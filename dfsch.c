@@ -760,6 +760,14 @@ static int get_token(token_t* token, char **str) {
   while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
     ++(*str);
 
+  if ((*str)[0]==';'){
+    while ((*str)[0]!=0 && (*str)[0]!='\n')
+      ++(*str); 
+  }
+
+  while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
+    ++(*str);
+
   switch ((*str)[0]){
   case 0:
     return 0;
@@ -785,7 +793,7 @@ static int get_token(token_t* token, char **str) {
       char *s, *e;
 
       s = *str;
-      e = strpbrk(s,") \t\n");
+      e = strpbrk(s,"() \t\n");
       if (!e)
 	e = s + strlen(s);
       
@@ -871,7 +879,7 @@ static int get_token(token_t* token, char **str) {
       char *s, *e;
       
       s = *str;
-      e = strpbrk(s,") \t\n");
+      e = strpbrk(s,"() \t\n");
       if (!e)
 	e = s + strlen(s);
       
@@ -1014,7 +1022,7 @@ dfsch_object_t* dfsch_list_read(char* str){
   object_t* f = NULL;
   object_t *t, *p;
 
-  while (i){
+  while (*i){
     object_t *o = one_obj_read(&i);
 
     if (dfsch_object_exception_p(o))
@@ -1028,6 +1036,12 @@ dfsch_object_t* dfsch_list_read(char* str){
       f = p = t;
     }
 
+    while (i[0]==' ' || i[0]=='\t' || i[0]=='\n')
+      ++i;
+    if (i[0]==';'){
+      while (i[0]!=0 && i[0]!='\n')
+	++i; 
+    }
     while (i[0]==' ' || i[0]=='\t' || i[0]=='\n')
       ++i;
 
@@ -1222,7 +1236,7 @@ static object_t* eval_list(object_t *list, object_t* env){
   object_t *i;
   object_t *f=NULL;
   object_t *t, *p;
-
+  object_t *r; 
 
   if (!list)
     return NULL;
@@ -1236,10 +1250,15 @@ static object_t* eval_list(object_t *list, object_t* env){
 
   i = list;
   while (i && i->type==PAIR){
-    t = dfsch_cons(dfsch_eval(i->data.pair.car,
-			      env),
-		   NULL);
+    r = dfsch_eval(i->data.pair.car,env);
+    if (dfsch_object_exception_p(r)){
+      dfsch_object_unref(list);
+      dfsch_object_unref(env);
+      dfsch_object_unref(f);
+      return r;
+    }
 
+    t = dfsch_cons(r,NULL);
     if (f){
       dfsch_set_cdr(p,t);
       p = t;
@@ -1334,12 +1353,16 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
 }
 
 static object_t* eval_proc(object_t* code, object_t* env){
-  object_t *i, *r;
+  object_t *i, *r=NULL;
 
 
   if (!env)
     return NULL;
   if (env->type==EXCEPTION)
+    return env;
+  if (!code)
+    return NULL;
+  if (code->type==EXCEPTION)
     return env;
 
   dfsch_object_ref(code);
@@ -1351,7 +1374,13 @@ static object_t* eval_proc(object_t* code, object_t* env){
     object_t* exp = i->data.pair.car; 
 
     r = dfsch_eval(exp,env);
-    
+
+    if (dfsch_object_exception_p(r)){
+      dfsch_object_unref(code);
+      dfsch_object_unref(env);
+      return r;
+    }
+   
     i = i->data.pair.cdr;
   }
 
@@ -1366,6 +1395,8 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
     return NULL;
   if (proc->type==EXCEPTION)
     return proc;
+  if (dfsch_object_exception_p(args))
+    return args;
 
   switch (proc->type){
   case CLOSURE:
@@ -1603,6 +1634,9 @@ static object_t* native_cons(object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
+static object_t* native_list(object_t* args){
+  return args;
+}
 static object_t* native_eq(object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args)))?
@@ -1785,6 +1819,7 @@ dfsch_ctx_t* dfsch_make_context(){
 
   dfsch_ctx_define(ctx, "make-macro", dfsch_make_primitive(&native_make_macro));
   dfsch_ctx_define(ctx, "cons", dfsch_make_primitive(&native_cons));
+  dfsch_ctx_define(ctx, "list", dfsch_make_primitive(&native_list));
   dfsch_ctx_define(ctx, "car", dfsch_make_primitive(&native_car));
   dfsch_ctx_define(ctx, "cdr", dfsch_make_primitive(&native_cdr));
   dfsch_ctx_define(ctx, "set-car!", dfsch_make_primitive(&native_set_car));

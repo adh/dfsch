@@ -23,8 +23,57 @@
 #include "dfsch.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <fcntl.h>
+#include <errno.h>
+
+static dfsch_ctx_t* ctx;
+
+static dfsch_object_t* import_impl(char *name){
+  int f = open(name,O_RDONLY);
+  off_t size,l;
+  char* buf;
+  dfsch_object_t* exp;
+
+  if (f<0){
+    int err = errno;
+    return dfsch_make_exception(dfsch_make_symbol("import:unix-error"),
+				dfsch_make_string(strerror(err)));
+  }
+
+  size = lseek(f,0,SEEK_END);
+  lseek(f,0,SEEK_SET);
+
+  buf = malloc(size+1);
+  if (!buf){
+    close(f);
+    return 0;
+  }
+
+  l = read(f,buf,size);
+  printf(";; Read: %d Bytes out of %d \n",l,size);
+  buf[size]=0;
+
+  exp = dfsch_list_read(buf);
+  free(buf);
+
+  return dfsch_ctx_eval_list(ctx,exp);
+
+}
+
+dfsch_object_t* import(dfsch_object_t* args){
+  dfsch_object_t* arg = dfsch_car(args);
+  if (dfsch_object_string_p(arg)){
+    return import_impl(dfsch_string(arg));
+  }else if (dfsch_object_symbol_p(arg)){
+
+  }else{
+    return dfsch_make_exception(dfsch_make_symbol("import:unknown-entity"),
+				arg);
+  }
+}
 
 /**
  * REP (read, eval, print) loop of dfsch.
@@ -34,13 +83,14 @@
  */
 int main(int argc, char**argv){
   
-  dfsch_ctx_t* ctx = dfsch_make_context();
+  ctx = dfsch_make_context();
 
   dfsch_ctx_define(ctx,"version",dfsch_make_string("0.1"));
   dfsch_ctx_define(ctx,"argv0",dfsch_make_string(argv[0]));
   dfsch_ctx_define(ctx,"arg-count",dfsch_make_number(argc));
 
   dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(&abort));
+  dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(&import));
 
   rl_bind_key ('\t', rl_insert);
 
