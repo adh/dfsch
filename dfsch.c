@@ -915,12 +915,8 @@ static object_t* parse_list(char **str){
   object_t *o;
   object_t *f = NULL; 
 
-  if (!get_token(&t,str))
-    return 
-      dfsch_make_exception(dfsch_make_symbol("parse-error:token-expected"),
-			  NULL);
   
-  while (t.type!=T_CLOSE){
+  while (get_token(&t,str)){
 
     if (one_obj_p(str, &t, &o)){
       if (f){
@@ -931,8 +927,8 @@ static object_t* parse_list(char **str){
 	f = p = dfsch_cons(o,NULL);
       }
     }else{
-      if (t.type=T_DOT){
-	if (!f)
+      if (t.type==T_DOT){
+	if (!p)
 	  return 
 	    dfsch_make_exception(dfsch_make_symbol("parse-error:car-expected"),
 				 NULL);
@@ -955,7 +951,9 @@ static object_t* parse_list(char **str){
 
 
 	return f;
-	
+
+      }else if (t.type==T_CLOSE){
+	return f;
       }else{
 	return 
 	  dfsch_make_exception(dfsch_make_symbol("parse-error:unexpected-token"),
@@ -964,15 +962,12 @@ static object_t* parse_list(char **str){
       }
     }
 
-    if (!get_token(&t,str)){
-      return 
-	dfsch_make_exception(dfsch_make_symbol("parse-error:token-expected"),
-			     NULL);
-    }
 
   }
+  return 
+    dfsch_make_exception(dfsch_make_symbol("parse-error:token-expected"),
+			 NULL);
 
-  return f;
 }
 
 static int one_obj_p(char **str, token_t *t, object_t **o){
@@ -1831,11 +1826,41 @@ static object_t* native_string_append(object_t* args){
   object_t* b = dfsch_car(dfsch_cdr(args));
   char *s;
 
+  if (!dfsch_object_string_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-string"),
+				a);
+  if (!dfsch_object_string_p(b))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-string"),
+				b);
+
   s = stracat(dfsch_string(a),dfsch_string(b));
 
   object_t* o = dfsch_make_string(s); 
   free(s);
   return o;
+}
+static object_t* native_string_ref(object_t* args){
+  NEED_ARGS(args,2);
+  object_t* a = dfsch_car(args);
+  object_t* b = dfsch_car(dfsch_cdr(args));
+
+  if (!dfsch_object_string_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-string"),
+				a);
+
+  char *s = dfsch_string(a);
+  size_t len = strlen(s);
+  size_t index = (size_t)(dfsch_number(b));
+  
+  if (index < 0)
+    index = index + len;
+  if (index>=len)
+    return dfsch_make_exception(dfsch_make_symbol("exception:index-too-large"),
+				b);
+
+
+
+  return dfsch_make_number((double)s[index]);
 }
 
 
@@ -1920,6 +1945,8 @@ dfsch_ctx_t* dfsch_make_context(){
 
   dfsch_ctx_define(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append));
+  dfsch_ctx_define(ctx, "string-ref", 
+		   dfsch_make_primitive(&native_string_ref));
 
   dfsch_ctx_define(ctx, "true", dfsch_true());
   dfsch_ctx_define(ctx, "nil", NULL);
