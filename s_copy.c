@@ -8,7 +8,6 @@
 int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(obj,100);
   puts(out);
-  free(out);
 }
 
 int main(){
@@ -34,8 +33,6 @@ int main(){
 
     free(str);
   }
-
-  dfsch_parser_destroy(parser);
 
   return 0;
 }

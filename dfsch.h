@@ -68,23 +68,6 @@ typedef dfsch_object_t* (*dfsch_primitive_t)(dfsch_object_t*);
 
 // object handling
 
-/**
- * Perform garbage collection
- */
-extern int dfsch_gc();
-
-/**
- * Mark object as referenced from C code.
- */
-extern void dfsch_object_ref(dfsch_object_t* obj);
-/**
- * Unregister one reference to referenced object.
- */
-extern void dfsch_object_unref(dfsch_object_t* obj);
-/**
- * Unregister all references to referenced object. (DANGEROUS)
- */
-extern void dfsch_object_all_unref(dfsch_object_t* obj);
 
 /**
  * Are A and B equal objects?
@@ -355,8 +338,7 @@ extern dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args);
 // context
 
 /**
- * Allocates new context and adds its top-level environment into list
- * of objects tat sould not be dealocated by garbage collector.
+ * Allocates new context (i.e. top level environment frame wrapped into struct)
  */
 extern dfsch_ctx_t* dfsch_make_context();
 /**
@@ -369,12 +351,6 @@ extern dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp);
  */
 extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
 					   dfsch_object_t* list);
-/**
- * Unregisters global environment of given context from list of 
- * non-deallocatable objects, runs garbage collector and dealocates
- * memory taken by given context CTX.
- */
-extern void dfsch_destroy_context(dfsch_ctx_t* ctx);
 /**
  * Defines new variable NAME with value OBJ in global environment 
  * of context CTX.

@@ -160,22 +160,6 @@ static char* straquote(char *s){
 
 
 
-void dfsch_object_ref(object_t* obj){
-
-  // no op
-
-}
-void dfsch_object_unref(object_t* obj){
-
-  // no op
-
-}
-
-void dfsch_object_all_unref(object_t* obj){
-
-  // no op
-
-}
 
 
 static object_t* make_object(type_t type){
@@ -453,7 +437,6 @@ dfsch_object_t* dfsch_true(){
     return cache;
 
   cache = dfsch_make_symbol("true");
-  dfsch_object_ref(cache);
   return cache;
 }
 dfsch_object_t* dfsch_quote(){
@@ -462,7 +445,6 @@ dfsch_object_t* dfsch_quote(){
     return cache;
 
   cache = dfsch_make_symbol("quote");
-  dfsch_object_ref(cache);
   return cache;
 }
 
@@ -1061,9 +1043,6 @@ static object_t* eval_list(object_t *list, object_t* env){
     return dfsch_eval(list,env);
   }
 
-  dfsch_object_ref(list);
-  dfsch_object_ref(env);
-
   i = list;
   while (i && i->type==PAIR){
     r = dfsch_eval(i->data.pair.car,env);
@@ -1176,8 +1155,6 @@ static object_t* eval_proc(object_t* code, object_t* env){
   if (code->type==EXCEPTION)
     return env;
 
-  dfsch_object_ref(code);
-  dfsch_object_ref(env);
 
   i = code;
 
@@ -1187,16 +1164,12 @@ static object_t* eval_proc(object_t* code, object_t* env){
     r = dfsch_eval(exp,env);
 
     if (dfsch_object_exception_p(r)){
-      dfsch_object_unref(code);
-      dfsch_object_unref(env);
       return r;
     }
    
     i = i->data.pair.cdr;
   }
 
-  dfsch_object_unref(code);
-  dfsch_object_unref(env);
   
   return r;
 }
@@ -1765,9 +1738,6 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "T", dfsch_true());
 
 
-
-  dfsch_object_ref(ctx->env);
-
   return ctx;
 }
 dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp){
@@ -1779,11 +1749,6 @@ extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx,
 }
 
 
-void dfsch_destroy_context(dfsch_ctx_t* ctx){
-
-  // no op
-
-}
 void dfsch_ctx_define(dfsch_ctx_t *ctx, 
 		      char *name, 
 		      dfsch_object_t *obj){

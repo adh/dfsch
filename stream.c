@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include <gc.h>
+
 //#define Q_DEBUG
 //#define T_DEBUG
 //#define P_DEBUG
@@ -34,8 +36,8 @@ typedef struct string_queue_t {
 } string_queue_t;
 
 static string_queue_t *create_queue(){
-  string_queue_t *q = malloc(sizeof(string_queue_t));
-  q->buf = malloc(512);
+  string_queue_t *q = GC_MALLOC(sizeof(string_queue_t));
+  q->buf = GC_MALLOC_ATOMIC(512);
   q->all = 512;
   if (!q->buf){
     abort();
@@ -43,19 +45,13 @@ static string_queue_t *create_queue(){
 
   return q;
 }
-static void destroy_queue(string_queue_t *q){
-  if (q->buf){
-    free(q->buf);
-  }
-  free(q);
-}
 static char* get_queue(string_queue_t *q){
   return q->buf;
 }
 static char* feed_queue(string_queue_t *q, char* data){
   size_t new_size = strlen(q->buf) + strlen(data)+1;
   if (new_size > q->all){
-    q->buf = realloc(q->buf, new_size+(new_size/2));
+    q->buf = GC_REALLOC(q->buf, new_size+(new_size/2));
     q->all = new_size+(new_size/2);
     if (!q->buf){
       abort();
@@ -73,7 +69,7 @@ static void consume_queue(string_queue_t *q, char* new){
   memmove(q->buf, new, nl);
 
   if (nl < q->all/2){
-    q->buf = realloc(q->buf, nl);
+    q->buf = GC_REALLOC(q->buf, nl);
     q->all = nl;    
     if (!q->buf){
       abort();
@@ -152,25 +148,12 @@ void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 
 
 static void parser_pop(dfsch_parser_ctx_t *ctx){
-  parser_stack_t *tmp = ctx->parser;
-
-  dfsch_object_unref(ctx->parser->front);
-  dfsch_object_unref(ctx->parser->last);
-
   ctx->parser = ctx->parser->next;
-  free(tmp);
-}
-
-void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx){
-  while (ctx->parser)
-    parser_pop(ctx);
-
-  free(ctx);
 }
 
 
 static void parser_push(dfsch_parser_ctx_t *ctx){
-  parser_stack_t *tmp = malloc(sizeof(parser_stack_t));
+  parser_stack_t *tmp = GC_MALLOC(sizeof(parser_stack_t));
 
   tmp->next = ctx->parser;
 
@@ -190,7 +173,6 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	  dfsch_set_cdr(ctx->parser->last, new);
 	}else{
 	  ctx->parser->front = new;
-	  dfsch_object_ref(new);
 	}
 	ctx->parser->last = new;
 	break;
@@ -234,7 +216,6 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
     dfsch_object_t *list;
     list = ctx->parser->front;
     parser_pop(ctx);
-    dfsch_object_unref(list);
     parse_object(ctx,list);
   }else{
     ctx->error = DFSCH_PARSER_UNEXPECTED_CLOSE;
@@ -334,7 +315,6 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
     {
     
       double d = atof(data);
-      free(data);
 #ifdef T_DEBUG
   printf(";; Number: %lf \n",d);
 #endif
@@ -346,7 +326,6 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 
   dfsch_object_t *d = dfsch_make_symbol(data);
 
-  free(data);
 
   parse_object(ctx,d);
 
@@ -414,7 +393,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	  consume_queue(ctx->q,data);
 	  return;
 	}
-	char *s = malloc((size_t)(e-data)+1);
+	char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
 	strncpy(s,data,e-data);
 	s[e-data]=0;
 
@@ -438,7 +417,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	  }
 	}
 
-	char *s = malloc((size_t)(e-data)+1);
+	char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
 	strncpy(s,data,e-data);
 	s[e-data]=0;
 

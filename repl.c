@@ -118,7 +118,6 @@ int main(int argc, char**argv){
     
   }
 
-  dfsch_destroy_context(ctx);
 
   return 0;
 }
