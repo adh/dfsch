@@ -1035,9 +1035,6 @@ static object_t* eval_list(object_t *list, object_t* env){
   while (i && i->type==PAIR){
     r = dfsch_eval(i->data.pair.car,env);
     if (dfsch_object_exception_p(r)){
-      dfsch_object_unref(list);
-      dfsch_object_unref(env);
-      dfsch_object_unref(f);
       return r;
     }
 
@@ -1046,19 +1043,18 @@ static object_t* eval_list(object_t *list, object_t* env){
       dfsch_set_cdr(p,t);
       p = t;
     }else{
-      dfsch_object_ref(f = p = t);
+      f = p = t;
     }
 
     i=i->data.pair.cdr;
   }
-  dfsch_object_unref(list);
-  dfsch_object_unref(env);
-  dfsch_object_unref(f);
 
   return f;
 }
 
 dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
+ start:
+
   if (!exp) 
     return NULL;
 
@@ -1074,9 +1070,8 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 			   dfsch_cons(env,
 				      exp->data.pair.cdr));
       case FLOW_MACRO:
-	return dfsch_eval(dfsch_apply(f->data.macro,     
-				      dfsch_cons(env,
-						 exp->data.pair.cdr)),env);
+	exp = dfsch_apply(f->data.macro,dfsch_cons(env, exp->data.pair.cdr));
+	goto start;
 	
       case CLOSURE:
       case PRIMITIVE:
