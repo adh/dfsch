@@ -41,7 +41,8 @@ typedef enum {
   CLOSURE,
   MACRO,
   FLOW_MACRO,
-  EXCEPTION // define new types here
+  EXCEPTION,
+  NATIVE // define new types here
 } type_t ;
 
 typedef dfsch_object_t object_t;
@@ -80,6 +81,13 @@ typedef struct exception_t{
   object_t *data;
 } exception_t; 
 
+typedef struct native_t {
+  
+  object_t* type;
+  void *data; 
+
+} native_t;
+
 struct dfsch_object_t{
   type_t type;
   union {
@@ -91,6 +99,7 @@ struct dfsch_object_t{
     closure_t closure;
     object_t *macro;
     exception_t exception;
+    native_t native;
   } data;
 };
 
@@ -103,18 +112,6 @@ static char* stracat(char* a, char* b){
   return o;
 }
 
-static char* strneko(char* a, char* b){ // ^_^
-  char * s = stracat(a,b);
-  return s;
-}
-static char* strneko_l(char* a, char* b){ // ^_^
-  char * s = stracat(a,b);
-  return s;
-}
-static char* strneko_r(char* a, char* b){ // ^_^
-  char * s = stracat(a,b);
-  return s;
-}
 static char* stracpy(char* x){
   char *b;
   size_t s = strlen(x)+1;
@@ -271,6 +268,11 @@ int dfsch_object_exception_p(dfsch_object_t* obj){
   return obj->type == EXCEPTION;
 }
 
+int dfsch_object_native_p(dfsch_object_t* obj){
+  if (!obj)
+    return 0;
+  return obj->type == NATIVE;
+}
 
 
 // Pairs
@@ -534,6 +536,33 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
 
   return e;
 }
+
+// Native data
+
+dfsch_object_t* dfsch_make_native_data(void *data, 
+					      dfsch_object_t *type){
+  object_t* n = make_object(EXCEPTION);
+  
+  n->data.native.type = type;
+  n->data.native.data = data;
+
+  return n;
+}
+void* dfsch_native_data(dfsch_object_t *object, dfsch_object_t* type){
+
+  if (!object || object->type!=NATIVE || object->data.native.type != type)
+    return NULL;
+  
+  return object->data.native.data;
+}
+dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object){
+  if (!object || object->type!=NATIVE)
+    return NULL;
+
+  return object->data.native.type;
+
+}
+
 
 // Expression parser
 
@@ -863,14 +892,18 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   case CLOSURE:
     return stracpy("<closure>");  // TODO: maybe dump some data?
   case MACRO:
-    return strneko(strneko_r("<macro: ",
-			     dfsch_obj_write(obj->data.macro,max_depth-1)),
+    return stracat(stracat("<macro: ",
+			   dfsch_obj_write(obj->data.macro,max_depth-1)),
+		   ">");
+  case NATIVE:
+    return stracat(stracat("<native-data: ",
+			   dfsch_obj_write(obj->data.native.type,max_depth-1)),
 		   ">");
   case EXCEPTION:
-    return strneko(strneko_r("<exception: ",
+    return stracat(stracat("<exception: ",
 			     dfsch_obj_write(obj->data.exception.type,
 					     max_depth-1)),
-		   strneko_l(strneko_r(" . ",
+		   stracat(stracat(" . ",
 				       dfsch_obj_write(obj->data.exception.data,
 						       max_depth-1)),
 			     ">"));
@@ -879,10 +912,10 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
     // TODO: at least semi-iterative solution? 
     {
       if (obj->data.pair.cdr && obj->data.pair.cdr->type!=PAIR)
-	return strneko(strneko_r("(",
+	return stracat(stracat("(",
 				 dfsch_obj_write(obj->data.pair.car,
 						 max_depth-1)),
-		       strneko_l(strneko_r(" . ",
+		       stracat(stracat(" . ",
 					   dfsch_obj_write(obj->data.pair.cdr,
 							   max_depth-1)),
 				 ")"));
@@ -894,25 +927,25 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 
 	while (i && i->type==PAIR){
 	  
-	  s = strneko(s, dfsch_obj_write(i->data.pair.car,max_depth-1));
+	  s = stracat(s, dfsch_obj_write(i->data.pair.car,max_depth-1));
 	  i = i->data.pair.cdr;
 
 	  if (i)
-	    s = strneko_l(s," ");
+	    s = stracat(s," ");
 	    
 	}
 
 	if (i){
-	  s = strneko_l(s,". ");
-	  s = strneko(s, dfsch_obj_write(i,max_depth-1));
+	  s = stracat(s,". ");
+	  s = stracat(s, dfsch_obj_write(i,max_depth-1));
 	}
 
-	return strneko_l(s,")");
+	return stracat(s,")");
       }
     }
   default:
     {
-      return stracpy("<native-object>");
+      return stracpy("<unknown-object>");
     }
   }
 }

@@ -112,7 +112,7 @@ extern int dfsch_object_atom_p(dfsch_object_t* obj); // i.e. not pair
 extern int dfsch_object_symbol_p(dfsch_object_t* obj);
 
 /**
- * Is A a anumber?
+ * Is A a a number?
  */
 extern int dfsch_object_number_p(dfsch_object_t* obj);
 
@@ -145,6 +145,12 @@ extern int dfsch_object_macro_p(dfsch_object_t* obj);
  * Is A an exception?
  */
 extern int dfsch_object_exception_p(dfsch_object_t* obj);
+
+/**
+ * Is A a native data pointer?
+ */
+extern int dfsch_object_native_p(dfsch_object_t* obj);
+
 
 
 /**
@@ -211,6 +217,19 @@ extern dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 				   dfsch_object_t *alist);
 
+// string
+
+/**
+ * Makes string object from corresponding ASCIIZ string.
+ */
+extern dfsch_object_t* dfsch_make_string(char* symbol);
+
+/**
+ * Returns ASCIIZ string for given string object.
+ */
+extern char* dfsch_string(dfsch_object_t* symbol);
+
+
 // symbols
 
 /**
@@ -264,6 +283,24 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
  * function.
  */
 extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim);
+
+/**
+ * Makes native object representing given pointer to native data with given
+ * type.
+ */
+extern dfsch_object_t* dfsch_make_native_data(void *data, 
+					      dfsch_object_t *type);
+
+/**
+ * Returns pointer to arbitrary native data represented by given object.
+ */
+extern void* dfsch_native_data(dfsch_object_t *object, dfsch_object_t *type);
+
+/**
+ * Returns object uniquely identifing data-type of native object.
+ */
+extern dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object);
+
 
 // macros
 

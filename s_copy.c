@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <gc.h>
 
 int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(obj,100);
@@ -11,6 +12,8 @@ int callback(dfsch_object_t *obj, void* baton){
 }
 
 int main(){
+  GC_INIT();
+
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
 
   puts(";; Parser created");

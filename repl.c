@@ -28,6 +28,8 @@
 #include <readline/history.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <gc.h>
+
 
 static dfsch_ctx_t* ctx;
 
@@ -83,6 +85,8 @@ dfsch_object_t* import(dfsch_object_t* args){
  */
 int main(int argc, char**argv){
   
+  GC_INIT();
+
   ctx = dfsch_make_context();
 
   dfsch_ctx_define(ctx,"version",dfsch_make_string("0.1"));
