@@ -111,9 +111,7 @@ int main(int argc, char**argv){
     out = dfsch_obj_write(res,100);
 
     puts(out);
-    free(out);
     
-    dfsch_gc();
   }
 
   dfsch_destroy_context(ctx);

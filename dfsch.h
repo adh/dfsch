@@ -78,9 +78,13 @@ extern int dfsch_gc();
  */
 extern void dfsch_object_ref(dfsch_object_t* obj);
 /**
- * Unregister referenced object.
+ * Unregister one reference to referenced object.
  */
 extern void dfsch_object_unref(dfsch_object_t* obj);
+/**
+ * Unregister all references to referenced object. (DANGEROUS)
+ */
+extern void dfsch_object_all_unref(dfsch_object_t* obj);
 
 /**
  * Are A and B equal objects?

@@ -7,7 +7,7 @@ clean:
 	rm -f dfsch s_copy
 
 dfsch: dfsch.o repl.o
-	gcc -o dfsch dfsch.o repl.o -lreadline -lncurses $(CFLAGS)
+	gcc -o dfsch dfsch.o repl.o -lreadline -lncurses -lgc -ldl $(CFLAGS)
 
 repl.o: repl.c dfsch.h
 	gcc -o repl.o -c repl.c $(CFLAGS)
@@ -22,7 +22,7 @@ s_copy.o: s_copy.c stream.h dfsch.h
 	gcc -o s_copy.o -c s_copy.c $(CFLAGS)
 
 s_copy: s_copy.o stream.o dfsch.o
-	gcc -o s_copy s_copy.o stream.o dfsch.o -lreadline -lncurses $(CFLAGS)
+	gcc -o s_copy s_copy.o stream.o dfsch.o -lreadline -lncurses -lgc -ldl $(CFLAGS)
 
 dox:
 	doxygen Doxyfile

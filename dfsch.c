@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <gc.h>
+
 //#define PARSER_DEBUG
 //#define GC_DEBUG
 //#define OBJ_LIST_DEBUG
@@ -80,7 +82,6 @@ typedef struct exception_t{
 
 struct dfsch_object_t{
   type_t type;
-  unsigned int marked;
   union {
     pair_t pair;
     symbol_t symbol;
@@ -96,7 +97,7 @@ struct dfsch_object_t{
 
 static char* stracat(char* a, char* b){
   size_t s = strlen(a)+strlen(b)+1;
-  char* o = malloc(s);
+  char* o = GC_malloc(s);
   strncpy(o,a,s);
   strncat(o,b,s);
   return o;
@@ -104,37 +105,33 @@ static char* stracat(char* a, char* b){
 
 static char* strneko(char* a, char* b){ // ^_^
   char * s = stracat(a,b);
-  free(a);
-  free(b);
   return s;
 }
 static char* strneko_l(char* a, char* b){ // ^_^
   char * s = stracat(a,b);
-  free(a);
   return s;
 }
 static char* strneko_r(char* a, char* b){ // ^_^
   char * s = stracat(a,b);
-  free(b);
   return s;
 }
 static char* stracpy(char* x){
   char *b;
   size_t s = strlen(x)+1;
-  b = malloc(s);
+  b = GC_malloc(s);
   strncpy(b,x,s);
   return b;
 }
 static char* strancpy(char* x, size_t n){
   char *b;
   size_t s = n+1;
-  b = malloc(s);
+  b = GC_malloc(s);
   strncpy(b,x,s-1);
   b[s-1]=0;
   return b;
 }
 static char* straquote(char *s){
-  char *b = malloc(strlen(s)*3+3);
+  char *b = GC_malloc(strlen(s)*2+3); // worst case, to lazy to optimize
   char *i = b;
 
   *i='"';
@@ -163,238 +160,33 @@ static char* straquote(char *s){
 #define EXCEPTION_CHECK(x) {if (dfsch_object_exception_p(x)) return x;}
 
 
-static void object_destroy(object_t* obj){
-#ifdef OBJ_LIST_DEBUG
-  printf(";; Destroy: %p\n",obj);
-#endif
-  if (!obj)
-    return;
-
-  switch (obj->type){
-  case STRING:
-    free(obj->data.string);
-    break;
-  case SYMBOL:
-    free(obj->data.symbol.data);
-
-    if (obj->data.symbol.prev){
-      obj->data.symbol.prev->data.symbol.next = obj->data.symbol.next;
-    }else{
-      global_symbol_table = obj->data.symbol.next;
-    }
-
-    if (obj->data.symbol.next){
-      obj->data.symbol.next->data.symbol.prev = obj->data.symbol.prev;
-    }
-
-    break;
-    
-  }
-
-  free(obj);
-}
-
-typedef struct objlist_t objlist_t;
-
-struct objlist_t{
-  object_t* object;
-  objlist_t* next;
-};
-
-
-static objlist_t* gc_objects=NULL;
-static objlist_t* gc_roots=NULL;
-
-
-static void gc_mark(object_t* obj){
-#ifdef GC_DEBUG
-  printf(";; Mark: %p\n",obj);
-#endif
-
-  if (!obj)
-    return;
-
-  if (obj->marked)
-    return;
-
-  obj->marked = 1;
-
-  switch (obj->type){
-  case PAIR:
-    gc_mark(obj->data.pair.car);
-    gc_mark(obj->data.pair.cdr);
-    break;
-  case CLOSURE:
-    gc_mark(obj->data.closure.args);
-    gc_mark(obj->data.closure.code);
-    gc_mark(obj->data.closure.env);
-    break;
-  case MACRO:
-  case FLOW_MACRO:
-    gc_mark(obj->data.macro);
-    break;
-  case EXCEPTION:
-    gc_mark(obj->data.exception.type);
-    gc_mark(obj->data.exception.data);
-  }
-}
-
-#ifdef OBJ_LIST_DEBUG
-static void dump_obj_list(objlist_t* list){
-  objlist_t *i = list;
-  printf(";; ObjList dump: %p\n",list);
-
-  while (i){
-    printf(";; ObjList item: %p => %p\n",i,i->object);
-    i = i->next;
-  }
-
-}
-#endif
-
-
-
-int dfsch_gc(){
-  objlist_t* i_o=gc_objects;
-  objlist_t *j, *d;
-  objlist_t* i_r=gc_roots;
-  int counter = 0;
-
-  while (i_o){
-    i_o->object->marked = 0;
-    i_o = i_o->next;
-  }
-
-  while (i_r){
-    gc_mark(i_r->object);
-    i_r = i_r->next;
-  }
-
-  i_o=gc_objects;
-
-  j = NULL;
-
-  while (i_o){
-#ifdef GC_DEBUG
-    printf(";; Post-Mark: %p = %d\n",i_o->object,i_o->object->marked);
-#endif
-
-    if (!i_o->object->marked){
-      d = i_o;
-      if (j){
-	i_o = j->next = i_o->next;
-      }else{
-	i_o = gc_objects = i_o->next;
-      }
-
-      object_destroy(d->object);
-      free(d);
-      ++counter;
-    }else{
-      j = i_o;
-      i_o = i_o->next;
-    }
-  }
-
-  return counter;
-
-}
-static void register_object(object_t* obj){
-  objlist_t *o = malloc(sizeof(objlist_t));
-
-  o->next = gc_objects;
-  o->object = obj;
-  gc_objects = o;
-
-#ifdef OBJ_LIST_DEBUG
-    printf(";; Register-object: %p, type %d\n",obj, obj->type);
-#endif
-
-
-}
 
 
 
 void dfsch_object_ref(object_t* obj){
-  objlist_t *o = malloc(sizeof(objlist_t));
 
-  o->next = gc_roots;
-  o->object = obj;
-  gc_roots = o;
+  // no op
+
 }
 void dfsch_object_unref(object_t* obj){
-  objlist_t *i,*d,*j;
 
-  i = gc_roots;
-  j = NULL;
-
-  while (i){
-    if (i->object==obj){
-      d = i;
-      if (j){
-	i = j->next = i->next;
-      }else{
-	i = gc_roots = i->next;
-      }
-#ifdef OBJ_LIST_DEBUG
-    printf(";; Unref-object: %p, type %d\n",obj, obj->type);
-#endif
-
-      free(d);
-      break;
-    }else{
-      j = i;
-      i = i->next;
-    }
-  }
-#ifdef OBJ_LIST_DEBUG
-  dump_obj_list(gc_roots);
-#endif
-  
-
+  // no op
 
 }
 
 void dfsch_object_all_unref(object_t* obj){
-  objlist_t *i,*d,*j;
 
-  i = gc_roots;
-  j = NULL;
-
-  while (i){
-    if (i->object==obj){
-      d = i;
-      if (j){
-	i = j->next = i->next;
-      }else{
-	i = gc_roots = i->next;
-      }
-#ifdef OBJ_LIST_DEBUG
-    printf(";; Unref-object: %p, type %d\n",obj, obj->type);
-#endif
-
-      free(d);
-    }else{
-      j = i;
-      i = i->next;
-    }
-  }
-#ifdef OBJ_LIST_DEBUG
-  dump_obj_list(gc_roots);
-#endif
-  
+  // no op
 
 }
 
 
 static object_t* make_object(type_t type){
-  object_t* o = malloc(sizeof(object_t));
+  object_t* o = GC_malloc(sizeof(object_t));
   if (!o)
     return NULL;
 
   o->type = type;
-
-  register_object(o);
 
   return o;
 }
@@ -808,7 +600,6 @@ static int get_token(token_t* token, char **str) {
 	}else{
 	  token->data = dfsch_make_number(atof(s));
 	}
-	free(s);
 	
 	token->type=T_TERMINAL;
 	return 1;
@@ -890,7 +681,6 @@ static int get_token(token_t* token, char **str) {
 #endif
 	token->data = dfsch_make_symbol(s);
 	
-	free(s);
 	
 	token->type=T_TERMINAL;
 	return 1;
@@ -1058,7 +848,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   switch (obj->type){
   case NUMBER:
     {
-      char  *s = malloc(512);
+      char  *s = GC_malloc(512);
       snprintf(s, 512, "%lf", obj->data.number);
       return s;
     }
@@ -1097,7 +887,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 							   max_depth-1)),
 				 ")"));
       {
-	char *s=malloc(2);
+	char *s=GC_malloc(2);
 	object_t* i=obj;
 	
 	strncpy(s,"(",2);
@@ -1738,10 +1528,6 @@ static object_t* native_macro_p(object_t* args){
     dfsch_true():
     NULL;  
 }
-static object_t* native_gc(object_t* args){
-  NEED_ARGS(args,0);  
-  return dfsch_make_number((double)dfsch_gc());
-}
 
 
 static object_t* native_lt(object_t* args){
@@ -1836,7 +1622,6 @@ static object_t* native_string_append(object_t* args){
   s = stracat(dfsch_string(a),dfsch_string(b));
 
   object_t* o = dfsch_make_string(s); 
-  free(s);
   return o;
 }
 static object_t* native_string_ref(object_t* args){
@@ -1868,7 +1653,7 @@ static object_t* native_string_ref(object_t* args){
 
 
 dfsch_ctx_t* dfsch_make_context(){
-  dfsch_ctx_t* ctx=malloc(sizeof(dfsch_ctx_t));
+  dfsch_ctx_t* ctx=GC_malloc(sizeof(dfsch_ctx_t));
   if (!ctx)
     return NULL;
 
@@ -1935,8 +1720,6 @@ dfsch_ctx_t* dfsch_make_context(){
 		   dfsch_make_primitive(&native_procedure_p));
   dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p));
 
-  dfsch_ctx_define(ctx, "gc", 
-		   dfsch_make_primitive(&native_gc));
 
   dfsch_ctx_define(ctx, "throw", 
 		   dfsch_make_primitive(&native_throw));
@@ -1969,9 +1752,9 @@ extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx,
 
 
 void dfsch_destroy_context(dfsch_ctx_t* ctx){
-  dfsch_object_unref(ctx->env);
-  dfsch_gc();
-  free(ctx);
+
+  // no op
+
 }
 void dfsch_ctx_define(dfsch_ctx_t *ctx, 
 		      char *name, 
