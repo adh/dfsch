@@ -1384,6 +1384,39 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
 }
 
 
+static int count_list(object_t* list){
+  object_t *i;
+  int count;
+
+  if (!list)
+    return 0;
+  if (list->type!=PAIR)
+    return -1;
+
+  i = list;
+  count = 0;
+
+  while (i && i->type==PAIR ){
+    object_t* exp = i->data.pair.car; 
+    i = i->data.pair.cdr;
+    ++count;
+  }
+
+  
+  return count;
+}
+
+#define NEED_ARGS(args,count) \
+  if (count_list(args)!=(count)) \
+    return dfsch_make_exception( \
+      dfsch_make_symbol("exception:wrong-number-of-arguments"), \
+      (args));
+#define MIN_ARGS(args,count) \
+  if (count_list(args)<(count)) \
+    return dfsch_make_exception( \
+      dfsch_make_symbol("exception:too-few-arguments"), \
+      (args));
+
 // Native procedures:
 
 static object_t* native_plus(object_t* args){
@@ -1469,7 +1502,9 @@ static object_t* native_slash(object_t* args){
 }
 
 static object_t* native_macro_lambda(object_t* args){
-  
+
+  MIN_ARGS(args,2);
+
   return dfsch_lambda(dfsch_car(args),
 		      dfsch_car(dfsch_cdr(args)),
 		      dfsch_cdr(dfsch_cdr(args)));
@@ -1477,7 +1512,9 @@ static object_t* native_macro_lambda(object_t* args){
 }
 
 static object_t* native_macro_define(object_t* args){
-  
+
+  MIN_ARGS(args,2);  
+
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
@@ -1495,6 +1532,8 @@ static object_t* native_macro_define(object_t* args){
 }
 static object_t* native_macro_set(object_t* args){
   
+  NEED_ARGS(args,3);  
+
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
   object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
@@ -1503,7 +1542,8 @@ static object_t* native_macro_set(object_t* args){
 
 }
 static object_t* native_flow_macro_if(object_t* args){
-  
+
+  NEED_ARGS(args,4);    
   object_t* env = dfsch_car(args);
   object_t* cond = dfsch_car(dfsch_cdr(args));
   object_t* true = dfsch_car(dfsch_cdr(dfsch_cdr(args)));
@@ -1516,6 +1556,8 @@ static object_t* native_flow_macro_if(object_t* args){
 
 static object_t* native_flow_macro_cond(object_t* args){
   
+  MIN_ARGS(args,1)
+
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
 
@@ -1534,98 +1576,175 @@ static object_t* native_flow_macro_cond(object_t* args){
 
 
 static object_t* native_macro_env(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_car(args);
 }
 
 static object_t* native_macro_quote(object_t* args){
+  NEED_ARGS(args,2);  
   return dfsch_car(dfsch_cdr(args));
 }
 
 
 
 static object_t* native_make_macro(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
 static object_t* native_car(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
 }
 static object_t* native_cdr(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_cdr(dfsch_car(args));
 }
 static object_t* native_cons(object_t* args){
+  NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
 static object_t* native_eq(object_t* args){
+  NEED_ARGS(args,2);  
   return dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args)))?
     dfsch_true():
     NULL;
 }
 static object_t* native_set_car(object_t* args){
+  NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
 static object_t* native_set_cdr(object_t* args){
+  NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
 
 static object_t* native_null_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_null_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_pair_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_pair_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_atom_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_atom_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_symbol_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_symbol_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_number_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_number_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_string_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_string_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_primitive_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_primitive_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_closure_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_closure_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_procedure_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_procedure_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_macro_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_macro_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 static object_t* native_exception_p(object_t* args){
+  NEED_ARGS(args,1);  
   return dfsch_object_exception_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
 
 static object_t* native_gc(object_t* args){
+  NEED_ARGS(args,0);  
   return dfsch_make_number((double)dfsch_gc());
 }
+
+
+static object_t* native_lt(object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  if (!dfsch_object_number_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				a);
+  if (!dfsch_object_number_p(b))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				b);
+
+  return dfsch_number(a)<dfsch_number(b)?
+    dfsch_true():
+    NULL;  
+}
+static object_t* native_gt(object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  if (!dfsch_object_number_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				a);
+  if (!dfsch_object_number_p(b))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				b);
+    
+
+  return dfsch_number(a)>dfsch_number(b)?
+    dfsch_true():
+    NULL;  
+}
+
+static object_t* native_or(object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  EXCEPTION_CHECK(a);
+  EXCEPTION_CHECK(b);
+  return (a||b)?
+    dfsch_true():
+    NULL;  
+}
+static object_t* native_and(object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  EXCEPTION_CHECK(a);
+  EXCEPTION_CHECK(b);
+  return (a&&b)?
+    dfsch_true():
+    NULL;  
+}
+
+
 
 // Context
 
@@ -1644,6 +1763,10 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "*", dfsch_make_primitive(&native_mult));
   dfsch_ctx_define(ctx, "/", dfsch_make_primitive(&native_slash));
   dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_eq));
+  dfsch_ctx_define(ctx, "<", dfsch_make_primitive(&native_lt));
+  dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt));
+  dfsch_ctx_define(ctx, "and", dfsch_make_primitive(&native_and));
+  dfsch_ctx_define(ctx, "or", dfsch_make_primitive(&native_or));
 
   dfsch_ctx_define(ctx, "lambda", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_lambda)));
