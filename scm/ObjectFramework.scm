@@ -4,7 +4,8 @@
 
 
 ;; Proposed root of class hierarchy
-(define (Object) (lambda (selector) 'doesNotUnderstand))
+(define (Object) (lambda (selector) 
+		   (throw (DoesNotUnderstand selector))))
 
 ;; Utility function for dispatching messages
 (define (message-dispatch parent-object message-list)
@@ -15,4 +16,20 @@
 	    (else (loop (cdr message-list)))))
     (loop message-list)))
 
+
+;; Exception handling
+
+(define (of-throw what)
+  (throw 'ObjectFrameworkException what))
+
+(define (Exception data)
+  (define (data)
+    data)
+  (define (setData: new)
+    (set! data new))
+  (define (identify)
+    'Exception)
+  (message-dispatch (Object) (list (list 'data data)
+				   (list 'setData: setData)
+				   (list 'identify identify))))
 

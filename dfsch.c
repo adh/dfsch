@@ -757,71 +757,69 @@ typedef struct token_t {
 } token_t;
 
 static int get_token(token_t* token, char **str) {
-  while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
-    ++(*str);
 
-  if ((*str)[0]==';'){
-    while ((*str)[0]!=0 && (*str)[0]!='\n')
-      ++(*str); 
-  }
-
-  while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
-    ++(*str);
-
-  switch ((*str)[0]){
-  case 0:
-    return 0;
-  case '.':
-    if ((*str)[1]==' ' || (*str)[1]=='\t' || (*str)[1]=='\n'){
-      token->type=T_DOT;
-      (*str)+=2;    
-      return 1;
-
-    }
-  case '0':
-  case '1':
-  case '2':
-  case '3':
-  case '4':
-  case '5':
-  case '6':
-  case '7':
-  case '8':
-  case '9':
-  case '-':
-    {
-      char *s, *e;
-
-      s = *str;
-      e = strpbrk(s,"() \t\n");
-      if (!e)
-	e = s + strlen(s);
-      
-      
-      s = strancpy(s,(size_t)(e-s));
-
-      (*str)=e;
-
-#ifdef PARSER_DEBUG
-      printf(";; Number: [%s]\n",s);
-#endif
-      if (strcmp(s,"-")==0){
-	token->data = dfsch_make_symbol("-");
-      }else{
-	token->data = dfsch_make_number(atof(s));
-      }
-      free(s);
-
-      token->type=T_TERMINAL;
-      return 1;
-    }
-  case '"':
-    {
-      char s[1024];
-      char *p=s;
-      
+  while ((*str)[0]){
+    while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
       ++(*str);
-
+    
+    switch ((*str)[0]){
+    case 0:
+      return 0;
+    case ';':
+      while ((*str)[0]!=0 && (*str)[0]!='\n')
+	++(*str);
+      continue;
+    case '.':
+      if ((*str)[1]==' ' || (*str)[1]=='\t' || (*str)[1]=='\n'){
+	token->type=T_DOT;
+	(*str)+=2;    
+	return 1;
+	
+      }
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+    case '-':
+      {
+	char *s, *e;
+	
+	s = *str;
+	e = strpbrk(s,"() \t\n");
+	if (!e)
+	  e = s + strlen(s);
+	
+	
+	s = strancpy(s,(size_t)(e-s));
+	
+	(*str)=e;
+	
+#ifdef PARSER_DEBUG
+	printf(";; Number: [%s]\n",s);
+#endif
+	if (strcmp(s,"-")==0){
+	  token->data = dfsch_make_symbol("-");
+	}else{
+	  token->data = dfsch_make_number(atof(s));
+	}
+	free(s);
+	
+	token->type=T_TERMINAL;
+	return 1;
+      }
+    case '"':
+      {
+	char s[1024];
+	char *p=s;
+	
+      ++(*str);
+      
       while (1){
 	if (p>s+1024)
 	  return 0; // overflow
@@ -849,7 +847,7 @@ static int get_token(token_t* token, char **str) {
 	  ++(*str);
 
 	  break;
-
+	  
 	case 0:
 	  return 0;
 	  
@@ -860,44 +858,44 @@ static int get_token(token_t* token, char **str) {
 	++(*str);
       }
       
-    }
-  case '(':
-    token->type=T_OPEN;
-    ++(*str);    
-    return 1;
-  case ')':
-    token->type=T_CLOSE;
-    ++(*str);
-    return 1;
-  case '\'':
-    token->type=T_QUOTE;
-    ++(*str);
-    return 1;
-  default:
-    
-    {
-      char *s, *e;
-      
-      s = *str;
-      e = strpbrk(s,"() \t\n");
-      if (!e)
-	e = s + strlen(s);
-      
-      (*str)=e;
-
-      s = strancpy(s,(size_t)(e-s));
-
-#ifdef PARSER_DEBUG
-      printf(";; Symbol: %s\n",s);
-#endif
-      token->data = dfsch_make_symbol(s);
-
-      free(s);
-
-      token->type=T_TERMINAL;
+      }
+    case '(':
+      token->type=T_OPEN;
+      ++(*str);    
       return 1;
+    case ')':
+      token->type=T_CLOSE;
+      ++(*str);
+      return 1;
+    case '\'':
+      token->type=T_QUOTE;
+      ++(*str);
+      return 1;
+    default:
+      
+      {
+	char *s, *e;
+	
+	s = *str;
+	e = strpbrk(s,"() \t\n");
+	if (!e)
+	  e = s + strlen(s);
+	
+	(*str)=e;
+	
+	s = strancpy(s,(size_t)(e-s));
+	
+#ifdef PARSER_DEBUG
+	printf(";; Symbol: %s\n",s);
+#endif
+	token->data = dfsch_make_symbol(s);
+	
+	free(s);
+	
+	token->type=T_TERMINAL;
+	return 1;
+      }
     }
-
   }
 }
 
