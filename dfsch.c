@@ -106,7 +106,7 @@ struct dfsch_object_t{
 
 static char* stracat(char* a, char* b){
   size_t s = strlen(a)+strlen(b)+1;
-  char* o = GC_malloc(s);
+  char* o = GC_MALLOC_ATOMIC(s);
   strncpy(o,a,s);
   strncat(o,b,s);
   return o;
@@ -115,20 +115,20 @@ static char* stracat(char* a, char* b){
 static char* stracpy(char* x){
   char *b;
   size_t s = strlen(x)+1;
-  b = GC_malloc(s);
+  b = GC_MALLOC_ATOMIC(s);
   strncpy(b,x,s);
   return b;
 }
 static char* strancpy(char* x, size_t n){
   char *b;
   size_t s = n+1;
-  b = GC_malloc(s);
+  b = GC_MALLOC_ATOMIC(s);
   strncpy(b,x,s-1);
   b[s-1]=0;
   return b;
 }
 static char* straquote(char *s){
-  char *b = GC_malloc(strlen(s)*2+3); // worst case, to lazy to optimize
+  char *b = GC_MALLOC_ATOMIC(strlen(s)*2+3); // worst case, to lazy to optimize
   char *i = b;
 
   *i='"';
@@ -179,7 +179,7 @@ void dfsch_object_all_unref(object_t* obj){
 
 
 static object_t* make_object(type_t type){
-  object_t* o = GC_malloc(sizeof(object_t));
+  object_t* o = GC_MALLOC(sizeof(object_t));
   if (!o)
     return NULL;
 
