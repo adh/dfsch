@@ -32,6 +32,7 @@ int main(){
     free(str);
   }
 
+  dfsch_parser_destroy(parser);
 
   return 0;
 }

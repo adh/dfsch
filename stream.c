@@ -20,11 +20,13 @@
 
 #include "stream.h"
 
-#include "strings.h"
-#include "unistd.h"
+#include <strings.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#define Q_DEBUG
-#define T_DEBUG
+//#define Q_DEBUG
+//#define T_DEBUG
+//#define P_DEBUG
 
 typedef struct string_queue_t {
   char* buf;
@@ -88,6 +90,21 @@ void empty_queue(string_queue_t *q){
   *(q->buf)=0;
 }
 
+typedef struct parser_stack_t parser_stack_t;
+
+struct parser_stack_t {
+  enum {
+    P_LIST,
+    P_DOT,
+    P_PREEND,
+    P_QUOTE
+  } state;
+
+  dfsch_object_t *front;
+  dfsch_object_t *last;
+
+  parser_stack_t *next;
+};
 
 struct dfsch_parser_ctx_t {
   string_queue_t *q;
@@ -99,8 +116,12 @@ struct dfsch_parser_ctx_t {
     T_NONE
   } tokenizer_state;
 
+  
+  parser_stack_t *parser;
+
+
   void *baton;
-  dfsch_parser_callback_t *callback;
+  dfsch_parser_callback_t callback;
 };
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
@@ -115,6 +136,8 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   }
 
   ctx->tokenizer_state = T_NONE;
+  ctx->parser = NULL;
+
   return ctx;
 }
 void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx){
@@ -122,7 +145,7 @@ void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx){
 }
 
 void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
-			   dfsch_parser_callback_t *callback,
+			   dfsch_parser_callback_t callback,
 			   void *baton){
 
   ctx->callback = callback;
@@ -131,26 +154,181 @@ void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 }
 
 
-static void parse_open(dfsch_parser_ctx_t *ctx){
+static void parser_pop(dfsch_parser_ctx_t *ctx){
+  parser_stack_t *tmp = ctx->parser;
 
+  ctx->parser = ctx->parser->next;
+
+  free(tmp);
+}
+static void parser_push(dfsch_parser_ctx_t *ctx){
+  parser_stack_t *tmp = malloc(sizeof(parser_stack_t));
+
+  tmp->next = ctx->parser;
+
+  ctx->parser = tmp;
+}
+
+
+
+static void parse_terminal(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
+  if (ctx->parser){
+    switch(ctx->parser->state){
+    case P_LIST:
+      {
+	dfsch_object_t *new = dfsch_cons(obj, NULL);
+
+	if (ctx->parser->last){
+	  dfsch_set_cdr(ctx->parser->last, new);
+	}else{
+	  ctx->parser->front = new;
+	}
+	ctx->parser->last = new;
+	break;
+      }
+    case P_DOT:
+      if (ctx->parser->last){
+	dfsch_set_cdr(ctx->parser->last, obj);
+	ctx->parser->state = P_PREEND;
+	return;
+      }
+    case P_QUOTE:
+      parser_pop(ctx);
+      parse_terminal(ctx,dfsch_cons(dfsch_quote(),dfsch_cons(obj, NULL)));
+    default:
+
+    }
+  }else{
+    (*ctx->callback)(obj,ctx->baton);
+  }
+}
+
+static void parse_open(dfsch_parser_ctx_t *ctx){
+  parser_push(ctx);
+  ctx->parser->state = P_LIST;
+  ctx->parser->last = NULL;
+  ctx->parser->front = NULL;
+}
+static void parse_quote(dfsch_parser_ctx_t *ctx){
+  parser_push(ctx);
+  ctx->parser->state = P_QUOTE;
+  ctx->parser->last = NULL;
+  ctx->parser->front = NULL;
 }
 static void parse_close(dfsch_parser_ctx_t *ctx){
-
+  if (ctx->parser){
+    dfsch_object_t *list;
+    list = ctx->parser->front;
+    parser_pop(ctx);
+    parse_terminal(ctx,list);
+  }else{
+    
+  }
 }
 static void parse_dot(dfsch_parser_ctx_t *ctx){
-
+  if (ctx->parser){
+    ctx->parser->state = P_DOT;
+  }
+  
 }
-static void parse_terminal(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
-
-}
-
 
 
 
 static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
+  char* out=data;
+  char* in=data;
 
+  while (*in){
+    switch (*in){
+    case '\\':
+      ++in;
+      switch (*in){
+      case 'n':
+	*out = '\n';
+	++out;
+	++in;
+	continue;
+      case 'r':
+	*out = '\r';
+	++out;
+	++in;
+	continue;
+      case 'a':
+	*out = '\a';
+	++out;
+	++in;
+	continue;
+      case 't':
+	*out = '\t';
+	++out;
+	++in;
+	continue;
+      case 'b':
+	*out = '\b';
+	++out;
+	++in;
+	continue;
+      case 'v':
+	*out = '\v';
+	++out;
+	++in;
+	continue;
+      case 'f':
+	*out = '\f';
+	++out;
+	++in;
+	continue;
+      }
+    default:
+      *out = *in;
+      ++out;
+      ++in;
+    }
+  }
+
+  *out = 0;
+  
+  dfsch_object_t *s = dfsch_make_string(data);
+  free(data);
+
+  parse_terminal(ctx,s);
 }
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
+#ifdef T_DEBUG
+  printf(";; Atom: [%s]\n",data);
+#endif
+
+  switch (*data){
+  case '-':
+  case '.':
+
+    if (data[1]<'0' || data[1]>'9')
+      break;
+
+  case '0':
+  case '1':
+  case '2':
+  case '3':
+  case '4':
+  case '5':
+  case '6':
+  case '7':
+  case '8':
+  case '9':
+    {
+    
+      double d = atof(data);
+      free(data);
+#ifdef T_DEBUG
+  printf(";; Number: %lf \n",d);
+#endif
+      
+      parse_terminal(ctx,dfsch_make_number(d));
+      return;
+    }
+  }
+
+  parse_terminal(ctx,dfsch_make_symbol(data));
 
 }
 
@@ -174,6 +352,12 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	++data;
 	
 	parse_open(ctx);
+
+	continue;
+      case '\'':
+	++data;
+	
+	parse_quote(ctx);
 
 	continue;
       case ')':
@@ -212,7 +396,6 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
 	dispatch_atom(ctx,s);
 
-	free(s);
 	data = e;
 	ctx->tokenizer_state = T_NONE;
 	break;
@@ -236,7 +419,6 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
 	dispatch_string(ctx,s);
 
-	free(s);
 	data = e+1;
 	
 	ctx->tokenizer_state = T_NONE;

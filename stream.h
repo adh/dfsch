@@ -35,7 +35,7 @@ extern dfsch_parser_ctx_t* dfsch_parser_create();
 extern void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx);
 
 extern void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
-				  dfsch_parser_callback_t *callback,
+				  dfsch_parser_callback_t callback,
 				  void *baton);
 
 extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
