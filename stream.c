@@ -122,6 +122,8 @@ struct dfsch_parser_ctx_t {
 
   void *baton;
   dfsch_parser_callback_t callback;
+
+  int error;
 };
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
@@ -171,7 +173,7 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
 
 
 
-static void parse_terminal(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
+static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
   if (ctx->parser){
     switch(ctx->parser->state){
     case P_LIST:
@@ -191,15 +193,20 @@ static void parse_terminal(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	dfsch_set_cdr(ctx->parser->last, obj);
 	ctx->parser->state = P_PREEND;
 	return;
+      }else{
+	ctx->error = DFSCH_PARSER_CAR_EXPECTED;
+	return;
       }
     case P_QUOTE:
       parser_pop(ctx);
-      parse_terminal(ctx,dfsch_cons(dfsch_quote(),dfsch_cons(obj, NULL)));
+      parse_object(ctx,dfsch_cons(dfsch_quote(),dfsch_cons(obj, NULL)));
     default:
+      ctx->error = DFSCH_PARSER_UNEXPECTED_OBJECT;
 
     }
   }else{
-    (*ctx->callback)(obj,ctx->baton);
+    if (!(*ctx->callback)(obj,ctx->baton))
+      ctx->error = DFSCH_PARSER_STOPPED;
   }
 }
 
@@ -220,16 +227,17 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
     dfsch_object_t *list;
     list = ctx->parser->front;
     parser_pop(ctx);
-    parse_terminal(ctx,list);
+    parse_object(ctx,list);
   }else{
-    
+    ctx->error = DFSCH_PARSER_UNEXPECTED_CLOSE;
   }
 }
 static void parse_dot(dfsch_parser_ctx_t *ctx){
   if (ctx->parser){
     ctx->parser->state = P_DOT;
+  }else{
+    ctx->error = DFSCH_PARSER_UNEXPECTED_DOT;
   }
-  
 }
 
 
@@ -291,7 +299,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
   dfsch_object_t *s = dfsch_make_string(data);
   free(data);
 
-  parse_terminal(ctx,s);
+  parse_object(ctx,s);
 }
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
@@ -323,12 +331,16 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   printf(";; Number: %lf \n",d);
 #endif
       
-      parse_terminal(ctx,dfsch_make_number(d));
+      parse_object(ctx,dfsch_make_number(d));
       return;
     }
   }
 
-  parse_terminal(ctx,dfsch_make_symbol(data));
+  dfsch_object_t *d = dfsch_make_symbol(data);
+
+  free(data);
+
+  parse_object(ctx,d);
 
 }
 
@@ -352,18 +364,21 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	++data;
 	
 	parse_open(ctx);
+	if (ctx->error) return;
 
 	continue;
       case '\'':
 	++data;
 	
 	parse_quote(ctx);
+	if (ctx->error) return;
 
 	continue;
       case ')':
 	++data;
 	
 	parse_close(ctx);
+	if (ctx->error) return;
 
 	continue;
       case ';':
@@ -375,6 +390,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	if (*data==' ' || *data=='\n' || *data=='\t' || 
 	    *data==0   || *data=='('  || *data==')'){
 	  parse_dot(ctx);
+	  if (ctx->error) return;
 	  
 	  continue;
 	}
@@ -395,6 +411,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	s[e-data]=0;
 
 	dispatch_atom(ctx,s);
+	if (ctx->error) return;
 
 	data = e;
 	ctx->tokenizer_state = T_NONE;
@@ -418,6 +435,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	s[e-data]=0;
 
 	dispatch_string(ctx,s);
+	if (ctx->error) return;
 
 	data = e+1;
 	
@@ -444,10 +462,17 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   if (!ctx)
     return DFSCH_PARSER_NULL;
 
+  ctx->error = DFSCH_PARSER_NOERROR;
+
   feed_queue(ctx->q, data);
 
   
   
   tokenizer_process(ctx,get_queue(ctx->q));
+
+  if (ctx->error)
+    empty_queue(ctx->q);
+
+  return ctx->error;
 
 }

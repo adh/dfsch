@@ -23,9 +23,18 @@
 
 #include "dfsch.h"
 
-#define DFSCH_PARSER_OK 0
-#define DFSCH_PARSER_NULL 1
-#define DFSCH_PARSER_ERROR 2
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#define DFSCH_PARSER_NOERROR 0
+#define DFSCH_PARSER_UNEXPECTED_CLOSE 1
+#define DFSCH_PARSER_UNEXPECTED_DOT 2
+#define DFSCH_PARSER_UNEXPECTED_OBJECT 3
+#define DFSCH_PARSER_CAR_EXPECTED 4
+#define DFSCH_PARSER_NULL 5
+#define DFSCH_PARSER_STOPPED 6
 
 typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
 typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 
@@ -39,5 +48,11 @@ extern void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 				  void *baton);
 
 extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
