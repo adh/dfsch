@@ -1825,6 +1825,18 @@ static object_t* native_macro_try(object_t* args){
     :value;
   
 }
+static object_t* native_string_append(object_t* args){
+  NEED_ARGS(args,2);
+  object_t* a = dfsch_car(args);
+  object_t* b = dfsch_car(dfsch_cdr(args));
+  char *s;
+
+  s = stracat(dfsch_string(a),dfsch_string(b));
+
+  object_t* o = dfsch_make_string(s); 
+  free(s);
+  return o;
+}
 
 
 // Context
@@ -1906,6 +1918,8 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "try", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_try)));
 
+  dfsch_ctx_define(ctx, "string-append", 
+		   dfsch_make_primitive(&native_string_append));
 
   dfsch_ctx_define(ctx, "true", dfsch_true());
   dfsch_ctx_define(ctx, "nil", NULL);

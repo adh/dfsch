@@ -69,7 +69,7 @@ dfsch_object_t* import(dfsch_object_t* args){
     return import_impl(dfsch_string(arg));
   }else if (dfsch_object_symbol_p(arg)){
 
-  }else{fg
+  }else{
     return dfsch_make_exception(dfsch_make_symbol("import:unknown-entity"),
 				arg);
   }
