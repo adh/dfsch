@@ -1818,9 +1818,9 @@ static object_t* native_macro_try(object_t* args){
   EXCEPTION_CHECK(except);
 
   return dfsch_object_exception_p(value)
-    ?dfsch_apply(except,dfsch_cons(except->data.exception.type,
-				   dfsch_cons(except->data.exception.data,
-					      dfsch_cons(except,
+    ?dfsch_apply(except,dfsch_cons(value->data.exception.type,
+				   dfsch_cons(value->data.exception.data,
+					      dfsch_cons(value,
 							 NULL))))
     :value;
   

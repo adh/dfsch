@@ -30,6 +30,6 @@
   (define (identify)
     'Exception)
   (message-dispatch (Object) (list (list 'data data)
-				   (list 'setData: setData)
+				   (list 'setData: setData:)
 				   (list 'identify identify))))
 
