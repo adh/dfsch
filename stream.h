@@ -26,8 +26,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
+  
+  
 #define DFSCH_PARSER_NOERROR 0
 #define DFSCH_PARSER_UNEXPECTED_CLOSE 1
 #define DFSCH_PARSER_UNEXPECTED_DOT 2
@@ -36,33 +36,29 @@ extern "C" {
 #define DFSCH_PARSER_NULL 5
 #define DFSCH_PARSER_STOPPED 6
 
-typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
-typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 
-
+  typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
+  typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 
+  
 
   /**
    * Creates new parser instance
    */
-extern dfsch_parser_ctx_t* dfsch_parser_create();
-
-  /**
-   * Destroys a parser instance
-   */
-extern void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx);
-
+  extern dfsch_parser_ctx_t* dfsch_parser_create();
+  
+  
   /**
    * Sets callback for complete objects parsed.
    */
-extern void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
-				  dfsch_parser_callback_t callback,
-				  void *baton);
-
+  extern void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
+				    dfsch_parser_callback_t callback,
+				    void *baton);
+  
   /**
    * Feed some data into parser.
    */
-extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
-
-
+  extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
+  
+  
 #ifdef __cplusplus
 }
 #endif
