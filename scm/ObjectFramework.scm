@@ -1,4 +1,9 @@
-;; Prposed root of class hierarchy
+;;; Simple message-delegation based object oriented framework
+;;; 
+;;; It looks like good example to me.
+
+
+;; Proposed root of class hierarchy
 (define (Object) (lambda (selector) 'doesNotUnderstand))
 
 ;; Utility function for dispatching messages
@@ -11,13 +16,3 @@
     (loop message-list)))
 
 
-(define (Neko name)
-  (define (speak)
-    "Nyaaaaa!")
-  (define (name)
-    name)
-  (define (rename: to)
-    (set! name to))
-  (message-dispatch (Object) (list (list 'speak speak) 
-				   (list 'name name)
-				   (list 'rename: rename:))))

@@ -1556,6 +1556,7 @@ static object_t* native_macro_define(object_t* args){
     return lambda;
   }else{
     object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
+    EXCEPTION_CHECK(value);
     define(name,value,env);
     return value;
   }
@@ -1569,9 +1570,21 @@ static object_t* native_macro_set(object_t* args){
   object_t* name = dfsch_car(dfsch_cdr(args));
   object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
 
+  EXCEPTION_CHECK(value);
+
   return dfsch_set(name, value, env);
 
 }
+static object_t* native_macro_defined_p(object_t* args){
+  NEED_ARGS(args,2);
+  object_t* env = dfsch_car(args);
+  object_t* name = dfsch_car(dfsch_cdr(args));
+
+  return (dfsch_object_exception_p(dfsch_lookup(name,env)))
+    ?NULL
+    :dfsch_true();
+}
+
 static object_t* native_flow_macro_if(object_t* args){
 
   NEED_ARGS(args,4);    
@@ -1615,12 +1628,28 @@ static object_t* native_macro_quote(object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_car(dfsch_cdr(args));
 }
+static object_t* native_macro_begin(object_t* args){
+  return eval_proc(dfsch_cdr(args),dfsch_car(args));
+}
+static object_t* native_macro_let(object_t* args){
+  MIN_ARGS(args,2);
+
+  object_t *env = dfsch_car(args);
+  object_t *ext = dfsch_car(dfsch_cdr(args));
+  object_t *code = dfsch_cdr(dfsch_cdr(args));
+
+  return eval_proc(code,dfsch_cons(ext,env));
+}
 
 
 
 static object_t* native_make_macro(object_t* args){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
+}
+static object_t* native_make_flow_macro(object_t* args){
+  NEED_ARGS(args,1);  
+  return dfsch_make_flow_macro(dfsch_car(args));
 }
 static object_t* native_car(object_t* args){
   NEED_ARGS(args,1);  
@@ -1636,6 +1665,10 @@ static object_t* native_cons(object_t* args){
 }
 static object_t* native_list(object_t* args){
   return args;
+}
+static object_t* native_length(object_t* args){
+  NEED_ARGS(args,1);  
+  return dfsch_make_number((double)count_list(args));
 }
 static object_t* native_eq(object_t* args){
   NEED_ARGS(args,2);  
@@ -1712,13 +1745,6 @@ static object_t* native_macro_p(object_t* args){
     dfsch_true():
     NULL;  
 }
-static object_t* native_exception_p(object_t* args){
-  NEED_ARGS(args,1);  
-  return dfsch_object_exception_p(dfsch_car(args))?
-    dfsch_true():
-    NULL;  
-}
-
 static object_t* native_gc(object_t* args){
   NEED_ARGS(args,0);  
   return dfsch_make_number((double)dfsch_gc());
@@ -1761,8 +1787,6 @@ static object_t* native_or(object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  EXCEPTION_CHECK(a);
-  EXCEPTION_CHECK(b);
   return (a||b)?
     dfsch_true():
     NULL;  
@@ -1771,13 +1795,38 @@ static object_t* native_and(object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  EXCEPTION_CHECK(a);
-  EXCEPTION_CHECK(b);
   return (a&&b)?
     dfsch_true():
     NULL;  
 }
+static object_t* native_not(object_t* args){
+  NEED_ARGS(args,1);  
+  object_t *a = dfsch_car(args);
+  return (!a)?
+    dfsch_true():
+    NULL;  
+}
 
+static object_t* native_throw(object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+}
+static object_t* native_macro_try(object_t* args){
+  NEED_ARGS(args,3);  
+  object_t *env = dfsch_car(args);
+  object_t *value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
+  object_t *except = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
+
+  EXCEPTION_CHECK(except);
+
+  return dfsch_object_exception_p(value)
+    ?dfsch_apply(except,dfsch_cons(except->data.exception.type,
+				   dfsch_cons(except->data.exception.data,
+					      dfsch_cons(except,
+							 NULL))))
+    :value;
+  
+}
 
 
 // Context
@@ -1801,11 +1850,19 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt));
   dfsch_ctx_define(ctx, "and", dfsch_make_primitive(&native_and));
   dfsch_ctx_define(ctx, "or", dfsch_make_primitive(&native_or));
+  dfsch_ctx_define(ctx, "not", dfsch_make_primitive(&native_not));
 
   dfsch_ctx_define(ctx, "lambda", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_lambda)));
   dfsch_ctx_define(ctx, "define", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_define)));
+  dfsch_ctx_define(ctx, "defined?", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_defined_p)));
+  dfsch_ctx_define(ctx, "begin", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_begin)));
+  dfsch_ctx_define(ctx, "let", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_let)));
+
   dfsch_ctx_define(ctx, "set!", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_set)));
   dfsch_ctx_define(ctx, "env", 
@@ -1817,13 +1874,18 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "cond", 
 		   dfsch_make_flow_macro(dfsch_make_primitive(&native_flow_macro_cond)));
 
-  dfsch_ctx_define(ctx, "make-macro", dfsch_make_primitive(&native_make_macro));
+  dfsch_ctx_define(ctx, "make-macro", 
+		   dfsch_make_primitive(&native_make_macro));
+  dfsch_ctx_define(ctx, "make-flow-macro", 
+		   dfsch_make_primitive(&native_make_flow_macro));
   dfsch_ctx_define(ctx, "cons", dfsch_make_primitive(&native_cons));
   dfsch_ctx_define(ctx, "list", dfsch_make_primitive(&native_list));
   dfsch_ctx_define(ctx, "car", dfsch_make_primitive(&native_car));
   dfsch_ctx_define(ctx, "cdr", dfsch_make_primitive(&native_cdr));
   dfsch_ctx_define(ctx, "set-car!", dfsch_make_primitive(&native_set_car));
   dfsch_ctx_define(ctx, "set-cdr!", dfsch_make_primitive(&native_set_cdr));
+
+  dfsch_ctx_define(ctx, "length", dfsch_make_primitive(&native_length));
 
   dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p));
   dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p));
@@ -1837,11 +1899,14 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "prcedure?", 
 		   dfsch_make_primitive(&native_procedure_p));
   dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p));
-  dfsch_ctx_define(ctx, "exception?", 
-		   dfsch_make_primitive(&native_exception_p));
 
   dfsch_ctx_define(ctx, "gc", 
 		   dfsch_make_primitive(&native_gc));
+
+  dfsch_ctx_define(ctx, "throw", 
+		   dfsch_make_primitive(&native_throw));
+  dfsch_ctx_define(ctx, "try", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_try)));
 
 
   dfsch_ctx_define(ctx, "true", dfsch_true());
@@ -1866,6 +1931,7 @@ extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx,
 
 void dfsch_destroy_context(dfsch_ctx_t* ctx){
   dfsch_object_unref(ctx->env);
+  dfsch_gc();
   free(ctx);
 }
 void dfsch_ctx_define(dfsch_ctx_t *ctx, 
