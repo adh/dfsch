@@ -60,7 +60,7 @@ extern "C" {
   /**
    * Native functions prototype
    */
-  typedef dfsch_object_t* (*dfsch_primitive_t)(dfsch_object_t*);
+  typedef dfsch_object_t* (*dfsch_primitive_t)(void*,dfsch_object_t*);
 
 #define DFSCH_CAR 0
 #define DFSCH_CDR 0
@@ -265,7 +265,8 @@ extern "C" {
    * Makes primitive (native) procedure from pointer to implementing
    * function.
    */
-  extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim);
+  extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim,
+					      void *baton);
 
   /**
    * Makes native object representing given pointer to native data with given

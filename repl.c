@@ -65,7 +65,7 @@ static dfsch_object_t* import_impl(char *name){
 
 }
 
-dfsch_object_t* import(dfsch_object_t* args){
+dfsch_object_t* import(void *baton, dfsch_object_t* args){
   dfsch_object_t* arg = dfsch_car(args);
   if (dfsch_object_string_p(arg)){
     return import_impl(dfsch_string(arg));
@@ -93,8 +93,8 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"argv0",dfsch_make_string(argv[0]));
   dfsch_ctx_define(ctx,"arg-count",dfsch_make_number(argc));
 
-  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(&abort));
-  dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(&import));
+  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(&abort,NULL));
+  dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(&import,NULL));
 
   rl_bind_key ('\t', rl_insert);
 
