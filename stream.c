@@ -33,7 +33,7 @@ typedef struct string_queue_t {
   size_t all;
 } string_queue_t;
 
-string_queue_t *create_queue(){
+static string_queue_t *create_queue(){
   string_queue_t *q = malloc(sizeof(string_queue_t));
   q->buf = malloc(512);
   q->all = 512;
@@ -43,16 +43,16 @@ string_queue_t *create_queue(){
 
   return q;
 }
-void destroy_queue(string_queue_t *q){
+static void destroy_queue(string_queue_t *q){
   if (q->buf){
     free(q->buf);
   }
   free(q);
 }
-char* get_queue(string_queue_t *q){
+static char* get_queue(string_queue_t *q){
   return q->buf;
 }
-char* feed_queue(string_queue_t *q, char* data){
+static char* feed_queue(string_queue_t *q, char* data){
   size_t new_size = strlen(q->buf) + strlen(data)+1;
   if (new_size > q->all){
     q->buf = realloc(q->buf, new_size+(new_size/2));
@@ -68,7 +68,7 @@ char* feed_queue(string_queue_t *q, char* data){
 #endif
 
 }
-void consume_queue(string_queue_t *q, char* new){
+static void consume_queue(string_queue_t *q, char* new){
   size_t nl = strlen(new)+1;
   memmove(q->buf, new, nl);
 
@@ -86,7 +86,7 @@ void consume_queue(string_queue_t *q, char* new){
 
 
 }
-void empty_queue(string_queue_t *q){
+static void empty_queue(string_queue_t *q){
   *(q->buf)=0;
 }
 
@@ -115,10 +115,8 @@ struct dfsch_parser_ctx_t {
     T_COMMENT,
     T_NONE
   } tokenizer_state;
-
   
   parser_stack_t *parser;
-
 
   void *baton;
   dfsch_parser_callback_t callback;
@@ -142,9 +140,6 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
 
   return ctx;
 }
-void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx){
-  free(ctx);
-}
 
 void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
 			   dfsch_parser_callback_t callback,
@@ -159,10 +154,21 @@ void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 static void parser_pop(dfsch_parser_ctx_t *ctx){
   parser_stack_t *tmp = ctx->parser;
 
-  ctx->parser = ctx->parser->next;
+  dfsch_object_unref(ctx->parser->front);
+  dfsch_object_unref(ctx->parser->last);
 
+  ctx->parser = ctx->parser->next;
   free(tmp);
 }
+
+void dfsch_parser_destroy(dfsch_parser_ctx_t *ctx){
+  while (ctx->parser)
+    parser_pop(ctx);
+
+  free(ctx);
+}
+
+
 static void parser_push(dfsch_parser_ctx_t *ctx){
   parser_stack_t *tmp = malloc(sizeof(parser_stack_t));
 
@@ -184,6 +190,7 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	  dfsch_set_cdr(ctx->parser->last, new);
 	}else{
 	  ctx->parser->front = new;
+	  dfsch_object_ref(new);
 	}
 	ctx->parser->last = new;
 	break;
@@ -227,6 +234,7 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
     dfsch_object_t *list;
     list = ctx->parser->front;
     parser_pop(ctx);
+    dfsch_object_unref(list);
     parse_object(ctx,list);
   }else{
     ctx->error = DFSCH_PARSER_UNEXPECTED_CLOSE;

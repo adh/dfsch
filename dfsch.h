@@ -244,7 +244,10 @@ extern float dfsch_number(dfsch_object_t *n);
 
 // closures
 
-
+/**
+ * Creates new lambda closure bound to environment ENV,
+ * with arguments ARGS and body containing CODE.
+ */
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				    dfsch_object_t* args,
 				    dfsch_object_t* code);
