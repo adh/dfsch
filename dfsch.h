@@ -38,6 +38,9 @@
 #ifndef H__dfsch__
 #define H__dfsch__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Interpreter context
@@ -340,5 +343,10 @@ extern void dfsch_ctx_define(dfsch_ctx_t *ctx,
  * Returns global environment associated with given context.
  */
 extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif
