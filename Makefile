@@ -1,4 +1,4 @@
-CFLAGS= -g
+CFLAGS= -g -I/usr/include/gc
 
 all: dfsch s_copy
 
