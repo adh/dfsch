@@ -127,7 +127,6 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
 
   ctx->q  = create_queue();
   if (!ctx->q){
-    free(ctx);
     return NULL;
   }
 
@@ -286,7 +285,6 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
   *out = 0;
   
   dfsch_object_t *s = dfsch_make_string(data);
-  free(data);
 
   parse_object(ctx,s);
 }

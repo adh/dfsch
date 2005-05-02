@@ -1097,7 +1097,13 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
     {
 
       object_t *f = dfsch_eval(exp->data.pair.car,env);
-      
+     
+      if (!f)
+	return 
+	  dfsch_make_exception(dfsch_make_symbol("exception:not-a-procedure-or-macro"),
+			       f);
+	
+ 
       switch(f->type){
       case MACRO:
 	return dfsch_apply(f->data.macro,     
