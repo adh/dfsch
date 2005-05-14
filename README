@@ -1,0 +1,7 @@
+This is dfsch - dfox's scheme implementation. It's essentialy an
+embeddable scheme interpreter. For now it's still lacking many
+scheme functions, but it's generally usable as embedded scripting
+language.
+
+Also, for now, there isn't any good documentation except sparse
+doxygen tags in source and source itself.
