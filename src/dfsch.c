@@ -486,7 +486,9 @@ dfsch_object_t* dfsch_quote(){
   cache = dfsch_make_symbol("quote");
   return cache;
 }
-
+dfsch_object_t* dfsch_bool(int bool){
+  return bool?dfsch_true():NULL;
+}
 // closures
 
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
@@ -943,8 +945,8 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   switch (obj->type){
   case NUMBER:
     {
-      char  *s = GC_malloc(512);
-      snprintf(s, 512, "%lf", obj->data.number);
+      char  *s = GC_malloc(64);
+      snprintf(s, 64, "%lf", obj->data.number);
       return s;
     }
   case SYMBOL:

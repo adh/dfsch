@@ -233,6 +233,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_true();
 
   /**
+   * Return true or nil depending on value of BOOL.
+   */
+  extern dfsch_object_t* dfsch_bool(int bool);
+
+  /**
    * Performance hack: returns symbol <code>quote</code> 
    * witout need for looking it up every time.
    */
