@@ -15,6 +15,12 @@ dnl AC_PROG_INTLTOOL - We dont want i18n
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
+AC_PROG_CPP
+AC_PROG_AWK
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 
 
@@ -22,8 +28,13 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDBOOL
 AC_C_CONST
 dnl AC_C_INLINE
+AC_HEADER_STDC
+AC_CHECK_HEADERS([fcntl.h stdlib.h string.h strings.h unistd.h])
 
 AC_CHECK_HEADERS(gc/gc.h)
+
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk])
 
 
 dnl automake stuff
