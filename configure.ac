@@ -23,6 +23,7 @@ AC_HEADER_STDBOOL
 AC_C_CONST
 dnl AC_C_INLINE
 
+AC_CHECK_HEADERS(gc/gc.h)
 
 
 dnl automake stuff

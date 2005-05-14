@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <gc.h>
+#include <gc/gc.h>
 
 //#define PARSER_DEBUG
 //#define GC_DEBUG
@@ -401,7 +401,7 @@ struct hash_entry_t {
 };
 
 static size_t string_hash(char* string){
-  size_t tmp;
+  size_t tmp=0x76ac92de;
 
   while (*string){
     tmp ^= *string ^ tmp << 5; 
@@ -419,6 +419,7 @@ static gsh_check_init(){
     return;
 
   memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
+  gsh_init = 1;
 }
 
 static object_t* lookup_symbol(char *symbol){

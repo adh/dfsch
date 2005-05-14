@@ -28,7 +28,7 @@
 #include <readline/history.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <gc.h>
+#include <gc/gc.h>
 
 
 static dfsch_ctx_t* ctx;

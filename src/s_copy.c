@@ -3,7 +3,7 @@
 #include "stdio.h"
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <gc.h>
+#include <gc/gc.h>
 
 int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(obj,100);
