@@ -18,7 +18,7 @@
  *
  */
 
-#include "stream.h"
+#include "../dfsch/stream.h"
 
 #include <strings.h>
 #include <unistd.h>

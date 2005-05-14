@@ -20,7 +20,7 @@
 
 /** @file Simple test program for dfsch - REP loop. */
 
-#include "dfsch.h"
+#include <dfsch/dfsch.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

@@ -1,6 +1,6 @@
-#include "stream.h"
+#include <dfsch/stream.h>
 
-#include "stdio.h"
+#include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <gc/gc.h>

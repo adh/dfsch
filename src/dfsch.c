@@ -20,7 +20,7 @@
 
 /** @file This is implementation of dfsch interpreter. */
 
-#include "dfsch.h"
+#include "../dfsch/dfsch.h"
 
 #include <stdlib.h>
 #include <stdio.h>
