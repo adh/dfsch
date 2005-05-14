@@ -1,5 +1,5 @@
 /*
- * dfsch - DFox's quick and dirty scheme implementation
+ * dfsch - dfox's quick and dirty scheme implementation
  * Copyright (C) 2005 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,8 +21,9 @@
 /*
  * It's not really scheme but something slightly similar, features left out 
  * include:
- * - Tail recursion
- * - Continuations
+ * - Tail recursion (trivial, but I'm too lazy)
+ * - Continuations (almost impossible to implement in this embeddable 
+ *                  architecture)
  * - I/O (left out on purpose)
  * - and maybe something other 
  */

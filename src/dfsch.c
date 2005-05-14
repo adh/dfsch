@@ -1,5 +1,5 @@
 /*
- * dfsch - DFox's quick and dirty scheme implementation
+ * dfsch - dfox's quick and dirty scheme implementation
  * Copyright (C) 2005 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
@@ -55,8 +55,6 @@ struct symbol_t{
   //  object_t *next;
   //  object_t *prev;
 };
-
-static object_t *global_symbol_table=NULL;
 
 
 struct dfsch_ctx_t{

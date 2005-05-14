@@ -1,6 +1,8 @@
 
 bin_PROGRAMS = dfsch
 
+EXTRA_DIST = scm/morse.scm src/stream_repl.c
+
 lib_LTLIBRARIES     = libdfsch.la
 
 libdfsch_la_SOURCES = src/dfsch.c src/dfsch.h src/stream.c src/stream.h
