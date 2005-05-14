@@ -79,11 +79,13 @@ typedef struct closure_t{
   object_t* args;
   object_t* code;
   object_t* env;
+  object_t* name;
 } closure_t;
 
 typedef struct exception_t{
   object_t *type;
   object_t *data;
+  object_t *trace;
 } exception_t; 
 
 typedef struct native_t {
@@ -408,7 +410,7 @@ static size_t string_hash(char* string){
     ++string;
   }
 
-  return tmp & 0x03FF;
+  return tmp & 0x03FF;  // XXX: calculate this from macros
 }
 
 static hash_entry_t*  global_symbol_hash[HASH_SIZE];
@@ -446,9 +448,6 @@ static object_t* make_symbol(char *symbol){
   
   size_t hash = string_hash(symbol);
 
-  if (global_symbol_hash[hash]){
-    fprintf(stderr,";; hash collision 0x%x",hash);
-  }
 
   e->next = global_symbol_hash[hash];
   global_symbol_hash[hash] = e;
@@ -502,6 +501,23 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
   c->data.closure.env = env;
   c->data.closure.args = args;
   c->data.closure.code = code;
+  c->data.closure.name = NULL;
+
+  return c;
+  
+}
+extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
+                                          dfsch_object_t* args,
+                                          dfsch_object_t* code,
+                                          dfsch_object_t* name){
+  object_t *c = make_object(CLOSURE);
+  if (!c)
+    return NULL;
+  
+  c->data.closure.env = env;
+  c->data.closure.args = args;
+  c->data.closure.code = code;
+  c->data.closure.name = name;
 
   return c;
   
@@ -554,12 +570,39 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
     return NULL;
 
 
-  e->data.exception.type=type;
-  e->data.exception.data=data;
-
-
+  e->data.exception.type = type;
+  e->data.exception.data = data;
+  e->data.exception.trace = NULL;
 
   return e;
+}
+
+void dfsch_exception_push(dfsch_object_t* e, dfsch_object_t* item){
+  if (!dfsch_object_exception_p(e))
+    return;
+
+  if(item){
+    e->data.exception.trace = dfsch_cons(item, e->data.exception.trace);
+  }
+}
+
+dfsch_object_t* dfsch_exception_type(dfsch_object_t* e){
+  if (!dfsch_object_exception_p(e))
+    return NULL;
+
+  return e->data.exception.type;
+}
+dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
+  if (!dfsch_object_exception_p(e))
+    return NULL;
+
+  return e->data.exception.data;
+}
+dfsch_object_t* dfsch_exception_trace(dfsch_object_t* e){
+  if (!dfsch_object_exception_p(e))
+    return NULL;
+
+  return e->data.exception.trace;
 }
 
 // Native data
@@ -929,9 +972,12 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 			     dfsch_obj_write(obj->data.exception.type,
 					     max_depth-1)),
 		   stracat(stracat(" . ",
-				       dfsch_obj_write(obj->data.exception.data,
+                                   dfsch_obj_write(obj->data.exception.data,
 						       max_depth-1)),
-			     ">"));
+                           stracat(" @ ",
+                                   stracat(dfsch_obj_write(obj->data.exception.trace,
+                                                           max_depth-1),
+                                           ">"))));
  
   case PAIR: 
     // TODO: at least semi-iterative solution? 
@@ -1249,11 +1295,19 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
 
   switch (proc->type){
   case CLOSURE:
-    return eval_proc(proc->data.closure.code,
-		     lambda_extend(proc->data.closure.args,
-				   args,
-				   proc->data.closure.env));
-    
+    {
+      object_t* r = eval_proc(proc->data.closure.code,
+                              lambda_extend(proc->data.closure.args,
+                                            args,
+                                            proc->data.closure.env));
+
+      if (dfsch_object_exception_p(r)){
+        dfsch_exception_push(r, proc->data.closure.name);
+      }
+      
+
+      return r;
+    }
   case PRIMITIVE:
     return (*proc->data.primitive.proc)(proc->data.primitive.baton,args);
   default:
@@ -1383,7 +1437,7 @@ static object_t* native_slash(void *baton, object_t* args){
 
 static object_t* native_macro_lambda(void *baton, object_t* args){
 
-  MIN_ARGS(args,2);
+  MIN_ARGS(dfsch_cdr(args),1);
 
   return dfsch_lambda(dfsch_car(args),
 		      dfsch_car(dfsch_cdr(args)),
@@ -1393,14 +1447,15 @@ static object_t* native_macro_lambda(void *baton, object_t* args){
 
 static object_t* native_macro_define(void *baton, object_t* args){
 
-  MIN_ARGS(args,2);  
+  MIN_ARGS(dfsch_cdr(args),1);  
 
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
   if (dfsch_object_pair_p(name)){
-    object_t* lambda = dfsch_lambda(env,dfsch_cdr(name),
-				    dfsch_cdr(dfsch_cdr(args)));
+    object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
+                                          dfsch_cdr(dfsch_cdr(args)),
+                                          dfsch_car(name));
     return dfsch_define(dfsch_car(name), lambda ,env);
   }else{
     object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
@@ -1411,7 +1466,7 @@ static object_t* native_macro_define(void *baton, object_t* args){
 }
 static object_t* native_macro_set(void *baton, object_t* args){
   
-  NEED_ARGS(args,3);  
+  NEED_ARGS(dfsch_cdr(args),2);  
 
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
@@ -1423,7 +1478,7 @@ static object_t* native_macro_set(void *baton, object_t* args){
 
 }
 static object_t* native_macro_defined_p(void *baton, object_t* args){
-  NEED_ARGS(args,2);
+  NEED_ARGS(dfsch_cdr(args),1);
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
@@ -1434,7 +1489,7 @@ static object_t* native_macro_defined_p(void *baton, object_t* args){
 
 static object_t* native_flow_macro_if(void *baton, object_t* args){
 
-  NEED_ARGS(args,4);    
+  NEED_ARGS(dfsch_cdr(args),3);    
   object_t* env = dfsch_car(args);
   object_t* cond = dfsch_car(dfsch_cdr(args));
   object_t* true = dfsch_car(dfsch_cdr(dfsch_cdr(args)));
@@ -1447,7 +1502,6 @@ static object_t* native_flow_macro_if(void *baton, object_t* args){
 
 static object_t* native_flow_macro_cond(void *baton, object_t* args){
   
-  MIN_ARGS(args,1)
 
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
@@ -1467,12 +1521,12 @@ static object_t* native_flow_macro_cond(void *baton, object_t* args){
 
 
 static object_t* native_macro_env(void *baton, object_t* args){
-  NEED_ARGS(args,1);  
+  NEED_ARGS(dfsch_car(args),0);  
   return dfsch_car(args);
 }
 
 static object_t* native_macro_quote(void *baton, object_t* args){
-  NEED_ARGS(args,2);  
+  NEED_ARGS(dfsch_car(args),1);  
   return dfsch_car(dfsch_cdr(args));
 }
 static object_t* native_macro_begin(void *baton, object_t* args){
@@ -1625,6 +1679,37 @@ static object_t* native_gt(void *baton, object_t* args){
     dfsch_true():
     NULL;  
 }
+static object_t* native_lte(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  if (!dfsch_object_number_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				a);
+  if (!dfsch_object_number_p(b))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				b);
+
+  return dfsch_number(a)<=dfsch_number(b)?
+    dfsch_true():
+    NULL;  
+}
+static object_t* native_gte(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  object_t *a = dfsch_car(args);
+  object_t *b = dfsch_car(dfsch_cdr(args));
+  if (!dfsch_object_number_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				a);
+  if (!dfsch_object_number_p(b))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-number"),
+				b);
+    
+
+  return dfsch_number(a)>=dfsch_number(b)?
+    dfsch_true():
+    NULL;  
+}
 
 static object_t* native_or(void *baton, object_t* args){
   NEED_ARGS(args,2);  
@@ -1711,6 +1796,18 @@ static object_t* native_string_ref(void *baton, object_t* args){
 
   return dfsch_make_number((double)s[index]);
 }
+static object_t* native_string_length(void *baton, object_t* args){
+  NEED_ARGS(args,1);
+
+  object_t* a = dfsch_car(args);
+  if (!dfsch_object_string_p(a))
+    return dfsch_make_exception(dfsch_make_symbol("exception:not-a-string"),
+				a);
+
+  return dfsch_make_number((double)strlen(dfsch_string(a)));
+}
+
+
 
 
 // Context
@@ -1734,6 +1831,8 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_eq,NULL));
   dfsch_ctx_define(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
   dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
+  dfsch_ctx_define(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
+  dfsch_ctx_define(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
   dfsch_ctx_define(ctx, "and", dfsch_make_primitive(&native_and,NULL));
   dfsch_ctx_define(ctx, "or", dfsch_make_primitive(&native_or,NULL));
   dfsch_ctx_define(ctx, "not", dfsch_make_primitive(&native_not,NULL));
@@ -1798,7 +1897,7 @@ dfsch_ctx_t* dfsch_make_context(){
 		   dfsch_make_primitive(&native_primitive_p,NULL));
   dfsch_ctx_define(ctx, "closure?", dfsch_make_primitive(&native_closure_p,
 							 NULL));
-  dfsch_ctx_define(ctx, "prcedure?", 
+  dfsch_ctx_define(ctx, "procedure?", 
 		   dfsch_make_primitive(&native_procedure_p,NULL));
   dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
 
@@ -1813,6 +1912,8 @@ dfsch_ctx_t* dfsch_make_context(){
 		   dfsch_make_primitive(&native_string_append,NULL));
   dfsch_ctx_define(ctx, "string-ref", 
 		   dfsch_make_primitive(&native_string_ref,NULL));
+  dfsch_ctx_define(ctx, "string-length", 
+		   dfsch_make_primitive(&native_string_length,NULL));
 
   dfsch_ctx_define(ctx, "true", dfsch_true());
   dfsch_ctx_define(ctx, "nil", NULL);

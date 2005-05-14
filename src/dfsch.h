@@ -301,6 +301,29 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 					      dfsch_object_t* data);
+  
+  /**
+   * Insert new item into exception's call trace list.
+   */
+  extern void dfsch_exception_push(dfsch_object_t* e, 
+                                   dfsch_object_t* item);
+
+  /**
+   * Return exception's type.
+   */
+  extern dfsch_object_t* dfsch_exception_type(dfsch_object_t* e);
+
+  /**
+   * Return data associated with given exception.
+   */
+  extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
+
+  /**
+   * Return call trace associated with given exception.
+   */
+  extern dfsch_object_t* dfsch_exception_trace(dfsch_object_t* e);
+
+
 
   // Lexical binding:
   /**
