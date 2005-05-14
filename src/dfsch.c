@@ -52,8 +52,8 @@ typedef struct symbol_t symbol_t;
 
 struct symbol_t{
   char *data;
-  object_t *next;
-  object_t *prev;
+  //  object_t *next;
+  //  object_t *prev;
 };
 
 static object_t *global_symbol_table=NULL;
@@ -391,14 +391,45 @@ char* dfsch_string(dfsch_object_t *n){
 
 // Symbols
 
+#define HASH_BITS 10
+#define HASH_SIZE 1 << HASH_BITS
+
+typedef struct hash_entry_t hash_entry_t;
+struct hash_entry_t {
+  dfsch_object_t* entry;
+  hash_entry_t* next;
+};
+
+static size_t string_hash(char* string){
+  size_t tmp;
+
+  while (*string){
+    tmp ^= *string ^ tmp << 5; 
+    ++string;
+  }
+
+  return tmp & 0x03FF;
+}
+
+static hash_entry_t*  global_symbol_hash[HASH_SIZE];
+static unsigned int gsh_init = 0;
+
+static gsh_check_init(){
+  if (gsh_init)
+    return;
+
+  memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
+}
+
 static object_t* lookup_symbol(char *symbol){
-  object_t *i = global_symbol_table;
+
+  hash_entry_t *i = global_symbol_hash[string_hash(symbol)];
 
   while (i){
-    if (strcasecmp(i->data.symbol.data, symbol)==0){
-      return i;
+    if (strcasecmp(i->entry->data.symbol.data, symbol)==0){
+      return i->entry;
     }
-    i = i->data.symbol.next;
+    i = i->next;
   }
 
   return NULL;
@@ -407,15 +438,20 @@ static object_t* make_symbol(char *symbol){
   object_t *s = make_object(SYMBOL);
   
   s->data.symbol.data = stracpy(symbol);
+  
+  hash_entry_t *e = malloc(sizeof(hash_entry_t));
 
-  s->data.symbol.prev = NULL;
-  s->data.symbol.next = global_symbol_table;
-  global_symbol_table = s;
+  e->entry = s;
+  
+  size_t hash = string_hash(symbol);
 
-  if (s->data.symbol.next){
-    s->data.symbol.next->data.symbol.prev = s;
+  if (global_symbol_hash[hash]){
+    fprintf(stderr,";; hash collision 0x%x",hash);
   }
 
+  e->next = global_symbol_hash[hash];
+  global_symbol_hash[hash] = e;
+  
   return s;
 }
 
@@ -1683,6 +1719,8 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_t* ctx=GC_malloc(sizeof(dfsch_ctx_t));
   if (!ctx)
     return NULL;
+
+  gsh_check_init();
 
   ctx->env = dfsch_cons(NULL,
 			NULL);
