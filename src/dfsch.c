@@ -1055,8 +1055,10 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
   object_t *i, *ie;
-  if (!env || env->type!=PAIR)
+  if (!env || env->type!=PAIR){
+    DFSCH_RETHROW(env);
     DFSCH_THROW("exception:not-a-pair",env);
+  }
 
   ie = env;
   while (ie && ie->type==PAIR){
@@ -1220,6 +1222,7 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 			   eval_list(exp->data.pair.cdr,env));
       }
       
+      DFSCH_RETHROW(f);
       DFSCH_THROW("exception:not-a-procedure-or-macro", f);
 
       
@@ -1323,6 +1326,7 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
   case PRIMITIVE:
     return (*proc->data.primitive.proc)(proc->data.primitive.baton,args);
   default:
+    DFSCH_RETHROW(proc);
     DFSCH_THROW("exception:not-a-procedure", proc);
 
   }  
@@ -1919,6 +1923,11 @@ extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx,
   return eval_proc(list, ctx->env);
 }
 
+dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
+                      dfsch_object_t* args,
+                      dfsch_object_t* code){
+  return dfsch_lambda(ctx->env, args, code);
+}
 
 void dfsch_ctx_define(dfsch_ctx_t *ctx, 
 		      char *name, 

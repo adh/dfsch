@@ -336,6 +336,18 @@ extern "C" {
            return dfsch_throw(type, data, (char*)__func__)
 
   /**
+   * If argument is exception, add current function into call trace and
+   * return from current function.
+   */
+#define DFSCH_RETHROW(exception)\
+           if (dfsch_object_exception_p(exception)){ \
+             dfsch_exception_push(exception, \
+                                  dfsch_make_string((char*)__func__)); \
+             return exception; \
+           }
+             
+
+  /**
    * Insert new item into exception's call trace list.
    */
   extern void dfsch_exception_push(dfsch_object_t* e, 
@@ -416,6 +428,12 @@ extern "C" {
 			       char *name, 
 			       dfsch_object_t *obj);
 
+  /**
+   * Creates new closure with global environment of given context.
+   */
+  extern dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
+                                          dfsch_object_t* args,
+                                          dfsch_object_t* code);
   /**
    * Returns global environment associated with given context.
    */

@@ -1,7 +1,7 @@
 
 bin_PROGRAMS = dfsch
 
-EXTRA_DIST = scm/morse.scm src/stream_repl.c
+EXTRA_DIST = scm/morse.scm src/repl.c
 
 include_HEADERS = dfsch/dfsch.h dfsch/stream.h
 
