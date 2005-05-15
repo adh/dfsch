@@ -198,7 +198,7 @@ extern "C" {
   /**
    * Return number of items in given list
    */
-  extern int dfsch_count_list(dfsch_object_t* list);
+  extern int dfsch_list_length(dfsch_object_t* list);
 
   /**
    * Returns given item of list.
@@ -329,7 +329,7 @@ extern "C" {
                                      char* location);
 
 #define DFSCH_THROW(type,data)\
-           dfsch_throw(type, data, (char*)__func__)
+           return dfsch_throw(type, data, (char*)__func__)
 
   /**
    * Insert new item into exception's call trace list.
