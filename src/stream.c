@@ -160,6 +160,8 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
 }
 
 
+#define PARSE_ERROR(err) ctx->error = err
+
 
 static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
   if (ctx->parser){
@@ -188,6 +190,7 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
     case P_QUOTE:
       parser_pop(ctx);
       parse_object(ctx,dfsch_cons(dfsch_quote(),dfsch_cons(obj, NULL)));
+      return;
     default:
       ctx->error = DFSCH_PARSER_UNEXPECTED_OBJECT;
 
@@ -199,18 +202,27 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 }
 
 static void parse_open(dfsch_parser_ctx_t *ctx){
+#ifdef P_DEBUG
+  printf(";; parse_open\n");
+#endif
   parser_push(ctx);
   ctx->parser->state = P_LIST;
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
 static void parse_quote(dfsch_parser_ctx_t *ctx){
+#ifdef P_DEBUG
+  printf(";; parse_quote\n");
+#endif
   parser_push(ctx);
   ctx->parser->state = P_QUOTE;
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
 static void parse_close(dfsch_parser_ctx_t *ctx){
+#ifdef P_DEBUG
+  printf(";; parse_close\n");
+#endif
   if (ctx->parser){
     dfsch_object_t *list;
     list = ctx->parser->front;
@@ -329,6 +341,12 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 
 }
 
+#ifdef T_DEBUG
+#define STATE_TRANS(state) printf(";; State transition: %s\n",#state)
+#else
+#define STATE_TRANS(state)
+#endif
+
 
 static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
   while (*data){
@@ -344,32 +362,32 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case '"':
 	++data;
 	ctx->tokenizer_state = T_STRING;
-	continue;
+	break;
       case '(':
 	++data;
 	
 	parse_open(ctx);
 	if (ctx->error) return;
 
-	continue;
+	break;
       case '\'':
 	++data;
 	
 	parse_quote(ctx);
 	if (ctx->error) return;
 
-	continue;
+	break;
       case ')':
 	++data;
 	
 	parse_close(ctx);
 	if (ctx->error) return;
 
-	continue;
+	break;
       case ';':
 	++data;
 	ctx->tokenizer_state = T_COMMENT;	
-	continue;
+	break;
       case '.':
 	++data;
 	if (*data==' ' || *data=='\n' || *data=='\t' || 
@@ -377,13 +395,15 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	  parse_dot(ctx);
 	  if (ctx->error) return;
 	  
-	  continue;
+	  break;
 	}
 	--data;
       default:
 	ctx->tokenizer_state = T_ATOM;
-	continue;	
+        STATE_TRANS(T_ATOM);
+	break;	
       }
+      break;
     case T_ATOM:
       {
 	char *e = strpbrk(data,"() \t\n");
@@ -400,6 +420,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
 	data = e;
 	ctx->tokenizer_state = T_NONE;
+        STATE_TRANS(T_NONE);
 	break;
       }
     case T_STRING:

@@ -81,6 +81,7 @@ dfsch_object_t* import(void *baton, dfsch_object_t* args){
 int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(dfsch_ctx_eval(baton, obj),100);
   puts(out);
+  return 1;
 }
 
 
@@ -110,12 +111,16 @@ int main(int argc, char**argv){
 
   while (1){
     char *str;
+    int rc;
+
     str = readline("]=> ");
     if (!str)
       break;
     add_history(str);
 
-    dfsch_parser_feed(parser,str);
+    if (rc = dfsch_parser_feed(parser,str)!=0){
+      fprintf(stderr,";; Parse error: %d",rc);
+    }
     dfsch_parser_feed(parser,"\n");
 
     free(str);
