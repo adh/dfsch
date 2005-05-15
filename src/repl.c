@@ -61,7 +61,6 @@ static dfsch_object_t* import_impl(char *name, dfsch_ctx_t* ctx){
   dfsch_parser_callback(parser, import_callback, &ictx);
 
   while ((r = read(f, buf, 8192))>0){
-    printf("%d",r);
     buf[r]=0;
     dfsch_parser_feed(parser,buf);
   }
