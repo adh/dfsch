@@ -31,54 +31,61 @@
 #include <errno.h>
 #include <gc/gc.h>
 
+typedef struct import_ctx_t {
+  dfsch_object_t* ret;
+  dfsch_ctx_t* ctx;
+} import_ctx_t;
 
+static int import_callback(dfsch_object_t *obj, void* baton){
+  puts(dfsch_obj_write(obj,100));
+  ((import_ctx_t*)baton)->ret = dfsch_ctx_eval(((import_ctx_t*)baton)->ctx, 
+                                               obj);
+  return 1;
+}
 
 
 static dfsch_object_t* import_impl(char *name, dfsch_ctx_t* ctx){
   int f = open(name,O_RDONLY);
-  off_t size,l;
-  char* buf;
-  dfsch_object_t* exp;
+  char buf[8193];
+  import_ctx_t ictx;
+  ssize_t r;
 
   if (f<0){
     int err = errno;
-    return dfsch_make_exception(dfsch_make_symbol("import:unix-error"),
-				dfsch_make_string(strerror(err)));
+    DFSCH_THROW("import:unix-error",dfsch_make_string(strerror(err)));
   }
 
-  size = lseek(f,0,SEEK_END);
-  lseek(f,0,SEEK_SET);
+  ictx.ctx = ctx;
+  ictx.ret = NULL;
 
-  buf = malloc(size+1);
-  if (!buf){
-    close(f);
-    return 0;
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, import_callback, &ictx);
+
+  while ((r = read(f, buf, 8192))>0){
+    printf("%d",r);
+    buf[r]='\0';
+    printf("[[%s]]",buf);
+    dfsch_parser_feed(parser,buf);
   }
 
-  l = read(f,buf,size);
-  printf(";; Read: %d Bytes out of %d \n",l,size);
-  buf[size]=0;
+  close(f);
 
-  exp = dfsch_list_read(buf);
-  free(buf);
-
-  return dfsch_ctx_eval_list(ctx,exp);
-
+  return ictx.ret;
 }
 
-dfsch_object_t* import(void *baton, dfsch_object_t* args){
+static dfsch_object_t* import(void *baton, dfsch_object_t* args){
   dfsch_object_t* arg = dfsch_car(args);
   if (dfsch_object_string_p(arg)){
     return import_impl(dfsch_string(arg), baton);
   }else if (dfsch_object_symbol_p(arg)){
-
+    DFSCH_THROW("unimplemented",NULL);
   }else{
     return dfsch_make_exception(dfsch_make_symbol("import:unknown-entity"),
 				arg);
   }
 }
 
-int callback(dfsch_object_t *obj, void* baton){
+static int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(dfsch_ctx_eval(baton, obj),100);
   puts(out);
   return 1;
@@ -104,7 +111,7 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"argv0",dfsch_make_string(argv[0]));
   dfsch_ctx_define(ctx,"arg-count",dfsch_make_number(argc));
 
-  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
+  //  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
   dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(import,ctx));
 
   rl_bind_key ('\t', rl_insert);

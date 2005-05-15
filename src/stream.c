@@ -42,7 +42,7 @@ static string_queue_t *create_queue(){
   if (!q->buf){
     abort();
   }
-
+  q->buf[0]=0;
   return q;
 }
 static char* get_queue(string_queue_t *q){
@@ -406,7 +406,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       break;
     case T_ATOM:
       {
-	char *e = strpbrk(data,"() \t\n");
+	char *e = strpbrk(data,"() \t\n;");
 	if (!e){
 	  consume_queue(ctx->q,data);
 	  return;
