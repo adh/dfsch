@@ -318,7 +318,7 @@ dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
   return pair;
 
 }
-int dfsch_count_list(object_t* list){
+int dfsch_list_length(object_t* list){
   object_t *i;
   int count;
 
@@ -1367,10 +1367,10 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
 
 
 #define NEED_ARGS(args,count) \
-  if (dfsch_count_list(args)!=(count)) \
+  if (dfsch_list_length(args)!=(count)) \
     return DFSCH_THROW("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
-  if (dfsch_count_list(args)<(count)) \
+  if (dfsch_list_length(args)<(count)) \
     return DFSCH_THROW("exception:too-few-arguments", (args));
 
 // Native procedures:
@@ -1591,7 +1591,7 @@ static object_t* native_list(void *baton, object_t* args){
 }
 static object_t* native_length(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_make_number((double)dfsch_count_list(args));
+  return dfsch_make_number((double)dfsch_list_length(args));
 }
 static object_t* native_eq(void *baton, object_t* args){
   NEED_ARGS(args,2);  
