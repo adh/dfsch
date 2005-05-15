@@ -194,12 +194,25 @@ extern "C" {
   extern dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 				       dfsch_object_t* c);
 
+
+  /**
+   * Return number of items in given list
+   */
+  extern int dfsch_count_list(dfsch_object_t* list);
+
+  /**
+   * Returns given item of list.
+   */
+  extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
+
   // alists
   /**
    * <code>(assoc KEY ALIST)</code>
    */
   extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 				     dfsch_object_t *alist);
+
+
 
   // string
 
@@ -308,6 +321,16 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 					      dfsch_object_t* data);
   
+  /**
+   * Convenience wrapper around dfsch_make_exception()
+   */
+  extern dfsch_object_t* dfsch_throw(char* type, 
+                                     dfsch_object_t* data,
+                                     char* location);
+
+#define DFSCH_THROW(type,data)\
+           dfsch_throw(type, data, (char*)__func__)
+
   /**
    * Insert new item into exception's call trace list.
    */

@@ -318,6 +318,40 @@ dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
   return pair;
 
 }
+int dfsch_count_list(object_t* list){
+  object_t *i;
+  int count;
+
+  if (!list)
+    return 0;
+  if (list->type!=PAIR)
+    return -1;
+
+  i = list;
+  count = 0;
+
+  while (i && i->type==PAIR ){
+    object_t* exp = i->data.pair.car; 
+    i = i->data.pair.cdr;
+    ++count;
+  }
+
+  
+  return count;
+}
+
+dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
+  object_t* it = list;
+  int i;
+  for (i=0; i<index; ++i){
+    if (dfsch_object_pair_p(it)){
+      it = dfsch_cdr(it);
+    }else{
+      DFSCH_THROW("exception:no-such-item",dfsch_make_number(index));
+    }
+  }
+  return dfsch_car(it);
+}
 
 // Alists
 
@@ -573,6 +607,18 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
   e->data.exception.type = type;
   e->data.exception.data = data;
   e->data.exception.trace = NULL;
+
+  return e;
+}
+
+dfsch_object_t* dfsch_throw(char* type, 
+                            dfsch_object_t* data,
+                            char* location){
+  object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data);
+
+  if (location){
+    dfsch_exception_push(e,dfsch_make_string(location));
+  }
 
   return e;
 }
@@ -945,7 +991,8 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   switch (obj->type){
   case NUMBER:
     {
-      char  *s = GC_malloc(64);
+      char  *s = GC_malloc(64);   
+      // 64 bytes should be enought, even for 128 bit machines ^_~
       snprintf(s, 64, "%lf", obj->data.number);
       return s;
     }
@@ -1318,38 +1365,13 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
 }
 
 
-static int count_list(object_t* list){
-  object_t *i;
-  int count;
-
-  if (!list)
-    return 0;
-  if (list->type!=PAIR)
-    return -1;
-
-  i = list;
-  count = 0;
-
-  while (i && i->type==PAIR ){
-    object_t* exp = i->data.pair.car; 
-    i = i->data.pair.cdr;
-    ++count;
-  }
-
-  
-  return count;
-}
 
 #define NEED_ARGS(args,count) \
-  if (count_list(args)!=(count)) \
-    return dfsch_make_exception( \
-      dfsch_make_symbol("exception:wrong-number-of-arguments"), \
-      (args));
+  if (dfsch_count_list(args)!=(count)) \
+    return DFSCH_THROW("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
-  if (count_list(args)<(count)) \
-    return dfsch_make_exception( \
-      dfsch_make_symbol("exception:too-few-arguments"), \
-      (args));
+  if (dfsch_count_list(args)<(count)) \
+    return DFSCH_THROW("exception:too-few-arguments", (args));
 
 // Native procedures:
 
@@ -1521,12 +1543,12 @@ static object_t* native_flow_macro_cond(void *baton, object_t* args){
 
 
 static object_t* native_macro_env(void *baton, object_t* args){
-  NEED_ARGS(dfsch_car(args),0);  
+  NEED_ARGS(dfsch_cdr(args),0);  
   return dfsch_car(args);
 }
 
 static object_t* native_macro_quote(void *baton, object_t* args){
-  NEED_ARGS(dfsch_car(args),1);  
+  NEED_ARGS(dfsch_cdr(args),1);  
   return dfsch_car(dfsch_cdr(args));
 }
 static object_t* native_macro_begin(void *baton, object_t* args){
@@ -1569,7 +1591,7 @@ static object_t* native_list(void *baton, object_t* args){
 }
 static object_t* native_length(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_make_number((double)count_list(args));
+  return dfsch_make_number((double)dfsch_count_list(args));
 }
 static object_t* native_eq(void *baton, object_t* args){
   NEED_ARGS(args,2);  
