@@ -37,7 +37,6 @@ typedef struct import_ctx_t {
 } import_ctx_t;
 
 static int import_callback(dfsch_object_t *obj, void* baton){
-  puts(dfsch_obj_write(obj,100));
   ((import_ctx_t*)baton)->ret = dfsch_ctx_eval(((import_ctx_t*)baton)->ctx, 
                                                obj);
   return 1;
@@ -63,8 +62,7 @@ static dfsch_object_t* import_impl(char *name, dfsch_ctx_t* ctx){
 
   while ((r = read(f, buf, 8192))>0){
     printf("%d",r);
-    buf[r]='\0';
-    printf("[[%s]]",buf);
+    buf[r]=0;
     dfsch_parser_feed(parser,buf);
   }
 
