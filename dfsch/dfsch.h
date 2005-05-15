@@ -328,6 +328,10 @@ extern "C" {
                                      dfsch_object_t* data,
                                      char* location);
 
+
+  /**
+   * And another convenience wrapper around dfsch_make_exeption()
+   */
 #define DFSCH_THROW(type,data)\
            return dfsch_throw(type, data, (char*)__func__)
 

@@ -1522,8 +1522,22 @@ static object_t* native_macro_let(void *baton, object_t* args){
   MIN_ARGS(args,2);
 
   object_t *env = dfsch_car(args);
-  object_t *ext = dfsch_car(dfsch_cdr(args));
+  object_t *vars = dfsch_car(dfsch_cdr(args));
   object_t *code = dfsch_cdr(dfsch_cdr(args));
+
+  object_t* ext = NULL;
+
+  while (vars && vars->type == PAIR){
+    object_t* var = dfsch_list_item(vars->data.pair.car,0);
+    object_t* exp = dfsch_list_item(vars->data.pair.car,1);
+
+    ext = dfsch_cons(dfsch_cons(var,
+                                dfsch_cons(dfsch_eval(exp,env),
+                                           NULL)),
+                     ext);
+    
+    vars = vars->data.pair.cdr;
+  }
 
   return eval_proc(code,dfsch_cons(ext,env));
 }
