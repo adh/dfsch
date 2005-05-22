@@ -263,6 +263,9 @@ int dfsch_object_native_p(dfsch_object_t* obj){
   return obj->type == NATIVE;
 }
 
+dfsch_object_t* dfsch_nil(){
+  return NULL;
+}
 
 // Pairs
 
