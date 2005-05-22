@@ -75,10 +75,9 @@ static dfsch_object_t* import(void *baton, dfsch_object_t* args){
   if (dfsch_object_string_p(arg)){
     return import_impl(dfsch_string(arg), baton);
   }else if (dfsch_object_symbol_p(arg)){
-    DFSCH_THROW("unimplemented",NULL);
+    DFSCH_THROW("import:unimplemented",NULL);
   }else{
-    return dfsch_make_exception(dfsch_make_symbol("import:unknown-entity"),
-				arg);
+    DFSCH_THROW("import:unknown-entity",arg);
   }
 }
 

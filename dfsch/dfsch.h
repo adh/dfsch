@@ -31,7 +31,7 @@
 /** @file
  *
  * dfsch is quick and dirty implementation of someting that resembles 
- * scheme. This file contains interfacespecification.
+ * scheme. This file contains interface specification.
  *
  */
 
