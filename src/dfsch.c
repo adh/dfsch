@@ -1944,6 +1944,9 @@ void dfsch_ctx_define(dfsch_ctx_t *ctx,
   dfsch_set_car(ctx->env,dfsch_cons(d,o));
   
 }
+dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name){
+  return dfsch_lookup(ctx->env,dfsch_make_symbol(name));
+}
 dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx){
   return ctx->env;
 }

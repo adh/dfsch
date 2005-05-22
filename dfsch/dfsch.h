@@ -435,6 +435,11 @@ extern "C" {
                                           dfsch_object_t* args,
                                           dfsch_object_t* code);
   /**
+   * Looks up value of variable given by NAME.
+   */
+  extern dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name);
+
+  /**
    * Returns global environment associated with given context.
    */
   extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
