@@ -36,9 +36,12 @@ AC_CHECK_HEADERS(gc/gc.h)
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk])
 
+AC_ARG_ENABLE(compiler, AC_HELP_STRING([--enable-compiler],[dfsch compiler (dsc)]),[enable_dsc="yes"])
 
 dnl automake stuff
 AM_MAINTAINER_MODE
+AM_CONDITIONAL(DSC, test "$enable_dsc" = yes)
+
 
 dnl create makefiles
 AC_OUTPUT(Makefile)
