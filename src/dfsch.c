@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include <gc/gc.h>
 
@@ -1911,6 +1912,7 @@ dfsch_ctx_t* dfsch_make_context(){
 		   dfsch_make_primitive(&native_string_length,NULL));
 
   dfsch_ctx_define(ctx, "true", dfsch_true());
+  dfsch_ctx_define(ctx, "pi", dfsch_make_number(3.1415926535897931));
   dfsch_ctx_define(ctx, "nil", NULL);
   dfsch_ctx_define(ctx, "else", dfsch_true());
   dfsch_ctx_define(ctx, "T", dfsch_true());
