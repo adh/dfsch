@@ -436,11 +436,11 @@ static size_t string_hash(char* string){
   size_t tmp=0x76ac92de;
 
   while (*string){
-    tmp ^= *string ^ tmp << 5; 
+    tmp ^= (*string & 0xbf) + tmp << 5; 
     ++string;
   }
 
-  return tmp & 0x03FF;  // XXX: calculate this from macros
+  return tmp & (HASH_SIZE - 1); 
 }
 
 static hash_entry_t*  global_symbol_hash[HASH_SIZE];
