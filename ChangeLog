@@ -1,0 +1,8 @@
+2005-08-05  Ales Hakl  <ales at hakl dot net>
+
+	* src/stream.c, src/repl.c: Automatic indenting of interactive
+	interpreter prompts
+
+	* src/dfsch.c: Some basic support for features like symbol
+	completion
+
