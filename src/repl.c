@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <gc/gc.h>
+#include <signal.h>
 
 typedef struct import_ctx_t {
   dfsch_object_t* ret;
@@ -81,12 +82,22 @@ static dfsch_object_t* import(void *baton, dfsch_object_t* args){
   }
 }
 
+
+
 static int callback(dfsch_object_t *obj, void* baton){
   char *out = dfsch_obj_write(dfsch_ctx_eval(baton, obj),100);
   puts(out);
   return 1;
 }
 
+dfsch_parser_ctx_t *parser;
+
+void foo(int sig){
+  dfsch_parser_reset(parser);
+  rl_set_prompt("]=> ");
+  rl_redisplay();
+  signal(SIGINT, foo);
+}
 
 /**
  * REP (read, eval, print) loop of dfsch.
@@ -98,8 +109,10 @@ int main(int argc, char**argv){
   
   GC_INIT();
 
+  signal(SIGINT, foo);
+
   dfsch_ctx_t* ctx = dfsch_make_context();
-  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  parser = dfsch_parser_create();
 
   dfsch_parser_callback(parser, callback, ctx);
 
@@ -114,9 +127,23 @@ int main(int argc, char**argv){
 
   while (1){
     char *str;
+    char *prompt;
     int rc;
+    int level = dfsch_parser_get_level(parser);
 
-    str = readline("]=> ");
+    if (level){
+      prompt = GC_MALLOC_ATOMIC((level*2)+5);
+      memset(prompt, ' ', level*2);
+      prompt[level*2+0] = '.';
+      prompt[level*2+1] = '.';
+      prompt[level*2+2] = '>';
+      prompt[level*2+3] = ' ';
+      prompt[level*2+4] = 0;
+    }else{
+      prompt = "]=> ";
+    }
+
+    str = readline(prompt);
     if (!str)
       break;
     add_history(str);
@@ -128,6 +155,8 @@ int main(int argc, char**argv){
 
     free(str);
   }
+  
+  puts("");
 
   return 0;
 }

@@ -23,7 +23,9 @@
  * include:
  * - Tail recursion (trivial, but I'm too lazy)
  * - Continuations (almost impossible to implement in this embeddable 
- *                  architecture)
+ *                  architecture, althought it's posibble to implement
+ *                  fast continuations - i.e. something like exceptions,
+ *                  and it's AFAIK possible in this scheme alone)
  * - I/O (left out on purpose)
  * - and maybe something other 
  */
@@ -443,6 +445,20 @@ extern "C" {
    * Returns global environment associated with given context.
    */
   extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
+
+  /**
+   * Iterator for dfsch_get_next_symbol
+   */
+  typedef struct dfsch_symbol_iter_t dfsch_symbol_iter_t;
+
+  /**
+   * Iterates over all symbols known by interpreter. And returns one 
+   * per call, useful for things like completion. ITER is pointer to 
+   * dfsch_symbol_iter_t*, when its value is NULL, new iterator is 
+   * allocated. NULL is returned, when no more symbols are avaiable.
+   */
+
+  extern char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter);
 
 #ifdef __cplusplus
 }

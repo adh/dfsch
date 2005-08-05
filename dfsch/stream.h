@@ -57,6 +57,18 @@ extern "C" {
    * Feed some data into parser.
    */
   extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
+
+  /**
+   * Get nesting level (i.e. some value proportional to depth of parser
+   * stack)
+   */
+  extern int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx);
+
+  /**
+   * Destroy current parser context and start from scratch (useful for 
+   * C-c in interactive applications)
+   */
+  extern void dfsch_parser_reset(dfsch_parser_ctx_t *ctx);
   
   
 #ifdef __cplusplus

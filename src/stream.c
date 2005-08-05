@@ -118,6 +118,7 @@ struct dfsch_parser_ctx_t {
   dfsch_parser_callback_t callback;
 
   int error;
+  int level;
 };
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
@@ -132,6 +133,9 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
 
   ctx->tokenizer_state = T_NONE;
   ctx->parser = NULL;
+
+  ctx->level = 0 ;
+  ctx->error = DFSCH_PARSER_NOERROR;
 
   return ctx;
 }
@@ -148,6 +152,7 @@ void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 
 static void parser_pop(dfsch_parser_ctx_t *ctx){
   ctx->parser = ctx->parser->next;
+  ctx->level--;
 }
 
 
@@ -157,6 +162,7 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
   tmp->next = ctx->parser;
 
   ctx->parser = tmp;
+  ctx->level++;
 }
 
 
@@ -480,5 +486,19 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
     empty_queue(ctx->q);
 
   return ctx->error;
+
+}
+
+int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx){
+  return ctx->level;
+}
+
+void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
+
+  empty_queue(ctx->q);
+  ctx->tokenizer_state = T_NONE;
+  ctx->parser = NULL;
+  ctx->level = 0 ;
+  ctx->error = DFSCH_PARSER_NOERROR;
 
 }

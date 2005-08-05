@@ -521,6 +521,32 @@ dfsch_object_t* dfsch_quote(){
 dfsch_object_t* dfsch_bool(int bool){
   return bool?dfsch_true():NULL;
 }
+
+struct dfsch_symbol_iter_t{
+  hash_entry_t* item;
+  size_t bucket;
+};
+
+char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){
+  if (*iter == NULL){
+    *iter = GC_MALLOC(sizeof(dfsch_symbol_iter_t));
+    (*iter)->bucket = NULL;
+    (*iter)->item = global_symbol_hash[(*iter)->bucket];
+  }
+  while ((*iter)->bucket < HASH_SIZE){
+    if (!(*iter)->item){
+      (*iter)->bucket ++;
+      (*iter)->item = global_symbol_hash[(*iter)->bucket];
+    }else{
+      hash_entry_t *i = (*iter)->item;
+      (*iter)->item = (*iter)->item->next;
+      return i->entry->data.symbol.data;
+    }
+  }  
+  return NULL;
+}
+
+
 // closures
 
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
