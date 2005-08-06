@@ -92,11 +92,11 @@ static int callback(dfsch_object_t *obj, void* baton){
 
 dfsch_parser_ctx_t *parser;
 
-void foo(int sig){
+void sigint_handler(int sig){
   dfsch_parser_reset(parser);
   rl_set_prompt("]=> ");
   rl_redisplay();
-  signal(SIGINT, foo);
+  signal(SIGINT, sigint_handler);
 }
 
 /**
@@ -109,12 +109,11 @@ int main(int argc, char**argv){
   
   GC_INIT();
 
-  signal(SIGINT, foo);
-
   dfsch_ctx_t* ctx = dfsch_make_context();
   parser = dfsch_parser_create();
 
   dfsch_parser_callback(parser, callback, ctx);
+  signal(SIGINT, sigint_handler);
 
   dfsch_ctx_define(ctx,"version",dfsch_make_string("0.2dev"));
   dfsch_ctx_define(ctx,"argv0",dfsch_make_string(argv[0]));
