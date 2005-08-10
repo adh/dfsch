@@ -1,3 +1,8 @@
+2005-08-10  Ales Hakl  <ales at hakl dot net>
+
+	* Makefile.am: Moved libdfsch specific shared libraries to
+	libdfsch_la_LIBADD.
+
 2005-08-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c: Fixed race condition in SIGINT handling.
