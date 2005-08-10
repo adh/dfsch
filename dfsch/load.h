@@ -24,15 +24,12 @@
 extern "C" {
 #endif
 
-  extern int dfsch_import_so(dfsch_ctx_t* ctx, char* so_name);
-  extern int dfsch_import_so_ex(dfsch_ctx_t* ctx, 
-                                char* so_name, 
-                                char* sym_name);
-  extern int dfsch_import_scm(dfsch_ctx_t* ctx, char* scm_name);
-
-  extern int dfsch_import(dfsch_ctx_t* ctx, char* name);
-
-  extern void dfsch_import_register(dfsch_ctx_t *ctx);
+  extern int dfsch_load_so(dfsch_ctx_t* ctx, 
+                             char* so_name, 
+                             char* sym_name);
+  extern int dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
+  extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
+  extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
