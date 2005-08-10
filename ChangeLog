@@ -1,3 +1,7 @@
+2005-08-11  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c: Readline TAB completion for scheme symbols
+
 2005-08-10  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am: Moved libdfsch specific shared libraries to

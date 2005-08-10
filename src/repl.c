@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <gc/gc.h>
 #include <signal.h>
+#include <assert.h>
 
 typedef struct import_ctx_t {
   dfsch_object_t* ret;
@@ -99,6 +100,35 @@ void sigint_handler(int sig){
   signal(SIGINT, sigint_handler);
 }
 
+
+     
+
+static char * symbol_completion_cb (const char* text, int state){
+  char *name;
+  static dfsch_symbol_iter_t* iter;
+  int len;
+
+
+  if (state==0)
+    iter = NULL;
+
+  len = strlen(text);
+
+  while (name = dfsch_get_next_symbol(&iter)){
+    if (strncmp (name, text, len) == 0){
+      return strdup(name);
+    }
+  }
+  
+  /* If no names matched, then return NULL. */
+  return ((char *)NULL);
+}
+
+static char ** symbol_completion (const char* text, int start, int end){
+  return rl_completion_matches (text, symbol_completion_cb);
+}
+
+
 /**
  * REP (read, eval, print) loop of dfsch.
  *
@@ -122,7 +152,12 @@ int main(int argc, char**argv){
   //  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
   dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(import,ctx));
 
-  rl_bind_key ('\t', rl_insert);
+  //rl_bind_key ('\t', rl_insert);
+  rl_readline_name = "dfsch";
+  rl_attempted_completion_function = symbol_completion;
+
+
+
 
   while (1){
     char *str;
