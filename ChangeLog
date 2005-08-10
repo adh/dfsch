@@ -1,6 +1,7 @@
 2005-08-11  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c: Readline TAB completion for scheme symbols
+	(main): Cleaned up indentation support a bit
 
 2005-08-10  Ales Hakl  <ales at hakl dot net>
 

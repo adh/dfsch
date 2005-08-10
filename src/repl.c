@@ -129,6 +129,21 @@ static char ** symbol_completion (const char* text, int start, int end){
 }
 
 
+static char* get_prompt(int level){
+  if (level){
+    char *prompt = GC_MALLOC_ATOMIC((level*2)+5);
+    memset(prompt, ' ', level*2);
+    prompt[level*2+0] = '.';
+    prompt[level*2+1] = '.';
+    prompt[level*2+2] = '>';
+    prompt[level*2+3] = ' ';
+    prompt[level*2+4] = 0;
+    return prompt;
+  }else{
+    return "]=> ";
+  }
+}
+
 /**
  * REP (read, eval, print) loop of dfsch.
  *
@@ -161,23 +176,10 @@ int main(int argc, char**argv){
 
   while (1){
     char *str;
-    char *prompt;
     int rc;
-    int level = dfsch_parser_get_level(parser);
 
-    if (level){
-      prompt = GC_MALLOC_ATOMIC((level*2)+5);
-      memset(prompt, ' ', level*2);
-      prompt[level*2+0] = '.';
-      prompt[level*2+1] = '.';
-      prompt[level*2+2] = '>';
-      prompt[level*2+3] = ' ';
-      prompt[level*2+4] = 0;
-    }else{
-      prompt = "]=> ";
-    }
 
-    str = readline(prompt);
+    str = readline(get_prompt(dfsch_parser_get_level(parser)));
     if (!str)
       break;
     add_history(str);
