@@ -1,5 +1,7 @@
 2005-08-11  Ales Hakl  <ales at hakl dot net>
 
+	* ChangeLog: added old entries from svn's ChangeLogs
+
 	* src/repl.c: Added support for loading code on runtime
 
 	* src/load.c: Renamed import to load
@@ -25,3 +27,244 @@
 	* src/dfsch.c: Some basic support for features like symbol
 	completion
 
+2005-07-10  Ales Hakl  <ales at hakl dot net>
+  
+	* src/dfsch.c: Calculate hash size correctly from macros
+  
+  
+2005-06-23  Ales Hakl  <ales at hakl dot net>
+  
+	* Makefile.am: removed targets and dependencies of dsc
+  
+  
+2005-06-23  Ales Hakl  <dfox at users dot sourceforge dot net>
+  
+	* dsc: Removed from trunk branch (this thing is not interesting) 
+  
+  
+2005-06-23  Ales Hakl  <ales at hakl dot net>
+  
+	* src/dfsch.c: Added PI constant
+  
+2005-05-25  Ales Hakl  <ales at hakl dot net>
+  
+  Basics of scheme compiler.
+  
+2005-05-22  Ales Hakl  <ales at hakl dot net>
+  
+  First phase of modularization - header for module for importing modules
+  
+2005-05-22  Ales Hakl  <ales at hakl dot net>
+  
+  Removed stream_repl.c
+  
+2005-05-22  Ales Hakl  <ales at hakl dot net>
+  
+  dfsch_ctx_lookup() function
+  
+2005-05-22  Ales Hakl  <ales at hakl dot net>
+  
+  Added missing implementation of dfsch_nil().
+  Tests directory.
+  
+2005-05-22  Ales Hakl  <ales at hakl dot net>
+  
+  Minor cleanups
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  ...
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  Removed debugging hooks
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  Stream parser fixes
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed weird behaviour of parser when processing '
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  reworked REP loop
+  dfsch_ctx_lambda() function
+  DFSCH_RETHROW() macro
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  BUGFIX: let works correctly now
+  Added some documentation here and there
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  Reworked error-handling
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  count_list renamed to list_length
+  
+2005-05-15  Ales Hakl  <ales at hakl dot net>
+  
+  DFSCH_THROW() and dfsch_throw() for better exception handling.
+  dfsch_list_item() and dfsch_count_list()
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  dfsch_bool()
+  Minor hacks
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed configure
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed include files
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Release 0.1
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Minor text files modifications
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  NEWS and README
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Minor pre-dist modifications
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Better exception handling
+  New functions
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Cleaned it up a bit
+  
+2005-05-14  Ales Hakl  <ales at hakl dot net>
+  
+  Symbol hashing
+  
+2005-05-03  Ales Hakl  <ales at hakl dot net>
+  
+  This works on debian (and probably only on debian)
+  
+2005-05-02  Ales Hakl  <ales at hakl dot net>
+  
+  Usual `buildhere' directory
+  
+2005-05-02  Ales Hakl  <ales at hakl dot net>
+  
+  This should maybe work (libtool is black magic)
+  
+2005-05-02  Ales Hakl  <ales at hakl dot net>
+  
+  Transition to autotools, phase 1.
+  
+2005-05-02  Ales Hakl  <ales at hakl dot net>
+  
+  Minor stability related fixes.
+  
+2005-04-11  Ales Hakl  <ales at hakl dot net>
+  
+  Makefile update for fscking debian
+  
+2005-03-18  Ales Hakl  <ales at hakl dot net>
+  
+  redefining symbol yields error
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  Removed declaration of dfsch_parser_destroy() - handled by gc now
+  
+  Reindented header files
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed what was broken by gc update.. etc. etc.
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  minor gc fixes
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  Native data support (untested)
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  minor optimalizations
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  Boehm's conservative garbage collector instead of that ugly hack.
+  
+2005-03-16  Ales Hakl  <ales at hakl dot net>
+  
+  Minor fixes around gc.
+  Documentation fixes
+  
+2005-03-15  Ales Hakl  <ales at hakl dot net>
+  
+  Error reporting
+  
+2005-03-15  Ales Hakl  <ales at hakl dot net>
+  
+  Eent driven parser is working - but doesn't detect any errors
+  
+2005-03-14  Ales Hakl  <ales at hakl dot net>
+  
+  Event driven tokenizer
+  
+2005-03-10  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed infinite loop in parser code
+  
+2005-03-06  Ales Hakl  <ales at hakl dot net>
+  
+  string-append in standard functions
+  
+2005-03-06  Ales Hakl  <ales at hakl dot net>
+  
+  Morse code example
+  
+2005-02-26  Ales Hakl  <ales at hakl dot net>
+  
+  Fixed fatal bug in try
+  
+2005-02-26  Ales Hakl  <ales at hakl dot net>
+  
+  Bugfix - multiple comments in a row should not cause problems anymore
+  
+2005-02-26  Ales Hakl  <ales at hakl dot net>
+  
+  Exception support
+  
+2005-02-25  Ales Hakl  <ales at hakl dot net>
+  
+  ObjectFramework + accopanying bugfixes
+  
+2005-02-25  Ales Hakl  <ales at hakl dot net>
+  
+  New primitives
+  
+2005-02-25  Ales Hakl  <ales at hakl dot net>
+  
+  C++ support
+  
+2005-02-24  Ales Hakl  <ales at hakl dot net>
+  
+  Removed clutter
+  
+2005-02-24  Ales Hakl  <ales at hakl dot net>
+  
+  Initial import
+  
