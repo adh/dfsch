@@ -1,5 +1,10 @@
 2005-08-11  Ales Hakl  <ales at hakl dot net>
 
+	* README: Added paragraph about interactive interpreter
+
+	* NEWS: Removed contents, it needs to have some system instead of
+	current chaos (absolute chaos)
+
 	* ChangeLog: added old entries from svn's ChangeLogs
 
 	* src/repl.c: Added support for loading code on runtime

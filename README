@@ -5,3 +5,7 @@ language.
 
 Also, for now, there isn't any good documentation except sparse
 doxygen tags in source and source itself.
+
+An useful example how to use this library is binary `dfsch' produced
+by compilation, it's source is `src/repl.c'. It's simple interactive
+interpreter with some additional convenience features.

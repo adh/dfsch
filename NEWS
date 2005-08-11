@@ -1,3 +1,0 @@
-* Symbols are stored in hashmap instead of linked list.
-* String handling functions are somehow more complete 
-  (althought still insufficient, I'm too lazy to work on it, patches welcomed)
