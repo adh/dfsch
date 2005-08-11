@@ -30,6 +30,7 @@ extern "C" {
   extern int dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
   extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);
+  extern void dfsch_load_register(dfsch_ctx_t *ctx);
 
 #ifdef __cplusplus
 }

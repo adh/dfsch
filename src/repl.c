@@ -22,6 +22,7 @@
 
 #include <dfsch/dfsch.h>
 #include <dfsch/stream.h>
+#include <dfsch/load.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -114,6 +115,8 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"version",dfsch_make_string("0.2dev"));
   dfsch_ctx_define(ctx,"argv0",dfsch_make_string(argv[0]));
   dfsch_ctx_define(ctx,"arg-count",dfsch_make_number(argc));
+
+  dfsch_load_register(ctx);
 
   //  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
 

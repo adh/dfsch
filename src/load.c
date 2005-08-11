@@ -70,7 +70,13 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
 
 
 static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args){
-  dfsch_object_t* arg = dfsch_car(args);
+  if (dfsch_list_length(args)!=1)
+    DFSCH_THROW("wrong-number-of-arguments",args);
+
+  dfsch_object_t*arg = dfsch_car(args);
+  if (!dfsch_object_string_p(arg))
+    DFSCH_THROW("not-a-string",arg);
+
   return dfsch_load_scm(baton, dfsch_string(arg));
 }
 
@@ -80,4 +86,7 @@ void dfsch_load_so_register(dfsch_ctx_t *ctx){
 }
 void dfsch_load_scm_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
+}
+void dfsch_load_register(dfsch_ctx_t *ctx){
+  dfsch_load_scm_register(ctx);
 }
