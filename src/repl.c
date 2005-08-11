@@ -33,55 +33,6 @@
 #include <signal.h>
 #include <assert.h>
 
-typedef struct import_ctx_t {
-  dfsch_object_t* ret;
-  dfsch_ctx_t* ctx;
-} import_ctx_t;
-
-static int import_callback(dfsch_object_t *obj, void* baton){
-  ((import_ctx_t*)baton)->ret = dfsch_ctx_eval(((import_ctx_t*)baton)->ctx, 
-                                               obj);
-  return 1;
-}
-
-
-static dfsch_object_t* import_impl(char *name, dfsch_ctx_t* ctx){
-  int f = open(name,O_RDONLY);
-  char buf[8193];
-  import_ctx_t ictx;
-  ssize_t r;
-
-  if (f<0){
-    int err = errno;
-    DFSCH_THROW("import:unix-error",dfsch_make_string(strerror(err)));
-  }
-
-  ictx.ctx = ctx;
-  ictx.ret = NULL;
-
-  dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, import_callback, &ictx);
-
-  while ((r = read(f, buf, 8192))>0){
-    buf[r]=0;
-    dfsch_parser_feed(parser,buf);
-  }
-
-  close(f);
-
-  return ictx.ret;
-}
-
-static dfsch_object_t* import(void *baton, dfsch_object_t* args){
-  dfsch_object_t* arg = dfsch_car(args);
-  if (dfsch_object_string_p(arg)){
-    return import_impl(dfsch_string(arg), baton);
-  }else if (dfsch_object_symbol_p(arg)){
-    DFSCH_THROW("import:unimplemented",NULL);
-  }else{
-    DFSCH_THROW("import:unknown-entity",arg);
-  }
-}
 
 
 
@@ -165,7 +116,6 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"arg-count",dfsch_make_number(argc));
 
   //  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
-  dfsch_ctx_define(ctx,"import!",dfsch_make_primitive(import,ctx));
 
   //rl_bind_key ('\t', rl_insert);
   rl_readline_name = "dfsch";

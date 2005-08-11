@@ -1,6 +1,7 @@
 2005-08-11  Ales Hakl  <ales at hakl dot net>
 
 	* src/load.c: Renamed import to load
+	Moved loading of scheme code from repl.c to load.c
 
 	* src/repl.c: Readline TAB completion for scheme symbols
 	(main): Cleaned up indentation support a bit

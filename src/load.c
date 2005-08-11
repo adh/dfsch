@@ -18,19 +18,66 @@
  *
  */
 
+#include <dfsch/stream.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <errno.h>
 
-
-int dfsch_load_so(dfsch_ctx_t* ctx, 
+dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
                     char* so_name, 
                     char* sym_name){
-
+  DFSCH_THROW("load:unimplemented",NULL);
 }
-int dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
 
+typedef struct import_ctx_t {
+  dfsch_object_t* ret;
+  dfsch_ctx_t* ctx;
+} import_ctx_t;
+
+static int load_callback(dfsch_object_t *obj, void* baton){
+  ((import_ctx_t*)baton)->ret = dfsch_ctx_eval(((import_ctx_t*)baton)->ctx, 
+                                               obj);
+  return 1;
 }
+
+dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
+  int f = open(scm_name,O_RDONLY);
+  char buf[8193];
+  import_ctx_t ictx;
+  ssize_t r;
+
+  if (f<0){
+    int err = errno;
+    DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
+  }
+
+  ictx.ctx = ctx;
+  ictx.ret = NULL;
+
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, load_callback, &ictx);
+
+  while ((r = read(f, buf, 8192))>0){
+    buf[r]=0;
+    dfsch_parser_feed(parser,buf);
+  }
+
+  close(f);
+
+  return ictx.ret;
+  
+}
+
+
+static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args){
+  dfsch_object_t* arg = dfsch_car(args);
+  return dfsch_load_scm(baton, dfsch_string(arg));
+}
+
+
 void dfsch_load_so_register(dfsch_ctx_t *ctx){
-
+  
 }
 void dfsch_load_scm_register(dfsch_ctx_t *ctx){
-
+  dfsch_ctx_define(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
 }
