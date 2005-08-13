@@ -472,7 +472,7 @@ static object_t* make_symbol(char *symbol){
   
   s->data.symbol.data = stracpy(symbol);
   
-  hash_entry_t *e = malloc(sizeof(hash_entry_t));
+  hash_entry_t *e = GC_MALLOC(sizeof(hash_entry_t));
 
   e->entry = s;
   

@@ -1,3 +1,15 @@
+2005-08-13  Ales Hakl  <ales at hakl dot net>
+
+	* src/stream.c (consume_queue): Added one debugging output
+
+	* src/dfsch.c (make_symbol): Similar problem in symbol handling
+
+	* src/stream.c (dfsch_parser_create): BUGFIX: parser context
+	wasn't garbage collected -> various parts of it (esp. input
+	buffer) was blown away by collector considering it to be
+	unreachable (this shoul hopefully fix some of SEGVs when using
+	large heap)
+
 2005-08-11  Ales Hakl  <ales at hakl dot net>
 
 	* ChangeLog: reformated old entries to match style of new ones (to

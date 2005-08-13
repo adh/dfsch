@@ -68,6 +68,10 @@ static void consume_queue(string_queue_t *q, char* new){
   size_t nl = strlen(new)+1;
   memmove(q->buf, new, nl);
 
+#ifdef Q_DEBUG
+  printf(";; Trimmed: [[[%s]]]",new);
+#endif
+
   if (nl < q->all/2){
     q->buf = GC_REALLOC(q->buf, nl);
     q->all = nl;    
@@ -122,7 +126,7 @@ struct dfsch_parser_ctx_t {
 };
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
-  dfsch_parser_ctx_t *ctx = malloc(sizeof(dfsch_parser_ctx_t));
+  dfsch_parser_ctx_t *ctx = GC_MALLOC(sizeof(dfsch_parser_ctx_t));
   if (!ctx)
     return NULL;
 
