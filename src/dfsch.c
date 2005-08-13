@@ -1016,9 +1016,14 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   case STRING:
     return straquote(obj->data.string);
   case PRIMITIVE:
-    return stracpy("<native-code>");
+    return "<native-code>";
   case CLOSURE:
-    return stracpy("<closure>");  // TODO: maybe dump some data?
+    if (obj->data.closure.name)
+      return stracat(stracat("<closure: ",
+                             dfsch_obj_write(obj->data.closure.name,
+                                             max_depth-1)),
+                     ">");
+    return "<closure>";
   case MACRO:
     return stracat(stracat("<macro: ",
 			   dfsch_obj_write(obj->data.macro,max_depth-1)),

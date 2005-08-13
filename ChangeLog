@@ -1,5 +1,7 @@
 2005-08-13  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_obj_write): Write out names of closures.
+
 	* src/stream.c (consume_queue): Added one debugging output
 
 	* src/dfsch.c (make_symbol): Similar problem in symbol handling
