@@ -29,7 +29,20 @@ AC_HEADER_STDBOOL
 AC_C_CONST
 dnl AC_C_INLINE
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h stdlib.h string.h strings.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h stdlib.h string.h strings.h unistd.h],, [not_posix="1"])
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk],, [not_posix="1"])
+
+if test x$not_posix == x1; then
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT(Your system lacks some of standard C features)
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT()
+        AC_MSG_ERROR(Seems like you are going to make a new port...)
+fi
+
+
 AC_CHECK_HEADERS(gc/gc.h, [have_gc="1"], [have_gc="0"])
 AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [-ldl -lpthread])
 
@@ -46,10 +59,7 @@ fi
 
 
 
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk])
 
-AC_ARG_ENABLE(compiler, AC_HELP_STRING([--enable-compiler],[dfsch compiler (dsc)]),[enable_dsc="yes"])
 
 dnl automake stuff
 AM_MAINTAINER_MODE

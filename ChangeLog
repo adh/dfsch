@@ -1,5 +1,10 @@
 2005-08-14  Ales Hakl  <ales at hakl dot net>
 
+	* configure.ac: Check for some basic functions in libc
+
+	* Makefile.am (dfsch_repl): Name clash between includes directory
+	and interpreter binary. 
+
 	* configure.ac: Check for gc.h and -lgc
 
 2005-08-13  Ales Hakl  <ales at hakl dot net>
