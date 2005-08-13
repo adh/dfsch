@@ -1,3 +1,7 @@
+2005-08-14  Ales Hakl  <ales at hakl dot net>
+
+	* configure.ac: Check for gc.h and -lgc
+
 2005-08-13  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_obj_write): Write out names of closures.

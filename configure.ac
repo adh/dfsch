@@ -30,8 +30,21 @@ AC_C_CONST
 dnl AC_C_INLINE
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h strings.h unistd.h])
+AC_CHECK_HEADERS(gc/gc.h, [have_gc="1"], [have_gc="0"])
+AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [-ldl -lpthread])
 
-AC_CHECK_HEADERS(gc/gc.h)
+if test "$have_gc" != "1"; then
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT(Boehm Garbage Collector (gc) not found!)
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(See http://www.hpl.hp.com/personal/Hans_Boehm/gc/index.html)
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT()
+        AC_MSG_ERROR(Cannot compile without gc!)
+fi
+
+
 
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk])
