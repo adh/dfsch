@@ -57,13 +57,26 @@ if test "$have_gc" != "1"; then
         AC_MSG_ERROR(Cannot compile without gc!)
 fi
 
+AC_CHECK_HEADERS(readline/readline.h, [have_readline="1"], [have_readline="0"])
+AC_CHECK_LIB(readline, readline,, [have_readline="0"], [-lncurses])
+
+if test "$have_readline" != "1"; then
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT(GNU Readline not found!)
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(See http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html)
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT()
+        AC_MSG_ERROR(Cannot compile without readline!)
+fi
+
 
 
 
 
 dnl automake stuff
 AM_MAINTAINER_MODE
-AM_CONDITIONAL(DSC, test "$enable_dsc" = yes)
 
 
 dnl create makefiles
