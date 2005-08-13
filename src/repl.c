@@ -96,6 +96,23 @@ static char* get_prompt(int level){
   }
 }
 
+dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
+  switch (dfsch_list_length(args)){
+  case 0:
+    exit(0);
+  case 1:
+    if (dfsch_object_number_p(dfsch_car(args))){
+      exit((int)dfsch_number(dfsch_car(args)));
+    }
+  default:
+    fputs(dfsch_obj_write(args,100),stderr);
+    fputs("\n",stderr);
+    fflush(stderr);
+    exit(1);
+  }
+}
+
+
 /**
  * REP (read, eval, print) loop of dfsch.
  *
@@ -118,7 +135,7 @@ int main(int argc, char**argv){
 
   dfsch_load_register(ctx);
 
-  //  dfsch_ctx_define(ctx,"abort!",dfsch_make_primitive(abort,NULL));
+  dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
 
   //rl_bind_key ('\t', rl_insert);
   rl_readline_name = "dfsch";

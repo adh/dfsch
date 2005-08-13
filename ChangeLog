@@ -1,5 +1,8 @@
 2005-08-14  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (command_exit): (exit) in interactive interpreter
+	(requested by Pavel Kacha)
+
 	* configure.ac: Check for some basic functions in libc
 	Check for readline.
 
