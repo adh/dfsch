@@ -1549,6 +1549,9 @@ static object_t* native_macro_env(void *baton, object_t* args){
   NEED_ARGS(dfsch_cdr(args),0);  
   return dfsch_car(args);
 }
+static object_t* native_env(void *baton, object_t* args){
+  return baton;
+}
 
 static object_t* native_macro_quote(void *baton, object_t* args){
   NEED_ARGS(dfsch_cdr(args),1);  
@@ -1894,9 +1897,11 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "set!", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_set,
 							 NULL)));
-  dfsch_ctx_define(ctx, "env", 
+  dfsch_ctx_define(ctx, "current-environment", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_env,
 							 NULL)));
+  dfsch_ctx_define(ctx, "top-level-environment", 
+                   dfsch_make_primitive(&native_env, ctx->env));
   dfsch_ctx_define(ctx, "quote", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_quote,
 							 NULL)));
