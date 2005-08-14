@@ -28,9 +28,10 @@ extern "C" {
 #endif
 
   extern dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
-  extern dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f, 
+  extern dfsch_object_t* dfsch_read_scm(char* scm_name);
+  extern dfsch_object_t* dfsch_read_scm_fd(int f, 
                                            char* name);
-  extern dfsch_object_t* dfsch_load_scm_stream(dfsch_ctx_t* ctx, FILE* f, 
+  extern dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
                                                char* name);
   extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);

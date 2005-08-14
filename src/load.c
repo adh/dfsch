@@ -31,17 +31,29 @@ dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx,
 }
 
 typedef struct import_ctx_t {
-  dfsch_object_t* ret;
-  dfsch_ctx_t* ctx;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
 } import_ctx_t;
 
-static int load_callback(dfsch_object_t *obj, void* baton){
-  ((import_ctx_t*)baton)->ret = dfsch_ctx_eval(((import_ctx_t*)baton)->ctx, 
-                                               obj);
+static int load_callback(dfsch_object_t *obj, import_ctx_t* ctx){
+
+  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
+
+  if (!ctx->head){
+    ctx->head = new_tail;
+  }else{
+    dfsch_set_cdr(ctx->tail, new_tail);
+  }
+
+  ctx->tail = new_tail;
+
   return 1;
 }
 
 dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
+  dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
+}
+dfsch_object_t* dfsch_read_scm(char* scm_name){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];
   import_ctx_t ictx;
@@ -54,20 +66,19 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
     DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
   }
 
-  obj = dfsch_load_scm_stream(ctx,f,scm_name);
+  obj = dfsch_read_scm_stream(f,scm_name);
 
   fclose(f);
     
   return obj;
 }
-dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f, char* name){
+dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
   int err=0;
 
-  ictx.ctx = ctx;
-  ictx.ret = NULL;
+  ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
@@ -91,18 +102,17 @@ dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f, char* name){
 
   }
 
-  return ictx.ret;
+  return ictx.head;
   
 }
-dfsch_object_t* dfsch_load_scm_stream(dfsch_ctx_t* ctx, FILE* f, char* name){
+dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
   int err=0;
   int l=0;
 
-  ictx.ctx = ctx;
-  ictx.ret = NULL;
+  ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
@@ -122,7 +132,7 @@ dfsch_object_t* dfsch_load_scm_stream(dfsch_ctx_t* ctx, FILE* f, char* name){
                                                  dfsch_make_number(l)));
   }
 
-  return ictx.ret;
+  return ictx.head;
   
 }
 
@@ -137,6 +147,16 @@ static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args){
 
   return dfsch_load_scm(baton, dfsch_string(arg));
 }
+static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args){
+  if (dfsch_list_length(args)!=1)
+    DFSCH_THROW("wrong-number-of-arguments",args);
+
+  dfsch_object_t*arg = dfsch_car(args);
+  if (!dfsch_object_string_p(arg))
+    DFSCH_THROW("not-a-string",arg);
+
+  return dfsch_read_scm(dfsch_string(arg));
+}
 
 
 void dfsch_load_so_register(dfsch_ctx_t *ctx){
@@ -144,6 +164,7 @@ void dfsch_load_so_register(dfsch_ctx_t *ctx){
 }
 void dfsch_load_scm_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
+  dfsch_ctx_define(ctx,"load:read-scm!",dfsch_make_primitive(native_read_scm,ctx));
 }
 void dfsch_load_register(dfsch_ctx_t *ctx){
   dfsch_load_scm_register(ctx);

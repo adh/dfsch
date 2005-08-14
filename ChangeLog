@@ -5,6 +5,8 @@
 	(dfsch_load_scm_stream): stdio streams based version (aware of
 	line numbers)
 	(dfsch_load_scm_...): Better error reporting 
+	(load_callback): Generalized the thing - now  it's posible to load
+	data by same code as is used for loading code.
 
 	* dfsch/load.h: Added include guard
 
