@@ -17,6 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+#ifndef H__dfsch__load__
+#define H__dfsch__load__
 
 #include <dfsch/dfsch.h>
 
@@ -27,11 +29,14 @@ extern "C" {
   extern int dfsch_load_so(dfsch_ctx_t* ctx, 
                              char* so_name, 
                              char* sym_name);
-  extern int dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
+  extern dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
+  extern dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f);
   extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_register(dfsch_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

@@ -45,11 +45,25 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
+  int err=0;
+  dfsch_object_t *obj;
 
   if (f<0){
     int err = errno;
     DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
   }
+
+  obj = dfsch_load_scm_fd(ctx,f);
+
+  close(f);
+    
+  return obj;
+}
+dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f){
+  char buf[8193];
+  import_ctx_t ictx;
+  ssize_t r;
+  int err=0;
 
   ictx.ctx = ctx;
   ictx.ret = NULL;
@@ -57,12 +71,15 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
 
-  while ((r = read(f, buf, 8192))>0){
+  while (!err & (r = read(f, buf, 8192))>0){
     buf[r]=0;
-    dfsch_parser_feed(parser,buf);
+    err = dfsch_parser_feed(parser,buf);
   }
-
   close(f);
+
+  if (err && err != DFSCH_PARSER_STOPPED){
+    DFSCH_THROW("load:syntax-error",NULL);
+  }
 
   return ictx.ret;
   

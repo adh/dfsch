@@ -1,5 +1,10 @@
 2005-08-14  Ales Hakl  <ales at hakl dot net>
 
+	* src/load.c (dfsch_load_scm_fd): Split core from dfsch_load_scm
+	into separate function
+
+	* dfsch/load.h: Added include guard
+
 	* src/repl.c (command_exit): (exit) in interactive interpreter
 	(requested by Pavel Kacha)
 
