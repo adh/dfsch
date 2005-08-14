@@ -1554,6 +1554,17 @@ static object_t* native_macro_quote(void *baton, object_t* args){
   NEED_ARGS(dfsch_cdr(args),1);  
   return dfsch_car(dfsch_cdr(args));
 }
+
+static object_t* native_eval(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+}
+static object_t* native_apply(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_apply(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+}
+
+
 static object_t* native_macro_begin(void *baton, object_t* args){
   return eval_proc(dfsch_cdr(args),dfsch_car(args));
 }
@@ -1947,6 +1958,9 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "nil", NULL);
   dfsch_ctx_define(ctx, "else", dfsch_true());
   dfsch_ctx_define(ctx, "T", dfsch_true());
+
+  dfsch_ctx_define(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
+  dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
 
   return ctx;
