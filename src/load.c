@@ -19,6 +19,7 @@
  */
 
 #include <dfsch/stream.h>
+#include <dfsch/load.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -41,25 +42,25 @@ static int load_callback(dfsch_object_t *obj, void* baton){
 }
 
 dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
-  int f = open(scm_name,O_RDONLY);
+  FILE* f = fopen(scm_name,"r");
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
   int err=0;
   dfsch_object_t *obj;
 
-  if (f<0){
+  if (!f){
     int err = errno;
     DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
   }
 
-  obj = dfsch_load_scm_fd(ctx,f);
+  obj = dfsch_load_scm_stream(ctx,f,scm_name);
 
-  close(f);
+  fclose(f);
     
   return obj;
 }
-dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f){
+dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f, char* name){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
@@ -71,14 +72,54 @@ dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f){
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
 
-  while (!err & (r = read(f, buf, 8192))>0){
+  while (!err && (r = read(f, buf, 8192))>0){
     buf[r]=0;
     err = dfsch_parser_feed(parser,buf);
   }
   close(f);
 
+  if (r<0){
+    int err = errno;
+    DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
+  }
+ 
   if (err && err != DFSCH_PARSER_STOPPED){
-    DFSCH_THROW("load:syntax-error",NULL);
+    if (name)
+      DFSCH_THROW("load:syntax-error",dfsch_make_string(name));
+    else
+      DFSCH_THROW("load:syntax-error",NULL);
+
+  }
+
+  return ictx.ret;
+  
+}
+dfsch_object_t* dfsch_load_scm_stream(dfsch_ctx_t* ctx, FILE* f, char* name){
+  char buf[8193];
+  import_ctx_t ictx;
+  ssize_t r;
+  int err=0;
+  int l=0;
+
+  ictx.ctx = ctx;
+  ictx.ret = NULL;
+
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, load_callback, &ictx);
+
+  while (!err && (fgets(buf, 8192, f))){
+    l++;
+    err = dfsch_parser_feed(parser,buf);
+  }
+  close(f);
+
+  if (err && err != DFSCH_PARSER_STOPPED){
+    if (name)
+      DFSCH_THROW("load:syntax-error",dfsch_cons(dfsch_make_string(name),
+                                                 dfsch_make_number(l)));
+    else
+      DFSCH_THROW("load:syntax-error",dfsch_cons(NULL,
+                                                 dfsch_make_number(l)));
   }
 
   return ictx.ret;

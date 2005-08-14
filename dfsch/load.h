@@ -21,16 +21,17 @@
 #define H__dfsch__load__
 
 #include <dfsch/dfsch.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  extern int dfsch_load_so(dfsch_ctx_t* ctx, 
-                             char* so_name, 
-                             char* sym_name);
   extern dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
-  extern dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f);
+  extern dfsch_object_t* dfsch_load_scm_fd(dfsch_ctx_t* ctx, int f, 
+                                           char* name);
+  extern dfsch_object_t* dfsch_load_scm_stream(dfsch_ctx_t* ctx, FILE* f, 
+                                               char* name);
   extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);
   extern void dfsch_load_register(dfsch_ctx_t *ctx);

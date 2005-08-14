@@ -2,6 +2,9 @@
 
 	* src/load.c (dfsch_load_scm_fd): Split core from dfsch_load_scm
 	into separate function
+	(dfsch_load_scm_stream): stdio streams based version (aware of
+	line numbers)
+	(dfsch_load_scm_...): Better error reporting 
 
 	* dfsch/load.h: Added include guard
 
