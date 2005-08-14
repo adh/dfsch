@@ -1,5 +1,7 @@
 2005-08-14  Ales Hakl  <ales at hakl dot net>
 
+	* Makefile.am (libdfsch_load_la_LIBADD): Explicitly link libdfsch
+
 	* src/dfsch.c: Added eval and apply primitives
 	(dfsch_make_context): added top-level-environment function
 	(dfsch_make_context): Renamed env to current-environment

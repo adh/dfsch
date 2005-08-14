@@ -12,6 +12,8 @@ libdfsch_la_LIBADD =  -lgc -lpthread -ldl
 
 libdfsch_load_la_SOURCES = src/load.c dfsch/load.h
 libdfsch_load_la_LDFLAGS = -version-info 1:0:0
+libdfsch_load_la_LIBADD =  libdfsch.la
+
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la -lreadline -lncurses
