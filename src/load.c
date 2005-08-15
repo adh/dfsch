@@ -118,7 +118,10 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   dfsch_parser_callback(parser, load_callback, &ictx);
 
   while (!err && (fgets(buf, 8192, f))){
-    l++;
+    if (buf[strlen(buf)] == '\n') 
+      // I'm not interested in '\r' or any other weird ideas
+      l++;
+
     err = dfsch_parser_feed(parser,buf);
   }
   close(f);

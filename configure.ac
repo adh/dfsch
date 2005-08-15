@@ -72,7 +72,7 @@ if test "$have_readline" != "1"; then
 fi
 
 
-
+AC_SYS_LARGEFILE 
 
 
 dnl automake stuff

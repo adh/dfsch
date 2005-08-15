@@ -1,3 +1,8 @@
+2005-08-16  Ales Hakl  <ales at hakl dot net>
+
+	* src/load.c (dfsch_read_scm_stream): BUGFIX: Correct counting of 
+	lines longer then 8KiB
+
 2005-08-14  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am (libdfsch_load_la_LIBADD): Explicitly link libdfsch
