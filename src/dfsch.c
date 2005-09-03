@@ -1089,6 +1089,9 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 // EVAL + APPLY
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
+
+  // TODO: This is slow and should be somehow redone
+
   object_t *i, *ie;
   if (!env || env->type!=PAIR){
     DFSCH_RETHROW(env);

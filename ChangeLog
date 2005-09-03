@@ -1,3 +1,8 @@
+2005-09-03  Ales Hakl  <ales at hakl dot net>
+
+	* configure.ac: Added option for profiling (need to be used in 
+	conjunction with --disable-shared)
+
 2005-08-16  Ales Hakl  <ales at hakl dot net>
 
 	* src/load.c (dfsch_read_scm_stream): BUGFIX: Correct counting of 

@@ -71,6 +71,13 @@ if test "$have_readline" != "1"; then
         AC_MSG_ERROR(Cannot compile without readline!)
 fi
 
+AC_ARG_ENABLE([profile],
+  AC_HELP_STRING([--enable-profile], [Enable profiling]),
+  [enable_profile="yes"])
+
+if test x"$enable_profile" = x"yes"; then 
+   CFLAGS="$CFLAGS -pg"
+fi 
 
 AC_SYS_LARGEFILE 
 
