@@ -33,9 +33,15 @@ extern "C" {
                                            char* name);
   extern dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
                                                char* name);
-  extern void dfsch_load_so_register(dfsch_ctx_t *ctx);
-  extern void dfsch_load_scm_register(dfsch_ctx_t *ctx);
-  extern void dfsch_load_register(dfsch_ctx_t *ctx);
+
+  extern dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
+                                       char* so_name, 
+                                       char* sym_name);
+
+
+  extern dfsch_object_t* dfsch_load_so_register(dfsch_ctx_t *ctx);
+  extern dfsch_object_t* dfsch_load_scm_register(dfsch_ctx_t *ctx);
+  extern dfsch_object_t* dfsch_load_register(dfsch_ctx_t *ctx);
 
 #ifdef __cplusplus
 }

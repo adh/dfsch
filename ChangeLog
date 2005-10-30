@@ -1,3 +1,7 @@
+2005-10-30  Ales Hakl  <ales at hakl dot net>
+
+	* src/load.c (dfsch_load_so): Binary modules loading support
+
 2005-09-03  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac: Added option for profiling (need to be used in 
