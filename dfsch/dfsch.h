@@ -426,9 +426,10 @@ extern "C" {
    * Defines new variable NAME with value OBJ in global environment 
    * of context CTX.
    */
-  extern void dfsch_ctx_define(dfsch_ctx_t *ctx, 
-			       char *name, 
-			       dfsch_object_t *obj);
+  extern int dfsch_ctx_define(dfsch_ctx_t *ctx, 
+                              char *name, 
+                              dfsch_object_t *obj);
+
 
   /**
    * Creates new closure with global environment of given context.

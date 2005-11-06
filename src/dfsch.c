@@ -18,7 +18,11 @@
  *
  */
 
-/** @file This is implementation of dfsch interpreter. */
+/** @file dfsch.c This is implementation of dfsch interpreter. */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include "../dfsch/dfsch.h"
 
@@ -1987,16 +1991,13 @@ dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
   return dfsch_lambda(ctx->env, args, code);
 }
 
-void dfsch_ctx_define(dfsch_ctx_t *ctx, 
+int dfsch_ctx_define(dfsch_ctx_t *ctx, 
 		      char *name, 
 		      dfsch_object_t *obj){
   
-  object_t *o,*d;
-
-
-  o = ctx->env->data.pair.car;
-  d = dfsch_cons(dfsch_make_symbol(name),dfsch_cons(obj,NULL));
-  dfsch_set_car(ctx->env,dfsch_cons(d,o));
+  return !dfsch_object_exception_p(dfsch_define(dfsch_make_symbol(name),
+                                                obj,
+                                                ctx->env));
   
 }
 dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name){

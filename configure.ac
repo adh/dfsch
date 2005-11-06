@@ -7,6 +7,7 @@ PACKAGE=dfsch
 VERSION=0.2dev
 AC_INIT(dfsch, 0.2dev)
 AC_CONFIG_SRCDIR(src/repl.c)
+AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
 dnl AC_CONFIG_AUX_DIR(config)
 dnl checks for programs
@@ -78,6 +79,8 @@ AC_ARG_ENABLE([profile],
 if test x"$enable_profile" = x"yes"; then 
    CFLAGS="$CFLAGS -pg"
 fi 
+
+CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS"
 
 AC_SYS_LARGEFILE 
 

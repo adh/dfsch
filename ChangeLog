@@ -1,3 +1,10 @@
+2005-11-06  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_ctx_define): Works like scheme's define
+	i.e. fails when variable is already defined in current environment
+
+	* configure.ac: Support for config.h
+	
 2005-10-30  Ales Hakl  <ales at hakl dot net>
 
 	* src/load.c (dfsch_load_so): Binary modules loading support
