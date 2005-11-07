@@ -1,5 +1,7 @@
 2005-11-07  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (string_hash): Another string hashing function
+
 	* bootstrap.sh: Added autoheader
 
 2005-11-06  Ales Hakl  <ales at hakl dot net>

@@ -166,12 +166,6 @@ static char* straquote(char *s){
 
 #define EXCEPTION_CHECK(x) {if (dfsch_object_exception_p(x)) return x;}
 
-
-
-
-
-
-
 static object_t* make_object(type_t type){
   object_t* o = GC_MALLOC(sizeof(object_t));
   if (!o)
@@ -436,11 +430,17 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
+
+/*
+ * ugly case-insensitive string hash used for symbols
+ */
 static size_t string_hash(char* string){
-  size_t tmp=0x76ac92de;
+  size_t tmp=0;
 
   while (*string){
-    tmp ^= (*string & 0xbf) + tmp << 5; 
+    char c = isupper(*string)?tolower(*string):*string; 
+    tmp ^= c ^ tmp << 1; 
+    tmp ^= c << 17 ^ tmp >> 3; 
     ++string;
   }
 
@@ -481,7 +481,6 @@ static object_t* make_symbol(char *symbol){
   e->entry = s;
   
   size_t hash = string_hash(symbol);
-
 
   e->next = global_symbol_hash[hash];
   global_symbol_hash[hash] = e;
