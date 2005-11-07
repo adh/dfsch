@@ -1,3 +1,7 @@
+2005-11-07  Ales Hakl  <ales at hakl dot net>
+
+	* bootstrap.sh: Added autoheader
+
 2005-11-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_ctx_define): Works like scheme's define
