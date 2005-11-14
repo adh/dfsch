@@ -41,6 +41,9 @@
 #ifndef H__dfsch__
 #define H__dfsch__
 
+#include <stdint.h>
+#include <gc/gc.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -133,6 +136,11 @@ extern "C" {
   extern int dfsch_object_exception_p(dfsch_object_t* obj);
 
   /**
+   * Is A an exception?
+   */
+  extern int dfsch_object_vector_p(dfsch_object_t* obj);
+
+  /**
    * Is A a native data pointer?
    */
   extern int dfsch_object_native_p(dfsch_object_t* obj);
@@ -207,6 +215,22 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
 
+  /**
+   * <code>(append . LLIST)</code> 
+   */
+  extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
+
+  /**
+   * Construct list of count items from arguments.
+   */
+
+  extern dfsch_object_t* dfsch_list(size_t count, ...);
+
+  /**
+   * Allocates new list with same contents as given list.
+   */
+  extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
+
   // alists
   /**
    * <code>(assoc KEY ALIST)</code>
@@ -245,7 +269,7 @@ extern "C" {
    * Performance hack: returns symbol <code>true</code> 
    * witout need for looking it up every time.
    */
-  extern dfsch_object_t* dfsch_true();
+  extern dfsch_object_t* dfsch_sym_true();
 
   /**
    * Return true or nil depending on value of BOOL.
@@ -256,7 +280,23 @@ extern "C" {
    * Performance hack: returns symbol <code>quote</code> 
    * witout need for looking it up every time.
    */
-  extern dfsch_object_t* dfsch_quote();
+  extern dfsch_object_t* dfsch_sym_quote();
+  /**
+   * Performance hack: returns symbol <code>quasiquote</code> 
+   * witout need for looking it up every time.
+   */
+  extern dfsch_object_t* dfsch_sym_quasiquote();
+  /**
+   * Performance hack: returns symbol <code>unquote</code> 
+   * witout need for looking it up every time.
+   */
+  extern dfsch_object_t* dfsch_sym_unquote();
+  /**
+   * Performance hack: returns symbol <code>unquote-splicing</code> 
+   * witout need for looking it up every time.
+   */
+  extern dfsch_object_t* dfsch_sym_unquote_splicing();
+
 
   // numbers
 
@@ -288,6 +328,41 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim,
 					      void *baton);
+
+
+  // vectors
+
+  /**
+   * Creates vector of given length
+   */
+  extern dfsch_object_t* dfsch_make_vector(size_t length, 
+                                           dfsch_object_t *fill);
+
+  /**
+   * Returns length of given vector
+   */
+  extern size_t dfsch_vector_length(dfsch_object_t *vector);
+
+  /**
+   * Returns contents of k-th slot of vector.
+   */
+  extern dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k);
+
+  /**
+   * Sets value of k-th slot of vector to obj.
+   */
+  extern dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
+                                          dfsch_object_t* obj);
+
+  /**
+   * Converts vector into list.
+   */
+  extern dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector);
+
+  /**
+   * Converts list into vector.
+   */
+  extern dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list);
 
   /**
    * Makes native object representing given pointer to native data with given
@@ -418,7 +493,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp);
   /**
    * Evaluates list of expressions in given context. Useful for evauating 
-   * contents of files andother things.
+   * contents of files and other things.
    */
   extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
 					     dfsch_object_t* list);
@@ -460,6 +535,66 @@ extern "C" {
    */
 
   extern char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter);
+
+
+#define DFSCH_OBJECT_ARG(al, name)\
+  if (!dfsch_object_pair_p((al))) \
+    DFSCH_THROW("exception:required-argument-missing",\
+                dfsch_make_string(#name));\
+  (name) = dfsch_car((al)); \
+  (al) = dfsch_cdr((al))
+
+#define DFSCH_STRING_ARG(al, name)\
+  if (!dfsch_object_pair_p((al))) \
+    DFSCH_THROW("exception:required-argument-missing",\
+                dfsch_make_string(#name));\
+  { object_t* tmp = dfsch_car((al)); \
+    if (!dfsch_object_string_p(tmp)) \
+        DFSCH_THROW("exception:not-a-string",tmp) \
+    (name) = dfsch_string(tmp); \
+    (al) = dfsch_cdr((al));\
+  }
+
+#define DFSCH_NUMBER_ARG(al, name, type)\
+  if (!dfsch_object_pair_p((al))) \
+    DFSCH_THROW("exception:required-argument-missing",\
+                dfsch_make_string(#name));\
+  { object_t* tmp = dfsch_car((al)); \
+    if (!dfsch_object_number_p(tmp)) \
+        DFSCH_THROW("exception:not-a-number",tmp); \
+    (name) = (type)dfsch_number(tmp); \
+    (al) = dfsch_cdr((al));\
+  }
+
+#define DFSCH_OBJECT_ARG_OPT(al, name,default)\
+  if (!dfsch_object_pair_p((al))) \
+   { (name) = (default);}else\
+  {(name) = dfsch_car((al)); \
+  (al) = dfsch_cdr((al));}
+
+#define DFSCH_STRING_ARG_OPT(al, name, default)\
+  if (!dfsch_object_pair_p((al))) \
+    {(name)=(default);} else\
+  { object_t* tmp = dfsch_car((al)); \
+    if (!dfsch_object_string_p(tmp)) \
+        DFSCH_THROW("exception:not-a-string",tmp) \
+    (name) = dfsch_string(tmp); \
+    (al) = dfsch_cdr((al));\
+  }
+
+#define DFSCH_NUMBER_ARG_OPT(al, name, type, default)\
+  if (!dfsch_object_pair_p((al))) \
+  {(name) = (default);} else\
+  { object_t* tmp = dfsch_car((al)); \
+    if (!dfsch_object_number_p(tmp)) \
+        DFSCH_THROW("exception:not-a-number",tmp) \
+    (name) = (type)dfsch_number(tmp); \
+    (al) = dfsch_cdr((al));\
+  }
+
+#define DFSCH_ARG_END(al) \
+  if (al != NULL) \
+    DFSCH_THROW("exception:too-many-arguments",NULL)
 
 #ifdef __cplusplus
 }

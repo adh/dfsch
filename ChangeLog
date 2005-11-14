@@ -1,3 +1,14 @@
+2005-11-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/stream.c (parse_vector): Vector support
+
+	* dfsch/dfsch.h (DFSCH_*ARG*): Argument helpers for native functions 
+
+	* src/dfsch.c: In-core representation of vectors 
+	Removed expression parser code from dfsch.c
+	(dfsch_define): Allow redefining on top-level
+	Vector datatype support
+
 2005-11-07  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (string_hash): Another string hashing function

@@ -97,11 +97,13 @@ struct parser_stack_t {
     P_LIST,
     P_DOT,
     P_PREEND,
-    P_QUOTE
+    P_QUOTE,
+    P_VECTOR
   } state;
 
   dfsch_object_t *front;
   dfsch_object_t *last;
+  dfsch_object_t *tag;
 
   parser_stack_t *next;
 };
@@ -198,8 +200,15 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	return;
       }
     case P_QUOTE:
+      {
+        dfsch_object_t* tag = ctx->parser->tag;
+        parser_pop(ctx);
+        parse_object(ctx,dfsch_cons(tag, dfsch_cons(obj, NULL)));
+        return;
+      }
+    case P_VECTOR:
       parser_pop(ctx);
-      parse_object(ctx,dfsch_cons(dfsch_quote(),dfsch_cons(obj, NULL)));
+      parse_object(ctx,dfsch_list_2_vector(obj));
       return;
     default:
       ctx->error = DFSCH_PARSER_UNEXPECTED_OBJECT;
@@ -220,12 +229,22 @@ static void parse_open(dfsch_parser_ctx_t *ctx){
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
-static void parse_quote(dfsch_parser_ctx_t *ctx){
+static void parse_quote(dfsch_parser_ctx_t *ctx, dfsch_object_t* tag){
 #ifdef P_DEBUG
   printf(";; parse_quote\n");
 #endif
   parser_push(ctx);
   ctx->parser->state = P_QUOTE;
+  ctx->parser->last = NULL;
+  ctx->parser->front = NULL;
+  ctx->parser->tag = tag;
+}
+static void parse_vector(dfsch_parser_ctx_t *ctx){
+#ifdef P_DEBUG
+  printf(";; parse_vector\n");
+#endif
+  parser_push(ctx);
+  ctx->parser->state = P_VECTOR;
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
@@ -383,7 +402,33 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case '\'':
 	++data;
 	
-	parse_quote(ctx);
+	parse_quote(ctx,dfsch_sym_quote());
+	if (ctx->error) return;
+
+	break;
+      case '`':
+	++data;
+	
+	parse_quote(ctx,dfsch_sym_quasiquote());
+	if (ctx->error) return;
+
+	break;
+      case ',':
+	++data;
+	
+        if (*data == '@'){
+          ++data;
+          parse_quote(ctx,dfsch_sym_unquote_splicing()); 
+        }else{
+          parse_quote(ctx,dfsch_sym_unquote());
+        }
+	if (ctx->error) return;
+
+	break;
+      case '#':
+	++data;
+	
+	parse_vector(ctx);
 	if (ctx->error) return;
 
 	break;

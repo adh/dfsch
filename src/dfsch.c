@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdarg.h>
 
 #include <gc/gc.h>
 
@@ -47,6 +48,7 @@ typedef enum {
   MACRO,
   FLOW_MACRO,
   EXCEPTION,
+  VECTOR,
   NATIVE // define new types here
 } type_t ;
 
@@ -97,6 +99,13 @@ typedef struct native_t {
   void *data; 
 
 } native_t;
+typedef struct vector_t {
+  
+  size_t length;
+  object_t** data;
+
+} vector_t;
+
 
 struct dfsch_object_t{
   type_t type;
@@ -109,10 +118,67 @@ struct dfsch_object_t{
     closure_t closure;
     object_t *macro;
     exception_t exception;
+    vector_t vector;
     native_t native;
   } data;
 };
 
+
+typedef struct str_li_t str_li_t;
+typedef struct str_list_t {
+  str_li_t* head;
+  str_li_t* tail;
+  size_t len;
+} str_list_t;
+struct str_li_t {
+  char* str;
+  size_t len;
+  str_li_t* next;
+};
+
+
+static str_list_t* sl_create(){
+  str_list_t* list = GC_MALLOC(sizeof(str_list_t));
+  
+  list->head = NULL;
+  list->tail = NULL;
+  list->len = NULL;
+
+  return list;
+}
+
+static void sl_append(str_list_t* list, char* string){
+  str_li_t* i = GC_MALLOC(sizeof(str_li_t));
+
+  i->str = string;
+  i->len = strlen(string);
+  i->next = NULL;
+
+  if (list->head){
+    list->tail->next = i;
+    list->tail = i;
+    list->len = list->len + i->len;
+  }else{
+    list->head = list->tail = i;
+    list->len = i->len;
+  }
+}
+
+static char* sl_value(str_list_t* list){
+  char *buf = GC_MALLOC_ATOMIC(list->len+1);
+  str_li_t *i = list->head;
+  char *ptr = buf;
+
+  while (i){
+    memcpy(ptr, i->str, i->len);
+    ptr += i->len;
+    i = i->next;
+  }
+  
+  *ptr = '\0';
+
+  return buf;
+}
 
 static char* stracat(char* a, char* b){
   size_t s = strlen(a)+strlen(b)+1;
@@ -256,6 +322,12 @@ int dfsch_object_exception_p(dfsch_object_t* obj){
   return obj->type == EXCEPTION;
 }
 
+int dfsch_object_vector_p(dfsch_object_t* obj){
+  if (!obj)
+    return 0;
+  return obj->type == VECTOR;
+}
+
 int dfsch_object_native_p(dfsch_object_t* obj){
   if (!obj)
     return 0;
@@ -350,6 +422,99 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   }
   return dfsch_car(it);
 }
+
+dfsch_object_t* dfsch_append(dfsch_object_t* llist){
+  object_t* head=NULL;
+  object_t* tail=NULL;
+  object_t* i = llist;
+  object_t* j;
+
+  while(i && i->type == PAIR && i->data.pair.cdr && 
+        i->data.pair.cdr->type == PAIR){
+    
+    j = i->data.pair.car;
+    while(j && j->type == PAIR){
+      if (head){
+        object_t* tmp = dfsch_cons(j->data.pair.car,NULL);
+        dfsch_set_cdr(tail, tmp);
+        tail = tmp;
+      }else{
+        head = tail = dfsch_cons(j->data.pair.car,NULL);
+      }
+      j = j->data.pair.cdr;
+    }
+    if (!(dfsch_object_pair_p(j) || !j))
+      DFSCH_THROW("exception:not-a-pair", j);
+
+    i = i->data.pair.cdr;
+  }
+
+  if (!(dfsch_object_pair_p(i) || !i))
+    DFSCH_THROW("exception:not-a-pair", i);
+  if (!(dfsch_object_pair_p(i->data.pair.car) || !i->data.pair.car))
+    DFSCH_THROW("exception:not-a-pair", i->data.pair.car);
+
+  if (tail){
+    tail->data.pair.cdr = i->data.pair.car;
+  }else{
+    head = i->data.pair.car;
+  }
+
+  return head;
+}
+
+dfsch_object_t* dfsch_list(size_t count, ...){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  size_t i;
+  va_list al;
+
+  va_start(al,count);
+
+  if (count == 0)
+    return NULL;
+
+  head = tail = dfsch_cons(va_arg(al, dfsch_object_t*), NULL);
+
+  for(i = 1; i < count; ++i){
+    object_t *tmp;
+    
+    tmp = dfsch_cons(va_arg(al, dfsch_object_t*),NULL);
+    dfsch_set_cdr(tail, tmp);
+    tail = tmp;
+
+  }
+
+  va_end(al);
+  return head;
+
+}
+
+dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  dfsch_object_t *i;
+
+  head = tail = NULL;
+
+  while(i && i->type == PAIR){
+    if (head){
+      object_t* tmp = dfsch_cons(i->data.pair.car,NULL);
+      dfsch_set_cdr(tail, tmp);
+      tail = tmp;
+    }else{
+        head = tail = dfsch_cons(i->data.pair.car,NULL);
+      }
+    i = i->data.pair.cdr;
+  }
+  if (!(dfsch_object_pair_p(i) || !i))
+    DFSCH_THROW("exception:not-a-pair", i);
+
+
+  return head;
+
+}
+
 
 // Alists
 
@@ -513,12 +678,36 @@ dfsch_object_t* dfsch_true(){
   cache = dfsch_make_symbol("true");
   return cache;
 }
-dfsch_object_t* dfsch_quote(){
+dfsch_object_t* dfsch_sym_quote(){
   static object_t *cache = NULL;
   if (cache)
     return cache;
 
   cache = dfsch_make_symbol("quote");
+  return cache;
+}
+dfsch_object_t* dfsch_sym_quasiquote(){
+  static object_t *cache = NULL;
+  if (cache)
+    return cache;
+
+  cache = dfsch_make_symbol("quasiquote");
+  return cache;
+}
+dfsch_object_t* dfsch_sym_unquote(){
+  static object_t *cache = NULL;
+  if (cache)
+    return cache;
+
+  cache = dfsch_make_symbol("unquote");
+  return cache;
+}
+dfsch_object_t* dfsch_sym_unquote_splicing(){
+  static object_t *cache = NULL;
+  if (cache)
+    return cache;
+
+  cache = dfsch_make_symbol("unquote-splicing");
   return cache;
 }
 dfsch_object_t* dfsch_bool(int bool){
@@ -678,6 +867,94 @@ dfsch_object_t* dfsch_exception_trace(dfsch_object_t* e){
   return e->data.exception.trace;
 }
 
+// Vectors
+
+dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
+  object_t* v = make_object(VECTOR);
+  size_t i;
+
+  v->data.vector.length = length;
+  v->data.vector.data = GC_MALLOC(sizeof(object_t*) * length);
+
+  for(i = 0; i<length; ++i){
+    v->data.vector.data[i] = fill;
+  }
+
+  return v;
+}
+
+size_t dfsch_vector_length(dfsch_object_t *vector){
+  if (!vector || vector->type != VECTOR)
+    return 0;
+
+  return vector->data.vector.length;  
+}
+
+dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
+  if (!vector || vector->type != VECTOR)
+    DFSCH_THROW("exception:not-a-vector",vector);
+
+  if (vector->data.vector.length <= k)
+    DFSCH_THROW("exception:invalid-index",dfsch_make_number(k));
+  
+  return vector->data.vector.data[k];
+}
+
+dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
+                                 dfsch_object_t* obj){
+  if (!vector || vector->type != VECTOR)
+    DFSCH_THROW("exception:not-a-vector",vector);
+
+  if (vector->data.vector.length <= k)
+    DFSCH_THROW("exception:invalid-index",dfsch_make_number(k));
+  
+  vector->data.vector.data[k] = obj;
+
+  return vector;
+}
+
+dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  size_t i;
+
+  if (!vector || vector->type != VECTOR)
+    DFSCH_THROW("exception:not-a-vector",vector);
+
+  if (vector->data.vector.length == 0)
+    return NULL;
+
+  head = tail = dfsch_cons(vector->data.vector.data[0], NULL);
+
+  for(i = 1; i< vector->data.vector.length; ++i){
+    object_t *tmp;
+    
+    tmp = dfsch_cons(vector->data.vector.data[i],NULL);
+    dfsch_set_cdr(tail, tmp);
+    tail = tmp;
+
+  }
+
+  return head;
+}
+
+dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
+  dfsch_object_t* vector;
+  size_t i=0;
+  if (!list || list->type != PAIR)
+    DFSCH_THROW("exception:not-a-pair",list);
+
+  vector = dfsch_make_vector(dfsch_list_length(list),NULL);
+
+  while (list && list->type == PAIR){
+    vector->data.vector.data[i] = list->data.pair.car;
+    list = list->data.pair.cdr;
+    i++;
+  }
+
+  return vector;
+}
+
 // Native data
 
 dfsch_object_t* dfsch_make_native_data(void *data, 
@@ -701,295 +978,6 @@ dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object){
     return NULL;
 
   return object->data.native.type;
-
-}
-
-
-// Expression parser
-
-typedef struct token_t {
-  enum {
-    T_OPEN,
-    T_CLOSE,
-    T_DOT,
-    T_QUOTE,
-    T_TERMINAL
-  } type;
-  object_t* data;
-} token_t;
-
-static int get_token(token_t* token, char **str) {
-
-  while ((*str)[0]){
-    while ((*str)[0]==' ' || (*str)[0]=='\t' || (*str)[0]=='\n')
-      ++(*str);
-    
-    switch ((*str)[0]){
-    case 0:
-      return 0;
-    case ';':
-      while ((*str)[0]!=0 && (*str)[0]!='\n')
-	++(*str);
-      continue;
-    case '.':
-      if ((*str)[1]==' ' || (*str)[1]=='\t' || (*str)[1]=='\n'){
-	token->type=T_DOT;
-	(*str)+=2;    
-	return 1;
-	
-      }
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-    case '-':
-      {
-	char *s, *e;
-	
-	s = *str;
-	e = strpbrk(s,"() \t\n");
-	if (!e)
-	  e = s + strlen(s);
-	
-	
-	s = strancpy(s,(size_t)(e-s));
-	
-	(*str)=e;
-	
-#ifdef PARSER_DEBUG
-	printf(";; Number: [%s]\n",s);
-#endif
-	if (strcmp(s,"-")==0){
-	  token->data = dfsch_make_symbol("-");
-	}else{
-	  token->data = dfsch_make_number(atof(s));
-	}
-	
-	token->type=T_TERMINAL;
-	return 1;
-      }
-    case '"':
-      {
-	char s[1024];
-	char *p=s;
-	
-      ++(*str);
-      
-      while (1){
-	if (p>s+1024)
-	  return 0; // overflow
-	
-	switch ((*str)[0]){
-	case '"':
-	  *p=0;
-	  ++(*str);
-#ifdef PARSER_DEBUG
-	  printf(";; String: \"%s\"\n",s);
-#endif
-	  token->data = dfsch_make_string(s);
-	  token->type = T_TERMINAL;
-	  return 1;
-
-	case '\\':
-	  switch((*str)[1]){
-	  case 0:
-	    return 0;
-	  default:
-	    *p = (*str)[1];
-	    ++p;
-	  }
-	  
-	  ++(*str);
-
-	  break;
-	  
-	case 0:
-	  return 0;
-	  
-	default:
-	  *p = **str;
-	  ++p;
-	} 
-	++(*str);
-      }
-      
-      }
-    case '(':
-      token->type=T_OPEN;
-      ++(*str);    
-      return 1;
-    case ')':
-      token->type=T_CLOSE;
-      ++(*str);
-      return 1;
-    case '\'':
-      token->type=T_QUOTE;
-      ++(*str);
-      return 1;
-    default:
-      
-      {
-	char *s, *e;
-	
-	s = *str;
-	e = strpbrk(s,"() \t\n");
-	if (!e)
-	  e = s + strlen(s);
-	
-	(*str)=e;
-	
-	s = strancpy(s,(size_t)(e-s));
-	
-#ifdef PARSER_DEBUG
-	printf(";; Symbol: %s\n",s);
-#endif
-	token->data = dfsch_make_symbol(s);
-	
-	
-	token->type=T_TERMINAL;
-	return 1;
-      }
-    }
-  }
-}
-
-static object_t* quote(object_t* d){
-  return dfsch_cons(dfsch_quote(),dfsch_cons(d, NULL));
-}
-
-
-static object_t* one_obj_read(char**str);
-static int one_obj_p(char **str, token_t *t, object_t **o);
-
-static object_t* parse_list(char **str){
-  
-  token_t t;
-  object_t *tmp;
-  object_t *p = NULL;
-  object_t *o;
-  object_t *f = NULL; 
-
-  
-  while (get_token(&t,str)){
-
-    if (one_obj_p(str, &t, &o)){
-      if (f){
-	tmp = dfsch_cons(o,NULL);
-	dfsch_set_cdr(p,tmp);
-	p = tmp;
-      }else{
-	f = p = dfsch_cons(o,NULL);
-      }
-    }else{
-      if (t.type==T_DOT){
-	if (!p)
-          DFSCH_THROW("parse-error:car-expected",NULL);
-
-
-	dfsch_set_cdr(p,one_obj_read(str));
-
-	if (!get_token(&t,str)){
-	  DFSCH_THROW("parse-error:token-expected",NULL);
-	}
-
-	if (t.type!=T_CLOSE){
-	  DFSCH_THROW("parse-error:token-expected",
-                      dfsch_make_symbol("T_CLOSE"));
-
-	}
-
-
-	return f;
-
-      }else if (t.type==T_CLOSE){
-	return f;
-      }else{
-	DFSCH_THROW("parse-error:unexpected-token",
-                    NULL);
-	
-      }
-    }
-
-
-  }
-  DFSCH_THROW("parse-error:token-expected",
-              NULL);
-
-}
-
-static int one_obj_p(char **str, token_t *t, object_t **o){
-
-  switch(t->type){
-  case T_TERMINAL:
-    *o = t->data;
-    return 1;
-  case T_QUOTE:
-    *o = quote(one_obj_read(str));
-    return 1;
-  case T_OPEN:
-    *o = parse_list(str);
-    return 1;
-  default:
-    return 0;
-  }
-}
-
-static object_t* one_obj_read(char** str){
-
-  token_t t;
-  object_t *o;
-  if (!get_token(&t,str))
-    DFSCH_THROW("parse-error:token-expected",NULL);
-  if (one_obj_p(str, &t,&o)){
-    return o;
-  }else{
-    DFSCH_THROW("parse-error:unexpected-token",NULL);
-  }
-
-}
-
-dfsch_object_t* dfsch_obj_read(char* str){
-
-  return one_obj_read(&str);
-
-}
-dfsch_object_t* dfsch_list_read(char* str){
-  char *i = str;
-  object_t* f = NULL;
-  object_t *t, *p;
-
-  while (*i){
-    object_t *o = one_obj_read(&i);
-
-    if (dfsch_object_exception_p(o))
-      return o;
-
-    t = dfsch_cons(o,NULL);
-    if (f){
-      dfsch_set_cdr(p,t);
-      p = t;
-    }else{
-      f = p = t;
-    }
-
-    while (i[0]==' ' || i[0]=='\t' || i[0]=='\n')
-      ++i;
-    if (i[0]==';'){
-      while (i[0]!=0 && i[0]!='\n')
-	++i; 
-    }
-    while (i[0]==' ' || i[0]=='\t' || i[0]=='\n')
-      ++i;
-
-  }
-
-  return f;
 
 }
 
@@ -1021,70 +1009,119 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   case PRIMITIVE:
     return "<native-code>";
   case CLOSURE:
-    if (obj->data.closure.name)
-      return stracat(stracat("<closure: ",
-                             dfsch_obj_write(obj->data.closure.name,
-                                             max_depth-1)),
-                     ">");
+    if (obj->data.closure.name){
+      str_list_t *l = sl_create();
+
+      sl_append(l, "<closure: ");
+      sl_append(l, dfsch_obj_write(obj->data.closure.name, max_depth-1));
+      sl_append(l, ">");
+      
+      return sl_value(l);
+    }
     return "<closure>";
   case MACRO:
-    return stracat(stracat("<macro: ",
-			   dfsch_obj_write(obj->data.macro,max_depth-1)),
-		   ">");
+    {
+      str_list_t *l = sl_create();
+      
+      sl_append(l, "<macro: ");
+      sl_append(l, dfsch_obj_write(obj->data.macro, max_depth-1));
+      sl_append(l, ">");
+      
+      return sl_value(l);
+    }
   case NATIVE:
-    return stracat(stracat("<native-data: ",
-			   dfsch_obj_write(obj->data.native.type,max_depth-1)),
-		   ">");
+    {
+      str_list_t *l = sl_create();
+      
+      sl_append(l, "<native-data: ");
+      sl_append(l, dfsch_obj_write(obj->data.native.type, max_depth-1));
+      sl_append(l, ">");
+      
+      return sl_value(l);
+    }
   case EXCEPTION:
-    return stracat(stracat("<exception: ",
-			     dfsch_obj_write(obj->data.exception.type,
-					     max_depth-1)),
-		   stracat(stracat(" . ",
-                                   dfsch_obj_write(obj->data.exception.data,
-						       max_depth-1)),
-                           stracat(" @ ",
-                                   stracat(dfsch_obj_write(obj->data.exception.trace,
-                                                           max_depth-1),
-                                           ">"))));
- 
+    {
+      str_list_t *l = sl_create();
+      
+      sl_append(l, "<exception: ");
+      sl_append(l, dfsch_obj_write(obj->data.exception.type, max_depth-1));
+      sl_append(l, " . ");
+      sl_append(l, dfsch_obj_write(obj->data.exception.data,
+                                   max_depth-1));
+      sl_append(l, " @ ");
+      sl_append(l, dfsch_obj_write(obj->data.exception.trace,
+                                   max_depth-1));
+      sl_append(l, ">");
+      
+      return sl_value(l);
+    } 
   case PAIR: 
     // TODO: at least semi-iterative solution? 
     {
-      if (obj->data.pair.cdr && obj->data.pair.cdr->type!=PAIR)
-	return stracat(stracat("(",
-				 dfsch_obj_write(obj->data.pair.car,
-						 max_depth-1)),
-		       stracat(stracat(" . ",
-					   dfsch_obj_write(obj->data.pair.cdr,
-							   max_depth-1)),
-				 ")"));
+
+      if (obj->data.pair.cdr && obj->data.pair.cdr->type!=PAIR){
+
+        str_list_t* l = sl_create();
+
+	sl_append(l, "(");
+	sl_append(l, dfsch_obj_write(obj->data.pair.car,
+                                     max_depth-1));
+
+        sl_append(l," . ");
+        sl_append(l, dfsch_obj_write(obj->data.pair.cdr,
+                                     max_depth-1));
+        sl_append(l, ")");
+        return sl_value(l);
+      }
       {
-	char *s=GC_malloc(2);
+	str_list_t* l = sl_create();
 	object_t* i=obj;
 	
-	strncpy(s,"(",2);
+	sl_append(l,"(");
 
 	while (i && i->type==PAIR){
 	  
-	  s = stracat(s, dfsch_obj_write(i->data.pair.car,max_depth-1));
+	  sl_append(l, dfsch_obj_write(i->data.pair.car,max_depth-1));
 	  i = i->data.pair.cdr;
 
 	  if (i)
-	    s = stracat(s," ");
+	    sl_append(l," ");
 	    
 	}
 
 	if (i){
-	  s = stracat(s,". ");
-	  s = stracat(s, dfsch_obj_write(i,max_depth-1));
+	  sl_append(l, ". ");
+	  sl_append(l, dfsch_obj_write(i,max_depth-1));
 	}
 
-	return stracat(s,")");
+	sl_append(l,")");
+        return sl_value(l);
       }
+    }
+  case VECTOR:
+    {
+	str_list_t* l= sl_create();
+        size_t i;
+        
+        sl_append(l,"#(");
+
+        for(i = 0; i < obj->data.vector.length-1; ++i){
+          sl_append(l, dfsch_obj_write(obj->data.vector.data[i],
+                                          max_depth-1));
+          sl_append(l, " ");
+        }
+
+        sl_append(l, dfsch_obj_write(obj->data.vector.data
+                                        [obj->data.vector.length-1],
+                                        max_depth-1));
+
+        sl_append(l,")");
+        return sl_value(l);
+
     }
   default:
     {
-      return stracpy("<unknown-object>");
+      return "<unknown-object>";
     }
   }
 }
@@ -1181,7 +1218,11 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 	  i->data.pair.car->data.pair.cdr->type!=PAIR)
 	DFSCH_THROW("exception:not-a-alist", i);
       
-      DFSCH_THROW("exception:already-defined", i->data.pair.car);
+      if (env->data.pair.cdr){
+        DFSCH_THROW("exception:already-defined", i->data.pair.car);
+      }else{
+        dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
+      }
     }
     
     i = i->data.pair.cdr;
@@ -1371,6 +1412,28 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
     DFSCH_THROW("exception:not-a-procedure", proc);
 
   }  
+}
+
+dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
+  if (dfsch_object_pair_p(arg)){
+    object_t* car = dfsch_car(arg);
+    object_t* cdr = dfsch_cdr(arg);
+
+    if (car == dfsch_sym_unquote() && dfsch_object_pair_p(cdr)){
+      return dfsch_eval(dfsch_car(cdr), env);
+    }else if (dfsch_object_pair_p(car)){
+      if (dfsch_car(car) == dfsch_sym_unquote_splicing()){
+        return dfsch_append(dfsch_list(2,
+                                       dfsch_eval(dfsch_car(dfsch_cdr(car)), 
+                                                  env),
+                                       dfsch_quasiquote(env, cdr)));
+      }
+    }
+
+    return dfsch_cons(dfsch_quasiquote(env,car), dfsch_quasiquote(env,cdr));
+  }else{
+    return arg;
+  }
 }
 
 
@@ -1564,6 +1627,16 @@ static object_t* native_macro_quote(void *baton, object_t* args){
   return dfsch_car(dfsch_cdr(args));
 }
 
+static object_t* native_macro_quasiquote(void *baton, object_t* args){
+  object_t* env;
+  object_t* arg;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, arg);
+
+  return dfsch_quasiquote(env,arg);
+}
+
+
 static object_t* native_eval(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
@@ -1624,7 +1697,7 @@ static object_t* native_cons(void *baton, object_t* args){
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
 static object_t* native_list(void *baton, object_t* args){
-  return args;
+  return dfsch_list_copy(args);
 }
 static object_t* native_length(void *baton, object_t* args){
   NEED_ARGS(args,1);  
@@ -1697,6 +1770,12 @@ static object_t* native_closure_p(void *baton, object_t* args){
 static object_t* native_procedure_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
   return dfsch_object_procedure_p(dfsch_car(args))?
+    dfsch_true():
+    NULL;  
+}
+static object_t* native_vector_p(void *baton, object_t* args){
+  NEED_ARGS(args,1);  
+  return dfsch_object_vector_p(dfsch_car(args))?
     dfsch_true():
     NULL;  
 }
@@ -1855,7 +1934,86 @@ static object_t* native_string_length(void *baton, object_t* args){
 }
 
 
+static object_t* native_make_vector(void* baton, object_t* args){
+  size_t length;
+  object_t* fill;
 
+  DFSCH_NUMBER_ARG(args, length, size_t);
+  DFSCH_OBJECT_ARG_OPT(args, fill, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_vector(length,fill);
+}
+
+static object_t* native_vector(void* baton, object_t* args){
+  return dfsch_list_2_vector(args);
+}
+static object_t* native_vector_length(void* baton, object_t* args){
+  object_t* vector;
+  
+  DFSCH_OBJECT_ARG(args,vector);
+  DFSCH_ARG_END(args);
+
+  if (!dfsch_object_vector_p)
+    DFSCH_THROW("exception:not-a-vector",vector);
+
+  return dfsch_make_number(dfsch_vector_length(vector));
+
+}
+static object_t* native_vector_ref(void* baton, object_t* args){
+  object_t* vector;
+  size_t k;
+
+  DFSCH_OBJECT_ARG(args, vector);
+  DFSCH_NUMBER_ARG(args, k, size_t);
+  DFSCH_ARG_END(args);
+
+  return dfsch_vector_ref(vector, k);
+}
+
+static object_t* native_vector_set(void* baton, object_t* args){
+  object_t* vector;
+  size_t k;
+  object_t* obj;
+
+  DFSCH_OBJECT_ARG(args, vector);
+  DFSCH_NUMBER_ARG(args, k, size_t);
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_vector_set(vector, k, obj);
+}
+
+static object_t* native_vector_2_list(void *baton, object_t* args){
+  object_t* vector;
+
+  DFSCH_OBJECT_ARG(args, vector);
+  DFSCH_ARG_END(args);
+
+  return dfsch_vector_2_list(vector);
+}
+
+static object_t* native_list_2_vector(void *baton, object_t* args){
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_list_2_vector(list);
+}
+
+static object_t* native_append(void* baton, object_t* args){
+  return dfsch_append(args);
+}
+static object_t* native_list_ref(void* baton, object_t* args){
+  int k;
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_NUMBER_ARG(args, k, int);
+
+  return dfsch_list_item(list, k);
+}
 
 // Context
 
@@ -1908,6 +2066,9 @@ dfsch_ctx_t* dfsch_make_context(){
 							 NULL)));
   dfsch_ctx_define(ctx, "top-level-environment", 
                    dfsch_make_primitive(&native_env, ctx->env));
+  dfsch_ctx_define(ctx, "quasiquote", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_quasiquote,
+							 NULL)));
   dfsch_ctx_define(ctx, "quote", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_quote,
 							 NULL)));
@@ -1932,6 +2093,7 @@ dfsch_ctx_t* dfsch_make_context(){
 							 NULL));
 
   dfsch_ctx_define(ctx, "length", dfsch_make_primitive(&native_length,NULL));
+  dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
 
   dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
   dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));
@@ -1949,6 +2111,8 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "procedure?", 
 		   dfsch_make_primitive(&native_procedure_p,NULL));
   dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
+  dfsch_ctx_define(ctx, "vector?", dfsch_make_primitive(&native_vector_p,
+                                                        NULL));
 
 
   dfsch_ctx_define(ctx, "throw", 
@@ -1973,6 +2137,22 @@ dfsch_ctx_t* dfsch_make_context(){
   dfsch_ctx_define(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
+  dfsch_ctx_define(ctx, "make-vector", 
+                   dfsch_make_primitive(&native_make_vector,NULL));
+  dfsch_ctx_define(ctx, "vector", 
+                   dfsch_make_primitive(&native_vector,NULL));
+  dfsch_ctx_define(ctx, "vector-length", 
+                   dfsch_make_primitive(&native_vector_length,NULL));
+  dfsch_ctx_define(ctx, "vector-set!", 
+                   dfsch_make_primitive(&native_vector_set,NULL));
+  dfsch_ctx_define(ctx, "vector-ref", 
+                   dfsch_make_primitive(&native_vector_ref,NULL));
+  dfsch_ctx_define(ctx, "vector->list", 
+                   dfsch_make_primitive(&native_vector_2_list,NULL));
+  dfsch_ctx_define(ctx, "list->vector", 
+                   dfsch_make_primitive(&native_list_2_vector,NULL));
+
+
 
   return ctx;
 }
@@ -1991,8 +2171,8 @@ dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
 }
 
 int dfsch_ctx_define(dfsch_ctx_t *ctx, 
-		      char *name, 
-		      dfsch_object_t *obj){
+                     char *name, 
+                     dfsch_object_t *obj){
   
   return !dfsch_object_exception_p(dfsch_define(dfsch_make_symbol(name),
                                                 obj,
