@@ -1,3 +1,10 @@
+2005-11-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/util.c: Moved utility functions to separate source file
+
+	* src/native.c (dfsch_native_register): Moved native functions
+	into separate source file.
+
 2005-11-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/stream.c (parse_vector): Vector support

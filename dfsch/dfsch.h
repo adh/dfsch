@@ -158,6 +158,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_list_read(char* str);
 
 
+
+
   /**
    * Convert object to ASCIIZ string
    */
@@ -475,6 +477,8 @@ extern "C" {
    * Evaluates EXP in given binding environment ENV.
    */
   extern dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_eval_proc(dfsch_object_t* exp, 
+                                         dfsch_object_t* env);
   /**
    * Applyes procedure PROC to arguments ARGS. Obviously it doesn't work for 
    * macros.
