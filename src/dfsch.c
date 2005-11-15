@@ -48,7 +48,7 @@ typedef enum {
   PRIMITIVE,
   CLOSURE,
   MACRO,
-  FLOW_MACRO,
+  FORM,
   EXCEPTION,
   VECTOR,
   NATIVE // define new types here
@@ -328,6 +328,9 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   object_t* tail=NULL;
   object_t* i = llist;
   object_t* j;
+
+  if (!llist)
+    return NULL;
 
   while(i && i->type == PAIR && i->data.pair.cdr && 
         i->data.pair.cdr->type == PAIR){
@@ -698,8 +701,8 @@ object_t* dfsch_make_macro(object_t *proc){
 
   return m;
 }
-object_t* dfsch_make_flow_macro(object_t *proc){
-  object_t *m = make_object(FLOW_MACRO);
+object_t* dfsch_make_form(object_t *proc){
+  object_t *m = make_object(FORM);
   
   if (!m)
     return NULL;
@@ -929,6 +932,16 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
       
       return sl_value(l);
     }
+  case FORM:
+    {
+      str_list_t *l = sl_create();
+      
+      sl_append(l, "<special-form: ");
+      sl_append(l, dfsch_obj_write(obj->data.macro, max_depth-1));
+      sl_append(l, ">");
+      
+      return sl_value(l);
+    }
   case NATIVE:
     {
       str_list_t *l = sl_create();
@@ -1122,6 +1135,7 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
         DFSCH_THROW("exception:already-defined", i->data.pair.car);
       }else{
         dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
+        return value;
       }
     }
     
@@ -1190,12 +1204,15 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 	
  
       switch(f->type){
-      case MACRO:
+      case FORM:
 	return dfsch_apply(f->data.macro,     
 			   dfsch_cons(env,
 				      exp->data.pair.cdr));
-      case FLOW_MACRO:
-        return dfsch_eval_proc(dfsch_apply(f->data.macro,dfsch_cons(env, exp->data.pair.cdr)),env);
+      case MACRO:
+        return dfsch_eval_proc(dfsch_apply(f->data.macro,
+                                           dfsch_cons(env, 
+                                                      exp->data.pair.cdr)),
+                               env);
 	
       case CLOSURE:
       case PRIMITIVE:

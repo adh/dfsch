@@ -390,6 +390,10 @@ extern "C" {
    * Wraps procedure for use as macro.
    */
   extern dfsch_object_t* dfsch_make_macro(dfsch_object_t *proc);
+  /**
+   * Wraps procedure for use as special form.
+   */
+  extern dfsch_object_t* dfsch_make_form(dfsch_object_t *proc);
 
 
   // error handling

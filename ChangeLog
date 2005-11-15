@@ -1,4 +1,14 @@
+2005-11-16  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_make_form, dfsch_make_macro): Cleaned up
+	terminology:
+	     flow-macro -> macro
+	     macro -> special-form
+
 2005-11-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_append): Fixed seg-fault when appending nothing.
+	(dfsch_define): Fixed growth of top-level env. when redefining
 
 	* src/util.c: Moved utility functions to separate source file
 
