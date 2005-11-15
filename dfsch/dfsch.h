@@ -241,6 +241,12 @@ extern "C" {
 				     dfsch_object_t *alist);
 
 
+  /**
+   * Perform quasi-quote (i.e. something like formating S-expressions)
+   * See book on scheme for futher explaination.
+   */
+  extern dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, 
+                                          dfsch_object_t* arg);
 
   // string
 
@@ -320,6 +326,17 @@ extern "C" {
   extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				      dfsch_object_t* args,
 				      dfsch_object_t* code);
+
+  /**
+   * Creates new lambda closure bound to environment ENV,
+   * with arguments ARGS and body containing CODE. Tagged
+   * with NAME. (this value will be printed in tracebacks
+   * on exception)
+   */
+  extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
+                                            dfsch_object_t* args,
+                                            dfsch_object_t* code,
+                                            dfsch_object_t* name);
 
 
   // native code

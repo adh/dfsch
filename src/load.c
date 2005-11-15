@@ -24,6 +24,7 @@
 
 #include <dfsch/stream.h>
 
+#include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -60,22 +61,28 @@ typedef struct import_ctx_t {
   dfsch_object_t* tail;
 } import_ctx_t;
 
-static int load_callback(dfsch_object_t *obj, import_ctx_t* ctx){
+static int load_callback(dfsch_object_t *obj, void* ctx){
 
   dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
 
-  if (!ctx->head){
-    ctx->head = new_tail;
+  if (!((import_ctx_t*)ctx)->head){
+    ((import_ctx_t*)ctx)->head = new_tail;
   }else{
-    dfsch_set_cdr(ctx->tail, new_tail);
+    dfsch_set_cdr(((import_ctx_t*)ctx)->tail, new_tail);
   }
 
-  ctx->tail = new_tail;
+  ((import_ctx_t*)ctx)->tail = new_tail;
 
   return 1;
 }
 
 dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
+
+  /*
+   * Read whole file into big list and then evaluate it - yeah there might
+   * be better ways to do this
+   */
+  
   dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
 }
 dfsch_object_t* dfsch_read_scm(char* scm_name){

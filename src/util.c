@@ -11,7 +11,7 @@ str_list_t* dfsch__sl_create(){
   
   list->head = NULL;
   list->tail = NULL;
-  list->len = NULL;
+  list->len = 0;
 
   return list;
 }

@@ -1,5 +1,7 @@
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
+	* FIXED various warnings throghout the code.
+
 	* src/dfsch.c (dfsch_make_form, dfsch_make_macro): Cleaned up
 	terminology:
 	     flow-macro -> macro

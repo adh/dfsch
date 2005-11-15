@@ -667,11 +667,11 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "string-length", 
 		   dfsch_make_primitive(&native_string_length,NULL));
 
-  dfsch_ctx_define(ctx, "true", dfsch_true());
+  dfsch_ctx_define(ctx, "true", dfsch_sym_true());
   dfsch_ctx_define(ctx, "pi", dfsch_make_number(3.1415926535897931));
   dfsch_ctx_define(ctx, "nil", NULL);
-  dfsch_ctx_define(ctx, "else", dfsch_true());
-  dfsch_ctx_define(ctx, "T", dfsch_true());
+  dfsch_ctx_define(ctx, "else", dfsch_sym_true());
+  dfsch_ctx_define(ctx, "T", dfsch_sym_true());
 
   dfsch_ctx_define(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));

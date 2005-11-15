@@ -573,7 +573,7 @@ char* dfsch_symbol(dfsch_object_t* symbol){
 
   return symbol->data.symbol.data;
 }
-dfsch_object_t* dfsch_true(){
+dfsch_object_t* dfsch_sym_true(){
   static object_t *cache = NULL;
   if (cache)
     return cache;
@@ -614,7 +614,7 @@ dfsch_object_t* dfsch_sym_unquote_splicing(){
   return cache;
 }
 dfsch_object_t* dfsch_bool(int bool){
-  return bool?dfsch_true():NULL;
+  return bool?dfsch_sym_true():NULL;
 }
 
 struct dfsch_symbol_iter_t{
@@ -625,7 +625,7 @@ struct dfsch_symbol_iter_t{
 char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){
   if (*iter == NULL){
     *iter = GC_MALLOC(sizeof(dfsch_symbol_iter_t));
-    (*iter)->bucket = NULL;
+    (*iter)->bucket = 0;
     (*iter)->item = global_symbol_hash[(*iter)->bucket];
   }
   while ((*iter)->bucket < HASH_SIZE){
@@ -888,11 +888,11 @@ dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object){
 
 char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   if (!obj){
-    return stracpy("()");
+    return "()";
   }
 
   if (max_depth==0){
-    return stracpy("...");
+    return "...";
   }
 
   switch (obj->type){
