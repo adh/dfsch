@@ -173,3 +173,26 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash,
                                  dfsch_object_t* key){
   // TODO
 }
+dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
+                                         dfsch_object_t* key,
+                                         dfsch_object_t* value){
+  
+  size_t h;
+  hash_t *hash;
+  hash_entry_t *i;
+
+  GET_HASH(hash_obj, hash);
+
+  h = get_hash(hash, key);  
+  i = hash->vector[h & hash->mask];
+  
+  while (i){
+    if (h = i->hash && dfsch_eq_p(i->key, key)){
+      i->value = value;
+      return dfsch_list(1,value);
+    }
+    i = i->next;
+  }
+
+  return NULL;
+}

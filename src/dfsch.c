@@ -25,7 +25,7 @@
 #endif
 
 #include "../dfsch/dfsch.h"
-
+#include <dfsch/hash.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -1058,39 +1058,25 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 }
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
-  return dfsch_cons(NULL, parent);
+  return dfsch_cons(dfsch_hash_make(NULL), parent);
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
+  object_t *i;
 
-  // TODO: This is slow and should be somehow redone
-
-  object_t *i, *ie;
   if (!env || env->type!=PAIR){
     DFSCH_RETHROW(env);
     DFSCH_THROW("exception:not-a-pair",env);
   }
 
-  ie = env;
-  while (ie && ie->type==PAIR){
-    i = ie->data.pair.car;
-    while (i && i->type==PAIR){
-      if (!i->data.pair.car || i->data.pair.car->type!=PAIR){
-	DFSCH_THROW("exception:not-a-alist",ie);
-      }
-      
-      if ((name == i->data.pair.car->data.pair.car)){
-	if (!i->data.pair.car->data.pair.cdr || 
-	    i->data.pair.car->data.pair.cdr->type!=PAIR)
-	  DFSCH_THROW("exception:not-a-alist",ie);
-	
-	return i->data.pair.car->data.pair.cdr->data.pair.car;
-      }
-      
-      i = i->data.pair.cdr;
-      
+  i = env;
+  while (i && i->type==PAIR){
+    object_t* ret = dfsch_hash_ref(i->data.pair.car, name);
+    if (ret){
+      return dfsch_car(ret);
     }
-    ie = ie->data.pair.cdr;
+
+    i = i->data.pair.cdr;
   }
   
 
@@ -1102,36 +1088,21 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   object_t *i, *ie;
-  if (!env || env->type!=PAIR)
-    return 0;
+  if (!env || env->type!=PAIR){
+    DFSCH_RETHROW(env);
+    DFSCH_THROW("exception:not-a-pair",env);
+  }
 
-  ie = env;
-  while (ie && ie->type==PAIR){
-    i = ie->data.pair.car;
-    while (i && i->type==PAIR){
-      if (!i->data.pair.car || i->data.pair.car->type!=PAIR){
-	DFSCH_THROW("exception:not-a-alist",ie);
-      }
-      
-      if (name == i->data.pair.car->data.pair.car){
-	if (!i->data.pair.car->data.pair.cdr || 
-	    i->data.pair.car->data.pair.cdr->type!=PAIR)
-	  DFSCH_THROW("exception:not-a-alist",ie);
+  i = env;
+  while (i && i->type==PAIR){
+    if(dfsch_hash_set_if_exists(i->data.pair.car, name))
+      return value;
 
-	dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
-	return value;
-      }
-      
-      i = i->data.pair.cdr;
-      
-    }
-    ie = ie->data.pair.cdr;
+    i = i->data.pair.cdr;
   }
   
 
   DFSCH_THROW("exception:unbound-variable",name);
-  
-
 }
 
 
@@ -1139,29 +1110,7 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
   if (!env || env->type!=PAIR)
     DFSCH_THROW("exception:not-a-pair",env);
 
-  object_t *i = env->data.pair.car;
-  while (i && i->type==PAIR){
-    if (!i->data.pair.car || i->data.pair.car->type!=PAIR){
-      DFSCH_THROW("exception:not-a-alist", i);
-    }
-    
-    if (name == i->data.pair.car->data.pair.car){
-      if (!i->data.pair.car->data.pair.cdr || 
-	  i->data.pair.car->data.pair.cdr->type!=PAIR)
-	DFSCH_THROW("exception:not-a-alist", i);
-      
-      dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
-    }
-    
-    i = i->data.pair.cdr;
-    
-  }
-  
-  dfsch_set_car(env,dfsch_cons(dfsch_cons(name, 
-					  dfsch_cons(value, 
-						     NULL)),
-			       env->data.pair.car));
-  
+  dfsch_hash_set(env->data.pair.car, name, value);  
   return value;
 
 }

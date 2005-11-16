@@ -746,6 +746,17 @@ object_t* native_hash_set(void* baton, object_t* args){
 
   return dfsch_hash_set(hash, key, value);
 }
+object_t* native_hash_set_if_exists(void* baton, object_t* args){
+  object_t* hash;
+  object_t* key;
+  object_t* value;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_set_if_exists(hash, key, value);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////

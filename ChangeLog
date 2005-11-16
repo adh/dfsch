@@ -1,5 +1,11 @@
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_new_frame, dfsch_lookup, dfsch_define,
+	dfsch_set): Hash-table based environment frames 
+
+	* src/hash.c (dfsch_hash_set_if_exists): Performance hack:
+	hash-set-if-exists! 
+
 	* src/native.c (native_form_let, native_form_letrec, 
 	native_form_let_seq): All three variants of let, implemented using
 	environment manipulation functions from dfsch.c
