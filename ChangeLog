@@ -1,5 +1,7 @@
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c: Hash implementation on top of scheme objects
+
 	* dfsch/hash.h: Hash data type
 
 	* src/dfsch.c (dfsch_vector): varargs constructor for vectors

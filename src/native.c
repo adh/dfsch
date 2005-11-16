@@ -47,6 +47,13 @@ typedef dfsch_object_t object_t;
 
 // Native procedures:
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Arithmetic on numbers
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
 static object_t* native_plus(void *baton, object_t* args){
   object_t* i = args;
   double s=0;
@@ -129,6 +136,12 @@ static object_t* native_slash(void *baton, object_t* args){
 
   return dfsch_make_number(s); 
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Basic special forms
+//
+/////////////////////////////////////////////////////////////////////////////
 
 static object_t* native_form_lambda(void *baton, object_t* args){
 
@@ -227,17 +240,6 @@ static object_t* native_form_quasiquote(void *baton, object_t* args){
   return dfsch_quasiquote(env,arg);
 }
 
-
-static object_t* native_eval(void *baton, object_t* args){
-  NEED_ARGS(args,2);  
-  return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
-}
-static object_t* native_apply(void *baton, object_t* args){
-  NEED_ARGS(args,2);  
-  return dfsch_apply(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
-}
-
-
 static object_t* native_macro_begin(void *baton, object_t* args){
   return dfsch_cdr(args);
 }
@@ -275,6 +277,28 @@ static object_t* native_make_macro(void *baton, object_t* args){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// EVAL + APPLY
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static object_t* native_eval(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+}
+static object_t* native_apply(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_apply(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Pairs and lists
+//
+/////////////////////////////////////////////////////////////////////////////
+
 static object_t* native_car(void *baton, object_t* args){
   NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
@@ -295,10 +319,6 @@ static object_t* native_length(void *baton, object_t* args){
 
   return dfsch_make_number((double)dfsch_list_length(args));
 }
-static object_t* native_eq(void *baton, object_t* args){
-  NEED_ARGS(args,2);  
-  return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
-}
 static object_t* native_set_car(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
@@ -307,6 +327,24 @@ static object_t* native_set_cdr(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
+static object_t* native_append(void* baton, object_t* args){
+  return dfsch_append(args);
+}
+static object_t* native_list_ref(void* baton, object_t* args){
+  int k;
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_NUMBER_ARG(args, k, int);
+
+  return dfsch_list_item(list, k);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Type predicates
+//
+/////////////////////////////////////////////////////////////////////////////
 
 static object_t* native_null_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
@@ -353,7 +391,16 @@ static object_t* native_macro_p(void *baton, object_t* args){
   return dfsch_bool(dfsch_object_macro_p(dfsch_car(args)));  
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Comparisons
+//
+/////////////////////////////////////////////////////////////////////////////
 
+static object_t* native_eq(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+}
 static object_t* native_lt(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
@@ -401,6 +448,13 @@ static object_t* native_gte(void *baton, object_t* args){
   return dfsch_bool(dfsch_number(a)>=dfsch_number(b));  
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Logic
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
 static object_t* native_or(void *baton, object_t* args){
   /*  NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
@@ -423,6 +477,13 @@ static object_t* native_not(void *baton, object_t* args){
   return dfsch_bool(!a);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Exception handling
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
 static object_t* native_throw(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
@@ -443,6 +504,14 @@ static object_t* native_form_try(void *baton, object_t* args){
     :value;
   
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
 static object_t* native_string_append(void *baton, object_t* args){
   NEED_ARGS(args,2);
   object_t* a = dfsch_car(args);
@@ -489,6 +558,12 @@ static object_t* native_string_length(void *baton, object_t* args){
 
   return dfsch_make_number((double)strlen(dfsch_string(a)));
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Vectors
+//
+/////////////////////////////////////////////////////////////////////////////
 
 
 static object_t* native_make_vector(void* baton, object_t* args){
@@ -559,18 +634,55 @@ static object_t* native_list_2_vector(void *baton, object_t* args){
   return dfsch_list_2_vector(list);
 }
 
-static object_t* native_append(void* baton, object_t* args){
-  return dfsch_append(args);
-}
-static object_t* native_list_ref(void* baton, object_t* args){
-  int k;
-  object_t* list;
 
-  DFSCH_OBJECT_ARG(args, list);
-  DFSCH_NUMBER_ARG(args, k, int);
+/////////////////////////////////////////////////////////////////////////////
+//
+// Hash operations
+//
+/////////////////////////////////////////////////////////////////////////////
 
-  return dfsch_list_item(list, k);
+
+object_t* native_make_hash(void* baton, object_t* args){
+  object_t* proc;
+  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_make(proc);
 }
+object_t* native_hash_p(void* baton, object_t* args){
+  object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_hash_p(obj));
+}
+object_t* native_hash_ref(void* baton, object_t* args){
+  object_t* hash;
+  object_t* key;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_ref(hash, key);
+}
+object_t* native_hash_set(void* baton, object_t* args){
+  object_t* hash;
+  object_t* key;
+  object_t* value;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_set(hash, key, value);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Registering function
+//
+/////////////////////////////////////////////////////////////////////////////
 
 dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){ 
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
@@ -691,6 +803,15 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "list->vector", 
                    dfsch_make_primitive(&native_list_2_vector,NULL));
 
+
+  dfsch_ctx_define(ctx, "make-hash", 
+                   dfsch_make_primitive(&native_make_hash,NULL));
+  dfsch_ctx_define(ctx, "hash?", 
+                   dfsch_make_primitive(&native_hash_p,NULL));
+  dfsch_ctx_define(ctx, "hash-ref", 
+                   dfsch_make_primitive(&native_hash_ref,NULL));
+  dfsch_ctx_define(ctx, "hash-set!", 
+                   dfsch_make_primitive(&native_hash_set,NULL));
 
 
   return NULL;

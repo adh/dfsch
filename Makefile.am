@@ -1,6 +1,6 @@
 
 bin_PROGRAMS = dfsch-repl
-nobase_include_HEADERS = dfsch/dfsch.h dfsch/stream.h
+nobase_include_HEADERS = dfsch/dfsch.h dfsch/stream.h dfsch/load.h dfsch/hash.h
 lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 
 EXTRA_DIST = scm/morse.scm
@@ -9,7 +9,9 @@ EXTRA_DIST = scm/morse.scm
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h \
 	src/stream.c dfsch/stream.h\
 	src/native.c src/native.h \
-	src/util.c src/util.h
+	src/util.c src/util.h\
+	src/hash.c dfsch/hash.h
+
 libdfsch_la_LDFLAGS = -version-info 3:0:2
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl
 
