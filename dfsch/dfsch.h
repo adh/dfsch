@@ -358,6 +358,12 @@ extern "C" {
                                            dfsch_object_t *fill);
 
   /**
+   * Construct vector of count items from arguments.
+   */
+
+  extern dfsch_object_t* dfsch_vector(size_t count, ...);
+
+  /**
    * Returns length of given vector
    */
   extern size_t dfsch_vector_length(dfsch_object_t *vector);

@@ -785,6 +785,24 @@ dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
 
   return v;
 }
+dfsch_object_t* dfsch_vector(size_t count, ...){
+  size_t i;
+  object_t* v = make_object(VECTOR);;
+  va_list al;
+
+  va_start(al,count);
+
+  v->data.vector.length = count;
+  v->data.vector.data = GC_MALLOC(sizeof(object_t*) * count);
+
+  for(i = 0; i < count; ++i){
+    dfsch_vector_set(v, i, va_arg(al, dfsch_object_t*));
+  }
+
+  va_end(al);
+  return v;
+
+}
 
 size_t dfsch_vector_length(dfsch_object_t *vector){
   if (!vector || vector->type != VECTOR)

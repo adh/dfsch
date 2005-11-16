@@ -1,5 +1,9 @@
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/hash.h: Hash data type
+
+	* src/dfsch.c (dfsch_vector): varargs constructor for vectors
+
 	* FIXED various warnings throghout the code.
 
 	* src/dfsch.c (dfsch_make_form, dfsch_make_macro): Cleaned up
