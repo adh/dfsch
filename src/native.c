@@ -455,21 +455,42 @@ static object_t* native_gte(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_or(void *baton, object_t* args){
-  /*  NEED_ARGS(args,2);  
-  object_t *a = dfsch_car(args);
-  object_t *b = dfsch_car(dfsch_cdr(args));
-  return (a||b)?
-    dfsch_true():
-    NULL;  */ // TODO
+static object_t* native_form_or(void *baton, object_t* args){
+  object_t* env;
+  object_t* i;
+  object_t* r = NULL;
+  MIN_ARGS(args, 1);
+  env = dfsch_car(args); 
+  i = dfsch_cdr(args);
+ 
+  while(i){
+    r = dfsch_eval(dfsch_car(i), env);
+    DFSCH_RETHROW(r);
+    if (r)
+      return r;
+    i = dfsch_cdr(i);
+  }
+
+  return r;
 }
-static object_t* native_and(void *baton, object_t* args){
-  /*  NEED_ARGS(args,2);  
-  object_t *a = dfsch_car(args);
-  object_t *b = dfsch_car(dfsch_cdr(args));
-  return (a&&b)?
-    dfsch_true():
-    NULL;  */ //TODO
+static object_t* native_form_and(void *baton, object_t* args){
+  object_t* env;
+  object_t* i;
+  object_t* r = dfsch_sym_true();
+  MIN_ARGS(args, 1);
+  env = dfsch_car(args); 
+  i = dfsch_cdr(args);
+ 
+  while(i){
+    r = dfsch_eval(dfsch_car(i), env);
+    DFSCH_RETHROW(r);
+    if (!r)
+      return r;
+
+    i = dfsch_cdr(i);
+  }
+
+  return r;
 }
 static object_t* native_not(void *baton, object_t* args){
   NEED_ARGS(args,1);  
@@ -694,8 +715,13 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
   dfsch_ctx_define(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
   dfsch_ctx_define(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
-  dfsch_ctx_define(ctx, "and", dfsch_make_primitive(&native_and,NULL));
-  dfsch_ctx_define(ctx, "or", dfsch_make_primitive(&native_or,NULL));
+
+  dfsch_ctx_define(ctx, "and", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_and,
+                                                        NULL)));
+  dfsch_ctx_define(ctx, "or", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_or,
+                                                        NULL)));
   dfsch_ctx_define(ctx, "not", dfsch_make_primitive(&native_not,NULL));
 
   dfsch_ctx_define(ctx, "lambda", 

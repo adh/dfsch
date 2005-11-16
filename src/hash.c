@@ -1,33 +1,60 @@
 #include <dfsch/hash.h>
-
+#include <gc/gc.h>
 #include <stdlib.h>
 
-static dfsch_object_t* hash_tag(){
-  static cache = NULL;
+
+typedef struct hash_entry_t hash_entry_t;
+typedef struct hash_t{
+
+  dfsch_object_t* proc;
+  size_t count;
+  size_t mask;
+  hash_entry_t** vector;
+
+}hash_t;
+
+struct hash_entry_t {
+  size_t hash;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  hash_entry_t* next;
+};
+
+static dfsch_object_t* hash_type(){
+  static dfsch_object_t* cache = NULL;
 
   if (cache)
     return cache;
 
-  return cache = dfsch_make_symbol("*hash*");
+  return cache = dfsch_make_symbol("hash");
+}
+
+static void alloc_vector(hash_t* hash){
+  hash->vector = GC_MALLOC(sizeof(hash_entry_t)*(hash->mask+1));
 }
 
 dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc){
-  return dfsch_vector(4,           
-                      hash_tag(),
-                      hash_proc,
-                      dfsch_make_number(0), 
-                      dfsch_make_vector(4, NULL));
+  hash_t *h = GC_NEW(hash_t); 
+
+  if (hash_proc && !dfsch_object_procedure_p(hash_proc))
+    DFSCH_THROW("exception:not-a-procedure", hash_proc);
+
+  h->proc = hash_proc;
+  h->count = 0;
+  h->mask = 0x03;
+  alloc_vector(h);
+
+  return dfsch_make_native_data(h, hash_type());
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return dfsch_object_vector_p(obj) && 
-    (dfsch_vector_ref(obj, 0) == hash_tag());
+  return dfsch_native_data_type(obj) == hash_type();
 }
 
-static size_t get_hash(dfsch_object_t* hash, dfsch_object_t*key){
-  dfsch_object_t* proc = dfsch_vector_ref(hash, 1);
+static size_t get_hash(hash_t* hash, dfsch_object_t*key){
   
-  if (proc){
-    return (size_t)dfsch_number(dfsch_apply(proc,dfsch_list(1,key)));
+  if (hash->proc){
+    return (size_t)dfsch_number(dfsch_apply(hash->proc,dfsch_list(1,key)));
   }else{
 
     /*
@@ -51,96 +78,98 @@ static size_t get_hash(dfsch_object_t* hash, dfsch_object_t*key){
   }
 }
 
-#define CHECK_HASH(h)\
-  if (!dfsch_hash_p(h))\
-    DFSCH_THROW("exception:not-a-hash", h)
+#define GET_HASH(obj,hash)\
+   hash = dfsch_native_data(obj, hash_type());\
+   if (!hash)\
+     DFSCH_THROW("exception:not-a-hash", obj)
 
-dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash, 
+dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
                                dfsch_object_t* key){
   
-  size_t h, len;
-  dfsch_object_t *entry;
-  dfsch_object_t *vector;
+  size_t h;
+  hash_t *hash;
+  hash_entry_t *i;
 
-  CHECK_HASH(hash);
+  GET_HASH(hash_obj, hash);
 
-  h = get_hash(hash, key);
-  vector = dfsch_vector_ref(hash, 3);
-  len = dfsch_vector_length(vector);
+  h = get_hash(hash, key);  
+  i = hash->vector[h & hash->mask];
   
-  entry = dfsch_vector_ref(vector, h % len);
-  
-  while (entry){
-    if (dfsch_car(dfsch_car(entry)) == key)
-      return dfsch_list(1,dfsch_cdr(dfsch_car(entry)));
+  while (i){
+    if (h = i->hash && dfsch_eq_p(i->key, key))
+      return dfsch_list(1,i->value);
     
-    entry = dfsch_cdr(entry);
+    i = i->next;
   }
 
   return NULL;
 }
-dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash,
+
+static hash_entry_t* alloc_entry(size_t hash, 
+                                 dfsch_object_t* key,
+                                 dfsch_object_t* value,
+                                 hash_entry_t* next){
+  hash_entry_t *e = GC_NEW(hash_entry_t);
+  e->hash = hash;
+  e->key = key;
+  e->value = value;
+  e->next = next;
+  return e;
+}
+
+dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
                                dfsch_object_t* key,
                                dfsch_object_t* value){
   size_t h, len, count;
-  dfsch_object_t *entry;
-  dfsch_object_t *i;
-  dfsch_object_t *vector;
+  hash_t *hash;
+  hash_entry_t *entry;
+  hash_entry_t *i;
 
-  CHECK_HASH(hash);
+  GET_HASH(hash_obj,hash);
 
-  h = get_hash(hash, key);
-  vector = dfsch_vector_ref(hash, 3);
-  count = (size_t)dfsch_number(dfsch_vector_ref(hash,2));
-  len = dfsch_vector_length(vector);
-  
-  i = entry = dfsch_vector_ref(vector, h % len);
-  
+  h = get_hash(hash, key);  
+  i = entry = hash->vector[h & hash->mask];
+
   while (i){
-    if (dfsch_car(dfsch_car(i)) == key){
-      return dfsch_set_cdr(dfsch_car(i), value);
+    if (h == i->hash && dfsch_eq_p(i->key, key)){
+      i->value = value;
+      return hash_obj;
     }
-    i = dfsch_cdr(i);
+    
+    i = i->next;
   }
 
+  
   // It isn't here, so we will add new item
 
-  dfsch_vector_set(hash, 2, dfsch_make_number(++count));
-  if (count > len*2){ // Should table grow?
-    int i;
-    dfsch_object_t* nv = dfsch_make_vector(len*2,NULL);
+  hash->count++;
+  if (hash->count > (hash->mask+1)*2){ // Should table grow?
+    int j;
+    hash_entry_t **vector = hash->vector; // Save pointer to old contents
+    size_t ol = hash->mask+1;
+    hash->mask = ((hash->mask+1) * 2) - 1;
+    alloc_vector(hash);
 
-    for (i=0; i<len; i++){
-      dfsch_object_t* item = dfsch_vector_ref(vector, i);
-      while (item){
-        dfsch_object_t* cons = dfsch_car(item);
-        dfsch_object_t* tmp;
-        size_t ih = get_hash(hash, dfsch_car(cons));
-        
-        dfsch_vector_set(nv, ih % (len * 2), 
-                         dfsch_cons(cons,
-                                    dfsch_vector_ref(nv,
-                                                     ih % (len * 2))));
-        
-        item = dfsch_cdr(item);
+    for (j=0; j<ol; j++){
+      i = vector[j];
+      while (i){
+        hash_entry_t *next = i->next;
+        size_t h = i->hash;
+        i->next = hash->vector[h & hash->mask];
+        hash->vector[h & hash->mask] = i;
+        i = next;
       }
     }
-
-    vector = nv;
-    dfsch_vector_set(hash,3,vector);
-    len *= 2;
-
   }
 
-  dfsch_vector_set(vector, 
-                   h % len, 
-                   dfsch_cons(dfsch_cons(key, 
-                                         value), 
-                              entry));
-
-  return value;
+  hash->vector[h & hash->mask] = alloc_entry(h,
+                                             key,
+                                             value,
+                                             hash->vector[h & hash->mask]);
+  
+  return hash_obj;
 }
 dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash,
                                  dfsch_object_t* key){
-
+  // TODO
 }

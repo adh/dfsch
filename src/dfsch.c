@@ -880,7 +880,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 
 dfsch_object_t* dfsch_make_native_data(void *data, 
 					      dfsch_object_t *type){
-  object_t* n = make_object(EXCEPTION);
+  object_t* n = make_object(NATIVE);
   
   n->data.native.type = type;
   n->data.native.data = data;
