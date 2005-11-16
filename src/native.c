@@ -25,7 +25,7 @@
 #endif
 
 #include "native.h"
-
+#include <dfsch/hash.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -194,16 +194,22 @@ static object_t* native_form_defined_p(void *baton, object_t* args){
 }
 
 static object_t* native_macro_if(void *baton, object_t* args){
+  object_t* env;
+  object_t* test;
+  object_t* consequent;
+  object_t* alternate;
 
-  NEED_ARGS(dfsch_cdr(args),3);    
-  object_t* env = dfsch_car(args);
-  object_t* cond = dfsch_car(dfsch_cdr(args));
-  object_t* true = dfsch_car(dfsch_cdr(dfsch_cdr(args)));
-  object_t* false = dfsch_car(dfsch_cdr(dfsch_cdr(dfsch_cdr(args))));
+  DFSCH_OBJECT_ARG(args,env);
+  DFSCH_OBJECT_ARG(args,test);
+  DFSCH_OBJECT_ARG(args,consequent);
+  DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
 
-  EXCEPTION_CHECK(cond);
+  test = dfsch_eval(test, env);
 
-  return dfsch_cons(dfsch_eval(cond,env)?true:false, NULL);
+  DFSCH_RETHROW(test);
+
+  return dfsch_eval(test?consequent:alternate, env);
+
 }
 
 static object_t* native_macro_cond(void *baton, object_t* args){
@@ -250,21 +256,64 @@ static object_t* native_form_let(void *baton, object_t* args){
   object_t *vars = dfsch_car(dfsch_cdr(args));
   object_t *code = dfsch_cdr(dfsch_cdr(args));
 
-  object_t* ext = NULL;
+  object_t* ext_env = dfsch_new_frame(env);
 
   while (dfsch_object_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* exp = dfsch_list_item(dfsch_car(vars),1);
+    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
 
-    ext = dfsch_cons(dfsch_cons(var,
-                                dfsch_cons(dfsch_eval(exp,env),
-                                           NULL)),
-                     ext);
+    DFSCH_RETHROW(val)
+
+    dfsch_define(var, val, ext_env);
     
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc(code,dfsch_cons(ext,env));
+  return dfsch_eval_proc(code,ext_env);
+}
+static object_t* native_form_letrec(void *baton, object_t* args){
+  MIN_ARGS(args,2);
+
+  object_t *env = dfsch_car(args);
+  object_t *vars = dfsch_car(dfsch_cdr(args));
+  object_t *code = dfsch_cdr(dfsch_cdr(args));
+
+  object_t* ext_env = dfsch_new_frame(env);
+
+  while (dfsch_object_pair_p(vars)){
+    object_t* var = dfsch_list_item(dfsch_car(vars),0);
+    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
+
+    DFSCH_RETHROW(val)
+
+    dfsch_define(var, val, ext_env);
+    
+    vars = dfsch_cdr(vars);
+  }
+
+  return dfsch_eval_proc(code,ext_env);
+}
+static object_t* native_form_let_seq(void *baton, object_t* args){
+  MIN_ARGS(args,2);
+
+  object_t *env = dfsch_car(args);
+  object_t *vars = dfsch_car(dfsch_cdr(args));
+  object_t *code = dfsch_cdr(dfsch_cdr(args));
+
+  object_t* ext_env = env;
+
+  while (dfsch_object_pair_p(vars)){
+    object_t* var = dfsch_list_item(dfsch_car(vars),0);
+    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
+    DFSCH_RETHROW(val)
+
+    ext_env = dfsch_new_frame(ext_env);
+    dfsch_define(var, val, ext_env);
+    
+    vars = dfsch_cdr(vars);
+  }
+
+  return dfsch_eval_proc(code, ext_env);
 }
 
 
@@ -738,6 +787,12 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
 							 NULL)));
   dfsch_ctx_define(ctx, "let", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_let,
+							 NULL)));
+  dfsch_ctx_define(ctx, "let*", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_let_seq,
+							 NULL)));
+  dfsch_ctx_define(ctx, "letrec", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_letrec,
 							 NULL)));
 
   dfsch_ctx_define(ctx, "set!", 

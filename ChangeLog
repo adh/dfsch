@@ -1,5 +1,15 @@
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_form_let, native_form_letrec, 
+	native_form_let_seq): All three variants of let, implemented using
+	environment manipulation functions from dfsch.c
+
+	* src/dfsch.c: Moved all (probably) manipulations of environment
+	into one place.
+
+	* src/native.c (native_macro_if): Reimplemented "if" to support
+	both forms mentioned in R5RS
+
 	* src/hash.c (hash_t): Native representation of hash tables
 
 	* src/native.c (native_form_or, native_form_and): Working forms

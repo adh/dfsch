@@ -478,6 +478,10 @@ extern "C" {
 
   // Lexical binding:
   /**
+   * Create new environment frame.
+   */
+  extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);
+  /**
    * Get value of variable name in environment env.
    */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 

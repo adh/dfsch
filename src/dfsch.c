@@ -1057,7 +1057,9 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
   }
 }
 
-// EVAL + APPLY
+dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
+  return dfsch_cons(NULL, parent);
+}
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
 
@@ -1138,7 +1140,6 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
     DFSCH_THROW("exception:not-a-pair",env);
 
   object_t *i = env->data.pair.car;
-
   while (i && i->type==PAIR){
     if (!i->data.pair.car || i->data.pair.car->type!=PAIR){
       DFSCH_THROW("exception:not-a-alist", i);
@@ -1149,12 +1150,7 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 	  i->data.pair.car->data.pair.cdr->type!=PAIR)
 	DFSCH_THROW("exception:not-a-alist", i);
       
-      if (env->data.pair.cdr){
-        DFSCH_THROW("exception:already-defined", i->data.pair.car);
-      }else{
-        dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
-        return value;
-      }
+      dfsch_set_car(i->data.pair.car->data.pair.cdr,value);
     }
     
     i = i->data.pair.cdr;
@@ -1251,17 +1247,14 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
-  object_t* f=NULL;
   object_t* i_f=fa;
   object_t* i_a=aa;
+  object_t* ext_env = dfsch_new_frame(env);
 
   while ((i_f && i_f->type==PAIR) &&
 	 (i_a && i_a->type==PAIR)){
 
-    f = dfsch_cons(dfsch_cons(i_f->data.pair.car,
-			      dfsch_cons(i_a->data.pair.car,
-					 NULL)),
-		   f);
+    dfsch_define(i_f, i_a, ext_env);
 
     i_f = i_f->data.pair.cdr;
     i_a = i_a->data.pair.cdr;
@@ -1269,10 +1262,8 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   }
 
   if (i_f && i_f->type==SYMBOL){
-    f = dfsch_cons(dfsch_cons(i_f,
-			      dfsch_cons(i_a,
-					 NULL)),
-		   f);
+
+    dfsch_define(i_f, i_a, ext_env);
   }
 
   if (!i_a  && i_f)
@@ -1281,7 +1272,7 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
       DFSCH_THROW("exception:too-many-arguments", aa);
   
 
-  return dfsch_cons(f,env);
+  return ext_env;
 }
 
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
@@ -1392,8 +1383,8 @@ dfsch_ctx_t* dfsch_make_context(){
 
   gsh_check_init();
 
-  ctx->env = dfsch_cons(NULL,
-			NULL);
+  ctx->env = dfsch_new_frame(NULL);
+
   dfsch_ctx_define(ctx, "top-level-environment", 
                    dfsch_make_primitive(&native_env, ctx->env));
   dfsch_ctx_define(ctx, "current-environment", 
