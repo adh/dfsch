@@ -304,6 +304,11 @@ extern "C" {
    * witout need for looking it up every time.
    */
   extern dfsch_object_t* dfsch_sym_unquote_splicing();
+  /**
+   * Performance hack: returns symbol <code>else</code> 
+   * witout need for looking it up every time.
+   */
+  extern dfsch_object_t* dfsch_sym_else();
 
 
   // numbers

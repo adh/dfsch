@@ -208,13 +208,11 @@ static object_t* native_macro_if(void *baton, object_t* args){
 
   DFSCH_RETHROW(test);
 
-  return dfsch_eval(test?consequent:alternate, env);
+  return dfsch_list(1, test?consequent:alternate);
 
 }
 
 static object_t* native_macro_cond(void *baton, object_t* args){
-  
-
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
 
@@ -230,7 +228,37 @@ static object_t* native_macro_cond(void *baton, object_t* args){
 
   return NULL;
 }
+static object_t* native_macro_case(void *baton, object_t* args){
+  object_t* env;
+  object_t* val;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, val);
 
+  val = dfsch_eval(val, env);
+  DFSCH_RETHROW(val);
+
+  while (dfsch_object_pair_p(args)){
+    object_t* c = dfsch_car(args);
+    object_t* i;
+    if (!dfsch_object_pair_p(c)){
+      DFSCH_THROW("exception:not-a-pair",c);
+    }
+    
+    i = dfsch_car(c);
+    if (i == dfsch_sym_else())
+        return dfsch_cdr(c);
+      
+    while (dfsch_object_pair_p(i)){
+      if (dfsch_eq_p(dfsch_car(i), val))
+        return dfsch_cdr(c);
+      i = dfsch_cdr(i);
+    }
+    args = dfsch_cdr(args);
+  }
+  
+  return NULL;
+  
+}
 
 static object_t* native_form_quote(void *baton, object_t* args){
   NEED_ARGS(dfsch_cdr(args),1);  
@@ -820,6 +848,9 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
 							      NULL)));
   dfsch_ctx_define(ctx, "cond", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_cond,
+							      NULL)));
+  dfsch_ctx_define(ctx, "case", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_case,
 							      NULL)));
 
   dfsch_ctx_define(ctx, "make-form", 

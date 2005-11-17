@@ -49,7 +49,7 @@ static int callback(dfsch_object_t *obj, void* baton){
 
 dfsch_parser_ctx_t *parser;
 
-void sigint_handler(int sig){
+static void sigint_handler(int sig){
   dfsch_parser_reset(parser);
   rl_set_prompt("]=> ");
   rl_redisplay();
@@ -100,7 +100,7 @@ static char* get_prompt(int level){
   }
 }
 
-dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
+static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
   switch (dfsch_list_length(args)){
   case 0:
     exit(0);
@@ -115,6 +115,12 @@ dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
     exit(1);
   }
 }
+static dfsch_object_t* command_print(void* arg, dfsch_object_t* args){
+  
+  puts(dfsch_obj_write(dfsch_cons(dfsch_make_symbol("print:"),args), 100));
+  return NULL;
+}
+
 
 
 /**
@@ -123,28 +129,13 @@ dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
  * Use this code as example if you want to embbed dfsch in your application.
  *
  */
-int main(int argc, char**argv){
-  
-  GC_INIT();
 
-  dfsch_ctx_t* ctx = dfsch_make_context();
-  parser = dfsch_parser_create();
+// TODO: this should be done in somehow different way
 
-  dfsch_parser_callback(parser, callback, ctx);
-  signal(SIGINT, sigint_handler);
-
-  dfsch_ctx_define(ctx,"version",dfsch_make_string("0.2dev"));
-
-  dfsch_load_register(ctx);
-
-  dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
-
+void readline_repl(dfsch_ctx_t* ctx){
   //rl_bind_key ('\t', rl_insert);
   rl_readline_name = "dfsch";
   rl_attempted_completion_function = symbol_completion;
-
-
-
 
   while (1){
     char *str;
@@ -165,6 +156,27 @@ int main(int argc, char**argv){
   }
   
   puts("");
+
+}
+
+int main(int argc, char**argv){
+  
+  GC_INIT();
+
+  dfsch_ctx_t* ctx = dfsch_make_context();
+  parser = dfsch_parser_create();
+
+  dfsch_parser_callback(parser, callback, ctx);
+  signal(SIGINT, sigint_handler);
+
+  dfsch_ctx_define(ctx,"version",dfsch_make_string("0.2dev"));
+
+  dfsch_load_register(ctx);
+
+  dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
+  dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
+
+  readline_repl(ctx);
 
   return 0;
 }

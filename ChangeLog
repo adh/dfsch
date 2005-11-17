@@ -1,5 +1,11 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (command_print): Ad-hoc printing mechanism in
+	commandline interpreter
+
+	* src/native.c (native_macro_case): "case" construct (see 4.2.1 of
+	R5RS) 
+
 	* src/dfsch.c (dfsch_eval_proc): Comment describing ways to
 	implement tail-recursion
 
