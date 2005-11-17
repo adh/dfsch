@@ -1082,7 +1082,7 @@ char* dfsch_exception_write(dfsch_object_t* e){
   sl_append(l,"Traceback:\n");
   i = e->data.exception.trace;
   while(dfsch_object_pair_p(i)){
-    sl_append(l,dfsch_obj_write(i,3));
+    sl_append(l,dfsch_obj_write(dfsch_car(i),3));
     sl_append(l,"\n");
 
     i = dfsch_cdr(i);
@@ -1122,9 +1122,9 @@ dfsch_object_t* dfsch_list_read(char* str){
   if (!err)
     dfsch_parser_feed(parser, " ");
 
-  if (err && err != DFSCH_PARSER_STOPPED && dfsch_parser_get_level(parser)!=0){
+  if ((err && err != DFSCH_PARSER_STOPPED)
+      || dfsch_parser_get_level(parser)!=0){
       DFSCH_THROW("read:syntax-error",NULL);
-
   }  
   
   return ctx.head;

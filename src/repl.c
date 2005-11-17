@@ -42,8 +42,12 @@
 
 
 static int callback(dfsch_object_t *obj, void* baton){
-  char *out = dfsch_obj_write(dfsch_ctx_eval(baton, obj),100);
-  puts(out);
+  dfsch_object_t *ret = dfsch_ctx_eval(baton, obj);
+  if (dfsch_object_exception_p(ret)){
+    fputs(dfsch_exception_write(ret),stderr);    
+  }
+
+  puts(dfsch_obj_write(ret,100));
   return 1;
 }
 
@@ -138,6 +142,7 @@ void interactive_repl(dfsch_ctx_t* ctx){
 
   rl_readline_name = "dfsch";
   rl_attempted_completion_function = symbol_completion;
+  rl_basic_word_break_characters = " \t\n\"()";
 
   while (1){
     char *str;
@@ -150,7 +155,7 @@ void interactive_repl(dfsch_ctx_t* ctx){
     add_history(str);
 
     if (rc = dfsch_parser_feed(parser,str)!=0){
-      fprintf(stderr,";; Parse error: %d",rc);
+      fprintf(stderr,"Parse error\n",rc);
     }
     dfsch_parser_feed(parser,"\n");
 
