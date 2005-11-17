@@ -1,5 +1,9 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_obj_write_exception): Pretty-printing exceptions
+
+	* src/load.c (dfsch_read_scm_*): Detect unclosed S-expressions 
+
 	* src/repl.c (main): dfsch-repl is now usable as interpreter in
 	shebang 
 

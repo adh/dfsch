@@ -164,6 +164,10 @@ extern "C" {
    * Convert object to ASCIIZ string
    */
   extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth);
+  /**
+   * Convert object to ASCIIZ string
+   */
+  extern char* dfsch_obj_write_exception(dfsch_object_t* obj);
 
   // NIL
 

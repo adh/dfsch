@@ -24,8 +24,10 @@
 # include <config.h>
 #endif
 
-#include "../dfsch/dfsch.h"
+#include <dfsch/dfsch.h>
 #include <dfsch/hash.h>
+#include <dfsch/stream.h>
+#include "native.h"
 #include "util.h"
 
 #include <stdlib.h>
@@ -1064,6 +1066,73 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
     }
   }
 }
+char* dfsch_obj_write_exception(dfsch_object_t* e){
+  str_list_t *l = sl_create();
+  dfsch_object_t *i;
+  if (!dfsch_object_exception_p(e)){
+    return "Not a exception\n";
+  }
+
+  sl_append(l,"Exception occured: ");
+  sl_append(l,dfsch_obj_write(e->data.exception.type,3));
+  sl_append(l," . ");
+  sl_append(l,dfsch_obj_write(e->data.exception.data,3));
+  sl_append(l,"\n\n");
+
+  sl_append(l,"Traceback:\n");
+  i = e->data.exception.trace;
+  while(dfsch_object_pair_p(i)){
+    sl_append(l,dfsch_obj_write(i,3));
+    sl_append(l,"\n");
+
+    i = dfsch_cdr(i);
+  }
+
+  return sl_value(l);
+}
+
+typedef struct read_ctx_t {
+  dfsch_object_t* head;
+  dfsch_object_t* tail;  
+} read_ctx_t;
+
+static read_callback(dfsch_object_t *obj, void* ctx){
+  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
+
+  if (!((read_ctx_t*)ctx)->head){
+    ((read_ctx_t*)ctx)->head = new_tail;
+  }else{
+    dfsch_set_cdr(((read_ctx_t*)ctx)->tail, new_tail);
+  }
+
+  ((read_ctx_t*)ctx)->tail = new_tail;
+
+  return 1;
+}
+
+dfsch_object_t* dfsch_list_read(char* str){
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  read_ctx_t ctx;
+  int err;
+  dfsch_parser_callback(parser, read_callback, &ctx);
+
+  ctx.head = ctx.tail = NULL;
+  
+  err = dfsch_parser_feed(parser, str);
+
+  if (err && err != DFSCH_PARSER_STOPPED && dfsch_parser_get_level(parser)!=0){
+      DFSCH_THROW("read:syntax-error",NULL);
+
+  }  
+  
+  return ctx.tail;
+}
+dfsch_object_t* dfsch_obj_read(char* str){
+  object_t* list = dfsch_list_read(str);
+  DFSCH_RETHROW(list);
+  return dfsch_car(list);
+}
+
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
   return dfsch_cons(dfsch_hash_make(NULL), parent);

@@ -126,7 +126,7 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
     DFSCH_THROW("load:unix-error",dfsch_make_string(strerror(err)));
   }
  
-  if (err && err != DFSCH_PARSER_STOPPED){
+  if (err && err != DFSCH_PARSER_STOPPED && dfsch_parser_get_level(parser)!=0){
     if (name)
       DFSCH_THROW("load:syntax-error",dfsch_make_string(name));
     else
@@ -158,7 +158,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   }
   close(f);
 
-  if (err && err != DFSCH_PARSER_STOPPED){
+  if (err && err != DFSCH_PARSER_STOPPED && dfsch_parser_get_level(parser)!=0){
     if (name)
       DFSCH_THROW("load:syntax-error",dfsch_cons(dfsch_make_string(name),
                                                  dfsch_make_number(l)));
