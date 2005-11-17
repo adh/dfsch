@@ -1227,6 +1227,19 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   object_t *i, *r=NULL;
 
+  /*
+   * Non-trivial hack is needed here in order to support tail-recursion (at
+   * least for most evident cases).
+   *
+   * There are two simple ways how to achieve this:
+   * 1) Pass escape continuation to anything called from here and descend here
+   *    in case of code like return eval(foo)
+   * 2) Integrate code for apply and other functions here and do tail recursion
+   *    explicitly
+   *
+   * First way could be extended to work even throught C stack frames, but 
+   * that seems unnecesary
+   */
 
   if (!env)
     return NULL;

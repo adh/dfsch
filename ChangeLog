@@ -1,3 +1,8 @@
+2005-11-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_eval_proc): Comment describing ways to
+	implement tail-recursion
+
 2005-11-16  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_new_frame, dfsch_lookup, dfsch_define,
