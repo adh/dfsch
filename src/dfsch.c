@@ -1237,8 +1237,8 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
    * 2) Integrate code for apply and other functions here and do tail recursion
    *    explicitly
    *
-   * First way could be extended to work even throught C stack frames, but 
-   * that seems unnecesary
+   * First way could be extended to work even throught native functions stack 
+   * frames, but that seems unnecesary.
    */
 
   if (!env)
