@@ -1,5 +1,8 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): dfsch-repl is now usable as interpreter in
+	shebang 
+
 	* scm/test.scm: Test for interpreter
 
 	* src/dfsch.c (lambda_extend): FIXED: extending new frames behaved

@@ -117,7 +117,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
 }
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args){
   
-  puts(dfsch_obj_write(dfsch_cons(dfsch_make_symbol("print:"),args), 100));
+  puts(dfsch_obj_write(args, 100));
   return NULL;
 }
 
@@ -130,10 +130,12 @@ static dfsch_object_t* command_print(void* arg, dfsch_object_t* args){
  *
  */
 
-// TODO: this should be done in somehow different way
+void interactive_repl(dfsch_ctx_t* ctx){
 
-void readline_repl(dfsch_ctx_t* ctx){
-  //rl_bind_key ('\t', rl_insert);
+  parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, callback, ctx);
+  signal(SIGINT, sigint_handler);
+
   rl_readline_name = "dfsch";
   rl_attempted_completion_function = symbol_completion;
 
@@ -160,14 +162,13 @@ void readline_repl(dfsch_ctx_t* ctx){
 }
 
 int main(int argc, char**argv){
-  
+  int c;
+  dfsch_ctx_t* ctx;
+  int interactive = 1;
+
   GC_INIT();
 
-  dfsch_ctx_t* ctx = dfsch_make_context();
-  parser = dfsch_parser_create();
-
-  dfsch_parser_callback(parser, callback, ctx);
-  signal(SIGINT, sigint_handler);
+  ctx = dfsch_make_context();
 
   dfsch_ctx_define(ctx,"version",dfsch_make_string("0.2dev"));
 
@@ -176,7 +177,58 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
 
-  readline_repl(ctx);
+  while ((c=getopt(argc, argv, "+l:e:E:hv")) != -1){
+    switch (c){
+    case 'l':
+      {
+        dfsch_object_t* ret = dfsch_load_scm(ctx, optarg);
+        if (dfsch_object_exception_p(ret)){
+          fputs(dfsch_obj_write(ret,100),stderr);
+          return 1;
+        }
+        break;
+      }
+    case 'v':
+      printf("dfsch version %s\n\n", PACKAGE_VERSION);
+      puts("Copyright (C) 2005 Ales Hakl");
+      puts("Gnomovision comes with ABSOLUTELY NO WARRANTY");
+      puts("This is free software, and you are welcome to redistribute it");
+      puts("under certain conditions; see file COPYING for details.");
+      return 0;
+    default:
+      printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
+      puts("Options:");
+      puts("-l <filename>     Load scheme file on startup\n");
+      puts("-e <expression>   Execute given expression\n");
+      puts("-E <expression>   Evaluate given expression\n");
+      puts("-i                Force interactive mode\n");
+
+      puts("First non-option argument is treated as filename of program to run");
+      puts("Run without non-option arguments to start in interactive mode");
+      return 0;
+    }
+  }
+
+  if (optind < argc) {
+    dfsch_object_t* ret;
+    dfsch_object_t* args = dfsch_make_vector(argc-optind,NULL);
+    int i;
+
+    for (i=0; i<argc-optind; i++){
+      dfsch_vector_set(args, i, dfsch_make_string(argv[optind+i]));
+    }
+
+    ret = dfsch_load_scm(ctx, argv[optind]);
+    if (dfsch_object_exception_p(ret)){
+      fputs(dfsch_obj_write(ret,100),stderr);
+      return 1;
+    }
+    return 0;
+  }
+
+  if (interactive)
+    interactive_repl(ctx);
+  
 
   return 0;
 }

@@ -1371,6 +1371,7 @@ dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp){
 }
 extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
 					   dfsch_object_t* list){
+  DFSCH_RETHROW(list);
   return dfsch_eval_proc(list, ctx->env);
 }
 

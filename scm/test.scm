@@ -61,5 +61,7 @@
 (print 'Tests 'failed: tests-failed)
 (print '===========================)
 (print 'Tests 'total: (+ tests-passed tests-failed))
-(if (= tests-passed 0)
+(if (= tests-failed 0)
+    (exit 0)
+    (exit 'some-tests-failed))
     
