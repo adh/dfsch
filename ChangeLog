@@ -1,5 +1,7 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm: Test for interpreter
+
 	* src/dfsch.c (lambda_extend): FIXED: extending new frames behaved
 	wildly 
 
