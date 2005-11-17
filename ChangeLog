@@ -2,7 +2,6 @@
 
 	* src/dfsch.c (lambda_extend): FIXED: extending new frames behaved
 	wildly 
-	(dfsch_define): Removed debug hook in define
 
 	* src/hash.c (dfsch_hash_2_alist): Routine for converting hash
 	tables into association lists
