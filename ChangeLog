@@ -1,5 +1,11 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (lambda_extend): FIXED: extending new frames behaved
+	wildly 
+
+	* src/hash.c (dfsch_hash_2_alist): Routine for converting hash
+	tables into association lists
+
 	* src/repl.c (command_print): Ad-hoc printing mechanism in
 	commandline interpreter
 

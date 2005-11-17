@@ -1103,7 +1103,7 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
 
   i = env;
   while (i && i->type==PAIR){
-    if(dfsch_hash_set_if_exists(i->data.pair.car, name))
+    if(dfsch_hash_set_if_exists(i->data.pair.car, name, value))
       return value;
 
     i = i->data.pair.cdr;
@@ -1119,6 +1119,11 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
     DFSCH_THROW("exception:not-a-pair",env);
 
   dfsch_hash_set(env->data.pair.car, name, value);  
+
+  puts(dfsch_obj_write(dfsch_cons(dfsch_make_symbol("environment:"),
+                                  dfsch_hash_2_alist(env->data.pair.car)),
+                       100));
+
   return value;
 
 }
@@ -1211,7 +1216,7 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   while ((i_f && i_f->type==PAIR) &&
 	 (i_a && i_a->type==PAIR)){
 
-    dfsch_define(i_f, i_a, ext_env);
+    dfsch_define(i_f->data.pair.car, i_a->data.pair.car, ext_env);
 
     i_f = i_f->data.pair.cdr;
     i_a = i_a->data.pair.cdr;

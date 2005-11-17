@@ -785,6 +785,14 @@ object_t* native_hash_set_if_exists(void* baton, object_t* args){
 
   return dfsch_hash_set_if_exists(hash, key, value);
 }
+static object_t* native_hash_2_alist(void *baton, object_t* args){
+  object_t* hash;
+
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_2_alist(hash);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -935,6 +943,10 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_hash_ref,NULL));
   dfsch_ctx_define(ctx, "hash-set!", 
                    dfsch_make_primitive(&native_hash_set,NULL));
+  dfsch_ctx_define(ctx, "hash-set-if-exists!", 
+                   dfsch_make_primitive(&native_hash_set_if_exists,NULL));
+  dfsch_ctx_define(ctx, "hash->alist", 
+                   dfsch_make_primitive(&native_hash_2_alist,NULL));
 
 
   return NULL;

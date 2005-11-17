@@ -196,3 +196,24 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
 
   return NULL;
 }
+dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
+  dfsch_object_t *alist = NULL;
+  int j;
+  hash_entry_t *i;
+  hash_t *hash;
+  
+  GET_HASH(hash_obj, hash);
+  
+  for (j=0; j<(hash->mask+1); j++){
+    i = hash->vector[j];
+    while (i){
+      alist = dfsch_cons(dfsch_list(2,
+                                    i->key,
+                                    i->value), 
+                         alist);
+      i = i->next;
+    }
+  }
+
+  return alist;
+}
