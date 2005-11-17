@@ -1,5 +1,7 @@
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): Evaluate expression from command line, -i option
+
 	* src/dfsch.c (dfsch_obj_write_exception): Pretty-printing exceptions
 
 	* src/load.c (dfsch_read_scm_*): Detect unclosed S-expressions 

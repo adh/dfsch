@@ -167,7 +167,7 @@ extern "C" {
   /**
    * Convert object to ASCIIZ string
    */
-  extern char* dfsch_obj_write_exception(dfsch_object_t* obj);
+  extern char* dfsch_exception_write(dfsch_object_t* e);
 
   // NIL
 

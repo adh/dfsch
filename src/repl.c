@@ -165,6 +165,7 @@ int main(int argc, char**argv){
   int c;
   dfsch_ctx_t* ctx;
   int interactive = 1;
+  int force_interactive = 0;
 
   GC_INIT();
 
@@ -182,12 +183,41 @@ int main(int argc, char**argv){
     case 'l':
       {
         dfsch_object_t* ret = dfsch_load_scm(ctx, optarg);
+
         if (dfsch_object_exception_p(ret)){
-          fputs(dfsch_obj_write(ret,100),stderr);
+          fputs(dfsch_exception_write(ret),stderr);
           return 1;
         }
         break;
       }
+    case 'e':
+      {
+        dfsch_object_t* ret = dfsch_ctx_eval_list(ctx, 
+                                                  dfsch_list_read(optarg));
+        interactive = 0;
+
+        if (dfsch_object_exception_p(ret)){
+          fputs(dfsch_exception_write(ret),stderr);
+          return 1;
+        }
+        break;
+      }
+    case 'E':
+      {
+        dfsch_object_t* ret = dfsch_ctx_eval_list(ctx,
+                                                  dfsch_list_read(optarg));
+        interactive = 0;
+
+        if (dfsch_object_exception_p(ret)){
+          fputs(dfsch_exception_write(ret),stderr);
+          return 1;
+        }
+        puts(dfsch_obj_write(ret,100));
+        break;
+      }
+    case 'i':
+      force_interactive = 1;
+      break;
     case 'v':
       printf("dfsch version %s\n\n", PACKAGE_VERSION);
       puts("Copyright (C) 2005 Ales Hakl");
@@ -226,7 +256,7 @@ int main(int argc, char**argv){
     return 0;
   }
 
-  if (interactive)
+  if (interactive || force_interactive)
     interactive_repl(ctx);
   
 

@@ -1066,7 +1066,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
     }
   }
 }
-char* dfsch_obj_write_exception(dfsch_object_t* e){
+char* dfsch_exception_write(dfsch_object_t* e){
   str_list_t *l = sl_create();
   dfsch_object_t *i;
   if (!dfsch_object_exception_p(e)){
@@ -1119,17 +1119,21 @@ dfsch_object_t* dfsch_list_read(char* str){
   ctx.head = ctx.tail = NULL;
   
   err = dfsch_parser_feed(parser, str);
+  if (!err)
+    dfsch_parser_feed(parser, " ");
 
   if (err && err != DFSCH_PARSER_STOPPED && dfsch_parser_get_level(parser)!=0){
       DFSCH_THROW("read:syntax-error",NULL);
 
   }  
   
-  return ctx.tail;
+  return ctx.head;
 }
 dfsch_object_t* dfsch_obj_read(char* str){
   object_t* list = dfsch_list_read(str);
   DFSCH_RETHROW(list);
+  if (!list)
+    return NULL;
   return dfsch_car(list);
 }
 
