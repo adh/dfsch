@@ -1120,10 +1120,6 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 
   dfsch_hash_set(env->data.pair.car, name, value);  
 
-  puts(dfsch_obj_write(dfsch_cons(dfsch_make_symbol("environment:"),
-                                  dfsch_hash_2_alist(env->data.pair.car)),
-                       100));
-
   return value;
 
 }
