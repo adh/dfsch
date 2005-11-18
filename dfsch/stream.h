@@ -33,8 +33,9 @@ extern "C" {
 #define DFSCH_PARSER_UNEXPECTED_DOT 2
 #define DFSCH_PARSER_UNEXPECTED_OBJECT 3
 #define DFSCH_PARSER_CAR_EXPECTED 4
-#define DFSCH_PARSER_NULL 5
-#define DFSCH_PARSER_STOPPED 6
+#define DFSCH_PARSER_INVALID_ESCAPE 6
+#define DFSCH_PARSER_NULL 254
+#define DFSCH_PARSER_STOPPED 255
 
   typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
   typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 

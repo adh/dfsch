@@ -315,6 +315,43 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 	++out;
 	++in;
 	continue;
+      case 'x':
+	{
+	  ++in;
+	  if (!*in){
+	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+	    return;
+	  }
+	  if (*in >= 'A' && *in <= 'F'){
+	    *out = *in - 'A' + 10;
+	  }else if (*in >= 'a' && *in <= 'f'){
+	    *out = *in - 'a' + 10;
+	  }else if (*in >= '0' && *in <= '9'){
+	    *out = *in - '0';
+	  }else{
+	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+	    return;
+	  }
+	  ++in;
+	  *out <<= 4;
+	  if (!*in){
+	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+	    return;
+	  }
+	  if (*in >= 'A' && *in <= 'F'){
+	    *out |= *in - 'A' + 10;
+	  }else if (*in >= 'a' && *in <= 'f'){
+	    *out |= *in - 'a' + 10;
+	  }else if (*in >= '0' && *in <= '9'){
+	    *out |= *in - '0';
+	  }else{
+	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+	    return;
+	  }
+	  ++in;
+	  ++out;
+	  continue;
+	}
       }
     default:
       *out = *in;
@@ -531,9 +568,12 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   
   tokenizer_process(ctx,get_queue(ctx->q));
 
-  if (ctx->error)
+  if (ctx->error){
     empty_queue(ctx->q);
-
+    ctx->tokenizer_state = T_NONE;
+    ctx->parser = NULL;
+    ctx->level = 0 ;    
+  }
   return ctx->error;
 
 }

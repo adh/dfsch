@@ -1,5 +1,7 @@
 2005-11-18  Ales Hakl  <ales at hakl dot net>
 
+	* src/stream.c (dispatch_string): Hexadecimal string escapes.
+	
 	* src/stream.c, src/util.c: Include correct header for string functions
 
 	* src/native.c (native_vector_length): Test for datatype
