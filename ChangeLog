@@ -1,3 +1,9 @@
+2005-11-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/stream.c, src/util.c: Include correct header for string functions
+
+	* src/native.c (native_vector_length): Test for datatype
+	
 2005-11-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/load.c (dfsch_read_scm_*): handle invalid syntax correctly

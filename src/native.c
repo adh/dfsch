@@ -684,7 +684,7 @@ static object_t* native_vector_length(void* baton, object_t* args){
   DFSCH_OBJECT_ARG(args,vector);
   DFSCH_ARG_END(args);
 
-  if (!dfsch_object_vector_p)
+  if (!dfsch_object_vector_p(args))
     DFSCH_THROW("exception:not-a-vector",vector);
 
   return dfsch_make_number(dfsch_vector_length(vector));

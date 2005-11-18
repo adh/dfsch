@@ -5,6 +5,7 @@
 #include "util.h"
 
 #include <gc/gc.h>
+#include <string.h>
 
 str_list_t* dfsch__sl_create(){
   str_list_t* list = GC_MALLOC(sizeof(str_list_t));
