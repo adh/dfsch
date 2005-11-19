@@ -1,3 +1,9 @@
+2005-11-20  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_assoc): assoc works correctly
+
+	* src/native.c: assoc and listref native functions 
+
 2005-11-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (main): Use dfsch_exception_write() consistently

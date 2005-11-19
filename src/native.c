@@ -423,6 +423,15 @@ static object_t* native_list_ref(void* baton, object_t* args){
 
   return dfsch_list_item(list, k);
 }
+static object_t* native_assoc(void* baton, object_t* args){
+  object_t* alist;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, alist);
+  DFSCH_OBJECT_ARG(args, key);
+
+  return dfsch_assoc(alist, key);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -883,6 +892,9 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "length", dfsch_make_primitive(&native_length,NULL));
   dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
+  dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
+                                                         NULL));
+  dfsch_ctx_define(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
 
   dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
   dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));

@@ -436,7 +436,7 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
     }
 
     if (dfsch_eq_p(key,i->data.pair.car->data.pair.car)){
-      return i->data.pair.cdr;
+      return i->data.pair.car;
     }
 
     i = i->data.pair.cdr;
