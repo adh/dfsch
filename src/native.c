@@ -221,13 +221,23 @@ static object_t* native_macro_cond(void *baton, object_t* args){
 
   while (dfsch_object_pair_p(i)){
     object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
-    printf(";; cond-test: ");
-    puts(dfsch_obj_write(o,100));
     DFSCH_RETHROW(o);
     if (o){
-      printf(";; cond-result: ");
-      puts(dfsch_obj_write(dfsch_cdr(dfsch_car(i)),100));
-      return dfsch_cdr(dfsch_car(i));
+      object_t* exp = dfsch_cdr(dfsch_car(i));
+      if (dfsch_car(exp) == dfsch_sym_bold_right_arrow()){
+        object_t* proc = dfsch_eval(dfsch_list_item(exp, 1), env);
+        DFSCH_RETHROW(proc);
+
+        return dfsch_cons(dfsch_list(2,
+                                     dfsch_sym_quote(),
+                                     dfsch_apply(proc,
+                                                 dfsch_list(1,
+                                                            o))),
+                          NULL);
+
+      }else{
+        return exp;
+      }
     }
     
     i = dfsch_cdr(i); 

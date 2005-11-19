@@ -623,6 +623,14 @@ dfsch_object_t* dfsch_sym_else(){
   cache = dfsch_make_symbol("else");
   return cache;
 }
+dfsch_object_t* dfsch_sym_bold_right_arrow(){
+  static object_t *cache = NULL;
+  if (cache)
+    return cache;
+
+  cache = dfsch_make_symbol("=>");
+  return cache;
+}
 dfsch_object_t* dfsch_bool(int bool){
   return bool?dfsch_sym_true():NULL;
 }

@@ -313,6 +313,11 @@ extern "C" {
    * witout need for looking it up every time.
    */
   extern dfsch_object_t* dfsch_sym_else();
+  /**
+   * Performance hack: returns symbol <code>=></code> 
+   * witout need for looking it up every time.
+   */
+  extern dfsch_object_t* dfsch_sym_bold_right_arrow();
 
 
   // numbers
