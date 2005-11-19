@@ -1,5 +1,9 @@
 2005-11-19  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): Use dfsch_exception_write() consistently
+
+	* src/dfsch.c (dfsch_eval_proc): Propagate exceptions correctly
+
 	* src/stream.c: Cleaned up vector (and other special values) handling
 
 	* src/native.c: Non-comutative number operators behaves correctly

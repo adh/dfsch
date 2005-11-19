@@ -45,9 +45,9 @@ static int callback(dfsch_object_t *obj, void* baton){
   dfsch_object_t *ret = dfsch_ctx_eval(baton, obj);
   if (dfsch_object_exception_p(ret)){
     fputs(dfsch_exception_write(ret),stderr);    
+  }else{
+    puts(dfsch_obj_write(ret,100));
   }
-
-  puts(dfsch_obj_write(ret,100));
   return 1;
 }
 
@@ -255,7 +255,7 @@ int main(int argc, char**argv){
 
     ret = dfsch_load_scm(ctx, argv[optind]);
     if (dfsch_object_exception_p(ret)){
-      fputs(dfsch_obj_write(ret,100),stderr);
+      fputs(dfsch_exception_write(ret),stderr);
       return 1;
     }
     return 0;

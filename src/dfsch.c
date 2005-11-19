@@ -1330,7 +1330,7 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   if (!code)
     return NULL;
   if (code->type==EXCEPTION)
-    return env;
+    return code;
 
 
   i = code;
@@ -1412,11 +1412,10 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   if (dfsch_list_length(args)<(count)) \
     DFSCH_THROW("exception:too-few-arguments", (args));
 
-static object_t* native_env(void *baton, object_t* args){
+static object_t* native_top_level_environment(void *baton, object_t* args){
   return baton;
 }
-static object_t* native_macro_env(void *baton, object_t* args){
-  NEED_ARGS(dfsch_cdr(args),0);  
+static object_t* native_form_current_environment(void *baton, object_t* args){
   return dfsch_car(args);
 }
 
@@ -1430,10 +1429,10 @@ dfsch_ctx_t* dfsch_make_context(){
   ctx->env = dfsch_new_frame(NULL);
 
   dfsch_ctx_define(ctx, "top-level-environment", 
-                   dfsch_make_primitive(&native_env, ctx->env));
+                   dfsch_make_primitive(&native_top_level_environment, ctx->env));
   dfsch_ctx_define(ctx, "current-environment", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_env,
-							 NULL)));
+		   dfsch_make_form(dfsch_make_primitive(&native_form_current_environment,
+                                                        NULL)));
 
   dfsch_native_register(ctx);
 
