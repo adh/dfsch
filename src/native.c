@@ -77,6 +77,8 @@ static object_t* native_minus(void *baton, object_t* args){
     DFSCH_THROW("exception:too-few-arguments",i);
 
   if (dfsch_object_number_p(dfsch_car(i))){
+    if (!dfsch_cdr(i))
+      return dfsch_make_number(0-dfsch_number(dfsch_car(i)));
     s=dfsch_number(dfsch_car(i));
   }else{
     DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -117,15 +119,16 @@ static object_t* native_slash(void *baton, object_t* args){
     DFSCH_THROW("exception:too-few-arguments",i);
 
   if (dfsch_object_number_p(dfsch_car(i))){
+    if (!dfsch_cdr(i))
+      return dfsch_make_number(1/dfsch_number(dfsch_car(i)));
     s=dfsch_number(dfsch_car(i));
   }else{
     DFSCH_THROW("exception:not-a-number", dfsch_car(i));
-    
   }
   i = dfsch_cdr(i);
   
   while(dfsch_object_pair_p(i)){
-    if (dfsch_object_number_p(i)){
+    if (dfsch_object_number_p(dfsch_car(i))){
       s/=dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));

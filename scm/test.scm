@@ -49,7 +49,7 @@
       'equal)
 (test 'condAlt
       (cond ((assoc 'b '((a 1) (b 2))) => cadr)
-            (else #f))
+            (else ()))
       2)
 
 ;;; End of tests

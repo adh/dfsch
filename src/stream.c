@@ -98,7 +98,7 @@ struct parser_stack_t {
     P_DOT,
     P_PREEND,
     P_QUOTE,
-    P_VECTOR
+    P_HASH
   } state;
 
   dfsch_object_t *front;
@@ -206,9 +206,14 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
         parse_object(ctx,dfsch_cons(tag, dfsch_cons(obj, NULL)));
         return;
       }
-    case P_VECTOR:
+    case P_HASH:
       parser_pop(ctx);
-      parse_object(ctx,dfsch_list_2_vector(obj));
+      if (dfsch_object_pair_p(obj)){
+        parse_object(ctx,dfsch_list_2_vector(obj));
+      }else{
+	ctx->error = DFSCH_PARSER_LIST_EXPECTED;
+	return;
+      }
       return;
     default:
       ctx->error = DFSCH_PARSER_UNEXPECTED_OBJECT;
@@ -244,7 +249,7 @@ static void parse_vector(dfsch_parser_ctx_t *ctx){
   printf(";; parse_vector\n");
 #endif
   parser_push(ctx);
-  ctx->parser->state = P_VECTOR;
+  ctx->parser->state = P_HASH;
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
