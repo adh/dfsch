@@ -1,6 +1,10 @@
 (define tests-passed 0)
 (define tests-failed 0)
 
+(define one-test-fail (and (= (vector-length argv) 2)
+                           (= (vector-ref argv 1)
+                              "--strict")))
+
 (define (test id exp val)
   (if (= exp val)
       (begin 

@@ -1,5 +1,10 @@
 2005-11-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_vector_length): Fixed bug concerning type
+	identification 
+
+	* src/repl.c (main): argv variable
+
 	* src/native.c (native_macro_cond): Support for alternate form
 	with "=>"
 
