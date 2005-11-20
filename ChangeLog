@@ -1,5 +1,7 @@
 2005-11-20  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm: Extended test suite 
+
 	* tests/scm-test.sh, Makefile.am: integrated test suite into build
 	process  
 

@@ -5,8 +5,17 @@
                            (= (vector-ref argv 1)
                               "--strict")))
 
+(define (== x y)
+  (cond ((= x y)
+         true)
+        ((and (pair? x) (pair? y))
+         (and (== (car x) (car y))
+              (== (cdr x) (cdr y))))
+        (else
+         ())))
+
 (define (test id exp val)
-  (if (= exp val)
+  (if (== exp val)
       (begin 
         (print 'Test 'passed: id)
         (set! tests-passed (+ tests-passed 1)))
@@ -14,8 +23,11 @@
         (print 'Test 'failed: id 'was: exp 'shouldBe: val)
         (set! tests-failed (+ tests-failed 1)))))
 
+(define (delimiter) 
+  (print '===========================))
 
-(define (cadr list) (car (cdr list))) ;; We dont have this (yet??)
+(define (cadr list) 
+  (car (cdr list))) ;; We dont have this (yet??)
 
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (+ 1 2) true)
@@ -34,6 +46,7 @@
 (test 'arith6 (- 3) -3)
 (test 'arith7 (/ 3 4 5) (/ 3 20))
 
+(delimiter)
 
 ;; Control flow
 
@@ -44,6 +57,8 @@
           (- 3 2)
           (+ 3 2))
       1)
+
+(delimiter)
 
 (test 'condSimple 
       (cond ((> 3 2) 'greater)
@@ -59,12 +74,49 @@
             (else ()))
       2)
 
+(delimiter)
 
+(test 'andTrue (and (= 2 2) (> 2 1)) true)
+(test 'andFalse (and (= 2 2) (< 2 1)) ())
+(test 'andValue (and 1 2 'c '(f g)) '(f g))
+(test 'andEmpty (and) true)
+
+(delimiter)
+
+(test 'orTrue (and (= 2 2) (> 2 1)) true)
+(test 'orFalse (and (= 2 2) (< 2 1)) ())
+
+
+(delimiter)
+;; Binding constructs
+
+(test 'let
+      (let ((x 2) (y 3))
+        (let ((x 7)
+              (z (+ x y)))
+          (* z x)))   
+      35)
+(test 'letrec
+      (letrec ((even?
+                (lambda (n)
+                  (if (= n 0)
+                      true
+                      (odd? (- n 1)))))
+               (odd?
+                (lambda (n)
+                  (if (= n 0)
+                      ()
+                      (even? (- n 1))))))
+        (even? 88))
+        true)
+
+(delimiter)
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately
 ;;
 
+(print)
 (print 'Tests 'passed: tests-passed)
 (print 'Tests 'failed: tests-failed)
 (print '===========================)
