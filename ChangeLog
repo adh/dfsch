@@ -1,5 +1,8 @@
 2005-11-20  Ales Hakl  <ales at hakl dot net>
 
+	* tests/scm-test.sh, Makefile.am: integrated test suite into build
+	process  
+
 	* src/native.c (native_vector_length): Fixed bug concerning type
 	identification 
 

@@ -24,3 +24,4 @@ dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la -lreadline -lncurses
 
 
+TESTS = tests/scm-test.sh
