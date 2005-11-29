@@ -39,7 +39,7 @@
 #include <assert.h>
 
 
-
+FILE *cmd_log;
 
 static int callback(dfsch_object_t *obj, void* baton){
   dfsch_object_t *ret = dfsch_ctx_eval(baton, obj);
@@ -47,6 +47,11 @@ static int callback(dfsch_object_t *obj, void* baton){
     fputs(dfsch_exception_write(ret),stderr);    
   }else{
     puts(dfsch_obj_write(ret,100));
+    if (cmd_log){
+      fputs(dfsch_obj_write(obj,1000),cmd_log);
+      fputs("\n",cmd_log);
+      fflush(cmd_log);
+    }
   }
   return 1;
 }
@@ -174,6 +179,7 @@ int main(int argc, char**argv){
 
   GC_INIT();
 
+  cmd_log = NULL;
   ctx = dfsch_make_context();
 
   dfsch_ctx_define(ctx,"version",dfsch_make_string(VERSION));
@@ -183,7 +189,7 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
 
-  while ((c=getopt(argc, argv, "+l:e:E:hv")) != -1){
+  while ((c=getopt(argc, argv, "+l:e:E:hvO:")) != -1){
     switch (c){
     case 'l':
       {
@@ -195,6 +201,11 @@ int main(int argc, char**argv){
         }
         break;
       }
+    case 'O':
+      cmd_log = fopen(optarg, "a");
+      if (!cmd_log)
+	perror(optarg);
+      break;
     case 'e':
       {
         dfsch_object_t* ret = dfsch_ctx_eval_list(ctx, 
@@ -236,6 +247,7 @@ int main(int argc, char**argv){
       puts("-l <filename>     Load scheme file on startup\n");
       puts("-e <expression>   Execute given expression\n");
       puts("-E <expression>   Evaluate given expression\n");
+      puts("-O <filename>     Log sucessfuly executed statements\n");
       puts("-i                Force interactive mode\n");
 
       puts("First non-option argument is treated as filename of program to run");
