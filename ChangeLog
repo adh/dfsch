@@ -1,3 +1,7 @@
+2005-11-29  Ales Hakl  <dfox@mahoro.dfox.org>
+
+	* src/repl.c: Support for logging of executed forms
+
 2005-11-20  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm: Extended test suite 
