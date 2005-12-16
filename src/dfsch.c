@@ -35,7 +35,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
-
+#include <setjmp.h>
 #include <gc/gc.h>
 
 //#define PARSER_DEBUG
@@ -1240,7 +1240,20 @@ static object_t* eval_list(object_t *list, object_t* env){
   return f;
 }
 
-dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
+typedef struct tail_escape_t {
+  jmp_buf ret;
+  object_t *code;
+  object_t *env;
+}tail_escape_t;
+
+static dfsch_object_t* eval_proc_impl(dfsch_object_t* code, 
+                                      dfsch_object_t* env,
+                                      tail_escape_t* esc);
+static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
+                                  tail_escape_t* esc);
+
+static dfsch_object_t* eval_impl(dfsch_object_t* exp, dfsch_object_t* env,
+                                 tail_escape_t* esc){
  start:
 
   if (!exp) 
@@ -1258,19 +1271,22 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
  
       switch(f->type){
       case FORM:
-	return dfsch_apply(f->data.macro,     
-			   dfsch_cons(env,
-				      exp->data.pair.cdr));
+	return apply_impl(f->data.macro,     
+                          dfsch_cons(env,
+                                     exp->data.pair.cdr),
+                          esc);
       case MACRO:
-        return dfsch_eval_proc(dfsch_apply(f->data.macro,
+        return eval_proc_impl(dfsch_apply(f->data.macro,
                                            dfsch_cons(env, 
                                                       exp->data.pair.cdr)),
-                               env);
+                               env,
+                               esc);
 	
       case CLOSURE:
       case PRIMITIVE:
-	return dfsch_apply(f, 
-			   eval_list(exp->data.pair.cdr,env));
+	return apply_impl(f, 
+                          eval_list(exp->data.pair.cdr,env),
+                          esc);
       }
       
       DFSCH_RETHROW(f);
@@ -1283,6 +1299,10 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
   default:
     return exp;
   }
+}
+
+dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
+  return eval_impl(exp, env, NULL);
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
@@ -1314,22 +1334,11 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   return ext_env;
 }
 
-dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
+static dfsch_object_t* eval_proc_impl(dfsch_object_t* code, 
+                                      dfsch_object_t* env,
+                                      tail_escape_t* esc){
   object_t *i, *r=NULL;
-
-  /*
-   * Non-trivial hack is needed here in order to support tail-recursion (at
-   * least for most evident cases).
-   *
-   * There are two simple ways how to achieve this:
-   * 1) Pass escape continuation to anything called from here and descend here
-   *    in case of code like return eval(foo)
-   * 2) Integrate code for apply and other functions here and do tail recursion
-   *    explicitly
-   *
-   * First way could be extended to work even throught native functions stack 
-   * frames, but that seems unnecesary.
-   */
+  tail_escape_t myesc;
 
   if (!env)
     return NULL;
@@ -1340,13 +1349,26 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   if (code->type==EXCEPTION)
     return code;
 
+  if (esc){
+    esc->code = code;
+    esc->env = env;
+    longjmp(esc->ret,1);
+  }
 
-  i = code;
+  if (setjmp(myesc.ret)){  
+    i = myesc.code;
+    env = myesc.env;
+  }else{
+    i = code;
+  }
 
   while (i && i->type==PAIR ){
     object_t* exp = i->data.pair.car; 
 
-    r = dfsch_eval(exp,env);
+    if (i->data.pair.cdr)
+      r = eval_impl(exp,env,NULL);
+    else
+      r = eval_impl(exp,env,&myesc);
 
     if (dfsch_object_exception_p(r)){
       return r;
@@ -1359,7 +1381,12 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   return r;
 }
 
-dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
+dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
+  return eval_proc_impl(code, env, NULL);
+}
+
+static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
+                                  tail_escape_t* esc){
   if (!proc)
     return NULL;
   if (proc->type==EXCEPTION)
@@ -1370,10 +1397,11 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
   switch (proc->type){
   case CLOSURE:
     {
-      object_t* r = dfsch_eval_proc(proc->data.closure.code,
-                                    lambda_extend(proc->data.closure.args,
-                                                  args,
-                                                  proc->data.closure.env));
+      object_t* r = eval_proc_impl(proc->data.closure.code,
+                                   lambda_extend(proc->data.closure.args,
+                                                 args,
+                                                 proc->data.closure.env),
+                                   esc);
 
       if (dfsch_object_exception_p(r)){
         dfsch_exception_push(r, proc->data.closure.name);
@@ -1389,6 +1417,10 @@ dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
     DFSCH_THROW("exception:not-a-procedure", proc);
 
   }  
+}
+
+dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
+  return apply_impl(proc, args, NULL);
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){

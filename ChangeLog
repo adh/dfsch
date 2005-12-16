@@ -1,4 +1,8 @@
-2005-11-29  Ales Hakl  <dfox@mahoro.dfox.org>
+2005-12-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (eval_proc_impl): Tail recursion support
+
+2005-11-29  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c: Support for logging of executed forms
 

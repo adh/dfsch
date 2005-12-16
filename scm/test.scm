@@ -123,6 +123,16 @@
         true)
 
 (delimiter)
+
+;; Functions
+
+(define (fact x)
+  (if (= x 0)
+      1
+      (* x (fact (- x 1)))))
+
+(test 'fact (fact 5) 120)
+
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately
