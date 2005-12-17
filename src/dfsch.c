@@ -764,10 +764,8 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
 
   if(setjmp(*exception_ret) == 1){
     exception_ret = old_ret;
-    puts("Exception handler");
     return dfsch_apply(handler, dfsch_list(1, exception_obj));
   }else{
-    puts("Thunk");
     object_t *r = dfsch_apply(thunk, NULL);
     exception_ret = old_ret;
     return r;

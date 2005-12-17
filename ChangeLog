@@ -1,6 +1,7 @@
 2005-12-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_raise): Escape continuations based exceptions
+	(dfsch_try): Removed debug hooks
 
 	* src/native.c (native_string_append): string-append for arbitrary
 	number of arguments
