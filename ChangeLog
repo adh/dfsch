@@ -1,5 +1,9 @@
 2005-12-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: Removed checks for exception datatype
+
+	* src/repl.c: Adapted for new exceptions.
+
 	* src/dfsch.c (dfsch_raise): Escape continuations based exceptions
 	(dfsch_try): Removed debug hooks
 

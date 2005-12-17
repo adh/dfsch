@@ -3,7 +3,7 @@ bin_PROGRAMS = dfsch-repl
 nobase_include_HEADERS = dfsch/dfsch.h dfsch/stream.h dfsch/load.h dfsch/hash.h
 lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 
-EXTRA_DIST = scm/morse.scm
+EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm
 
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h \

@@ -41,18 +41,34 @@
 
 FILE *cmd_log;
 
-static int callback(dfsch_object_t *obj, void* baton){
-  dfsch_object_t *ret = dfsch_ctx_eval(baton, obj);
-  if (dfsch_object_exception_p(ret)){
-    fputs(dfsch_exception_write(ret),stderr);    
-  }else{
-    puts(dfsch_obj_write(ret,100));
-    if (cmd_log){
-      fputs(dfsch_obj_write(obj,1000),cmd_log);
-      fputs("\n",cmd_log);
-      fflush(cmd_log);
-    }
+typedef struct evaluator_ctx_t {
+  dfsch_ctx_t *ctx;
+  dfsch_object_t *expr;
+} evaluator_ctx_t;
+
+static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton, 
+                                       dfsch_object_t *args){
+  dfsch_object_t *ret = dfsch_ctx_eval(baton->ctx, baton->expr);
+  puts(dfsch_obj_write(ret,100));
+  if (cmd_log){
+    fputs(dfsch_obj_write(baton->expr,1000),cmd_log);
+    fputs("\n",cmd_log);
+    fflush(cmd_log);
   }
+}
+static dfsch_object_t* evaluator_handler(dfsch_object_t *baton, 
+                                         dfsch_object_t *args){
+  fputs(dfsch_exception_write(dfsch_car(args)),stderr);      
+}
+
+static int callback(dfsch_object_t *obj, void *baton){
+  evaluator_ctx_t ctx;
+
+  ctx.ctx = baton;
+  ctx.expr = obj;
+
+  dfsch_try(dfsch_make_primitive((dfsch_primitive_t)evaluator_handler, obj),
+            dfsch_make_primitive((dfsch_primitive_t)evaluator_thunk, &ctx));
   return 1;
 }
 
@@ -193,12 +209,7 @@ int main(int argc, char**argv){
     switch (c){
     case 'l':
       {
-        dfsch_object_t* ret = dfsch_load_scm(ctx, optarg);
-
-        if (dfsch_object_exception_p(ret)){
-          fputs(dfsch_exception_write(ret),stderr);
-          return 1;
-        }
+        dfsch_load_scm(ctx, optarg);
         break;
       }
     case 'O':
@@ -208,27 +219,16 @@ int main(int argc, char**argv){
       break;
     case 'e':
       {
-        dfsch_object_t* ret = dfsch_ctx_eval_list(ctx, 
-                                                  dfsch_list_read(optarg));
+        dfsch_ctx_eval_list(ctx, dfsch_list_read(optarg));
         interactive = 0;
-
-        if (dfsch_object_exception_p(ret)){
-          fputs(dfsch_exception_write(ret),stderr);
-          return 1;
-        }
         break;
       }
     case 'E':
       {
-        dfsch_object_t* ret = dfsch_ctx_eval_list(ctx,
-                                                  dfsch_list_read(optarg));
+        puts(dfsch_obj_write(dfsch_ctx_eval_list(ctx, dfsch_list_read(optarg)),
+                             100));
         interactive = 0;
 
-        if (dfsch_object_exception_p(ret)){
-          fputs(dfsch_exception_write(ret),stderr);
-          return 1;
-        }
-        puts(dfsch_obj_write(ret,100));
         break;
       }
     case 'i':
@@ -267,10 +267,6 @@ int main(int argc, char**argv){
     dfsch_ctx_define(ctx, "argv", args);
 
     ret = dfsch_load_scm(ctx, argv[optind]);
-    if (dfsch_object_exception_p(ret)){
-      fputs(dfsch_exception_write(ret),stderr);
-      return 1;
-    }
     return 0;
   }
 

@@ -93,7 +93,6 @@ typedef struct closure_t{
 typedef struct exception_t{
   object_t *type;
   object_t *data;
-  object_t *trace;
 } exception_t; 
 
 typedef struct native_t {
@@ -738,15 +737,7 @@ void dfsch_raise(dfsch_object_t* exception,
                  dfsch_object_t* location){
 
   if (!exception_ret){
-    fputs(dfsch_exception_write(exception),stderr);
-    fputs("\nStack trace:\n",stderr);
-      void *stack[20];
-  size_t size;
-        
-  size = backtrace(stack, 20);
-  backtrace_symbols_fd(stack, size, 2);
-
-
+    fputs(dfsch_exception_write(exception),stderr);        
     abort();
   }
 
@@ -1006,7 +997,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
     {
       str_list_t *l = sl_create();
       
-      sl_append(l, "<native-data: ");
+      sl_append(l, "<");
       sl_append(l, dfsch_obj_write(obj->data.native.type, max_depth-1));
       sl_append(l, ">");
       
@@ -1021,9 +1012,9 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
       sl_append(l, " . ");
       sl_append(l, dfsch_obj_write(obj->data.exception.data,
                                    max_depth-1));
-      sl_append(l, " @ ");
-      sl_append(l, dfsch_obj_write(obj->data.exception.trace,
-                                   max_depth-1));
+      //sl_append(l, " @ ");
+      //sl_append(l, dfsch_obj_write(obj->data.exception.trace,
+      //                             max_depth-1));
       sl_append(l, ">");
       
       return sl_value(l);
@@ -1306,7 +1297,6 @@ static dfsch_object_t* eval_impl(dfsch_object_t* exp, dfsch_object_t* env,
                           esc);
       }
       
-      DFSCH_RETHROW(f);
       DFSCH_THROW("exception:not-a-procedure-or-macro", f);
 
       
@@ -1386,10 +1376,6 @@ static dfsch_object_t* eval_proc_impl(dfsch_object_t* code,
       r = eval_impl(exp,env,NULL);
     else
       r = eval_impl(exp,env,&myesc);
-
-    if (dfsch_object_exception_p(r)){
-      return r;
-    }
    
     i = i->data.pair.cdr;
   }
@@ -1406,10 +1392,6 @@ static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
                                   tail_escape_t* esc){
   if (!proc)
     return NULL;
-  if (proc->type==EXCEPTION)
-    return proc;
-  if (dfsch_object_exception_p(args))
-    return args;
 
   switch (proc->type){
   case CLOSURE:
