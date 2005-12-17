@@ -21,7 +21,6 @@
 /*
  * It's not really scheme but something slightly similar, features left out 
  * include:
- * - Tail recursion (trivial, but I'm too lazy)
  * - Continuations (almost impossible to implement in this embeddable 
  *                  architecture, althought it's posibble to implement
  *                  fast continuations - i.e. something like exceptions,
@@ -42,6 +41,8 @@
 #define H__dfsch__
 
 #include <stdint.h>
+#include <pthread.h>
+#define GC_THREADS
 #include <gc/gc.h>
 
 #ifdef __cplusplus
