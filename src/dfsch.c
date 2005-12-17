@@ -731,7 +731,7 @@ object_t* dfsch_make_form(object_t *proc){
 
 
 
-static jmp_buf* exception_ret = NULL;
+static jmp_buf* exception_ret = NULL;        // TODO: thread safety
 static dfsch_object_t* exception_obj = NULL;
 
 void dfsch_raise(dfsch_object_t* exception,
