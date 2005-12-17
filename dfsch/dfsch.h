@@ -450,7 +450,24 @@ extern "C" {
 					      dfsch_object_t* data);
   
   /**
-   * Convenience wrapper around dfsch_make_exception()
+   * Raises an exception (exception could be any object)
+   */
+
+  extern void dfsch_raise(dfsch_object_t* exception, dfsch_object_t* location);
+
+  /**
+   * Executes THUNK and in case of RAISE aborts it's execution and executes
+   * handler with RAISE's argument.
+   *
+   * @arg thunk Procedure of zero arguments
+   * @arg handler Procedure of one argument
+   */
+  extern dfsch_object_t* dfsch_try(dfsch_object_t* handler,
+                                   dfsch_object_t* thunk);
+  
+
+  /**
+   * Convenience wrapper.
    */
   extern dfsch_object_t* dfsch_throw(char* type, 
                                      dfsch_object_t* data,
@@ -467,19 +484,9 @@ extern "C" {
    * If argument is exception, add current function into call trace and
    * return from current function.
    */
-#define DFSCH_RETHROW(exception)\
-           if (dfsch_object_exception_p(exception)){ \
-             dfsch_exception_push(exception, \
-                                  dfsch_make_string((char*)__func__)); \
-             return exception; \
-           }
+#define DFSCH_RETHROW(exception)
              
 
-  /**
-   * Insert new item into exception's call trace list.
-   */
-  extern void dfsch_exception_push(dfsch_object_t* e, 
-                                   dfsch_object_t* item);
 
   /**
    * Return exception's type.
@@ -490,11 +497,6 @@ extern "C" {
    * Return data associated with given exception.
    */
   extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
-
-  /**
-   * Return call trace associated with given exception.
-   */
-  extern dfsch_object_t* dfsch_exception_trace(dfsch_object_t* e);
 
 
 

@@ -731,7 +731,50 @@ object_t* dfsch_make_form(object_t *proc){
 
 
 
-// Error handling
+static jmp_buf* exception_ret = NULL;
+static dfsch_object_t* exception_obj = NULL;
+
+void dfsch_raise(dfsch_object_t* exception,
+                 dfsch_object_t* location){
+
+  if (!exception_ret){
+    fputs(dfsch_exception_write(exception),stderr);
+    fputs("\nStack trace:\n",stderr);
+      void *stack[20];
+  size_t size;
+        
+  size = backtrace(stack, 20);
+  backtrace_symbols_fd(stack, size, 2);
+
+
+    abort();
+  }
+
+  exception_obj = exception;
+  longjmp(*exception_ret, 1);
+}
+
+dfsch_object_t* dfsch_try(dfsch_object_t* handler,
+                          dfsch_object_t* thunk){
+
+  jmp_buf *old_ret;
+  
+  old_ret = exception_ret;
+  exception_ret = GC_NEW(jmp_buf);
+
+  if(setjmp(*exception_ret) == 1){
+    exception_ret = old_ret;
+    puts("Exception handler");
+    return dfsch_apply(handler, dfsch_list(1, exception_obj));
+  }else{
+    puts("Thunk");
+    object_t *r = dfsch_apply(thunk, NULL);
+    exception_ret = old_ret;
+    return r;
+  }
+
+}
+
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 				     dfsch_object_t* data){
@@ -742,7 +785,6 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
 
   e->data.exception.type = type;
   e->data.exception.data = data;
-  e->data.exception.trace = NULL;
 
   return e;
 }
@@ -752,20 +794,11 @@ dfsch_object_t* dfsch_throw(char* type,
                             char* location){
   object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data);
 
-  if (location){
-    dfsch_exception_push(e,dfsch_make_string(location));
-  }
-
-  return e;
-}
-
-void dfsch_exception_push(dfsch_object_t* e, dfsch_object_t* item){
-  if (!dfsch_object_exception_p(e))
-    return;
-
-  if(item){
-    e->data.exception.trace = dfsch_cons(item, e->data.exception.trace);
-  }
+  if(location)
+    dfsch_raise(e, dfsch_make_string(location));
+  else
+    dfsch_raise(e, NULL);
+    
 }
 
 dfsch_object_t* dfsch_exception_type(dfsch_object_t* e){
@@ -779,12 +812,6 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
     return NULL;
 
   return e->data.exception.data;
-}
-dfsch_object_t* dfsch_exception_trace(dfsch_object_t* e){
-  if (!dfsch_object_exception_p(e))
-    return NULL;
-
-  return e->data.exception.trace;
 }
 
 // Vectors
@@ -1080,20 +1107,13 @@ char* dfsch_exception_write(dfsch_object_t* e){
     return "Not a exception\n";
   }
 
+  
+
   sl_append(l,"Exception occured: ");
   sl_append(l,dfsch_obj_write(e->data.exception.type,3));
   sl_append(l," . ");
   sl_append(l,dfsch_obj_write(e->data.exception.data,3));
   sl_append(l,"\n\n");
-
-  sl_append(l,"Traceback:\n");
-  i = e->data.exception.trace;
-  while(dfsch_object_pair_p(i)){
-    sl_append(l,dfsch_obj_write(dfsch_car(i),3));
-    sl_append(l,"\n");
-
-    i = dfsch_cdr(i);
-  }
 
   return sl_value(l);
 }
@@ -1402,9 +1422,9 @@ static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
                                                  proc->data.closure.env),
                                    esc);
 
-      if (dfsch_object_exception_p(r)){
+      /*      if (dfsch_object_exception_p(r)){
         dfsch_exception_push(r, proc->data.closure.name);
-      }
+        }*/ // TODO: Install transient exception handler here for tracing
       
 
       return r;

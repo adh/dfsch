@@ -613,20 +613,14 @@ static object_t* native_throw(void *baton, object_t* args){
   return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
 static object_t* native_form_try(void *baton, object_t* args){
-  NEED_ARGS(args,3);  
-  object_t *env = dfsch_car(args);
-  object_t *value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
-  object_t *except = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
+  object_t* handler;
+  object_t* thunk;
+  DFSCH_OBJECT_ARG(args, handler);
+  DFSCH_OBJECT_ARG(args, thunk);
+  DFSCH_ARG_END(args);
 
-  EXCEPTION_CHECK(except);
-
-  return dfsch_object_exception_p(value)
-    ?dfsch_apply(except,dfsch_list(3,
-                                   dfsch_exception_type(value),
-                                   dfsch_exception_data(value),
-                                   dfsch_exception_trace(value)))
-    :value;
-  
+  return dfsch_try(handler, thunk);
+ 
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -930,8 +924,7 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "throw", 
 		   dfsch_make_primitive(&native_throw,NULL));
   dfsch_ctx_define(ctx, "try", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_try,
-							 NULL)));
+		   dfsch_make_primitive(&native_form_try,NULL));
 
   dfsch_ctx_define(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append,NULL));
