@@ -1,5 +1,8 @@
 2005-12-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_string_append): string-append for arbitrary
+	number of arguments
+
 	* src/dfsch.c (eval_proc_impl): Tail recursion support
 
 2005-11-29  Ales Hakl  <ales at hakl dot net>

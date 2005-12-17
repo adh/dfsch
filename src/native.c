@@ -637,19 +637,20 @@ static object_t* native_form_try(void *baton, object_t* args){
 
 
 static object_t* native_string_append(void *baton, object_t* args){
-  NEED_ARGS(args,2);
-  object_t* a = dfsch_car(args);
-  object_t* b = dfsch_car(dfsch_cdr(args));
-  char *s;
+  str_list_t* s = sl_create();
 
-  if (!dfsch_object_string_p(a))
-    DFSCH_THROW("exception:not-a-string", a);
-  if (!dfsch_object_string_p(b))
-    DFSCH_THROW("exception:not-a-string", b);
+  while(dfsch_object_pair_p(args)){
+    dfsch_object_t* i = dfsch_car(args);
+    
+    if (!dfsch_object_string_p(i))
+      DFSCH_THROW("exception:not-a-string", i);
+      
+    sl_append(s, dfsch_string(i));
 
-  s = stracat(dfsch_string(a),dfsch_string(b));
+    args = dfsch_cdr(args);
+  }
 
-  object_t* o = dfsch_make_string(s); 
+  object_t* o = dfsch_make_string(sl_value(s)); 
   return o;
 }
 static object_t* native_string_ref(void *baton, object_t* args){
