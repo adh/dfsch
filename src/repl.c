@@ -244,11 +244,11 @@ int main(int argc, char**argv){
     default:
       printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
       puts("Options:");
-      puts("-l <filename>     Load scheme file on startup\n");
-      puts("-e <expression>   Execute given expression\n");
-      puts("-E <expression>   Evaluate given expression\n");
-      puts("-O <filename>     Log sucessfuly executed statements\n");
-      puts("-i                Force interactive mode\n");
+      puts("-l <filename>     Load scheme file on startup");
+      puts("-e <expression>   Execute given expression");
+      puts("-E <expression>   Evaluate given expression");
+      puts("-O <filename>     Log sucessfuly executed statements");
+      puts("-i                Force interactive mode");
 
       puts("First non-option argument is treated as filename of program to run");
       puts("Run without non-option arguments to start in interactive mode");

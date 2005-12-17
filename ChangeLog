@@ -8,6 +8,11 @@
 
 	* src/dfsch.c (eval_proc_impl): Tail recursion support
 
+2005-12-05  Ales Hakl  <ales at hakl dot net>
+
+	* src/native.c (native_eval_proc): eval-proc is avaiable to scheme code
+	(native_modulo) modulo (%) operator
+
 2005-11-29  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c: Support for logging of executed forms
