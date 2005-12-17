@@ -1,5 +1,6 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
+ *   Basic native functions
  * Copyright (C) 2005 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
