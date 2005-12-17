@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include <gc/gc.h>
 
 //#define Q_DEBUG
 //#define T_DEBUG

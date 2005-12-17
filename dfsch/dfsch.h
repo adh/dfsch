@@ -40,10 +40,17 @@
 #ifndef H__dfsch__
 #define H__dfsch__
 
+#ifndef _REENTRANT
+#  define _REENTRANT
+#endif
+#ifndef GC_THREADS
+#  define GC_THREADS
+#endif
+
 #include <stdint.h>
 #include <pthread.h>
-#define GC_THREADS
 #include <gc/gc.h>
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -36,7 +36,6 @@
 #include <math.h>
 #include <stdarg.h>
 #include <setjmp.h>
-#include <gc/gc.h>
 
 //#define PARSER_DEBUG
 //#define GC_DEBUG

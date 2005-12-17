@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-#include <gc/gc.h>
+#include <dfsch/dfsch.h>
 #include <string.h>
 
 str_list_t* dfsch__sl_create(){

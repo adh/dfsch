@@ -1,5 +1,4 @@
 #include <dfsch/hash.h>
-#include <gc/gc.h>
 #include <stdlib.h>
 
 

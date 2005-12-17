@@ -34,7 +34,6 @@
 #include <readline/history.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <gc/gc.h>
 #include <signal.h>
 #include <assert.h>
 

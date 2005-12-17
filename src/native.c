@@ -33,7 +33,6 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
-#include <gc/gc.h>
 
 typedef dfsch_object_t object_t;
 
