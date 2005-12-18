@@ -19,7 +19,6 @@
  *
  */
 
-/** @file dfsch.c This is implementation of dfsch interpreter. */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -34,6 +33,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+#include <setjmp.h>
 
 typedef dfsch_object_t object_t;
 
@@ -43,7 +43,7 @@ typedef dfsch_object_t object_t;
 #define MIN_ARGS(args,count) \
   if (dfsch_list_length(args)<(count)) \
     DFSCH_THROW("exception:too-few-arguments", (args));
-#define EXCEPTION_CHECK(x) {if (dfsch_object_exception_p(x)) return x;}
+
 
 // Native procedures:
 
@@ -197,7 +197,6 @@ static object_t* native_form_define(void *baton, object_t* args){
     return dfsch_define(dfsch_car(name), lambda ,env);
   }else{
     object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
-    EXCEPTION_CHECK(value);
     return dfsch_define(name,value,env);
   }
 
@@ -209,8 +208,6 @@ static object_t* native_form_set(void *baton, object_t* args){
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
   object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(dfsch_cdr(args))),env);
-
-  EXCEPTION_CHECK(value);
 
   return dfsch_set(name, value, env);
 
@@ -236,8 +233,6 @@ static object_t* native_macro_if(void *baton, object_t* args){
 
   test = dfsch_eval(test, env);
 
-  DFSCH_RETHROW(test);
-
   return dfsch_list(1, test?consequent:alternate);
 
 }
@@ -248,12 +243,10 @@ static object_t* native_macro_cond(void *baton, object_t* args){
 
   while (dfsch_object_pair_p(i)){
     object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
-    DFSCH_RETHROW(o);
     if (o){
       object_t* exp = dfsch_cdr(dfsch_car(i));
       if (dfsch_car(exp) == dfsch_sym_bold_right_arrow()){
         object_t* proc = dfsch_eval(dfsch_list_item(exp, 1), env);
-        DFSCH_RETHROW(proc);
 
         return dfsch_cons(dfsch_list(2,
                                      dfsch_sym_quote(),
@@ -279,7 +272,6 @@ static object_t* native_macro_case(void *baton, object_t* args){
   DFSCH_OBJECT_ARG(args, val);
 
   val = dfsch_eval(val, env);
-  DFSCH_RETHROW(val);
 
   while (dfsch_object_pair_p(args)){
     object_t* c = dfsch_car(args);
@@ -334,8 +326,6 @@ static object_t* native_form_let(void *baton, object_t* args){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
 
-    DFSCH_RETHROW(val)
-
     dfsch_define(var, val, ext_env);
     
     vars = dfsch_cdr(vars);
@@ -356,8 +346,6 @@ static object_t* native_form_letrec(void *baton, object_t* args){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
 
-    DFSCH_RETHROW(val)
-
     dfsch_define(var, val, ext_env);
     
     vars = dfsch_cdr(vars);
@@ -377,7 +365,6 @@ static object_t* native_form_let_seq(void *baton, object_t* args){
   while (dfsch_object_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-    DFSCH_RETHROW(val)
 
     ext_env = dfsch_new_frame(ext_env);
     dfsch_define(var, val, ext_env);
@@ -599,7 +586,6 @@ static object_t* native_form_or(void *baton, object_t* args){
  
   while(i){
     r = dfsch_eval(dfsch_car(i), env);
-    DFSCH_RETHROW(r);
     if (r)
       return r;
     i = dfsch_cdr(i);
@@ -617,7 +603,6 @@ static object_t* native_form_and(void *baton, object_t* args){
  
   while(i){
     r = dfsch_eval(dfsch_car(i), env);
-    DFSCH_RETHROW(r);
     if (!r)
       return r;
 
@@ -639,11 +624,27 @@ static object_t* native_not(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_throw(void *baton, object_t* args){
+static object_t* native_make_exception(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_form_try(void *baton, object_t* args){
+static object_t* native_raise(void *baton, object_t* args){
+  NEED_ARGS(args,1);  
+  dfsch_raise(dfsch_car(args));
+}
+static object_t* native_throw(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  dfsch_raise(dfsch_make_exception(dfsch_car(args),
+                                   dfsch_car(dfsch_cdr(args))));
+}
+static object_t* native_error(void *baton, object_t* args){
+  dfsch_throw("user:error",args);
+}
+static object_t* native_abort(void *baton, object_t* args){
+  dfsch_throw("user:abort",NULL);
+}
+
+static object_t* native_try(void *baton, object_t* args){
   object_t* handler;
   object_t* thunk;
   DFSCH_OBJECT_ARG(args, handler);
@@ -652,6 +653,53 @@ static object_t* native_form_try(void *baton, object_t* args){
 
   return dfsch_try(handler, thunk);
  
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Continuations
+//
+/////////////////////////////////////////////////////////////////////////////
+
+typedef struct continuation_t {
+  jmp_buf ret;
+  object_t* value;
+  int active;
+} continuation_t;
+
+static object_t* continuation_closure(continuation_t *cont, object_t* args){
+  object_t* value;
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  if (!cont->active)
+    DFSCH_THROW("exception:already-returned",NULL);
+
+  cont->value = value;
+  longjmp(cont->ret,1);
+}
+
+static object_t* native_call_ec(void *baton, object_t* args){
+  object_t *proc, *value;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  continuation_t *cont = GC_NEW(continuation_t);
+
+  cont->active = 1;
+  if(setjmp(cont->ret) == 1){
+    value = cont->value;
+  }else{
+    value = dfsch_apply(proc,
+                        dfsch_list(1,
+                                   dfsch_make_primitive((dfsch_primitive_t)
+                                                        continuation_closure,
+                                                        cont)));
+  }
+  
+  cont->active = 0;
+  return value;
+
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -953,10 +1001,24 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                                                         NULL));
 
 
+  dfsch_ctx_define(ctx, "raise", 
+		   dfsch_make_primitive(&native_raise,NULL));
+  dfsch_ctx_define(ctx, "make-exception", 
+		   dfsch_make_primitive(&native_make_exception,NULL));
   dfsch_ctx_define(ctx, "throw", 
 		   dfsch_make_primitive(&native_throw,NULL));
+  dfsch_ctx_define(ctx, "error", 
+		   dfsch_make_primitive(&native_error,NULL));
+  dfsch_ctx_define(ctx, "abort", 
+		   dfsch_make_primitive(&native_abort,NULL));
   dfsch_ctx_define(ctx, "try", 
-		   dfsch_make_primitive(&native_form_try,NULL));
+		   dfsch_make_primitive(&native_try,NULL));
+
+  dfsch_ctx_define(ctx, "call-with-escape-continuation",
+                   dfsch_ctx_define(ctx, "call/ec", 
+                                    dfsch_make_primitive(&native_call_ec,
+                                                         NULL)));
+
 
   dfsch_ctx_define(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append,NULL));

@@ -733,8 +733,7 @@ object_t* dfsch_make_form(object_t *proc){
 static jmp_buf* exception_ret = NULL;        // TODO: thread safety
 static dfsch_object_t* exception_obj = NULL;
 
-void dfsch_raise(dfsch_object_t* exception,
-                 dfsch_object_t* location){
+void dfsch_raise(dfsch_object_t* exception){
 
   if (!exception_ret){
     fputs(dfsch_exception_write(exception),stderr);        
@@ -779,14 +778,10 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
 }
 
 dfsch_object_t* dfsch_throw(char* type, 
-                            dfsch_object_t* data,
-                            char* location){
+                            dfsch_object_t* data){
   object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data);
 
-  if(location)
-    dfsch_raise(e, dfsch_make_string(location));
-  else
-    dfsch_raise(e, NULL);
+  dfsch_raise(e);
     
 }
 
@@ -1091,17 +1086,16 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
 }
 char* dfsch_exception_write(dfsch_object_t* e){
   str_list_t *l = sl_create();
-  dfsch_object_t *i;
-  if (!dfsch_object_exception_p(e)){
-    return "Not a exception\n";
-  }
-
-  
 
   sl_append(l,"Exception occured: ");
-  sl_append(l,dfsch_obj_write(e->data.exception.type,3));
-  sl_append(l," . ");
-  sl_append(l,dfsch_obj_write(e->data.exception.data,3));
+
+  if (!dfsch_object_exception_p(e)){
+    sl_append(l,dfsch_obj_write(e,3));
+  }else{
+    sl_append(l,dfsch_obj_write(e->data.exception.type,3));
+    sl_append(l," with data: ");
+    sl_append(l,dfsch_obj_write(e->data.exception.data,3));
+  }
   sl_append(l,"\n\n");
 
   return sl_value(l);
@@ -1147,7 +1141,6 @@ dfsch_object_t* dfsch_list_read(char* str){
 }
 dfsch_object_t* dfsch_obj_read(char* str){
   object_t* list = dfsch_list_read(str);
-  DFSCH_RETHROW(list);
   if (!list)
     return NULL;
   return dfsch_car(list);
@@ -1162,7 +1155,6 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
   object_t *i;
 
   if (!env || env->type!=PAIR){
-    DFSCH_RETHROW(env);
     DFSCH_THROW("exception:not-a-pair",env);
   }
 
@@ -1186,7 +1178,6 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   object_t *i, *ie;
   if (!env || env->type!=PAIR){
-    DFSCH_RETHROW(env);
     DFSCH_THROW("exception:not-a-pair",env);
   }
 
@@ -1412,7 +1403,6 @@ static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
   case PRIMITIVE:
     return (*proc->data.primitive.proc)(proc->data.primitive.baton,args);
   default:
-    DFSCH_RETHROW(proc);
     DFSCH_THROW("exception:not-a-procedure", proc);
 
   }  
@@ -1482,7 +1472,6 @@ dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp){
 }
 extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
 					   dfsch_object_t* list){
-  DFSCH_RETHROW(list);
   return dfsch_eval_proc(list, ctx->env);
 }
 
@@ -1492,13 +1481,13 @@ dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
   return dfsch_lambda(ctx->env, args, code);
 }
 
-int dfsch_ctx_define(dfsch_ctx_t *ctx, 
-                     char *name, 
-                     dfsch_object_t *obj){
+dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx, 
+                                 char *name, 
+                                 dfsch_object_t *obj){
   
-  return !dfsch_object_exception_p(dfsch_define(dfsch_make_symbol(name),
-                                                obj,
-                                                ctx->env));
+  return dfsch_define(dfsch_make_symbol(name),
+                      obj,
+                      ctx->env);
   
 }
 dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name){

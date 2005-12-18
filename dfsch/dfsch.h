@@ -453,7 +453,7 @@ extern "C" {
    * Raises an exception (exception could be any object)
    */
 
-  extern void dfsch_raise(dfsch_object_t* exception, dfsch_object_t* location);
+  extern void dfsch_raise(dfsch_object_t* exception);
 
   /**
    * Executes THUNK and in case of RAISE aborts it's execution and executes
@@ -470,22 +470,20 @@ extern "C" {
    * Convenience wrapper.
    */
   extern dfsch_object_t* dfsch_throw(char* type, 
-                                     dfsch_object_t* data,
-                                     char* location);
+                                     dfsch_object_t* data);
 
 
   /**
    * And another convenience wrapper around dfsch_make_exeption()
    */
-#define DFSCH_THROW(type,data)\
-           return dfsch_throw(type, data, (char*)__func__)
+#define DFSCH_THROW(type,data) dfsch_throw(type, data)
 
   /**
    * If argument is exception, add current function into call trace and
    * return from current function.
    */
-#define DFSCH_RETHROW(exception)
-             
+#define DFSCH_RETHROW(exception)  -- DEPRECATED --
+              
 
 
   /**
@@ -560,9 +558,9 @@ extern "C" {
    * Defines new variable NAME with value OBJ in global environment 
    * of context CTX.
    */
-  extern int dfsch_ctx_define(dfsch_ctx_t *ctx, 
-                              char *name, 
-                              dfsch_object_t *obj);
+  extern dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx, 
+                                          char *name, 
+                                          dfsch_object_t *obj);
 
 
   /**

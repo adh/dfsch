@@ -12,7 +12,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h \
 	src/util.c src/util.h\
 	src/hash.c dfsch/hash.h
 
-libdfsch_la_LDFLAGS = -version-info 3:0:2
+libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl
 
 libdfsch_load_la_SOURCES = src/load.c dfsch/load.h
