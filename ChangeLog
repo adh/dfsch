@@ -1,3 +1,8 @@
+2005-12-20  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.h: Moved dfsch_object_t definition into separate
+	reusable file 
+
 2005-12-19  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac: Bumped version number to 0.2.0-pre1

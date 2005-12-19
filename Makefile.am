@@ -6,11 +6,11 @@ lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm
 
 
-libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h \
+libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h\
 	src/stream.c dfsch/stream.h\
 	src/native.c src/native.h \
 	src/util.c src/util.h\
-	src/hash.c dfsch/hash.h
+	src/hash.c dfsch/hash.h 
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl
