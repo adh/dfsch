@@ -135,6 +135,27 @@ static hash_entry_t* alloc_entry(size_t hash,
   return e;
 }
 
+static void hash_change_size(hash_t* hash, size_t new_mask){
+  int j;
+  hash_entry_t *i;
+  hash_entry_t **vector = hash->vector; // Save pointer to old contents
+  size_t ol = hash->mask+1;
+  hash->mask = new_mask;
+  alloc_vector(hash);
+  
+  for (j=0; j<ol; j++){
+    i = vector[j];
+    while (i){
+      hash_entry_t *next = i->next;
+      size_t h = i->hash;
+      i->next = hash->vector[h & hash->mask];
+      hash->vector[h & hash->mask] = i;
+      i = next;
+    }
+  }
+  
+}
+
 dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
                                dfsch_object_t* key,
                                dfsch_object_t* value){
@@ -162,22 +183,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
 
   hash->count++;
   if (hash->count > (hash->mask+1)*2){ // Should table grow?
-    int j;
-    hash_entry_t **vector = hash->vector; // Save pointer to old contents
-    size_t ol = hash->mask+1;
-    hash->mask = ((hash->mask+1) * 2) - 1;
-    alloc_vector(hash);
-
-    for (j=0; j<ol; j++){
-      i = vector[j];
-      while (i){
-        hash_entry_t *next = i->next;
-        size_t h = i->hash;
-        i->next = hash->vector[h & hash->mask];
-        hash->vector[h & hash->mask] = i;
-        i = next;
-      }
-    }
+    hash_change_size(hash, ((hash->mask+1) * 2) - 1);
   }
 
   hash->vector[h & hash->mask] = alloc_entry(h,
@@ -187,9 +193,36 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   
   return hash_obj;
 }
-dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash,
+dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
                                  dfsch_object_t* key){
-  // TODO
+  size_t h;
+  hash_t *hash;
+  hash_entry_t *i, *j;
+
+  GET_HASH(hash_obj, hash);
+
+  h = get_hash(hash, key);  
+  i = hash->vector[h & hash->mask];
+  
+  while (i){
+    if (h = i->hash && dfsch_eq_p(i->key, key)) {
+      j->next = i->next;
+      hash->count --;
+
+      if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
+        hash_change_size(hash, ((hash->mask+1) / 2) - 1);
+      }
+      
+
+      return i->value;
+    }
+      
+    j = i;
+    i = i->next;
+  }
+
+  return NULL;
+  
 }
 dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
                                          dfsch_object_t* key,
