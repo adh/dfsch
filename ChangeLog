@@ -1,5 +1,7 @@
 2005-12-25  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/hash.h: Documentation update
+
 	* src/promise.c: Promises
 
 2005-12-20  Ales Hakl  <ales at hakl dot net>

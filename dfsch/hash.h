@@ -48,17 +48,30 @@ extern "C" {
   extern dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash, 
                                         dfsch_object_t* key);
 
-  
+  /**
+   * Associate value with key
+   */
   extern dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash,
                                         dfsch_object_t* key,
                                         dfsch_object_t* value);
+
+  /**
+   * Delete given key.
+   */
   extern dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash,
                                           dfsch_object_t* key);
+
+  /**
+   * Set value associated with given key only when there is already such 
+   * key.
+   */
   extern dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash,
                                                   dfsch_object_t* key,
                                                   dfsch_object_t* value);
   
-  
+  /**
+   * Convert hash table to list of associations.
+   */
   extern dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj);
   
 #ifdef __cplusplus
