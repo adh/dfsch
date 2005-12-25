@@ -26,6 +26,7 @@
 
 #include "native.h"
 #include <dfsch/hash.h>
+#include <dfsch/promise.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -707,7 +708,19 @@ static object_t* native_call_ec(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_macro_delay(void* baton, object_t* args){
+static object_t* native_form_delay(void* baton, object_t* args){
+  object_t* env;
+  DFSCH_OBJECT_ARG(args, env);
+
+  return dfsch_make_promise(args, env);
+}
+
+static object_t* native_force(void* baton, object_t* args){
+  object_t* promise;
+  DFSCH_OBJECT_ARG(args, promise);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_force_promise(promise);
 }
 
 
@@ -1074,6 +1087,12 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_hash_set_if_exists,NULL));
   dfsch_ctx_define(ctx, "hash->alist", 
                    dfsch_make_primitive(&native_hash_2_alist,NULL));
+
+  dfsch_ctx_define(ctx, "delay", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_delay,
+                                                        NULL)));
+  dfsch_ctx_define(ctx, "force", 
+                   dfsch_make_primitive(&native_force,NULL));
 
 
   return NULL;

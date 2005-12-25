@@ -1,5 +1,7 @@
 2005-12-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c: Promises avaiable as native functions
+
 	* dfsch/hash.h: Documentation update
 
 	* src/promise.c: Promises
