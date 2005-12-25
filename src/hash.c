@@ -99,9 +99,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 }
 
 #define GET_HASH(obj,hash)\
-   hash = dfsch_native_data(obj, hash_type());\
-   if (!hash)\
-     DFSCH_THROW("exception:not-a-hash", obj)
+   hash = dfsch_native_data(obj, hash_type());
 
 dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
                                dfsch_object_t* key){
