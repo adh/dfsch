@@ -1,6 +1,7 @@
 2005-12-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c: Promises avaiable as native functions
+	(native_form_cons_stream): Streams avaiable as native functions
 
 	* dfsch/hash.h: Documentation update
 

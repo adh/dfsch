@@ -723,6 +723,36 @@ static object_t* native_force(void* baton, object_t* args){
   return dfsch_force_promise(promise);
 }
 
+static object_t* native_form_cons_stream(void* baton, object_t* args){
+  object_t* env;
+  object_t* head;
+  object_t* tail;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, head);
+  DFSCH_OBJECT_ARG(args, tail);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_cons(dfsch_eval(head, env), 
+                    dfsch_make_promise(dfsch_list(1,
+                                                  tail),
+                                       env));
+}
+
+static object_t* native_head(void* baton, object_t* args){
+  object_t* stream;
+  DFSCH_OBJECT_ARG(args, stream);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_car(stream);
+}
+static object_t* native_tail(void* baton, object_t* args){
+  object_t* stream;
+  DFSCH_OBJECT_ARG(args, stream);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_stream_tail(stream);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1056,7 +1086,8 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "T", dfsch_sym_true());
 
   dfsch_ctx_define(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
-  dfsch_ctx_define(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,NULL));
+  dfsch_ctx_define(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
+                                                          NULL));
   dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
   dfsch_ctx_define(ctx, "make-vector", 
@@ -1093,6 +1124,13 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                                                         NULL)));
   dfsch_ctx_define(ctx, "force", 
                    dfsch_make_primitive(&native_force,NULL));
+  dfsch_ctx_define(ctx, "cons-stream", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_cons_stream,
+                                                        NULL)));
+  dfsch_ctx_define(ctx, "head", 
+                   dfsch_make_primitive(&native_head,NULL));
+  dfsch_ctx_define(ctx, "tail", 
+                   dfsch_make_primitive(&native_tail,NULL));
 
 
   return NULL;
