@@ -29,10 +29,26 @@
 extern "C" {
 #endif
 
+  /**
+   * Create new hash table object
+   */
   extern dfsch_object_t* dfsch_hash_make();
+
+  /**
+   * Check whenever given object is hashtable
+   */
   extern int dfsch_hash_p(dfsch_object_t* obj);
+
+  /**
+   * Get given entry in hashtable.
+   *
+   * Return value is pair, whose CAR is value associated with key
+   * or empty list in case of non-existant key.
+   */
   extern dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash, 
                                         dfsch_object_t* key);
+
+  
   extern dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash,
                                         dfsch_object_t* key,
                                         dfsch_object_t* value);

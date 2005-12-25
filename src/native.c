@@ -623,7 +623,6 @@ static object_t* native_not(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-
 static object_t* native_make_exception(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
@@ -701,6 +700,16 @@ static object_t* native_call_ec(void *baton, object_t* args){
   return value;
 
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Promises and streams
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static object_t* native_macro_delay(void* baton, object_t* args){
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

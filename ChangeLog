@@ -1,3 +1,7 @@
+2005-12-25  Ales Hakl  <ales at hakl dot net>
+
+	* src/promise.c: Promises
+
 2005-12-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.h: Moved dfsch_object_t definition into separate

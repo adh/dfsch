@@ -818,7 +818,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 // Native data
 
 dfsch_object_t* dfsch_make_native_data(void *data, 
-					      dfsch_object_t *type){
+                                       dfsch_object_t *type){
   object_t* n = make_object(NATIVE);
   
   n->data.native.type = type;
@@ -829,13 +829,13 @@ dfsch_object_t* dfsch_make_native_data(void *data,
 void* dfsch_native_data(dfsch_object_t *object, dfsch_object_t* type){
 
   if (!object || object->type!=NATIVE || object->data.native.type != type)
-    return NULL;
+    dfsch_throw("exception:invalid-type", dfsch_cons(type, object));
   
   return object->data.native.data;
 }
 dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object){
   if (!object || object->type!=NATIVE)
-    return NULL;
+    dfsch_throw("exception:invalid-type", dfsch_cons(NULL, object));
 
   return object->data.native.type;
 

@@ -10,7 +10,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h\
 	src/stream.c dfsch/stream.h\
 	src/native.c src/native.h \
 	src/util.c src/util.h\
-	src/hash.c dfsch/hash.h 
+	src/hash.c dfsch/hash.h \
+	src/promise.c dfsch/promise.h
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl
