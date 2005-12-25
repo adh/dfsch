@@ -3,5 +3,4 @@
   - Big integers
   - Fractions
   - Complex numbers (as pairs of two numbers of same type)
-* Streams
 * caaadadr and such weird functions (I've no idea how to implement this)
