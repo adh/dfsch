@@ -2,6 +2,7 @@
 
 	* src/native.c: Promises avaiable as native functions
 	(native_form_cons_stream): Streams avaiable as native functions
+	(native_form_stream_*): Renamed to match SRFI 40 
 
 	* dfsch/hash.h: Documentation update
 

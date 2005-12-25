@@ -739,14 +739,14 @@ static object_t* native_form_cons_stream(void* baton, object_t* args){
                                        env));
 }
 
-static object_t* native_head(void* baton, object_t* args){
+static object_t* native_stream_car(void* baton, object_t* args){
   object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
 
   return dfsch_car(stream);
 }
-static object_t* native_tail(void* baton, object_t* args){
+static object_t* native_stream_cdr(void* baton, object_t* args){
   object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
@@ -1127,10 +1127,10 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "cons-stream", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_cons_stream,
                                                         NULL)));
-  dfsch_ctx_define(ctx, "head", 
-                   dfsch_make_primitive(&native_head,NULL));
-  dfsch_ctx_define(ctx, "tail", 
-                   dfsch_make_primitive(&native_tail,NULL));
+  dfsch_ctx_define(ctx, "stream-car", 
+                   dfsch_make_primitive(&native_stream_car,NULL));
+  dfsch_ctx_define(ctx, "stream-cdr", 
+                   dfsch_make_primitive(&native_stream_cdr,NULL));
 
 
   return NULL;
