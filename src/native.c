@@ -915,6 +915,15 @@ object_t* native_hash_ref(void* baton, object_t* args){
 
   return dfsch_hash_ref(hash, key);
 }
+object_t* native_hash_unset(void* baton, object_t* args){
+  object_t* hash;
+  object_t* key;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_unset(hash, key);
+}
 object_t* native_hash_set(void* baton, object_t* args){
   object_t* hash;
   object_t* key;
@@ -1112,6 +1121,8 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_hash_p,NULL));
   dfsch_ctx_define(ctx, "hash-ref", 
                    dfsch_make_primitive(&native_hash_ref,NULL));
+  dfsch_ctx_define(ctx, "hash-unset!", 
+                   dfsch_make_primitive(&native_hash_set,NULL));
   dfsch_ctx_define(ctx, "hash-set!", 
                    dfsch_make_primitive(&native_hash_set,NULL));
   dfsch_ctx_define(ctx, "hash-set-if-exists!", 

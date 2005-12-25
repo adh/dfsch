@@ -1,5 +1,8 @@
 2005-12-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_hash_unset): hash-unset acessible to scheme
+	code 
+
 	* src/hash.c (dfsch_hash_unset): Deleting keys and shrinking of 
 	hash-tables
 
