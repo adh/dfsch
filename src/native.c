@@ -723,7 +723,7 @@ static object_t* native_force(void* baton, object_t* args){
   return dfsch_force_promise(promise);
 }
 
-static object_t* native_form_cons_stream(void* baton, object_t* args){
+static object_t* native_form_stream_cons(void* baton, object_t* args){
   object_t* env;
   object_t* head;
   object_t* tail;
@@ -1135,8 +1135,9 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                                                         NULL)));
   dfsch_ctx_define(ctx, "force", 
                    dfsch_make_primitive(&native_force,NULL));
-  dfsch_ctx_define(ctx, "cons-stream", 
-                   dfsch_make_form(dfsch_make_primitive(&native_form_cons_stream,
+
+  dfsch_ctx_define(ctx, "stream-cons", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_stream_cons,
                                                         NULL)));
   dfsch_ctx_define(ctx, "stream-car", 
                    dfsch_make_primitive(&native_stream_car,NULL));
