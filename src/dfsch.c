@@ -43,8 +43,8 @@
 
 #include "object.h"
 
-static object_t* make_object(type_t type){
-  object_t* o = GC_MALLOC(sizeof(object_t));
+object_t* dfsch__make_object(type_t type, size_t size){
+  object_t* o = GC_MALLOC(size);
   if (!o)
     return NULL;
 
@@ -152,7 +152,7 @@ dfsch_object_t* dfsch_nil(){
 // Pairs
 
 dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
-  object_t* p = make_object(PAIR);
+  dfsch_object_t* p = make_object(PAIR);
   if (!p)
     return NULL;
 
@@ -352,27 +352,6 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
   }
 
   return NULL;
-
-}
-
-// Numbers
-
-dfsch_object_t* dfsch_make_number(double num){
-  object_t *n;
-  n = make_object(NUMBER);
-  if (!n)
-    return NULL;
-
-
-  n->data.number = num;
-
-  return n;
-}
-float dfsch_number(dfsch_object_t *n){
-  if (!n || n->type!=NUMBER)
-    return 0.0;
-
-  return n->data.number;
 
 }
 

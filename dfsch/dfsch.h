@@ -21,10 +21,7 @@
 /*
  * It's not really scheme but something slightly similar, features left out 
  * include:
- * - Continuations (almost impossible to implement in this embeddable 
- *                  architecture, althought it's posibble to implement
- *                  fast continuations - i.e. something like exceptions,
- *                  and it's AFAIK possible in this scheme alone)
+ * - first class continuations
  * - I/O (left out on purpose)
  * - and maybe something other 
  */
@@ -166,6 +163,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_list_read(char* str);
 
 
+#define dfsch_number dfsch_number_to_double
+#define dfsch_make_number dfsch_make_number_from_double
+#include <dfsch/number.h>
 
 
   /**
@@ -326,18 +326,6 @@ extern "C" {
    * witout need for looking it up every time.
    */
   extern dfsch_object_t* dfsch_sym_bold_right_arrow();
-
-
-  // numbers
-
-  /**
-   * Makes number object from given floating-point number.
-   */
-  extern dfsch_object_t* dfsch_make_number(double n);
-  /**
-   * Returns native representation of given number object;
-   */
-  extern float dfsch_number(dfsch_object_t *n);
 
   // closures
 

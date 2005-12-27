@@ -73,8 +73,8 @@ struct dfsch_object_t{
   type_t type;
   union {
     pair_t pair;
-    symbol_t symbol;
     double number;
+    symbol_t symbol;
     char* string;
     primitive_t primitive;
     closure_t closure;
@@ -84,5 +84,10 @@ struct dfsch_object_t{
     native_t native;
   } data;
 };
+
+
+
+extern object_t* dfsch__make_object(type_t type, size_t size);
+#define make_object(t) dfsch__make_object(t,sizeof(dfsch_object_t))
 
 #endif
