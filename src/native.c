@@ -54,6 +54,12 @@ typedef dfsch_object_t object_t;
 //
 /////////////////////////////////////////////////////////////////////////////
 
+/*
+ * Number maniulation is simply brain damaged and needs considerable amount
+ * of work.
+ *
+ * We also need support for different numeric types here.
+ */
 
 static object_t* native_plus(void *baton, object_t* args){
   object_t* i = args;
