@@ -1,5 +1,7 @@
 2006-01-05  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/strings.h: Some basic idea of API.
+
 	* src/strings.c dfsch/strings.h: Files for new implementation of
 	string handling
 
