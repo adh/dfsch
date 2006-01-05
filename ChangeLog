@@ -1,3 +1,8 @@
+2006-01-05  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c dfsch/strings.h: Files for new implementation of
+	string handling
+
 2005-12-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c (native_hash_unset): hash-unset acessible to scheme
