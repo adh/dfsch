@@ -1,3 +1,7 @@
+2006-01-22  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/strings.h: We should be able to create empty strings
+
 2006-01-05  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/strings.h: Some basic idea of API.

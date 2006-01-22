@@ -13,6 +13,7 @@ extern dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len);
 extern dfsch_object_t* dfsch_make_string_cstr(char* string);
 extern dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf);
 extern dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len);
+extern dfsch_object_t* dfsch_make_string(size_t len, char def);
 
 extern char* dfsch_string_to_cstr(dfsch_object_t* obj);
 extern dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj);
