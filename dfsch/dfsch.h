@@ -593,9 +593,9 @@ extern "C" {
   if (!dfsch_object_pair_p((al))) \
     DFSCH_THROW("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
-  { object_t* tmp = dfsch_car((al)); \
+  { dfsch_object_t* tmp = dfsch_car((al)); \
     if (!dfsch_object_string_p(tmp)) \
-        DFSCH_THROW("exception:not-a-string",tmp) \
+      DFSCH_THROW("exception:not-a-string",tmp);	\
     (name) = dfsch_string(tmp); \
     (al) = dfsch_cdr((al));\
   }
@@ -604,7 +604,7 @@ extern "C" {
   if (!dfsch_object_pair_p((al))) \
     DFSCH_THROW("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
-  { object_t* tmp = dfsch_car((al)); \
+  { dfsch_object_t* tmp = dfsch_car((al)); \
     if (!dfsch_object_number_p(tmp)) \
         DFSCH_THROW("exception:not-a-number",tmp); \
     (name) = (type)dfsch_number(tmp); \
@@ -620,9 +620,9 @@ extern "C" {
 #define DFSCH_STRING_ARG_OPT(al, name, default)\
   if (!dfsch_object_pair_p((al))) \
     {(name)=(default);} else\
-  { object_t* tmp = dfsch_car((al)); \
+  { dfsch_object_t* tmp = dfsch_car((al)); \
     if (!dfsch_object_string_p(tmp)) \
-        DFSCH_THROW("exception:not-a-string",tmp) \
+      DFSCH_THROW("exception:not-a-string",tmp);	\
     (name) = dfsch_string(tmp); \
     (al) = dfsch_cdr((al));\
   }
@@ -630,9 +630,9 @@ extern "C" {
 #define DFSCH_NUMBER_ARG_OPT(al, name, type, default)\
   if (!dfsch_object_pair_p((al))) \
   {(name) = (default);} else\
-  { object_t* tmp = dfsch_car((al)); \
+  { dfsch_object_t* tmp = dfsch_car((al)); \
     if (!dfsch_object_number_p(tmp)) \
-        DFSCH_THROW("exception:not-a-number",tmp) \
+      DFSCH_THROW("exception:not-a-number",tmp);	\
     (name) = (type)dfsch_number(tmp); \
     (al) = dfsch_cdr((al));\
   }

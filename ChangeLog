@@ -1,5 +1,7 @@
 2006-01-23  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h: Fixed tzpos in argument proocessing macros
+
 	* src/strings.c: New handling of strings is working
 
 2006-01-22  Ales Hakl  <ales at hakl dot net>
