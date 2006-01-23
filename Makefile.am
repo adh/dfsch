@@ -1,15 +1,18 @@
 
 bin_PROGRAMS = dfsch-repl
-nobase_include_HEADERS = dfsch/dfsch.h dfsch/stream.h dfsch/load.h dfsch/hash.h
+nobase_include_HEADERS = \
+	dfsch/dfsch.h dfsch/stream.h dfsch/load.h \
+	dfsch/hash.h dfsch/number.h
+
 lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm
 
 
-libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h\
-	src/stream.c dfsch/stream.h\
+libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h \
+	src/stream.c dfsch/stream.h \
 	src/native.c src/native.h \
-	src/util.c src/util.h\
+	src/util.c src/util.h \
 	src/hash.c dfsch/hash.h \
 	src/promise.c dfsch/promise.h \
 	src/number.c dfsch/number.h
@@ -27,3 +30,4 @@ dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la -lreadline -lncurses
 
 
 TESTS = tests/scm-test.sh
+
