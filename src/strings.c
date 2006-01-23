@@ -1,5 +1,6 @@
 #include <dfsch/strings.h>
 #include "object.h"
+#include <string.h>
 
 typedef struct dfsch_string_t {
   type_t string;
@@ -26,12 +27,13 @@ dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf){
   return dfsch_make_string_buf(strbuf->ptr, strbuf->len);
 }
 dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
-  dfsch_string_t *s = dfsch__make_object(STRING, sizeof(dfsch_string_t));
+  dfsch_string_t *s = 
+    (dfsch_string_t*)dfsch__make_object(STRING, sizeof(dfsch_string_t));
 
   s->ptr = ptr;
   s->len = len;
 
-  return s;
+  return (dfsch_object_t*)s;
 }
 
 char* dfsch_string_to_cstr(dfsch_object_t* obj){
