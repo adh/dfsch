@@ -14,6 +14,7 @@ typedef enum {
   VECTOR,
   NATIVE // define new types here
 } type_t ;
+#include "object.h"
 
 typedef dfsch_object_t object_t;
 typedef dfsch_ctx_t context_t;
@@ -75,7 +76,6 @@ struct dfsch_object_t{
     pair_t pair;
     double number;
     symbol_t symbol;
-    char* string;
     primitive_t primitive;
     closure_t closure;
     object_t *macro;
@@ -89,5 +89,9 @@ struct dfsch_object_t{
 
 extern object_t* dfsch__make_object(type_t type, size_t size);
 #define make_object(t) dfsch__make_object(t,sizeof(dfsch_object_t))
+
+#define TYPE_CHECK(obj, t, name) \
+  if (((dfsch_object_t*)obj)->type != t) \
+    dfsch_throw("exception:not-a-" name, obj);
 
 #endif

@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ *((dfsch_string_t*)s)->ptr
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -69,7 +69,7 @@ int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   case NUMBER:
     return (a->data.number == b->data.number);
   case STRING:
-    return strcmp(a->data.string, b->data.string)==0?1:0;
+    return dfsch_string_eq_p(a,b);
   }
 
   return 0;
@@ -358,22 +358,10 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 // Strings
 
 dfsch_object_t* dfsch_make_string(char* str){
-  object_t *n;
-  n = make_object(STRING);
-  if (!n)
-    return NULL;
-
-
-  n->data.string = stracpy(str);
-
-  return n;
+  return dfsch_make_string_cstr(str);
 }
 char* dfsch_string(dfsch_object_t *n){
-  if (!n || n->type!=STRING)
-    return NULL;
-
-  return n->data.string;
-
+  return dfsch_string_to_cstr(n);
 }
 
 
@@ -844,7 +832,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
       return stracpy(dfsch_symbol(obj));
     }
   case STRING:
-    return straquote(obj->data.string);
+    return straquote(dfsch_string_to_cstr(obj));
   case PRIMITIVE:
     return "<native-code>";
   case CLOSURE:
