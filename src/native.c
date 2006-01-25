@@ -468,6 +468,26 @@ static object_t* native_assoc(void* baton, object_t* args){
 
   return dfsch_assoc(alist, key);
 }
+static object_t* native_assv(void* baton, object_t* args){
+  object_t* alist;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, alist);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_assv(alist, key);
+}
+static object_t* native_assq(void* baton, object_t* args){
+  object_t* alist;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, alist);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_assq(alist, key);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -940,6 +960,8 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
                                                          NULL));
   dfsch_ctx_define(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
+  dfsch_ctx_define(ctx, "assq", dfsch_make_primitive(&native_assq,NULL));
+  dfsch_ctx_define(ctx, "assv", dfsch_make_primitive(&native_assv,NULL));
 
   dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
   dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));

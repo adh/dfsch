@@ -1,5 +1,7 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (dfsch_native_register): assq, assv in scheme
+
 	* src/dfsch.c (dfsch_assq, dfsch_assv): Other variants of assoc 
 	(dfsch_assv): Fixed
 
