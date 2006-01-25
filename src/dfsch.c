@@ -86,8 +86,8 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   return a->type->equal_p(a,b);
 }
 
-int pair_equal_p(pair_t*, pair_t*);
-char* pair_write(pair_t*, int);
+static int pair_equal_p(pair_t*, pair_t*);
+static char* pair_write(pair_t*, int);
 
 static const dfsch_type_t pair_type = {
   sizeof(pair_t), 
@@ -97,10 +97,10 @@ static const dfsch_type_t pair_type = {
 };
 #define PAIR (&pair_type)
 
-int pair_equal_p(pair_t*a, pair_t*b){
+static int pair_equal_p(pair_t*a, pair_t*b){
   return dfsch_equal_p(a->car,b->car) && dfsch_equal_p(a->cdr, b->cdr);
 }
-char* pair_write(pair_t*p, int max_depth){
+static char* pair_write(pair_t*p, int max_depth){
   if (p->cdr && p->cdr->type!=PAIR){
     
     str_list_t* l = sl_create();
@@ -141,8 +141,8 @@ char* pair_write(pair_t*p, int max_depth){
 
 }
 
-int symbol_equal_p(object_t*, object_t*);
-char* symbol_write(symbol_t*, int);
+static int symbol_equal_p(object_t*, object_t*);
+static char* symbol_write(symbol_t*, int);
 static const dfsch_type_t symbol_type = {
   sizeof(symbol_t), 
   "symbol",
@@ -150,10 +150,10 @@ static const dfsch_type_t symbol_type = {
   (dfsch_type_write_t)symbol_write
 };
 #define SYMBOL (&symbol_type) 
-int symbol_equal_p(object_t* a, object_t* b){
+static int symbol_equal_p(object_t* a, object_t* b){
   return a == b;
 }
-char* symbol_write(symbol_t* s, int max_depth){
+static char* symbol_write(symbol_t* s, int max_depth){
   return s->data;
 }
 

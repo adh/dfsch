@@ -1,6 +1,7 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_vector_2_list): Fixed segfaults in list->vector
+	(type definitions): Made types' methods static 
 
 	* New way of handling objects in memory 
 
