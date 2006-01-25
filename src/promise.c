@@ -21,35 +21,36 @@
 
 #include <dfsch/promise.h>
 
-dfsch_object_t* promise_type(){
-  static dfsch_object_t* cache = NULL;
-  if (!cache)
-    cache = dfsch_make_symbol("promise");
-
-  return cache;
-}
-
 typedef struct promise_t {
+  dfsch_type_t *type;
   dfsch_object_t* expr;
   dfsch_object_t* env;
   dfsch_object_t* value;
   int set;
 } promise_t;
 
+static const dfsch_type_t promise_type = {
+  sizeof(promise_t),
+  "promise",
+  NULL,
+  NULL
+};
 
 dfsch_object_t* dfsch_make_promise(dfsch_object_t* expr, dfsch_object_t* env){
-  promise_t* p = GC_NEW(promise_t);
+  promise_t* p = dfsch_make_object(&promise_type);
 
   p->expr = expr;
   p->env = env;
   p->value = NULL;
   p->set = 0;
 
-  return dfsch_make_native_data(p, promise_type());
+  return p;
 }
 
 dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
-  promise_t* p = dfsch_native_data(promise, promise_type());
+  promise_t* p = promise;
+  if (promise->type != &promise_type)
+    dfsch_throw("exception:not-a-promise", promise);
 
   if (!p->set){
     p->value = dfsch_eval_proc(p->expr, p->env);

@@ -59,19 +59,35 @@ extern "C" {
   typedef struct dfsch_ctx_t dfsch_ctx_t;
 
   /**
-   * C datatype for scheme objects
-   */
-  typedef struct dfsch_object_t dfsch_object_t;
-
-  /**
    * Meant for functions like caaddar, currently unused
    */
   typedef unsigned int dfsch_cXr_t;
 
   /**
+   * C datatype for scheme objects
+   */
+  typedef struct dfsch_object_t dfsch_object_t;
+
+  typedef struct dfsch_type_t {
+    size_t size;
+    char* name;
+    int (*equal_p)(dfsch_object_t*, dfsch_object_t*);
+    char* (*write)(dfsch_object_t*, int);
+  } dfsch_type_t;
+
+  /**
+   * C datatype for scheme objects
+   */
+  struct dfsch_object_t {
+    dfsch_type_t *type;
+  };
+
+  /**
    * Native functions prototype
    */
   typedef dfsch_object_t* (*dfsch_primitive_t)(void*,dfsch_object_t*);
+
+
 
 #define DFSCH_CAR 0
 #define DFSCH_CDR 0
@@ -79,11 +95,12 @@ extern "C" {
 
   // object handling
 
+  extern dfsch_object_t* dfsch_make_object(dfsch_type_t* type);
 
-  /**
-   * Are A and B equal objects?
-   */
+
   extern int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b);
+  extern int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b);
+  extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
 
   /**
    * Is A null?
@@ -583,55 +600,55 @@ extern "C" {
 
 
 #define DFSCH_OBJECT_ARG(al, name)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
     DFSCH_THROW("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
 
 #define DFSCH_STRING_ARG(al, name)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
     DFSCH_THROW("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
   { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_object_string_p(tmp)) \
+    if (!dfsch_string_p(tmp)) \
       DFSCH_THROW("exception:not-a-string",tmp);	\
     (name) = dfsch_string(tmp); \
     (al) = dfsch_cdr((al));\
   }
 
 #define DFSCH_NUMBER_ARG(al, name, type)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
     DFSCH_THROW("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
   { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_object_number_p(tmp)) \
+    if (!dfsch_number_p(tmp)) \
         DFSCH_THROW("exception:not-a-number",tmp); \
     (name) = (type)dfsch_number(tmp); \
     (al) = dfsch_cdr((al));\
   }
 
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
    { (name) = (default);}else\
   {(name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al));}
 
 #define DFSCH_STRING_ARG_OPT(al, name, default)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
     {(name)=(default);} else\
   { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_object_string_p(tmp)) \
+    if (!dfsch_string_p(tmp)) \
       DFSCH_THROW("exception:not-a-string",tmp);	\
     (name) = dfsch_string(tmp); \
     (al) = dfsch_cdr((al));\
   }
 
 #define DFSCH_NUMBER_ARG_OPT(al, name, type, default)\
-  if (!dfsch_object_pair_p((al))) \
+  if (!dfsch_pair_p((al))) \
   {(name) = (default);} else\
   { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_object_number_p(tmp)) \
+    if (!dfsch_number_p(tmp)) \
       DFSCH_THROW("exception:not-a-number",tmp);	\
     (name) = (type)dfsch_number(tmp); \
     (al) = dfsch_cdr((al));\

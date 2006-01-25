@@ -37,6 +37,10 @@ extern "C" {
    */
   extern double dfsch_number_to_double(dfsch_object_t *n);
 
+  /**
+   * Creates number from external representation
+   */
+  extern dfsch_object_t* dfsch_make_number_from_string(char* str);
 
 
 #ifdef __cplusplus

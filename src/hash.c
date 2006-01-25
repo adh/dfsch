@@ -26,6 +26,7 @@
 typedef struct hash_entry_t hash_entry_t;
 typedef struct hash_t{
 
+  dfsch_type_t* type;
   dfsch_object_t* proc;
   size_t count;
   size_t mask;
@@ -41,23 +42,21 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
-static dfsch_object_t* hash_type(){
-  static dfsch_object_t* cache = NULL;
-
-  if (cache)
-    return cache;
-
-  return cache = dfsch_make_symbol("hash");
-}
+static const dfsch_type_t hash_type = {
+  sizeof(hash_t),
+  "hash",
+  NULL,
+  NULL
+};
 
 static void alloc_vector(hash_t* hash){
   hash->vector = GC_MALLOC(sizeof(hash_entry_t)*(hash->mask+1));
 }
 
 dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc){
-  hash_t *h = GC_NEW(hash_t); 
+  hash_t *h = dfsch_make_object(&hash_type); 
 
-  if (hash_proc && !dfsch_object_procedure_p(hash_proc))
+  if (hash_proc && !dfsch_procedure_p(hash_proc))
     DFSCH_THROW("exception:not-a-procedure", hash_proc);
 
   h->proc = hash_proc;
@@ -65,10 +64,10 @@ dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc){
   h->mask = 0x03;
   alloc_vector(h);
 
-  return dfsch_make_native_data(h, hash_type());
+  return h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return dfsch_native_data_type(obj) == hash_type();
+  return obj->type == &hash_type;
 }
 
 static size_t get_hash(hash_t* hash, dfsch_object_t*key){
@@ -99,7 +98,9 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 }
 
 #define GET_HASH(obj,hash)\
-   hash = dfsch_native_data(obj, hash_type());
+   if (obj->type != &hash_type)\
+     dfsch_throw("exception:not-a-hash", obj); \
+   hash = obj;
 
 dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
                                dfsch_object_t* key){

@@ -207,7 +207,7 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       }
     case P_HASH:
       parser_pop(ctx);
-      if (dfsch_object_pair_p(obj)){
+      if (dfsch_pair_p(obj)){
         parse_object(ctx,dfsch_list_2_vector(obj));
       }else{
 	ctx->error = DFSCH_PARSER_LIST_EXPECTED;
@@ -319,6 +319,11 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 	++out;
 	++in;
 	continue;
+      case '0':
+	*out = '\0';
+	++out;
+	++in;
+	continue;
       case 'x':
 	{
 	  ++in;
@@ -355,6 +360,11 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 	  ++in;
 	  ++out;
 	  continue;
+        default:
+          *out = *in;
+          ++out;
+          ++in;
+          continue;
 	}
       }
     default:
@@ -366,7 +376,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 
   *out = 0;
   
-  dfsch_object_t *s = dfsch_make_string(data);
+  dfsch_object_t *s = dfsch_make_string_buf(data, out-data);
 
   parse_object(ctx,s);
 }

@@ -180,7 +180,7 @@ static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args){
     DFSCH_THROW("wrong-number-of-arguments",args);
 
   arg = dfsch_car(args);
-  if (!dfsch_object_string_p(arg))
+  if (!dfsch_string_p(arg))
     DFSCH_THROW("not-a-string",arg);
 
   return dfsch_load_scm(baton, dfsch_string(arg));
@@ -192,10 +192,10 @@ static dfsch_object_t* native_load_so(void *baton, dfsch_object_t* args){
     DFSCH_THROW("wrong-number-of-arguments",args);
 
   so = dfsch_car(args);
-  if (!dfsch_object_string_p(so))
+  if (!dfsch_string_p(so))
     DFSCH_THROW("not-a-string",so);
   sym = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_object_string_p(sym))
+  if (!dfsch_string_p(sym))
     DFSCH_THROW("not-a-string",sym);
 
   return dfsch_load_so(baton, dfsch_string(so), dfsch_string(sym));
@@ -207,7 +207,7 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args){
     DFSCH_THROW("wrong-number-of-arguments",args);
 
   dfsch_object_t*arg = dfsch_car(args);
-  if (!dfsch_object_string_p(arg))
+  if (!dfsch_string_p(arg))
     DFSCH_THROW("not-a-string",arg);
 
   return dfsch_read_scm(dfsch_string(arg));

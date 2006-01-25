@@ -64,9 +64,9 @@ typedef dfsch_object_t object_t;
 static object_t* native_plus(void *baton, object_t* args){
   object_t* i = args;
   double s=0;
-  while(dfsch_object_pair_p(i)){
+  while(dfsch_pair_p(i)){
     
-    if (dfsch_object_number_p(dfsch_car(i))){
+    if (dfsch_number_p(dfsch_car(i))){
       s+=dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -80,10 +80,10 @@ static object_t* native_plus(void *baton, object_t* args){
 static object_t* native_minus(void *baton, object_t* args){
   object_t* i = args;
   double s;
-  if (!dfsch_object_pair_p(i))
+  if (!dfsch_pair_p(i))
     DFSCH_THROW("exception:too-few-arguments",i);
 
-  if (dfsch_object_number_p(dfsch_car(i))){
+  if (dfsch_number_p(dfsch_car(i))){
     if (!dfsch_cdr(i))
       return dfsch_make_number(0-dfsch_number(dfsch_car(i)));
     s=dfsch_number(dfsch_car(i));
@@ -92,8 +92,8 @@ static object_t* native_minus(void *baton, object_t* args){
     
   }
   i = dfsch_cdr(i);
-  while(dfsch_object_pair_p(i)){
-    if (dfsch_object_number_p(dfsch_car(i))){
+  while(dfsch_pair_p(i)){
+    if (dfsch_number_p(dfsch_car(i))){
       s-=dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -107,8 +107,8 @@ static object_t* native_minus(void *baton, object_t* args){
 static object_t* native_mult(void *baton, object_t* args){
   object_t* i = args;
   double s=1;
-  while(dfsch_object_pair_p(i)){
-    if (dfsch_object_number_p(dfsch_car(i))){
+  while(dfsch_pair_p(i)){
+    if (dfsch_number_p(dfsch_car(i))){
       s*=dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -122,10 +122,10 @@ static object_t* native_mult(void *baton, object_t* args){
 static object_t* native_slash(void *baton, object_t* args){
   object_t* i = args;
   double s;
-  if (!dfsch_object_pair_p(i))
+  if (!dfsch_pair_p(i))
     DFSCH_THROW("exception:too-few-arguments",i);
 
-  if (dfsch_object_number_p(dfsch_car(i))){
+  if (dfsch_number_p(dfsch_car(i))){
     if (!dfsch_cdr(i))
       return dfsch_make_number(1/dfsch_number(dfsch_car(i)));
     s=dfsch_number(dfsch_car(i));
@@ -134,8 +134,8 @@ static object_t* native_slash(void *baton, object_t* args){
   }
   i = dfsch_cdr(i);
   
-  while(dfsch_object_pair_p(i)){
-    if (dfsch_object_number_p(dfsch_car(i))){
+  while(dfsch_pair_p(i)){
+    if (dfsch_number_p(dfsch_car(i))){
       s/=dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -149,10 +149,10 @@ static object_t* native_slash(void *baton, object_t* args){
 static object_t* native_modulo(void *baton, object_t* args){
   object_t* i = args;
   long s;
-  if (!dfsch_object_pair_p(i))
+  if (!dfsch_pair_p(i))
     DFSCH_THROW("exception:too-few-arguments",i);
 
-  if (dfsch_object_number_p(dfsch_car(i))){
+  if (dfsch_number_p(dfsch_car(i))){
     if (!dfsch_cdr(i))
       DFSCH_THROW("exception:too-few-arguments", i);
     s=(long)dfsch_number(dfsch_car(i));
@@ -161,8 +161,8 @@ static object_t* native_modulo(void *baton, object_t* args){
   }
   i = dfsch_cdr(i);
   
-  while(dfsch_object_pair_p(i)){
-    if (dfsch_object_number_p(dfsch_car(i))){
+  while(dfsch_pair_p(i)){
+    if (dfsch_number_p(dfsch_car(i))){
       s%=(long)dfsch_number(dfsch_car(i));
     }else{
       DFSCH_THROW("exception:not-a-number", dfsch_car(i));
@@ -197,7 +197,7 @@ static object_t* native_form_define(void *baton, object_t* args){
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
-  if (dfsch_object_pair_p(name)){
+  if (dfsch_pair_p(name)){
     object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
                                           dfsch_cdr(dfsch_cdr(args)),
                                           dfsch_car(name));
@@ -224,7 +224,7 @@ static object_t* native_form_defined_p(void *baton, object_t* args){
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
-  return dfsch_bool(dfsch_object_exception_p(dfsch_lookup(name,env)));
+  return dfsch_bool(dfsch_exception_p(dfsch_lookup(name,env)));
 }
 
 static object_t* native_macro_if(void *baton, object_t* args){
@@ -248,7 +248,7 @@ static object_t* native_macro_cond(void *baton, object_t* args){
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
 
-  while (dfsch_object_pair_p(i)){
+  while (dfsch_pair_p(i)){
     object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
     if (o){
       object_t* exp = dfsch_cdr(dfsch_car(i));
@@ -280,10 +280,10 @@ static object_t* native_macro_case(void *baton, object_t* args){
 
   val = dfsch_eval(val, env);
 
-  while (dfsch_object_pair_p(args)){
+  while (dfsch_pair_p(args)){
     object_t* c = dfsch_car(args);
     object_t* i;
-    if (!dfsch_object_pair_p(c)){
+    if (!dfsch_pair_p(c)){
       DFSCH_THROW("exception:not-a-pair",c);
     }
     
@@ -291,7 +291,7 @@ static object_t* native_macro_case(void *baton, object_t* args){
     if (i == dfsch_sym_else())
         return dfsch_cdr(c);
       
-    while (dfsch_object_pair_p(i)){
+    while (dfsch_pair_p(i)){
       if (dfsch_eq_p(dfsch_car(i), val))
         return dfsch_cdr(c);
       i = dfsch_cdr(i);
@@ -329,7 +329,7 @@ static object_t* native_form_let(void *baton, object_t* args){
 
   object_t* ext_env = dfsch_new_frame(env);
 
-  while (dfsch_object_pair_p(vars)){
+  while (dfsch_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
 
@@ -349,7 +349,7 @@ static object_t* native_form_letrec(void *baton, object_t* args){
 
   object_t* ext_env = dfsch_new_frame(env);
 
-  while (dfsch_object_pair_p(vars)){
+  while (dfsch_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
 
@@ -369,7 +369,7 @@ static object_t* native_form_let_seq(void *baton, object_t* args){
 
   object_t* ext_env = env;
 
-  while (dfsch_object_pair_p(vars)){
+  while (dfsch_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
 
@@ -476,47 +476,47 @@ static object_t* native_assoc(void* baton, object_t* args){
 
 static object_t* native_null_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_null_p(dfsch_car(args)));
+  return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
 static object_t* native_pair_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_pair_p(dfsch_car(args)));
+  return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
 }
 static object_t* native_atom_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_atom_p(dfsch_car(args)));
+  return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
 }
 static object_t* native_symbol_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_symbol_p(dfsch_car(args)));
+  return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
 static object_t* native_number_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_number_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_number_p(dfsch_car(args)));  
 }
 static object_t* native_string_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_string_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
 }
 static object_t* native_primitive_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_primitive_p(dfsch_car(args))); 
+  return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
 }
 static object_t* native_closure_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_closure_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_closure_p(dfsch_car(args)));  
 }
 static object_t* native_procedure_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_procedure_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_procedure_p(dfsch_car(args)));  
 }
 static object_t* native_vector_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_vector_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_vector_p(dfsch_car(args)));  
 }
 static object_t* native_macro_p(void *baton, object_t* args){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_object_macro_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -533,9 +533,9 @@ static object_t* native_lt(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_object_number_p(a))
+  if (!dfsch_number_p(a))
     DFSCH_THROW("exception:not-a-number", a);
-  if (!dfsch_object_number_p(b))
+  if (!dfsch_number_p(b))
     DFSCH_THROW("exception:not-a-number", b);
 
   return dfsch_bool(dfsch_number(a)<dfsch_number(b));  
@@ -544,9 +544,9 @@ static object_t* native_gt(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_object_number_p(a))
+  if (!dfsch_number_p(a))
     DFSCH_THROW("exception:not-a-number", a);
-  if (!dfsch_object_number_p(b))
+  if (!dfsch_number_p(b))
     DFSCH_THROW("exception:not-a-number", b);
     
 
@@ -556,9 +556,9 @@ static object_t* native_lte(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_object_number_p(a))
+  if (!dfsch_number_p(a))
     DFSCH_THROW("exception:not-a-number", a);
-  if (!dfsch_object_number_p(b))
+  if (!dfsch_number_p(b))
     DFSCH_THROW("exception:not-a-number", b);
 
   return dfsch_bool(dfsch_number(a)<=dfsch_number(b));  
@@ -567,9 +567,9 @@ static object_t* native_gte(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_object_number_p(a))
+  if (!dfsch_number_p(a))
     DFSCH_THROW("exception:not-a-number", a);
-  if (!dfsch_object_number_p(b))
+  if (!dfsch_number_p(b))
     DFSCH_THROW("exception:not-a-number", b);
     
 
@@ -770,10 +770,10 @@ static object_t* native_stream_cdr(void* baton, object_t* args){
 static object_t* native_string_append(void *baton, object_t* args){
   str_list_t* s = sl_create();
 
-  while(dfsch_object_pair_p(args)){
+  while(dfsch_pair_p(args)){
     dfsch_object_t* i = dfsch_car(args);
     
-    if (!dfsch_object_string_p(i))
+    if (!dfsch_string_p(i))
       DFSCH_THROW("exception:not-a-string", i);
       
     sl_append(s, dfsch_string(i));
@@ -789,7 +789,7 @@ static object_t* native_string_ref(void *baton, object_t* args){
   object_t* a = dfsch_car(args);
   object_t* b = dfsch_car(dfsch_cdr(args));
 
-  if (!dfsch_object_string_p(a))
+  if (!dfsch_string_p(a))
     DFSCH_THROW("exception:not-a-string", a);
 
   char *s = dfsch_string(a);
@@ -809,7 +809,7 @@ static object_t* native_string_length(void *baton, object_t* args){
   NEED_ARGS(args,1);
 
   object_t* a = dfsch_car(args);
-  if (!dfsch_object_string_p(a))
+  if (!dfsch_string_p(a))
     DFSCH_THROW("exception:not-a-string", a);
 
   return dfsch_make_number((double)strlen(dfsch_string(a)));
@@ -842,7 +842,7 @@ static object_t* native_vector_length(void* baton, object_t* args){
   DFSCH_OBJECT_ARG(args,vector);
   DFSCH_ARG_END(args);
 
-  if (!dfsch_object_vector_p(vector))
+  if (!dfsch_vector_p(vector))
     DFSCH_THROW("exception:not-a-vector",vector);
 
   return dfsch_make_number(dfsch_vector_length(vector));

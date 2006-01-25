@@ -1,3 +1,7 @@
+2006-01-25  Ales Hakl  <ales at hakl dot net>
+
+	* New way of handling objects in memory 
+
 2006-01-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Fixed various warnings about type safety and undefined
