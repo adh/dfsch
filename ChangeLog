@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_vector_2_list): Fixed segfaults in list->vector
 	(type definitions): Made types' methods static 
+	(vector_equal_p): Vector comparison
 
 	* New way of handling objects in memory 
 

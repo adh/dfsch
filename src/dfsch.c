@@ -198,10 +198,23 @@ static const dfsch_type_t exception_type = {
 };
 #define EXCEPTION (&exception_type)
 
+static int vector_equal_p(vector_t* a, vector_t* b){
+  size_t i;
+  if (a->length != b->length)
+    return 0;
+
+  for (i=0; i<a->length; i++){
+    if (!dfsch_equal_p(a->data[i], b->data[i]))
+      return 0;
+  }
+
+  return 1;
+}
+
 static const dfsch_type_t vector_type = {
   sizeof(vector_t),
   "vector",
-  NULL,
+  (dfsch_type_equal_p_t)vector_equal_p,
   NULL
 };
 #define VECTOR (&vector_type)
