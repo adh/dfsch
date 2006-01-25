@@ -63,3 +63,73 @@ dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
 dfsch_object_t* dfsch_stream_tail(dfsch_object_t* stream){
   return dfsch_force_promise(dfsch_cdr(stream));
 }
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Scheme binding
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static dfsch_object_t* native_form_delay(void* baton, dfsch_object_t* args){
+  dfsch_object_t* env;
+  DFSCH_OBJECT_ARG(args, env);
+
+  return dfsch_make_promise(args, env);
+}
+
+static dfsch_object_t* native_force(void* baton, dfsch_object_t* args){
+  dfsch_object_t* promise;
+  DFSCH_OBJECT_ARG(args, promise);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_force_promise(promise);
+}
+
+static dfsch_object_t* native_form_stream_cons(void* baton, 
+                                               dfsch_object_t* args){
+  dfsch_object_t* env;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, head);
+  DFSCH_OBJECT_ARG(args, tail);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_cons(dfsch_eval(head, env), 
+                    dfsch_make_promise(dfsch_list(1,
+                                                  tail),
+                                       env));
+}
+
+static dfsch_object_t* native_stream_car(void* baton, dfsch_object_t* args){
+  dfsch_object_t* stream;
+  DFSCH_OBJECT_ARG(args, stream);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_car(stream);
+}
+static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args){
+  dfsch_object_t* stream;
+  DFSCH_OBJECT_ARG(args, stream);
+  DFSCH_ARG_END(args);  
+
+  return dfsch_stream_tail(stream);
+}
+
+dfsch_object_t* dfsch__promise_native_register(dfsch_ctx_t *ctx){
+    dfsch_ctx_define(ctx, "delay", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_delay,
+                                                        NULL)));
+  dfsch_ctx_define(ctx, "force", 
+                   dfsch_make_primitive(&native_force,NULL));
+
+  dfsch_ctx_define(ctx, "stream-cons", 
+                   dfsch_make_form(dfsch_make_primitive(&native_form_stream_cons,
+                                                        NULL)));
+  dfsch_ctx_define(ctx, "stream-car", 
+                   dfsch_make_primitive(&native_stream_car,NULL));
+  dfsch_ctx_define(ctx, "stream-cdr", 
+                   dfsch_make_primitive(&native_stream_cdr,NULL));
+
+}

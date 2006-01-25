@@ -1,5 +1,7 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/promise.c: Moved promise and stream primitives to separate file
+
 	* src/hash.c (dfsch__hash_native_register): Moved hash primitives
 	to separate file
 
