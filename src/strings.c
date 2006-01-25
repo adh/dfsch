@@ -128,17 +128,6 @@ dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
 
   return (dfsch_object_t*)s;
 }
-dfsch_object_t* dfsch_make_string_buf_im(char* ptr, size_t len){
-  dfsch_string_t *s = 
-    (dfsch_string_t*)dfsch_make_object(&string_type);
-
-  s->ptr = ptr;
-  s->len = len;
-  s->ptr[len] = 0;
-
-  return (dfsch_object_t*)s;
-}
-
 char* dfsch_string_to_cstr(dfsch_object_t* obj){
   TYPE_CHECK(obj, STRING, "string");
 

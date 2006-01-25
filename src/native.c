@@ -292,7 +292,7 @@ static object_t* native_macro_case(void *baton, object_t* args){
         return dfsch_cdr(c);
       
     while (dfsch_pair_p(i)){
-      if (dfsch_eq_p(dfsch_car(i), val))
+      if (dfsch_eqv_p(dfsch_car(i), val))
         return dfsch_cdr(c);
       i = dfsch_cdr(i);
     }
@@ -528,6 +528,18 @@ static object_t* native_macro_p(void *baton, object_t* args){
 static object_t* native_eq(void *baton, object_t* args){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+}
+static object_t* native_eqv(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+}
+static object_t* native_equal(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+}
+static object_t* native_number_equal(void *baton, object_t* args){
+  NEED_ARGS(args,2);  
+  return dfsch_bool(dfsch_number_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
 static object_t* native_lt(void *baton, object_t* args){
   NEED_ARGS(args,2);  
@@ -974,7 +986,10 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
   dfsch_ctx_define(ctx, "/", dfsch_make_primitive(&native_slash,NULL));
   dfsch_ctx_define(ctx, "%", dfsch_make_primitive(&native_modulo,NULL));
-  dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_eq,NULL));
+  dfsch_ctx_define(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
+  dfsch_ctx_define(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
+  dfsch_ctx_define(ctx, "equal?", dfsch_make_primitive(&native_equal,NULL));
+  dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_number_equal,NULL));
   dfsch_ctx_define(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
   dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
   dfsch_ctx_define(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));

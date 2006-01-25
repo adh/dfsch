@@ -59,12 +59,21 @@ int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
 }
 
 int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b){
-  return (a==b);
+  if (a==b)
+    return 1;
+
+  if ((a->type == b->type) && dfsch_number_p(a))
+    return dfsch__number_eqv_p(a,b);
+
+  return 0;
 }
 
 int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   if (a==b)
     return 1;
+
+  if (!a || !b)
+    return 0;
 
   if (a->type != b->type)
     return 0;
@@ -83,8 +92,8 @@ char* pair_write(pair_t*, int);
 static const dfsch_type_t pair_type = {
   sizeof(pair_t), 
   "pair",
-  pair_equal_p,
-  pair_write
+  (dfsch_type_equal_p_t)pair_equal_p,
+  (dfsch_type_write_t)pair_write
 };
 #define PAIR (&pair_type)
 
@@ -108,14 +117,14 @@ char* pair_write(pair_t*p, int max_depth){
   }
   
   str_list_t* l = sl_create();
-  pair_t* i=p;
+  pair_t* i=(pair_t*)p;
     
   sl_append(l,"(");
     
   while (i && i->type==PAIR){
     
     sl_append(l, dfsch_obj_write(i->car,max_depth-1));
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
     
     if (i)
       sl_append(l," ");
@@ -124,7 +133,7 @@ char* pair_write(pair_t*p, int max_depth){
   
   if (i){
     sl_append(l, ". ");
-    sl_append(l, dfsch_obj_write(i,max_depth-1));
+    sl_append(l, dfsch_obj_write((object_t*)i,max_depth-1));
   }
   
   sl_append(l,")");
@@ -137,8 +146,8 @@ char* symbol_write(symbol_t*, int);
 static const dfsch_type_t symbol_type = {
   sizeof(symbol_t), 
   "symbol",
-  symbol_equal_p,
-  symbol_write
+  (dfsch_type_equal_p_t)symbol_equal_p,
+  (dfsch_type_write_t)symbol_write
 };
 #define SYMBOL (&symbol_type) 
 int symbol_equal_p(object_t* a, object_t* b){
@@ -259,7 +268,7 @@ dfsch_object_t* dfsch_nil(){
 // Pairs
 
 dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
-  pair_t* p = (pair_t*)make_object(PAIR);
+  pair_t* p = (pair_t*)dfsch_make_object(PAIR);
   if (!p)
     return NULL;
 
@@ -643,7 +652,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				    dfsch_object_t* args,
 				    dfsch_object_t* code){
-  closure_t *c = make_object(CLOSURE);
+  closure_t *c = dfsch_make_object(CLOSURE);
   if (!c)
     return NULL;
   
@@ -659,7 +668,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code,
                                           dfsch_object_t* name){
-  closure_t *c = make_object(CLOSURE);
+  closure_t *c = dfsch_make_object(CLOSURE);
   if (!c)
     return NULL;
   
@@ -675,7 +684,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
 // native code
 
 object_t* dfsch_make_primitive(dfsch_primitive_t prim, void *baton){
-  primitive_t* p = make_object(PRIMITIVE);
+  primitive_t* p = dfsch_make_object(PRIMITIVE);
   if (!p)
     return NULL;
 
@@ -688,7 +697,7 @@ object_t* dfsch_make_primitive(dfsch_primitive_t prim, void *baton){
 // macros
 
 object_t* dfsch_make_macro(object_t *proc){
-  macro_t *m = make_object(MACRO);
+  macro_t *m = dfsch_make_object(MACRO);
   
   if (!m)
     return NULL;
@@ -698,7 +707,7 @@ object_t* dfsch_make_macro(object_t *proc){
   return m;
 }
 object_t* dfsch_make_form(object_t *proc){
-  form_t *f = make_object(FORM);
+  form_t *f = dfsch_make_object(FORM);
   
   if (!f)
     return NULL;
@@ -746,7 +755,7 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 				     dfsch_object_t* data){
-  exception_t* e = make_object(EXCEPTION);
+  exception_t* e = dfsch_make_object(EXCEPTION);
   if (!e)
     return NULL;
 
@@ -781,7 +790,7 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 // Vectors
 
 dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
-  vector_t* v = make_object(VECTOR);
+  vector_t* v = dfsch_make_object(VECTOR);
   size_t i;
 
   v->length = length;
@@ -795,7 +804,7 @@ dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
 }
 dfsch_object_t* dfsch_vector(size_t count, ...){
   size_t i;
-  vector_t* v = make_object(VECTOR);
+  vector_t* v = dfsch_make_object(VECTOR);
   va_list al;
 
   va_start(al,count);

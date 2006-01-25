@@ -1,19 +1,6 @@
 #ifndef H__dfsch__object__
 #define H__dfsch__object__
 
-
-//typedef enum {
-#define  PRIMITIVE NULL
-#define  CLOSURE NULL
-#define  MACRO NULL
-#define  FORM NULL
-#define  EXCEPTION NULL
-#define  VECTOR NULL
-#define  NATIVE  NULL
-
-// define new types here
-    //} type_t ;
-
 typedef dfsch_object_t object_t;
 typedef dfsch_ctx_t context_t;
 
@@ -96,8 +83,6 @@ typedef struct form_t {
   dfsch_object_t* proc;
 } form_t;
 
-
-#define make_object(t) dfsch_make_object(t)
 
 #define TYPE_CHECK(obj, t, name) \
   if (((dfsch_object_t*)obj)->type != t) \

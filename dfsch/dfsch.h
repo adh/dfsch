@@ -68,11 +68,14 @@ extern "C" {
    */
   typedef struct dfsch_object_t dfsch_object_t;
 
+  typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
+  typedef char* (*dfsch_type_write_t)(dfsch_object_t*, int);
+
   typedef struct dfsch_type_t {
     size_t size;
     char* name;
-    int (*equal_p)(dfsch_object_t*, dfsch_object_t*);
-    char* (*write)(dfsch_object_t*, int);
+    dfsch_type_equal_p_t equal_p;
+    dfsch_type_write_t write;
   } dfsch_type_t;
 
   /**

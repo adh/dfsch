@@ -5,17 +5,9 @@
                            (= (vector-ref argv 1)
                               "--strict")))
 
-(define (== x y)
-  (cond ((= x y)
-         true)
-        ((and (pair? x) (pair? y))
-         (and (== (car x) (car y))
-              (== (cdr x) (cdr y))))
-        (else
-         ())))
 
 (define (test id exp val)
-  (if (== exp val)
+  (if (equal? exp val)
       (begin 
         (print 'Test 'passed: id)
         (set! tests-passed (+ tests-passed 1)))
