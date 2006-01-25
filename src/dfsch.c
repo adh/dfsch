@@ -211,11 +211,28 @@ static int vector_equal_p(vector_t* a, vector_t* b){
   return 1;
 }
 
+static char* vector_write(vector_t* v, int max_depth){
+  str_list_t* l= sl_create();
+  size_t i;
+        
+  sl_append(l,"#(");
+
+  for(i = 0; i < v->length-1; ++i){
+    sl_append(l, dfsch_obj_write(v->data[i], max_depth-1));
+    sl_append(l, " ");
+  }
+  
+  sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1));
+  
+  sl_append(l,")");
+  return sl_value(l);
+}
+
 static const dfsch_type_t vector_type = {
   sizeof(vector_t),
   "vector",
   (dfsch_type_equal_p_t)vector_equal_p,
-  NULL
+  (dfsch_type_write_t)vector_write
 };
 #define VECTOR (&vector_type)
 
