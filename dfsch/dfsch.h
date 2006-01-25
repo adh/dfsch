@@ -271,6 +271,16 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 				     dfsch_object_t *alist);
+  /**
+   * <code>(assv KEY ALIST)</code>
+   */
+  extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
+				     dfsch_object_t *alist);
+  /**
+   * <code>(assq KEY ALIST)</code>
+   */
+  extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
+				     dfsch_object_t *alist);
 
 
   /**

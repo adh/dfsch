@@ -316,7 +316,7 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
   p->car = car;
   p->cdr = cdr;
 
-  return p;
+  return (object_t*)p;
 }
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
   if (!pair || pair->type!=PAIR)
@@ -361,11 +361,11 @@ long dfsch_list_length(object_t* list){
   if (list->type!=PAIR)
     return -1;
 
-  i = list;
+  i = (pair_t*)list;
   count = 0;
 
   while (i && i->type==PAIR ){
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
     ++count;
   }
 
@@ -374,22 +374,22 @@ long dfsch_list_length(object_t* list){
 }
 
 dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
-  pair_t* it = list;
+  pair_t* it = (pair_t*)list;
   int i;
   for (i=0; i<index; ++i){
     if (it && it->type == PAIR){
-      it = it->cdr;
+      it = (pair_t*)it->cdr;
     }else{
       DFSCH_THROW("exception:no-such-item",dfsch_make_number(index));
     }
   }
-  return dfsch_car(it);
+  return dfsch_car((object_t*)it);
 }
 
 dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   pair_t* head=NULL;
   pair_t* tail=NULL;
-  pair_t* i = llist;
+  pair_t* i = (pair_t*)llist;
   pair_t* j;
 
   if (!llist)
@@ -398,7 +398,7 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   while(i && i->type == PAIR && i->cdr && 
         i->cdr->type == PAIR){
     
-    j = i->car;
+    j = (pair_t*)i->car;
     while(j && j->type == PAIR){
       if (head){
         object_t* tmp = dfsch_cons(j->car,NULL);
@@ -482,7 +482,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
 }
 
 
-// Alists // TODO: another variants...
+// Alists 
 
 dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 			    dfsch_object_t *alist){
@@ -497,6 +497,50 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
     }
 
     if (dfsch_equal_p(key,((pair_t*)i->car)->car)){
+      return i->car;
+    }
+
+    i = i->cdr;
+  }
+
+  return NULL;
+
+}
+dfsch_object_t* dfsch_assq(dfsch_object_t *key,
+			    dfsch_object_t *alist){
+  if (!alist || alist->type!=PAIR)
+    DFSCH_THROW("exception:not-a-pair",alist);
+
+  pair_t* i=alist;
+  
+  while (i && i->type==PAIR){
+    if (!i->car || i->car->type!=PAIR){
+      DFSCH_THROW("exception:not-a-alist",alist);
+    }
+
+    if (key == ((pair_t*)i->car)->car){
+      return i->car;
+    }
+
+    i = i->cdr;
+  }
+
+  return NULL;
+
+}
+dfsch_object_t* dfsch_assv(dfsch_object_t *key,
+			    dfsch_object_t *alist){
+  if (!alist || alist->type!=PAIR)
+    DFSCH_THROW("exception:not-a-pair",alist);
+
+  pair_t* i=alist;
+  
+  while (i && i->type==PAIR){
+    if (!i->car || i->car->type!=PAIR){
+      DFSCH_THROW("exception:not-a-alist",alist);
+    }
+
+    if (dfsch_eqv(key,((pair_t*)i->car)->car)){
       return i->car;
     }
 
