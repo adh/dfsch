@@ -540,7 +540,7 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
       DFSCH_THROW("exception:not-a-alist",alist);
     }
 
-    if (dfsch_eqv(key,((pair_t*)i->car)->car)){
+    if (dfsch_eqv_p(key,((pair_t*)i->car)->car)){
       return i->car;
     }
 

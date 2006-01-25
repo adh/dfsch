@@ -1,6 +1,7 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_assq, dfsch_assv): Other variants of assoc 
+	(dfsch_assv): Fixed
 
 	* src/strings.c (string_equal_p): Fixed string comparison function
 
