@@ -33,6 +33,10 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_make_number_from_double(double n);
   /**
+   * Makes number object from given integer number.
+   */
+  extern dfsch_object_t* dfsch_make_number_from_long(long n);
+  /**
    * Returns value of given number as double.
    */
   extern double dfsch_number_to_double(dfsch_object_t *n);

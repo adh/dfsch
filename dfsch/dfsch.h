@@ -242,7 +242,7 @@ extern "C" {
   /**
    * Return number of items in given list
    */
-  extern int dfsch_list_length(dfsch_object_t* list);
+  extern long dfsch_list_length(dfsch_object_t* list);
 
   /**
    * Returns given item of list.

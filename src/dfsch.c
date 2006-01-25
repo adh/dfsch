@@ -311,12 +311,13 @@ dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
   return pair;
 
 }
-int dfsch_list_length(object_t* list){
+long dfsch_list_length(object_t* list){
   pair_t *i;
-  int count;
+  long count;
 
   if (!list)
     return 0;
+
   if (list->type!=PAIR)
     return -1;
 
@@ -813,7 +814,7 @@ dfsch_object_t* dfsch_vector(size_t count, ...){
   v->data = GC_MALLOC(sizeof(object_t*) * count);
 
   for(i = 0; i < count; ++i){
-    dfsch_vector_set(v, i, va_arg(al, dfsch_object_t*));
+    v->data[i] = va_arg(al, dfsch_object_t*);
   }
 
   va_end(al);
@@ -877,17 +878,19 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
 }
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
-  dfsch_object_t* vector;
+  vector_t* vector;
   pair_t* j = list;
   size_t i=0;
   if (!list || list->type != PAIR)
     DFSCH_THROW("exception:not-a-pair",list);
-
-  vector = dfsch_make_vector(dfsch_list_length(list),NULL);
-
+  
+  vector = dfsch_make_object(VECTOR);
+  vector->length = dfsch_list_length(list);
+  vector->data = GC_MALLOC(sizeof(object_t*)*vector->length);
+  
   while (j && j->type == PAIR){
-    ((vector_t*)vector)->data[i] = j->car;
-    list = j->cdr;
+    vector->data[i] = j->car;
+    j = j->cdr;
     i++;
   }
 

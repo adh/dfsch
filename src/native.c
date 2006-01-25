@@ -436,7 +436,7 @@ static object_t* native_list(void *baton, object_t* args){
 static object_t* native_length(void *baton, object_t* args){
   NEED_ARGS(args,1);  
 
-  return dfsch_make_number((double)dfsch_list_length(args));
+  return dfsch_make_number_from_long(dfsch_list_length(dfsch_car(args)));
 }
 static object_t* native_set_car(void *baton, object_t* args){
   NEED_ARGS(args,2);  
@@ -455,6 +455,7 @@ static object_t* native_list_ref(void* baton, object_t* args){
 
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_NUMBER_ARG(args, k, int);
+  DFSCH_ARG_END(args);
 
   return dfsch_list_item(list, k);
 }
@@ -464,6 +465,7 @@ static object_t* native_assoc(void* baton, object_t* args){
 
   DFSCH_OBJECT_ARG(args, alist);
   DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
 
   return dfsch_assoc(alist, key);
 }

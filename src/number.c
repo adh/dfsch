@@ -35,6 +35,10 @@ dfsch_object_t* dfsch_make_number_from_double(double num){
 
   return (dfsch_object_t*)n;
 }
+dfsch_object_t* dfsch_make_number_from_long(long n){
+  return dfsch_make_number_from_double((double)n);
+}
+
 double dfsch_number_to_double(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
     dfsch_throw("exception:not-a-number", n);
