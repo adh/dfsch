@@ -32,6 +32,7 @@ typedef struct hash_t{
   size_t count;
   size_t mask;
   hash_entry_t** vector;
+  int mode;
 
 }hash_t;
 
@@ -54,7 +55,7 @@ static void alloc_vector(hash_t* hash){
   hash->vector = GC_MALLOC(sizeof(hash_entry_t)*(hash->mask+1));
 }
 
-dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc){
+dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
   hash_t *h = dfsch_make_object(&hash_type); 
 
   if (hash_proc && !dfsch_procedure_p(hash_proc))
@@ -63,6 +64,7 @@ dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc){
   h->proc = hash_proc;
   h->count = 0;
   h->mask = 0x03;
+  h->mode = mode;
   alloc_vector(h);
 
   return h;
@@ -114,14 +116,33 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
 
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
-  
-  while (i){
-    if (h = i->hash && dfsch_eq_p(i->key, key))
-      return dfsch_list(1,i->value);
-    
-    i = i->next;
-  }
 
+  switch (hash->mode){
+  case DFSCH_HASH_EQ:
+    while (i){
+      if (h == i->hash && (i->key == key))
+        return dfsch_list(1,i->value);
+      
+      i = i->next;
+    }
+    break;
+  case DFSCH_HASH_EQV:
+    while (i){
+      if (h == i->hash && dfsch_eqv_p(i->key, key))
+        return dfsch_list(1,i->value);
+      
+      i = i->next;
+    }
+    break;
+  case DFSCH_HASH_EQUAL:
+    while (i){
+      if (h == i->hash && dfsch_equal_p(i->key, key))
+        return dfsch_list(1,i->value);
+      
+      i = i->next;
+    }
+    break;
+  }
   return NULL;
 }
 
@@ -171,15 +192,38 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   h = get_hash(hash, key);  
   i = entry = hash->vector[h & hash->mask];
 
-  while (i){
-    if (h == i->hash && dfsch_eq_p(i->key, key)){
-      i->value = value;
-      return hash_obj;
+  switch (hash->mode){
+  case DFSCH_HASH_EQ:
+    while (i){
+      if (h == i->hash && i->key == key){
+        i->value = value;
+        return hash_obj;
+      }
+      
+      i = i->next;
     }
-    
-    i = i->next;
+    break;
+  case DFSCH_HASH_EQV:
+    while (i){
+      if (h == i->hash && dfsch_eqv_p(i->key, key)){
+        i->value = value;
+        return hash_obj;
+      }
+      
+      i = i->next;
+    }
+    break;
+  case DFSCH_HASH_EQUAL:
+    while (i){
+      if (h == i->hash && dfsch_equal_p(i->key, key)){
+        i->value = value;
+        return hash_obj;
+      }
+      
+      i = i->next;
+    }
+    break;
   }
-
   
   // It isn't here, so we will add new item
 
@@ -206,21 +250,63 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
   
-  while (i){
-    if (h = i->hash && dfsch_eq_p(i->key, key)) {
-      j->next = i->next;
-      hash->count --;
-
-      if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
-        hash_change_size(hash, ((hash->mask+1) / 2) - 1);
+  switch (hash->mode){
+  case DFSCH_HASH_EQ:
+    while (i){
+      if (h == i->hash && (i->key == key)) {
+        j->next = i->next;
+        hash->count --;
+        
+        if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
+          hash_change_size(hash, ((hash->mask+1) / 2) - 1);
+        }
+        
+        
+        return i->value;
       }
       
-
-      return i->value;
+      j = i;
+      i = i->next;
     }
+    break;
+
+  case DFSCH_HASH_EQV:
+    while (i){
+      if (h == i->hash && dfsch_eqv_p(i->key, key)) {
+        j->next = i->next;
+        hash->count --;
+        
+        if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
+          hash_change_size(hash, ((hash->mask+1) / 2) - 1);
+        }
+        
+        
+        return i->value;
+      }
       
-    j = i;
-    i = i->next;
+      j = i;
+      i = i->next;
+    }
+    break;
+
+  case DFSCH_HASH_EQUAL:
+    while (i){
+      if (h == i->hash && dfsch_equal_p(i->key, key)) {
+        j->next = i->next;
+        hash->count --;
+        
+        if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
+          hash_change_size(hash, ((hash->mask+1) / 2) - 1);
+        }
+        
+        
+        return i->value;
+      }
+      
+      j = i;
+      i = i->next;
+    }
+    break;
   }
 
   return NULL;
@@ -239,16 +325,40 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
   
-  while (i){
-    if (h = i->hash && dfsch_eq_p(i->key, key)){
-      i->value = value;
-      return dfsch_list(1,value);
+  switch (hash->mode){
+  case DFSCH_HASH_EQ:
+    while (i){
+      if (h = i->hash && i->key == key){
+        i->value = value;
+        return dfsch_list(1,value);
+      }
+      i = i->next;
     }
-    i = i->next;
+    break;
+  case DFSCH_HASH_EQV:
+    while (i){
+      if (h = i->hash && dfsch_eqv_p(i->key, key)){
+        i->value = value;
+        return dfsch_list(1,value);
+      }
+      i = i->next;
+    }
+    break;
+  case DFSCH_HASH_EQUAL:
+    while (i){
+      if (h = i->hash && dfsch_equal_p(i->key, key)){
+        i->value = value;
+        return dfsch_list(1,value);
+      }
+      i = i->next;
+    }
+    break;
   }
 
   return NULL;
 }
+
+
 dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
   dfsch_object_t *alist = NULL;
   int j;
@@ -278,11 +388,22 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
 /////////////////////////////////////////////////////////////////////////////
 
 static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args){
-  dfsch_object_t* proc;
+  dfsch_object_t *proc;
+  dfsch_object_t *mode;
+  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
   DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_hash_make(proc);
+  if (!mode)
+    return dfsch_hash_make(proc, DFSCH_HASH_EQ);
+  if (mode == dfsch_make_symbol("equal?"))
+    return dfsch_hash_make(proc, DFSCH_HASH_EQUAL);
+  if (mode == dfsch_make_symbol("eqv?"))
+    return dfsch_hash_make(proc, DFSCH_HASH_EQV);
+  if (mode == dfsch_make_symbol("eq?"))
+    return dfsch_hash_make(proc, DFSCH_HASH_EQ);
+
+  dfsch_throw("exception:unknown-mode", mode);
 }
 static dfsch_object_t* native_hash_p(void* baton, dfsch_object_t* args){
   dfsch_object_t* obj;

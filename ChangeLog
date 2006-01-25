@@ -1,5 +1,9 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/strings.c (string_equal_p): Fixed string comparison function
+
+	* src/hash.c: Multiple options of comparison for hash tables
+
 	* src/promise.c: Moved promise and stream primitives to separate file
 
 	* src/hash.c (dfsch__hash_native_register): Moved hash primitives

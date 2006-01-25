@@ -29,10 +29,15 @@
 extern "C" {
 #endif
 
+#define DFSCH_HASH_EQ 0
+#define DFSCH_HASH_EQV 1
+#define DFSCH_HASH_EQUAL 2
+
   /**
    * Create new hash table object
    */
-  extern dfsch_object_t* dfsch_hash_make();
+  extern dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, 
+                                         int mode);
 
   /**
    * Check whenever given object is hashtable

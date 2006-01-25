@@ -13,7 +13,7 @@ int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
   if (a->len != b->len)
     return 0;
 
-  return memcmp(a->ptr, b->ptr, a->len);
+  return memcmp(a->ptr, b->ptr, a->len) == 0;
 }
 char* string_write(dfsch_string_t* o, int max_depth){
   char *b = GC_MALLOC_ATOMIC(o->len*2+3);
