@@ -5,6 +5,7 @@
 	(vector_equal_p): Vector comparison
 	(vector_write): Vector writer
 	(dfsch_obj_write): Removed unused parts of code
+	(dfsch_make_object): Optional logging of object creations
 
 	* New way of handling objects in memory 
 

@@ -38,11 +38,14 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
-//#define PARSER_DEBUG
-//#define GC_DEBUG
-//#define OBJ_LIST_DEBUG
-
 #include "object.h"
+
+//#define ALLOC_DEBUG
+
+#ifdef ALLOC_DEBUG
+static int obj_count = 0;
+static int obj_size = 0;
+#endif
 
 object_t* dfsch_make_object(dfsch_type_t* type){
   object_t* o = GC_MALLOC(type->size);
@@ -50,6 +53,13 @@ object_t* dfsch_make_object(dfsch_type_t* type){
     return NULL;
 
   o->type = type;
+
+#ifdef ALLOC_DEBUG
+  obj_count ++;
+  obj_size += type->size;
+  printf(";; Alloc'd: #<%s 0x%x> serial %d arena %d\n", type->name, o, 
+         obj_count, obj_size);
+#endif
 
   return o;
 }
