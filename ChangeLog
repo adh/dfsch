@@ -4,6 +4,7 @@
 	(type definitions): Made types' methods static 
 	(vector_equal_p): Vector comparison
 	(vector_write): Vector writer
+	(dfsch_obj_write): Removed unused parts of code
 
 	* New way of handling objects in memory 
 
