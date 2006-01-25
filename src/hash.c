@@ -20,6 +20,7 @@
  */
 
 #include <dfsch/hash.h>
+#include "internal.h"
 #include <stdlib.h>
 
 
@@ -268,4 +269,92 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
   }
 
   return alist;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Scheme binding
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_make(proc);
+}
+static dfsch_object_t* native_hash_p(void* baton, dfsch_object_t* args){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_hash_p(obj));
+}
+static dfsch_object_t* native_hash_ref(void* baton, dfsch_object_t* args){
+  dfsch_object_t* hash;
+  dfsch_object_t* key;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_ref(hash, key);
+}
+static dfsch_object_t* native_hash_unset(void* baton, dfsch_object_t* args){
+  dfsch_object_t* hash;
+  dfsch_object_t* key;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_unset(hash, key);
+}
+static dfsch_object_t* native_hash_set(void* baton, dfsch_object_t* args){
+  dfsch_object_t* hash;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_set(hash, key, value);
+}
+static dfsch_object_t* native_hash_set_if_exists(void* baton, 
+                                                 dfsch_object_t* args){
+  dfsch_object_t* hash;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_set_if_exists(hash, key, value);
+}
+static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args){
+  dfsch_object_t* hash;
+
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_ARG_END(args);
+
+  return dfsch_hash_2_alist(hash);
+}
+
+void dfsch__hash_native_register(dfsch_ctx_t *ctx){
+  dfsch_ctx_define(ctx, "make-hash", 
+                   dfsch_make_primitive(&native_make_hash,NULL));
+  dfsch_ctx_define(ctx, "hash?", 
+                   dfsch_make_primitive(&native_hash_p,NULL));
+  dfsch_ctx_define(ctx, "hash-ref", 
+                   dfsch_make_primitive(&native_hash_ref,NULL));
+  dfsch_ctx_define(ctx, "hash-unset!", 
+                   dfsch_make_primitive(&native_hash_set,NULL));
+  dfsch_ctx_define(ctx, "hash-set!", 
+                   dfsch_make_primitive(&native_hash_set,NULL));
+  dfsch_ctx_define(ctx, "hash-set-if-exists!", 
+                   dfsch_make_primitive(&native_hash_set_if_exists,NULL));
+  dfsch_ctx_define(ctx, "hash->alist", 
+                   dfsch_make_primitive(&native_hash_2_alist,NULL));
+
 }

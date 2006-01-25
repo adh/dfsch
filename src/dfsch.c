@@ -28,8 +28,8 @@
 #include <dfsch/hash.h>
 #include <dfsch/stream.h>
 #include <dfsch/strings.h>
-#include "native.h"
 #include "util.h"
+#include "internal.h"
 
 #include <stdlib.h>
 #include <stdio.h>

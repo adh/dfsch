@@ -1,4 +1,5 @@
 #include <dfsch/number.h>
+#include "internal.h"
 
 typedef struct number_t {
   dfsch_type_t *type;

@@ -1,5 +1,8 @@
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (dfsch__hash_native_register): Moved hash primitives
+	to separate file
+
 	* src/internal.h: Header file for internal functions (i.e. Native
 	function registration)
 
