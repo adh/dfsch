@@ -1087,14 +1087,14 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
     DFSCH_THROW("exception:not-a-pair",env);
   }
 
-  i = env;
+  i = (pair_t*)env;
   while (i && i->type==PAIR){
     object_t* ret = dfsch_hash_ref(i->car, name);
     if (ret){
       return dfsch_car(ret);
     }
 
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
   }
   
 
