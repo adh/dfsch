@@ -164,7 +164,13 @@ static int symbol_equal_p(object_t* a, object_t* b){
   return a == b;
 }
 static char* symbol_write(symbol_t* s, int max_depth){
-  return s->data;
+  if (s->data){
+    return s->data;
+  } else {
+    char* buf = GC_MALLOC_ATOMIC(64);
+    snprintf(buf, 64, "#<gensym 0x%x>", s);
+    return buf;
+  }
 }
 
 
@@ -636,6 +642,13 @@ static symbol_t* make_symbol(char *symbol){
   return s;
 }
 
+dfsch_object_t* dfsch_gensym(){
+  symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
+
+  s->data = NULL;
+
+  return (object_t*)s;
+}
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
 

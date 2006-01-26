@@ -311,6 +311,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_symbol(char* symbol);
 
   /**
+   * Returns unique symbol object
+   */
+  extern dfsch_object_t* dfsch_gensym();
+
+  /**
    * Returns string representation of given symbol.
    */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
