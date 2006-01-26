@@ -964,7 +964,7 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
 
   }
 
-  return head;
+  return (object_t*)head;
 }
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
