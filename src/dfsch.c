@@ -1224,8 +1224,8 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
-  pair_t* i_f=fa;
-  pair_t* i_a=aa;
+  pair_t* i_f=(pair_t*)fa;
+  pair_t* i_a=(pair_t*)aa;
   object_t* ext_env = dfsch_new_frame(env);
 
   while ((i_f && i_f->type==PAIR) &&
@@ -1233,8 +1233,8 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
 
     dfsch_define(i_f->car, i_a->car, ext_env);
 
-    i_f = i_f->cdr;
-    i_a = i_a->cdr;
+    i_f = (pair_t*)i_f->cdr;
+    i_a = (pair_t*)i_a->cdr;
     
   }
 
