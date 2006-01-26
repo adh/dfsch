@@ -466,18 +466,18 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   while(i && i->type == PAIR){
     if (head){
       object_t* tmp = dfsch_cons(i->car,NULL);
-      dfsch_set_cdr(tail, tmp);
-      tail = tmp;
+      tail->cdr = tmp;
+      tail = (pair_t*)tmp;
     }else{
-        head = tail = dfsch_cons(i->car,NULL);
+        head = tail = (pair_t*)dfsch_cons(i->car,NULL);
       }
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
   }
-  if (!(dfsch_pair_p(i) || !i))
-    DFSCH_THROW("exception:not-a-pair", i);
+  if (!i || i->type != PAIR)
+    DFSCH_THROW("exception:not-a-pair", (object_t*)i);
 
 
-  return head;
+  return (object_t*)head;
 
 }
 
