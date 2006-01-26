@@ -743,7 +743,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				    dfsch_object_t* args,
 				    dfsch_object_t* code){
-  closure_t *c = dfsch_make_object(CLOSURE);
+  closure_t *c = (closure_t*)dfsch_make_object(CLOSURE);
   if (!c)
     return NULL;
   
@@ -752,14 +752,14 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
   c->code = code;
   c->name = NULL;
 
-  return c;
+  return (object_t*)c;
   
 }
 extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code,
                                           dfsch_object_t* name){
-  closure_t *c = dfsch_make_object(CLOSURE);
+  closure_t *c = (closure_t*)dfsch_make_object(CLOSURE);
   if (!c)
     return NULL;
   
@@ -768,44 +768,44 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->code = code;
   c->name = name;
 
-  return c;
+  return (object_t*)c;
   
 }
 
 // native code
 
 object_t* dfsch_make_primitive(dfsch_primitive_t prim, void *baton){
-  primitive_t* p = dfsch_make_object(PRIMITIVE);
+  primitive_t* p = (primitive_t*)dfsch_make_object(PRIMITIVE);
   if (!p)
     return NULL;
 
   p->proc = prim;
   p->baton = baton;
 
-  return p;
+  return (object_t*)p;
 }
 
 // macros
 
 object_t* dfsch_make_macro(object_t *proc){
-  macro_t *m = dfsch_make_object(MACRO);
+  macro_t *m = (macro_t*)dfsch_make_object(MACRO);
   
   if (!m)
     return NULL;
 
   m->proc = proc;
 
-  return m;
+  return (object_t*)m;
 }
 object_t* dfsch_make_form(object_t *proc){
-  form_t *f = dfsch_make_object(FORM);
+  form_t *f = (form_t*)dfsch_make_object(FORM);
   
   if (!f)
     return NULL;
 
   f->proc = proc;
 
-  return f;
+  return (object_t*)f;
 }
 
 
