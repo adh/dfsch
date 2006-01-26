@@ -620,7 +620,7 @@ static symbol_t* lookup_symbol(char *symbol){
   return NULL;
 }
 static symbol_t* make_symbol(char *symbol){
-  symbol_t *s = dfsch_make_object(SYMBOL);
+  symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
   
   s->data = symbol;
   
@@ -644,7 +644,7 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   if (!s)
     s = make_symbol(symbol);
 
-  return s;
+  return (object_t*)s;
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
