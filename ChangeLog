@@ -1,5 +1,7 @@
 2006-01-26  Ales Hakl  <ales at hakl dot net>
 
+	* src/promise.c: Fixed some warnings
+
 	* src/hash.c: Fixed some warnings
 
 	* src/dfsch.c: Fixed some warnings

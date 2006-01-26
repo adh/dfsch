@@ -37,18 +37,18 @@ static const dfsch_type_t promise_type = {
 };
 
 dfsch_object_t* dfsch_make_promise(dfsch_object_t* expr, dfsch_object_t* env){
-  promise_t* p = dfsch_make_object(&promise_type);
+  promise_t* p = (promise_t*)dfsch_make_object(&promise_type);
 
   p->expr = expr;
   p->env = env;
   p->value = NULL;
   p->set = 0;
 
-  return p;
+  return (dfsch_object_t*)p;
 }
 
 dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
-  promise_t* p = promise;
+  promise_t* p = (promise_t*)promise;
   if (promise->type != &promise_type)
     dfsch_throw("exception:not-a-promise", promise);
 
