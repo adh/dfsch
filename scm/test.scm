@@ -125,6 +125,13 @@
 
 (test 'fact (fact 5) 120)
 
+;; Vectors
+
+(let ((v (make-vector 5)))
+  (vector-set! v 0 'foo)
+  (test 'vectorBase (vector-ref v 0) 'foo)
+  (test 'vectorLit (vector-ref '#(0 1 2 3) 1) 1))
+
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately

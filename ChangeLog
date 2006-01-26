@@ -1,3 +1,7 @@
+2006-01-26  Ales Hakl  <ales at hakl dot net>
+
+	* scm/test.scm (v): Test for vector manipulation
+
 2006-01-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c (dfsch_native_register): assq, assv in scheme
