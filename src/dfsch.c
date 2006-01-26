@@ -47,12 +47,12 @@ static int obj_count = 0;
 static int obj_size = 0;
 #endif
 
-object_t* dfsch_make_object(dfsch_type_t* type){
+object_t* dfsch_make_object(const dfsch_type_t* type){
   object_t* o = GC_MALLOC(type->size);
   if (!o)
     return NULL;
 
-  o->type = type;
+  o->type = (dfsch_type_t*)type;
 
 #ifdef ALLOC_DEBUG
   obj_count ++;

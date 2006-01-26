@@ -98,7 +98,7 @@ extern "C" {
 
   // object handling
 
-  extern dfsch_object_t* dfsch_make_object(dfsch_type_t* type);
+  extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
 
 
   extern int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b);
