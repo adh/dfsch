@@ -846,7 +846,7 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 				     dfsch_object_t* data){
-  exception_t* e = dfsch_make_object(EXCEPTION);
+  exception_t* e = (exception_t*)dfsch_make_object(EXCEPTION);
   if (!e)
     return NULL;
 
@@ -854,7 +854,7 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
   e->class = type;
   e->data = data;
 
-  return e;
+  return (object_t*)e;
 }
 
 dfsch_object_t* dfsch_throw(char* type, 
