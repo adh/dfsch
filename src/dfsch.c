@@ -1110,12 +1110,12 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
     DFSCH_THROW("exception:not-a-pair",env);
   }
 
-  i = env;
+  i = (pair_t*)env;
   while (i && i->type==PAIR){
     if(dfsch_hash_set_if_exists(i->car, name, value))
       return value;
 
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
   }
   
 
