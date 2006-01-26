@@ -881,7 +881,7 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 // Vectors
 
 dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
-  vector_t* v = dfsch_make_object(VECTOR);
+  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
   size_t i;
 
   v->length = length;
@@ -891,11 +891,11 @@ dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
     v->data[i] = fill;
   }
 
-  return v;
+  return (object_t*)v;
 }
 dfsch_object_t* dfsch_vector(size_t count, ...){
   size_t i;
-  vector_t* v = dfsch_make_object(VECTOR);
+  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
   va_list al;
 
   va_start(al,count);
@@ -908,7 +908,7 @@ dfsch_object_t* dfsch_vector(size_t count, ...){
   }
 
   va_end(al);
-  return v;
+  return (object_t*)v;
 
 }
 
@@ -953,14 +953,14 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
   if (((vector_t*)vector)->length == 0)
     return NULL;
 
-  head = tail = dfsch_cons(((vector_t*)vector)->data[0], NULL);
+  head = tail = (pair_t*)dfsch_cons(((vector_t*)vector)->data[0], NULL);
 
   for(i = 1; i< ((vector_t*)vector)->length; ++i){
     object_t *tmp;
     
     tmp = dfsch_cons(((vector_t*)vector)->data[i],NULL);
-    dfsch_set_cdr(tail, tmp);
-    tail = tmp;
+    tail->cdr = tmp;
+    tail = (pair_t*)tmp;
 
   }
 
@@ -969,22 +969,22 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   vector_t* vector;
-  pair_t* j = list;
+  pair_t* j = (pair_t*)list;
   size_t i=0;
   if (!list || list->type != PAIR)
     DFSCH_THROW("exception:not-a-pair",list);
   
-  vector = dfsch_make_object(VECTOR);
+  vector = (vector_t*)dfsch_make_object(VECTOR);
   vector->length = dfsch_list_length(list);
   vector->data = GC_MALLOC(sizeof(object_t*)*vector->length);
   
   while (j && j->type == PAIR){
     vector->data[i] = j->car;
-    j = j->cdr;
+    j = (pair_t*)j->cdr;
     i++;
   }
 
-  return vector;
+  return (object_t*)vector;
 }
 
 char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
