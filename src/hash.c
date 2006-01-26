@@ -56,7 +56,7 @@ static void alloc_vector(hash_t* hash){
 }
 
 dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
-  hash_t *h = dfsch_make_object(&hash_type); 
+  hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
 
   if (hash_proc && !dfsch_procedure_p(hash_proc))
     DFSCH_THROW("exception:not-a-procedure", hash_proc);
@@ -67,7 +67,7 @@ dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
   h->mode = mode;
   alloc_vector(h);
 
-  return h;
+  return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
   return obj->type == &hash_type;
@@ -103,7 +103,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 #define GET_HASH(obj,hash)\
    if (obj->type != &hash_type)\
      dfsch_throw("exception:not-a-hash", obj); \
-   hash = obj;
+   hash = (hash_t*)obj;
 
 dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
                                dfsch_object_t* key){

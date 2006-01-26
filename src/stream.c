@@ -20,6 +20,7 @@
  */
 
 #include "../dfsch/stream.h"
+#include <dfsch/strings.h>
 
 #include <string.h>
 #include <unistd.h>
