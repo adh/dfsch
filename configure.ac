@@ -59,7 +59,7 @@ if test "$have_gc" != "1"; then
 fi
 
 AC_CHECK_HEADERS(readline/readline.h, [have_readline="1"], [have_readline="0"])
-AC_CHECK_LIB(readline, readline,, [have_readline="0"], [-lncurses])
+AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline -lncurses"], [have_readline="0"], [-lncurses])
 
 if test "$have_readline" != "1"; then
         AC_MSG_RESULT()
