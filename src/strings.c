@@ -87,8 +87,8 @@ char* string_write(dfsch_string_t* o, int max_depth){
 static const dfsch_type_t string_type = {
   sizeof(dfsch_string_t),
   "string",
-  string_equal_p,
-  string_write,
+  (dfsch_type_equal_p_t)string_equal_p,
+  (dfsch_type_write_t)string_write,
 };
 #define STRING (&string_type)
 

@@ -1,5 +1,7 @@
 2006-01-26  Ales Hakl  <ales at hakl dot net>
 
+	* src/strings.c: Fixed some warnings
+
 	* src/promise.c: Fixed some warnings
 
 	* src/hash.c: Fixed some warnings
