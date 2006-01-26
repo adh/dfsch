@@ -1240,7 +1240,7 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
 
   if (i_f && i_f->type==SYMBOL){
 
-    dfsch_define(i_f, i_a, ext_env);
+    dfsch_define((object_t*)i_f, (object_t*)i_a, ext_env);
   }
 
   if (!i_a  && i_f)
