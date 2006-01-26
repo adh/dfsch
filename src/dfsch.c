@@ -402,31 +402,31 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
     while(j && j->type == PAIR){
       if (head){
         object_t* tmp = dfsch_cons(j->car,NULL);
-        dfsch_set_cdr(tail, tmp);
-        tail = tmp;
+        tail->cdr = tmp;
+        tail = (pair_t*)tmp;
       }else{
-        head = tail = dfsch_cons(j->car,NULL);
+        head = tail = (pair_t*)dfsch_cons(j->car,NULL);
       }
-      j = j->cdr;
+      j = (pair_t*)j->cdr;
     }
-    if (!(dfsch_pair_p(j) || !j))
-      DFSCH_THROW("exception:not-a-pair", j);
+    if (!j || j->type != PAIR)
+      DFSCH_THROW("exception:not-a-pair", (object_t*)j);
 
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
   }
 
-  if (!(dfsch_pair_p(i) || !i))
-    DFSCH_THROW("exception:not-a-pair", i);
-  if (!(dfsch_pair_p(i->car) || !i->car))
+  if (!i || i->type != PAIR)
+    DFSCH_THROW("exception:not-a-pair", (object_t*)i);
+  if (!i->car || i->car->type != PAIR)
     DFSCH_THROW("exception:not-a-pair", i->car);
 
   if (tail){
     tail->cdr = i->car;
   }else{
-    head = i->car;
+    head = (pair_t*)i->car;
   }
 
-  return head;
+  return (object_t*)head;
 }
 
 dfsch_object_t* dfsch_list(size_t count, ...){

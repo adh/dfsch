@@ -1,5 +1,7 @@
 2006-01-26  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: Fixed some warnings
+
 	* scm/test.scm (v): Test for vector manipulation
 
 2006-01-25  Ales Hakl  <ales at hakl dot net>
