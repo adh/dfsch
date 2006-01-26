@@ -1147,7 +1147,7 @@ static object_t* eval_list(object_t *list, object_t* env){
     return dfsch_eval(list,env);
   }
 
-  i = list;
+  i = (pair_t*)list;
   while (i && i->type==PAIR){
     r = dfsch_eval(i->car,env);
 
@@ -1159,7 +1159,7 @@ static object_t* eval_list(object_t *list, object_t* env){
       f = p = t;
     }
 
-    i=i->cdr;
+    i = (pair_t*)i->cdr;
   }
 
   return f;
