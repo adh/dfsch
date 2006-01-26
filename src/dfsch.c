@@ -1275,10 +1275,10 @@ static dfsch_object_t* eval_proc_impl(dfsch_object_t* code,
   }
 
   if (setjmp(myesc.ret)){  
-    i = myesc.code;
+    i = (pair_t*)myesc.code;
     env = myesc.env;
   }else{
-    i = code;
+    i = (pair_t*)code;
   }
 
   while (i && i->type==PAIR ){
@@ -1289,7 +1289,7 @@ static dfsch_object_t* eval_proc_impl(dfsch_object_t* code,
     else
       r = eval_impl(exp,env,&myesc);
    
-    i = i->cdr;
+    i = (pair_t*)i->cdr;
   }
 
   
