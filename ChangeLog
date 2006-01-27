@@ -1,5 +1,8 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_append): append accepts empty lists as
+	arguments.
+
 	* src/native.c (native_gensym): gensym function
 
 	* src/dfsch.c (dfsch_gensym): gensyms (unique symbols)
