@@ -187,6 +187,28 @@ void interactive_repl(dfsch_ctx_t* ctx){
 
 }
 
+void noninteractive_repl(dfsch_ctx_t* ctx){
+
+  parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, callback, ctx);
+
+  while (1){
+    char str[4096];
+    int rc;
+    
+    fgets(str, 4096, stdin);
+
+    if (rc = dfsch_parser_feed(parser,str)!=0){
+      fprintf(stderr,"Parse error\n",rc);
+    }
+
+  }
+  
+  puts("");
+
+}
+
+
 int main(int argc, char**argv){
   int c;
   dfsch_ctx_t* ctx;
@@ -270,8 +292,13 @@ int main(int argc, char**argv){
     return 0;
   }
 
-  if (interactive || force_interactive)
-    interactive_repl(ctx);
+  if (interactive || force_interactive){
+    if (isatty(0)){
+      interactive_repl(ctx);
+    }else{
+      noninteractive_repl(ctx);
+    }
+  }
   
 
   return 0;

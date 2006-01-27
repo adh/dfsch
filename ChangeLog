@@ -1,5 +1,8 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (noninteractive_repl): Handle input from something
+	that is not a terminal gracefuly
+
 	* src/dfsch.c (lambda_extend): Fixed misbehaving lambda_extend for
 	functions with variable number of srguments called without any
 	arguments 
