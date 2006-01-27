@@ -54,6 +54,15 @@ static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* 
   return dfsch_gensym();
 }
 
+static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* symbol;
+  DFSCH_OBJECT_ARG(args, symbol);
+  DFSCH_ARG_END(args);
+
+  dfsch_unintern(symbol);
+  return symbol;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -708,6 +717,8 @@ static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_es
 
 dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){ 
   dfsch_ctx_define(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
+  dfsch_ctx_define(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
+
   dfsch_ctx_define(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
   dfsch_ctx_define(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
   dfsch_ctx_define(ctx, "equal?", dfsch_make_primitive(&native_equal,NULL));

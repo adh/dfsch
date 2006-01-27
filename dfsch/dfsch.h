@@ -318,6 +318,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_symbol(char* symbol);
 
   /**
+   * Converts normal symbol into something resembling gensym.
+   */
+  extern void dfsch_unintern(dfsch_object_t* symbol);
+
+  /**
    * Returns unique symbol object
    */
   extern dfsch_object_t* dfsch_gensym();

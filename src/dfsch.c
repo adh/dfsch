@@ -642,6 +642,34 @@ static symbol_t* make_symbol(char *symbol){
   return s;
 }
 
+void dfsch_unintern(dfsch_object_t* symbol){
+  symbol_t *s=(symbol_t*)symbol;
+  hash_entry_t *i;
+  hash_entry_t *j;
+
+  if (s->type != SYMBOL)
+    dfsch_throw("exception:not-a-symbol", symbol);
+
+  i = global_symbol_hash[string_hash(s->data)];
+  j = NULL;
+  
+  while (i){
+    if (strcasecmp(i->entry->data, s->data)==0){
+      if (j){
+        j->next = i->next;
+      } else {
+        global_symbol_hash[string_hash(s->data)] = i->next;
+      }
+      break;
+    }
+    j = i;
+    i = i->next;
+  }
+
+  s->data = NULL;
+  
+}
+
 dfsch_object_t* dfsch_gensym(){
   symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
 

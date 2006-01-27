@@ -1,5 +1,10 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (GET_HASH): Recognize nils as not being valid hash
+	table objects
+
+	* src/dfsch.c (dfsch_unintern): uninterning of symbols
+
 	* src/native.c: Removed duplicated code
 
 	* src/number.c: Moved number native functions to number.c
