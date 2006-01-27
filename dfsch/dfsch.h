@@ -543,6 +543,12 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
+  /**
+   * Get value of variable name in environment env. Return empty list
+   * in case of failure.
+   */
+  extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
+                                       dfsch_object_t* env);
 
   /**
    * Set value of variable name in environment env to value.

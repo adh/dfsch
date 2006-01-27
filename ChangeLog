@@ -1,5 +1,12 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (lambda_extend): Fixed misbehaving lambda_extend for
+	functions with variable number of srguments called without any
+	arguments 
+
+	* src/native.c (native_form_defined_p): Fixed defined? to work
+	with new wxception system
+
 	* src/hash.c (GET_HASH): Recognize nils as not being valid hash
 	table objects
 

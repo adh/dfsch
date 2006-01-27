@@ -1138,10 +1138,26 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
     i = (pair_t*)i->cdr;
   }
   
-
   DFSCH_THROW("exception:unbound-variable",name);
-  
+}
+object_t* dfsch_env_get(object_t* name, object_t* env){
+  pair_t *i;
 
+  if (!env || env->type!=PAIR){
+    DFSCH_THROW("exception:not-a-pair",env);
+  }
+
+  i = (pair_t*)env;
+  while (i && i->type==PAIR){
+    object_t* ret = dfsch_hash_ref(i->car, name);
+    if (ret){
+      return ret;
+    }
+
+    i = (pair_t*)i->cdr;
+  }
+  
+  return NULL;
 }
 
 
@@ -1280,6 +1296,7 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   if (i_f && i_f->type==SYMBOL){
 
     dfsch_define((object_t*)i_f, (object_t*)i_a, ext_env);
+    return ext_env;
   }
 
   if (!i_a  && i_f)

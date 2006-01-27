@@ -114,7 +114,7 @@ static object_t* native_form_defined_p(void *baton, object_t* args, dfsch_tail_e
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
 
-  return dfsch_bool(dfsch_exception_p(dfsch_lookup(name,env)));
+  return dfsch_env_get(name, env);
 }
 
 static object_t* native_macro_if(void *baton, object_t* args, dfsch_tail_escape_t* esc){
