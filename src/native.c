@@ -344,7 +344,7 @@ static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc(code,ext_env);
+  return dfsch_eval_proc_tr(code,ext_env,esc);
 }
 static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
@@ -364,7 +364,7 @@ static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_esca
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc(code,ext_env);
+  return dfsch_eval_proc_tr(code,ext_env,esc);
 }
 static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
@@ -385,7 +385,7 @@ static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_esc
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc(code, ext_env);
+  return dfsch_eval_proc_tr(code, ext_env, esc);
 }
 
 
