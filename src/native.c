@@ -47,7 +47,7 @@ typedef dfsch_object_t object_t;
 
 // Native procedures:
 
-static object_t* native_gensym(void*baton, object_t* args){
+static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* esc){
   if (args)
     dfsch_throw("exception:too-many-arguments", args);
 
@@ -67,7 +67,7 @@ static object_t* native_gensym(void*baton, object_t* args){
  * We also need support for different numeric types here.
  */
 
-static object_t* native_plus(void *baton, object_t* args){
+static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
   double s=0;
   while(dfsch_pair_p(i)){
@@ -83,7 +83,7 @@ static object_t* native_plus(void *baton, object_t* args){
 
   return dfsch_make_number(s); 
 }
-static object_t* native_minus(void *baton, object_t* args){
+static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
   double s;
   if (!dfsch_pair_p(i))
@@ -110,7 +110,7 @@ static object_t* native_minus(void *baton, object_t* args){
 
   return dfsch_make_number(s); 
 }
-static object_t* native_mult(void *baton, object_t* args){
+static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
   double s=1;
   while(dfsch_pair_p(i)){
@@ -125,7 +125,7 @@ static object_t* native_mult(void *baton, object_t* args){
 
   return dfsch_make_number(s); 
 }
-static object_t* native_slash(void *baton, object_t* args){
+static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
   double s;
   if (!dfsch_pair_p(i))
@@ -152,7 +152,7 @@ static object_t* native_slash(void *baton, object_t* args){
 
   return dfsch_make_number(s); 
 }
-static object_t* native_modulo(void *baton, object_t* args){
+static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
   long s;
   if (!dfsch_pair_p(i))
@@ -186,7 +186,7 @@ static object_t* native_modulo(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_form_lambda(void *baton, object_t* args){
+static object_t* native_form_lambda(void *baton, object_t* args, dfsch_tail_escape_t* esc){
 
   MIN_ARGS(dfsch_cdr(args),1);
 
@@ -196,7 +196,7 @@ static object_t* native_form_lambda(void *baton, object_t* args){
 
 }
 
-static object_t* native_form_define(void *baton, object_t* args){
+static object_t* native_form_define(void *baton, object_t* args, dfsch_tail_escape_t* esc){
 
   MIN_ARGS(dfsch_cdr(args),1);  
 
@@ -214,7 +214,7 @@ static object_t* native_form_define(void *baton, object_t* args){
   }
 
 }
-static object_t* native_form_set(void *baton, object_t* args){
+static object_t* native_form_set(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   
   NEED_ARGS(dfsch_cdr(args),2);  
 
@@ -225,7 +225,7 @@ static object_t* native_form_set(void *baton, object_t* args){
   return dfsch_set(name, value, env);
 
 }
-static object_t* native_form_defined_p(void *baton, object_t* args){
+static object_t* native_form_defined_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(dfsch_cdr(args),1);
   object_t* env = dfsch_car(args);
   object_t* name = dfsch_car(dfsch_cdr(args));
@@ -233,7 +233,7 @@ static object_t* native_form_defined_p(void *baton, object_t* args){
   return dfsch_bool(dfsch_exception_p(dfsch_lookup(name,env)));
 }
 
-static object_t* native_macro_if(void *baton, object_t* args){
+static object_t* native_macro_if(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* test;
   object_t* consequent;
@@ -250,7 +250,7 @@ static object_t* native_macro_if(void *baton, object_t* args){
 
 }
 
-static object_t* native_macro_cond(void *baton, object_t* args){
+static object_t* native_macro_cond(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
 
@@ -278,7 +278,7 @@ static object_t* native_macro_cond(void *baton, object_t* args){
 
   return NULL;
 }
-static object_t* native_macro_case(void *baton, object_t* args){
+static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* val;
   DFSCH_OBJECT_ARG(args, env);
@@ -309,12 +309,12 @@ static object_t* native_macro_case(void *baton, object_t* args){
   
 }
 
-static object_t* native_form_quote(void *baton, object_t* args){
+static object_t* native_form_quote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(dfsch_cdr(args),1);  
   return dfsch_car(dfsch_cdr(args));
 }
 
-static object_t* native_form_quasiquote(void *baton, object_t* args){
+static object_t* native_form_quasiquote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* arg;
   DFSCH_OBJECT_ARG(args, env);
@@ -323,10 +323,10 @@ static object_t* native_form_quasiquote(void *baton, object_t* args){
   return dfsch_quasiquote(env,arg);
 }
 
-static object_t* native_macro_begin(void *baton, object_t* args){
+static object_t* native_macro_begin(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   return dfsch_cdr(args);
 }
-static object_t* native_form_let(void *baton, object_t* args){
+static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
 
   object_t *env = dfsch_car(args);
@@ -346,7 +346,7 @@ static object_t* native_form_let(void *baton, object_t* args){
 
   return dfsch_eval_proc(code,ext_env);
 }
-static object_t* native_form_letrec(void *baton, object_t* args){
+static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
 
   object_t *env = dfsch_car(args);
@@ -366,7 +366,7 @@ static object_t* native_form_letrec(void *baton, object_t* args){
 
   return dfsch_eval_proc(code,ext_env);
 }
-static object_t* native_form_let_seq(void *baton, object_t* args){
+static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
 
   object_t *env = dfsch_car(args);
@@ -390,11 +390,11 @@ static object_t* native_form_let_seq(void *baton, object_t* args){
 
 
 
-static object_t* native_make_form(void *baton, object_t* args){
+static object_t* native_make_form(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_make_form(dfsch_car(args));
 }
-static object_t* native_make_macro(void *baton, object_t* args){
+static object_t* native_make_macro(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
@@ -405,15 +405,15 @@ static object_t* native_make_macro(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_eval(void *baton, object_t* args){
+static object_t* native_eval(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_eval_proc(void *baton, object_t* args){
+static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_eval_proc(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_apply(void *baton, object_t* args){
+static object_t* native_apply(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_apply(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
@@ -424,38 +424,38 @@ static object_t* native_apply(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_car(void *baton, object_t* args){
+static object_t* native_car(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
 }
-static object_t* native_cdr(void *baton, object_t* args){
+static object_t* native_cdr(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
 return dfsch_cdr(dfsch_car(args));
 }
-static object_t* native_cons(void *baton, object_t* args){
+static object_t* native_cons(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_list(void *baton, object_t* args){
+static object_t* native_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   return dfsch_list_copy(args);
 }
-static object_t* native_length(void *baton, object_t* args){
+static object_t* native_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
 
   return dfsch_make_number_from_long(dfsch_list_length(dfsch_car(args)));
 }
-static object_t* native_set_car(void *baton, object_t* args){
+static object_t* native_set_car(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-static object_t* native_set_cdr(void *baton, object_t* args){
+static object_t* native_set_cdr(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-static object_t* native_append(void* baton, object_t* args){
+static object_t* native_append(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   return dfsch_append(args);
 }
-static object_t* native_list_ref(void* baton, object_t* args){
+static object_t* native_list_ref(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   int k;
   object_t* list;
 
@@ -465,7 +465,7 @@ static object_t* native_list_ref(void* baton, object_t* args){
 
   return dfsch_list_item(list, k);
 }
-static object_t* native_assoc(void* baton, object_t* args){
+static object_t* native_assoc(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
@@ -475,7 +475,7 @@ static object_t* native_assoc(void* baton, object_t* args){
 
   return dfsch_assoc(alist, key);
 }
-static object_t* native_assv(void* baton, object_t* args){
+static object_t* native_assv(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
@@ -485,7 +485,7 @@ static object_t* native_assv(void* baton, object_t* args){
 
   return dfsch_assv(alist, key);
 }
-static object_t* native_assq(void* baton, object_t* args){
+static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
@@ -502,47 +502,47 @@ static object_t* native_assq(void* baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_null_p(void *baton, object_t* args){
+static object_t* native_null_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
-static object_t* native_pair_p(void *baton, object_t* args){
+static object_t* native_pair_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
 }
-static object_t* native_atom_p(void *baton, object_t* args){
+static object_t* native_atom_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
 }
-static object_t* native_symbol_p(void *baton, object_t* args){
+static object_t* native_symbol_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
-static object_t* native_number_p(void *baton, object_t* args){
+static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_number_p(dfsch_car(args)));  
 }
-static object_t* native_string_p(void *baton, object_t* args){
+static object_t* native_string_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
 }
-static object_t* native_primitive_p(void *baton, object_t* args){
+static object_t* native_primitive_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
 }
-static object_t* native_closure_p(void *baton, object_t* args){
+static object_t* native_closure_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_closure_p(dfsch_car(args)));  
 }
-static object_t* native_procedure_p(void *baton, object_t* args){
+static object_t* native_procedure_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_procedure_p(dfsch_car(args)));  
 }
-static object_t* native_vector_p(void *baton, object_t* args){
+static object_t* native_vector_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_vector_p(dfsch_car(args)));  
 }
-static object_t* native_macro_p(void *baton, object_t* args){
+static object_t* native_macro_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
 }
@@ -553,23 +553,23 @@ static object_t* native_macro_p(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_eq(void *baton, object_t* args){
+static object_t* native_eq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_eqv(void *baton, object_t* args){
+static object_t* native_eqv(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_equal(void *baton, object_t* args){
+static object_t* native_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_number_equal(void *baton, object_t* args){
+static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_number_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_lt(void *baton, object_t* args){
+static object_t* native_lt(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
@@ -580,7 +580,7 @@ static object_t* native_lt(void *baton, object_t* args){
 
   return dfsch_bool(dfsch_number(a)<dfsch_number(b));  
 }
-static object_t* native_gt(void *baton, object_t* args){
+static object_t* native_gt(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
@@ -592,7 +592,7 @@ static object_t* native_gt(void *baton, object_t* args){
 
   return dfsch_bool(dfsch_number(a)>dfsch_number(b));  
 }
-static object_t* native_lte(void *baton, object_t* args){
+static object_t* native_lte(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
@@ -603,7 +603,7 @@ static object_t* native_lte(void *baton, object_t* args){
 
   return dfsch_bool(dfsch_number(a)<=dfsch_number(b));  
 }
-static object_t* native_gte(void *baton, object_t* args){
+static object_t* native_gte(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
   object_t *b = dfsch_car(dfsch_cdr(args));
@@ -623,7 +623,7 @@ static object_t* native_gte(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_form_or(void *baton, object_t* args){
+static object_t* native_form_or(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* i;
   object_t* r = NULL;
@@ -640,7 +640,7 @@ static object_t* native_form_or(void *baton, object_t* args){
 
   return r;
 }
-static object_t* native_form_and(void *baton, object_t* args){
+static object_t* native_form_and(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* i;
   object_t* r = dfsch_sym_true();
@@ -658,7 +658,7 @@ static object_t* native_form_and(void *baton, object_t* args){
 
   return r;
 }
-static object_t* native_not(void *baton, object_t* args){
+static object_t* native_not(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   object_t *a = dfsch_car(args);
   return dfsch_bool(!a);
@@ -670,27 +670,27 @@ static object_t* native_not(void *baton, object_t* args){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_make_exception(void *baton, object_t* args){
+static object_t* native_make_exception(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_raise(void *baton, object_t* args){
+static object_t* native_raise(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   dfsch_raise(dfsch_car(args));
 }
-static object_t* native_throw(void *baton, object_t* args){
+static object_t* native_throw(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   dfsch_raise(dfsch_make_exception(dfsch_car(args),
                                    dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_error(void *baton, object_t* args){
+static object_t* native_error(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   dfsch_throw("user:error",args);
 }
-static object_t* native_abort(void *baton, object_t* args){
+static object_t* native_abort(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   dfsch_throw("user:abort",NULL);
 }
 
-static object_t* native_try(void *baton, object_t* args){
+static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* handler;
   object_t* thunk;
   DFSCH_OBJECT_ARG(args, handler);
@@ -713,7 +713,7 @@ typedef struct continuation_t {
   int active;
 } continuation_t;
 
-static object_t* continuation_closure(continuation_t *cont, object_t* args){
+static object_t* continuation_closure(continuation_t *cont, object_t* args, dfsch_tail_escape_t* esc){
   object_t* value;
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
@@ -725,7 +725,7 @@ static object_t* continuation_closure(continuation_t *cont, object_t* args){
   longjmp(cont->ret,1);
 }
 
-static object_t* native_call_ec(void *baton, object_t* args){
+static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t *proc, *value;
   DFSCH_OBJECT_ARG(args, proc);
   DFSCH_ARG_END(args);
@@ -755,7 +755,7 @@ static object_t* native_call_ec(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_string_append(void *baton, object_t* args){
+static object_t* native_string_append(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   str_list_t* s = sl_create();
 
   while(dfsch_pair_p(args)){
@@ -772,7 +772,7 @@ static object_t* native_string_append(void *baton, object_t* args){
   object_t* o = dfsch_make_string(sl_value(s)); 
   return o;
 }
-static object_t* native_string_ref(void *baton, object_t* args){
+static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);
   object_t* a = dfsch_car(args);
   object_t* b = dfsch_car(dfsch_cdr(args));
@@ -793,7 +793,7 @@ static object_t* native_string_ref(void *baton, object_t* args){
 
   return dfsch_make_number((double)s[index]);
 }
-static object_t* native_string_length(void *baton, object_t* args){
+static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);
 
   object_t* a = dfsch_car(args);
@@ -810,7 +810,7 @@ static object_t* native_string_length(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_make_vector(void* baton, object_t* args){
+static object_t* native_make_vector(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   size_t length;
   object_t* fill;
 
@@ -821,10 +821,10 @@ static object_t* native_make_vector(void* baton, object_t* args){
   return dfsch_make_vector(length,fill);
 }
 
-static object_t* native_vector(void* baton, object_t* args){
+static object_t* native_vector(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   return dfsch_list_2_vector(args);
 }
-static object_t* native_vector_length(void* baton, object_t* args){
+static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* vector;
   
   DFSCH_OBJECT_ARG(args,vector);
@@ -836,7 +836,7 @@ static object_t* native_vector_length(void* baton, object_t* args){
   return dfsch_make_number(dfsch_vector_length(vector));
 
 }
-static object_t* native_vector_ref(void* baton, object_t* args){
+static object_t* native_vector_ref(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* vector;
   size_t k;
 
@@ -847,7 +847,7 @@ static object_t* native_vector_ref(void* baton, object_t* args){
   return dfsch_vector_ref(vector, k);
 }
 
-static object_t* native_vector_set(void* baton, object_t* args){
+static object_t* native_vector_set(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* vector;
   size_t k;
   object_t* obj;
@@ -860,7 +860,7 @@ static object_t* native_vector_set(void* baton, object_t* args){
   return dfsch_vector_set(vector, k, obj);
 }
 
-static object_t* native_vector_2_list(void *baton, object_t* args){
+static object_t* native_vector_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* vector;
 
   DFSCH_OBJECT_ARG(args, vector);
@@ -869,7 +869,7 @@ static object_t* native_vector_2_list(void *baton, object_t* args){
   return dfsch_vector_2_list(vector);
 }
 
-static object_t* native_list_2_vector(void *baton, object_t* args){
+static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -942,13 +942,13 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
 							 NULL)));
   dfsch_ctx_define(ctx, "if", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_if,
-							      NULL)));
+                                                         NULL)));
   dfsch_ctx_define(ctx, "cond", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_cond,
-							      NULL)));
+                                                         NULL)));
   dfsch_ctx_define(ctx, "case", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_case,
-							      NULL)));
+                                                         NULL)));
 
   dfsch_ctx_define(ctx, "make-form", 
 		   dfsch_make_primitive(&native_make_form,NULL));

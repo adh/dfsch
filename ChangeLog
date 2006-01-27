@@ -1,5 +1,7 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c: escape argument to native functions
+
 	* src/load.c: escape argument to native functions
 
 	* src/promise.c: escape argument to native functions
