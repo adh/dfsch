@@ -70,14 +70,16 @@ dfsch_object_t* dfsch_stream_tail(dfsch_object_t* stream){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static dfsch_object_t* native_form_delay(void* baton, dfsch_object_t* args){
+static dfsch_object_t* native_form_delay(void* baton, dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc){
   dfsch_object_t* env;
   DFSCH_OBJECT_ARG(args, env);
 
   return dfsch_make_promise(args, env);
 }
 
-static dfsch_object_t* native_force(void* baton, dfsch_object_t* args){
+static dfsch_object_t* native_force(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
   dfsch_object_t* promise;
   DFSCH_OBJECT_ARG(args, promise);
   DFSCH_ARG_END(args);  
@@ -86,7 +88,8 @@ static dfsch_object_t* native_force(void* baton, dfsch_object_t* args){
 }
 
 static dfsch_object_t* native_form_stream_cons(void* baton, 
-                                               dfsch_object_t* args){
+                                               dfsch_object_t* args,
+                                               dfsch_tail_escape_t* esc){
   dfsch_object_t* env;
   dfsch_object_t* head;
   dfsch_object_t* tail;
@@ -102,14 +105,16 @@ static dfsch_object_t* native_form_stream_cons(void* baton,
                                        env));
 }
 
-static dfsch_object_t* native_stream_car(void* baton, dfsch_object_t* args){
+static dfsch_object_t* native_stream_car(void* baton, dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc){
   dfsch_object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
 
   return dfsch_car(stream);
 }
-static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args){
+static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc){
   dfsch_object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  

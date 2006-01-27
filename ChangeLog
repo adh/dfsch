@@ -1,5 +1,7 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/promise.c: escape argument to native functions
+
 	* src/hash.c: escape argument to native functions
 
 	* src/dfsch.c (dfsch_apply_tr): Support for tail recursive native
