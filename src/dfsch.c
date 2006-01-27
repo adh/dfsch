@@ -603,13 +603,25 @@ static size_t string_hash(char* string){
 
 static hash_entry_t*  global_symbol_hash[HASH_SIZE];
 static unsigned int gsh_init = 0;
+static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+ * It's possible to use rwlock here (althought such solution is not so 
+ * straightforward), but it seem unnecessary - most symbol creations are 
+ * done when reading source and in such case there will be probably only
+ * one thread doing such things.
+ */
 
 static gsh_check_init(){
   if (gsh_init)
     return;
 
+  pthread_mutex_lock(&symbol_lock);
+
   memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
   gsh_init = 1;
+
+  pthread_mutex_unlock(&symbol_lock);
 }
 
 static symbol_t* lookup_symbol(char *symbol){
@@ -650,6 +662,8 @@ void dfsch_unintern(dfsch_object_t* symbol){
   if (s->type != SYMBOL)
     dfsch_throw("exception:not-a-symbol", symbol);
 
+  pthread_mutex_lock(&symbol_lock);
+
   i = global_symbol_hash[string_hash(s->data)];
   j = NULL;
   
@@ -666,6 +680,8 @@ void dfsch_unintern(dfsch_object_t* symbol){
     i = i->next;
   }
 
+  pthread_mutex_unlock(&symbol_lock);
+
   s->data = NULL;
   
 }
@@ -680,10 +696,16 @@ dfsch_object_t* dfsch_gensym(){
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
 
-  symbol_t *s = lookup_symbol(symbol);
+  symbol_t *s;
+
+  pthread_mutex_lock(&symbol_lock);
+
+  s = lookup_symbol(symbol);
 
   if (!s)
     s = make_symbol(symbol);
+
+  pthread_mutex_unlock(&symbol_lock);
 
   return (object_t*)s;
 

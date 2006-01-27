@@ -4,6 +4,7 @@
 	functions with variable number of srguments called without any
 	arguments 
 	(dfsch_raise): Thread safe exception handling
+	(dfsch_make_symbol): Thread safe symbols
 
 	* src/native.c (native_form_defined_p): Fixed defined? to work
 	with new wxception system
