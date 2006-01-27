@@ -1,5 +1,7 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_gensym): gensym function
+
 	* src/dfsch.c (dfsch_gensym): gensyms (unique symbols)
 
 2006-01-26  Ales Hakl  <ales at hakl dot net>

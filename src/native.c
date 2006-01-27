@@ -47,6 +47,13 @@ typedef dfsch_object_t object_t;
 
 // Native procedures:
 
+static object_t* native_gensym(void*baton, object_t* args){
+  if (args)
+    dfsch_throw("exception:too-many-arguments", args);
+
+  return dfsch_gensym();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Arithmetic on numbers
@@ -879,6 +886,7 @@ static object_t* native_list_2_vector(void *baton, object_t* args){
 /////////////////////////////////////////////////////////////////////////////
 
 dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){ 
+  dfsch_ctx_define(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
   dfsch_ctx_define(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
   dfsch_ctx_define(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
