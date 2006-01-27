@@ -1287,10 +1287,12 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
   if (!exp) 
     return NULL;
 
+  if(exp->type == SYMBOL)
+    return dfsch_lookup(exp,env);
 
   if(exp->type==PAIR){
     
-    object_t *f = dfsch_eval(((pair_t*)exp)->car,env);
+    object_t *f = dfsch_eval_tr(((pair_t*)exp)->car,env,NULL);
     
     if (!f)
       DFSCH_THROW("exception:not-a-procedure-or-macro", f);
@@ -1313,11 +1315,7 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
                           esc);
     
     
-  }
-  
-  
-  if(exp->type == SYMBOL)
-    return dfsch_lookup(exp,env);
+  }  
   
   return exp;
 }

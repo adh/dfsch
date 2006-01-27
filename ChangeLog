@@ -5,6 +5,7 @@
 	arguments 
 	(dfsch_raise): Thread safe exception handling
 	(dfsch_make_symbol): Thread safe symbols
+	(dfsch_eval_tr): Marginal performance hack
 
 	* src/native.c (native_form_defined_p): Fixed defined? to work
 	with new wxception system
