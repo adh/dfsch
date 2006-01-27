@@ -124,6 +124,7 @@
       (* x (fact (- x 1)))))
 
 (test 'fact (fact 5) 120)
+(delimiter)
 
 ;; Vectors
 
@@ -131,6 +132,12 @@
   (vector-set! v 0 'foo)
   (test 'vectorBase (vector-ref v 0) 'foo)
   (test 'vectorLit (vector-ref '#(0 1 2 3) 1) 1))
+
+(delimiter)
+
+;; Some special cases:
+
+(test 'degeneratedList `(,@'() . foo) 'foo)
 
 ;;; End of tests
 ;;
