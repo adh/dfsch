@@ -407,15 +407,15 @@ static object_t* native_make_macro(void *baton, object_t* args, dfsch_tail_escap
 
 static object_t* native_eval(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
-  return dfsch_eval(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+  return dfsch_eval_tr(dfsch_car(args),dfsch_car(dfsch_cdr(args)), esc);
 }
 static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
-  return dfsch_eval_proc(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+  return dfsch_eval_proc_tr(dfsch_car(args),dfsch_car(dfsch_cdr(args)), esc);
 }
 static object_t* native_apply(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
-  return dfsch_apply(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+  return dfsch_apply_tr(dfsch_car(args),dfsch_car(dfsch_cdr(args)), esc);
 }
 
 /////////////////////////////////////////////////////////////////////////////

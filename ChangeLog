@@ -1,6 +1,7 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c: escape argument to native functions
+	(native_eval): eval, apply and eval-proc are properly tail-recursive
 
 	* src/load.c: escape argument to native functions
 
