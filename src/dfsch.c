@@ -851,34 +851,60 @@ object_t* dfsch_make_form(object_t *proc){
 
 
 
-static jmp_buf* exception_ret = NULL;        // TODO: thread safety
-static dfsch_object_t* exception_obj = NULL;
+typedef struct exception_info_t {
+  jmp_buf* exception_ret;        // TODO: thread safety
+  dfsch_object_t* exception_obj;
+} exception_info_t;
+
+static pthread_key_t exception_key;
+static pthread_once_t exception_once = PTHREAD_ONCE_INIT;
+
+static void exception_info_destroy(void* ptr){
+  if (ptr)
+    GC_FREE(ptr);
+}
+static void exception_key_alloc(){
+  pthread_key_create(&exception_key, exception_info_destroy);
+}
+static exception_info_t* get_exception_info(){
+  exception_info_t *ei = pthread_getspecific(exception_key);
+  if (!ei){
+    pthread_once(&exception_once, exception_key_alloc);
+    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(exception_info_t));
+    ei->exception_ret = NULL;
+    pthread_setspecific(exception_key, ei);
+  }
+  return ei;
+} 
 
 void dfsch_raise(dfsch_object_t* exception){
 
-  if (!exception_ret){
+  exception_info_t *ei = get_exception_info();
+
+  if (!ei->exception_ret){
     fputs(dfsch_exception_write(exception),stderr);        
     abort();
   }
 
-  exception_obj = exception;
-  longjmp(*exception_ret, 1);
+  ei->exception_obj = exception;
+  longjmp(*ei->exception_ret, 1);
 }
 
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
+  exception_info_t *ei = get_exception_info();
   jmp_buf *old_ret;
   
-  old_ret = exception_ret;
-  exception_ret = GC_NEW(jmp_buf);
+  old_ret = ei->exception_ret;
+  ei->exception_ret = GC_NEW(jmp_buf);
 
-  if(setjmp(*exception_ret) == 1){
-    exception_ret = old_ret;
-    return dfsch_apply(handler, dfsch_list(1, exception_obj));
+  if(setjmp(*ei->exception_ret) == 1){
+    ei->exception_ret = old_ret;
+    return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
   }else{
     object_t *r = dfsch_apply(thunk, NULL);
-    exception_ret = old_ret;
+    ei->exception_ret = old_ret;
     return r;
   }
 
