@@ -393,10 +393,6 @@ static object_t* native_symbol_p(void *baton, object_t* args, dfsch_tail_escape_
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
-static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_number_p(dfsch_car(args)));  
-}
 static object_t* native_string_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_string_p(dfsch_car(args)));  

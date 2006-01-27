@@ -1,5 +1,7 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c: Removed duplicated code
+
 	* src/number.c: Moved number native functions to number.c
 
 	* src/native.c: escape argument to native functions
