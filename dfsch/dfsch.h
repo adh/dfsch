@@ -86,9 +86,16 @@ extern "C" {
   };
 
   /**
+   *
+   */
+
+  typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
+
+  /**
    * Native functions prototype
    */
-  typedef dfsch_object_t* (*dfsch_primitive_t)(void*,dfsch_object_t*);
+  typedef dfsch_object_t* (*dfsch_primitive_t)(void*,dfsch_object_t*,
+                                               dfsch_tail_escape_t*);
 
 
 
@@ -560,6 +567,18 @@ extern "C" {
    * macros.
    */
   extern dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args);
+
+extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
+                                          dfsch_object_t* env,
+                                          dfsch_tail_escape_t* esc);
+extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc);
+
+extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
+                                     dfsch_object_t* env,
+                                     dfsch_tail_escape_t* esc);
+
 
   // context
 

@@ -1,5 +1,8 @@
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_apply_tr): Support for tail recursive native
+	functions.
+
 	* scm/test.scm (degeneratedList): Test for special case of quasiquote
 
 	* src/dfsch.c (dfsch_append): append accepts empty lists as

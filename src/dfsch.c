@@ -1178,20 +1178,18 @@ static object_t* eval_list(object_t *list, object_t* env){
   return f;
 }
 
-typedef struct tail_escape_t {
+struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *code;
   object_t *env;
-}tail_escape_t;
+};
 
-static dfsch_object_t* eval_proc_impl(dfsch_object_t* code, 
-                                      dfsch_object_t* env,
-                                      tail_escape_t* esc);
-static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
-                                  tail_escape_t* esc);
+typedef dfsch_tail_escape_t tail_escape_t;
 
-static dfsch_object_t* eval_impl(dfsch_object_t* exp, dfsch_object_t* env,
-                                 tail_escape_t* esc){
+
+dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
+                              dfsch_object_t* env,
+                              dfsch_tail_escape_t* esc){
  start:
 
   if (!exp) 
@@ -1207,20 +1205,20 @@ static dfsch_object_t* eval_impl(dfsch_object_t* exp, dfsch_object_t* env,
 	
  
     if (f->type == FORM)
-      return apply_impl(((form_t*)f)->proc,     
-                        dfsch_cons(env,
-                                   ((pair_t*)exp)->cdr),
-                        esc);
-    if (f->type == MACRO)
-      return eval_proc_impl(dfsch_apply(((macro_t*)f)->proc,
-                                        dfsch_cons(env, 
-                                                   ((pair_t*)exp)->cdr)),
-                            env,
+      return dfsch_apply_tr(((form_t*)f)->proc,     
+                            dfsch_cons(env,
+                                       ((pair_t*)exp)->cdr),
                             esc);
+    if (f->type == MACRO)
+      return dfsch_eval_proc_tr(dfsch_apply(((macro_t*)f)->proc,
+                                            dfsch_cons(env, 
+                                                       ((pair_t*)exp)->cdr)),
+                                env,
+                                esc);
       
-    return apply_impl(f, 
-                      eval_list(((pair_t*)exp)->cdr,env),
-                      esc);
+    return dfsch_apply_tr(f, 
+                          eval_list(((pair_t*)exp)->cdr,env),
+                          esc);
     
     
   }
@@ -1233,7 +1231,7 @@ static dfsch_object_t* eval_impl(dfsch_object_t* exp, dfsch_object_t* env,
 }
 
 dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
-  return eval_impl(exp, env, NULL);
+  return dfsch_eval_tr(exp, env, NULL);
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
@@ -1265,9 +1263,9 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   return ext_env;
 }
 
-static dfsch_object_t* eval_proc_impl(dfsch_object_t* code, 
-                                      dfsch_object_t* env,
-                                      tail_escape_t* esc){
+dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
+                                   dfsch_object_t* env,
+                                   tail_escape_t* esc){
   pair_t *i;
   object_t *r=NULL;
   tail_escape_t myesc;
@@ -1298,9 +1296,9 @@ static dfsch_object_t* eval_proc_impl(dfsch_object_t* code,
     object_t* exp = i->car; 
 
     if (i->cdr)
-      r = eval_impl(exp,env,NULL);
+      r = dfsch_eval_tr(exp,env,NULL);
     else
-      r = eval_impl(exp,env,&myesc);
+      r = dfsch_eval_tr(exp,env,&myesc);
    
     i = (pair_t*)i->cdr;
   }
@@ -1310,32 +1308,27 @@ static dfsch_object_t* eval_proc_impl(dfsch_object_t* code,
 }
 
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
-  return eval_proc_impl(code, env, NULL);
+  return dfsch_eval_proc_tr(code, env, NULL);
 }
 
-static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
-                                  tail_escape_t* esc){
+dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
+                                      dfsch_object_t* args,
+                                      tail_escape_t* esc){
   if (!proc)
     return NULL;
 
   //  switch (proc->type){
   //case CLOSURE:
   if (proc->type == CLOSURE){
-    object_t* r = eval_proc_impl(((closure_t*)proc)->code,
-                                 lambda_extend(((closure_t*)proc)->args,
-                                               args,
-                                               ((closure_t*)proc)->env),
-                                 esc);
-
-    /*      if (dfsch_object_exception_p(r)){
-            dfsch_exception_push(r, proc->data.closure.name);
-            }*/ // TODO: Install transient exception handler here for tracing
-    
-    
+    object_t* r = dfsch_eval_proc_tr(((closure_t*)proc)->code,
+                                     lambda_extend(((closure_t*)proc)->args,
+                                                   args,
+                                                   ((closure_t*)proc)->env),
+                                     esc);
     return r;
   }
   if (proc->type == PRIMITIVE)
-    return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args);
+    return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,esc);
 
 
   DFSCH_THROW("exception:not-a-procedure", proc);
@@ -1343,7 +1336,7 @@ static dfsch_object_t* apply_impl(dfsch_object_t* proc, dfsch_object_t* args,
 }
 
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
-  return apply_impl(proc, args, NULL);
+  return dfsch_apply_tr(proc, args, NULL);
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
@@ -1375,10 +1368,12 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   if (dfsch_list_length(args)<(count)) \
     DFSCH_THROW("exception:too-few-arguments", (args));
 
-static object_t* native_top_level_environment(void *baton, object_t* args){
+static object_t* native_top_level_environment(void *baton, object_t* args,
+                                              dfsch_tail_escape_t* esc){
   return baton;
 }
-static object_t* native_form_current_environment(void *baton, object_t* args){
+static object_t* native_form_current_environment(void *baton, object_t* args,
+                                                 dfsch_tail_escape_t* esc){
   return dfsch_car(args);
 }
 
