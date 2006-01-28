@@ -86,6 +86,7 @@ dfsch_parser_ctx_t *parser;
 static void sigint_handler_rl(int sig){
   dfsch_parser_reset(parser);
   rl_set_prompt("]=> ");
+  rl_replace_line("", 1);
   rl_redisplay();
   signal(SIGINT, sigint_handler_rl);
 }

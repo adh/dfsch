@@ -2,6 +2,7 @@
 
 	* src/repl.c (sigint_handler_break): Handle C-C while evaluating
 	as user break.
+	(sigint_handler_rl): C-c in readline works in more sane way
 
 2006-01-27  Ales Hakl  <ales at hakl dot net>
 
