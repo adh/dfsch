@@ -46,10 +46,19 @@ typedef struct evaluator_ctx_t {
   dfsch_object_t *expr;
 } evaluator_ctx_t;
 
+static void sigint_handler_break(int sig){
+  dfsch_throw("user:sigint", NULL);
+}
+
 static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton, 
                                        dfsch_object_t *args){
-  dfsch_object_t *ret = dfsch_ctx_eval(baton->ctx, baton->expr);
+  dfsch_object_t *ret;
+
+  signal(SIGINT, sigint_handler_break);
+
+  ret = dfsch_ctx_eval(baton->ctx, baton->expr);
   puts(dfsch_obj_write(ret,100));
+
   if (cmd_log){
     fputs(dfsch_obj_write(baton->expr,1000),cmd_log);
     fputs("\n",cmd_log);
@@ -74,11 +83,11 @@ static int callback(dfsch_object_t *obj, void *baton){
 
 dfsch_parser_ctx_t *parser;
 
-static void sigint_handler(int sig){
+static void sigint_handler_rl(int sig){
   dfsch_parser_reset(parser);
   rl_set_prompt("]=> ");
   rl_redisplay();
-  signal(SIGINT, sigint_handler);
+  signal(SIGINT, sigint_handler_rl);
 }
 
 
@@ -159,7 +168,6 @@ void interactive_repl(dfsch_ctx_t* ctx){
 
   parser = dfsch_parser_create();
   dfsch_parser_callback(parser, callback, ctx);
-  signal(SIGINT, sigint_handler);
 
   rl_readline_name = "dfsch";
   rl_attempted_completion_function = symbol_completion;
@@ -170,6 +178,7 @@ void interactive_repl(dfsch_ctx_t* ctx){
     int rc;
 
 
+    signal(SIGINT, sigint_handler_rl);
     str = readline(get_prompt(dfsch_parser_get_level(parser)));
     if (!str)
       break;
@@ -216,6 +225,7 @@ int main(int argc, char**argv){
   int force_interactive = 0;
 
   GC_INIT();
+  signal(SIGINT, sigint_handler_break);
 
   cmd_log = NULL;
   ctx = dfsch_make_context();
