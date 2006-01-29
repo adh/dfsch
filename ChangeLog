@@ -1,5 +1,8 @@
 2006-01-29  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h: Added readable parameter (discrimining between
+	write and display)
+
 	* src/repl.c (esc): Added last argument to functions defined in
 	repl.c 
 

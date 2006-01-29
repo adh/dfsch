@@ -57,10 +57,10 @@ static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton,
   signal(SIGINT, sigint_handler_break);
 
   ret = dfsch_ctx_eval(baton->ctx, baton->expr);
-  puts(dfsch_obj_write(ret,100));
+  puts(dfsch_obj_write(ret,100,1));
 
   if (cmd_log){
-    fputs(dfsch_obj_write(baton->expr,1000),cmd_log);
+    fputs(dfsch_obj_write(baton->expr,1000,1),cmd_log);
     fputs("\n",cmd_log);
     fflush(cmd_log);
   }
@@ -145,7 +145,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
       exit((int)dfsch_number(dfsch_car(args)));
     }
   default:
-    fputs(dfsch_obj_write(args,100),stderr);
+    fputs(dfsch_obj_write(args,100,0),stderr);
     fputs("\n",stderr);
     fflush(stderr);
     exit(1);
@@ -154,7 +154,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
-  puts(dfsch_obj_write(args, 100));
+  puts(dfsch_obj_write(args, 100, 0));
   return NULL;
 }
 
@@ -261,7 +261,7 @@ int main(int argc, char**argv){
     case 'E':
       {
         puts(dfsch_obj_write(dfsch_ctx_eval_list(ctx, dfsch_list_read(optarg)),
-                             100));
+                             100, 1));
         interactive = 0;
 
         break;

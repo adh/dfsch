@@ -69,7 +69,8 @@ extern "C" {
   typedef struct dfsch_object_t dfsch_object_t;
 
   typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
-  typedef char* (*dfsch_type_write_t)(dfsch_object_t*, int);
+  typedef char* (*dfsch_type_write_t)(dfsch_object_t* obj, int depth, 
+                                      int readable);
 
   typedef struct dfsch_type_t {
     size_t size;
@@ -198,7 +199,8 @@ extern "C" {
   /**
    * Convert object to ASCIIZ string
    */
-  extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth);
+  extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, 
+                               int readable);
   /**
    * Convert object to ASCIIZ string
    */

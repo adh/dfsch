@@ -15,11 +15,18 @@ int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
 
   return memcmp(a->ptr, b->ptr, a->len) == 0;
 }
-char* string_write(dfsch_string_t* o, int max_depth){
-  char *b = GC_MALLOC_ATOMIC(o->len*2+3);
-  char *i = b;
+char* string_write(dfsch_string_t* o, int max_depth, int readable){
+  char *b;
+  char *i;
   int j;
 
+  if (!readable){
+    return o->ptr;
+  }
+
+  b = GC_MALLOC_ATOMIC(o->len*2+3);
+  i = b;
+ 
   *i='"';
   i++;
 

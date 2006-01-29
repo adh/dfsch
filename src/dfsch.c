@@ -97,7 +97,7 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
 }
 
 static int pair_equal_p(pair_t*, pair_t*);
-static char* pair_write(pair_t*, int);
+static char* pair_write(pair_t*, int, int);
 
 static const dfsch_type_t pair_type = {
   sizeof(pair_t), 
@@ -110,18 +110,16 @@ static const dfsch_type_t pair_type = {
 static int pair_equal_p(pair_t*a, pair_t*b){
   return dfsch_equal_p(a->car,b->car) && dfsch_equal_p(a->cdr, b->cdr);
 }
-static char* pair_write(pair_t*p, int max_depth){
+static char* pair_write(pair_t*p, int max_depth, int readable){
   if (p->cdr && p->cdr->type!=PAIR){
     
     str_list_t* l = sl_create();
     
     sl_append(l, "(");
-    sl_append(l, dfsch_obj_write(p->car,
-                                 max_depth-1));
+    sl_append(l, dfsch_obj_write(p->car, max_depth-1, readable));
 
     sl_append(l," . ");
-    sl_append(l, dfsch_obj_write(p->cdr,
-                                 max_depth-1));
+    sl_append(l, dfsch_obj_write(p->cdr, max_depth-1, readable));
     sl_append(l, ")");
     return sl_value(l);
   }
@@ -133,7 +131,7 @@ static char* pair_write(pair_t*p, int max_depth){
     
   while (i && i->type==PAIR){
     
-    sl_append(l, dfsch_obj_write(i->car,max_depth-1));
+    sl_append(l, dfsch_obj_write(i->car, max_depth-1, readable));
     i = (pair_t*)i->cdr;
     
     if (i)
@@ -143,7 +141,7 @@ static char* pair_write(pair_t*p, int max_depth){
   
   if (i){
     sl_append(l, ". ");
-    sl_append(l, dfsch_obj_write((object_t*)i,max_depth-1));
+    sl_append(l, dfsch_obj_write((object_t*)i, max_depth-1, readable));
   }
   
   sl_append(l,")");
@@ -152,7 +150,7 @@ static char* pair_write(pair_t*p, int max_depth){
 }
 
 static int symbol_equal_p(object_t*, object_t*);
-static char* symbol_write(symbol_t*, int);
+static char* symbol_write(symbol_t*, int, int);
 static const dfsch_type_t symbol_type = {
   sizeof(symbol_t), 
   "symbol",
@@ -163,7 +161,7 @@ static const dfsch_type_t symbol_type = {
 static int symbol_equal_p(object_t* a, object_t* b){
   return a == b;
 }
-static char* symbol_write(symbol_t* s, int max_depth){
+static char* symbol_write(symbol_t* s, int max_depth, int readable){
   if (s->data){
     return s->data;
   } else {
@@ -227,18 +225,18 @@ static int vector_equal_p(vector_t* a, vector_t* b){
   return 1;
 }
 
-static char* vector_write(vector_t* v, int max_depth){
+static char* vector_write(vector_t* v, int max_depth, int readable){
   str_list_t* l= sl_create();
   size_t i;
         
   sl_append(l,"#(");
 
   for(i = 0; i < v->length-1; ++i){
-    sl_append(l, dfsch_obj_write(v->data[i], max_depth-1));
+    sl_append(l, dfsch_obj_write(v->data[i], max_depth-1, readable));
     sl_append(l, " ");
   }
   
-  sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1));
+  sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1, readable));
   
   sl_append(l,")");
   return sl_value(l);
@@ -1076,7 +1074,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   return (object_t*)vector;
 }
 
-char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
+char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
   if (!obj){
     return "()";
   }
@@ -1100,7 +1098,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth){
     return sl_value(sl);
   }
 
-  return obj->type->write(obj, max_depth);
+  return obj->type->write(obj, max_depth, readable);
 }
 char* dfsch_exception_write(dfsch_object_t* e){
   str_list_t *l = sl_create();
@@ -1108,11 +1106,11 @@ char* dfsch_exception_write(dfsch_object_t* e){
   sl_append(l,"Exception occured: ");
 
   if (!dfsch_exception_p(e)){
-    sl_append(l,dfsch_obj_write(e,3));
+    sl_append(l,dfsch_obj_write(e,3,1));
   }else{
-    sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3));
+    sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3,1));
     sl_append(l," with data: ");
-    sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3));
+    sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
   }
   sl_append(l,"\n\n");
 
