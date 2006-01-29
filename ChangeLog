@@ -1,5 +1,7 @@
 2006-01-29  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): indented option help a bit
+
 	* dfsch/dfsch.h: Added readable parameter (discrimining between
 	write and display)
 
