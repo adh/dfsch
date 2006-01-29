@@ -30,6 +30,7 @@
 #include <dfsch/load.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -107,7 +108,7 @@ static char * symbol_completion_cb (const char* text, int state){
 
   while (name = dfsch_get_next_symbol(&iter)){
     if (strncmp (name, text, len) == 0){
-      return strdup(name);
+      return (char*)strdup(name);
     }
   }
   
