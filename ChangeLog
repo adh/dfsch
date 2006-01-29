@@ -1,3 +1,8 @@
+2006-01-29  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c (esc): Added last argument to functions defined in
+	repl.c 
+
 2006-01-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (sigint_handler_break): Handle C-C while evaluating

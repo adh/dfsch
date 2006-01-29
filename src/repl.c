@@ -135,7 +135,8 @@ static char* get_prompt(int level){
   }
 }
 
-static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
+static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
   switch (dfsch_list_length(args)){
   case 0:
     exit(0);
@@ -150,7 +151,8 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args){
     exit(1);
   }
 }
-static dfsch_object_t* command_print(void* arg, dfsch_object_t* args){
+static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
   
   puts(dfsch_obj_write(args, 100));
   return NULL;
