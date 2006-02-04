@@ -1,4 +1,5 @@
-* Multithreading
+* Multithreading (current version is probably thread-safe but any threading 
+  code is missing)
 * More number types:
   - Big integers
   - Fractions
