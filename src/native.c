@@ -580,61 +580,6 @@ static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Strings
-//
-/////////////////////////////////////////////////////////////////////////////
-
-
-static object_t* native_string_append(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  str_list_t* s = sl_create();
-
-  while(dfsch_pair_p(args)){
-    dfsch_object_t* i = dfsch_car(args);
-    
-    if (!dfsch_string_p(i))
-      DFSCH_THROW("exception:not-a-string", i);
-      
-    sl_append(s, dfsch_string(i));
-
-    args = dfsch_cdr(args);
-  }
-
-  object_t* o = dfsch_make_string(sl_value(s)); 
-  return o;
-}
-static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,2);
-  object_t* a = dfsch_car(args);
-  object_t* b = dfsch_car(dfsch_cdr(args));
-
-  if (!dfsch_string_p(a))
-    DFSCH_THROW("exception:not-a-string", a);
-
-  char *s = dfsch_string(a);
-  size_t len = strlen(s);
-  size_t index = (size_t)(dfsch_number(b));
-  
-  if (index < 0)
-    index = index + len;
-  if (index>=len)
-    DFSCH_THROW("exception:index-too-large", b);
-
-
-
-  return dfsch_make_number((double)s[index]);
-}
-static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,1);
-
-  object_t* a = dfsch_car(args);
-  if (!dfsch_string_p(a))
-    DFSCH_THROW("exception:not-a-string", a);
-
-  return dfsch_make_number((double)strlen(dfsch_string(a)));
-}
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Vectors
 //
 /////////////////////////////////////////////////////////////////////////////
@@ -830,12 +775,6 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
                                                          NULL)));
 
 
-  dfsch_ctx_define(ctx, "string-append", 
-		   dfsch_make_primitive(&native_string_append,NULL));
-  dfsch_ctx_define(ctx, "string-ref", 
-		   dfsch_make_primitive(&native_string_ref,NULL));
-  dfsch_ctx_define(ctx, "string-length", 
-		   dfsch_make_primitive(&native_string_length,NULL));
 
   dfsch_ctx_define(ctx, "true", dfsch_sym_true());
   dfsch_ctx_define(ctx, "nil", NULL);
@@ -866,6 +805,7 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch__hash_native_register(ctx);
   dfsch__promise_native_register(ctx);
   dfsch__number_native_register(ctx);
+  dfsch__string_native_register(ctx);
 
   return NULL;
 }

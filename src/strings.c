@@ -158,3 +158,68 @@ int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b){
 		((dfsch_string_t*)a)->len) == 0;
 
 }
+
+dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
+  object_t* i = list;
+  size_t len = 0;
+  dfsch_string_t *r = dfsch_make_object(STRING);
+  char* ptr;
+
+  while (i){
+    dfsch_string_t *s = (dfsch_string_t*)dfsch_car(i);
+
+    TYPE_CHECK(s, STRING, "string");
+    
+    len += s->len;
+
+    i = dfsch_cdr(i);
+  }
+
+  r->len = len;
+  r->ptr = ptr = GC_MALLOC_ATOMIC(len+1);
+
+  i = list;
+
+  while (i){
+    dfsch_string_t *s = (dfsch_string_t*)dfsch_car(i);
+
+    memcpy(ptr, s->ptr, s->len);
+    ptr += s->len;
+
+    i = dfsch_cdr(i);
+  }
+  
+  *ptr = 0;
+
+  return r;
+
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Scheme binding
+//
+/////////////////////////////////////////////////////////////////////////////
+
+
+static object_t* native_string_append(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  
+  return dfsch_string_list_append(args);
+
+}
+static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+}
+static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+}
+
+void dfsch__string_native_register(dfsch_ctx_t *ctx){
+
+  dfsch_ctx_define(ctx, "string-append", 
+		   dfsch_make_primitive(&native_string_append,NULL));
+  dfsch_ctx_define(ctx, "string-ref", 
+		   dfsch_make_primitive(&native_string_ref,NULL));
+  dfsch_ctx_define(ctx, "string-length", 
+		   dfsch_make_primitive(&native_string_length,NULL));
+
+
+}
