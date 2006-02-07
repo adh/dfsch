@@ -195,6 +195,18 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 
 }
 
+char dfsch_string_ref(dfsch_object_t* string, size_t index){
+  dfsch_string_t* s = (dfsch_string_t*) string;
+
+  TYPE_CHECK(s, STRING, "string");
+
+  if (index >= s->len)
+    dfsch_throw("exception:index-out-of-bounds",
+                dfsch_make_number_from_long(index));
+
+  return s->ptr[index];
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding

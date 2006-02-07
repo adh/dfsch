@@ -1,5 +1,7 @@
 2006-02-07  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h (DFSCH_GENERIC_ARG): generic argument handling macros 
+
 	* src/strings.c (dfsch_string_list_append): Generic string append
 	function.
 

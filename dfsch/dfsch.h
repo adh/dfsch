@@ -655,58 +655,41 @@ extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
                 dfsch_make_string(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
-
-#define DFSCH_STRING_ARG(al, name)\
-  if (!dfsch_pair_p((al))) \
-    DFSCH_THROW("exception:required-argument-missing",\
-                dfsch_make_string(#name));\
-  { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_string_p(tmp)) \
-      DFSCH_THROW("exception:not-a-string",tmp);	\
-    (name) = dfsch_string(tmp); \
-    (al) = dfsch_cdr((al));\
-  }
-
-#define DFSCH_NUMBER_ARG(al, name, type)\
-  if (!dfsch_pair_p((al))) \
-    DFSCH_THROW("exception:required-argument-missing",\
-                dfsch_make_string(#name));\
-  { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_number_p(tmp)) \
-        DFSCH_THROW("exception:not-a-number",tmp); \
-    (name) = (type)dfsch_number(tmp); \
-    (al) = dfsch_cdr((al));\
-  }
-
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
   if (!dfsch_pair_p((al))) \
    { (name) = (default);}else\
   {(name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al));}
-
-#define DFSCH_STRING_ARG_OPT(al, name, default)\
+#define DFSCH_GENERIC_ARG(al, name, type, conv)\
+  if (!dfsch_pair_p((al))) \
+    DFSCH_THROW("exception:required-argument-missing",\
+                dfsch_make_string(#name));\
+  { dfsch_object_t* tmp = dfsch_car((al)); \
+    (name) = (type)(conv)(tmp); \
+    (al) = dfsch_cdr((al));\
+  }
+#define DFSCH_GENERIC_ARG_OPT(al, name, default, type, conv)\
   if (!dfsch_pair_p((al))) \
     {(name)=(default);} else\
   { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_string_p(tmp)) \
-      DFSCH_THROW("exception:not-a-string",tmp);	\
-    (name) = dfsch_string(tmp); \
+    (name) = (type)(conv)(tmp); \
     (al) = dfsch_cdr((al));\
   }
-
-#define DFSCH_NUMBER_ARG_OPT(al, name, type, default)\
-  if (!dfsch_pair_p((al))) \
-  {(name) = (default);} else\
-  { dfsch_object_t* tmp = dfsch_car((al)); \
-    if (!dfsch_number_p(tmp)) \
-      DFSCH_THROW("exception:not-a-number",tmp);	\
-    (name) = (type)dfsch_number(tmp); \
-    (al) = dfsch_cdr((al));\
-  }
-
 #define DFSCH_ARG_END(al) \
   if (al != NULL) \
     DFSCH_THROW("exception:too-many-arguments",NULL)
+
+  // Backward compatibility:
+
+#define DFSCH_NUMBER_ARG(al, name, type) \
+  DFSCH_GENERIC_ARG(al, name, type, dfsch_number_to_double)
+#define DFSCH_NUMBER_ARG_OPT(al, name, default, type) \
+  DFSCH_GENERIC_ARG(al, name, default, type, dfsch_number_to_double)
+#define DFSCH_STRING_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, char*, dfsch_string)
+#define DFSCH_STRING_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string)
+
 
 #ifdef __cplusplus
 }

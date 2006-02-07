@@ -50,4 +50,17 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#define DFSCH_DOUBLE_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, dfsch_number_to_double)
+#define DFSCH_DOUBLE_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG(al, name, default, dfsch_number_to_double)
+
+#define DFSCH_LONG_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, dfsch_number_to_long)
+#define DFSCH_LONG_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG(al, name, default, dfsch_number_to_long)
+
+
+
 #endif
