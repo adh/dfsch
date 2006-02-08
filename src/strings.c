@@ -147,17 +147,107 @@ dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
 			     ((dfsch_string_t*)obj)->len);  
 }
 
+int dfsch_string_cmp(dfsch_object_t* a, dfsch_object_t* b){
+  TYPE_CHECK(a, STRING, "string");
+  TYPE_CHECK(b, STRING, "string");
+  
+  if (((dfsch_string_t*)a)->len != ((dfsch_string_t*)b)->len){
+    size_t l = (((dfsch_string_t*)a)->len < ((dfsch_string_t*)b)->len) ?
+       ((dfsch_string_t*)a)->len : ((dfsch_string_t*)b)->len;
+
+    int r = memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
+                   l);
+
+    if (r == 0){
+      return (((dfsch_string_t*)a)->len < ((dfsch_string_t*)b)->len) ? -1 : 1;
+    }else {
+      return r;
+    }
+
+  }
+
+  return memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
+		((dfsch_string_t*)a)->len);
+
+}
+
 int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b){
   TYPE_CHECK(a, STRING, "string");
   TYPE_CHECK(b, STRING, "string");
   
   if (((dfsch_string_t*)a)->len != ((dfsch_string_t*)b)->len)
-    return 0;
+      return 0;
 
   return memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
 		((dfsch_string_t*)a)->len) == 0;
 
 }
+int dfsch_string_lt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp(a, b) < 0;
+}
+int dfsch_string_gt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp(a, b) > 0;
+}
+int dfsch_string_lte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp(a, b) <= 0;
+}
+int dfsch_string_gte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp(a, b) >= 0;
+}
+
+int dfsch_string_cmp_ci(dfsch_object_t* a_, dfsch_object_t* b_){
+  size_t i;
+  size_t l;
+
+  dfsch_string_t* a=(dfsch_string_t*)a_;
+  dfsch_string_t* b=(dfsch_string_t*)b_;
+
+  TYPE_CHECK(a, STRING, "string");
+  TYPE_CHECK(b, STRING, "string");
+
+  l = a->len; 
+  if (a->len > b->len){
+    l = b->len; 
+  }
+
+  for (i=0; i < l; i++){
+    char ac = toupper(a->ptr[i]);
+    char bc = toupper(b->ptr[i]);
+
+    if (ac < bc){
+      return -1;
+    }
+    if (ac > bc){
+      return 1;
+    }
+  }
+  
+  if (a->len == b->len)
+    return 0;
+
+  if (a->len < b->len)
+    return -1;
+
+  return 1;
+}
+
+int dfsch_string_ci_eq_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) == 0;
+}
+int dfsch_string_ci_lt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) < 0;
+}
+int dfsch_string_ci_gt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) > 0;
+}
+int dfsch_string_ci_lte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) <= 0;
+}
+int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) >= 0;
+}
+
+
 
 dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   object_t* i = list;
@@ -245,6 +335,17 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
 
+static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* a;
+  object_t* b;
+
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+
+  return dfsch_bool(((int (*)(object_t*,object_t*)) baton)(a, b));
+}
+
+
 void dfsch__string_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "string-append", 
@@ -254,5 +355,36 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "string-length", 
 		   dfsch_make_primitive(&native_string_length,NULL));
 
+  dfsch_ctx_define(ctx, "string=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_eq_p));
+  dfsch_ctx_define(ctx, "string<?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_lt_p));
+  dfsch_ctx_define(ctx, "string>?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_gt_p));
+  dfsch_ctx_define(ctx, "string<=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_lte_p));
+  dfsch_ctx_define(ctx, "string>=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_gte_p));
+
+  dfsch_ctx_define(ctx, "string-ci=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_ci_eq_p));
+  dfsch_ctx_define(ctx, "string-ci<?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_ci_lt_p));
+  dfsch_ctx_define(ctx, "string-ci>?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_ci_gt_p));
+  dfsch_ctx_define(ctx, "string-ci<=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_ci_lte_p));
+  dfsch_ctx_define(ctx, "string-ci>=?", 
+		   dfsch_make_primitive(&native_string_cmp_p,
+                                        &dfsch_string_ci_gte_p));
 
 }
