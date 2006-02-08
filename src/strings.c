@@ -207,6 +207,14 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
   return s->ptr[index];
 }
 
+size_t dfsch_string_length(dfsch_object_t* string){
+  dfsch_string_t* s = (dfsch_string_t*) string;
+
+  TYPE_CHECK(s, STRING, "string");
+
+  return s->len;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -220,8 +228,21 @@ static object_t* native_string_append(void *baton, object_t* args, dfsch_tail_es
 
 }
 static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  size_t index;
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_LONG_ARG(args, index);
+
+  return dfsch_make_number_from_long(dfsch_string_ref(string, index));
+
 }
 static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+
+  return dfsch_make_number_from_long(dfsch_string_length(string));
 }
 
 void dfsch__string_native_register(dfsch_ctx_t *ctx){

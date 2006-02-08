@@ -48,6 +48,13 @@ double dfsch_number_to_double(dfsch_object_t *n){
   return ((number_t*)n)->number;
 
 }
+long dfsch_number_to_long(dfsch_object_t *n){
+  if (!n || n->type!=NUMBER)
+    dfsch_throw("exception:not-a-number", n);
+
+  return (long)((number_t*)n)->number;
+
+}
 int dfsch_number_p(dfsch_object_t* obj){
   if (!obj)
     return 0;

@@ -1,3 +1,7 @@
+2006-02-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c (dfsch_string_length): Return length of list
+
 2006-02-07  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/dfsch.h (DFSCH_GENERIC_ARG): generic argument handling macros 

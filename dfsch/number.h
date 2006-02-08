@@ -40,6 +40,10 @@ extern "C" {
    * Returns value of given number as double.
    */
   extern double dfsch_number_to_double(dfsch_object_t *n);
+  /**
+   * Returns value of given number as long.
+   */
+  extern long dfsch_number_to_long(dfsch_object_t *n);
 
   /**
    * Creates number from external representation
@@ -52,14 +56,14 @@ extern "C" {
 #endif
 
 #define DFSCH_DOUBLE_ARG(al, name) \
-  DFSCH_GENERIC_ARG(al, name, dfsch_number_to_double)
+  DFSCH_GENERIC_ARG(al, name, double, dfsch_number_to_double)
 #define DFSCH_DOUBLE_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, dfsch_number_to_double)
+  DFSCH_GENERIC_ARG(al, name, default, double, dfsch_number_to_double)
 
 #define DFSCH_LONG_ARG(al, name) \
-  DFSCH_GENERIC_ARG(al, name, dfsch_number_to_long)
+  DFSCH_GENERIC_ARG(al, name, long, dfsch_number_to_long)
 #define DFSCH_LONG_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, dfsch_number_to_long)
+  DFSCH_GENERIC_ARG(al, name, default, long, dfsch_number_to_long)
 
 
 
