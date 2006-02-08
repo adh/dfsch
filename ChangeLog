@@ -1,5 +1,8 @@
 2006-02-08  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/strings.h (dfsch_string_substring): Added declarations of
+	added functions to header file
+
 	* src/strings.c (dfsch_string_length): Return length of list
 	(dfsch__string_native_register): Full set of string comparison
 	predicates
