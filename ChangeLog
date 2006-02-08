@@ -3,6 +3,7 @@
 	* src/strings.c (dfsch_string_length): Return length of list
 	(dfsch__string_native_register): Full set of string comparison
 	predicates
+	(native_substring): substring function
 
 2006-02-07  Ales Hakl  <ales at hakl dot net>
 

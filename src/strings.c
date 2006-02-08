@@ -287,7 +287,6 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 
 char dfsch_string_ref(dfsch_object_t* string, size_t index){
   dfsch_string_t* s = (dfsch_string_t*) string;
-
   TYPE_CHECK(s, STRING, "string");
 
   if (index >= s->len)
@@ -299,10 +298,26 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
 
 size_t dfsch_string_length(dfsch_object_t* string){
   dfsch_string_t* s = (dfsch_string_t*) string;
-
   TYPE_CHECK(s, STRING, "string");
 
   return s->len;
+}
+
+dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
+                                       size_t end){
+  dfsch_string_t* s = (dfsch_string_t*) string;
+  TYPE_CHECK(s, STRING, "string");
+
+  if (end > s->len)
+    dfsch_throw("exception:index-out-of-bounds",
+                dfsch_make_number_from_long(end));
+
+  if (start > end)
+    dfsch_throw("exception:index-out-of-bounds",
+                dfsch_make_number_from_long(start));
+
+  return dfsch_make_string_buf(s->ptr+start, end-start);
+
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -344,12 +359,25 @@ static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_esc
 
   return dfsch_bool(((int (*)(object_t*,object_t*)) baton)(a, b));
 }
+static object_t* native_substring(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  size_t start, end;
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_LONG_ARG(args, start);
+  DFSCH_LONG_ARG(args, end);
+
+  return dfsch_string_substring(string, start, end);
+
+}
 
 
 void dfsch__string_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append,NULL));
+  dfsch_ctx_define(ctx, "substring", 
+		   dfsch_make_primitive(&native_substring,NULL));
   dfsch_ctx_define(ctx, "string-ref", 
 		   dfsch_make_primitive(&native_string_ref,NULL));
   dfsch_ctx_define(ctx, "string-length", 
