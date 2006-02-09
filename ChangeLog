@@ -1,3 +1,7 @@
+2006-02-09  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/dfsch.h: removed DFSCH_THROW
+
 2006-02-08  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/strings.h (dfsch_string_substring): Added declarations of

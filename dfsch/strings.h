@@ -41,5 +41,10 @@ extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
                                               size_t start,
                                               size_t end);
 
+#define DFSCH_STRING_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
+#define DFSCH_STRING_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string_to_cstr)
+
 
 #endif

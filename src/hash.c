@@ -59,7 +59,7 @@ dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
   hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
 
   if (hash_proc && !dfsch_procedure_p(hash_proc))
-    DFSCH_THROW("exception:not-a-procedure", hash_proc);
+    dfsch_throw("exception:not-a-procedure", hash_proc);
 
   h->proc = hash_proc;
   h->count = 0;

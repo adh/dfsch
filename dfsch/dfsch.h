@@ -513,15 +513,7 @@ extern "C" {
   /**
    * And another convenience wrapper around dfsch_make_exeption()
    */
-#define DFSCH_THROW(type,data) dfsch_throw(type, data)
-
-  /**
-   * If argument is exception, add current function into call trace and
-   * return from current function.
-   */
-#define DFSCH_RETHROW(exception)  -- DEPRECATED --
-              
-
+#define DFSCH_THROW(type,data) dfsch_throw(type, data) ---deprecated---
 
   /**
    * Return exception's type.
@@ -651,7 +643,7 @@ extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
 
 #define DFSCH_OBJECT_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
-    DFSCH_THROW("exception:required-argument-missing",\
+    dfsch_throw("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
@@ -662,7 +654,7 @@ extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
   (al) = dfsch_cdr((al));}
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
   if (!dfsch_pair_p((al))) \
-    DFSCH_THROW("exception:required-argument-missing",\
+    dfsch_throw("exception:required-argument-missing",\
                 dfsch_make_string(#name));\
   { dfsch_object_t* tmp = dfsch_car((al)); \
     (name) = (type)(conv)(tmp); \
@@ -677,7 +669,7 @@ extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
   }
 #define DFSCH_ARG_END(al) \
   if (al != NULL) \
-    DFSCH_THROW("exception:too-many-arguments",NULL)
+    dfsch_throw("exception:too-many-arguments",NULL)
 
   // Backward compatibility:
 
@@ -685,10 +677,6 @@ extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
   DFSCH_GENERIC_ARG(al, name, type, dfsch_number_to_double)
 #define DFSCH_NUMBER_ARG_OPT(al, name, default, type) \
   DFSCH_GENERIC_ARG(al, name, default, type, dfsch_number_to_double)
-#define DFSCH_STRING_ARG(al, name) \
-  DFSCH_GENERIC_ARG(al, name, char*, dfsch_string)
-#define DFSCH_STRING_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string)
 
 
 #ifdef __cplusplus

@@ -39,10 +39,10 @@ typedef dfsch_object_t object_t;
 
 #define NEED_ARGS(args,count) \
   if (dfsch_list_length(args)!=(count)) \
-    DFSCH_THROW("exception:wrong-number-of-arguments",(args));
+    dfsch_throw("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
   if (dfsch_list_length(args)<(count)) \
-    DFSCH_THROW("exception:too-few-arguments", (args));
+    dfsch_throw("exception:too-few-arguments", (args));
 
 
 // Native procedures:
@@ -174,7 +174,7 @@ static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escap
     object_t* c = dfsch_car(args);
     object_t* i;
     if (!dfsch_pair_p(c)){
-      DFSCH_THROW("exception:not-a-pair",c);
+      dfsch_throw("exception:not-a-pair",c);
     }
     
     i = dfsch_car(c);
@@ -549,7 +549,7 @@ static object_t* continuation_closure(continuation_t *cont, object_t* args, dfsc
   DFSCH_ARG_END(args);
   
   if (!cont->active)
-    DFSCH_THROW("exception:already-returned",NULL);
+    dfsch_throw("exception:already-returned",NULL);
 
   cont->value = value;
   longjmp(cont->ret,1);
@@ -606,7 +606,7 @@ static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_es
   DFSCH_ARG_END(args);
 
   if (!dfsch_vector_p(vector))
-    DFSCH_THROW("exception:not-a-vector",vector);
+    dfsch_throw("exception:not-a-vector",vector);
 
   return dfsch_make_number(dfsch_vector_length(vector));
 

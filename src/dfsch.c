@@ -324,13 +324,13 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
 }
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
   if (!pair || pair->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",pair);
+    dfsch_throw("exception:not-a-pair",pair);
 
   return ((pair_t*)pair)->car;
 }
 dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
   if (!pair || pair->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",pair);
+    dfsch_throw("exception:not-a-pair",pair);
 
   return ((pair_t*)pair)->cdr;
 }
@@ -338,7 +338,7 @@ dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 			      dfsch_object_t* car){
   if (!pair || pair->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",pair);
+    dfsch_throw("exception:not-a-pair",pair);
 
   ((pair_t*)pair)->car = car;
   
@@ -348,7 +348,7 @@ dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
   if (!pair || pair->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",pair);
+    dfsch_throw("exception:not-a-pair",pair);
   
   ((pair_t*)pair)->cdr = cdr;
   
@@ -384,7 +384,7 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
     if (it && it->type == PAIR){
       it = (pair_t*)it->cdr;
     }else{
-      DFSCH_THROW("exception:no-such-item",dfsch_make_number(index));
+      dfsch_throw("exception:no-such-item",dfsch_make_number(index));
     }
   }
   return dfsch_car((object_t*)it);
@@ -414,15 +414,15 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
       j = (pair_t*)j->cdr;
     }
     if (j && j->type != PAIR)
-      DFSCH_THROW("exception:not-a-pair", (object_t*)j);
+      dfsch_throw("exception:not-a-pair", (object_t*)j);
 
     i = (pair_t*)i->cdr;
   }
 
   if (!i || i->type != PAIR)
-    DFSCH_THROW("exception:not-a-pair", (object_t*)i);
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
   /*  if (i->car && i->car->type != PAIR)
-      DFSCH_THROW("exception:not-a-pair", i->car);*/
+      dfsch_throw("exception:not-a-pair", i->car);*/
 
   if (tail){
     tail->cdr = i->car;
@@ -478,7 +478,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
     i = (pair_t*)i->cdr;
   }
   if (!i || i->type != PAIR)
-    DFSCH_THROW("exception:not-a-pair", (object_t*)i);
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
 
 
   return (object_t*)head;
@@ -493,13 +493,13 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
   pair_t* i;
   
   if (!alist || alist->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",alist);
+    dfsch_throw("exception:not-a-pair",alist);
 
   i=(pair_t*)alist;
   
   while (i && i->type==PAIR){
     if (!i->car || i->car->type!=PAIR){
-      DFSCH_THROW("exception:not-a-alist",(object_t*)alist);
+      dfsch_throw("exception:not-a-alist",(object_t*)alist);
     }
 
     if (dfsch_equal_p(key,((pair_t*)i->car)->car)){
@@ -517,13 +517,13 @@ dfsch_object_t* dfsch_assq(dfsch_object_t *key,
   pair_t* i;
 
   if (!alist || alist->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",alist);
+    dfsch_throw("exception:not-a-pair",alist);
 
   i=(pair_t*)alist;
   
   while (i && i->type==PAIR){
     if (!i->car || i->car->type!=PAIR){
-      DFSCH_THROW("exception:not-a-alist",alist);
+      dfsch_throw("exception:not-a-alist",alist);
     }
 
     if (key == ((pair_t*)i->car)->car){
@@ -541,13 +541,13 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
   pair_t *i;
 
   if (!alist || alist->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",alist);
+    dfsch_throw("exception:not-a-pair",alist);
 
   i=(pair_t*)alist;
   
   while (i && i->type==PAIR){
     if (!i->car || i->car->type!=PAIR){
-      DFSCH_THROW("exception:not-a-alist",alist);
+      dfsch_throw("exception:not-a-alist",alist);
     }
 
     if (dfsch_eqv_p(key,((pair_t*)i->car)->car)){
@@ -1008,10 +1008,10 @@ size_t dfsch_vector_length(dfsch_object_t *vector){
 
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
   if (!vector || vector->type != VECTOR)
-    DFSCH_THROW("exception:not-a-vector",vector);
+    dfsch_throw("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
-    DFSCH_THROW("exception:invalid-index",dfsch_make_number(k));
+    dfsch_throw("exception:invalid-index",dfsch_make_number(k));
   
   return ((vector_t*)vector)->data[k];
 }
@@ -1019,10 +1019,10 @@ dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
 dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
                                  dfsch_object_t* obj){
   if (!vector || vector->type != VECTOR)
-    DFSCH_THROW("exception:not-a-vector",vector);
+    dfsch_throw("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
-    DFSCH_THROW("exception:invalid-index",dfsch_make_number(k));
+    dfsch_throw("exception:invalid-index",dfsch_make_number(k));
   
   ((vector_t*)vector)->data[k] = obj;
 
@@ -1035,7 +1035,7 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
   size_t i;
 
   if (!vector || vector->type != VECTOR)
-    DFSCH_THROW("exception:not-a-vector",vector);
+    dfsch_throw("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length == 0)
     return NULL;
@@ -1059,7 +1059,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   pair_t* j = (pair_t*)list;
   size_t i=0;
   if (!list || list->type != PAIR)
-    DFSCH_THROW("exception:not-a-pair",list);
+    dfsch_throw("exception:not-a-pair",list);
   
   vector = (vector_t*)dfsch_make_object(VECTOR);
   vector->length = dfsch_list_length(list);
@@ -1150,7 +1150,7 @@ dfsch_object_t* dfsch_list_read(char* str){
 
   if ((err && err != DFSCH_PARSER_STOPPED)
       || dfsch_parser_get_level(parser)!=0){
-      DFSCH_THROW("read:syntax-error",NULL);
+      dfsch_throw("read:syntax-error",NULL);
   }  
   
   return ctx.head;
@@ -1171,7 +1171,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
   pair_t *i;
 
   if (!env || env->type!=PAIR){
-    DFSCH_THROW("exception:not-a-pair",env);
+    dfsch_throw("exception:not-a-pair",env);
   }
 
   i = (pair_t*)env;
@@ -1184,13 +1184,13 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
     i = (pair_t*)i->cdr;
   }
   
-  DFSCH_THROW("exception:unbound-variable",name);
+  dfsch_throw("exception:unbound-variable",name);
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   pair_t *i;
 
   if (!env || env->type!=PAIR){
-    DFSCH_THROW("exception:not-a-pair",env);
+    dfsch_throw("exception:not-a-pair",env);
   }
 
   i = (pair_t*)env;
@@ -1210,7 +1210,7 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   pair_t *i;
   if (!env || env->type!=PAIR){
-    DFSCH_THROW("exception:not-a-pair",env);
+    dfsch_throw("exception:not-a-pair",env);
   }
 
   i = (pair_t*)env;
@@ -1222,13 +1222,13 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   }
   
 
-  DFSCH_THROW("exception:unbound-variable",name);
+  dfsch_throw("exception:unbound-variable",name);
 }
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
   if (!env || env->type!=PAIR)
-    DFSCH_THROW("exception:not-a-pair",env);
+    dfsch_throw("exception:not-a-pair",env);
 
   dfsch_hash_set(((pair_t*)env)->car, name, value);  
 
@@ -1293,7 +1293,7 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
     object_t *f = dfsch_eval_tr(((pair_t*)exp)->car,env,NULL);
     
     if (!f)
-      DFSCH_THROW("exception:not-a-procedure-or-macro", f);
+      dfsch_throw("exception:not-a-procedure-or-macro", f);
 	
  
     if (f->type == FORM)
@@ -1344,9 +1344,9 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   }
 
   if (!i_a  && i_f)
-      DFSCH_THROW("exception:too-few-arguments", aa);
+      dfsch_throw("exception:too-few-arguments", aa);
   if (!i_f && i_a) 
-      DFSCH_THROW("exception:too-many-arguments", aa);
+      dfsch_throw("exception:too-many-arguments", aa);
   
 
   return ext_env;
@@ -1420,7 +1420,7 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
     return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,esc);
 
 
-  DFSCH_THROW("exception:not-a-procedure", proc);
+  dfsch_throw("exception:not-a-procedure", proc);
    
 }
 
@@ -1452,10 +1452,10 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
 
 #define NEED_ARGS(args,count) \
   if (dfsch_list_length(args)!=(count)) \
-    DFSCH_THROW("exception:wrong-number-of-arguments",(args));
+    dfsch_throw("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
   if (dfsch_list_length(args)<(count)) \
-    DFSCH_THROW("exception:too-few-arguments", (args));
+    dfsch_throw("exception:too-few-arguments", (args));
 
 static object_t* native_top_level_environment(void *baton, object_t* args,
                                               dfsch_tail_escape_t* esc){
