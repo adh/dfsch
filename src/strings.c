@@ -320,6 +320,23 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 }
 
+int dfsch_string_for_each(dfsch_string_unicode_callback_t proc,
+                               dfsch_object_t* string,
+                               void *baton){
+  dfsch_string_t* s = (dfsch_string_t*) string;
+  int i;
+  TYPE_CHECK(s, STRING, "string");
+
+
+  for (i=0; i<s->len; i++){
+    int r = proc(s->ptr[i], baton, i, i);
+    if (r)
+      return r;
+  }
+
+  return 0;
+}
+
 // UTF-8 support
 
 int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
@@ -470,12 +487,12 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
       dfsch_throw("exception:index-out-of-bounds",
                   dfsch_make_number_from_long(end));
       
-    eptr = s->len;
+    c.eptr = s->len;
   }
   
   
 
-  return dfsch_make_string_buf(s->ptr + sptr, s->ptr + (eptr-sptr));
+  return dfsch_make_string_buf(s->ptr + c.sptr, s->ptr + (c.eptr-c.sptr));
 
 }
 
