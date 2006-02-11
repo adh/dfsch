@@ -336,7 +336,7 @@ size_t dfsch_string_utf8_length(dfsch_object_t* string){
       if ((s->ptr[i] & 0xe0) == 0xc0){ // U+0080 - U+07FF, two bytes
         i++;
         state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xd0){ // U+0800 - U+FFFF, three bytes
+      }else if ((s->ptr[i] & 0xf0) == 0xe0){ // U+0800 - U+FFFF, three bytes
         i++;
         state = 2;
       }else if ((s->ptr[i] & 0xf7) == 0xf0){ // U+10000 - U+10FFFF, four bytes

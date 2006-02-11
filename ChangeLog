@@ -2,6 +2,7 @@
 
 	* src/strings.c (dfsch_string_utf8_length): Length calculation
 	function for utf-8 strings 
+	(dfsch_string_utf8_length): Fixed bad constant
 
 2006-02-09  Ales Hakl  <ales at hakl dot net>
 
