@@ -320,6 +320,8 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 }
 
+// UTF-8 support
+
 size_t dfsch_string_utf8_length(dfsch_object_t* string){
   dfsch_string_t* s = (dfsch_string_t*) string;
   size_t i = 0;
@@ -333,13 +335,16 @@ size_t dfsch_string_utf8_length(dfsch_object_t* string){
       len++;
       state = 0;
     }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0){ // U+0080 - U+07FF, two bytes
+      if ((s->ptr[i] & 0xe0) == 0xc0 &&
+          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
         i++;
         state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0){ // U+0800 - U+FFFF, three bytes
+      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
+                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
         i++;
         state = 2;
-      }else if ((s->ptr[i] & 0xf7) == 0xf0){ // U+10000 - U+10FFFF, four bytes
+      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
+                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
         i++;
         state = 3;
       }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
@@ -348,7 +353,8 @@ size_t dfsch_string_utf8_length(dfsch_object_t* string){
           if (state == 0) len++;
         }
         i++;
-      }else{
+      }else{ // Invalid byte
+        state = 0;
         i++;
       }
     }
@@ -374,15 +380,18 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
       len++;
       state = 0;
     }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0){ // U+0080 - U+07FF, two bytes
+      if ((s->ptr[i] & 0xe0) == 0xc0 &&
+          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
         ch = s->ptr[i] & 0x1f;
         i++;
         state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0){ // U+0800 - U+FFFF, three bytes
+      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
+                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
         ch = s->ptr[i] & 0xf;
         i++;
         state = 2;
-      }else if ((s->ptr[i] & 0xf7) == 0xf0){ // U+10000 - U+10FFFF, four bytes
+      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
+                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
         ch = s->ptr[i] & 0x7;
         i++;
         state = 3;
@@ -398,7 +407,8 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
           }
         }
         i++;
-      }else{
+      }else{ // Invalid byte
+        state = 0;
         i++;
       }
     }
@@ -436,7 +446,8 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
       len++;
       state = 0;
     }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0){ // U+0080 - U+07FF, two bytes
+      if ((s->ptr[i] & 0xe0) == 0xc0 &&
+          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
         if (len == start){
           sptr = s->ptr+i;
         }
@@ -446,7 +457,8 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
         }
         i++;
         state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0){ // U+0800 - U+FFFF, three bytes
+      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
+                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
         if (len == start){
           sptr = s->ptr+i;
         }
@@ -456,7 +468,8 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
         }
         i++;
         state = 2;
-      }else if ((s->ptr[i] & 0xf7) == 0xf0){ // U+10000 - U+10FFFF, four bytes
+      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
+                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
         if (len == start){
           sptr = s->ptr+i;
         }
@@ -474,7 +487,8 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
             len++;
           }
         }
-      }else{
+      }else{ // Invalid byte
+        state = 0;
         i++;
       }
     }
