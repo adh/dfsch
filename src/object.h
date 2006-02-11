@@ -86,6 +86,6 @@ typedef struct form_t {
 
 #define TYPE_CHECK(obj, t, name) \
   if (((dfsch_object_t*)obj)->type != t) \
-    dfsch_throw("exception:not-a-" name, obj);
+    dfsch_throw("exception:not-a-" name, (dfsch_object_t*)obj);
 
 #endif

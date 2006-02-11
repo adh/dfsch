@@ -320,6 +320,43 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 }
 
+size_t dfsch_string_utf8_length(dfsch_object_t* string){
+  dfsch_string_t* s = (dfsch_string_t*) string;
+  size_t i = 0;
+  size_t len = 0;
+  size_t state = 0;
+  TYPE_CHECK(s, STRING, "string");
+
+  while(i<s->len){
+    if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
+      i++;
+      len++;
+      state = 0;
+    }else{
+      if ((s->ptr[i] & 0xe0) == 0xc0){ // U+0080 - U+07FF, two bytes
+        i++;
+        state = 1;
+      }else if ((s->ptr[i] & 0xf0) == 0xd0){ // U+0800 - U+FFFF, three bytes
+        i++;
+        state = 2;
+      }else if ((s->ptr[i] & 0xf7) == 0xf0){ // U+10000 - U+10FFFF, four bytes
+        i++;
+        state = 3;
+      }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
+        if (state != 0){
+          state--;
+          if (state == 0) len++;
+        }
+        i++;
+      }else{
+        i++;
+      }
+    }
+  }
+
+  return len;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -348,6 +385,13 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
   DFSCH_OBJECT_ARG(args, string);
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
+}
+static object_t* native_string_utf8_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+
+  return dfsch_make_number_from_long(dfsch_string_utf8_length(string));
 }
 
 static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -382,6 +426,8 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
 		   dfsch_make_primitive(&native_string_ref,NULL));
   dfsch_ctx_define(ctx, "string-length", 
 		   dfsch_make_primitive(&native_string_length,NULL));
+  dfsch_ctx_define(ctx, "string-utf8-length", 
+		   dfsch_make_primitive(&native_string_utf8_length,NULL));
 
   dfsch_ctx_define(ctx, "string=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
