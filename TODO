@@ -6,5 +6,3 @@
   - Complex numbers (as pairs of two numbers of same type)
 * caaadadr and such weird functions (I've no idea how to implement this)
 * IO
-* Better strings
-  - UTF-8 and internationalization (somehow)
