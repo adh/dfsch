@@ -320,7 +320,7 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 }
 
-int dfsch_string_for_each(dfsch_string_unicode_callback_t proc,
+int dfsch_string_for_each(dfsch_string_callback_t proc,
                                dfsch_object_t* string,
                                void *baton){
   dfsch_string_t* s = (dfsch_string_t*) string;
@@ -329,7 +329,7 @@ int dfsch_string_for_each(dfsch_string_unicode_callback_t proc,
 
 
   for (i=0; i<s->len; i++){
-    int r = proc(s->ptr[i], baton, i, i);
+    int r = proc(s->ptr[i], baton);
     if (r)
       return r;
   }
@@ -465,8 +465,8 @@ static utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c,
 }
 
 
-uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
-                                     size_t end){
+dfsch_object_t* dfsch_string_utf8_substring(dfsch_object_t* string,
+                                            size_t start, size_t end){
 
   utf8_substring_ctx_t c;
   dfsch_string_t *s = (dfsch_string_t*)string;
@@ -492,7 +492,7 @@ uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
   
   
 
-  return dfsch_make_string_buf(s->ptr + c.sptr, s->ptr + (c.eptr-c.sptr));
+  return dfsch_make_string_buf(s->ptr + c.sptr, c.eptr - c.sptr);
 
 }
 

@@ -8,6 +8,7 @@
 	Better handling of invalid bytes and sequences in utf-8
 	(dfsch_string_utf8_for_each): Generalized UTF-8 handling
 	(dfsch_string_for_each): Iteration over raw strings
+	Fixed some warnings and logic bugs
 
 2006-02-09  Ales Hakl  <ales at hakl dot net>
 
