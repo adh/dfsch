@@ -322,77 +322,41 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 // UTF-8 support
 
-size_t dfsch_string_utf8_length(dfsch_object_t* string){
+int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
+                               dfsch_object_t* string,
+                               void *baton){
+
   dfsch_string_t* s = (dfsch_string_t*) string;
   size_t i = 0;
-  size_t len = 0;
   size_t state = 0;
-  TYPE_CHECK(s, STRING, "string");
-
-  while(i<s->len){
-    if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
-      i++;
-      len++;
-      state = 0;
-    }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0 &&
-          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
-        i++;
-        state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
-                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
-        i++;
-        state = 2;
-      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
-                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
-        i++;
-        state = 3;
-      }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
-        if (state != 0){
-          state--;
-          if (state == 0) len++;
-        }
-        i++;
-      }else{ // Invalid byte
-        state = 0;
-        i++;
-      }
-    }
-  }
-
-  return len;
-}
-
-uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  size_t i = 0;
-  size_t len = 0;
-  size_t state = 0;
+  size_t char_start = 0;
   uint32_t ch;
   TYPE_CHECK(s, STRING, "string");
 
   while(i<s->len){
     if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
-      if (len == index){
-        return s->ptr[i];
-      }
+      int r = proc(s->ptr[i], baton, i, i);
+      if (r)
+        return r;
       i++;
-      len++;
       state = 0;
     }else{
       if ((s->ptr[i] & 0xe0) == 0xc0 &&
           (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
         ch = s->ptr[i] & 0x1f;
+        char_start = i;
         i++;
         state = 1;
       }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
                 (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
         ch = s->ptr[i] & 0xf;
+        char_start = i;
         i++;
         state = 2;
       }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
                 (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
         ch = s->ptr[i] & 0x7;
+        char_start = i;
         i++;
         state = 3;
       }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
@@ -400,10 +364,9 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
           state--;
           ch = (ch << 6) | s->ptr[i] & 0x3f;
           if (state == 0){ 
-            if (len == index){
-              return ch;
-            }
-            len++;
+            int r = proc(ch, baton, char_start, i);
+            if (r)
+              return r;
           }
         }
         i++;
@@ -412,98 +375,110 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
         i++;
       }
     }
+  }
+
+  return 0;
+}
+
+static utf8_len_cb(uint32_t ch, size_t*len, size_t start, size_t end){
+  (*len)++;
+  return 0;
+}
+
+size_t dfsch_string_utf8_length(dfsch_object_t* string){
+  size_t len = 0;
+
+  dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_len_cb, 
+                             string, &len);
+
+  return len;
+}
+
+typedef struct utf8_ref_ctx_t{
+  size_t len;
+  size_t index;
+  uint32_t ch;
+}utf8_ref_ctx_t;
+
+static utf8_ref_cb(uint32_t ch, utf8_ref_ctx_t* c, size_t start, size_t end){
+  if (c->len = c->index){
+    c->ch = ch;
+    return 1;
+  }
+  c->len++;
+  return 0;
+}
+
+
+uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
+  utf8_ref_ctx_t c;
+  
+  c.len = 0;
+  c.index = index;
+
+  if (dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_ref_cb, 
+                                 string, &c)){
+    return c.ch;
   }
 
   dfsch_throw("exception:index-out-of-bounds",
               dfsch_make_number_from_long(index));
 }
 
+typedef struct utf8_substring_ctx_t{
+  size_t len;
+  size_t start;
+  size_t end;
+  size_t sptr;
+  size_t eptr;
+}utf8_substring_ctx_t;
+
+static utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c, 
+                   size_t start, size_t end){
+  
+  if (c->len = c->start){
+    c->sptr = start;
+  }
+  if (c->len = c->end){
+    c->eptr = start;
+    return 1;
+  }
+  c->len++;
+  return 0;
+}
+
+
 uint32_t dfsch_string_utf8_substring(dfsch_object_t* string, size_t start,
                                      size_t end){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  size_t i = 0;
-  size_t len = 0;
-  size_t state = 0;
-  char* sptr = NULL;
-  char* eptr = NULL;
-  uint32_t ch;
-  TYPE_CHECK(s, STRING, "string");
+
+  utf8_substring_ctx_t c;
+  dfsch_string_t *s = (dfsch_string_t*)string;
 
   if (start > end)
     dfsch_throw("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(start));
 
-  while(i<s->len){
-    if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
-      if (len == start){
-        sptr = s->ptr+i;
-      }
-      if (len == end){
-        eptr = s->ptr+i;
-        break;
-      }
-      i++;
-      len++;
-      state = 0;
-    }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0 &&
-          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
-        if (len == start){
-          sptr = s->ptr+i;
-        }
-        if (len == end){
-          eptr = s->ptr+i;
-          break;
-        }
-        i++;
-        state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
-                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
-        if (len == start){
-          sptr = s->ptr+i;
-        }
-        if (len == end){
-          eptr = s->ptr+i;
-          break;
-        }
-        i++;
-        state = 2;
-      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
-                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
-        if (len == start){
-          sptr = s->ptr+i;
-        }
-        if (len == end){
-          eptr = s->ptr+i;
-          break;
-        }
-        i++;
-        state = 3;
-      }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
-        i++;
-        if (state != 0){
-          state--;
-          if (state == 0){ 
-            len++;
-          }
-        }
-      }else{ // Invalid byte
-        state = 0;
-        i++;
-      }
-    }
+  c.start = start;
+  c.end = end;
+  c.len = 0;
+
+  if (!dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)
+                                  utf8_substring_cb, 
+                                 string, &c)){
+
+    if (c.len != c.end)
+      dfsch_throw("exception:index-out-of-bounds",
+                  dfsch_make_number_from_long(end));
+      
+    eptr = s->len;
   }
-
-  if (len == end && !eptr)
-    eptr = s->ptr + s->len;
-
-  if (!eptr) // sptr must be non-null when eptr is non-null
-    dfsch_throw("exception:index-out-of-bounds",
-                dfsch_make_number_from_long(end));
-
-  return dfsch_make_string_buf(sptr, eptr-sptr);
   
+  
+
+  return dfsch_make_string_buf(s->ptr + sptr, s->ptr + (eptr-sptr));
+
 }
+
 
 
 

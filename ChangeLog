@@ -6,6 +6,7 @@
 	(dfsch_string_utf8_ref): string-ref for utf-8 strings
 	(dfsch_string_utf8_substring): substring for utf-8 strings
 	Better handling of invalid bytes and sequences in utf-8
+	(dfsch_string_utf8_for_each): Generalized UTF-8 handling
 
 2006-02-09  Ales Hakl  <ales at hakl dot net>
 

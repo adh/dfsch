@@ -41,6 +41,12 @@ extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
                                               size_t start,
                                               size_t end);
 
+typedef int (*dfsch_string_callback_t)(char, void*);
+typedef int (*dfsch_string_unicode_callback_t)(uint32_t ch, 
+                                               size_t start,
+                                               size_t end,
+                                               void*);
+
 #define DFSCH_STRING_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
 #define DFSCH_STRING_ARG_OPT(al, name, default) \
