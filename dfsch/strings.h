@@ -46,6 +46,9 @@ typedef int (*dfsch_string_unicode_callback_t)(uint32_t ch,
                                                void* baton,
                                                size_t start,
                                                size_t end);
+typedef int (*dfsch_string_unicode_invalid_callback_t)(uint32_t ch, 
+                                                       void* baton,
+                                                       size_t index);
 
 #define DFSCH_STRING_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)

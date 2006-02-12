@@ -341,7 +341,9 @@ int dfsch_string_for_each(dfsch_string_callback_t proc,
 
 int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
                                dfsch_object_t* string,
-                               void *baton){
+                               void *baton,
+                               dfsch_string_unicode_invalid_callback_t iproc,
+                               void* ibaton){
 
   dfsch_string_t* s = (dfsch_string_t*) string;
   size_t i = 0;
@@ -376,19 +378,25 @@ int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
         char_start = i;
         i++;
         state = 3;
-      }else if ((s->ptr[i] & 0xc0) == 0x80){ // internal byte
-        if (state != 0){
-          state--;
-          ch = (ch << 6) | s->ptr[i] & 0x3f;
-          if (state == 0){ 
-            int r = proc(ch, baton, char_start, i);
-            if (r)
-              return r;
-          }
+      }else if ((s->ptr[i] & 0xc0) == 0x80 &&
+                state != 0){ // internal byte
+        state--;
+        ch = (ch << 6) | s->ptr[i] & 0x3f;
+        if (state == 0){ 
+          int r = proc(ch, baton, char_start, i);
+          if (r)
+            return r;
         }
         i++;
       }else{ // Invalid byte
         state = 0;
+        
+        if (iproc){
+          int r = iproc(s->ptr[i], ibaton, i);
+          if (r)
+            return r;
+        }
+
         i++;
       }
     }
@@ -406,7 +414,7 @@ size_t dfsch_string_utf8_length(dfsch_object_t* string){
   size_t len = 0;
 
   dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_len_cb, 
-                             string, &len);
+                             string, &len, NULL, NULL);
 
   return len;
 }
@@ -434,7 +442,7 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
   c.index = index;
 
   if (dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_ref_cb, 
-                                 string, &c)){
+                                 string, &c, NULL, NULL)){
     return c.ch;
   }
 
@@ -481,7 +489,7 @@ dfsch_object_t* dfsch_string_utf8_substring(dfsch_object_t* string,
 
   if (!dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)
                                   utf8_substring_cb, 
-                                 string, &c)){
+                                 string, &c, NULL, NULL)){
 
     if (c.len != c.end)
       dfsch_throw("exception:index-out-of-bounds",
