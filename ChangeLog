@@ -1,3 +1,7 @@
+2006-02-12  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/dfsch.h: Removed remains of DFSCH_THROW
+
 2006-02-11  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (dfsch_string_utf8_length): Length calculation

@@ -511,11 +511,6 @@ extern "C" {
 
 
   /**
-   * And another convenience wrapper around dfsch_make_exeption()
-   */
-#define DFSCH_THROW(type,data) dfsch_throw(type, data) ---deprecated---
-
-  /**
    * Return exception's type.
    */
   extern dfsch_object_t* dfsch_exception_type(dfsch_object_t* e);
