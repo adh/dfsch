@@ -871,35 +871,35 @@ object_t* dfsch_make_form(object_t *proc){
 
 
 
-typedef struct exception_info_t {
-  jmp_buf* exception_ret;        // TODO: thread safety
+typedef struct thread_info_t {
+  jmp_buf* exception_ret;
   dfsch_object_t* exception_obj;
-} exception_info_t;
+} thread_info_t;
 
-static pthread_key_t exception_key;
-static pthread_once_t exception_once = PTHREAD_ONCE_INIT;
+static pthread_key_t thread_key;
+static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
-static void exception_info_destroy(void* ptr){
+static void thread_info_destroy(void* ptr){
   if (ptr)
     GC_FREE(ptr);
 }
-static void exception_key_alloc(){
-  pthread_key_create(&exception_key, exception_info_destroy);
+static void thread_key_alloc(){
+  pthread_key_create(&thread_key, thread_info_destroy);
 }
-static exception_info_t* get_exception_info(){
-  exception_info_t *ei = pthread_getspecific(exception_key);
+static thread_info_t* get_thread_info(){
+  thread_info_t *ei = pthread_getspecific(thread_key);
   if (!ei){
-    pthread_once(&exception_once, exception_key_alloc);
-    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(exception_info_t));
+    pthread_once(&thread_once, thread_key_alloc);
+    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(thread_info_t));
     ei->exception_ret = NULL;
-    pthread_setspecific(exception_key, ei);
+    pthread_setspecific(thread_key, ei);
   }
   return ei;
 } 
 
 void dfsch_raise(dfsch_object_t* exception){
 
-  exception_info_t *ei = get_exception_info();
+  thread_info_t *ei = get_thread_info();
 
   if (!ei->exception_ret){
     fputs(dfsch_exception_write(exception),stderr);        
@@ -913,7 +913,7 @@ void dfsch_raise(dfsch_object_t* exception){
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
-  exception_info_t *ei = get_exception_info();
+  thread_info_t *ei = get_thread_info();
   jmp_buf *old_ret;
   
   old_ret = ei->exception_ret;
