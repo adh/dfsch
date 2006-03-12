@@ -575,6 +575,17 @@ static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t
   }
   
   cont->active = 0;
+  /*
+   * TODO: We need to deactivate continuation even in case of escaping 
+   *       called function by means of another continuation:
+   *
+   *       ]=> ((call/ec (lambda (a)
+   *             ..> (call/ec (lambda (b) (a b))))) 1)
+   *       Illegal instruction
+   *
+   *       Ideal implementation would be combined with stack traces mentioned
+   *       in TODO - maintain stack of outstanding continuations in thread_info
+   */
   return value;
 
 }
