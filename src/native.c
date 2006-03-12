@@ -44,6 +44,7 @@ typedef dfsch_object_t object_t;
   if (dfsch_list_length(args)<(count)) \
     dfsch_throw("exception:too-few-arguments", (args));
 
+// TODO: document all native functions somewhere
 
 // Native procedures:
 
