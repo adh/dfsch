@@ -1,3 +1,8 @@
+2006-03-12  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c (sigill_handler_break): Handle SIGILL as exception 
+	(BEWARE OF THE HACK)
+
 2006-02-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (dfsch_string_utf8_for_each): user selectable
