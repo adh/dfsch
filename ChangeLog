@@ -1,3 +1,7 @@
+2006-03-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: Stack traces
+
 2006-03-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (sigill_handler_break): Handle SIGILL as exception 

@@ -55,6 +55,14 @@ static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* 
   return dfsch_gensym();
 }
 
+static object_t* native_stack_trace(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+  if (args)
+    dfsch_throw("exception:too-many-arguments", args);
+
+  return dfsch_get_stack_trace();
+}
+
+
 static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* symbol;
   DFSCH_OBJECT_ARG(args, symbol);
@@ -229,7 +237,7 @@ static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code,ext_env,esc);
+  return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
 }
 static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
@@ -249,7 +257,7 @@ static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_esca
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code,ext_env,esc);
+  return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
 }
 static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   MIN_ARGS(args,2);
@@ -270,7 +278,7 @@ static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_esc
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code, ext_env, esc);
+  return dfsch_eval_proc_tr(code, ext_env, NULL, esc);
 }
 
 
@@ -296,7 +304,7 @@ static object_t* native_eval(void *baton, object_t* args, dfsch_tail_escape_t* e
 }
 static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
-  return dfsch_eval_proc_tr(dfsch_car(args),dfsch_car(dfsch_cdr(args)), esc);
+  return dfsch_eval_proc_tr(dfsch_car(args),dfsch_car(dfsch_cdr(args)), NULL, esc);
 }
 static object_t* native_apply(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
@@ -503,7 +511,7 @@ static object_t* native_not(void *baton, object_t* args, dfsch_tail_escape_t* es
 
 static object_t* native_make_exception(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
-  return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+  return dfsch_make_exception(dfsch_car(args),dfsch_car(dfsch_cdr(args)), NULL);
 }
 static object_t* native_raise(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
@@ -512,7 +520,8 @@ static object_t* native_raise(void *baton, object_t* args, dfsch_tail_escape_t* 
 static object_t* native_throw(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   dfsch_raise(dfsch_make_exception(dfsch_car(args),
-                                   dfsch_car(dfsch_cdr(args))));
+                                   dfsch_car(dfsch_cdr(args)),
+                                   dfsch_get_stack_trace()));
 }
 static object_t* native_error(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   dfsch_throw("user:error",args);
@@ -674,6 +683,8 @@ static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_es
 
 dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){ 
   dfsch_ctx_define(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
+  dfsch_ctx_define(ctx, "stack-trace",
+                   dfsch_make_primitive(&native_stack_trace,NULL));
   dfsch_ctx_define(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
 
   dfsch_ctx_define(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));

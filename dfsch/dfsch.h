@@ -484,7 +484,8 @@ extern "C" {
    * Makes exception symbol of given TYPE and DATA.
    */
   extern dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
-					      dfsch_object_t* data);
+					      dfsch_object_t* data,
+                                              dfsch_object_t* stack_trace);
   
   /**
    * Raises an exception (exception could be any object)
@@ -570,6 +571,7 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
+                                            dfsch_object_t* call_signature,
                                             dfsch_tail_escape_t* esc);
   extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
@@ -621,6 +623,9 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
 
+  extern dfsch_object_t* dfsch_get_stack_trace();
+
+  
   /**
    * Iterator for dfsch_get_next_symbol
    */

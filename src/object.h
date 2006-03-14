@@ -43,6 +43,7 @@ typedef struct exception_t{
   dfsch_type_t* type;
   object_t *class;
   object_t *data;
+  object_t *stack_trace;
 } exception_t; 
 
 /*typedef struct native_t {

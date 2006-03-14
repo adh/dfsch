@@ -869,11 +869,10 @@ object_t* dfsch_make_form(object_t *proc){
   return (object_t*)f;
 }
 
-
-
 typedef struct thread_info_t {
   jmp_buf* exception_ret;
   dfsch_object_t* exception_obj;
+  dfsch_object_t* stack_trace;
 } thread_info_t;
 
 static pthread_key_t thread_key;
@@ -892,10 +891,16 @@ static thread_info_t* get_thread_info(){
     pthread_once(&thread_once, thread_key_alloc);
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(thread_info_t));
     ei->exception_ret = NULL;
+    ei->stack_trace = NULL;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
-} 
+}
+
+dfsch_object_t* dfsch_get_stack_trace(){
+  thread_info_t *ti = get_thread_info();
+  return ti->stack_trace;
+}
 
 void dfsch_raise(dfsch_object_t* exception){
 
@@ -932,7 +937,8 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
 
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
-				     dfsch_object_t* data){
+				     dfsch_object_t* data,
+                                     dfsch_object_t* stack_trace){
   exception_t* e = (exception_t*)dfsch_make_object(EXCEPTION);
   if (!e)
     return NULL;
@@ -940,13 +946,15 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
 
   e->class = type;
   e->data = data;
-
+  e->stack_trace = stack_trace;
+  
   return (object_t*)e;
 }
 
 dfsch_object_t* dfsch_throw(char* type, 
                             dfsch_object_t* data){
-  object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data);
+  object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data,
+                                     dfsch_get_stack_trace());
 
   dfsch_raise(e);
     
@@ -1111,6 +1119,9 @@ char* dfsch_exception_write(dfsch_object_t* e){
     sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3,1));
     sl_append(l," with data: ");
     sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
+    sl_append(l,"\n\nCall stack:\n");
+    sl_append(l,dfsch_obj_write(((exception_t*)e)->stack_trace,20,1));
+    
   }
   sl_append(l,"\n\n");
 
@@ -1281,7 +1292,7 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
                               dfsch_object_t* env,
                               dfsch_tail_escape_t* esc){
  start:
-
+  
   if (!exp) 
     return NULL;
 
@@ -1306,6 +1317,7 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
                                             dfsch_cons(env, 
                                                        ((pair_t*)exp)->cdr)),
                                 env,
+                                NULL,
                                 esc);
       
     return dfsch_apply_tr(f, 
@@ -1354,10 +1366,13 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
 
 dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                    dfsch_object_t* env,
+                                   dfsch_object_t* proc_name,
                                    tail_escape_t* esc){
   pair_t *i;
   object_t *r=NULL;
   tail_escape_t myesc;
+  thread_info_t *ti;
+  dfsch_object_t *old_frame;
 
   if (!env)
     return NULL;
@@ -1368,11 +1383,18 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
   if (code->type==EXCEPTION)
     return code;
 
+  ti = get_thread_info();
+
   if (esc){
+    dfsch_set_car(ti->stack_trace, dfsch_list(3, proc_name, code, env));
     esc->code = code;
     esc->env = env;
     longjmp(esc->ret,1);
   }
+  
+  old_frame = ti->stack_trace;  
+  ti->stack_trace = dfsch_cons(dfsch_list(3, proc_name, code, env),
+                               ti->stack_trace);
 
   if (setjmp(myesc.ret)){  
     i = (pair_t*)myesc.code;
@@ -1393,32 +1415,36 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
   }
 
   
+  ti->stack_trace = old_frame;
   return r;
 }
 
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
-  return dfsch_eval_proc_tr(code, env, NULL);
+  return dfsch_eval_proc_tr(code, env, NULL, NULL);
 }
 
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
-                                      dfsch_object_t* args,
-                                      tail_escape_t* esc){
+                               dfsch_object_t* args,
+                               tail_escape_t* esc){
+
   if (!proc)
     return NULL;
 
-  //  switch (proc->type){
-  //case CLOSURE:
   if (proc->type == CLOSURE){
     object_t* r = dfsch_eval_proc_tr(((closure_t*)proc)->code,
                                      lambda_extend(((closure_t*)proc)->args,
                                                    args,
                                                    ((closure_t*)proc)->env),
+                                     dfsch_cons(proc, args),
                                      esc);
     return r;
   }
-  if (proc->type == PRIMITIVE)
-    return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,esc);
 
+  if (proc->type == PRIMITIVE){
+    object_t* r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
+                                             esc);
+    return r;
+  }
 
   dfsch_throw("exception:not-a-procedure", proc);
    
