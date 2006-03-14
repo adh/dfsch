@@ -180,11 +180,29 @@ static const dfsch_type_t primitive_type = {
 };
 #define PRIMITIVE (&primitive_type)
 
+static char* closure_write(closure_t* c, int max_depth, int readable){
+    str_list_t* l = sl_create();
+    char buf[16];
+
+    sl_append(l, "#<closure 0x");
+    snprintf(buf, 16, "%x", c);
+    sl_append(l, buf);
+    
+    if (c->name){
+      sl_append(l, " ");
+      sl_append(l, dfsch_obj_write(c->name, max_depth-1, readable));
+    }
+
+    sl_append(l,">");
+    
+    return sl_value(l);
+}
+
 static const dfsch_type_t closure_type = {
   sizeof(closure_t),
   "closure",
   NULL,
-  NULL
+  (dfsch_type_write_t)closure_write
 };
 #define CLOSURE (&closure_type)
 
@@ -1091,8 +1109,16 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
     return "...";
   }
 
-  if (!obj->type)
-    return "#<UNTYPED VALUE>";
+  if (!obj->type){
+    str_list_t *sl = sl_create();
+    char buf[16];
+    sl_append(sl, "#<typeless-value ");
+    sl_append(sl, " 0x");
+    snprintf(buf, 16, "%x", obj);
+    sl_append(sl, buf);
+    sl_append(sl, ">");
+    return sl_value(sl);
+  }
 
   if (!obj->type->write){
     str_list_t *sl = sl_create();

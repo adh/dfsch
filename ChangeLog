@@ -1,6 +1,7 @@
 2006-03-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Stack traces
+	(closure_write): Print closure's name
 
 2006-03-12  Ales Hakl  <ales at hakl dot net>
 
