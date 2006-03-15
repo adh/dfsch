@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *((dfsch_string_t*)s)->ptr
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -788,6 +788,14 @@ dfsch_object_t* dfsch_sym_bold_right_arrow(){
   cache = dfsch_make_symbol("=>");
   return cache;
 }
+dfsch_object_t* dfsch_sym_tail_recursive(){
+  static object_t *cache = NULL;
+  if (cache)
+    return cache;
+
+  cache = dfsch_make_symbol("tail-recursive");
+  return cache;
+}
 dfsch_object_t* dfsch_bool(int bool){
   return bool?dfsch_sym_true():NULL;
 }
@@ -938,16 +946,20 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
 
   thread_info_t *ei = get_thread_info();
   jmp_buf *old_ret;
+  dfsch_object_t* old_frame;
   
   old_ret = ei->exception_ret;
+  old_frame = ei->stack_trace;
   ei->exception_ret = GC_NEW(jmp_buf);
 
   if(setjmp(*ei->exception_ret) == 1){
     ei->exception_ret = old_ret;
+    ei->stack_trace = old_frame;
     return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
   }else{
     object_t *r = dfsch_apply(thunk, NULL);
     ei->exception_ret = old_ret;
+    ei->stack_trace = old_frame;
     return r;
   }
 
@@ -1142,14 +1154,19 @@ char* dfsch_exception_write(dfsch_object_t* e){
   if (!dfsch_exception_p(e)){
     sl_append(l,dfsch_obj_write(e,3,1));
   }else{
+    dfsch_object_t *i = ((exception_t*)e)->stack_trace;
     sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3,1));
     sl_append(l," with data: ");
     sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
     sl_append(l,"\n\nCall stack:\n");
-    sl_append(l,dfsch_obj_write(((exception_t*)e)->stack_trace,20,1));
-    
+    while (i){
+      sl_append(l,"\t");
+      sl_append(l,dfsch_obj_write(dfsch_car(dfsch_car(i)),20,1));
+      sl_append(l,"\n");
+      i = dfsch_cdr(i);
+    }
   }
-  sl_append(l,"\n\n");
+  sl_append(l,"\n");
 
   return sl_value(l);
 }
@@ -1293,7 +1310,7 @@ static object_t* eval_list(object_t *list, object_t* env){
 
     t = dfsch_cons(r,NULL);
     if (f){
-      dfsch_set_cdr(p,t);
+      dfsch_set_cdr(p,t);   // TODO
       p = t;
     }else{
       f = p = t;
@@ -1412,7 +1429,8 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
   ti = get_thread_info();
 
   if (esc){
-    dfsch_set_car(ti->stack_trace, dfsch_list(3, proc_name, code, env));
+    dfsch_set_car(ti->stack_trace, dfsch_list(4, proc_name, code, env,
+                                              dfsch_sym_tail_recursive()));
     esc->code = code;
     esc->env = env;
     longjmp(esc->ret,1);

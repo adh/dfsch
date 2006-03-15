@@ -1,3 +1,7 @@
+2006-03-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: Better formating of exceptions.
+
 2006-03-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Stack traces
