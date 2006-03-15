@@ -1296,7 +1296,7 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 static object_t* eval_list(object_t *list, object_t* env){
   pair_t *i;
   object_t *f=NULL;
-  object_t *t, *p;
+  pair_t *t, *p;
   object_t *r; 
 
   if (!list)
@@ -1310,12 +1310,12 @@ static object_t* eval_list(object_t *list, object_t* env){
   while (i && i->type==PAIR){
     r = dfsch_eval(i->car,env);
 
-    t = dfsch_cons(r,NULL);
+    t = (pair_t*)dfsch_cons(r,NULL);
     if (f){
-      dfsch_set_cdr(p,t);   // TODO
+      p->cdr = (object_t*)t;
       p = t;
     }else{
-      f = p = t;
+      f = (object_t*)(p = t);
     }
 
     i = (pair_t*)i->cdr;
