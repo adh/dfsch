@@ -121,6 +121,7 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
     sl_append(l," . ");
     sl_append(l, dfsch_obj_write(p->cdr, max_depth-1, readable));
     sl_append(l, ")");
+    
     return sl_value(l);
   }
   
@@ -145,8 +146,8 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
   }
   
   sl_append(l,")");
+  
   return sl_value(l);
-
 }
 
 static int symbol_equal_p(object_t*, object_t*);
