@@ -248,14 +248,15 @@ static char* vector_write(vector_t* v, int max_depth, int readable){
   size_t i;
         
   sl_append(l,"#(");
-
-  for(i = 0; i < v->length-1; ++i){
-    sl_append(l, dfsch_obj_write(v->data[i], max_depth-1, readable));
-    sl_append(l, " ");
+  
+  if (v->length > 0){
+    for(i = 0; i < v->length-1; ++i){
+      sl_append(l, dfsch_obj_write(v->data[i], max_depth-1, readable));
+      sl_append(l, " ");
+    }
+  
+    sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1, readable));
   }
-  
-  sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1, readable));
-  
   sl_append(l,")");
   return sl_value(l);
 }
@@ -1096,8 +1097,8 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   vector_t* vector;
   pair_t* j = (pair_t*)list;
   size_t i=0;
-  if (!list || list->type != PAIR)
-    dfsch_throw("exception:not-a-pair",list);
+  if (list && list->type != PAIR)
+    dfsch_throw("exception:not-a-list",list);
   
   vector = (vector_t*)dfsch_make_object(VECTOR);
   vector->length = dfsch_list_length(list);

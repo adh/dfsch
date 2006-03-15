@@ -208,7 +208,7 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       }
     case P_HASH:
       parser_pop(ctx);
-      if (dfsch_pair_p(obj)){
+      if ((!obj) || dfsch_pair_p(obj)){
         parse_object(ctx,dfsch_list_2_vector(obj));
       }else{
 	ctx->error = DFSCH_PARSER_LIST_EXPECTED;
