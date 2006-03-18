@@ -428,7 +428,10 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #define STATE_TRANS(state)
 #endif
 
-
+/*
+ * It's probably wise to somehow generalize this routine in order to support
+ * "normal" scheme ports and such things.
+ */
 static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
   while (*data){
     switch (ctx->tokenizer_state){
