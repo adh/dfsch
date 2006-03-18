@@ -4,16 +4,38 @@
 
 typedef struct number_t {
   dfsch_type_t *type;
-  double number;
+  enum {
+    N_FIXNUM,
+    N_FLONUM
+  } n_type;
+  union {
+    long fixnum;
+    double flonum;
+  };
 } number_t;
 
 static int n_equal_p(number_t* a, number_t* b){
-  return a->number == b->number;
+  if (a->n_type != b->n_type)
+    return 0;
+
+  switch(a->n_type){
+  case N_FIXNUM:
+    return a->fixnum == b->fixnum;
+  case N_FLONUM:
+    return a->flonum == b->flonum;
+  }
 }
 static char* n_write(number_t*n, int max_depth){
   char  *s = GC_malloc(64);   
   // 64 bytes should be enought, even for 128 bit machines ^_~
-  snprintf(s, 64, "%lf", n->number);
+  switch (n->n_type){
+  case N_FLONUM:
+    snprintf(s, 64, "%lf", n->flonum);
+    break; 
+  case N_FIXNUM:
+    snprintf(s, 64, "%ld", n->fixnum);
+    break;
+  }
   return s;
 }
 
@@ -26,33 +48,51 @@ static dfsch_type_t number_type = {
 #define NUMBER (&number_type)
 
 
+int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t *b){
+  return n_equal_p((number_t*)a, (number_t*) b);
+}
+
 dfsch_object_t* dfsch_make_number_from_double(double num){
   number_t *n;
   n = (number_t*)dfsch_make_object(NUMBER);
   if (!n)
     return NULL;
 
-
-  n->number = num;
+  n->n_type = N_FLONUM;
+  n->flonum = num;
 
   return (dfsch_object_t*)n;
 }
-dfsch_object_t* dfsch_make_number_from_long(long n){
-  return dfsch_make_number_from_double((double)n);
+dfsch_object_t* dfsch_make_number_from_long(long num){
+  number_t *n;
+  n = (number_t*)dfsch_make_object(NUMBER);
+  if (!n)
+    return NULL;
+
+  n->n_type = N_FIXNUM;
+  n->fixnum = num;
+
+  return (dfsch_object_t*)n;
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
     dfsch_throw("exception:not-a-number", n);
 
-  return ((number_t*)n)->number;
-
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    return ((number_t*)n)->flonum;
+  case N_FIXNUM:
+    return (double)((number_t*)n)->fixnum;
+  }
 }
 long dfsch_number_to_long(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
     dfsch_throw("exception:not-a-number", n);
-
-  return (long)((number_t*)n)->number;
+  if (((number_t*)n)->n_type!=N_FIXNUM)
+    dfsch_throw("exception:not-an-exact-number", n);
+  
+  return (long)((number_t*)n)->fixnum;
 
 }
 int dfsch_number_p(dfsch_object_t* obj){
@@ -66,15 +106,8 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
   if (!b || b->type!=NUMBER)
     dfsch_throw("exception:not-a-number", b);
 
-  return ((number_t*)a)->number == ((number_t*)b)->number;
-  
+  return n_equal_p((number_t*)a, (number_t*)b);
 }
-
-int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
-  return ((number_t*)a)->number == ((number_t*)b)->number;  
-}
-
-
 
 /////////////////////////////////////////////////////////////////////////////
 //

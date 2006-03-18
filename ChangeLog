@@ -1,3 +1,7 @@
+2006-03-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c: FIxnum support (unused for now)
+
 2006-03-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/stream.c: Support for empty vectors
