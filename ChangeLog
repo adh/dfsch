@@ -1,5 +1,7 @@
 2006-03-19  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c: Better formating of numbers
+
 	* many places: Removed old number API calls
 	(dfsch_number()/dfsch_make_number())  
 

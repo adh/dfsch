@@ -34,7 +34,7 @@ static char* n_write(number_t*n, int max_depth){
   // 64 bytes should be enought, even for 128 bit machines ^_~
   switch (n->n_type){
   case N_FLONUM:
-    snprintf(s, 64, "%lf", n->flonum);
+    snprintf(s, 64, "%.32lg", n->flonum);
     break; 
   case N_FIXNUM:
     snprintf(s, 64, "%ld", n->fixnum);
