@@ -8,4 +8,3 @@
 * IO
 * Garbage collected symbols
 * REPL not requiring readline
-* Handling of already returned continuations

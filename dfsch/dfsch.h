@@ -521,7 +521,11 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
 
+  /**
+   * Call given function with escape continuation as sole argument.
+   */
 
+  extern dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc);
 
   // Lexical binding:
   /**

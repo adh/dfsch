@@ -1,3 +1,8 @@
+2006-03-19  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_call_ec): Continuations moved to dfsch.c and
+	improved a bit.
+
 2006-03-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: Fixnum support (unused for now)

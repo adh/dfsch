@@ -547,56 +547,13 @@ static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* es
 //
 /////////////////////////////////////////////////////////////////////////////
 
-typedef struct continuation_t {
-  jmp_buf ret;
-  object_t* value;
-  int active;
-} continuation_t;
-
-static object_t* continuation_closure(continuation_t *cont, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* value;
-  DFSCH_OBJECT_ARG(args, value);
-  DFSCH_ARG_END(args);
-  
-  if (!cont->active)
-    dfsch_throw("exception:already-returned",NULL);
-
-  cont->value = value;
-  longjmp(cont->ret,1);
-}
 
 static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t *proc, *value;
+  object_t *proc;
   DFSCH_OBJECT_ARG(args, proc);
   DFSCH_ARG_END(args);
 
-  continuation_t *cont = GC_NEW(continuation_t);
-
-  cont->active = 1;
-  if(setjmp(cont->ret) == 1){
-    value = cont->value;
-  }else{
-    value = dfsch_apply(proc,
-                        dfsch_list(1,
-                                   dfsch_make_primitive((dfsch_primitive_t)
-                                                        continuation_closure,
-                                                        cont)));
-  }
-  
-  cont->active = 0;
-  /*
-   * TODO: We need to deactivate continuation even in case of escaping 
-   *       called function by means of another continuation:
-   *
-   *       ]=> ((call/ec (lambda (a)
-   *             ..> (call/ec (lambda (b) (a b))))) 1)
-   *       Illegal instruction
-   *
-   *       Ideal implementation would be combined with stack traces mentioned
-   *       in TODO - maintain stack of outstanding continuations in thread_info
-   */
-  return value;
-
+  return dfsch_call_ec(proc);
 }
 
 /////////////////////////////////////////////////////////////////////////////

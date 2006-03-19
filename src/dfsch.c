@@ -897,10 +897,19 @@ object_t* dfsch_make_form(object_t *proc){
   return (object_t*)f;
 }
 
+typedef struct continuation_t continuation_t;
+struct continuation_t {
+  jmp_buf ret;
+  object_t* value;
+  int active;
+  continuation_t* next;
+};
+
 typedef struct thread_info_t {
   jmp_buf* exception_ret;
   dfsch_object_t* exception_obj;
   dfsch_object_t* stack_trace;
+  continuation_t* cont_stack;
 } thread_info_t;
 
 static pthread_key_t thread_key;
@@ -920,6 +929,7 @@ static thread_info_t* get_thread_info(){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(thread_info_t));
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
+    ei->cont_stack = NULL;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -946,9 +956,9 @@ void dfsch_raise(dfsch_object_t* exception){
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
-  thread_info_t *ei = get_thread_info();
-  jmp_buf *old_ret;
-  dfsch_object_t* old_frame;
+  volatile thread_info_t *ei = get_thread_info();
+  volatile jmp_buf *old_ret;
+  volatile dfsch_object_t* old_frame;
   
   old_ret = ei->exception_ret;
   old_frame = ei->stack_trace;
@@ -1003,6 +1013,52 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
     return NULL;
 
   return ((exception_t*)e)->data;
+}
+
+
+static object_t* continuation_closure(continuation_t *cont, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* value;
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  if (!cont->active)
+    dfsch_throw("exception:already-returned",NULL);
+
+  cont->value = value;
+  longjmp(cont->ret,1);
+}
+
+
+dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
+  object_t* value;
+  volatile continuation_t *cont = GC_NEW(continuation_t);
+  continuation_t *i;
+  volatile thread_info_t *ti = get_thread_info();
+
+  cont->active = 1;
+  cont->next = ti->cont_stack;
+  ti->cont_stack = cont;
+  if(setjmp(cont->ret) == 1){
+    value = cont->value;
+  }else{
+    value = dfsch_apply(proc,
+                        dfsch_list(1,
+                                   dfsch_make_primitive((dfsch_primitive_t)
+                                                        continuation_closure,
+                                                        cont)));
+  }
+  
+  i = ti->cont_stack;
+
+  while (i && i != cont){
+    i->active = 0;
+    i = i->next;
+  }
+  
+  cont->active = 0;
+  ti->cont_stack = cont->next;
+  return value;
+
 }
 
 // Vectors
