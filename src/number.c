@@ -1,6 +1,8 @@
 #include <dfsch/number.h>
 #include "internal.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
 typedef struct number_t {
   dfsch_type_t *type;
@@ -15,14 +17,16 @@ typedef struct number_t {
 } number_t;
 
 static int n_equal_p(number_t* a, number_t* b){
-  if (a->n_type != b->n_type)
-    return 0;
-
-  switch(a->n_type){
-  case N_FIXNUM:
-    return a->fixnum == b->fixnum;
-  case N_FLONUM:
-    return a->flonum == b->flonum;
+  if (a->n_type == b->n_type){
+    switch(a->n_type){
+    case N_FIXNUM:
+      return a->fixnum == b->fixnum;
+    case N_FLONUM:
+      return a->flonum == b->flonum;
+    }
+  }else{
+    return dfsch_number_to_double((dfsch_object_t*) a) == 
+      dfsch_number_to_double((dfsch_object_t*) b);
   }
 }
 static char* n_write(number_t*n, int max_depth){
@@ -73,6 +77,18 @@ dfsch_object_t* dfsch_make_number_from_long(long num){
   n->fixnum = num;
 
   return (dfsch_object_t*)n;
+}
+
+dfsch_object_t* dfsch_make_number_from_string(char* string){
+  if (strchr(string, '.')){ // contains dot => floating-point
+  flonum:
+    return dfsch_make_number_from_double(atof(string));
+  }else{ // doesn't => fixed point 
+    long n = atol(string);    
+    if (n == LONG_MAX || n == LONG_MIN)
+      goto flonum;
+    return dfsch_make_number_from_long(n);
+  }
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){

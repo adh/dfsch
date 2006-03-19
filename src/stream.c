@@ -405,12 +405,7 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '9':
     {
     
-      double d = atof(data);
-#ifdef T_DEBUG
-  printf(";; Number: %lf \n",d);
-#endif
-      
-      parse_object(ctx,dfsch_make_number(d));
+      parse_object(ctx,dfsch_make_number_from_string(data));
       return;
     }
   }
