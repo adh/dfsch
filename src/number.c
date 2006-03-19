@@ -86,6 +86,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
   }else{ // doesn't => fixed point 
     long n = atol(string);    
     if (n == LONG_MAX || n == LONG_MIN)
+      // overflow... so we wil made it floating point
       goto flonum;
     return dfsch_make_number_from_long(n);
   }
