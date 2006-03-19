@@ -4,6 +4,7 @@
 	numbers - discriminate between fixnum and flonum
 	(n_equal_p): support for comparing different numeric types
 	(NUMBER_BINOP): First try at type-aware numeric operators 
+	(native_slash_i): /i functions for integer division
 
 	* src/dfsch.c (dfsch_call_ec): Continuations moved to dfsch.c and
 	improved a bit.

@@ -37,6 +37,7 @@
 (test 'arith5 (- 3 4 5) -6)
 (test 'arith6 (- 3) -3)
 (test 'arith7 (/ 3 4 5) (/ 3 20))
+(test 'arithIntDiv (/i 8 3) 2)
 
 (delimiter)
 

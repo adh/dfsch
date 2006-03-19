@@ -128,35 +128,144 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
 
 // Arithmetics
 
-#define NUMBER_BINOP(op_name, op) \
-dfsch_object_t* dfsch_number_ ## op_name (dfsch_object_t* a,  \
-                                          dfsch_object_t* b){ \
-  if (!a || a->type!=NUMBER) \
-    dfsch_throw("exception:not-a-number", a); \
-  if (!b || b->type!=NUMBER) \
-    dfsch_throw("exception:not-a-number", b); \
- \
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ \
-    switch(((number_t*)a)->n_type){ \
-    case N_FIXNUM: \
-      return dfsch_make_number_from_long(((number_t*)a)->fixnum op \
-                                         ((number_t*)b)->fixnum); \
-    case N_FLONUM: \
-      return dfsch_make_number_from_double(((number_t*)a)->flonum op \
-                                           ((number_t*)b)->flonum); \
-    } \
-  }else{ \
-    return dfsch_make_number_from_double \
-      (dfsch_number_to_double((dfsch_object_t*) a) op \
-       dfsch_number_to_double((dfsch_object_t*) b)); \
-  } \
-  \
-}\
+dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
+                                 dfsch_object_t* b){ 
+  if (!a || a->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", a); 
+  if (!b || b->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", b); 
+ 
+  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
+    switch(((number_t*)a)->n_type){ 
+    case N_FIXNUM: 
+      {
+        long an = ((number_t*)a)->fixnum;
+        long bn = ((number_t*)b)->fixnum;
+        long x = an + bn;
 
-NUMBER_BINOP(add, +);
-NUMBER_BINOP(sub, -);
-NUMBER_BINOP(mul, *);
-NUMBER_BINOP(div, /);
+        if ((an^x) >= 0 || (bn^x) >= 0)
+          return dfsch_make_number_from_long(x);
+        goto fallback;
+      }
+    case N_FLONUM: 
+      return dfsch_make_number_from_double(((number_t*)a)->flonum +
+                                           ((number_t*)b)->flonum); 
+    } 
+  }else{ 
+  fallback:
+    return dfsch_make_number_from_double 
+      (dfsch_number_to_double((dfsch_object_t*) a) + 
+       dfsch_number_to_double((dfsch_object_t*) b)); 
+  } 
+  
+}
+
+dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,  
+                                 dfsch_object_t* b){ 
+  if (!a || a->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", a); 
+  if (!b || b->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", b); 
+ 
+  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
+    switch(((number_t*)a)->n_type){ 
+    case N_FIXNUM: 
+      {
+        long an = ((number_t*)a)->fixnum;
+        long bn = ((number_t*)b)->fixnum;
+        long x = an - bn;
+
+        if ((an^x) >= 0 || (~bn^x) >= 0)
+          return dfsch_make_number_from_long(x);
+        goto fallback;
+      }
+    case N_FLONUM: 
+      return dfsch_make_number_from_double(((number_t*)a)->flonum -
+                                           ((number_t*)b)->flonum); 
+    } 
+  }else{ 
+  fallback:
+    return dfsch_make_number_from_double 
+      (dfsch_number_to_double((dfsch_object_t*) a) - 
+       dfsch_number_to_double((dfsch_object_t*) b)); 
+  } 
+  
+}
+
+dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,  
+                                 dfsch_object_t* b){ 
+  if (!a || a->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", a); 
+  if (!b || b->type!=NUMBER) 
+    dfsch_throw("exception:not-a-number", b); 
+ 
+  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
+    switch(((number_t*)a)->n_type){ 
+    case N_FIXNUM: 
+      {
+        long an = ((number_t*)a)->fixnum;
+        long bn = ((number_t*)b)->fixnum;
+        long x = an * bn;
+        double xd = (double)an * (double)bn;
+
+        if (x == xd){
+          return dfsch_make_number_from_long(x);
+        }else{
+          double d = x > xd ? x - xd : xd - x;
+          double p = xd >= 0 ? xd : -xd;
+          
+          if (32.0 * d <= p)
+            return dfsch_make_number_from_long(x);
+          else
+            return dfsch_make_number_from_double(xd);
+        }
+      }
+    case N_FLONUM: 
+      return dfsch_make_number_from_double(((number_t*)a)->flonum *
+                                           ((number_t*)b)->flonum); 
+    } 
+  }else{ 
+  fallback:
+    return dfsch_make_number_from_double 
+      (dfsch_number_to_double((dfsch_object_t*) a) * 
+       dfsch_number_to_double((dfsch_object_t*) b)); 
+  } 
+}
+
+dfsch_object_t* dfsch_number_div (dfsch_object_t* a,  
+                                  dfsch_object_t* b){ 
+
+  double an = dfsch_number_to_double((dfsch_object_t*) a);
+  double bn = dfsch_number_to_double((dfsch_object_t*) b);
+ 
+  if (bn == 0.0)
+    dfsch_throw("exception:division-by-zero", NULL);
+
+  return dfsch_make_number_from_double(an / bn); 
+}
+dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,  
+                                   dfsch_object_t* b){ 
+
+  long an = dfsch_number_to_long((dfsch_object_t*) a);
+  long bn = dfsch_number_to_long((dfsch_object_t*) b);
+ 
+  if (bn == 0)
+    dfsch_throw("exception:division-by-zero", NULL);
+
+  return dfsch_make_number_from_long(an / bn); 
+}
+dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,  
+                                  dfsch_object_t* b){ 
+
+  long an = dfsch_number_to_long((dfsch_object_t*) a);
+  long bn = dfsch_number_to_long((dfsch_object_t*) b);
+ 
+  if (bn == 0)
+    dfsch_throw("exception:division-by-zero", NULL);
+
+  return dfsch_make_number_from_long(an % bn); 
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -198,30 +307,20 @@ static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* e
 }
 static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
-  double s;
+  object_t* s;
   if (!dfsch_pair_p(i))
     dfsch_throw("exception:too-few-arguments",i);
 
-  if (dfsch_number_p(dfsch_car(i))){
-    if (!dfsch_cdr(i))
-      return dfsch_make_number(0-dfsch_number(dfsch_car(i)));
-    s=dfsch_number(dfsch_car(i));
-  }else{
-    dfsch_throw("exception:not-a-number", dfsch_car(i));
-    
-  }
+  if (!dfsch_cdr(i))
+    return dfsch_number_sub(dfsch_make_number_from_long(0), dfsch_car(i));
+  s = dfsch_car(i);
   i = dfsch_cdr(i);
   while(dfsch_pair_p(i)){
-    if (dfsch_number_p(dfsch_car(i))){
-      s-=dfsch_number(dfsch_car(i));
-    }else{
-      dfsch_throw("exception:not-a-number", dfsch_car(i));
-      
-    }
+    s= dfsch_number_sub(s, dfsch_car(i));
     i = dfsch_cdr(i);
   }
 
-  return dfsch_make_number(s); 
+  return s; 
 }
 static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
@@ -235,58 +334,64 @@ static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* e
 }
 static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
-  double s;
+  object_t* s;
   if (!dfsch_pair_p(i))
     dfsch_throw("exception:too-few-arguments",i);
 
-  if (dfsch_number_p(dfsch_car(i))){
-    if (!dfsch_cdr(i))
-      return dfsch_make_number(1/dfsch_number(dfsch_car(i)));
-    s=dfsch_number(dfsch_car(i));
-  }else{
-    dfsch_throw("exception:not-a-number", dfsch_car(i));
-  }
+  if (!dfsch_cdr(i))
+    return dfsch_number_div(dfsch_make_number_from_long(1), 
+                            dfsch_car(i));
+  s = dfsch_car(i);
   i = dfsch_cdr(i);
   
   while(dfsch_pair_p(i)){
-    if (dfsch_number_p(dfsch_car(i))){
-      s/=dfsch_number(dfsch_car(i));
-    }else{
-      dfsch_throw("exception:not-a-number", dfsch_car(i));
-      
-    }
+    s=dfsch_number_div(s, dfsch_car(i));
     i = dfsch_cdr(i);
   }
 
-  return dfsch_make_number(s); 
+  return s; 
+}
+static object_t* native_slash_i(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* i = args;
+  object_t* s;
+  if (!dfsch_pair_p(i))
+    dfsch_throw("exception:too-few-arguments",i);
+
+  if (!dfsch_cdr(i))
+    return dfsch_number_div(dfsch_make_number_from_long(1), 
+                            dfsch_car(i));
+  s = dfsch_car(i);
+  i = dfsch_cdr(i);
+  
+  while(dfsch_pair_p(i)){
+    s=dfsch_number_div_i(s, dfsch_car(i));
+    i = dfsch_cdr(i);
+  }
+
+  return s; 
 }
 static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
-  long s;
+  object_t* s;
   if (!dfsch_pair_p(i))
     dfsch_throw("exception:too-few-arguments",i);
 
-  if (dfsch_number_p(dfsch_car(i))){
-    if (!dfsch_cdr(i))
-      dfsch_throw("exception:too-few-arguments", i);
-    s=(long)dfsch_number(dfsch_car(i));
-  }else{
-    dfsch_throw("exception:not-a-number", dfsch_car(i));
-  }
+  if (!dfsch_cdr(i))
+    return dfsch_number_div(dfsch_make_number_from_long(1), 
+                            dfsch_car(i));
+  s = dfsch_car(i);
   i = dfsch_cdr(i);
   
   while(dfsch_pair_p(i)){
-    if (dfsch_number_p(dfsch_car(i))){
-      s%=(long)dfsch_number(dfsch_car(i));
-    }else{
-      dfsch_throw("exception:not-a-number", dfsch_car(i));
-      
-    }
+    s=dfsch_number_mod(s, dfsch_car(i));
     i = dfsch_cdr(i);
   }
 
-  return dfsch_make_number(s); 
+  return s; 
 }
+
+// TODO: comparisons
+
 static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_number_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
@@ -343,6 +448,7 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
   dfsch_ctx_define(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
   dfsch_ctx_define(ctx, "/", dfsch_make_primitive(&native_slash,NULL));
+  dfsch_ctx_define(ctx, "/i", dfsch_make_primitive(&native_slash_i,NULL));
   dfsch_ctx_define(ctx, "%", dfsch_make_primitive(&native_modulo,NULL));
   dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_number_equal,NULL));
   dfsch_ctx_define(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
