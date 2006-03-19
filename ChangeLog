@@ -3,6 +3,7 @@
 	* src/number.c (dfsch_make_number_from_double): New way of parsing
 	numbers - discriminate between fixnum and flonum
 	(n_equal_p): support for comparing different numeric types
+	(NUMBER_BINOP): First try at type-aware numeric operators 
 
 	* src/dfsch.c (dfsch_call_ec): Continuations moved to dfsch.c and
 	improved a bit.

@@ -86,7 +86,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
   }else{ // doesn't => fixed point 
     long n = atol(string);    
     if (n == LONG_MAX || n == LONG_MIN)
-      // overflow... so we wil made it floating point
+      // overflow... so we will made it floating point
       goto flonum;
     return dfsch_make_number_from_long(n);
   }
@@ -126,6 +126,38 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
   return n_equal_p((number_t*)a, (number_t*)b);
 }
 
+// Arithmetics
+
+#define NUMBER_BINOP(op_name, op) \
+dfsch_object_t* dfsch_number_ ## op_name (dfsch_object_t* a,  \
+                                          dfsch_object_t* b){ \
+  if (!a || a->type!=NUMBER) \
+    dfsch_throw("exception:not-a-number", a); \
+  if (!b || b->type!=NUMBER) \
+    dfsch_throw("exception:not-a-number", b); \
+ \
+  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ \
+    switch(((number_t*)a)->n_type){ \
+    case N_FIXNUM: \
+      return dfsch_make_number_from_long(((number_t*)a)->fixnum op \
+                                         ((number_t*)b)->fixnum); \
+    case N_FLONUM: \
+      return dfsch_make_number_from_double(((number_t*)a)->flonum op \
+                                           ((number_t*)b)->flonum); \
+    } \
+  }else{ \
+    return dfsch_make_number_from_double \
+      (dfsch_number_to_double((dfsch_object_t*) a) op \
+       dfsch_number_to_double((dfsch_object_t*) b)); \
+  } \
+  \
+}\
+
+NUMBER_BINOP(add, +);
+NUMBER_BINOP(sub, -);
+NUMBER_BINOP(mul, *);
+NUMBER_BINOP(div, /);
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -156,19 +188,13 @@ static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_
 
 static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
-  double s=0;
+  dfsch_object_t* s = dfsch_make_number_from_long(0);
   while(dfsch_pair_p(i)){
-    
-    if (dfsch_number_p(dfsch_car(i))){
-      s+=dfsch_number(dfsch_car(i));
-    }else{
-      dfsch_throw("exception:not-a-number", dfsch_car(i));
-      
-    }
+    s = dfsch_number_add(s, dfsch_car(i));
     i = dfsch_cdr(i);
   }
 
-  return dfsch_make_number(s); 
+  return s; 
 }
 static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
@@ -199,18 +225,13 @@ static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* 
 }
 static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
-  double s=1;
+  object_t* s = dfsch_make_number_from_long(1);
   while(dfsch_pair_p(i)){
-    if (dfsch_number_p(dfsch_car(i))){
-      s*=dfsch_number(dfsch_car(i));
-    }else{
-      dfsch_throw("exception:not-a-number", dfsch_car(i));
-      
-    }
+    s = dfsch_number_mul(s,dfsch_car(i));
     i = dfsch_cdr(i);
   }
 
-  return dfsch_make_number(s); 
+  return s; 
 }
 static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* i = args;
