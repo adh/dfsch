@@ -48,7 +48,6 @@ extern "C" {
    */
   extern dfsch_parser_ctx_t* dfsch_parser_create();
   
-  
   /**
    * Sets callback for complete objects parsed.
    */
