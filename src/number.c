@@ -12,16 +12,6 @@ typedef struct number_t {
     long fixnum;
     double flonum;
   };
-
-  /*
-   * What about "object-oriented" solution like one used for scheme datatypes?
-   *
-   * Althought, it needs deeper thought - how to implement arithmetic in way
-   * that takes advantage from such arrangement? It doesn't matter too much if
-   * we need to reimplement some trivial routines for adding new number type
-   * when we need to reimplement about 80% of this anyway.
-   */
-  
 } number_t;
 
 static int n_equal_p(number_t* a, number_t* b){
