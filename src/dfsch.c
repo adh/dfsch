@@ -26,6 +26,7 @@
 
 #include <dfsch/dfsch.h>
 #include <dfsch/hash.h>
+#include <dfsch/number.h>
 #include <dfsch/stream.h>
 #include <dfsch/strings.h>
 #include "util.h"
@@ -404,7 +405,7 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
     if (it && it->type == PAIR){
       it = (pair_t*)it->cdr;
     }else{
-      dfsch_throw("exception:no-such-item",dfsch_make_number(index));
+      dfsch_throw("exception:no-such-item",dfsch_make_number_from_long(index));
     }
   }
   return dfsch_car((object_t*)it);
@@ -1107,7 +1108,7 @@ dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
     dfsch_throw("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
-    dfsch_throw("exception:invalid-index",dfsch_make_number(k));
+    dfsch_throw("exception:invalid-index",dfsch_make_number_from_long(k));
   
   return ((vector_t*)vector)->data[k];
 }
@@ -1118,7 +1119,7 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
     dfsch_throw("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
-    dfsch_throw("exception:invalid-index",dfsch_make_number(k));
+    dfsch_throw("exception:invalid-index",dfsch_make_number_from_long(k));
   
   ((vector_t*)vector)->data[k] = obj;
 

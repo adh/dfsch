@@ -33,7 +33,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
-#include <setjmp.h>
+#include <dfsch/number.h>
 
 typedef dfsch_object_t object_t;
 
@@ -353,7 +353,7 @@ static object_t* native_list_ref(void* baton, object_t* args, dfsch_tail_escape_
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
-  DFSCH_NUMBER_ARG(args, k, int);
+  DFSCH_LONG_ARG(args, k);
   DFSCH_ARG_END(args);
 
   return dfsch_list_item(list, k);
@@ -567,7 +567,7 @@ static object_t* native_make_vector(void* baton, object_t* args, dfsch_tail_esca
   size_t length;
   object_t* fill;
 
-  DFSCH_NUMBER_ARG(args, length, size_t);
+  DFSCH_LONG_ARG(args, length);
   DFSCH_OBJECT_ARG_OPT(args, fill, NULL);
   DFSCH_ARG_END(args);
 
@@ -586,7 +586,7 @@ static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_es
   if (!dfsch_vector_p(vector))
     dfsch_throw("exception:not-a-vector",vector);
 
-  return dfsch_make_number(dfsch_vector_length(vector));
+  return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
 }
 static object_t* native_vector_ref(void* baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -594,7 +594,7 @@ static object_t* native_vector_ref(void* baton, object_t* args, dfsch_tail_escap
   size_t k;
 
   DFSCH_OBJECT_ARG(args, vector);
-  DFSCH_NUMBER_ARG(args, k, size_t);
+  DFSCH_LONG_ARG(args, k);
   DFSCH_ARG_END(args);
 
   return dfsch_vector_ref(vector, k);
@@ -606,7 +606,7 @@ static object_t* native_vector_set(void* baton, object_t* args, dfsch_tail_escap
   object_t* obj;
 
   DFSCH_OBJECT_ARG(args, vector);
-  DFSCH_NUMBER_ARG(args, k, size_t);
+  DFSCH_LONG_ARG(args, k);
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 

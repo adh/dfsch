@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <dfsch/load.h>
+#include <dfsch/number.h>
 
 dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
                     char* so_name, 
@@ -162,11 +163,13 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   if ((err && err != DFSCH_PARSER_STOPPED) 
       || dfsch_parser_get_level(parser)!=0){
     if (name)
-      dfsch_throw("load:syntax-error",dfsch_cons(dfsch_make_string(name),
-                                                 dfsch_make_number(l)));
+      dfsch_throw("load:syntax-error",
+                  dfsch_cons(dfsch_make_string(name),
+                             dfsch_make_number_from_long(l)));
     else
-      dfsch_throw("load:syntax-error",dfsch_cons(NULL,
-                                                 dfsch_make_number(l)));
+      dfsch_throw("load:syntax-error",
+                  dfsch_cons(NULL,
+                             dfsch_make_number_from_long(l)));
   }
 
   return ictx.head;

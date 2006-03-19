@@ -1,5 +1,8 @@
 2006-03-19  Ales Hakl  <ales at hakl dot net>
 
+	* many places: Removed old number API calls
+	(dfsch_number()/dfsch_make_number())  
+
 	* src/number.c (dfsch_make_number_from_double): New way of parsing
 	numbers - discriminate between fixnum and flonum
 	(n_equal_p): support for comparing different numeric types

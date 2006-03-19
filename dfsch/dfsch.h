@@ -190,12 +190,6 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_list_read(char* str);
 
-
-#define dfsch_number dfsch_number_to_double
-#define dfsch_make_number dfsch_make_number_from_double
-#include <dfsch/number.h>
-
-
   /**
    * Convert object to ASCIIZ string
    */
@@ -674,14 +668,6 @@ extern "C" {
 #define DFSCH_ARG_END(al) \
   if (al != NULL) \
     dfsch_throw("exception:too-many-arguments",NULL)
-
-  // Backward compatibility:
-
-#define DFSCH_NUMBER_ARG(al, name, type) \
-  DFSCH_GENERIC_ARG(al, name, type, dfsch_number_to_double)
-#define DFSCH_NUMBER_ARG_OPT(al, name, default, type) \
-  DFSCH_GENERIC_ARG(al, name, default, type, dfsch_number_to_double)
-
 
 #ifdef __cplusplus
 }

@@ -76,7 +76,8 @@ int dfsch_hash_p(dfsch_object_t* obj){
 static size_t get_hash(hash_t* hash, dfsch_object_t*key){
   
   if (hash->proc){
-    return (size_t)dfsch_number(dfsch_apply(hash->proc,dfsch_list(1,key)));
+    return (size_t)dfsch_number_to_long(dfsch_apply(hash->proc,
+                                                    dfsch_list(1,key)));
   }else{
 
     /*

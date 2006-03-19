@@ -1,4 +1,5 @@
 #include <dfsch/strings.h>
+#include <dfsch/number.h>
 #include "object.h"
 #include <string.h>
 
