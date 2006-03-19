@@ -5,6 +5,16 @@
                            (= (vector-ref argv 1)
                               "--strict")))
 
+(define (exit-func)
+  (print)
+  (print 'Tests 'passed: tests-passed)
+  (print 'Tests 'failed: tests-failed)
+  (print '===========================)
+  (print 'Tests 'total: (+ tests-passed tests-failed))
+  (if (= tests-failed 0)
+      (exit 0)
+      (exit 'some-tests-failed)))
+
 
 (define (test id exp val)
   (if (equal? exp val)
@@ -13,7 +23,8 @@
         (set! tests-passed (+ tests-passed 1)))
       (begin
         (print 'Test 'failed: id 'was: exp 'shouldBe: val)
-        (set! tests-failed (+ tests-failed 1)))))
+        (set! tests-failed (+ tests-failed 1))
+        (if one-test-fail (exit-func) ()))))
 
 (define (delimiter) 
   (print '===========================))
@@ -145,12 +156,4 @@
 ;; Print some statistics and exit apropriately
 ;;
 
-(print)
-(print 'Tests 'passed: tests-passed)
-(print 'Tests 'failed: tests-failed)
-(print '===========================)
-(print 'Tests 'total: (+ tests-passed tests-failed))
-(if (= tests-failed 0)
-    (exit 0)
-    (exit 'some-tests-failed))
-    
+(exit-func)    
