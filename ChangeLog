@@ -1,6 +1,7 @@
 2006-03-20  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm (exit-func): Slightly modified testsuite
+	Use strings instead of symbols in output
 
 	* dfsch/number.h: prototypes for arithmetic routines
 

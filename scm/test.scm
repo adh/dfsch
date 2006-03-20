@@ -7,10 +7,10 @@
 
 (define (exit-func)
   (print)
-  (print 'Tests 'passed: tests-passed)
-  (print 'Tests 'failed: tests-failed)
-  (print '===========================)
-  (print 'Tests 'total: (+ tests-passed tests-failed))
+  (print "Tests passed:" tests-passed)
+  (print "Tests failed:" tests-failed)
+  (print "===========================")
+  (print "Tests total:" (+ tests-passed tests-failed))
   (if (= tests-failed 0)
       (exit 0)
       (exit 'some-tests-failed)))
@@ -19,15 +19,17 @@
 (define (test id exp val)
   (if (equal? exp val)
       (begin 
-        (print 'Test 'passed: id)
+        (print "Test passed:" id)
         (set! tests-passed (+ tests-passed 1)))
       (begin
-        (print 'Test 'failed: id 'was: exp 'shouldBe: val)
+        (print "Test failed:" id "was:" exp "should be:" val)
         (set! tests-failed (+ tests-failed 1))
-        (if one-test-fail (exit-func) ()))))
+        (if one-test-fail (begin
+                            (print "*** Test failed -- ABORTING ***")
+                            (exit-func)) ()))))
 
 (define (delimiter) 
-  (print '===========================))
+  (print "==========================="))
 
 (define (cadr list) 
   (car (cdr list))) ;; We dont have this (yet??)
