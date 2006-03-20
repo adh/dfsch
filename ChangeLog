@@ -1,6 +1,10 @@
-2006-03-19  Ales Hakl  <ales at hakl dot net>
+2006-03-20  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm (exit-func): Slightly modified testsuite
+
+	* dfsch/number.h: prototypes for arithmetic routines
+
+2006-03-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: Better formating of numbers
 

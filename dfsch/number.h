@@ -51,6 +51,20 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_number_from_string(char* str);
 
 
+  extern dfsch_object_t* dfsch_number_add(dfsch_object_t* a, 
+                                          dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_sub(dfsch_object_t* a, 
+                                          dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_mul(dfsch_object_t* a, 
+                                          dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_div(dfsch_object_t* a, 
+                                          dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a, 
+                                            dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_mod(dfsch_object_t* a, 
+                                          dfsch_object_t* b);
+
+
 #ifdef __cplusplus
 }
 #endif
