@@ -1,5 +1,9 @@
 2006-03-20  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm (exit-func): Better formatting of output (probably)
+
+	* src/repl.c (command_print): Less ugly print function
+
 	* scm/test.scm (exit-func): Slightly modified testsuite
 	Use strings instead of symbols in output
 

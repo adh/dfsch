@@ -7,10 +7,11 @@
 
 (define (exit-func)
   (print)
-  (print "Tests passed:" tests-passed)
-  (print "Tests failed:" tests-failed)
-  (print "===========================")
-  (print "Tests total:" (+ tests-passed tests-failed))
+  (print "***** RESULTS: *****")
+  (print "  Tests passed:" tests-passed)
+  (print "  Tests failed:" tests-failed)
+  (print "  ===========================")
+  (print "  Tests total:" (+ tests-passed tests-failed))
   (if (= tests-failed 0)
       (exit 0)
       (exit 'some-tests-failed)))
@@ -19,17 +20,21 @@
 (define (test id exp val)
   (if (equal? exp val)
       (begin 
-        (print "Test passed:" id)
+        (print "   Test passed:" id)
         (set! tests-passed (+ tests-passed 1)))
       (begin
-        (print "Test failed:" id "was:" exp "should be:" val)
+        (print "!! Test failed:" id "was:" exp "should be:" val)
         (set! tests-failed (+ tests-failed 1))
         (if one-test-fail (begin
                             (print "*** Test failed -- ABORTING ***")
                             (exit-func)) ()))))
 
-(define (delimiter) 
-  (print "==========================="))
+(define (group name) 
+  (print "===== " name " ====="))
+
+(define (sub-group name) 
+  (print " --- " name " ---"))
+
 
 (define (cadr list) 
   (car (cdr list))) ;; We dont have this (yet??)
@@ -39,7 +44,7 @@
 ;;
 
 
-;; Arithmetics
+(group "arithmetics")
 
 (test 'arith0 (+ 3 4) 7)
 (test 'arith1 (+ 3) 3)
@@ -52,9 +57,7 @@
 (test 'arith7 (/ 3 4 5) (/ 3 20))
 (test 'arithIntDiv (/i 8 3) 2)
 
-(delimiter)
-
-;; Control flow
+(group "control flow")
 
 (test 'ifTrue (if (> 3 2) 'yes 'no) 'yes)
 (test 'ifFalse (if (< 3 2) 'yes 'no) 'no)
@@ -64,7 +67,7 @@
           (+ 3 2))
       1)
 
-(delimiter)
+(sub-group 'cond)
 
 (test 'condSimple 
       (cond ((> 3 2) 'greater)
@@ -79,7 +82,9 @@
       (cond ((assoc 'b '((a 1) (b 2))) => cadr)
             (else ()))
       2)
-(delimiter)
+
+(sub-group 'case)
+
 (test 'caseSimple
       (case (* 2 3)
         ((2 3 5 7) 'prime)
@@ -92,21 +97,18 @@
         (else 'consonant))
       'consonant)
 
-(delimiter)
+(sub-group '(and or))
 
 (test 'andTrue (and (= 2 2) (> 2 1)) true)
 (test 'andFalse (and (= 2 2) (< 2 1)) ())
 (test 'andValue (and 1 2 'c '(f g)) '(f g))
 (test 'andEmpty (and) true)
 
-(delimiter)
-
 (test 'orTrue (and (= 2 2) (> 2 1)) true)
 (test 'orFalse (and (= 2 2) (< 2 1)) ())
 
 
-(delimiter)
-;; Binding constructs
+(group "Binding constructs")
 
 (test 'let
       (let ((x 2) (y 3))
@@ -128,9 +130,7 @@
         (even? 88))
         true)
 
-(delimiter)
-
-;; Functions
+(group "functions")
 
 (define (fact x)
   (if (= x 0)
@@ -138,18 +138,15 @@
       (* x (fact (- x 1)))))
 
 (test 'fact (fact 5) 120)
-(delimiter)
 
-;; Vectors
+(group "vectors")
 
 (let ((v (make-vector 5)))
   (vector-set! v 0 'foo)
   (test 'vectorBase (vector-ref v 0) 'foo)
   (test 'vectorLit (vector-ref '#(0 1 2 3) 1) 1))
 
-(delimiter)
-
-;; Some special cases:
+(group "some special cases")
 
 (test 'degeneratedList `(,@'() . foo) 'foo)
 

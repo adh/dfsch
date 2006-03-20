@@ -154,7 +154,11 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
-  puts(dfsch_obj_write(args, 100, 0));
+  while (dfsch_pair_p(args)){
+    fputs(dfsch_obj_write(dfsch_car(args), 100, 0), stdout);
+    args = dfsch_cdr(args);
+  }
+  puts("");
   return NULL;
 }
 
