@@ -1,6 +1,7 @@
 2006-03-20  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm (exit-func): Better formatting of output (probably)
+	(one-test-fail): Works correcrtly
 
 	* src/repl.c (command_print): Less ugly print function
 
