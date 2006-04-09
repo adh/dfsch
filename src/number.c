@@ -1,8 +1,13 @@
 #include <dfsch/number.h>
 #include "internal.h"
+#include "object.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+
+#define SMALLNUM_ORIGIN  -16
+#define SMALLNUM_COUNT   32
+
 
 typedef struct number_t {
   dfsch_type_t *type;
@@ -15,6 +20,8 @@ typedef struct number_t {
     double flonum;
   };
 } number_t;
+
+number_t smallnum_buf[SMALLNUM_COUNT];
 
 static int n_equal_p(number_t* a, number_t* b){
   if (a->n_type == b->n_type){
@@ -69,7 +76,13 @@ dfsch_object_t* dfsch_make_number_from_double(double num){
 }
 dfsch_object_t* dfsch_make_number_from_long(long num){
   number_t *n;
-  n = (number_t*)dfsch_make_object(NUMBER);
+
+  if (num < SMALLNUM_COUNT + SMALLNUM_ORIGIN && num >= SMALLNUM_ORIGIN){
+    n = smallnum_buf + (num - SMALLNUM_ORIGIN);
+    n->type = NUMBER;
+  }else{
+    n = (number_t*)dfsch_make_object(NUMBER);
+  }
   if (!n)
     return NULL;
 
@@ -279,8 +292,6 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
  *
  * We also need support for different numeric types here.
  */
-
-typedef dfsch_object_t object_t;
 
 #define NEED_ARGS(args,count) \
   if (dfsch_list_length(args)!=(count)) \
