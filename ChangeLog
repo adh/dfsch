@@ -1,5 +1,7 @@
 2006-04-09  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_unintern): Compare object pointers, not data 
+
 	* src/number.c (dfsch_make_number_from_long): Internation of small
 	numbers 
 

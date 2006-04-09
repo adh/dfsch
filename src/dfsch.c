@@ -687,7 +687,7 @@ void dfsch_unintern(dfsch_object_t* symbol){
   j = NULL;
   
   while (i){
-    if (strcasecmp(i->entry->data, s->data)==0){
+    if (i->entry == s){
       if (j){
         j->next = i->next;
       } else {
