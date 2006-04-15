@@ -1,5 +1,8 @@
 2006-04-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/load.c (dfsch_read_scm_stream): last character is
+	strlen()-1, strlen() is final NUL
+
 	* src/native.c (native_id): return unique id (memory address) of
 	given object
 
