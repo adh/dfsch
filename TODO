@@ -7,4 +7,3 @@
 * caaadadr and such weird functions (I've no idea how to implement this)
 * IO
 * Garbage collected symbols
-* REPL not requiring readline
