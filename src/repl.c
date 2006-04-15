@@ -84,6 +84,7 @@ static int callback(dfsch_object_t *obj, void *baton){
 
 dfsch_parser_ctx_t *parser;
 
+#ifdef USE_READLINE
 static void sigint_handler_rl(int sig){
   dfsch_parser_reset(parser);
   rl_set_prompt("]=> ");
@@ -91,8 +92,6 @@ static void sigint_handler_rl(int sig){
   rl_redisplay();
   signal(SIGINT, sigint_handler_rl);
 }
-
-     
 
 static char * symbol_completion_cb (const char* text, int state){
   char *name;
@@ -118,7 +117,7 @@ static char * symbol_completion_cb (const char* text, int state){
 static char ** symbol_completion (const char* text, int start, int end){
   return rl_completion_matches (text, symbol_completion_cb);
 }
-
+#endif /* USE_READLINE */
 
 static char* get_prompt(int level){
   if (level){
@@ -171,6 +170,7 @@ static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
  *
  */
 
+#ifdef USE_READLINE
 void interactive_repl(dfsch_ctx_t* ctx){
 
   parser = dfsch_parser_create();
@@ -202,17 +202,46 @@ void interactive_repl(dfsch_ctx_t* ctx){
   puts("");
 
 }
+#else
+void interactive_repl(dfsch_ctx_t* ctx){
+
+  parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, callback, ctx);
+
+  fputs(get_prompt(dfsch_parser_get_level(parser)), stdout);
+
+  while (!feof(stdin)){
+    char str[4096];
+    int rc;
+    
+    if(fgets(str, 4096, stdin) == NULL)
+      break;
+
+    if (rc = dfsch_parser_feed(parser,str)!=0){
+      fprintf(stderr,"Parse error\n",rc);
+    }
+
+    if (str[strlen(str)-1] == '\n')
+      fputs(get_prompt(dfsch_parser_get_level(parser)), stdout);
+
+  }
+  
+  puts("");
+
+}
+#endif
 
 void noninteractive_repl(dfsch_ctx_t* ctx){
 
   parser = dfsch_parser_create();
   dfsch_parser_callback(parser, callback, ctx);
 
-  while (1){
+  while (!feof(stdin)){
     char str[4096];
     int rc;
     
-    fgets(str, 4096, stdin);
+    if (fgets(str, 4096, stdin) == NULL)
+      break;
 
     if (rc = dfsch_parser_feed(parser,str)!=0){
       fprintf(stderr,"Parse error\n",rc);

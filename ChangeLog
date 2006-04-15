@@ -1,5 +1,7 @@
 2006-04-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (interactive_repl): non-readline REPL
+
 	* src/load.c (dfsch_read_scm_stream): last character is
 	strlen()-1, strlen() is final NUL
 

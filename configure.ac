@@ -73,8 +73,6 @@ AC_ARG_WITH([readline],
   AC_HELP_STRING([--with-readline], [Use readline library]))
 
 if test x"$with_readline" != x"no"; then 
-   AC_DEFINE(USE_READLINE, [1], [Use readline for input]) 
-else
         if test x"$have_readline" = x"yes"; then
            AC_DEFINE(USE_READLINE, [1], [Use readline for input])
         fi
