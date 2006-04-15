@@ -58,27 +58,27 @@ if test "$have_gc" != "1"; then
         AC_MSG_ERROR(Cannot compile without gc!)
 fi
 
-AC_CHECK_HEADERS(readline/readline.h, [have_readline="1"], [have_readline="0"])
-AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline -lncurses"], [have_readline="0"], [-lncurses])
+AC_CHECK_HEADERS(readline/readline.h, [have_readline="yes"], [have_readline="no"])
+AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline -lncurses"], [have_readline="no"], [-lncurses])
 
-if test "$have_readline" != "1"; then
-        AC_MSG_RESULT()
-        AC_MSG_RESULT(****************************************************************)
-        AC_MSG_RESULT(GNU Readline not found!)
-        AC_MSG_RESULT()
-        AC_MSG_RESULT(See http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html)
-        AC_MSG_RESULT(****************************************************************)
-        AC_MSG_RESULT()
-        AC_MSG_ERROR(Cannot compile without readline!)
-fi
 
 AC_ARG_ENABLE([profile],
-  AC_HELP_STRING([--enable-profile], [Enable profiling]),
-  [enable_profile="yes"])
+  AC_HELP_STRING([--enable-profile], [Enable profiling]))
 
 if test x"$enable_profile" = x"yes"; then 
    CFLAGS="$CFLAGS -pg"
 fi 
+
+AC_ARG_WITH([readline],
+  AC_HELP_STRING([--with-readline], [Use readline library]))
+
+if test x"$with_readline" != x"no"; then 
+   AC_DEFINE(USE_READLINE, [1], [Use readline for input]) 
+else
+        if test x"$have_readline" = x"yes"; then
+           AC_DEFINE(USE_READLINE, [1], [Use readline for input])
+        fi
+fi
 
 CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"
 
@@ -87,6 +87,11 @@ AC_SYS_LARGEFILE
 
 dnl automake stuff
 AM_MAINTAINER_MODE
+
+
+if test x"$use_readline" = x"1"; then
+   AC_DEFINE(USE_READLINE)
+fi
 
 
 dnl create makefiles

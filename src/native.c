@@ -72,6 +72,14 @@ static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t
   return symbol;
 }
 
+static object_t* native_id(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_long((long)object);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -643,6 +651,7 @@ dfsch_object_t* dfsch_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "stack-trace",
                    dfsch_make_primitive(&native_stack_trace,NULL));
   dfsch_ctx_define(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
+  dfsch_ctx_define(ctx, "id", dfsch_make_primitive(&native_id,NULL));
 
   dfsch_ctx_define(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
   dfsch_ctx_define(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
