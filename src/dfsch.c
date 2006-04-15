@@ -631,6 +631,13 @@ static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
  * one thread doing such things.
  */
 
+/*
+ * How to garbage collect this?
+ * 
+ * We have global hash containing references to all curently allocated symbols.
+ * We need to detect ones that are not used by anything else, using.
+ */
+
 static gsh_check_init(){
   if (gsh_init)
     return;
