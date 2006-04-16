@@ -1,0 +1,46 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH DFSCH-REPL 1 "" "" "User Manuals"
+.SH NAME
+dfsch-repl \- scheme interpreter
+.SH SYNOPSIS
+.B dfsch-repl [-i] [-e
+.I expression
+.B ] [-E
+.I expression
+.B ] [-l
+.I scheme-file
+.B ] [-O
+.I filename
+.B ] [
+.I filename
+.B [ 
+.I arguments
+.B ... ]]
+.SH DESCRIPTION
+.B dfsch
+is small embeddable scheme interpreter.
+.B dfsch-repl
+is standalone command interpreter of scheme subset used by
+.BR dfsch .
+.SH OPTIONS
+.IP "-e expression"
+Execute given expression. That is, evaluate it and forget result.
+.IP "-E expression"
+Evaluate given expression. That is, evaluate it and print result to
+.BR stdout .
+.IP -i
+Force entry into 
+.B "interactive mode"
+even after executing code from non-interactive sources.
+.IP "-l scheme-file"
+Load given code into top-level environment.
+.IP "-O filename"
+Log all sucessfuly evaluated expressions into given file.
+.SH BUGS
+Many.
+.SH AUTHOR
+Ales Hakl <ales at hakl dot net>
+.SH "SEE ALSO"
+.B dfsch(3)

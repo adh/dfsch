@@ -6,7 +6,9 @@ nobase_include_HEADERS = \
 
 lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 
-EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm
+man_MANS = doc/dfsch-repl.1
+
+EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm doc/dfsch-repl.1
 
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h src/internal.h\
