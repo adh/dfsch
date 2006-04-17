@@ -1,5 +1,7 @@
 2006-04-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/strings.c (dfsch_string_2_list): string->list function
+
 	* src/dfsch.c (string_hash): Slightly simplified
 	(lookup_symbol): Faster and locale independent lookup
 

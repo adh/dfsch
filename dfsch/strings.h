@@ -41,6 +41,9 @@ extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
                                               size_t start,
                                               size_t end);
 
+extern dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string);
+
+
 typedef int (*dfsch_string_callback_t)(char, void*);
 typedef int (*dfsch_string_unicode_callback_t)(uint32_t ch, 
                                                void* baton,
@@ -50,6 +53,15 @@ typedef int (*dfsch_string_unicode_invalid_callback_t)(uint32_t ch,
                                                        void* baton,
                                                        size_t index);
 
+extern int dfsch_string_for_each(dfsch_string_callback_t proc,
+                                 dfsch_object_t* string,
+                                 void *baton);
+
+extern int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
+                                      dfsch_object_t* string,
+                                      void *baton,
+                                      dfsch_string_unicode_invalid_callback_t iproc,
+                                      void* ibaton);
 #define DFSCH_STRING_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
 #define DFSCH_STRING_ARG_OPT(al, name, default) \

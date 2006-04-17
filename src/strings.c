@@ -5,7 +5,6 @@
 
 typedef struct dfsch_string_t {
   dfsch_type_t type;
-  int immutable;
   char* ptr;
   size_t len;
 } dfsch_string_t;
@@ -321,6 +320,34 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 }
 
+dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
+
+  dfsch_string_t* s = (dfsch_string_t*) string;
+  pair_t *head; 
+  pair_t *tail;
+  size_t i;
+
+  TYPE_CHECK(s, STRING, "string");
+
+  if (s->len == 0)
+    return NULL;
+
+  head = tail = (pair_t*)dfsch_cons(dfsch_make_number_from_long(s->ptr[0]), 
+                                    NULL);
+
+  for(i = 1; i < s->len; ++i){
+    object_t *tmp;
+    
+    tmp = dfsch_cons(dfsch_make_number_from_long(s->ptr[i]),NULL);
+    tail->cdr = tmp;
+    tail = (pair_t*)tmp;
+
+  }
+
+  return (object_t*)head;
+  
+}
+
 int dfsch_string_for_each(dfsch_string_callback_t proc,
                                dfsch_object_t* string,
                                void *baton){
@@ -538,6 +565,13 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
+static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+
+  return dfsch_string_2_list(string);
+}
 
 static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   size_t index;
@@ -606,6 +640,8 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
 		   dfsch_make_primitive(&native_string_length,NULL));
   dfsch_ctx_define(ctx, "string-utf8-length", 
 		   dfsch_make_primitive(&native_string_utf8_length,NULL));
+  dfsch_ctx_define(ctx, "string->list", 
+		   dfsch_make_primitive(&native_string_2_list,NULL));
 
   dfsch_ctx_define(ctx, "string=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
