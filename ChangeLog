@@ -1,3 +1,7 @@
+2006-04-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (string_hash): Slightly simplified
+
 2006-04-16  Ales Hakl  <ales at hakl dot net>
 
 	* doc/dfsch-repl.1: manpage for dfsch-repl

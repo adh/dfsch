@@ -611,7 +611,7 @@ static size_t string_hash(char* string){
   size_t tmp=0;
 
   while (*string){
-    char c = isupper(*string)?tolower(*string):*string; 
+    char c = tolower(*string); 
     tmp ^= c ^ tmp << 1; 
     tmp ^= c << 17 ^ tmp >> 3; 
     ++string;
