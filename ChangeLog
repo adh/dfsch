@@ -1,6 +1,7 @@
 2006-04-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (string_hash): Slightly simplified
+	(lookup_symbol): Faster and locale independent lookup
 
 2006-04-16  Ales Hakl  <ales at hakl dot net>
 

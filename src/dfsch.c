@@ -600,9 +600,26 @@ char* dfsch_string(dfsch_object_t *n){
 typedef struct hash_entry_t hash_entry_t;
 struct hash_entry_t {
   symbol_t* entry;
+  size_t hash;
   hash_entry_t* next;
 };
 
+#define ASCII_tolower(c) ((c)<='Z'&&(c)>='A'?(c)+('a'-'A'):(c))
+
+inline static int ascii_strcasecmp(char* a, char* b){ 
+  /*
+   * XXX: this function HASN'T same API as strcasecmp 
+   *      - it doesn't distinguish between < and >, only == and !=
+   */
+
+  while (*a && *b){
+    if (ASCII_tolower(*a) != ASCII_tolower(*b))
+      return 1;
+    a++;
+    b++;
+  }
+  return (*a != *b);
+}
 
 /*
  * ugly case-insensitive string hash used for symbols
@@ -611,7 +628,7 @@ static size_t string_hash(char* string){
   size_t tmp=0;
 
   while (*string){
-    char c = tolower(*string); 
+    char c = ASCII_tolower(*string); 
     tmp ^= c ^ tmp << 1; 
     tmp ^= c << 17 ^ tmp >> 3; 
     ++string;
@@ -652,10 +669,11 @@ static gsh_check_init(){
 
 static symbol_t* lookup_symbol(char *symbol){
 
-  hash_entry_t *i = global_symbol_hash[string_hash(symbol)];
+  size_t hash = string_hash(symbol);
+  hash_entry_t *i = global_symbol_hash[hash];
 
   while (i){
-    if (strcasecmp(i->entry->data, symbol)==0){
+    if (i->hash == hash && ascii_strcasecmp(i->entry->data, symbol)==0){
       return i->entry;
     }
     i = i->next;
@@ -671,11 +689,10 @@ static symbol_t* make_symbol(char *symbol){
   hash_entry_t *e = GC_MALLOC(sizeof(hash_entry_t));
 
   e->entry = s;
-  
-  size_t hash = string_hash(symbol);
+  e->hash = string_hash(symbol);
 
-  e->next = global_symbol_hash[hash];
-  global_symbol_hash[hash] = e;
+  e->next = global_symbol_hash[e->hash];
+  global_symbol_hash[e->hash] = e;
   
   return s;
 }
