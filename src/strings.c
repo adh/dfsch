@@ -130,7 +130,8 @@ dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
 
   s->ptr = GC_MALLOC_ATOMIC(len+1);
   s->len = len;
-  memcpy(s->ptr, ptr, len);
+  if(ptr) // For allocating space to be used later
+    memcpy(s->ptr, ptr, len);
   s->ptr[len] = 0;
 
   return (dfsch_object_t*)s;
@@ -343,10 +344,10 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
     tail = (pair_t*)tmp;
 
   }
-
   return (object_t*)head;
-  
 }
+
+
 
 int dfsch_string_for_each(dfsch_string_callback_t proc,
                                dfsch_object_t* string,
@@ -381,6 +382,7 @@ int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
   TYPE_CHECK(s, STRING, "string");
 
   while(i<s->len){
+    printf(";;;; %d\n",i);
     if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
       int r = proc(s->ptr[i], baton, i, i);
       if (r)
@@ -532,9 +534,36 @@ dfsch_object_t* dfsch_string_utf8_substring(dfsch_object_t* string,
 
 }
 
+typedef struct utf8_list_ctx_t{
+  pair_t* head;
+  pair_t* tail;
+} utf8_list_ctx_t;
 
+static utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, size_t start, size_t end){
+  if (c->head){
+    pair_t* tmp;
+    tmp = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), NULL);
+    c->tail->cdr = tmp;
+    c->tail = tmp;
+  }else{
+    c->head = c->tail = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), 
+                                            NULL);
+  }
+  return 0;
+}
 
+dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
+  utf8_list_ctx_t ctx;
 
+  ctx.head = NULL;
+  ctx.tail = NULL;
+
+  dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)
+                             utf8_list_cb, 
+                             string, &ctx, NULL, NULL);
+  
+  return ctx.head;           
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -565,14 +594,6 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
-static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* string;
-
-  DFSCH_OBJECT_ARG(args, string);
-
-  return dfsch_string_2_list(string);
-}
-
 static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   size_t index;
   object_t* string;
@@ -589,6 +610,20 @@ static object_t* native_string_utf8_length(void *baton, object_t* args, dfsch_ta
   DFSCH_OBJECT_ARG(args, string);
 
   return dfsch_make_number_from_long(dfsch_string_utf8_length(string));
+}
+static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+
+  return dfsch_string_2_list(string);
+}
+static object_t* native_string_utf8_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+
+  return dfsch_string_utf8_2_list(string);
 }
 
 static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -642,6 +677,8 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
 		   dfsch_make_primitive(&native_string_utf8_length,NULL));
   dfsch_ctx_define(ctx, "string->list", 
 		   dfsch_make_primitive(&native_string_2_list,NULL));
+  dfsch_ctx_define(ctx, "string-utf8->list", 
+		   dfsch_make_primitive(&native_string_utf8_2_list,NULL));
 
   dfsch_ctx_define(ctx, "string=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
