@@ -98,6 +98,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
     return dfsch_make_number_from_double(atof(string));
   }else{ // doesn't => fixed point 
     long n = atol(string);    
+    // XXX: this doesn't work, some systems have borked atol(3)
     if (n == LONG_MAX || n == LONG_MIN)
       // overflow... so we will made it floating point
       goto flonum;
