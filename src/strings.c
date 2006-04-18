@@ -16,6 +16,7 @@ int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
   return memcmp(a->ptr, b->ptr, a->len) == 0;
 }
 char* string_write(dfsch_string_t* o, int max_depth, int readable){
+  char *hex = "0123456789abcdef";
   char *b;
   char *i;
   int j;
@@ -24,7 +25,7 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
     return o->ptr;
   }
 
-  b = GC_MALLOC_ATOMIC(o->len*2+3);
+  b = GC_MALLOC_ATOMIC(o->len*4+3); // XXX: this is TOO much
   i = b;
  
   *i='"';
@@ -79,8 +80,16 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
       break;
 
     default:
-      *i = o->ptr[j];
-      ++i;
+      if (o->ptr[j]){
+	i[0] = '\\';
+	i[1] = 'x';
+	i[2] = hex[o->ptr[j] >> 4];
+	i[3] = hex[o->ptr[j] & 0xf];
+	i+=4;
+      }else{
+	*i = o->ptr[j];
+	++i;
+      }
     }
   }
 
@@ -347,6 +356,24 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
   return (object_t*)head;
 }
 
+dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
+  dfsch_string_t* string;
+  pair_t* j = (pair_t*)list;
+  size_t i=0;
+  if (list && !dfsch_pair_p(list))
+    dfsch_throw("exception:not-a-list",list);
+  
+  string = (dfsch_string_t*)dfsch_make_string_buf(NULL,
+						  dfsch_list_length(list));
+  
+  while (dfsch_pair_p(j)){
+    string->ptr[i] = dfsch_number_to_long(j->car);
+    j = (pair_t*)j->cdr;
+    i++;
+  }
+
+  return (object_t*)string;
+}
 
 
 int dfsch_string_for_each(dfsch_string_callback_t proc,
@@ -625,6 +652,13 @@ static object_t* native_string_utf8_2_list(void *baton, object_t* args, dfsch_ta
 
   return dfsch_string_utf8_2_list(string);
 }
+static object_t* native_list_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, list);
+
+  return dfsch_list_2_string(list);
+}
 
 static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* a;
@@ -679,6 +713,8 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
 		   dfsch_make_primitive(&native_string_2_list,NULL));
   dfsch_ctx_define(ctx, "string-utf8->list", 
 		   dfsch_make_primitive(&native_string_utf8_2_list,NULL));
+  dfsch_ctx_define(ctx, "list->string", 
+		   dfsch_make_primitive(&native_list_2_string,NULL));
 
   dfsch_ctx_define(ctx, "string=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
