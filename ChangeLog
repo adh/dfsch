@@ -1,3 +1,9 @@
+2006-04-19  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c (string_write): Better string escaping.
+	(dfsch_list_2_string_utf8): list->string-utf8 function
+	(utf8_ref_cb): Fixed.
+
 2006-04-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c: Escape all characters < 32, list->string function
