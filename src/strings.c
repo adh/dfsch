@@ -676,14 +676,6 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
-static object_t* native_list_2_string_utf8(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* list;
-
-  DFSCH_OBJECT_ARG(args, list);
-
-  return dfsch_list_2_string_utf8(list);
-}
-
 static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   size_t index;
   object_t* string;
@@ -722,7 +714,13 @@ static object_t* native_list_2_string(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_list_2_string(list);
 }
+static object_t* native_list_2_string_utf8(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
 
+  DFSCH_OBJECT_ARG(args, list);
+
+  return dfsch_list_2_string_utf8(list);
+}
 static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* a;
   object_t* b;
