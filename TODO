@@ -9,3 +9,4 @@
 * Garbage collected symbols
 * Documentation for library API
 * Documented semantics of locales
+* Unicode case-insensitive string compare
