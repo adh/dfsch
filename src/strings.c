@@ -408,7 +408,6 @@ int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
   TYPE_CHECK(s, STRING, "string");
 
   while(i<s->len){
-    printf(";;;; %d\n",i);
     if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
       int r = proc(s->ptr[i], baton, i, i);
       if (r)
