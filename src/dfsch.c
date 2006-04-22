@@ -1041,7 +1041,9 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 }
 
 
-static object_t* continuation_closure(continuation_t *cont, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* continuation_closure(continuation_t *cont, object_t* args,
+                                      dfsch_tail_escape_t* esc){
+
   object_t* value;
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
