@@ -41,6 +41,10 @@ extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
                                               size_t start,
                                               size_t end);
 
+extern dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string, 
+                                                   size_t start,
+                                                   size_t end);
+
 extern dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string);
 
 

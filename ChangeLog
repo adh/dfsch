@@ -1,3 +1,7 @@
+2006-04-22  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c: rename utf8-substring to substring-utf8
+
 2006-04-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (string_write): Better string escaping.

@@ -529,7 +529,7 @@ static utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c,
 }
 
 
-dfsch_object_t* dfsch_string_utf8_substring(dfsch_object_t* string,
+dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
                                             size_t start, size_t end){
 
   utf8_substring_ctx_t c;
@@ -741,7 +741,7 @@ static object_t* native_substring(void *baton, object_t* args, dfsch_tail_escape
   return dfsch_string_substring(string, start, end);
 
 }
-static object_t* native_utf8_substring(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   size_t start, end;
   object_t* string;
 
@@ -749,7 +749,7 @@ static object_t* native_utf8_substring(void *baton, object_t* args, dfsch_tail_e
   DFSCH_LONG_ARG(args, start);
   DFSCH_LONG_ARG(args, end);
 
-  return dfsch_string_utf8_substring(string, start, end);
+  return dfsch_string_substring_utf8(string, start, end);
 
 }
 
@@ -760,8 +760,8 @@ void dfsch__string_native_register(dfsch_ctx_t *ctx){
 		   dfsch_make_primitive(&native_string_append,NULL));
   dfsch_ctx_define(ctx, "substring", 
 		   dfsch_make_primitive(&native_substring,NULL));
-  dfsch_ctx_define(ctx, "utf8-substring", 
-		   dfsch_make_primitive(&native_utf8_substring,NULL));
+  dfsch_ctx_define(ctx, "substring-utf8", 
+		   dfsch_make_primitive(&native_substring_utf8,NULL));
   dfsch_ctx_define(ctx, "string-ref", 
 		   dfsch_make_primitive(&native_string_ref,NULL));
   dfsch_ctx_define(ctx, "string-utf8-ref", 
