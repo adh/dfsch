@@ -567,7 +567,7 @@ static utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, size_t start, size_t end){
   if (c->head){
     pair_t* tmp;
     tmp = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), NULL);
-    c->tail->cdr = tmp;
+    c->tail->cdr = (object_t*)tmp;
     c->tail = tmp;
   }else{
     c->head = c->tail = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), 
@@ -584,7 +584,7 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
                              utf8_list_cb, 
                              string, &ctx, NULL, NULL);
   
-  return ctx.head;           
+  return (object_t*)ctx.head;           
 }
 
 dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
@@ -613,7 +613,7 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
     j = (pair_t*)j->cdr;
   }
 
-  string = dfsch_make_string_buf(NULL, len);
+  string = (dfsch_string_t*)dfsch_make_string_buf(NULL, len);
 
   j = (pair_t*)list;
   while (dfsch_pair_p((object_t*)j)){

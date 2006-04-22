@@ -1,7 +1,11 @@
 2006-04-22  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: tail escape descriptor should (probably) be
+	declared volatile
+
 	* src/strings.c: rename utf8-substring to substring-utf8
 	Removed debugging code
+	Fixed some warnings
 
 2006-04-19  Ales Hakl  <ales at hakl dot net>
 
