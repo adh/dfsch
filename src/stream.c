@@ -21,6 +21,9 @@
 
 #include "../dfsch/stream.h"
 #include <dfsch/strings.h>
+#include <dfsch/number.h>
+
+#include "util.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -625,7 +628,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           
           for (i=0; i < sizeof(char_table)/sizeof(char_table_entry_t); i++){
 
-            if (strcmp(s,char_table[i].name)==0){
+            if (ascii_strcasecmp(s,char_table[i].name)==0){
               parse_object(ctx,dfsch_make_number_from_long(char_table[i].ch));
               if (ctx->error) return;
               goto char_out;

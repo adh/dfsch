@@ -37,6 +37,9 @@ struct str_li_t {
   str_li_t* next;
 };
 
+#define ASCII_tolower(c) ((c)<='Z'&&(c)>='A'?(c)+('a'-'A'):(c))
+
+
 extern str_list_t* dfsch__sl_create();
 #define sl_create dfsch__sl_create
 extern void dfsch__sl_append(str_list_t* list, char* string);
@@ -51,7 +54,7 @@ extern char* dfsch__strancpy(char* x, size_t n);
 #define strancpy dfsch__strancpy
 extern char* dfsch__straquote(char *s);
 #define straquote dfsch__straquote
-
-
+extern int dfsch__ascii_strcasecmp(char* a, char* b);
+#define ascii_strcasecmp dfsch__ascii_strcasecmp
 
 #endif

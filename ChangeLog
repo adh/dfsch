@@ -2,6 +2,7 @@
 
 	* src/stream.c (tokenizer_process): support for boolean and
 	character escapes
+	(tokenizer_process): case insensitive character names
 
 2006-04-22  Ales Hakl  <ales at hakl dot net>
 
