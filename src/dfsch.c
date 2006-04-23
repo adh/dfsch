@@ -764,7 +764,8 @@ dfsch_object_t* dfsch_sym_true(){
   if (cache)
     return cache;
 
-  cache = dfsch_make_symbol("true");
+  cache = dfsch_make_symbol("true"); 
+  // TODO: shouldn't this be something other? #t ? T ?
   return cache;
 }
 dfsch_object_t* dfsch_sym_quote(){
