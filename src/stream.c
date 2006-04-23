@@ -420,8 +420,11 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '8':
   case '9':
     {
-    
-      parse_object(ctx,dfsch_make_number_from_string(data));
+      dfsch_object_t *d = dfsch_make_number_from_string(data);
+      if (!d) {
+        ctx->error = DFSCH_PARSER_INVALID_NUMBER;
+      }
+      parse_object(ctx,d);
       return;
     }
   }

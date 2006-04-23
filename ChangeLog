@@ -3,6 +3,7 @@
 	* src/stream.c (tokenizer_process): support for boolean and
 	character escapes
 	(tokenizer_process): case insensitive character names
+	(dispatch_atom): Signal error on invalid number
 
 2006-04-22  Ales Hakl  <ales at hakl dot net>
 
