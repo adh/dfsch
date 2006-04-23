@@ -1,5 +1,8 @@
 2006-04-23  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_make_number_from_string): At least some
+	support for non-decimal numbers
+
 	* src/stream.c (tokenizer_process): support for boolean and
 	character escapes
 	(tokenizer_process): case insensitive character names

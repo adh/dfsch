@@ -93,12 +93,25 @@ dfsch_object_t* dfsch_make_number_from_long(long num){
 }
 
 dfsch_object_t* dfsch_make_number_from_string(char* string){
+  // TODO: This function is slightly flawed
+
+  char *eptr;
+  double d;
+  long n;
+
   if (strchr(string, '.')){ // contains dot => floating-point
   flonum:
+   
+    d = strtod(string, &eptr);
+    if (*eptr)
+      return NULL;
     return dfsch_make_number_from_double(atof(string));
   }else{ // doesn't => fixed point 
-    long n = atol(string);    
-    // XXX: this doesn't work, some systems have borked atol(3)
+    n = strtol(string, &eptr, 0);    
+
+    if (*eptr)
+      return NULL;
+
     if (n == LONG_MAX || n == LONG_MIN)
       // overflow... so we will made it floating point
       goto flonum;
