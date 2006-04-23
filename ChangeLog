@@ -1,5 +1,7 @@
 2006-04-23  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: Removed static declaration of ascii_strcasecmp
+
 	* src/stream.c (tokenizer_process): Special case for unreadable objects
 
 	* src/number.c (dfsch_make_number_from_string): At least some

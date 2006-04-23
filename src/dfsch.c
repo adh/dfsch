@@ -604,23 +604,6 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
-#define ASCII_tolower(c) ((c)<='Z'&&(c)>='A'?(c)+('a'-'A'):(c))
-
-inline static int ascii_strcasecmp(char* a, char* b){ 
-  /*
-   * XXX: this function HASN'T same API as strcasecmp 
-   *      - it doesn't distinguish between < and >, only == and !=
-   */
-
-  while (*a && *b){
-    if (ASCII_tolower(*a) != ASCII_tolower(*b))
-      return 1;
-    a++;
-    b++;
-  }
-  return (*a != *b);
-}
-
 /*
  * ugly case-insensitive string hash used for symbols
  */
