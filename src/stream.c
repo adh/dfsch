@@ -593,7 +593,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case 't':
       case 'T':
         ++data;
-        parse_object(ctx,dfsch_make_symbol("T"));
+        parse_object(ctx,dfsch_sym_true());
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
