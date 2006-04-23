@@ -80,7 +80,7 @@
       'equal)
 (test 'condAlt
       (cond ((assoc 'b '((a 1) (b 2))) => cadr)
-            (else ()))
+            (else #f))
       2)
 
 (sub-group 'case)
