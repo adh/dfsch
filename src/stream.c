@@ -30,6 +30,16 @@
 //#define T_DEBUG
 //#define P_DEBUG
 
+typedef struct char_table_entry_t {
+  char* name;
+  uint32_t ch;
+} char_table_entry_t;
+
+char_table_entry_t char_table[]={
+  {"newline", '\n'},
+  {"space", ' '},
+};
+
 typedef struct string_queue_t {
   char* buf;
   size_t all;
@@ -115,7 +125,10 @@ struct dfsch_parser_ctx_t {
     T_ATOM, // i.e. number or symbol
     T_STRING,
     T_COMMENT,
-    T_NONE
+    T_NONE,
+    T_HASH,
+    T_CHAR,
+    T_CHAR_CONT,
   } tokenizer_state;
   
   parser_stack_t *parser;
@@ -477,11 +490,9 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case '#':
 	++data;
-	
-	parse_vector(ctx);
-	if (ctx->error) return;
+	ctx->tokenizer_state = T_HASH;	
+        break;
 
-	break;
       case ')':
 	++data;
 	
@@ -513,7 +524,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       {
 	char *e = strpbrk(data,"() \t\n;");
 	if (!e){
-	  consume_queue(ctx->q,data);
+          consume_queue(ctx->q,data);
 	  return;
 	}
 	char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
@@ -532,7 +543,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       {
 	char *e= strchr(data,'"');
 	if (!e){
-	  consume_queue(ctx->q,data);
+          consume_queue(ctx->q,data);
 	  return;
 	}
 	if (e>data){
@@ -560,6 +571,83 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	  break;
 	}
 	++data;
+      }
+      break;
+    case T_HASH:
+      switch(*data){
+      case 'n':
+      case 'f':
+      case 'N':
+      case 'F':
+        ++data;
+        parse_object(ctx,NULL);
+	if (ctx->error) return;
+        ctx->tokenizer_state = T_NONE;
+        break;
+      case 't':
+      case 'T':
+        ++data;
+        parse_object(ctx,dfsch_make_symbol("T"));
+	if (ctx->error) return;
+        ctx->tokenizer_state = T_NONE;  
+        break;
+      case '\\':
+        ++data;
+        ctx->tokenizer_state = T_CHAR;
+        break;
+      case '(':
+        parse_vector(ctx);
+        if (ctx->error) return;
+        ctx->tokenizer_state = T_NONE;
+        break;
+      default:
+        ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+        return;
+      }
+      break;
+    case T_CHAR:
+      {
+        unsigned char c = *data;
+        if ((c>='a' && c<= 'z') || (c>='A' && c<= 'Z')){
+          char *e = strpbrk(data,"() \t\n;");
+          if (!e){
+            consume_queue(ctx->q,data);
+            return;
+          }
+          if (e - data ==  1) // One character
+            goto simple;
+
+          char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
+          int i;
+
+          strncpy(s,data,e-data);
+          s[e-data]=0;
+          
+          for (i=0; i < sizeof(char_table)/sizeof(char_table_entry_t); i++){
+
+            if (strcmp(s,char_table[i].name)==0){
+              parse_object(ctx,dfsch_make_number_from_long(char_table[i].ch));
+              if (ctx->error) return;
+              goto char_out;
+            }
+          } 
+
+          ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+          return;
+
+        char_out:
+          data = e;
+          ctx->tokenizer_state = T_NONE;
+          break;
+          
+        }else{
+        simple:
+          ++data;
+          parse_object(ctx,dfsch_make_number_from_long(c));
+          if (ctx->error) return;
+          ctx->tokenizer_state = T_NONE;  
+          break;          
+        }
       }
     }
   }
