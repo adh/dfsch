@@ -604,6 +604,7 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
+
 /*
  * ugly case-insensitive string hash used for symbols
  */
