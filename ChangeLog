@@ -1,3 +1,7 @@
+2006-05-01  Ales Hakl  <ales at hakl dot net>
+
+	* src/native.c (native_form_let): named-let construct
+
 2006-04-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/stream.c (tokenizer_process): create true object from cache

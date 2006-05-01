@@ -228,13 +228,54 @@ static object_t* native_macro_begin(void *baton, object_t* args, dfsch_tail_esca
   return dfsch_cdr(args);
 }
 static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  MIN_ARGS(args,2);// TODO: named let
+  MIN_ARGS(args,2);
 
   object_t *env = dfsch_car(args);
   object_t *vars = dfsch_car(dfsch_cdr(args));
   object_t *code = dfsch_cdr(dfsch_cdr(args));
 
   object_t* ext_env = dfsch_new_frame(env);
+
+  if (dfsch_symbol_p(vars)){ 
+    object_t* name = vars;
+
+    object_t* ll_head = NULL;
+    object_t* ll_tail = NULL;
+    object_t* vl_head = NULL;
+    object_t* vl_tail = NULL;
+
+    object_t* lambda;
+
+    vars = dfsch_car(dfsch_cdr(dfsch_cdr(args)));
+    code = dfsch_cdr(dfsch_cdr(dfsch_cdr(args)));
+
+    while (dfsch_pair_p(vars)){
+      object_t* var = dfsch_list_item(dfsch_car(vars),0);
+      object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
+      
+      if (ll_head && vl_head){
+        object_t* tmp;
+        
+        tmp = dfsch_cons(var, NULL);
+        dfsch_set_cdr(ll_tail, tmp);
+        ll_tail = tmp;
+
+        tmp = dfsch_cons(val, NULL);
+        dfsch_set_cdr(vl_tail, tmp);
+        vl_tail = tmp;
+      }else{
+        ll_head = ll_tail = dfsch_cons(var, NULL);
+        vl_head = vl_tail = dfsch_cons(val, NULL);
+      }
+
+      vars = dfsch_cdr(vars);
+    }
+
+    lambda = dfsch_named_lambda(ext_env, ll_head, code, name);
+    dfsch_define(name, lambda, ext_env);
+
+    return dfsch_apply_tr(lambda, vl_head, esc);
+  }
 
   while (dfsch_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
