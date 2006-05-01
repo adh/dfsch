@@ -11,4 +11,4 @@
 * Documented semantics of locales
 * Unicode case-insensitive string compare
 * Some platform- and locale-independent conversion of numbers from/to strings
-* iteration (do and named-let)
+* iteration (do and posible common-lisp style loop)
