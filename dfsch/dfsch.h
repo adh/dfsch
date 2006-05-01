@@ -645,6 +645,11 @@ extern "C" {
                 dfsch_make_string(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
+#define DFSCH_DISCARD_ARG(al, name)\
+  if (!dfsch_pair_p((al))) \
+    dfsch_throw("exception:required-argument-missing",\
+                dfsch_make_string(#name));\
+  (al) = dfsch_cdr((al))
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
   if (!dfsch_pair_p((al))) \
    { (name) = (default);}else\

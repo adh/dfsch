@@ -1,5 +1,8 @@
 2006-05-01  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h (DFSCH_DISCARD_ARG): Macro for unneeded arguments
+	(like env in some macros/forms)
+
 	* src/control.c (dfsch__control_register): split native.c to
 	native and control.
 
