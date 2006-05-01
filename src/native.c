@@ -236,7 +236,7 @@ static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_
 
   object_t* ext_env = dfsch_new_frame(env);
 
-  if (dfsch_symbol_p(vars)){ 
+  if (dfsch_symbol_p(vars)){ // named-let
     object_t* name = vars;
 
     object_t* ll_head = NULL;
