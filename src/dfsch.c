@@ -1489,12 +1489,8 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
 
   if (!env)
     return NULL;
-  if (env->type==EXCEPTION)
-    return env;
   if (!code)
     return NULL;
-  if (code->type==EXCEPTION)
-    return code;
 
   ti = get_thread_info();
 
