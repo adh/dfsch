@@ -1621,7 +1621,7 @@ dfsch_ctx_t* dfsch_make_context(){
 		   dfsch_make_form(dfsch_make_primitive(&native_form_current_environment,
                                                         NULL)));
 
-  dfsch_native_register(ctx);
+  dfsch__native_register(ctx);
 
   return ctx;
 }
