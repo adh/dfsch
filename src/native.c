@@ -34,6 +34,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <dfsch/number.h>
+#include <dfsch/strings.h>
 
 typedef dfsch_object_t object_t;
 
@@ -414,6 +415,29 @@ static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_es
   return dfsch_list_2_vector(list);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Reading and writing strings
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static object_t* native_object_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_obj_write(object, 256, 1));
+}
+static object_t* native_string_2_object(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  char* string;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_obj_read(string);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -512,6 +536,11 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_vector_2_list,NULL));
   dfsch_ctx_define(ctx, "list->vector", 
                    dfsch_make_primitive(&native_list_2_vector,NULL));
+
+  dfsch_ctx_define(ctx, "object->string", 
+                   dfsch_make_primitive(&native_object_2_string,NULL));
+  dfsch_ctx_define(ctx, "string->object", 
+                   dfsch_make_primitive(&native_string_2_object,NULL));
 
 
   dfsch__control_register(ctx);
