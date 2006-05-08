@@ -438,6 +438,33 @@ static object_t* native_string_2_object(void *baton, object_t* args, dfsch_tail_
   return dfsch_obj_read(string);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Symbols
+//
+/////////////////////////////////////////////////////////////////////////////
+
+static object_t* native_symbol_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* object;
+  char* str;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  str = dfsch_symbol(object);
+  if (str)
+    return dfsch_make_string_cstr(str);
+  else
+    dfsch_throw("exception:not-a-symbol", object);
+}
+static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  char* string;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_symbol(string);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -542,6 +569,10 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "string->object", 
                    dfsch_make_primitive(&native_string_2_object,NULL));
 
+  dfsch_ctx_define(ctx, "symbol->string", 
+                   dfsch_make_primitive(&native_symbol_2_string,NULL));
+  dfsch_ctx_define(ctx, "string->symbol", 
+                   dfsch_make_primitive(&native_string_2_symbol,NULL));
 
   dfsch__control_register(ctx);
   dfsch__hash_native_register(ctx);

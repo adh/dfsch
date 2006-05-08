@@ -1,5 +1,7 @@
 2006-05-08  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c: string->symbol and symbol->string
+
 	* src/object.h (TYPE_CHECK): check for nil
 
 	* src/native.c: string->object and object->string
