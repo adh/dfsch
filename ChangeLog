@@ -1,5 +1,7 @@
 2006-05-08  Ales Hakl  <ales at hakl dot net>
 
+	* src/object.h (TYPE_CHECK): check for nil
+
 	* src/native.c: string->object and object->string
 
 2006-05-01  Ales Hakl  <ales at hakl dot net>
