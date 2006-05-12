@@ -1,6 +1,7 @@
 2006-05-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c: for-each and map functions
+	map works
 
 2006-05-08  Ales Hakl  <ales at hakl dot net>
 

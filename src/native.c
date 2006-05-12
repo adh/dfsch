@@ -255,7 +255,7 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
     object_t *t = dfsch_cons(dfsch_apply(func, 
 					 dfsch_list(1, dfsch_car(list))),
 			     NULL);
-    if (head){
+    if (!head){
       head = tail = t;
     }else{
       dfsch_set_cdr(tail, t);
@@ -534,7 +534,7 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "lambda", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_lambda,
-			 NULL)));
+							NULL)));
   dfsch_ctx_define(ctx, "define", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_define,
 							 NULL)));
