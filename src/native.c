@@ -225,6 +225,47 @@ static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_assq(alist, key);
 }
+static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* func;
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  while (dfsch_pair_p(list)){
+    dfsch_apply(func, dfsch_list(1, dfsch_car(list)));
+
+    list = dfsch_cdr(list);
+  }
+  
+  return NULL;
+}
+static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* func;
+  object_t* list;
+  object_t* head = NULL;
+  object_t* tail;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  while (dfsch_pair_p(list)){
+    object_t *t = dfsch_cons(dfsch_apply(func, 
+					 dfsch_list(1, dfsch_car(list))),
+			     NULL);
+    if (head){
+      head = tail = t;
+    }else{
+      dfsch_set_cdr(tail, t);
+      tail = t;
+    }
+    list = dfsch_cdr(list);
+  }
+  
+  return head;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -493,7 +534,8 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "lambda", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_lambda,
-							 NULL)));
+				  dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
+			 NULL)));
   dfsch_ctx_define(ctx, "define", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_define,
 							 NULL)));
@@ -519,6 +561,10 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "length", dfsch_make_primitive(&native_length,NULL));
   dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
+  dfsch_ctx_define(ctx, "for-each", dfsch_make_primitive(&native_for_each,
+							 NULL));
+  dfsch_ctx_define(ctx, "map", dfsch_make_primitive(&native_map,
+							 NULL));
   dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
                                                          NULL));
   dfsch_ctx_define(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
