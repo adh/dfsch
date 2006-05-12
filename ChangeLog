@@ -1,5 +1,7 @@
 2006-05-12  Ales Hakl  <ales at hakl dot net>
 
+	* scm/ObjectFramework.scm (define-struct): Structures (preliminary)
+
 	* src/native.c: for-each and map functions
 	map works
 
