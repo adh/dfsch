@@ -534,7 +534,6 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "lambda", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_lambda,
-				  dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
 			 NULL)));
   dfsch_ctx_define(ctx, "define", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_define,
