@@ -1,6 +1,7 @@
 2006-05-13  Ales Hakl  <ales at hakl dot net>
 
 	* scm/lib.scm (define-struct): Defaulting of slot values
+	(define-struct): Indicate slot name for unknown slots
 
 2006-05-12  Ales Hakl  <ales at hakl dot net>
 

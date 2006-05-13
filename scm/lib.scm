@@ -38,7 +38,7 @@
                                     (set! offset (+ 1 offset))
                                     cls)
                                   slot-names))
-                             (else (throw 'struct:no-such-slot)))
+                             (else (throw 'struct:no-such-slot name)))
                            value)
               (loop (cdr (cdr i))))
             ()))
