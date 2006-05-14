@@ -19,7 +19,7 @@
  *
  */
 
-#include "../dfsch/stream.h"
+#include "../dfsch/parse.h"
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
 

@@ -22,7 +22,7 @@
 # include <config.h>
 #endif
 
-#include <dfsch/stream.h>
+#include <dfsch/parse.h>
 
 #include <string.h>
 #include <fcntl.h>

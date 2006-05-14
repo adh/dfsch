@@ -1,5 +1,7 @@
 2006-05-14  Ales Hakl  <ales at hakl dot net>
 
+	* {dfsch,src}/parse.[hc]: Renamed from stream.[ch] to parse.[ch]
+
 	* src/control.c (native_macro_case): slightly simplified
 	when and unless macros
 

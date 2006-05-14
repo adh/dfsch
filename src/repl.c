@@ -26,7 +26,7 @@
 #endif
 
 #include <dfsch/dfsch.h>
-#include <dfsch/stream.h>
+#include <dfsch/parse.h>
 #include <dfsch/load.h>
 #include <stdio.h>
 #include <stdlib.h>

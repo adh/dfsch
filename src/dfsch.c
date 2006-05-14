@@ -27,7 +27,7 @@
 #include <dfsch/dfsch.h>
 #include <dfsch/hash.h>
 #include <dfsch/number.h>
-#include <dfsch/stream.h>
+#include <dfsch/parse.h>
 #include <dfsch/strings.h>
 #include "util.h"
 #include "internal.h"

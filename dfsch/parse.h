@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef H__dfsch__stream__
-#define H__dfsch__stream__
+#ifndef H__dfsch__parse__
+#define H__dfsch__parse__
 
 #include "dfsch.h"
 
