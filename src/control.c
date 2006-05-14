@@ -101,12 +101,7 @@ static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escap
 
   while (dfsch_pair_p(args)){
     object_t* c = dfsch_car(args);
-    object_t* i;
-    if (!dfsch_pair_p(c)){
-      dfsch_throw("exception:not-a-pair",c);
-    }
-    
-    i = dfsch_car(c);
+    object_t* i = dfsch_car(c);
     if (i == dfsch_sym_else())
         return dfsch_cdr(c);
       
