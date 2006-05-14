@@ -63,6 +63,31 @@ static object_t* native_macro_if(void *baton, object_t* args, dfsch_tail_escape_
 
 }
 
+static object_t* native_macro_when(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* env;
+  object_t* test;
+
+  DFSCH_OBJECT_ARG(args,env);
+  DFSCH_OBJECT_ARG(args,test);
+
+  test = dfsch_eval(test, env);
+
+  return test?args:NULL;
+}
+
+static object_t* native_macro_unless(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* env;
+  object_t* test;
+
+  DFSCH_OBJECT_ARG(args,env);
+  DFSCH_OBJECT_ARG(args,test);
+
+  test = dfsch_eval(test, env);
+
+  return test?NULL:args;
+}
+
+
 static object_t* native_macro_cond(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
@@ -337,6 +362,12 @@ void dfsch__control_register(dfsch_ctx_t *ctx){
 							 NULL)));
   dfsch_ctx_define(ctx, "if", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_if,
+                                                         NULL)));
+  dfsch_ctx_define(ctx, "when", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_when,
+                                                         NULL)));
+  dfsch_ctx_define(ctx, "unless", 
+		   dfsch_make_macro(dfsch_make_primitive(&native_macro_unless,
                                                          NULL)));
   dfsch_ctx_define(ctx, "cond", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_cond,
