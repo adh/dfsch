@@ -1,0 +1,22 @@
+-----------------------------------------------------------------------------
+version 0.2.0-pre1           2006-02-26              svn rev. 258
+-----------------------------------------------------------------------------
+
+Architectural changes:
+        * Real exceptions
+        * union-free in-core representation of objects
+        * Proper tail recursion (almost)
+
+Datatypes:
+        * New: vectors and hashtables
+        * Strings can contain any data + special support for utf-8 text
+
+-----------------------------------------------------------------------------
+version 0.1.1                2005-05-14              svn rev. 39
+-----------------------------------------------------------------------------
+Corrected installation of header files
+
+-----------------------------------------------------------------------------
+version 0.1                  2005-05-14              svn rev. 37
+-----------------------------------------------------------------------------
+First release
