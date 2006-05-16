@@ -78,12 +78,6 @@ static int load_callback(dfsch_object_t *obj, void* ctx){
 }
 
 dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
-
-  /*
-   * Read whole file into big list and then evaluate it - yeah there might
-   * be better ways to do this
-   */
-  
   return dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
 }
 dfsch_object_t* dfsch_read_scm(char* scm_name){
