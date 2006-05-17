@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
+#include <errno.h>
 
 #define SMALLNUM_ORIGIN  -16
 #define SMALLNUM_COUNT   32
@@ -597,6 +598,27 @@ static object_t* native_sqrt(void *baton, object_t* args,
   return dfsch_make_number_from_double(sqrt(z));
 }
 
+static object_t* native_expt(void *baton, object_t* args, 
+                             dfsch_tail_escape_t* esc){
+  double z0, z1, v;
+  DFSCH_DOUBLE_ARG(args, z0);
+  DFSCH_DOUBLE_ARG(args, z1);
+  DFSCH_ARG_END(args);
+
+  errno = 0;
+  v = pow(z0,z1);
+  if (errno == EDOM) // XXX
+    dfsch_throw("exception:not-in-argument-domain", 
+                dfsch_list(3, 
+                           dfsch_make_symbol("sqrt"),
+                           dfsch_make_number_from_double(z0),
+                           dfsch_make_number_from_double(z1)));
+
+  return dfsch_make_number_from_double(v);
+}
+
+// TODO: min, max
+// TODO: exact?, inexact?, real?, integer? ...
 
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
@@ -621,6 +643,7 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
   dfsch_ctx_define(ctx, "log", dfsch_make_primitive(&native_log,NULL));
+  dfsch_ctx_define(ctx, "expt", dfsch_make_primitive(&native_expt,NULL));
 
   dfsch_ctx_define(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
   dfsch_ctx_define(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));

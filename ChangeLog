@@ -3,6 +3,7 @@
 	* src/number.c (native_acos, native_asin): inverse trigonometrics
 	(native_atan): arcus tangent
 	(native_sqrt): Square root
+	(native_expt): Power (expt)
 
 2006-05-17  Ales Hakl  <ales at hakl dot net>
 
