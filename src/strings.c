@@ -664,6 +664,7 @@ static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escap
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, index);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long((unsigned char)dfsch_string_ref(string, index));
 
@@ -672,6 +673,7 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
@@ -681,6 +683,7 @@ static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, index);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(dfsch_string_utf8_ref(string, index));
 
@@ -689,6 +692,7 @@ static object_t* native_string_utf8_length(void *baton, object_t* args, dfsch_ta
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(dfsch_string_utf8_length(string));
 }
@@ -696,6 +700,7 @@ static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_es
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
 
   return dfsch_string_2_list(string);
 }
@@ -703,6 +708,7 @@ static object_t* native_string_utf8_2_list(void *baton, object_t* args, dfsch_ta
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
 
   return dfsch_string_utf8_2_list(string);
 }
@@ -710,6 +716,7 @@ static object_t* native_list_2_string(void *baton, object_t* args, dfsch_tail_es
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
 
   return dfsch_list_2_string(list);
 }
@@ -717,6 +724,7 @@ static object_t* native_list_2_string_utf8(void *baton, object_t* args, dfsch_ta
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
 
   return dfsch_list_2_string_utf8(list);
 }
@@ -726,6 +734,7 @@ static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_esc
 
   DFSCH_OBJECT_ARG(args, a);
   DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
 
   return dfsch_bool(((int (*)(object_t*,object_t*)) baton)(a, b));
 }
@@ -736,6 +745,7 @@ static object_t* native_substring(void *baton, object_t* args, dfsch_tail_escape
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, start);
   DFSCH_LONG_ARG(args, end);
+  DFSCH_ARG_END(args);
 
   return dfsch_string_substring(string, start, end);
 
@@ -747,6 +757,7 @@ static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_e
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, start);
   DFSCH_LONG_ARG(args, end);
+  DFSCH_ARG_END(args);
 
   return dfsch_string_substring_utf8(string, start, end);
 

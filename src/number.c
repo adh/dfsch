@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <math.h>
 
 #define SMALLNUM_ORIGIN  -16
 #define SMALLNUM_COUNT   32
@@ -301,7 +302,7 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
 /////////////////////////////////////////////////////////////////////////////
 
 /*
- * Number maniulation is simply brain damaged and needs considerable amount
+ * Number manipulation is simply brain damaged and needs considerable amount
  * of work.
  *
  * We also need support for different numeric types here.
@@ -474,6 +475,7 @@ static object_t* native_abs(void *baton, object_t* args,
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
     dfsch_throw("exception:not-a-number", n);
@@ -496,6 +498,13 @@ static object_t* native_abs(void *baton, object_t* args,
   }
 }
 
+static object_t* native_exp(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(exp(z));
+}
 
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
@@ -517,5 +526,6 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 
 
   dfsch_ctx_define(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
+  dfsch_ctx_define(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
   
 }

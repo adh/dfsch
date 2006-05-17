@@ -23,7 +23,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h src/internal.h\
 	src/strings.c dfsch/strings.h 
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
-libdfsch_la_LIBADD =  -lgc -lpthread -ldl
+libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
 
 libdfsch_load_la_SOURCES = src/load.c dfsch/load.h
 libdfsch_load_la_LDFLAGS = -version-info 1:0:0
