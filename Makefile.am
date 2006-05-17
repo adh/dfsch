@@ -1,14 +1,15 @@
 
 bin_PROGRAMS = dfsch-repl
 nobase_include_HEADERS = \
-	dfsch/dfsch.h dfsch/stream.h dfsch/load.h \
+	dfsch/dfsch.h dfsch/parse.h dfsch/load.h \
 	dfsch/hash.h dfsch/number.h dfsch/strings.h
 
 lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
 
 man_MANS = doc/dfsch-repl.1
 
-EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm doc/dfsch-repl.1
+EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/lib.scm \
+	doc/dfsch-repl.1
 
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h src/internal.h\
