@@ -415,12 +415,11 @@ static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t*
   return s; 
 }
 
-// TODO: comparisons
-
 static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_number_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
+
 static object_t* native_lt(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
   object_t *a = dfsch_car(args);
@@ -468,6 +467,36 @@ static object_t* native_gte(void *baton, object_t* args, dfsch_tail_escape_t* es
   return dfsch_bool(dfsch_number_to_double(a)>=dfsch_number_to_double(b));  
 }
 
+// Functions
+
+static object_t* native_abs(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      if (num >= 0)
+        return n;
+      return dfsch_make_number_from_double(-num);
+    }
+  case N_FIXNUM:
+    {
+      long num = ((number_t*)n)->fixnum;
+      if (num >= 0)
+        return n;
+      return dfsch_make_number_from_long(-num);
+    }
+  }
+}
+
+
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
   dfsch_ctx_define(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
@@ -485,5 +514,8 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "pi", 
                    dfsch_make_number_from_double(3.1415926535897931));
+
+
+  dfsch_ctx_define(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
   
 }

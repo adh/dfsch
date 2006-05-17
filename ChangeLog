@@ -1,5 +1,7 @@
 2006-05-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (native_abs): Absolute value function
+
 	* NEWS: Release 0.2.0-pre2
 
 2006-05-14  Ales Hakl  <ales at hakl dot net>
