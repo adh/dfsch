@@ -582,6 +582,20 @@ static object_t* native_atan(void *baton, object_t* args,
   return dfsch_make_number_from_double(atan(z0/z1));
 }
 
+static object_t* native_sqrt(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+
+  if (z < 0.0)
+    dfsch_throw("exception:not-in-argument-domain", 
+                dfsch_list(2, 
+                           dfsch_make_symbol("sqrt"),
+                           dfsch_make_number_from_double(z)));
+
+  return dfsch_make_number_from_double(sqrt(z));
+}
 
 
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
@@ -615,5 +629,7 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
   dfsch_ctx_define(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
   dfsch_ctx_define(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
+
+  dfsch_ctx_define(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
   
 }
