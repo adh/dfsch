@@ -512,7 +512,7 @@ static object_t* native_log(void *baton, object_t* args,
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
 
-  if (z <= 0)
+  if (z <= 0.0)
     dfsch_throw("exception:not-in-argument-domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("log"),
@@ -541,6 +541,36 @@ static object_t* native_tan(void *baton, object_t* args,
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tan(z));
+}
+
+static object_t* native_asin(void *baton, object_t* args, 
+                             dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+
+  if (z > 1.0 || z < -1.0)
+    dfsch_throw("exception:not-in-argument-domain", 
+                dfsch_list(2, 
+                           dfsch_make_symbol("asin"),
+                           dfsch_make_number_from_double(z)));
+
+  return dfsch_make_number_from_double(asin(z));
+}
+
+static object_t* native_acos(void *baton, object_t* args, 
+                             dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+
+  if (z > 1.0 || z < -1.0)
+    dfsch_throw("exception:not-in-argument-domain", 
+                dfsch_list(2, 
+                           dfsch_make_symbol("acos"),
+                           dfsch_make_number_from_double(z)));
+
+  return dfsch_make_number_from_double(acos(z));
 }
 
 
@@ -572,5 +602,8 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
   dfsch_ctx_define(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));
   dfsch_ctx_define(ctx, "tan", dfsch_make_primitive(&native_tan,NULL));
+
+  dfsch_ctx_define(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
+  dfsch_ctx_define(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
   
 }

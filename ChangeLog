@@ -1,3 +1,7 @@
+2006-05-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c (native_acos, native_asin): inverse trigonometrics
+
 2006-05-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c (native_log): Natural logarithm
