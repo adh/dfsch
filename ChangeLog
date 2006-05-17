@@ -1,5 +1,8 @@
 2006-05-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (native_log): Natural logarithm
+	(native_tan, native_cos, native_sin): Trigonometric functions
+
 	* src/strings.c: Added DFSCH_ARG_END to mark ends of argument lists
 
 	* src/number.c (native_abs): Absolute value function

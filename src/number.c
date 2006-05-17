@@ -506,6 +506,45 @@ static object_t* native_exp(void *baton, object_t* args,
   return dfsch_make_number_from_double(exp(z));
 }
 
+static object_t* native_log(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+
+  if (z <= 0)
+    dfsch_throw("exception:not-in-argument-domain", 
+                dfsch_list(2, 
+                           dfsch_make_symbol("log"),
+                           dfsch_make_number_from_double(z)));
+
+  return dfsch_make_number_from_double(log(z));
+}
+
+static object_t* native_sin(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(sin(z));
+}
+static object_t* native_cos(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(cos(z));
+}
+static object_t* native_tan(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(tan(z));
+}
+
+
+
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
   dfsch_ctx_define(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
@@ -526,6 +565,12 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 
 
   dfsch_ctx_define(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
+
   dfsch_ctx_define(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
+  dfsch_ctx_define(ctx, "log", dfsch_make_primitive(&native_log,NULL));
+
+  dfsch_ctx_define(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
+  dfsch_ctx_define(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));
+  dfsch_ctx_define(ctx, "tan", dfsch_make_primitive(&native_tan,NULL));
   
 }
