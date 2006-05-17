@@ -573,6 +573,15 @@ static object_t* native_acos(void *baton, object_t* args,
   return dfsch_make_number_from_double(acos(z));
 }
 
+static object_t* native_atan(void *baton, object_t* args, 
+                             dfsch_tail_escape_t* esc){
+  double z0, z1;
+  DFSCH_DOUBLE_ARG(args, z0);
+  DFSCH_DOUBLE_ARG_OPT(args, z1, 1.0);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(atan(z0/z1));
+}
+
 
 
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
@@ -605,5 +614,6 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 
   dfsch_ctx_define(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
   dfsch_ctx_define(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
+  dfsch_ctx_define(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
   
 }
