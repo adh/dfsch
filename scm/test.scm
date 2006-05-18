@@ -59,9 +59,9 @@
 
 (group "control flow")
 
-(test 'ifTrue (if (> 3 2) 'yes 'no) 'yes)
-(test 'ifFalse (if (< 3 2) 'yes 'no) 'no)
-(test 'ifEval 
+(test 'if-true (if (> 3 2) 'yes 'no) 'yes)
+(test 'if-false (if (< 3 2) 'yes 'no) 'no)
+(test 'if-eval 
       (if (> 3 2)
           (- 3 2)
           (+ 3 2))
