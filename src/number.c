@@ -617,8 +617,84 @@ static object_t* native_expt(void *baton, object_t* args,
   return dfsch_make_number_from_double(v);
 }
 
+static object_t* native_zero_p(void *baton, object_t* args, 
+                               dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      return dfsch_bool(num == 0.0);
+    }
+  case N_FIXNUM:
+    {
+      long num = ((number_t*)n)->fixnum;
+      return dfsch_bool(num == 0);
+    }
+  }
+}
+
+static object_t* native_positive_p(void *baton, object_t* args, 
+                               dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      return dfsch_bool(num > 0.0);
+    }
+  case N_FIXNUM:
+    {
+      long num = ((number_t*)n)->fixnum;
+      return dfsch_bool(num > 0);
+    }
+  }
+}
+
+static object_t* native_negative_p(void *baton, object_t* args, 
+                                   dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      return dfsch_bool(num < 0.0);
+    }
+  case N_FIXNUM:
+    {
+      long num = ((number_t*)n)->fixnum;
+      return dfsch_bool(num < 0);
+    }
+  }
+}
+
+
+
+
 // TODO: min, max
 // TODO: exact?, inexact?, real?, integer? ...
+// TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
@@ -654,5 +730,12 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
 
   dfsch_ctx_define(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
+
+  dfsch_ctx_define(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
+                                                      NULL));
+  dfsch_ctx_define(ctx, "negative?", dfsch_make_primitive(&native_negative_p,
+                                                          NULL));
+  dfsch_ctx_define(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
+                                                          NULL));
   
 }

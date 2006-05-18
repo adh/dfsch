@@ -4,6 +4,8 @@
 	(native_atan): arcus tangent
 	(native_sqrt): Square root
 	(native_expt): Power (expt)
+	(native_zero_p, native_positive_p, native_negative_p): some basic
+	predicates
 
 2006-05-17  Ales Hakl  <ales at hakl dot net>
 
