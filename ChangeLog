@@ -1,3 +1,7 @@
+2006-05-19  Ales Hakl  <ales at hakl dot net>
+
+	* src/control.c (native_form_do): do iteration form
+
 2006-05-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_obj_write): Better support for platforms with

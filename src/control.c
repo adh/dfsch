@@ -334,7 +334,73 @@ static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t
   return dfsch_call_ec(proc);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// do
+//
+/////////////////////////////////////////////////////////////////////////////
 
+static object_t* native_form_do(void *baton, object_t* args, 
+                                dfsch_tail_escape_t* esc){
+
+  object_t* env;
+  object_t* vars;
+  object_t* test;
+  object_t* exprs;
+  object_t* commands;
+  object_t* lenv;
+  object_t* i;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_OBJECT_ARG(args, test);
+  
+  commands = args;
+  exprs = dfsch_cdr(test);
+  test = dfsch_car(test);
+
+  lenv = dfsch_new_frame(env);
+
+  i = vars;
+  while (dfsch_pair_p(i)){
+    object_t* j = dfsch_car(i);
+    object_t* name;
+    object_t* init;
+    object_t* step;
+
+    DFSCH_OBJECT_ARG(j, name);
+    DFSCH_OBJECT_ARG(j, init);
+
+    dfsch_define(name, dfsch_eval(init, env), lenv);
+
+    i = dfsch_cdr(i);
+  }
+
+  while (dfsch_eval(test, lenv) == NULL){
+    object_t* nenv;
+    dfsch_eval_proc(commands, lenv);
+
+    nenv = dfsch_new_frame(env);
+    i = vars;
+    while (dfsch_pair_p(i)){
+      object_t* j = dfsch_car(i);
+      object_t* name;
+      object_t* init;
+      object_t* step;
+      
+      DFSCH_OBJECT_ARG(j, name);
+      DFSCH_OBJECT_ARG(j, init);
+      DFSCH_OBJECT_ARG_OPT(j, step, name);
+
+      dfsch_define(name, dfsch_eval(step, lenv), nenv);
+      
+      i = dfsch_cdr(i);
+    }
+    lenv = nenv;
+  }
+
+  return dfsch_eval_proc_tr(exprs, lenv, NULL, esc);
+}
 
 
 
@@ -400,6 +466,10 @@ void dfsch__control_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
                                                           NULL));
   dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
+
+  dfsch_ctx_define(ctx, "do", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_do,
+							 NULL)));
 
 
   dfsch__hash_native_register(ctx);

@@ -69,16 +69,16 @@
 
 (sub-group 'cond)
 
-(test 'condSimple 
+(test 'cond-simple 
       (cond ((> 3 2) 'greater)
             ((< 3 2) 'less))
       'greater)
-(test 'condElse
+(test 'cond-else
       (cond ((> 3 3) 'greater)
             ((< 3 3) 'less)
             (else 'equal))
       'equal)
-(test 'condAlt
+(test 'cond-alt
       (cond ((assoc 'b '((a 1) (b 2))) => cadr)
             (else #f))
       2)
@@ -107,6 +107,14 @@
 (test 'orTrue (and (= 2 2) (> 2 1)) true)
 (test 'orFalse (and (= 2 2) (< 2 1)) ())
 
+(sub-group 'do)
+
+(test 'do 
+      (do ((vec (make-vector 5))
+           (i 0 (+ i 1)))
+          ((= i 5) vec)
+        (vector-set! vec i i))
+      #(0 1 2 3 4))
 
 (group "Binding constructs")
 
