@@ -55,7 +55,7 @@
 (test 'arith5 (- 3 4 5) -6)
 (test 'arith6 (- 3) -3)
 (test 'arith7 (/ 3 4 5) (/ 3 20))
-(test 'arithIntDiv (/i 8 3) 2)
+(test 'arith-int-div (/i 8 3) 2)
 
 (group "control flow")
 
@@ -85,12 +85,12 @@
 
 (sub-group 'case)
 
-(test 'caseSimple
+(test 'case-simple
       (case (* 2 3)
         ((2 3 5 7) 'prime)
         ((1 4 6 8 9) 'composite))
       'composite)
-(test 'caseElse
+(test 'case-else
       (case (car '(c d))
         ((a e i o u) 'vowel)
         ((w y) 'semivowel)
@@ -99,13 +99,13 @@
 
 (sub-group '(and or))
 
-(test 'andTrue (and (= 2 2) (> 2 1)) true)
-(test 'andFalse (and (= 2 2) (< 2 1)) ())
-(test 'andValue (and 1 2 'c '(f g)) '(f g))
-(test 'andEmpty (and) true)
+(test 'and-true (and (= 2 2) (> 2 1)) true)
+(test 'and-false (and (= 2 2) (< 2 1)) ())
+(test 'and-value (and 1 2 'c '(f g)) '(f g))
+(test 'and-empty (and) true)
 
-(test 'orTrue (and (= 2 2) (> 2 1)) true)
-(test 'orFalse (and (= 2 2) (< 2 1)) ())
+(test 'or-true (and (= 2 2) (> 2 1)) true)
+(test 'or-false (and (= 2 2) (< 2 1)) ())
 
 (sub-group 'do)
 
@@ -151,12 +151,12 @@
 
 (let ((v (make-vector 5)))
   (vector-set! v 0 'foo)
-  (test 'vectorBase (vector-ref v 0) 'foo)
-  (test 'vectorLit (vector-ref '#(0 1 2 3) 1) 1))
+  (test 'vector-base (vector-ref v 0) 'foo)
+  (test 'vector-lit (vector-ref '#(0 1 2 3) 1) 1))
 
 (group "some special cases")
 
-(test 'degeneratedList `(,@'() . foo) 'foo)
+(test 'degenerated-list-qq `(,@'() . foo) 'foo)
 
 ;;; End of tests
 ;;

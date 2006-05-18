@@ -1,5 +1,7 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm: Naming change
+
 	* src/control.c (native_form_do): do iteration form
 
 2006-05-18  Ales Hakl  <ales at hakl dot net>
