@@ -184,10 +184,10 @@ static const dfsch_type_t primitive_type = {
 
 static char* closure_write(closure_t* c, int max_depth, int readable){
     str_list_t* l = sl_create();
-    char buf[16];
+    char buf[sizeof(void*)*2+1];
 
     sl_append(l, "#<closure 0x");
-    snprintf(buf, 16, "%x", c);
+    snprintf(buf, sizeof(void*)*2+1, "%x", c);
     sl_append(l, buf);
     
     if (c->name){
@@ -1193,10 +1193,10 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 
   if (!obj->type){
     str_list_t *sl = sl_create();
-    char buf[16];
+    char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<typeless-value ");
     sl_append(sl, " 0x");
-    snprintf(buf, 16, "%x", obj);
+    snprintf(buf, sizeof(void*)*2+1, "%x", obj);
     sl_append(sl, buf);
     sl_append(sl, ">");
     return sl_value(sl);
@@ -1204,11 +1204,11 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 
   if (!obj->type->write){
     str_list_t *sl = sl_create();
-    char buf[16];
+    char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<");
     sl_append(sl, obj->type->name);
     sl_append(sl, " 0x");
-    snprintf(buf, 16, "%x", obj);
+    snprintf(buf, sizeof(void*)*2+1, "%x", obj);
     sl_append(sl, buf);
     sl_append(sl, ">");
     return sl_value(sl);
