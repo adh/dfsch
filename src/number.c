@@ -690,7 +690,7 @@ static object_t* native_negative_p(void *baton, object_t* args,
 }
 
 
-
+// TODO: even?, odd?
 
 // TODO: min, max
 // TODO: exact?, inexact?, real?, integer? ...
