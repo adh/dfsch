@@ -829,7 +829,32 @@ static object_t* native_odd_p(void *baton, object_t* args,
   }
 }
 
-// TODO: min, max
+static object_t* native_max(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t *max;
+  object_t *i;
+
+  DFSCH_OBJECT_ARG(args, max);
+  while (args){
+    DFSCH_OBJECT_ARG(args, i);
+    if (dfsch_number_lt(max, i))
+      max = i;
+  }
+  return max;
+}
+
+static object_t* native_min(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t *max;
+  object_t *i;
+
+  DFSCH_OBJECT_ARG(args, max);
+  while (args){
+    DFSCH_OBJECT_ARG(args, i);
+    if (dfsch_number_gt(max, i))
+      max = i;
+  }
+  return max;
+}
+
 // TODO: exact?, inexact?, real?, integer? ...
 // TODO: gcd, lcm
 
@@ -867,6 +892,9 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
 
   dfsch_ctx_define(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
+
+  dfsch_ctx_define(ctx, "min", dfsch_make_primitive(&native_min,NULL));
+  dfsch_ctx_define(ctx, "max", dfsch_make_primitive(&native_max,NULL));
 
   dfsch_ctx_define(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
                                                       NULL));

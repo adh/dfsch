@@ -1,6 +1,7 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c, dfsch/number.h: Comparison functions reimplemented 
+	(native_max, native_min): max and min functions
 
 	* src/number.c (native_even_p, native_odd_p): even? and odd?
 	(dfsch__number_eqv_p): eqv? works correctly
