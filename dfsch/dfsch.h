@@ -268,6 +268,8 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
 
+  extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
+
   // alists
   /**
    * <code>(assoc KEY ALIST)</code>
@@ -283,6 +285,13 @@ extern "C" {
    * <code>(assq KEY ALIST)</code>
    */
   extern dfsch_object_t* dfsch_assq(dfsch_object_t *key,
+                                    dfsch_object_t *alist);
+
+  extern dfsch_object_t* dfsch_member(dfsch_object_t *key,
+                                      dfsch_object_t *alist);
+  extern dfsch_object_t* dfsch_memv(dfsch_object_t *key,
+                                    dfsch_object_t *alist);
+  extern dfsch_object_t* dfsch_memq(dfsch_object_t *key,
                                     dfsch_object_t *alist);
 
 
