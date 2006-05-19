@@ -61,9 +61,6 @@ static dfsch_type_t number_type = {
 #define NUMBER (&number_type)
 
 
-int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t *b){
-  return n_equal_p((number_t*)a, (number_t*) b);
-}
 
 dfsch_object_t* dfsch_make_number_from_double(double num){
   number_t *n;
@@ -154,6 +151,23 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
 
   return n_equal_p((number_t*)a, (number_t*)b);
 }
+int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
+  if (!a || a->type!=NUMBER)
+    dfsch_throw("exception:not-a-number", a);
+  if (!b || b->type!=NUMBER)
+    dfsch_throw("exception:not-a-number", b);
+
+  if (((number_t*)a)->n_type != ((number_t*)b)->n_type)
+    return 0;
+
+  switch(((number_t*)a)->n_type){
+  case N_FIXNUM:
+    return ((number_t*)a)->fixnum == ((number_t*)b)->fixnum;
+  case N_FLONUM:
+    return ((number_t*)a)->flonum == ((number_t*)b)->flonum;
+  }
+}
+
 
 // Arithmetics
 
@@ -688,6 +702,55 @@ static object_t* native_negative_p(void *baton, object_t* args,
     }
   }
 }
+static object_t* native_even_p(void *baton, object_t* args, 
+                               dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      num = num / 2;
+      return dfsch_bool(num == round(num));
+    }
+  case N_FIXNUM:
+    {
+      long z = ((number_t*)n)->fixnum;
+      return dfsch_bool(z % 2 == 0);
+    }
+  }
+}
+
+static object_t* native_odd_p(void *baton, object_t* args, 
+                              dfsch_tail_escape_t* esc){
+  object_t *n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_number_p(n))
+    dfsch_throw("exception:not-a-number", n);
+
+  switch (((number_t*)n)->n_type){
+  case N_FLONUM:
+    {
+      double num = ((number_t*)n)->flonum;
+      num = (num + 1) / 2;
+      return dfsch_bool(num == round(num));
+    }
+  case N_FIXNUM:
+    {
+      long z = ((number_t*)n)->fixnum;
+      return dfsch_bool(z % 2 == 1);
+    }
+  }
+}
 
 
 // TODO: even?, odd?
@@ -737,5 +800,10 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
                                                           NULL));
   dfsch_ctx_define(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
                                                           NULL));
+
+  dfsch_ctx_define(ctx, "even?", dfsch_make_primitive(&native_even_p,
+                                                      NULL));
+  dfsch_ctx_define(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
+                                                     NULL));
   
 }

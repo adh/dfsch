@@ -1,5 +1,8 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (native_even_p, native_odd_p): even? and odd?
+	(dfsch__number_eqv_p): eqv? works correctly
+
 	* scm/test.scm: Naming change
 
 	* src/control.c (native_form_do): do iteration form
