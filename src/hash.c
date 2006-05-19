@@ -393,7 +393,7 @@ static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args,
   dfsch_object_t *proc;
   dfsch_object_t *mode;
   DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
-  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, mode, NULL);
   DFSCH_ARG_END(args);
 
   if (!mode)
