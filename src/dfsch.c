@@ -675,7 +675,7 @@ char* dfsch_string(dfsch_object_t *n){
 // Symbols
 
 #define HASH_BITS 10
-#define HASH_SIZE 1 << HASH_BITS
+#define HASH_SIZE (1 << HASH_BITS)
 
 typedef struct hash_entry_t hash_entry_t;
 struct hash_entry_t {
@@ -693,8 +693,8 @@ static size_t string_hash(char* string){
 
   while (*string){
     char c = ASCII_tolower(*string); 
-    tmp ^= c ^ tmp << 1; 
-    tmp ^= c << 17 ^ tmp >> 3; 
+    tmp ^= c ^ (tmp << 7); 
+    tmp ^= ((size_t)c << 17) ^ (tmp >> 11); 
     ++string;
   }
 

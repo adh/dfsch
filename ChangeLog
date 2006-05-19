@@ -1,3 +1,7 @@
+2006-05-20  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: Fixed bug in string_hash
+
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_form_p): form? type predicate
