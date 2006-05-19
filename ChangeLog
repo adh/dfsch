@@ -1,6 +1,7 @@
 2006-05-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Fixed bug in string_hash
+	(symbol_finalizer): GC'd symbols
 
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 

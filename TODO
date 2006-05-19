@@ -6,7 +6,6 @@
   - Complex numbers (as pairs of two numbers of same type)
 * caaadadr and such weird functions (I've no idea how to implement this)
 * IO
-* Garbage collected symbols
 * Documentation for library API
 * Documented semantics of locales
 * Unicode case-insensitive string compare

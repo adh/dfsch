@@ -745,12 +745,19 @@ static symbol_t* lookup_symbol(char *symbol){
 
   return NULL;
 }
+
+static symbol_finalizer(symbol_t* symbol, void* cd){
+  free_symbol(symbol);
+}
+
 static symbol_t* make_symbol(char *symbol){
   symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
+
+  GC_REGISTER_FINALIZER(s, symbol_finalizer, NULL, NULL, NULL);
   
   s->data = symbol;
   
-  hash_entry_t *e = GC_MALLOC(sizeof(hash_entry_t));
+  hash_entry_t *e = malloc(sizeof(hash_entry_t));
 
   e->entry = s;
   e->hash = string_hash(symbol);
@@ -761,13 +768,9 @@ static symbol_t* make_symbol(char *symbol){
   return s;
 }
 
-void dfsch_unintern(dfsch_object_t* symbol){
-  symbol_t *s=(symbol_t*)symbol;
+static void free_symbol(symbol_t* s){
   hash_entry_t *i;
   hash_entry_t *j;
-
-  if (s->type != SYMBOL)
-    dfsch_throw("exception:not-a-symbol", symbol);
 
   pthread_mutex_lock(&symbol_lock);
 
@@ -781,6 +784,7 @@ void dfsch_unintern(dfsch_object_t* symbol){
       } else {
         global_symbol_hash[string_hash(s->data)] = i->next;
       }
+      free(i);
       break;
     }
     j = i;
@@ -790,7 +794,13 @@ void dfsch_unintern(dfsch_object_t* symbol){
   pthread_mutex_unlock(&symbol_lock);
 
   s->data = NULL;
-  
+}
+
+void dfsch_unintern(dfsch_object_t* symbol){
+  if (symbol->type != SYMBOL)
+    dfsch_throw("exception:not-a-symbol", symbol);
+
+  free_symbol((symbol_t*)symbol);
 }
 
 dfsch_object_t* dfsch_gensym(){
