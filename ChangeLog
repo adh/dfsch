@@ -1,5 +1,7 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_form_p): form? type predicate
+
 	* dfsch/dfsch.h: Correct declarations in header for new list functions
 	Corrected other broken headers.
 

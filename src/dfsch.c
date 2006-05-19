@@ -312,6 +312,11 @@ int dfsch_macro_p(dfsch_object_t* obj){
     return 0;
   return obj->type == MACRO;
 }
+int dfsch_form_p(dfsch_object_t* obj){
+  if (!obj)
+    return 0;
+  return obj->type == FORM;
+}
 
 int dfsch_exception_p(dfsch_object_t* obj){
   if (!obj)

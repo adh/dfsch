@@ -159,6 +159,11 @@ extern "C" {
   extern int dfsch_macro_p(dfsch_object_t* obj);
 
   /**
+   * Is OBJ a special form?
+   */
+  extern int dfsch_form_p(dfsch_object_t* obj);
+
+  /**
    * Is A an exception?
    */
   extern int dfsch_exception_p(dfsch_object_t* obj);

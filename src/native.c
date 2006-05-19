@@ -351,6 +351,10 @@ static object_t* native_macro_p(void *baton, object_t* args, dfsch_tail_escape_t
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
 }
+static object_t* native_form_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  NEED_ARGS(args,1);  
+  return dfsch_bool(dfsch_form_p(dfsch_car(args)));  
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -627,6 +631,7 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "procedure?", 
 		   dfsch_make_primitive(&native_procedure_p,NULL));
   dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
+  dfsch_ctx_define(ctx, "form?", dfsch_make_primitive(&native_form_p,NULL));
   dfsch_ctx_define(ctx, "vector?", dfsch_make_primitive(&native_vector_p,
                                                         NULL));
 
