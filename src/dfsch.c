@@ -484,7 +484,7 @@ dfsch_object_t* dfsch_list(size_t count, ...){
 dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   pair_t *head; 
   pair_t *tail;
-  pair_t *i;
+  pair_t *i = (pair_t*) list;
 
   head = tail = NULL;
 
@@ -498,12 +498,87 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
       }
     i = (pair_t*)i->cdr;
   }
-  if (!i || i->type != PAIR)
+  if (i && i->type != PAIR)
     dfsch_throw("exception:not-a-pair", (object_t*)i);
 
 
   return (object_t*)head;
 
+}
+
+dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
+  object_t *head; 
+  pair_t *i = (pair_t*) list;
+
+  head = NULL;
+
+  while(i && i->type == PAIR){
+    head = dfsch_cons(i->car, head);
+    i = (pair_t*)i->cdr;
+  }
+  if (i && i->type != PAIR)
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
+
+
+  return (object_t*)head;
+
+}
+
+dfsch_object_t* dfsch_member(dfsch_object_t *key,
+                             dfsch_object_t *list){
+  pair_t* i;
+  i=(pair_t*)list;
+  
+  while (i && i->type==PAIR){
+    if (dfsch_equal_p(key,(pair_t*)i->car)){
+      return i;
+    }
+
+    i = (pair_t*)i->cdr;
+  }
+
+  if (i && i->type!=PAIR)
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
+
+  return NULL;
+}
+
+dfsch_object_t* dfsch_memv(dfsch_object_t *key,
+                           dfsch_object_t *list){
+  pair_t* i;
+  i=(pair_t*)list;
+  
+  while (i && i->type==PAIR){
+    if (dfsch_eqv_p(key,(pair_t*)i->car)){
+      return i;
+    }
+
+    i = (pair_t*)i->cdr;
+  }
+
+  if (i && i->type!=PAIR)
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
+
+  return NULL;
+}
+
+dfsch_object_t* dfsch_memq(dfsch_object_t *key,
+                           dfsch_object_t *list){
+  pair_t* i;
+  i=(pair_t*)list;
+  
+  while (i && i->type==PAIR){
+    if (key == (pair_t*)i->car){
+      return i;
+    }
+
+    i = (pair_t*)i->cdr;
+  }
+
+  if (i && i->type!=PAIR)
+    dfsch_throw("exception:not-a-pair", (object_t*)i);
+
+  return NULL;
 }
 
 

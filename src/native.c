@@ -195,35 +195,73 @@ static object_t* native_list_ref(void* baton, object_t* args, dfsch_tail_escape_
 
   return dfsch_list_item(list, k);
 }
+static object_t* native_reverse(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_reverse(list);
+}
+static object_t* native_member(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_member(key, list);
+}
+static object_t* native_memv(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_memv(key, list);
+}
+static object_t* native_memq(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* list;
+  object_t* key;
+
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_memq(key, list);
+}
 static object_t* native_assoc(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
-  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_ARG_END(args);
 
-  return dfsch_assoc(alist, key);
+  return dfsch_assoc(key, alist);
 }
 static object_t* native_assv(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
-  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_ARG_END(args);
 
-  return dfsch_assv(alist, key);
+  return dfsch_assv(key, alist);
 }
 static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* alist;
   object_t* key;
 
-  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, alist);
   DFSCH_ARG_END(args);
 
-  return dfsch_assq(alist, key);
+  return dfsch_assq(key, alist);
 }
 static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* func;
@@ -566,6 +604,11 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 							 NULL));
   dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
                                                          NULL));
+  dfsch_ctx_define(ctx, "reverse", dfsch_make_primitive(&native_reverse,
+                                                         NULL));
+  dfsch_ctx_define(ctx, "member", dfsch_make_primitive(&native_member,NULL));
+  dfsch_ctx_define(ctx, "memq", dfsch_make_primitive(&native_memq,NULL));
+  dfsch_ctx_define(ctx, "memv", dfsch_make_primitive(&native_memv,NULL));
   dfsch_ctx_define(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
   dfsch_ctx_define(ctx, "assq", dfsch_make_primitive(&native_assq,NULL));
   dfsch_ctx_define(ctx, "assv", dfsch_make_primitive(&native_assv,NULL));
