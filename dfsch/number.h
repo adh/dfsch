@@ -64,6 +64,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_number_mod(dfsch_object_t* a, 
                                           dfsch_object_t* b);
 
+  extern int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b);
+  extern int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b);
+  extern int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b);
+  extern int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b);
+
 
 #ifdef __cplusplus
 }
