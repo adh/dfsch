@@ -43,6 +43,48 @@
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
 ;;
 
+(group "equivalence")
+
+(sub-group 'eqv?)
+
+(test 'eqv? (eqv? 'a 'a) #t)
+(test 'eqv?-proc 
+      (let ((p (lambda (x) x)))
+        (eqv? p p))
+      #t)
+
+(define gen-counter
+  (lambda ()
+    (let ((n 0))
+      (lambda () (set! n (+ n 1)) n))))
+
+(test 'proc-ret-0
+      (let ((g (gen-counter)))
+        (eqv? g g)) 
+      #t)
+(test 'proc-ret-1
+      (eqv? (gen-counter) (gen-counter))
+      #f)
+        
+(sub-group 'eq?)
+
+(test 'eq? (eq? 'a 'a) #t)
+
+(sub-group 'equal?)
+
+(test 'equal?-string 
+      (equal? "abc" "abc")
+      #t)
+
+(test 'equal?-vector
+      (equal? (make-vector 5 'a)
+              (make-vector 5 'a))
+      #t)
+
+(test 'equal?-fail
+      (equal? 1 2)
+      #f)
+
 
 (group "arithmetics")
 
@@ -157,6 +199,7 @@
 (group "some special cases")
 
 (test 'degenerated-list-qq `(,@'() . foo) 'foo)
+
 
 ;;; End of tests
 ;;

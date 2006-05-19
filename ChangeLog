@@ -1,5 +1,7 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm: More tests
+
 	* src/hash.c (native_make_hash): mode argument was ignored
 
 	* src/number.c, dfsch/number.h: Comparison functions reimplemented 
