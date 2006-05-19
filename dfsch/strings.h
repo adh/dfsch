@@ -8,6 +8,8 @@ typedef struct dfsch_strbuf_t{
   size_t len;
 } dfsch_strbuf_t;
 
+extern int dfsch_string_p(dfsch_object_t* obj);
+
 extern dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len);
 
 extern dfsch_object_t* dfsch_make_string_cstr(char* string);

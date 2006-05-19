@@ -116,67 +116,58 @@ extern "C" {
   /**
    * Is A null?
    */
-  extern int dfsch_object_null_p(dfsch_object_t* obj);
+  extern int dfsch_null_p(dfsch_object_t* obj);
 
   /**
    * Is A a pair?
    */
-  extern int dfsch_object_pair_p(dfsch_object_t* obj);
+  extern int dfsch_pair_p(dfsch_object_t* obj);
 
   /**
    * Is A an atom?
    */
-  extern int dfsch_object_atom_p(dfsch_object_t* obj); // i.e. not pair
+  extern int dfsch_atom_p(dfsch_object_t* obj); // i.e. not pair
 
   /**
    * Is A a symbol?
    */
-  extern int dfsch_object_symbol_p(dfsch_object_t* obj);
+  extern int dfsch_symbol_p(dfsch_object_t* obj);
 
   /**
    * Is A a a number?
    */
-  extern int dfsch_object_number_p(dfsch_object_t* obj);
-
-  /**
-   * Is A a string?
-   */
-  extern int dfsch_object_string_p(dfsch_object_t* obj);
+  extern int dfsch_number_p(dfsch_object_t* obj);
 
   /**
    * Is A a primitive (native) function?
    */
-  extern int dfsch_object_primitive_p(dfsch_object_t* obj);
+  extern int dfsch_primitive_p(dfsch_object_t* obj);
 
   /**
    * Is A a lambda-closure??
    */
-  extern int dfsch_object_closure_p(dfsch_object_t* obj);
+  extern int dfsch_closure_p(dfsch_object_t* obj);
 
   /**
    * Is A an applicable procedure?
    */
-  extern int dfsch_object_procedure_p(dfsch_object_t* obj);
+  extern int dfsch_procedure_p(dfsch_object_t* obj);
 
   /**
    * Is A an macro?
    */
-  extern int dfsch_object_macro_p(dfsch_object_t* obj);
+  extern int dfsch_macro_p(dfsch_object_t* obj);
 
   /**
    * Is A an exception?
    */
-  extern int dfsch_object_exception_p(dfsch_object_t* obj);
+  extern int dfsch_exception_p(dfsch_object_t* obj);
 
   /**
    * Is A an exception?
    */
-  extern int dfsch_object_vector_p(dfsch_object_t* obj);
+  extern int dfsch_vector_p(dfsch_object_t* obj);
 
-  /**
-   * Is A a native data pointer?
-   */
-  extern int dfsch_object_native_p(dfsch_object_t* obj);
 
 
 

@@ -1,6 +1,7 @@
 2006-05-19  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/dfsch.h: Correct declarations in header for new list functions
+	Corrected other broken headers.
 
 	* src/dfsch.c (dfsch_reverse): list reversal function
 	(dfsch_mem*) Membership checking functions
