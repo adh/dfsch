@@ -1,3 +1,7 @@
+2006-05-21  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c: Rounding functions
+
 2006-05-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (dfsch_list_2_string): Fixed some warnings

@@ -855,6 +855,35 @@ static object_t* native_min(void *baton, object_t* args, dfsch_tail_escape_t* es
   return max;
 }
 
+static object_t* native_round(void *baton, object_t* args, 
+                              dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(round(z));
+}
+static object_t* native_floor(void *baton, object_t* args, 
+                              dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(floor(z));
+}
+static object_t* native_ceiling(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(ceil(z));
+}
+static object_t* native_truncate(void *baton, object_t* args, 
+                            dfsch_tail_escape_t* esc){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(trunc(z));
+}
+
 // TODO: exact?, inexact?, real?, integer? ...
 // TODO: gcd, lcm
 
@@ -907,5 +936,10 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
                                                       NULL));
   dfsch_ctx_define(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
                                                      NULL));
+
+  dfsch_ctx_define(ctx, "round", dfsch_make_primitive(&native_round,NULL));
+  dfsch_ctx_define(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));
+  dfsch_ctx_define(ctx, "ceiling", dfsch_make_primitive(&native_ceiling,NULL));
+  dfsch_ctx_define(ctx, "truncate", dfsch_make_primitive(&native_truncate,NULL));
   
 }
