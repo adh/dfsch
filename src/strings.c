@@ -365,7 +365,7 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   string = (dfsch_string_t*)dfsch_make_string_buf(NULL,
 						  dfsch_list_length(list));
   
-  while (dfsch_pair_p(j)){
+  while (dfsch_pair_p((object_t*)j)){
     string->ptr[i] = dfsch_number_to_long(j->car);
     j = (pair_t*)j->cdr;
     i++;

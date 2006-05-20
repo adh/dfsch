@@ -1,5 +1,7 @@
 2006-05-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/strings.c (dfsch_list_2_string): Fixed some warnings
+
 	* src/dfsch.c: Fixed some warnings introduced by GC'd symbols
 	Fixed some other warnings
 
