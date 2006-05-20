@@ -1,6 +1,7 @@
 2006-05-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Fixed some warnings introduced by GC'd symbols
+	Fixed some other warnings
 
 	* src/parse.c (dispatch_atom): Allow numbers with leading +
 

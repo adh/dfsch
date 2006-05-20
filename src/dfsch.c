@@ -535,8 +535,8 @@ dfsch_object_t* dfsch_member(dfsch_object_t *key,
   i=(pair_t*)list;
   
   while (i && i->type==PAIR){
-    if (dfsch_equal_p(key,(pair_t*)i->car)){
-      return i;
+    if (dfsch_equal_p(key,i->car)){
+      return (object_t*)i;
     }
 
     i = (pair_t*)i->cdr;
@@ -554,8 +554,8 @@ dfsch_object_t* dfsch_memv(dfsch_object_t *key,
   i=(pair_t*)list;
   
   while (i && i->type==PAIR){
-    if (dfsch_eqv_p(key,(pair_t*)i->car)){
-      return i;
+    if (dfsch_eqv_p(key,i->car)){
+      return (object_t*)i;
     }
 
     i = (pair_t*)i->cdr;
@@ -573,8 +573,8 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
   i=(pair_t*)list;
   
   while (i && i->type==PAIR){
-    if (key == (pair_t*)i->car){
-      return i;
+    if (key == i->car){
+      return (object_t*)i;
     }
 
     i = (pair_t*)i->cdr;
@@ -739,6 +739,7 @@ static symbol_t* lookup_symbol(char *symbol){
 
   return NULL;
 }
+
 static void free_symbol(symbol_t* s){
   hash_entry_t *i;
   hash_entry_t *j;
@@ -774,7 +775,9 @@ static symbol_finalizer(symbol_t* symbol, void* cd){
 static symbol_t* make_symbol(char *symbol){
   symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
 
-  GC_REGISTER_FINALIZER(s, symbol_finalizer, NULL, NULL, NULL);
+  GC_REGISTER_FINALIZER(s, 
+                        (GC_finalization_proc)symbol_finalizer, NULL, 
+                        NULL, NULL);
   
   s->data = symbol;
   
@@ -1050,22 +1053,22 @@ void dfsch_raise(dfsch_object_t* exception){
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
-  volatile thread_info_t *ei = get_thread_info();
+  volatile thread_info_t *ei = (volatile thread_info_t*)get_thread_info();
   volatile jmp_buf *old_ret;
   volatile dfsch_object_t* old_frame;
   
-  old_ret = ei->exception_ret;
-  old_frame = ei->stack_trace;
+  old_ret = (volatile jmp_buf*)ei->exception_ret;
+  old_frame = (volatile object_t*) ei->stack_trace;
   ei->exception_ret = GC_NEW(jmp_buf);
 
   if(setjmp(*ei->exception_ret) == 1){
-    ei->exception_ret = old_ret;
-    ei->stack_trace = old_frame;
+    ei->exception_ret = (jmp_buf*)old_ret;
+    ei->stack_trace = (object_t*)old_frame;
     return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
   }else{
     object_t *r = dfsch_apply(thunk, NULL);
-    ei->exception_ret = old_ret;
-    ei->stack_trace = old_frame;
+    ei->exception_ret = (jmp_buf*)old_ret;
+    ei->stack_trace = (object_t*)old_frame;
     return r;
   }
 
@@ -1133,7 +1136,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
 
   cont->active = 1;
   cont->next = ti->cont_stack;
-  ti->cont_stack = cont;
+  ti->cont_stack = (continuation_t*)cont;
   if(setjmp(cont->ret) == 1){
     value = cont->value;
   }else{
@@ -1141,6 +1144,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
                         dfsch_list(1,
                                    dfsch_make_primitive((dfsch_primitive_t)
                                                         continuation_closure,
+                                                        (continuation_t*)
                                                         cont)));
   }
   
@@ -1603,7 +1607,7 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
     if (i->cdr)
       r = dfsch_eval_tr(exp,env,NULL);
     else
-      r = dfsch_eval_tr(exp,env,&myesc);
+      r = dfsch_eval_tr(exp,env,(tail_escape_t*)&myesc);
    
     i = (pair_t*)i->cdr;
   }
