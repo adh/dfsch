@@ -739,29 +739,6 @@ static symbol_t* lookup_symbol(char *symbol){
 
   return NULL;
 }
-
-static symbol_finalizer(symbol_t* symbol, void* cd){
-  free_symbol(symbol);
-}
-
-static symbol_t* make_symbol(char *symbol){
-  symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
-
-  GC_REGISTER_FINALIZER(s, symbol_finalizer, NULL, NULL, NULL);
-  
-  s->data = symbol;
-  
-  hash_entry_t *e = malloc(sizeof(hash_entry_t));
-
-  e->entry = s;
-  e->hash = string_hash(symbol);
-
-  e->next = global_symbol_hash[e->hash];
-  global_symbol_hash[e->hash] = e;
-  
-  return s;
-}
-
 static void free_symbol(symbol_t* s){
   hash_entry_t *i;
   hash_entry_t *j;
@@ -789,6 +766,29 @@ static void free_symbol(symbol_t* s){
 
   s->data = NULL;
 }
+
+static symbol_finalizer(symbol_t* symbol, void* cd){
+  free_symbol(symbol);
+}
+
+static symbol_t* make_symbol(char *symbol){
+  symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
+
+  GC_REGISTER_FINALIZER(s, symbol_finalizer, NULL, NULL, NULL);
+  
+  s->data = symbol;
+  
+  hash_entry_t *e = malloc(sizeof(hash_entry_t));
+
+  e->entry = s;
+  e->hash = string_hash(symbol);
+
+  e->next = global_symbol_hash[e->hash];
+  global_symbol_hash[e->hash] = e;
+  
+  return s;
+}
+
 
 void dfsch_unintern(dfsch_object_t* symbol){
   if (symbol->type != SYMBOL)
