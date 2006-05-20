@@ -404,6 +404,7 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 
   switch (*data){
   case '-':
+  case '+':
   case '.':
 
     if (data[1]<'0' || data[1]>'9')
