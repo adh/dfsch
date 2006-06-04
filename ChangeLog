@@ -4,7 +4,7 @@
 	(pair_write): Detect infinite lists
 	(dfsch_list_length_check): Function with semantics similar to
 	length in scheme - return length of given list, throw exception
-	for anything else.
+	for anything else. Compiles now.
 
 2006-06-03  Ales Hakl  <ales at hakl dot net>
 

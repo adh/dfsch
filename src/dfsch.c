@@ -450,7 +450,7 @@ long dfsch_list_length_check(object_t* list){
   long len;
   len = dfsch_list_length(list);
   if (len < 0)
-    dfsch_throw("exception:not-a-list");
+    dfsch_throw("exception:not-a-list", list);
   return len;
 }
 
