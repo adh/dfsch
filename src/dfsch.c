@@ -1305,11 +1305,8 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   vector_t* vector;
   pair_t* j = (pair_t*)list;
   size_t i=0;
-  if (list && list->type != PAIR)
-    dfsch_throw("exception:not-a-list",list);
-  
   vector = (vector_t*)dfsch_make_object(VECTOR);
-  vector->length = dfsch_list_length(list);
+  vector->length = dfsch_list_length_check(list);
   vector->data = GC_MALLOC(sizeof(object_t*)*vector->length);
   
   while (j && j->type == PAIR){

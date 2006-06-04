@@ -359,11 +359,9 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   dfsch_string_t* string;
   pair_t* j = (pair_t*)list;
   size_t i=0;
-  if (list && !dfsch_pair_p(list))
-    dfsch_throw("exception:not-a-list",list);
-  
-  string = (dfsch_string_t*)dfsch_make_string_buf(NULL,
-						  dfsch_list_length(list));
+  string = 
+    (dfsch_string_t*)dfsch_make_string_buf(NULL,
+                                           dfsch_list_length_check(list));
   
   while (dfsch_pair_p((object_t*)j)){
     string->ptr[i] = dfsch_number_to_long(j->car);
