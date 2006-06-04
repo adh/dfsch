@@ -446,6 +446,14 @@ long dfsch_list_length(object_t* list){
   return count;
 }
 
+long dfsch_list_length_check(object_t* list){
+  long len;
+  len = dfsch_list_length(list);
+  if (len < 0)
+    dfsch_throw("exception:not-a-list");
+  return len;
+}
+
 dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   pair_t* it = (pair_t*)list;
   int i;
