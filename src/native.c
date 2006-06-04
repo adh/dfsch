@@ -170,9 +170,15 @@ static object_t* native_list(void *baton, object_t* args, dfsch_tail_escape_t* e
   return dfsch_list_copy(args);
 }
 static object_t* native_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  long len;
   NEED_ARGS(args,1);  
 
-  return dfsch_make_number_from_long(dfsch_list_length(dfsch_car(args)));
+  len = dfsch_list_length(dfsch_car(args));
+
+  if (len < 0)
+    dfsch_throw("exception:not-a-list", dfsch_car(args));
+  
+  return dfsch_make_number_from_long(len);
 }
 static object_t* native_set_car(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,2);  
@@ -304,6 +310,8 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   
   return head;
 }
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

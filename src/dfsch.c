@@ -381,7 +381,7 @@ dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
   return pair;
 
 }
-long dfsch_list_length(object_t* list){
+long dfsch_list_length_fast(object_t* list){
   pair_t *i;
   long count;
 
@@ -399,7 +399,39 @@ long dfsch_list_length(object_t* list){
     ++count;
   }
 
-  
+  return count;
+}
+long dfsch_list_length(object_t* list){
+  pair_t *i;
+  pair_t *j; 
+  long count;
+
+  if (!list)
+    return 0;
+
+  if (list->type!=PAIR)
+    return -1;
+
+  i = j = (pair_t*)list;
+  count = 0;
+
+  while (i && i->type==PAIR ){
+    i = (pair_t*)i->cdr;
+    ++count;
+    if (i == j)
+      return -1;
+    j = (pair_t*)j->cdr;
+    if (!(i && i->type==PAIR ))
+      break;
+    i = (pair_t*)i->cdr;
+    ++count;
+    if (i == j)
+      return -1;
+  }
+
+  if (i)
+    return -1;
+
   return count;
 }
 

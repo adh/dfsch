@@ -1,3 +1,7 @@
+2006-06-04  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_list_length): Detect infinite lists
+
 2006-06-03  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c (dfsch_number_to_string): Number-specific write
