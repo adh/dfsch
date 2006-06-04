@@ -128,6 +128,8 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
   
   str_list_t* l = sl_create();
   pair_t* i=(pair_t*)p;
+  pair_t* j=(pair_t*)p;
+  int c = 0;
     
   sl_append(l,"(");
     
@@ -135,7 +137,16 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
     
     sl_append(l, dfsch_obj_write(i->car, max_depth-1, readable));
     i = (pair_t*)i->cdr;
-    
+    if (i == j){
+      sl_append(l," ... #<infinite-list>)");
+      return sl_value(l);
+    }
+    c++;
+
+    if (c == 2){
+      c = 0;
+      j = (pair_t*)j->cdr;
+    }
     if (i)
       sl_append(l," ");
     
