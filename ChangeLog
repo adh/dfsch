@@ -1,3 +1,9 @@
+2006-06-03  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c (dfsch_number_to_string): Number-specific write
+	function
+	(native_.*_2_.*): convert string to number and other way
+
 2006-05-21  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: Rounding functions

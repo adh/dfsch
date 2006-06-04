@@ -1,4 +1,5 @@
 #include <dfsch/number.h>
+#include <dfsch/strings.h>
 #include "internal.h"
 #include "object.h"
 #include <stdio.h>
@@ -137,6 +138,12 @@ long dfsch_number_to_long(dfsch_object_t *n){
   
   return (long)((number_t*)n)->fixnum;
 
+}
+char* dfsch_number_to_string(dfsch_object_t *n){
+  if (!n || n->type!=NUMBER)
+    dfsch_throw("exception:not-a-number", n);
+
+  return n_write(n, 2);
 }
 int dfsch_number_p(dfsch_object_t* obj){
   if (!obj)
@@ -733,7 +740,7 @@ static object_t* native_zero_p(void *baton, object_t* args,
 }
 
 static object_t* native_positive_p(void *baton, object_t* args, 
-                               dfsch_tail_escape_t* esc){
+				   dfsch_tail_escape_t* esc){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -884,6 +891,24 @@ static object_t* native_truncate(void *baton, object_t* args,
   return dfsch_make_number_from_double(trunc(z));
 }
 
+static object_t* native_number_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t *n;
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_number_to_string(n));
+}
+static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  char *str;
+  object_t *i;
+
+  DFSCH_STRING_ARG(args, str);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_string(str);
+}
+
+
 // TODO: exact?, inexact?, real?, integer? ...
 // TODO: gcd, lcm
 
@@ -941,5 +966,10 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));
   dfsch_ctx_define(ctx, "ceiling", dfsch_make_primitive(&native_ceiling,NULL));
   dfsch_ctx_define(ctx, "truncate", dfsch_make_primitive(&native_truncate,NULL));
+
+  dfsch_ctx_define(ctx, "number->string", 
+		   dfsch_make_primitive(&native_number_2_string,NULL));
+  dfsch_ctx_define(ctx, "string->number", 
+		   dfsch_make_primitive(&native_string_2_number,NULL));
   
 }
