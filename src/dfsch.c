@@ -1722,13 +1722,6 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   }
 }
 
-#define NEED_ARGS(args,count) \
-  if (dfsch_list_length(args)!=(count)) \
-    dfsch_throw("exception:wrong-number-of-arguments",(args));
-#define MIN_ARGS(args,count) \
-  if (dfsch_list_length(args)<(count)) \
-    dfsch_throw("exception:too-few-arguments", (args));
-
 static object_t* native_top_level_environment(void *baton, object_t* args,
                                               dfsch_tail_escape_t* esc){
   return baton;

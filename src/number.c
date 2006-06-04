@@ -394,24 +394,13 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-/*
- * Number manipulation is simply brain damaged and needs considerable amount
- * of work.
- *
- * We also need support for different numeric types here.
- */
-
-#define NEED_ARGS(args,count) \
-  if (dfsch_list_length(args)!=(count)) \
-    dfsch_throw("exception:wrong-number-of-arguments",(args));
-#define MIN_ARGS(args,count) \
-  if (dfsch_list_length(args)<(count)) \
-    dfsch_throw("exception:too-few-arguments", (args));
-
 
 static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_number_p(dfsch_car(args)));  
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_number_p(obj));  
 }
 
 static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -510,8 +499,12 @@ static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t*
 }
 
 static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,2);  
-  return dfsch_bool(dfsch_number_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+  object_t* z0, *z1;
+  DFSCH_OBJECT_ARG(args, z0);
+  DFSCH_OBJECT_ARG(args, z1);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_number_equal_p(z0,z1));
 }
 
 static object_t* native_lt(void *baton, object_t* args, dfsch_tail_escape_t* esc){

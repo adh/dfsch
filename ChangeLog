@@ -1,5 +1,7 @@
 2006-06-04  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch_list_length_check used almost anywhere where makes sense
+
 	* src/strings.c (dfsch_list_2_string): use dfsch_list_length_check
 
 	* src/dfsch.c (dfsch_list_length): Detect infinite lists

@@ -38,10 +38,10 @@
 typedef dfsch_object_t object_t;
 
 #define NEED_ARGS(args,count) \
-  if (dfsch_list_length(args)!=(count)) \
+  if (dfsch_list_length_check(args)!=(count)) \
     dfsch_throw("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
-  if (dfsch_list_length(args)<(count)) \
+  if (dfsch_list_length_check(args)<(count)) \
     dfsch_throw("exception:too-few-arguments", (args));
 
 // TODO: document all native functions somewhere
