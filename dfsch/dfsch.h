@@ -53,59 +53,66 @@
 extern "C" {
 #endif
 
-  /**
-   * Interpreter context
-   */
+  /** Interpreter context */
   typedef struct dfsch_ctx_t dfsch_ctx_t;
 
-  /**
-   * Meant for functions like caaddar, currently unused
-   */
+  /** Meant for functions like caaddar, currently unused */
   typedef unsigned int dfsch_cXr_t;
 
-  /**
-   * C datatype for scheme objects
-   */
+  /** C datatype for scheme objects */
   typedef struct dfsch_object_t dfsch_object_t;
 
+  /** Equivalence metod prototype */
   typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
+  /** Write / Display method prototype */
   typedef char* (*dfsch_type_write_t)(dfsch_object_t* obj, int depth, 
                                       int readable);
 
+  /** Representation of scheme datatypes. */
   typedef struct dfsch_type_t {
+    /** Instance size */
     size_t size;
+    /** Type name */
     char* name;
+    /** Equal method - called with two instances of this type */
     dfsch_type_equal_p_t equal_p;
+    /** 
+     * Should return external representation of given object. In most cases
+     * something like "#&gt;my-object bla bla bla&lt;"
+     */
     dfsch_type_write_t write;
   } dfsch_type_t;
 
   /**
-   * C datatype for scheme objects
+   * C datatype for scheme objects. Used as abstract datatype and also 
+   * first field of any non-generic object.
    */
   struct dfsch_object_t {
+    /** Pointer to datatype */
     dfsch_type_t *type;
   };
 
-  /**
-   *
-   */
-
+  /** Continuation used for tail-call elimination. */
   typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
 
   /**
-   * Native functions prototype
+   * Native functions prototype.  
+   *
+   * @param baton Context pointer passed to callback
+   * @param args Function arguments as scheme list
+   * @param esc Tail call continuation - function should pass this value
+   *            to functions which accept it and their return value is also
+   *            return value of this native function.
    */
-  typedef dfsch_object_t* (*dfsch_primitive_t)(void*,dfsch_object_t*,
-                                               dfsch_tail_escape_t*);
-
+  typedef dfsch_object_t* (*dfsch_primitive_t)(void* baton,
+					       dfsch_object_t* args,
+                                               dfsch_tail_escape_t* esc);
 
 
 #define DFSCH_CAR 0
 #define DFSCH_CDR 0
 
-
-  // object handling
-
+  /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
 
 
@@ -113,427 +120,211 @@ extern "C" {
   extern int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b);
   extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
 
-  /**
-   * Is A null?
-   */
+  /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);
-
-  /**
-   * Is A a pair?
-   */
+  /** Is OBJ a pair? */
   extern int dfsch_pair_p(dfsch_object_t* obj);
-
-  /**
-   * Is A an atom?
-   */
+  /** Is OBJ an atom? (i.e. not pair) */
   extern int dfsch_atom_p(dfsch_object_t* obj); // i.e. not pair
-
-  /**
-   * Is A a symbol?
-   */
+  /** Is OBJ a symbol? */
   extern int dfsch_symbol_p(dfsch_object_t* obj);
-
-  /**
-   * Is A a a number?
-   */
+  /** Is OBJ a a number? */
   extern int dfsch_number_p(dfsch_object_t* obj);
-
-  /**
-   * Is A a primitive (native) function?
-   */
+  /** Is OBJ a primitive (native) function? */
   extern int dfsch_primitive_p(dfsch_object_t* obj);
-
-  /**
-   * Is A a lambda-closure??
-   */
+  /** Is OBJ a lambda-closure? */
   extern int dfsch_closure_p(dfsch_object_t* obj);
-
-  /**
-   * Is A an applicable procedure?
-   */
+  /** Is OBJ an applicable procedure? */
   extern int dfsch_procedure_p(dfsch_object_t* obj);
-
-  /**
-   * Is A an macro?
-   */
+  /** Is OBJ a macro? */
   extern int dfsch_macro_p(dfsch_object_t* obj);
-
-  /**
-   * Is OBJ a special form?
-   */
+  /** Is OBJ a special form? */
   extern int dfsch_form_p(dfsch_object_t* obj);
-
-  /**
-   * Is A an exception?
-   */
+  /** Is OBJ an exception? */
   extern int dfsch_exception_p(dfsch_object_t* obj);
-
-  /**
-   * Is A an exception?
-   */
+  /** Is OBJ a vector? */
   extern int dfsch_vector_p(dfsch_object_t* obj);
 
-
-
-
-  /**
-   * Parse ASCIIZ string into object
-   */
+  /** Parse string into object. */
   extern dfsch_object_t* dfsch_obj_read(char* str);
-
-  /**
-   * Parse ASCIIZ string into list of objects
-   */
+  /** Parse string into list of objects */
   extern dfsch_object_t* dfsch_list_read(char* str);
-
-  /**
-   * Convert object to ASCIIZ string
-   */
+  /** Convert object to string */
   extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, 
                                int readable);
-  /**
-   * Convert object to ASCIIZ string
-   */
+  /** Convert exception object to descriptive message */
   extern char* dfsch_exception_write(dfsch_object_t* e);
 
-  // NIL
-
-  /**
-   * <code>'()</code>
-   */
+  /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();
 
-  // pairs
-
-  /**
-   * <code>(cons CAR CDR)</code>
-   */
+  /** Construct pair object */
   extern dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr);
 
-  /**
-   * <code>(car PAIR)</code>
-   */
+  /** Return first (car) item of pair */
   extern dfsch_object_t* dfsch_car(dfsch_object_t* pair);
-
-  /**
-   * <code>(cdr PAIR)</code>
-   */
+  /** Return second (cdr) item of pair */
   extern dfsch_object_t* dfsch_cdr(dfsch_object_t* pair);
-
-  /**
-   * Unimplemented
-   */
+  /** Unimplemented */
   extern dfsch_object_t* dfsch_cXr(dfsch_object_t* pair, dfsch_cXr_t x);
 
-  /**
-   * <code>(set-car! PAIR C)</code>
-   */
+  /** Set first (car) item of pair */
   extern dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 				       dfsch_object_t* c);
-
-  /**
-   * <code>(set-cdr! PAIR C)</code>
-   */
+  /** Set second (cdr) item of pair */
   extern dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 				       dfsch_object_t* c);
 
-
-  /**
-   * Return number of items in given list
-   */
+  /** Returns number of items in given list or -1 for infinite lists */
   extern long dfsch_list_length(dfsch_object_t* list);
-
-  /**
-   * Returns given item of list.
-   */
+  /** Returns number of items in given finite list */
+  extern long dfsch_list_length_fast(dfsch_object_t* list);
+  /** Returns number of items in given finite list, fail otherwise */
+  extern long dfsch_list_length_check(dfsch_object_t* list);
+  /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
 
-  /**
-   * <code>(append . LLIST)</code> 
-   */
+  /** Concatenate lists */
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
-
-  /**
-   * Construct list of count items from arguments.
-   */
-
+  /** Construct list from arguments */
   extern dfsch_object_t* dfsch_list(size_t count, ...);
-
-  /**
-   * Allocates new list with same contents as given list.
-   */
+  /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
-
+  /** Reverses list */
   extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
 
-  // alists
-  /**
-   * <code>(assoc KEY ALIST)</code>
-   */
+  /** Return alist entry with car equal? to key */
   extern dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 				     dfsch_object_t *alist);
-  /**
-   * <code>(assv KEY ALIST)</code>
-   */
+  /** Return alist entry with car eqv? to key */
   extern dfsch_object_t* dfsch_assv(dfsch_object_t *key,
                                     dfsch_object_t *alist);
-  /**
-   * <code>(assq KEY ALIST)</code>
-   */
+  /** Return alist entry with car eq? to key */
   extern dfsch_object_t* dfsch_assq(dfsch_object_t *key,
                                     dfsch_object_t *alist);
 
+  /** Return first cell of list with car equal? to key*/
   extern dfsch_object_t* dfsch_member(dfsch_object_t *key,
                                       dfsch_object_t *alist);
+  /** Return first cell of list with car eqv? to key*/
   extern dfsch_object_t* dfsch_memv(dfsch_object_t *key,
                                     dfsch_object_t *alist);
+  /** Return first cell of list with car eq? to key*/
   extern dfsch_object_t* dfsch_memq(dfsch_object_t *key,
                                     dfsch_object_t *alist);
 
 
-  /**
-   * Perform quasi-quote (i.e. something like formating S-expressions)
-   * See book on scheme for futher explaination.
-   */
+  /** Expand quasi-quoted expression */
   extern dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, 
                                           dfsch_object_t* arg);
 
-  // string
-
-  /**
-   * Makes string object from corresponding ASCIIZ string.
-   */
-  extern dfsch_object_t* dfsch_make_string(char* symbol);
-
-  /**
-   * Returns ASCIIZ string for given string object.
-   */
-  extern char* dfsch_string(dfsch_object_t* symbol);
-
-
-  // symbols
-
-  /**
-   * Makes symbol object from corresponding ASCIIZ string.
-   */
+  /** Makes symbol object from string. */
   extern dfsch_object_t* dfsch_make_symbol(char* symbol);
 
-  /**
-   * Converts normal symbol into something resembling gensym.
-   */
+  /** Dissociates symbol object from its name. */
   extern void dfsch_unintern(dfsch_object_t* symbol);
 
-  /**
-   * Returns unique symbol object
-   */
+  /** Returns unique generated symbol. */
   extern dfsch_object_t* dfsch_gensym();
 
-  /**
-   * Returns string representation of given symbol.
-   */
+  /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
 
-  /**
-   * Performance hack: returns symbol <code>true</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol "true" */
   extern dfsch_object_t* dfsch_sym_true();
 
-  /**
-   * Return true or nil depending on value of BOOL.
-   */
+  /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
 
-  /**
-   * Performance hack: returns symbol <code>quote</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol "'" */
   extern dfsch_object_t* dfsch_sym_quote();
-  /**
-   * Performance hack: returns symbol <code>quasiquote</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol "`" */
   extern dfsch_object_t* dfsch_sym_quasiquote();
-  /**
-   * Performance hack: returns symbol <code>unquote</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol ","*/
   extern dfsch_object_t* dfsch_sym_unquote();
-  /**
-   * Performance hack: returns symbol <code>unquote-splicing</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol ",@"*/
   extern dfsch_object_t* dfsch_sym_unquote_splicing();
-  /**
-   * Performance hack: returns symbol <code>else</code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol "else"*/
   extern dfsch_object_t* dfsch_sym_else();
-  /**
-   * Performance hack: returns symbol <code>=></code> 
-   * witout need for looking it up every time.
-   */
+  /** Returns symbol "=>"*/
   extern dfsch_object_t* dfsch_sym_bold_right_arrow();
 
-  // closures
 
-  /**
-   * Creates new lambda closure bound to environment ENV,
-   * with arguments ARGS and body containing CODE.
-   */
+  /** Create new lambda closure. */
   extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				      dfsch_object_t* args,
 				      dfsch_object_t* code);
 
-  /**
-   * Creates new lambda closure bound to environment ENV,
-   * with arguments ARGS and body containing CODE. Tagged
-   * with NAME. (this value will be printed in tracebacks
-   * on exception)
-   */
+  /** Create new named lambda closure. */
   extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                             dfsch_object_t* args,
                                             dfsch_object_t* code,
                                             dfsch_object_t* name);
 
-
-  // native code
-
-  /**
-   * Makes primitive (native) procedure from pointer to implementing
-   * function.
-   */
+  /** Create native function object */
   extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim,
 					      void *baton);
 
 
   // vectors
 
-  /**
-   * Creates vector of given length
-   */
+  /** Create vector */
   extern dfsch_object_t* dfsch_make_vector(size_t length, 
                                            dfsch_object_t *fill);
-
-  /**
-   * Construct vector of count items from arguments.
-   */
-
+  /** Construct vector from arguments. */
   extern dfsch_object_t* dfsch_vector(size_t count, ...);
-
-  /**
-   * Returns length of given vector
-   */
+  /** Returns length of given vector. */
   extern size_t dfsch_vector_length(dfsch_object_t *vector);
-
-  /**
-   * Returns contents of k-th slot of vector.
-   */
+  /** Returns contents of k-th slot of vector. */
   extern dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k);
-
-  /**
-   * Sets value of k-th slot of vector to obj.
-   */
+  /** Sets value of k-th slot of vector to obj. */
   extern dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
                                           dfsch_object_t* obj);
-
-  /**
-   * Converts vector into list.
-   */
+  /** Converts vector to list. */
   extern dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector);
-
-  /**
-   * Converts list into vector.
-   */
+  /** Converts list to vector. */
   extern dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list);
 
-  /**
-   * Makes native object representing given pointer to native data with given
-   * type.
-   */
-  extern dfsch_object_t* dfsch_make_native_data(void *data, 
-						dfsch_object_t *type);
-
-  /**
-   * Returns pointer to arbitrary native data represented by given object.
-   */
-  extern void* dfsch_native_data(dfsch_object_t *object, dfsch_object_t *type);
-
-  /**
-   * Returns object uniquely identifing data-type of native object.
-   */
-  extern dfsch_object_t* dfsch_native_data_type(dfsch_object_t *object);
-
-
-  // macros
-
-  /**
-   * Wraps procedure for use as macro.
-   */
+  /** Wraps procedure for use as macro. */
   extern dfsch_object_t* dfsch_make_macro(dfsch_object_t *proc);
-  /**
-   * Wraps procedure for use as special form.
-   */
+  /** Wraps procedure for use as special form. */
   extern dfsch_object_t* dfsch_make_form(dfsch_object_t *proc);
 
 
   // error handling
 
-  /**
-   * Makes exception symbol of given TYPE and DATA.
-   */
+  /** Creates exception object */
   extern dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 					      dfsch_object_t* data,
                                               dfsch_object_t* stack_trace);
   
-  /**
-   * Raises an exception (exception could be any object)
-   */
+  /** Raises an exception (exception could be any object) */
 
   extern void dfsch_raise(dfsch_object_t* exception);
 
-  /**
-   * Executes THUNK and in case of RAISE aborts it's execution and executes
-   * handler with RAISE's argument.
-   *
-   * @arg thunk Procedure of zero arguments
-   * @arg handler Procedure of one argument
-   */
+  /** Catches exceptions */
   extern dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                                    dfsch_object_t* thunk);
   
 
-  /**
-   * Convenience wrapper.
-   */
+  /** Convenience wrapper for throwing an exception from C code */
   extern dfsch_object_t* dfsch_throw(char* type, 
                                      dfsch_object_t* data);
 
 
-  /**
-   * Return exception's type.
-   */
+  /** Return exception's type. */
   extern dfsch_object_t* dfsch_exception_type(dfsch_object_t* e);
 
-  /**
-   * Return data associated with given exception.
-   */
+  /** Return data associated with given exception. */
   extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
 
-  /**
-   * Call given function with escape continuation as sole argument.
-   */
-
+  /** Call given function with escape continuation as sole argument. */
   extern dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc);
 
   // Lexical binding:
-  /**
-   * Create new environment frame.
-   */
+  /** Create new environment frame. */
   extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);
-  /**
-   * Get value of variable name in environment env.
-   */
+  /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
   /**
@@ -543,16 +334,12 @@ extern "C" {
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
 
-  /**
-   * Set value of variable name in environment env to value.
-   */
+  /** Set value of variable name in environment env to value. */
   extern dfsch_object_t* dfsch_set(dfsch_object_t* name,
 				   dfsch_object_t* value,
 				   dfsch_object_t* env);
 
-  /**
-   * Define variable name in environment env with initial value of value 
-   */
+  /** Define variable name in environment env */
   extern dfsch_object_t* dfsch_define(dfsch_object_t* name,
 				      dfsch_object_t* value,
 				      dfsch_object_t* env);
@@ -560,26 +347,23 @@ extern "C" {
 
   // EVAL+APPLY
 
-  /**
-   * Evaluates EXP in given binding environment ENV.
-   */
+  /** Evaluate expression. */
   extern dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env);
+  /** Evaluate multiple expressions returning value of final one. */
   extern dfsch_object_t* dfsch_eval_proc(dfsch_object_t* exp, 
                                          dfsch_object_t* env);
-  /**
-   * Applyes procedure PROC to arguments ARGS. Obviously it doesn't work for 
-   * macros.
-   */
+  /** Apply procedure to given arguments*/
   extern dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args);
-
+  /** Extended variant of dfsch_eval_proc with support for tail recursion */
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
                                             dfsch_object_t* call_signature,
                                             dfsch_tail_escape_t* esc);
+  /** Extended variant of dfsch_apply with support for tail recursion */
   extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
                                         dfsch_tail_escape_t* esc);
-
+  /** Extended variant of dfsch_eval with support for tail recursion */
   extern dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
                                        dfsch_object_t* env,
                                        dfsch_tail_escape_t* esc);
@@ -587,51 +371,33 @@ extern "C" {
 
   // context
 
-  /**
-   * Allocates new context (i.e. top level environment frame wrapped into struct)
-   */
+  /** Allocates new top-level context (environment). */
   extern dfsch_ctx_t* dfsch_make_context();
-  /**
-   * Evaluates given expression EXP in global environment of given context CTX.
-   */
+  /** Evaluate expression in given context. */
   extern dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp);
-  /**
-   * Evaluates list of expressions in given context. Useful for evauating 
-   * contents of files and other things.
-   */
+  /** Evaluate list of expressions in given context. */
   extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
 					     dfsch_object_t* list);
-  /**
-   * Defines new variable NAME with value OBJ in global environment 
-   * of context CTX.
-   */
+  /** Define new variable in given context */
   extern dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx, 
                                           char *name, 
                                           dfsch_object_t *obj);
 
 
-  /**
-   * Creates new closure with global environment of given context.
-   */
+  /** Creates new closure based on environment of specified context. */
   extern dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code);
-  /**
-   * Looks up value of variable given by NAME.
-   */
+  /** Looks up value of variable given by NAME. */
   extern dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name);
 
-  /**
-   * Returns global environment associated with given context.
-   */
+  /** Return environment wrapped by given context.. */
   extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
-
+  /** Return stack trace for running thread. */
   extern dfsch_object_t* dfsch_get_stack_trace();
 
   
-  /**
-   * Iterator for dfsch_get_next_symbol
-   */
+  /** Iterator for dfsch_get_next_symbol */
   typedef struct dfsch_symbol_iter_t dfsch_symbol_iter_t;
 
   /**
@@ -640,7 +406,6 @@ extern "C" {
    * dfsch_symbol_iter_t*, when its value is NULL, new iterator is 
    * allocated. NULL is returned, when no more symbols are avaiable.
    */
-
   extern char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter);
 
 
