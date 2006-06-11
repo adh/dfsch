@@ -26,7 +26,7 @@
  * - and maybe something other 
  */
 
-/** @file
+/** @file dfsch/dfsch.h
  *
  * dfsch is quick and dirty implementation of someting that resembles 
  * scheme. This file contains interface specification.
@@ -116,8 +116,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
 
 
+  /** Same object? (i.e. equal addresses) */
   extern int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b);
+  /** Same object or number? */
   extern int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b);
+  /** Equal object? (i.e. equal contents) */
   extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
 
   /** Is OBJ null? */
@@ -410,22 +413,57 @@ extern "C" {
 
 #include <dfsch/strings.h>
 
+
+  /**
+   * Parses one argument of no specific type from argument list and assigns it
+   * to given variable (or l-value)
+   *
+   * @param al Argument list
+   * @param name Variable or l-value (also used as argument name in exceptions)
+   */
 #define DFSCH_OBJECT_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
+
+  /**
+   * Parses one argument of no specific type from argument list and discards it
+   *
+   * @param al Argument list
+   * @param name Argument name (used only in exceptions)
+   */
 #define DFSCH_DISCARD_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
   (al) = dfsch_cdr((al))
+
+  /**
+   * Parses one argument of no specific type from argument list and assigns it
+   * to given variable (or l-value). Uses default value instead of throwing 
+   * exception when there are no arguments left.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param default Default value 
+   */
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
   if (!dfsch_pair_p((al))) \
    { (name) = (default);}else\
   {(name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al));}
+
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
@@ -434,6 +472,18 @@ extern "C" {
     (name) = (type)(conv)(tmp); \
     (al) = dfsch_cdr((al));\
   }
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   * Uses default value instead of throwing exception when no arguments are 
+   * left.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param default Default value
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
 #define DFSCH_GENERIC_ARG_OPT(al, name, default, type, conv)\
   if (!dfsch_pair_p((al))) \
     {(name)=(default);} else\
@@ -441,6 +491,12 @@ extern "C" {
     (name) = (type)(conv)(tmp); \
     (al) = dfsch_cdr((al));\
   }
+
+  /**
+   * Throws exception if arguments list contain any arguments.
+   *
+   * @param al Argument list
+   */
 #define DFSCH_ARG_END(al) \
   if (al != NULL) \
     dfsch_throw("exception:too-many-arguments",NULL)
