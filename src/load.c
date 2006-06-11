@@ -31,6 +31,7 @@
 #include <dlfcn.h>
 #include <dfsch/load.h>
 #include <dfsch/number.h>
+#include <dfsch/strings.h>
 
 dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
                     char* so_name, 
@@ -45,13 +46,13 @@ dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx,
 
   err = dlerror();
   if (err)
-    dfsch_throw("load:dlopen-failed",dfsch_make_string(err));
+    dfsch_throw("load:dlopen-failed",dfsch_make_string_cstr(err));
     
   entry = dlsym(handle, sym_name);
 
   err = dlerror();
   if (err)
-    dfsch_throw("load:dlopen-failed",dfsch_make_string(err));
+    dfsch_throw("load:dlopen-failed",dfsch_make_string_cstr(err));
   
   return entry(ctx); // TODO: what if this routine fails?
 
@@ -90,7 +91,7 @@ dfsch_object_t* dfsch_read_scm(char* scm_name){
 
   if (!f){
     int err = errno;
-    dfsch_throw("load:unix-error",dfsch_make_string(strerror(err)));
+    dfsch_throw("load:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 
   obj = dfsch_read_scm_stream(f,scm_name);
@@ -118,13 +119,13 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
 
   if (r<0){
     int err = errno;
-    dfsch_throw("load:unix-error",dfsch_make_string(strerror(err)));
+    dfsch_throw("load:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
  
   if ((err && err != DFSCH_PARSER_STOPPED) 
       || dfsch_parser_get_level(parser)!=0){
     if (name)
-      dfsch_throw("load:syntax-error",dfsch_make_string(name));
+      dfsch_throw("load:syntax-error",dfsch_make_string_cstr(name));
     else
       dfsch_throw("load:syntax-error",NULL);
 
@@ -158,7 +159,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
       || dfsch_parser_get_level(parser)!=0){
     if (name)
       dfsch_throw("load:syntax-error",
-                  dfsch_cons(dfsch_make_string(name),
+                  dfsch_cons(dfsch_make_string_cstr(name),
                              dfsch_make_number_from_long(l)));
     else
       dfsch_throw("load:syntax-error",
@@ -181,7 +182,7 @@ static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args,
   if (!dfsch_string_p(arg))
     dfsch_throw("not-a-string",arg);
 
-  return dfsch_load_scm(baton, dfsch_string(arg));
+  return dfsch_load_scm(baton, dfsch_string_to_cstr(arg));
 }
 
 static dfsch_object_t* native_load_so(void *baton, dfsch_object_t* args,
@@ -197,7 +198,8 @@ static dfsch_object_t* native_load_so(void *baton, dfsch_object_t* args,
   if (!dfsch_string_p(sym))
     dfsch_throw("not-a-string",sym);
 
-  return dfsch_load_so(baton, dfsch_string(so), dfsch_string(sym));
+  return dfsch_load_so(baton, dfsch_string_to_cstr(so), 
+                       dfsch_string_to_cstr(sym));
 }
 
 
@@ -210,7 +212,7 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
   if (!dfsch_string_p(arg))
     dfsch_throw("not-a-string",arg);
 
-  return dfsch_read_scm(dfsch_string(arg));
+  return dfsch_read_scm(dfsch_string_to_cstr(arg));
 }
 
 

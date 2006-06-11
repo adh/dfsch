@@ -408,17 +408,18 @@ extern "C" {
    */
   extern char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter);
 
+#include <dfsch/strings.h>
 
 #define DFSCH_OBJECT_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
-                dfsch_make_string(#name));\
+                dfsch_make_string_cstr(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
 #define DFSCH_DISCARD_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
-                dfsch_make_string(#name));\
+                dfsch_make_string_cstr(#name));\
   (al) = dfsch_cdr((al))
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
   if (!dfsch_pair_p((al))) \
@@ -428,7 +429,7 @@ extern "C" {
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
-                dfsch_make_string(#name));\
+                dfsch_make_string_cstr(#name));\
   { dfsch_object_t* tmp = dfsch_car((al)); \
     (name) = (type)(conv)(tmp); \
     (al) = dfsch_cdr((al));\

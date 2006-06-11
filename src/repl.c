@@ -267,7 +267,7 @@ int main(int argc, char**argv){
   cmd_log = NULL;
   ctx = dfsch_make_context();
 
-  dfsch_ctx_define(ctx,"version",dfsch_make_string(VERSION));
+  dfsch_ctx_define(ctx,"version",dfsch_make_string_cstr(VERSION));
 
   dfsch_load_register(ctx);
 
@@ -331,7 +331,7 @@ int main(int argc, char**argv){
     int i;
 
     for (i=0; i<argc-optind; i++){
-      dfsch_vector_set(args, i, dfsch_make_string(argv[optind+i]));
+      dfsch_vector_set(args, i, dfsch_make_string_cstr(argv[optind+i]));
     }
     dfsch_ctx_define(ctx, "argv", args);
 

@@ -713,14 +713,6 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
 
 }
 
-// Strings
-
-dfsch_object_t* dfsch_make_string(char* str){
-  return dfsch_make_string_cstr(str);
-}
-char* dfsch_string(dfsch_object_t *n){
-  return dfsch_string_to_cstr(n);
-}
 
 
 // Symbols
