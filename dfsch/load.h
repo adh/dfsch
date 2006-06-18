@@ -27,20 +27,27 @@
 extern "C" {
 #endif
 
+  /** Load scheme file into given context. */
   extern dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
+  /** Read scheme list from given file. */
   extern dfsch_object_t* dfsch_read_scm(char* scm_name);
+  /** Read scheme list from given file descriptor. */
   extern dfsch_object_t* dfsch_read_scm_fd(int f, 
                                            char* name);
+  /** Read scheme list from given stdio stream. */
   extern dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
                                                char* name);
 
+  /** Load given binary module and register it into given context. */
   extern dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
                                        char* so_name, 
                                        char* sym_name);
 
-
+  /** Register shared object related part of this module. */
   extern dfsch_object_t* dfsch_load_so_register(dfsch_ctx_t *ctx);
+  /** Register scheme related part of this module. */
   extern dfsch_object_t* dfsch_load_scm_register(dfsch_ctx_t *ctx);
+  /** Register this module. */
   extern dfsch_object_t* dfsch_load_register(dfsch_ctx_t *ctx);
 
 #ifdef __cplusplus

@@ -28,45 +28,44 @@
 extern "C" {
 #endif
 
-  /**
-   * Makes number object from given floating-point number.
-   */
+  /** Makes number object from given floating-point number. */
   extern dfsch_object_t* dfsch_make_number_from_double(double n);
-  /**
-   * Makes number object from given integer number.
-   */
+  /** Makes number object from given integer number. */
   extern dfsch_object_t* dfsch_make_number_from_long(long n);
-  /**
-   * Returns value of given number as double.
-   */
+  /** Returns value of given number as double. */
   extern double dfsch_number_to_double(dfsch_object_t *n);
-  /**
-   * Returns value of given number as long.
-   */
+  /** Returns value of given number as long. */
   extern long dfsch_number_to_long(dfsch_object_t *n);
 
-  /**
-   * Creates number from external representation
-   */
+  /** Creates number from external representation. */
   extern dfsch_object_t* dfsch_make_number_from_string(char* str);
 
-
+  /** Add arguments. */
   extern dfsch_object_t* dfsch_number_add(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  /** Substract arguments. */
   extern dfsch_object_t* dfsch_number_sub(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  /** Multiply arguments */
   extern dfsch_object_t* dfsch_number_mul(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  /** Divide arguments */
   extern dfsch_object_t* dfsch_number_div(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  /** Integer division */
   extern dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a, 
                                             dfsch_object_t* b);
+  /** Modulo */
   extern dfsch_object_t* dfsch_number_mod(dfsch_object_t* a, 
                                           dfsch_object_t* b);
 
+  /** Less than operator */
   extern int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b);
+  /** Greater than operator */
   extern int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b);
+  /** Less than or equal operator */
   extern int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b);
+  /** Greater than or equal operator */
   extern int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b);
 
 
