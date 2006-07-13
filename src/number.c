@@ -143,7 +143,7 @@ char* dfsch_number_to_string(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
     dfsch_throw("exception:not-a-number", n);
 
-  return n_write(n, 2);
+  return n_write((number_t*)n, 2);
 }
 int dfsch_number_p(dfsch_object_t* obj){
   if (!obj)

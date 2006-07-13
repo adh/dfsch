@@ -1,5 +1,7 @@
 2006-07-13  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_number_to_string): added cast to number_t*
+
 	* src/threads.c: Multithreading support (or something like that)
 
 2006-06-18  Ales Hakl  <ales at hakl dot net>
