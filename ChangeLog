@@ -1,6 +1,7 @@
 2006-07-13  Ales Hakl  <ales at hakl dot net>
 
 	* src/threads.c: Mutexes (non-working)
+	(dfsch_mutex_*): added asignments to m (this is why it didn't work) 
 
 	* src/dfsch.c (dfsch_call_ec): Removed volatile (there is no
 	reason for it to be there, probably)

@@ -757,6 +757,7 @@ static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 static gsh_check_init(){
+  int err;
   if (gsh_init)
     return;
 

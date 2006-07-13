@@ -107,7 +107,7 @@ static mutex_finalizer(mutex_t* mutex, void* cd){
    * impementations may leak some resources here)
    */
 
-  //  pthread_mutex_destroy(&(mutex->mutex));
+  pthread_mutex_destroy(&(mutex->mutex));
 }
 
 dfsch_object_t* dfsch_mutex_create(){
@@ -127,6 +127,8 @@ void dfsch_mutex_lock(dfsch_object_t* mutex){
   if (!mutex || mutex->type != &mutex_type)
     dfsch_throw("thread:not-a-mutex", mutex);
 
+  m = (mutex_t*)mutex;
+
   err = pthread_mutex_lock(&(m->mutex));
 
   if (err != 0){
@@ -138,6 +140,8 @@ int dfsch_mutex_trylock(dfsch_object_t* mutex){
   if (!mutex || mutex->type != &mutex_type)
     dfsch_throw("thread:not-a-mutex", mutex);
 
+  m = (mutex_t*)mutex;
+
   return (pthread_mutex_trylock(&(m->mutex)) == 0);
 }
 void dfsch_mutex_unlock(dfsch_object_t* mutex){
@@ -146,10 +150,11 @@ void dfsch_mutex_unlock(dfsch_object_t* mutex){
   if (!mutex || mutex->type != &mutex_type)
     dfsch_throw("thread:not-a-mutex", mutex);
 
+  m = (mutex_t*)mutex;
+
   err = pthread_mutex_unlock(&(m->mutex));
 
   if (err != 0){
-    int err = errno;
     dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
