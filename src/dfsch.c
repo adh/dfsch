@@ -1173,13 +1173,13 @@ static object_t* continuation_closure(continuation_t *cont, object_t* args,
 
 dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   object_t* value;
-  volatile continuation_t *cont = GC_NEW(continuation_t);
+  continuation_t *cont = GC_NEW(continuation_t);
   continuation_t *i;
-  volatile thread_info_t *ti = get_thread_info();
+  thread_info_t *ti = get_thread_info();
 
   cont->active = 1;
   cont->next = ti->cont_stack;
-  ti->cont_stack = (continuation_t*)cont;
+  ti->cont_stack = cont;
   if(setjmp(cont->ret) == 1){
     value = cont->value;
   }else{
@@ -1187,8 +1187,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
                         dfsch_list(1,
                                    dfsch_make_primitive((dfsch_primitive_t)
                                                         continuation_closure,
-                                                        (continuation_t*)
-                                                        cont)));
+                                                        (void*)cont)));
   }
   
   i = ti->cont_stack;
