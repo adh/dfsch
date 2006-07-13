@@ -1,3 +1,7 @@
+2006-07-13  Ales Hakl  <ales at hakl dot net>
+
+	* src/threads.c: Multithreading support (or something like that)
+
 2006-06-18  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/*.h: Added documentation comments

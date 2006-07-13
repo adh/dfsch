@@ -4,7 +4,7 @@ nobase_include_HEADERS = \
 	dfsch/dfsch.h dfsch/parse.h dfsch/load.h \
 	dfsch/hash.h dfsch/number.h dfsch/strings.h
 
-lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la
+lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la libdfsch_threads.la
 
 man_MANS = doc/dfsch-repl.1
 
@@ -25,13 +25,18 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h src/internal.h\
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
 
+libdfsch_threads_la_SOURCES = src/threads.c dfsch/threads.h
+libdfsch_threads_la_LDFLAGS = -version-info 1:0:0
+libdfsch_threads_la_LIBADD =  libdfsch.la -lpthread
+
 libdfsch_load_la_SOURCES = src/load.c dfsch/load.h
 libdfsch_load_la_LDFLAGS = -version-info 1:0:0
 libdfsch_load_la_LIBADD =  libdfsch.la
 
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la -lreadline -lncurses
+dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la libdfsch_threads.la \
+	-lreadline -lncurses
 
 
 TESTS = tests/scm-test.sh

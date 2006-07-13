@@ -26,6 +26,7 @@
 #endif
 
 #include <dfsch/dfsch.h>
+#include <dfsch/number.h>
 #include <dfsch/parse.h>
 #include <dfsch/load.h>
 #include <stdio.h>
@@ -151,6 +152,19 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
     exit(1);
   }
 }
+static dfsch_object_t* command_sleep(void*baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  long time;
+
+  DFSCH_LONG_ARG(args, time);
+  DFSCH_ARG_END(args);
+
+  sleep(time);
+
+  return NULL;
+}
+
+
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
@@ -270,9 +284,11 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"version",dfsch_make_string_cstr(VERSION));
 
   dfsch_load_register(ctx);
+  dfsch_threads_register(ctx);
 
   dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
+  dfsch_ctx_define(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
 
   while ((c=getopt(argc, argv, "+l:e:E:hvO:")) != -1){
     switch (c){
