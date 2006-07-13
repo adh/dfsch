@@ -1610,7 +1610,7 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
                                    tail_escape_t* esc){
   pair_t *i;
   object_t *r=NULL;
-  volatile tail_escape_t myesc;
+  tail_escape_t myesc;
   thread_info_t *ti;
   dfsch_object_t *old_frame;
 

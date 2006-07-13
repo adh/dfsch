@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_call_ec): Removed volatile (there is no
 	reason for it to be there, probably)
+	(dfsch_eval_proc_tr): dtto.
 
 	* src/number.c (dfsch_number_to_string): added cast to number_t*
 
