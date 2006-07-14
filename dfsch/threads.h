@@ -14,7 +14,11 @@ extern void dfsch_mutex_lock(dfsch_object_t* mutex);
 extern int dfsch_mutex_trylock(dfsch_object_t* mutex);
 extern void dfsch_mutex_unlock(dfsch_object_t* mutex);
 
-
+extern dfsch_object_t* dfsch_condition_create();
+extern void dfsch_condition_wait(dfsch_object_t* condition,
+                                 dfsch_object_t* mutex);
+extern void dfsch_condition_signal(dfsch_object_t* condition);
+extern void dfsch_condition_broadcast(dfsch_object_t* condition);
 
 extern dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx);
 

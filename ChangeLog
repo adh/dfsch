@@ -1,3 +1,7 @@
+2006-07-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/threads.c (dfsch_condition_create): Condition variables
+
 2006-07-13  Ales Hakl  <ales at hakl dot net>
 
 	* src/threads.c: Mutexes (non-working)

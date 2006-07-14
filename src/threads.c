@@ -159,7 +159,93 @@ void dfsch_mutex_unlock(dfsch_object_t* mutex){
   }
 }
 
+// Condition variables
 
+typedef struct condition_t {
+  dfsch_type_t* type;
+  pthread_cond_t cond;
+} condition_t;
+
+static const dfsch_type_t condition_type = {
+  sizeof(condition_t), 
+  "condition",
+  NULL,
+  NULL
+};
+
+static condition_finalizer(condition_t* cond, void* cd){
+  /* 
+   * No-op when there are threads waiting (and associated resource leak 
+   * somewhere).
+   */
+
+  pthread_cond_destroy(&(cond->cond));
+}
+
+dfsch_object_t* dfsch_condition_create(){
+  condition_t* cond = (condition_t*)dfsch_make_object(&condition_type);
+
+  GC_REGISTER_FINALIZER(cond, 
+                        (GC_finalization_proc)condition_finalizer,
+                        NULL, NULL, NULL);
+
+  pthread_cond_init(&(cond->cond), NULL);
+
+  return (dfsch_object_t*)cond;
+}
+
+void dfsch_condition_wait(dfsch_object_t* cond, dfsch_object_t* mutex){
+  condition_t* c;
+  int err;
+  mutex_t* m;
+
+  if (!mutex || mutex->type != &mutex_type)
+    dfsch_throw("thread:not-a-mutex", mutex);
+  if (!cond || cond->type != &condition_type)
+    dfsch_throw("thread:not-a-condition", cond);
+
+  c = (condition_t*)cond;
+  m = (mutex_t*)mutex;
+
+  err = pthread_cond_wait(&(c->cond), &(m->mutex));
+
+  if (err != 0){
+    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+  }
+}
+
+void dfsch_condition_signal(dfsch_object_t* cond){
+  condition_t* c;
+  int err;
+  if (!cond || cond->type != &condition_type)
+    dfsch_throw("thread:not-a-condition", cond);
+
+  c = (condition_t*)cond;
+
+  err = pthread_cond_signal(&(c->cond));
+
+  if (err != 0){
+    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+  }
+}
+
+void dfsch_condition_broadcast(dfsch_object_t* cond){
+  condition_t* c;
+  int err;
+  if (!cond || cond->type != &condition_type)
+    dfsch_throw("thread:not-a-condition", cond);
+
+  c = (condition_t*)cond;
+
+  err = pthread_cond_broadcast(&(c->cond));
+
+  if (err != 0){
+    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+  }
+}
+
+
+// Scheme binding
 
 static dfsch_object_t* native_thread_create(void*baton, dfsch_object_t* args, 
                                             dfsch_tail_escape_t* esc){
@@ -228,6 +314,45 @@ static dfsch_object_t* native_mutex_unlock(void*baton, dfsch_object_t* args,
   dfsch_mutex_unlock(mutex);
   return mutex;
 }
+static dfsch_object_t* native_condition_create(void*baton, 
+                                               dfsch_object_t* args, 
+                                               dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+
+  return dfsch_condition_create();
+}
+static dfsch_object_t* native_condition_wait(void*baton, 
+                                             dfsch_object_t* args, 
+                                             dfsch_tail_escape_t* esc){
+  dfsch_object_t* cond;
+  dfsch_object_t* mutex;
+  DFSCH_OBJECT_ARG(args, cond);
+  DFSCH_OBJECT_ARG(args, mutex);
+  DFSCH_ARG_END(args);
+
+  dfsch_condition_wait(cond, mutex);
+  return cond;
+}
+static dfsch_object_t* native_condition_signal(void*baton, 
+                                               dfsch_object_t* args, 
+                                               dfsch_tail_escape_t* esc){
+  dfsch_object_t* cond;
+  DFSCH_OBJECT_ARG(args, cond);
+  DFSCH_ARG_END(args);
+
+  dfsch_condition_signal(cond);
+  return cond;
+}
+static dfsch_object_t* native_condition_broadcast(void*baton, 
+                                                  dfsch_object_t* args, 
+                                                  dfsch_tail_escape_t* esc){
+  dfsch_object_t* cond;
+  DFSCH_OBJECT_ARG(args, cond);
+  DFSCH_ARG_END(args);
+
+  dfsch_condition_broadcast(cond);
+  return cond;
+}
 
 
 dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx){
@@ -248,6 +373,15 @@ dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_mutex_trylock,NULL));
   dfsch_ctx_define(ctx, "mutex:unlock", 
                    dfsch_make_primitive(&native_mutex_unlock,NULL));
+
+  dfsch_ctx_define(ctx, "condition:create", 
+                   dfsch_make_primitive(&native_condition_create,NULL));
+  dfsch_ctx_define(ctx, "condition:wait", 
+                   dfsch_make_primitive(&native_condition_wait,NULL));
+  dfsch_ctx_define(ctx, "condition:signal", 
+                   dfsch_make_primitive(&native_condition_signal,NULL));
+  dfsch_ctx_define(ctx, "condition:broadcast", 
+                   dfsch_make_primitive(&native_condition_broadcast,NULL));
 
   return NULL;
 }
