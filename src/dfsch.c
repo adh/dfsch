@@ -1273,6 +1273,8 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
   return vector;
 }
 
+
+
 dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
   pair_t *head; 
   pair_t *tail;
@@ -1363,8 +1365,15 @@ char* dfsch_exception_write(dfsch_object_t* e){
     sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
     sl_append(l,"\n\nCall stack:\n");
     while (i){
+      object_t* item = dfsch_car(i);
       sl_append(l,"\t");
-      sl_append(l,dfsch_obj_write(dfsch_car(dfsch_car(i)),20,1));
+
+      if (dfsch_vector_ref(item, 4) == dfsch_sym_tail_recursive())
+        sl_append(l,"...");
+        
+      sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 1),20,1));
+      sl_append(l,"\n\t  ");
+      sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 0),20,1));
       sl_append(l,"\n");
       i = dfsch_cdr(i);
     }
@@ -1529,6 +1538,7 @@ struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *code;
   object_t *env;
+  object_t *proc_name; 
 };
 
 typedef dfsch_tail_escape_t tail_escape_t;
@@ -1619,6 +1629,7 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
   tail_escape_t myesc;
   thread_info_t *ti;
   dfsch_object_t *old_frame;
+  dfsch_object_t *my_frame;
 
   if (!env)
     return NULL;
@@ -1631,26 +1642,34 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
     dfsch_throw("exception:break", dfsch_make_symbol(ti->break_type));
 
   if (esc){
-    dfsch_set_car(ti->stack_trace, dfsch_list(4, proc_name, code, env,
-                                              dfsch_sym_tail_recursive()));
     esc->code = code;
     esc->env = env;
+    esc->proc_name = proc_name;
     longjmp(esc->ret,1);
   }
   
   old_frame = ti->stack_trace;  
-  ti->stack_trace = dfsch_cons(dfsch_list(3, proc_name, code, env),
+  my_frame = dfsch_vector(5, NULL, proc_name, code, env, NULL);
+  ti->stack_trace = dfsch_cons(my_frame,
                                ti->stack_trace);
 
   if (setjmp(myesc.ret)){  
     i = (pair_t*)myesc.code;
     env = myesc.env;
+    my_frame = dfsch_vector(5, NULL, 
+                            myesc.proc_name, 
+                            myesc.code, 
+                            myesc.env,
+                            dfsch_sym_tail_recursive());
+    dfsch_set_car(ti->stack_trace, my_frame);
   }else{
     i = (pair_t*)code;
   }
 
   while (i && i->type==PAIR ){
     object_t* exp = i->car; 
+
+    ((vector_t*)my_frame)->data[0] = exp;
 
     if (i->cdr)
       r = dfsch_eval_tr(exp,env,NULL);

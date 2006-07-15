@@ -1,5 +1,10 @@
 2006-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_exception_write): Better stacktraces
+	(containing processed forms)
+
+	* src/threads.c (dfsch_channel_read): Erase readed items from buffer
+
 	* src/dfsch.c (dfsch_break): signal-safe exceptions
 
 	* src/threads.c (dfsch_thread_detach): Aehm... missing assignment

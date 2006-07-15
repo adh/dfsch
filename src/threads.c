@@ -336,6 +336,7 @@ dfsch_object_t* dfsch_channel_read(dfsch_object_t* channel){
   }
 
   ret = ch->buf[ch->readptr];
+  ch->buf[ch->readptr] = NULL;
   ch->readptr = (ch->readptr + 1) % ch->buf_len;
 
   pthread_mutex_unlock(&(ch->mutex));
