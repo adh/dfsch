@@ -314,6 +314,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_throw(char* type, 
                                      dfsch_object_t* data);
 
+  /** Set break flag (call this when throwing exception isn't safe) */
+  extern dfsch_object_t* dfsch_break(char* type);
 
   /** Return exception's type. */
   extern dfsch_object_t* dfsch_exception_type(dfsch_object_t* e);

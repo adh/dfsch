@@ -1051,6 +1051,7 @@ typedef struct thread_info_t {
   dfsch_object_t* exception_obj;
   dfsch_object_t* stack_trace;
   continuation_t* cont_stack;
+  char* break_type;
 } thread_info_t;
 
 static pthread_key_t thread_key;
@@ -1141,6 +1142,10 @@ dfsch_object_t* dfsch_throw(char* type,
 
   dfsch_raise(e);
     
+}
+dfsch_object_t* dfsch_break(char* type){
+  thread_info_t *ti = get_thread_info();
+  ti->break_type = type;
 }
 
 dfsch_object_t* dfsch_exception_type(dfsch_object_t* e){
@@ -1621,6 +1626,9 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
     return NULL;
 
   ti = get_thread_info();
+
+  if (ti->break_type)
+    dfsch_throw("exception:break", dfsch_make_symbol(ti->break_type));
 
   if (esc){
     dfsch_set_car(ti->stack_trace, dfsch_list(4, proc_name, code, env,

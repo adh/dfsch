@@ -4,10 +4,14 @@
 (define free-tellers (channel:create))
 (define exits (channel:create))
 (define io (mutex:create))
-(define (log . args)
-  (mutex:lock io)
-  (apply print args)
-  (mutex:unlock io))
+
+(define log
+  (let ((counter 1))
+    (lambda args
+      (mutex:lock io)
+      (apply print (append (list "[" counter "] ") args))
+      (set! counter (+ 1 counter))
+      (mutex:unlock io))))
 
 (define thread-list ())
 
@@ -24,12 +28,13 @@
      (letrec ((thread-return (channel:read exits))
               (thread-type (car thread-return))
               (thread-id (cdr thread-return)))
-       (print "thread exited " thread-type thread-id)))
+       (log "thread exited " thread-type thread-id)))
    thread-list))
 
 (define (teller max-customers)
   (let ((my-id (gensym)) (my-channel (channel:create)))
     (let main-loop ((iter 0))
+      (sleep 1)
       (log "teller " my-id " available")
       (channel:write free-tellers (cons my-channel my-id))
       
@@ -45,6 +50,7 @@
         (for-each (lambda (item) 
                     (let ((name (vector-ref item 0))
                           (price (vector-ref item 1)))
+                      (sleep 1)
                       (log "teller " my-id " item " name " @ " price)
                       (set! sum (+ sum price))))
                   cust-items)
@@ -69,7 +75,7 @@
     (letrec ((teller (channel:read free-tellers))
              (teller-channel (car teller))
              (teller-id (cdr teller)))
-    
+      (sleep 1)
       (log "customer " my-id " got teller " teller-id)
       (channel:write teller-channel 
                      (cons (cons my-channel my-id) 
@@ -78,20 +84,20 @@
       (letrec ((sum (channel:read my-channel))
                (pay (* sum 1.10)))
         (log "customer " my-id " sum is " sum " paying " pay)
+        (sleep 1)
         (channel:write teller-channel pay)
         (let ((return (channel:read my-channel)))
           (log "customer " my-id " got " return " back, going home")
           (channel:write exits (cons 'customer my-id)))))))
 
+(thread:create collect-threads ())
 
-(let loop ((i 5))
+(let top-loop ()
   (start-thread teller '(10))
-  (when (> i 0)
-        (loop (- i 1))))
-
-(let loop ((i 10))
-  (start-thread customer (list (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
-  (when (> i 0)
-        (loop (- i 1))))
-
-(collect-threads)
+  
+  (let loop ((i 10))
+    (start-thread customer (list (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
+    (when (> i 0)
+          (loop (- i 1))))
+  (top-loop))
+  

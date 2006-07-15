@@ -49,8 +49,7 @@ typedef struct evaluator_ctx_t {
 } evaluator_ctx_t;
 
 static void sigint_handler_break(int sig){
-  dfsch_throw("user:sigint", NULL); 
-  // XXX: this can break in many interesting ways
+  dfsch_break("user:sigint"); 
 }
 
 static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton, 

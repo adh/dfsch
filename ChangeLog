@@ -1,5 +1,7 @@
 2006-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_break): signal-safe exceptions
+
 	* src/threads.c (dfsch_thread_detach): Aehm... missing assignment
 
 	* scm/supermarket.scm: Some example code for multithreading
