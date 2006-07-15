@@ -10,7 +10,7 @@
 
 (define (teller max-customers)
   (let ((my-id (gensym)) (my-channel (channel:create)))
-    (let main-loop ((iter max-customers))
+    (let main-loop ((iter 0))
       (channel:write free-tellers (cons my-channel my-id))
       
       (letrec ((cust-data (channel:read my-channel))
@@ -20,7 +20,7 @@
                (cust-items (cdr cust-data))
                (sum 0))
 
-        (log "teller " my-id " got customer " cust-id)
+        (log "teller " my-id " got customer " cust-id " number " iter)
 
         (for-each (lambda (item) 
                     (let ((name (vector-ref item 0))
@@ -38,7 +38,7 @@
           ))
       
       (when (< iter max-customers)
-            (main-loop (- max-customers 1))))
+            (main-loop (+ iter 1))))
 
     (log "teller " my-id " going home")))
 
@@ -67,29 +67,14 @@
                    (apply function arguments)) 
                  ()))
 
-(start-thread teller '(10))
-(start-thread teller '(10))
-(start-thread teller '(10))
+(let loop ((i 5))
+  (start-thread teller '(10))
+  (when (> i 0)
+        (loop (- i 1))))
 
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
-(start-thread customer '((#(foo 10) #(bar 20) #(quux 30))))
+(let loop ((i 100))
+  (start-thread customer (list (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
+  (when (> i 0)
+        (loop (- i 1))))
+
+
