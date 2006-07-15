@@ -2,15 +2,35 @@
 ;; (and good test for dfsch's multithreading support)
 
 (define free-tellers (channel:create))
+(define exits (channel:create))
 (define io (mutex:create))
 (define (log . args)
   (mutex:lock io)
   (apply print args)
   (mutex:unlock io))
 
+(define thread-list ())
+
+(define (start-thread function arguments)
+  (let ((thread (thread:create (lambda ()
+                                 (thread:detach (thread:self))
+                                 (apply function arguments))
+                               ())))
+    (set! thread-list (cons thread thread-list))))
+
+(define (collect-threads)
+  (for-each 
+   (lambda (thread)
+     (letrec ((thread-return (channel:read exits))
+              (thread-type (car thread-return))
+              (thread-id (cdr thread-return)))
+       (print "thread exited " thread-type thread-id)))
+   thread-list))
+
 (define (teller max-customers)
   (let ((my-id (gensym)) (my-channel (channel:create)))
     (let main-loop ((iter 0))
+      (log "teller " my-id " available")
       (channel:write free-tellers (cons my-channel my-id))
       
       (letrec ((cust-data (channel:read my-channel))
@@ -40,7 +60,8 @@
       (when (< iter max-customers)
             (main-loop (+ iter 1))))
 
-    (log "teller " my-id " going home")))
+    (log "teller " my-id " going home")
+    (channel:write exits (cons 'teller my-id))))
 
 (define (customer items)
   (let ((my-id (gensym)) 
@@ -59,22 +80,18 @@
         (log "customer " my-id " sum is " sum " paying " pay)
         (channel:write teller-channel pay)
         (let ((return (channel:read my-channel)))
-          (log "customer " my-id " got " return " back, going home"))))))
+          (log "customer " my-id " got " return " back, going home")
+          (channel:write exits (cons 'customer my-id)))))))
 
-(define (start-thread function arguments)
-  (thread:create (lambda () 
-                   (thread:detach (thread:self))
-                   (apply function arguments)) 
-                 ()))
 
 (let loop ((i 5))
   (start-thread teller '(10))
   (when (> i 0)
         (loop (- i 1))))
 
-(let loop ((i 100))
+(let loop ((i 10))
   (start-thread customer (list (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
   (when (> i 0)
         (loop (- i 1))))
 
-
+(collect-threads)
