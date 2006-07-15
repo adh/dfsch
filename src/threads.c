@@ -70,6 +70,8 @@ void dfsch_thread_detach(dfsch_object_t* thread){
   if (!thread || thread->type != &thread_type)
     dfsch_throw("thread:not-a-thread", thread);
 
+  t = (thread_t*)thread;
+
   err = pthread_detach(t->thread);
 
   if (err != 0){

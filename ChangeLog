@@ -1,5 +1,7 @@
 2006-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/threads.c (dfsch_thread_detach): Aehm... missing assignment
+
 	* scm/supermarket.scm: Some example code for multithreading
 
 	* src/threads.c (dfsch_channel_create): Channels (which seems like
