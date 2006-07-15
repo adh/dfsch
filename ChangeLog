@@ -1,3 +1,8 @@
+2006-07-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/threads.c (dfsch_channel_create): Channels (which seems like
+	preferable method of communication between threads)
+
 2006-07-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/threads.c (dfsch_condition_create): Condition variables

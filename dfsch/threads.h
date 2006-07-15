@@ -20,6 +20,11 @@ extern void dfsch_condition_wait(dfsch_object_t* condition,
 extern void dfsch_condition_signal(dfsch_object_t* condition);
 extern void dfsch_condition_broadcast(dfsch_object_t* condition);
 
+extern dfsch_object_t* dfsch_channel_create(size_t buffer);
+extern dfsch_object_t* dfsch_channel_read(dfsch_object_t* channel);
+extern void dfsch_channel_write(dfsch_object_t* channel,
+                                dfsch_object_t* object);
+
 extern dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx);
 
 #endif

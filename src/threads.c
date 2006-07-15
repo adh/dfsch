@@ -1,5 +1,7 @@
 #include "dfsch/threads.h"
 
+#include <dfsch/number.h>
+
 #include <errno.h>
 #include <string.h>
 
@@ -244,6 +246,133 @@ void dfsch_condition_broadcast(dfsch_object_t* cond){
   }
 }
 
+// Channels
+
+/*
+ * Channel is simply inter-thread pipe for transferring objects. In theory,
+ * it could be possible to use channel as a queue inside one thread - but you
+ * are risking a deadlock here when channels' buffer becomes full or empty.
+ *
+ * It might be useful to use dfsch's wrapper objects here and leave resource
+ * reclaimation and error handling to them, but that would have slight 
+ * unnecessary overhead due to redundant type checking and would use more 
+ * memory.
+ */
+
+typedef struct channel_t {
+  dfsch_type_t* type;
+
+  pthread_mutex_t mutex;
+  pthread_cond_t read;
+  pthread_cond_t write;
+  
+  dfsch_object_t** buf;
+  
+  size_t buf_len;
+  size_t readptr;
+  size_t writeptr;
+} channel_t;
+
+static const dfsch_type_t channel_type = {
+  sizeof(channel_t), 
+  "channel",
+  NULL,
+  NULL
+};
+
+static channel_finalizer(channel_t* ch, void* cd){
+  /* 
+   * When this is called, there are no outstanding references to this
+   * so we can expect that no operations are in progress on this channel
+   * which in turn should mean that there are no locks held and no threads 
+   * waiting. This does not necessarily mean that buffer is empty.
+   */
+
+  pthread_cond_destroy(&(ch->read));
+  pthread_cond_destroy(&(ch->write));
+  pthread_mutex_destroy(&(ch->mutex));
+  GC_FREE(ch->buf);
+}
+
+dfsch_object_t* dfsch_channel_create(size_t buffer){
+  channel_t* ch = (channel_t*)dfsch_make_object(&channel_type);
+
+  GC_REGISTER_FINALIZER(ch, 
+                        (GC_finalization_proc)channel_finalizer,
+                        NULL, NULL, NULL);
+
+  pthread_cond_init(&(ch->read), NULL);
+  pthread_cond_init(&(ch->write), NULL);
+  pthread_mutex_init(&(ch->mutex), NULL);
+
+  ch->buf = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch_object_t*)*buffer);
+  ch->buf_len = buffer;
+  ch->readptr = 0;
+  ch->writeptr = 0;
+
+  return (dfsch_object_t*)ch;
+}
+
+dfsch_object_t* dfsch_channel_read(dfsch_object_t* channel){
+  channel_t* ch;
+  dfsch_object_t* ret;
+
+  /*
+   * pthread functions returning errors here probably means that something is 
+   * fundamentaly wrong, so we don't bother to check for them.
+   */
+
+  if (!channel || channel->type != &channel_type)
+    dfsch_throw("thread:not-a-channel", channel);
+  
+  ch = (channel_t*) channel;
+
+  pthread_mutex_lock(&(ch->mutex));
+  
+  while(ch->readptr == ch->writeptr){ // Buffer is empty
+    pthread_cond_wait(&(ch->read), &(ch->mutex));
+  }
+
+  ret = ch->buf[ch->readptr];
+  ch->readptr = (ch->readptr + 1) % ch->buf_len;
+
+  pthread_mutex_unlock(&(ch->mutex));
+  pthread_cond_signal(&(ch->write));
+
+  return ret;
+}
+
+void dfsch_channel_write(dfsch_object_t* channel,
+                         dfsch_object_t* object){
+  channel_t* ch;
+  size_t new_writeptr;
+
+  /*
+   * pthread functions returning errors here probably means that something is 
+   * fundamentaly wrong, so we don't bother to check for them.
+   */
+
+  if (!channel || channel->type != &channel_type)
+    dfsch_throw("thread:not-a-channel", channel);
+  
+  ch = (channel_t*) channel;
+
+  pthread_mutex_lock(&(ch->mutex));
+  
+  new_writeptr = (ch->writeptr + 1) % ch->buf_len;
+
+  while(ch->readptr == new_writeptr){ // Buffer is full
+    pthread_cond_wait(&(ch->write), &(ch->mutex));
+  }
+
+  ch->buf[ch->writeptr] = object;
+  ch->writeptr = new_writeptr;
+
+  pthread_mutex_unlock(&(ch->mutex));
+  pthread_cond_signal(&(ch->read));
+
+}
+
 
 // Scheme binding
 
@@ -354,6 +483,39 @@ static dfsch_object_t* native_condition_broadcast(void*baton,
   return cond;
 }
 
+static dfsch_object_t* native_channel_create(void*baton, 
+                                             dfsch_object_t* args, 
+                                             dfsch_tail_escape_t* esc){
+  size_t buffer;
+  DFSCH_LONG_ARG_OPT(args, buffer, 16);
+  DFSCH_ARG_END(args);
+
+  return dfsch_channel_create(buffer);
+}
+static dfsch_object_t* native_channel_read(void*baton, 
+                                           dfsch_object_t* args, 
+                                           dfsch_tail_escape_t* esc){
+  dfsch_object_t* channel;
+  DFSCH_OBJECT_ARG(args, channel);
+  DFSCH_ARG_END(args);
+
+  return dfsch_channel_read(channel);
+}
+static dfsch_object_t* native_channel_write(void*baton, 
+                                            dfsch_object_t* args, 
+                                            dfsch_tail_escape_t* esc){
+  dfsch_object_t* channel;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, channel);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_channel_write(channel, object);
+ 
+  return object;
+}
+
+
 
 dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "thread:create", 
@@ -382,6 +544,13 @@ dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_condition_signal,NULL));
   dfsch_ctx_define(ctx, "condition:broadcast", 
                    dfsch_make_primitive(&native_condition_broadcast,NULL));
+
+  dfsch_ctx_define(ctx, "channel:create", 
+                   dfsch_make_primitive(&native_channel_create,NULL));
+  dfsch_ctx_define(ctx, "channel:read", 
+                   dfsch_make_primitive(&native_channel_read,NULL));
+  dfsch_ctx_define(ctx, "channel:write", 
+                   dfsch_make_primitive(&native_channel_write,NULL));
 
   return NULL;
 }
