@@ -1366,13 +1366,13 @@ char* dfsch_exception_write(dfsch_object_t* e){
     sl_append(l,"\n\nCall stack:\n");
     while (i){
       object_t* item = dfsch_car(i);
-      sl_append(l,"\t");
+      sl_append(l,"  ");
 
       if (dfsch_vector_ref(item, 4) == dfsch_sym_tail_recursive())
         sl_append(l,"...");
         
       sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 1),20,1));
-      sl_append(l,"\n\t  ");
+      sl_append(l,"\n      ");
       sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 0),20,1));
       sl_append(l,"\n");
       i = dfsch_cdr(i);

@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_exception_write): Better stacktraces
 	(containing processed forms)
+	(dfsch_exception_write): Minor formating changes
 
 	* src/threads.c (dfsch_channel_read): Erase readed items from buffer
 
