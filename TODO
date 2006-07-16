@@ -1,5 +1,3 @@
-* Multithreading (current version is probably thread-safe but any threading 
-  code is missing)
 * More number types:
   - Big integers
   - Fractions
@@ -12,5 +10,3 @@
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Warnings
 * alist->hash
-* Better handling of signals in repl.c - it's not so wise to longjmp() out 
-  of signal handler
