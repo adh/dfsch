@@ -9,3 +9,4 @@
 * Unicode case-insensitive string compare
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Warnings
+* Structures
