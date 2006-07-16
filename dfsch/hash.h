@@ -78,6 +78,13 @@ extern "C" {
    * Convert hash table to list of associations.
    */
   extern dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj);
+
+  /**
+   * Convert list of associations to hash table.
+   */
+  extern dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
+                                            dfsch_object_t* hash_proc, 
+                                            int mode);
   
 #ifdef __cplusplus
 }

@@ -382,6 +382,26 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
   return alist;
 }
 
+dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
+                                   dfsch_object_t* hash_proc, 
+                                   int mode){
+  dfsch_object_t* hash = dfsch_hash_make(hash_proc, mode);
+  dfsch_object_t* i = alist;
+  
+  while (dfsch_pair_p(i)){
+    dfsch_object_t* item = dfsch_car(i);
+    dfsch_object_t* name = dfsch_list_item(item, 0);
+    dfsch_object_t* value = dfsch_list_item(item, 1);
+
+    dfsch_hash_set(hash, name, value);
+
+    i = dfsch_cdr(i);
+  }
+
+  return hash;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -470,6 +490,30 @@ static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args,
   return dfsch_hash_2_alist(hash);
 }
 
+static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
+                                           dfsch_tail_escape_t* esc){
+  dfsch_object_t* alist;
+  dfsch_object_t *proc;
+  dfsch_object_t *mode;
+
+  DFSCH_OBJECT_ARG(args, alist);
+  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, mode, NULL);
+  DFSCH_ARG_END(args);
+
+  if (!mode)
+    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQ);
+  if (mode == dfsch_make_symbol("equal?"))
+    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQUAL);
+  if (mode == dfsch_make_symbol("eqv?"))
+    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQV);
+  if (mode == dfsch_make_symbol("eq?"))
+    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQ);
+
+  dfsch_throw("exception:unknown-mode", mode);
+}
+
+
 void dfsch__hash_native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "make-hash", 
                    dfsch_make_primitive(&native_make_hash,NULL));
@@ -485,5 +529,7 @@ void dfsch__hash_native_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_hash_set_if_exists,NULL));
   dfsch_ctx_define(ctx, "hash->alist", 
                    dfsch_make_primitive(&native_hash_2_alist,NULL));
+  dfsch_ctx_define(ctx, "alist->hash", 
+                   dfsch_make_primitive(&native_alist_2_hash,NULL));
 
 }
