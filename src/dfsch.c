@@ -1040,6 +1040,7 @@ object_t* dfsch_make_form(object_t *proc){
 
 typedef struct continuation_t continuation_t;
 struct continuation_t {
+  dfsch_type_t* type;
   jmp_buf ret;
   object_t* value;
   int active;
@@ -1162,8 +1163,9 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 }
 
 
-static object_t* continuation_closure(continuation_t *cont, object_t* args,
-                                      dfsch_tail_escape_t* esc){
+static object_t* continuation_apply(continuation_t *cont, 
+                                    object_t* args,
+                                    dfsch_tail_escape_t* esc){
 
   object_t* value;
   DFSCH_OBJECT_ARG(args, value);
@@ -1176,10 +1178,18 @@ static object_t* continuation_closure(continuation_t *cont, object_t* args,
   longjmp(cont->ret,1);
 }
 
+static struct dfsch_type_t continuation_type = {
+  sizeof(continuation_t*),
+  "escape-continuation",
+  NULL,
+  NULL,
+  (dfsch_type_apply_t)continuation_apply
+};
 
 dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   object_t* value;
-  continuation_t *cont = GC_NEW(continuation_t);
+  continuation_t *cont = 
+    (continuation_t*)dfsch_make_object(&continuation_type);
   continuation_t *i;
   thread_info_t *ti = get_thread_info();
 
@@ -1190,10 +1200,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
     value = cont->value;
   }else{
     value = dfsch_apply(proc,
-                        dfsch_list(1,
-                                   dfsch_make_primitive((dfsch_primitive_t)
-                                                        continuation_closure,
-                                                        (void*)cont)));
+                        dfsch_list(1, cont));
   }
   
   i = ti->cont_stack;
