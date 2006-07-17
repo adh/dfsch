@@ -1717,7 +1717,7 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
   }
 
   if (proc->type->apply){
-    return proc->type->apply(proc, args);
+    return proc->type->apply(proc, args, esc);
   }
 
   dfsch_throw("exception:not-a-procedure", proc);

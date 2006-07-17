@@ -1,5 +1,8 @@
 2006-07-17  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_apply_tr): Optimize tail calls even thru
+	custom applicable types
+
 	* src/wrapper.c (dfsch_make_wrapper_type): Wraper object for
 	building custom data types from scheme code
 

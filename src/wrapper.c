@@ -55,11 +55,13 @@ static int wrapper_equal_p(dfsch_object_t* a, dfsch_object_t* b){
 }
 
 static dfsch_object_t* wrapper_apply(dfsch_object_t* obj, 
-                                     dfsch_object_t* args){
+                                     dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
   wrapper_type_t* type = (wrapper_type_t*) obj->type;
 
-  return dfsch_apply(type->apply,
-                     dfsch_list(2, obj, args));
+  return dfsch_apply_tr(type->apply,
+                        dfsch_list(2, obj, args),
+                        esc);
 }
 
 static char*  wrapper_type_write(wrapper_type_obj_t* t, int max_depth, int readable){

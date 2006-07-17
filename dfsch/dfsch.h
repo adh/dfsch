@@ -56,6 +56,9 @@ extern "C" {
   /** Interpreter context */
   typedef struct dfsch_ctx_t dfsch_ctx_t;
 
+  /** Continuation used for tail-call elimination. */
+  typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
+
   /** Meant for functions like caaddar, currently unused */
   typedef unsigned int dfsch_cXr_t;
 
@@ -69,7 +72,8 @@ extern "C" {
                                       int readable);
   /** Apply metod prototype */
   typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object, 
-                                                dfsch_object_t* args);
+                                                dfsch_object_t* args,
+                                                dfsch_tail_escape_t* esc);
 
   /** Representation of scheme datatypes. */
   typedef struct dfsch_type_t {
@@ -100,9 +104,6 @@ extern "C" {
     /** Pointer to datatype */
     dfsch_type_t *type;
   };
-
-  /** Continuation used for tail-call elimination. */
-  typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
 
   /**
    * Native functions prototype.  
