@@ -3,6 +3,7 @@
 	* src/dfsch.c (dfsch_apply_tr): Optimize tail calls even thru
 	custom applicable types
 	(dfsch_call_ec): continuations as distinct type
+	(continuation_apply): check for continuations passed between threads
 
 	* src/wrapper.c (dfsch_make_wrapper_type): Wraper object for
 	building custom data types from scheme code

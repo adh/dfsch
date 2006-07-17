@@ -1044,6 +1044,7 @@ struct continuation_t {
   jmp_buf ret;
   object_t* value;
   int active;
+  pthread_t thread;
   continuation_t* next;
 };
 
@@ -1173,6 +1174,9 @@ static object_t* continuation_apply(continuation_t *cont,
   
   if (!cont->active)
     dfsch_throw("exception:already-returned",NULL);
+  if (cont->thread != pthread_self())
+    dfsch_throw("exception:cross-thread-continuation",NULL);
+
 
   cont->value = value;
   longjmp(cont->ret,1);
@@ -1195,6 +1199,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
 
   cont->active = 1;
   cont->next = ti->cont_stack;
+  cont->thread = pthread_self();
   ti->cont_stack = cont;
   if(setjmp(cont->ret) == 1){
     value = cont->value;
