@@ -1,3 +1,11 @@
+2006-07-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_apply_tr): reordered checks - primitives are
+	provably called more often than closures
+
+	* dfsch/dfsch.h (dfsch_type_t): apply method for user-defined
+	applicable objects
+
 2006-07-16  Ales Hakl  <ales at hakl dot net>
 
 	* src/hash.c (dfsch_hash_2_alist): alist->hash

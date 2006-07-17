@@ -67,6 +67,9 @@ extern "C" {
   /** Write / Display method prototype */
   typedef char* (*dfsch_type_write_t)(dfsch_object_t* obj, int depth, 
                                       int readable);
+  /** Apply metod prototype */
+  typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object, 
+                                                dfsch_object_t* args);
 
   /** Representation of scheme datatypes. */
   typedef struct dfsch_type_t {
@@ -81,6 +84,12 @@ extern "C" {
      * something like "#&gt;my-object bla bla bla&lt;"
      */
     dfsch_type_write_t write;
+    /** 
+     * Apply method - called when object of this type is applyed to 
+     * something. Beware - primitives and closures are handled directly
+     * in evaluator and have this field set to NULL
+     */
+    dfsch_type_apply_t apply;
   } dfsch_type_t;
 
   /**

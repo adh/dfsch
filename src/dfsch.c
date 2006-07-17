@@ -1695,6 +1695,17 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
   if (!proc)
     return NULL;
 
+  /**
+   * Two most common cases are written here explicitly (for historical
+   * and performance reasons)
+   */
+
+  if (proc->type == PRIMITIVE){
+    object_t* r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
+                                             esc);
+    return r;
+  }
+
   if (proc->type == CLOSURE){
     object_t* r = dfsch_eval_proc_tr(((closure_t*)proc)->code,
                                      lambda_extend(((closure_t*)proc)->args,
@@ -1705,10 +1716,8 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
     return r;
   }
 
-  if (proc->type == PRIMITIVE){
-    object_t* r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                             esc);
-    return r;
+  if (proc->type->apply){
+    return proc->type->apply(proc, args);
   }
 
   dfsch_throw("exception:not-a-procedure", proc);
