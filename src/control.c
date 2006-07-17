@@ -472,9 +472,5 @@ void dfsch__control_register(dfsch_ctx_t *ctx){
 							 NULL)));
 
 
-  dfsch__hash_native_register(ctx);
-  dfsch__promise_native_register(ctx);
-  dfsch__number_native_register(ctx);
-  dfsch__string_native_register(ctx);
 
 }
