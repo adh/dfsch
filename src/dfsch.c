@@ -1650,8 +1650,10 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
 
   ti = get_thread_info();
 
-  if (ti->break_type)
+  if (ti->break_type){
     dfsch_throw("exception:break", dfsch_make_symbol(ti->break_type));
+    ti->break_type = NULL;
+  }
 
   if (esc){
     esc->code = code;

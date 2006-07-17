@@ -4,6 +4,7 @@
 	custom applicable types
 	(dfsch_call_ec): continuations as distinct type
 	(continuation_apply): check for continuations passed between threads
+	(dfsch_evla_tr): clear break_type after handling it.
 
 	* src/wrapper.c (dfsch_make_wrapper_type): Wraper object for
 	building custom data types from scheme code
