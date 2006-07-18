@@ -10,3 +10,4 @@
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Warnings
 * Structures
+* Some object system (should be used for IO subsystem somehow)
