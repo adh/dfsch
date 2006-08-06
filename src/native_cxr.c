@@ -55,12 +55,6 @@ static dfsch_object_t* native_cxr(void *baton, dfsch_object_t* args,
   return pair;
 }
 
-
-
-
-#define CxR_DEFINE(sym) \
-
-
 void dfsch__native_cxr_register(dfsch_ctx_t *ctx){
   int i;
 
