@@ -675,6 +675,7 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "string->symbol", 
                    dfsch_make_primitive(&native_string_2_symbol,NULL));
 
+  dfsch__native_cxr_register(ctx);
   dfsch__control_register(ctx);
   dfsch__hash_native_register(ctx);
   dfsch__promise_native_register(ctx);

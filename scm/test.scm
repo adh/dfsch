@@ -36,9 +36,6 @@
   (print " --- " name " ---"))
 
 
-(define (cadr list) 
-  (car (cdr list))) ;; We dont have this (yet??)
-
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
 ;;

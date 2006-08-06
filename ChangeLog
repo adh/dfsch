@@ -1,3 +1,7 @@
+2006-08-06  Ales Hakl  <ales at hakl dot net>
+
+	* src/native_cxr.c: nested accessors for pairs
+
 2006-07-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_apply_tr): Optimize tail calls even thru
