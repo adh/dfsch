@@ -49,6 +49,13 @@
       (let ((p (lambda (x) x)))
         (eqv? p p))
       #t)
+(test 'eqv?-nil
+      (eqv? () ())
+      #t)
+(test 'eqv?-nil
+      (eqv? () #t)
+      #f)
+
 
 (define gen-counter
   (lambda ()
@@ -82,6 +89,14 @@
       (equal? 1 2)
       #f)
 
+(test 'gensyms
+      (eq? (gensym) (gensym))
+      #f)
+
+(test 'id-equal?
+      (let ((a (gensym)))
+        (equal? (id a) (id a)))
+      #t)
 
 (group "arithmetics")
 
@@ -143,8 +158,8 @@
 (test 'and-value (and 1 2 'c '(f g)) '(f g))
 (test 'and-empty (and) true)
 
-(test 'or-true (and (= 2 2) (> 2 1)) true)
-(test 'or-false (and (= 2 2) (< 2 1)) ())
+(test 'or-true (or (= 2 2) (> 2 1)) true)
+(test 'or-false (or (> 2 2) (< 2 1)) ())
 
 (sub-group 'do)
 
