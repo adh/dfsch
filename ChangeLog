@@ -1,3 +1,7 @@
+2006-08-12  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_eqv_p): Handle the NULL case.
+
 2006-08-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/native_cxr.c: nested accessors for pairs

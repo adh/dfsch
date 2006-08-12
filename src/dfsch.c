@@ -73,6 +73,9 @@ int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b){
   if (a==b)
     return 1;
 
+  if (!a || !b)
+    return 0;
+
   if ((a->type == b->type) && dfsch_number_p(a))
     return dfsch__number_eqv_p(a,b);
 
