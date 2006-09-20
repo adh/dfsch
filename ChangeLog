@@ -1,5 +1,7 @@
 2006-09-20  Ales Hakl  <ales at hakl dot net>
 
+	* configure.ac (USE_READLINE): Removed redundant chcek for use_readline
+
 	* TODO: Reordered to match priority
 
 	* lib/: Moved standalone libraries to separate directory. 

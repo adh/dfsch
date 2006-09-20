@@ -47,7 +47,7 @@ fi
 AC_CHECK_HEADERS(gc/gc.h, [have_gc="1"], [have_gc="0"])
 AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [-ldl -lpthread])
 
-if test "$have_gc" != "1"; then
+if test x$have_gc != x1; then
         AC_MSG_RESULT()
         AC_MSG_RESULT(****************************************************************)
         AC_MSG_RESULT(Boehm Garbage Collector (gc) not found!)
@@ -74,7 +74,7 @@ AC_ARG_WITH([readline],
 
 if test x"$with_readline" != x"no"; then 
         if test x"$have_readline" = x"yes"; then
-           AC_DEFINE(USE_READLINE, [1], [Use readline for input])
+           AC_DEFINE(USE_READLINE, [1], [Use readline for input])        
         fi
 fi
 
@@ -85,12 +85,6 @@ AC_SYS_LARGEFILE
 
 dnl automake stuff
 AM_MAINTAINER_MODE
-
-
-if test x"$use_readline" = x"1"; then
-   AC_DEFINE(USE_READLINE)
-fi
-
 
 dnl create makefiles
 AC_OUTPUT(Makefile)
