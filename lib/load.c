@@ -22,14 +22,14 @@
 # include <config.h>
 #endif
 
-#include <dfsch/parse.h>
+#include "dfsch/lib/load.h"
 
+#include <dfsch/parse.h>
 #include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <dlfcn.h>
-#include <dfsch/load.h>
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 

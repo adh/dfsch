@@ -28,7 +28,8 @@
 #include <dfsch/dfsch.h>
 #include <dfsch/number.h>
 #include <dfsch/parse.h>
-#include <dfsch/load.h>
+#include <dfsch/lib/load.h>
+#include <dfsch/lib/threads.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,7 @@
+2006-09-20  Ales Hakl  <ales at hakl dot net>
+
+	* lib/: Moved standalone libraries to separate directory. 
+
 2006-08-13  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm: Some more tests
