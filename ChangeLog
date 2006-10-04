@@ -1,5 +1,8 @@
 2006-10-04  Ales Hakl  <ales at hakl dot net>
 
+	* lib/threads.c (dfsch_threads_register): Fixed prototypes of 
+	finalizers
+
 	* lib/regex.c (dfsch_regex_register): Simple (match/no match) regular 
 	expression support... and now with code :)
 	(regex_finalizer): finalization of regex objects

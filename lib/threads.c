@@ -101,7 +101,7 @@ static const dfsch_type_t mutex_type = {
   NULL
 };
 
-static mutex_finalizer(mutex_t* mutex, void* cd){
+static void mutex_finalizer(mutex_t* mutex, void* cd){
   /*
    * When given mutex is locked we will do nothing. If user loses reference
    * to locked mutex, something is probably wrong.
@@ -177,7 +177,7 @@ static const dfsch_type_t condition_type = {
   NULL
 };
 
-static condition_finalizer(condition_t* cond, void* cd){
+static void condition_finalizer(condition_t* cond, void* cd){
   /* 
    * No-op when there are threads waiting (and associated resource leak 
    * somewhere).
@@ -282,7 +282,7 @@ static const dfsch_type_t channel_type = {
   NULL
 };
 
-static channel_finalizer(channel_t* ch, void* cd){
+static void channel_finalizer(channel_t* ch, void* cd){
   /* 
    * When this is called, there are no outstanding references to this
    * so we can expect that no operations are in progress on this channel
