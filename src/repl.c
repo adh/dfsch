@@ -30,6 +30,7 @@
 #include <dfsch/parse.h>
 #include <dfsch/lib/load.h>
 #include <dfsch/lib/threads.h>
+#include <dfsch/lib/regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -285,6 +286,7 @@ int main(int argc, char**argv){
 
   dfsch_load_register(ctx);
   dfsch_threads_register(ctx);
+  dfsch_regex_register(ctx);
 
   dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));

@@ -1,5 +1,7 @@
 2006-10-05  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): integrated regular expressions
+
 	* lib/regex.c (dfsch_regex_substrings): substring matches
 
 2006-10-04  Ales Hakl  <ales at hakl dot net>

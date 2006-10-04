@@ -47,8 +47,9 @@ libdfsch_regex_la_LIBADD =  libdfsch.la
 
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la  libdfsch_load.la libdfsch_threads.la \
-	-lreadline -lncurses
+dfsch_repl_LDADD = libdfsch.la \
+	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la \
+	-lreadline -lncurses		
 
 
 TESTS = tests/scm-test.sh
