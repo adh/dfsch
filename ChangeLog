@@ -1,5 +1,9 @@
 2006-10-05  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm ("Regular expressions"): Tests for regex module
+
+	* lib/regex.c (dfsch_regex_substrings): Fixed buffer overflow
+
 	* src/repl.c (main): integrated regular expressions
 
 	* lib/regex.c (dfsch_regex_substrings): substring matches

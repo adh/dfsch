@@ -18,12 +18,14 @@
 
 
 (define (test id exp val)
+;;  (print (object->string val))
   (if (equal? exp val)
       (begin 
         (print "   Test passed: " id)
         (set! tests-passed (+ tests-passed 1)))
       (begin
-        (print "!! Test failed: " id " was: " exp " should be: " val)
+        (print "!! Test failed: " id " was: " (object->string exp) 
+               " should be: " (object->string val))
         (set! tests-failed (+ tests-failed 1))
         (if one-test-fail (begin
                             (print "*** Test failed -- ABORTING ***")
@@ -212,6 +214,15 @@
 
 (test 'degenerated-list-qq `(,@'() . foo) 'foo)
 
+(group "Regular expressions")
+(let ((r0 (regex:compile "[ab]+"))
+      (r0b (regex:compile "[ab]+" 'basic))
+      (r1 (regex:compile "^([^ ]+) +([^ ]+)$")))
+  (test 'extended (regex:match? r0 "baba") #t)
+  (test 'basic (regex:match? r0b "baba") #f)
+  (test 'substring 
+        (regex:substrings r1 "aaa bbb") 
+        #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
 ;;; End of tests
 ;;

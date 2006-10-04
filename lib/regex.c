@@ -84,7 +84,7 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
 
   r = (dfsch_regex_t*)regex;
 
-  match = GC_MALLOC_ATOMIC(r->sub_count);
+  match = GC_MALLOC_ATOMIC(sizeof(regmatch_t)*r->sub_count);
 
   if (regexec(&(r->regex), string, r->sub_count, match, flags) == REG_NOMATCH){
     GC_FREE(match);
