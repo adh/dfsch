@@ -1,7 +1,7 @@
 2006-10-04  Ales Hakl  <ales at hakl dot net>
 
 	* lib/regex.c (dfsch_regex_register): Simple (match/no match) regular 
-	expression support
+	expression support... and now with code :)
 
 	* scm/supermarket.scm: Exit after predefined number of iterations, 
 	do not loop forever
