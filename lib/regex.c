@@ -14,6 +14,10 @@ dfsch_type_t regex_type = {
   NULL, // apply
 };
 
+static void regex_finalizer(dfsch_regex_t* regex, void* cd){
+  regfree(&(regex->regex));
+}
+
 char* regex_get_error(int errcode, const regex_t *preg){
   size_t len;
   char* buf;
@@ -33,6 +37,9 @@ dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
     dfsch_throw("regex:error", 
                 dfsch_make_string_cstr(regex_get_error(err, &(r->regex))));
   }
+
+  GC_REGISTER_FINALIZER(r, (GC_finalization_proc)regex_finalizer,
+                        NULL, NULL, NULL);
   
   r->sub_count = 0;
   escape = 0;
@@ -58,11 +65,11 @@ int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags){
   if (regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
 
-  return dfsch_bool(regexec(&(((dfsch_regex_t*) regex)->regex),
-                            string,
-                            0,
-                            NULL,
-                            flags) == 0);
+  return (regexec(&(((dfsch_regex_t*) regex)->regex),
+                  string,
+                  0,
+                  NULL,
+                  flags) == 0);
 }
 dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
                                        int flags){
@@ -116,7 +123,7 @@ static dfsch_object_t* native_regex_match_p(void *baton,
   FLAG_SET("noteol", REG_NOTEOL, flags);
   FLAG_PARSER_END(args);
 
-  return dfsch_regex_match_p(expression, string, flags);
+  return dfsch_bool(dfsch_regex_match_p(expression, string, flags));
 }
 
 

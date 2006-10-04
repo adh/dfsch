@@ -9,5 +9,6 @@ int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags);
 dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
                                        int flags);
 
+dfsch_object_t* dfsch_regex_register(dfsch_ctx_t *ctx);
 
 #endif
