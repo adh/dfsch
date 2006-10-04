@@ -1,3 +1,8 @@
+2006-10-04  Ales Hakl  <ales at hakl dot net>
+
+	* scm/supermarket.scm: Exit after predefined number of iterations, 
+	do not loop forever
+
 2006-09-20  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac (USE_READLINE): Removed redundant chcek for use_readline

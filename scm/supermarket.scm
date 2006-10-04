@@ -16,23 +16,28 @@
 (define thread-list ())
 
 (define (start-thread function arguments)
-  (let ((thread (thread:create (lambda ()
-                                 (thread:detach (thread:self))
-                                 (apply function arguments))
-                               ())))
+  (thread:create (lambda ()
+                   (thread:detach (thread:self))
+                   (apply function arguments))
+                 ()))
+
+(define (start-collectable-thread function arguments)
+  (let ((thread (start-thread (lambda args 
+                                (apply function args)
+                                (channel:write exits (thread:self))
+                                ) 
+                              arguments)))
     (set! thread-list (cons thread thread-list))))
 
 (define (collect-threads)
   (for-each 
    (lambda (thread)
-     (letrec ((thread-return (channel:read exits))
-              (thread-type (car thread-return))
-              (thread-id (cdr thread-return)))
-       (log "thread exited " thread-type thread-id)))
+     (let ((thread (channel:read exits)))
+       (log "thread exited " thread)))
    thread-list))
 
 (define (teller max-customers)
-  (let ((my-id (gensym)) (my-channel (channel:create)))
+  (let ((my-id (thread:self)) (my-channel (channel:create)))
     (let main-loop ((iter 0))
       (sleep 1)
       (log "teller " my-id " available")
@@ -66,11 +71,10 @@
       (when (< iter max-customers)
             (main-loop (+ iter 1))))
 
-    (log "teller " my-id " going home")
-    (channel:write exits (cons 'teller my-id))))
+    (log "teller " my-id " going home")))
 
 (define (customer items)
-  (let ((my-id (gensym)) 
+  (let ((my-id (thread:self)) 
         (my-channel (channel:create)))
     (letrec ((teller (channel:read free-tellers))
              (teller-channel (car teller))
@@ -87,17 +91,20 @@
         (sleep 1)
         (channel:write teller-channel pay)
         (let ((return (channel:read my-channel)))
-          (log "customer " my-id " got " return " back, going home")
-          (channel:write exits (cons 'customer my-id)))))))
+          (log "customer " my-id " got " return " back, going home"))))))
 
-(thread:create collect-threads ())
 
-(let top-loop ()
-  (start-thread teller '(10))
+(let loop ((i 15))   ;; tellers
+  (start-thread teller (list i))
+  (when (> i 0)
+        (loop (- i 1))))
   
-  (let loop ((i 10))
-    (start-thread customer (list (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
-    (when (> i 0)
-          (loop (- i 1))))
-  (top-loop))
+(let loop ((i 100))  ;; customers
+  (start-collectable-thread customer 
+                            (list 
+                             (cons (vector 'foo i) '(#(bar 20) #(quux 30)))))
+  (when (> i 0)
+        (loop (- i 1))))
+
+(collect-threads)
   
