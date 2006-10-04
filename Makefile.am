@@ -10,7 +10,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/number.h \
 	dfsch/wrapper.h
 
-lib_LTLIBRARIES     = libdfsch.la libdfsch_load.la libdfsch_threads.la
+lib_LTLIBRARIES     = libdfsch.la \
+	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la
 
 man_MANS = doc/dfsch-repl.1
 
@@ -39,6 +40,10 @@ libdfsch_threads_la_LIBADD =  libdfsch.la -lpthread
 libdfsch_load_la_SOURCES = lib/load.c dfsch/lib/load.h
 libdfsch_load_la_LDFLAGS = -version-info 1:0:0
 libdfsch_load_la_LIBADD =  libdfsch.la
+
+libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h
+libdfsch_regex_la_LDFLAGS = -version-info 1:0:0
+libdfsch_regex_la_LIBADD =  libdfsch.la
 
 
 dfsch_repl_SOURCES = src/repl.c
