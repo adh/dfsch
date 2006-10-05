@@ -27,23 +27,11 @@ char* regex_get_error(int errcode, const regex_t *preg){
   return buf;
 }
 
-dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
-  int err;
+static int get_sub_count(char* expression, int flags){
   int escape;
-  dfsch_regex_t* r = (dfsch_regex_t*)dfsch_make_object(&regex_type);
-
-  err = regcomp(&(r->regex), expression, flags);
-  if (err != 0){
-    dfsch_throw("regex:error", 
-                dfsch_make_string_cstr(regex_get_error(err, &(r->regex))));
-  }
-
-  GC_REGISTER_FINALIZER(r, (GC_finalization_proc)regex_finalizer,
-                        NULL, NULL, NULL);
-  
-  r->sub_count = 1;
+  int r;
   escape = 0;
-
+  r = 0;
   while (*expression){
     switch (*expression){
     case '\\':
@@ -51,53 +39,72 @@ dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
       break;
     case '(':
       if ((flags & REG_EXTENDED) == REG_EXTENDED || escape){
-        r->sub_count++;
+        r++;
       }
     default:
       escape = 0;
     }
     expression++;
   }
+  return r+1;
+}
+
+static void regex_compile(regex_t* regex, char* expression, int flags){
+  int err;
+
+  err = regcomp(regex, expression, flags);
+  if (err != 0){
+    dfsch_throw("regex:error", 
+                dfsch_make_string_cstr(regex_get_error(err, regex)));
+  }
+}
+
+dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
+  dfsch_regex_t* r = (dfsch_regex_t*)dfsch_make_object(&regex_type);
+  
+  regex_compile(&(r->regex), expression, flags);
+  r->sub_count = get_sub_count(expression, flags);
+
+  GC_REGISTER_FINALIZER(r, (GC_finalization_proc)regex_finalizer,
+                        NULL, NULL, NULL);
+
 
   return (dfsch_object_t*)r;
 }
+
+static int regex_match(regex_t* regex, char*string, int flags){
+  return (regexec(regex, string, 0, NULL, flags) == 0);
+}
+
 int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags){
   if (regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
 
-  return (regexec(&(((dfsch_regex_t*) regex)->regex),
-                  string,
-                  0,
-                  NULL,
-                  flags) == 0);
+  return regex_match(&(((dfsch_regex_t*)regex)->regex), string, flags);
 }
-dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
-                                       int flags){
+
+static dfsch_object_t* regex_substrings(regex_t* regex, char* string, 
+                                        int sub_count, int flags){
   regmatch_t *match;
-  dfsch_regex_t* r;
   int i;
   int count;
   dfsch_object_t* vector;
 
-  if (regex->type != &regex_type)
-    dfsch_throw("regex:not-a-regex", regex);
+  match = GC_MALLOC_ATOMIC(sizeof(regmatch_t)*sub_count);
 
-  r = (dfsch_regex_t*)regex;
-
-  match = GC_MALLOC_ATOMIC(sizeof(regmatch_t)*r->sub_count);
-
-  if (regexec(&(r->regex), string, r->sub_count, match, flags) == REG_NOMATCH){
+  if (regexec(regex, string, sub_count, match, flags) == REG_NOMATCH){
     GC_FREE(match);
     return NULL;
   }
 
   count = 0;
 
-  for (i = 0; i < r->sub_count; i++){
+  for (i = 0; i < sub_count; i++){
     if (match[i].rm_so == -1)  // No more substring matches
       break;
     count ++;
   }
+
 
   vector = dfsch_make_vector(count, NULL);
   
@@ -113,6 +120,17 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
   GC_FREE(match);
     
   return vector;
+}
+
+dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
+                                       int flags){
+  dfsch_regex_t* r;
+  if (regex->type != &regex_type)
+    dfsch_throw("regex:not-a-regex", regex);
+
+  r = (dfsch_regex_t*)regex;
+
+  return regex_substrings(&(r->regex), string, r->sub_count, flags);
 }
 
 
