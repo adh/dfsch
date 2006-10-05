@@ -1,5 +1,7 @@
 2006-10-05  Ales Hakl  <ales at hakl dot net>
 
+	* lib/regex.c (native_regex_substrings_once): removed REG_NOSUB
+
 	* scm/test.scm (substrings-once): Additional test 
 
 	* lib/regex.c: split core from code handling wrapper objects.

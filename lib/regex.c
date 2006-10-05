@@ -63,8 +63,12 @@ dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
   dfsch_regex_t* r = (dfsch_regex_t*)dfsch_make_object(&regex_type);
   
   regex_compile(&(r->regex), expression, flags);
-  r->sub_count = get_sub_count(expression, flags);
 
+  if (flags & REG_NOSUB == REG_NOSUB){
+    r->sub_count = 0;
+  }else{
+    r->sub_count = get_sub_count(expression, flags);
+  }
   GC_REGISTER_FINALIZER(r, (GC_finalization_proc)regex_finalizer,
                         NULL, NULL, NULL);
 
@@ -127,6 +131,9 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
   dfsch_regex_t* r;
   if (regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
+  if (r->sub_count == 0)
+    dfsch_throw("regex:compiled-with-nosub", regex);
+  
 
   r = (dfsch_regex_t*)regex;
 
@@ -234,7 +241,7 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
   char* expression;
   char* string;
   int mflags = 0;
-  int cflags = REG_EXTENDED | REG_NOSUB;
+  int cflags = REG_EXTENDED;
   regex_t regex;
   dfsch_object_t* r;
   
