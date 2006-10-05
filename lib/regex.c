@@ -200,6 +200,66 @@ static dfsch_object_t* native_regex_substrings(void *baton,
   return dfsch_regex_substrings(expression, string, flags);
 }
 
+static dfsch_object_t* native_regex_match_once_p(void *baton, 
+                                                 dfsch_object_t* args, 
+                                                 dfsch_tail_escape_t* esc){
+  char* expression;
+  char* string;
+  int mflags = 0;
+  int cflags = REG_EXTENDED | REG_NOSUB;
+  regex_t regex;
+  int r;
+  
+  DFSCH_STRING_ARG(args, expression);
+  DFSCH_STRING_ARG(args, string);
+
+  FLAG_PARSER_BEGIN(args);
+  FLAG_UNSET("basic", REG_EXTENDED, cflags);
+  FLAG_SET("icase", REG_ICASE, cflags);
+  FLAG_SET("newline", REG_NEWLINE, cflags);
+  FLAG_SET("notbol", REG_NOTBOL, mflags);
+  FLAG_SET("noteol", REG_NOTEOL, mflags);
+  FLAG_PARSER_END(args);
+
+  regex_compile(&regex, expression, cflags);
+  r = regex_match(&regex, string, mflags);
+  regfree(&regex);
+
+  return dfsch_bool(r);
+}
+
+static dfsch_object_t* native_regex_substrings_once(void *baton, 
+                                                    dfsch_object_t* args, 
+                                                    dfsch_tail_escape_t* esc){
+  char* expression;
+  char* string;
+  int mflags = 0;
+  int cflags = REG_EXTENDED | REG_NOSUB;
+  regex_t regex;
+  dfsch_object_t* r;
+  
+  DFSCH_STRING_ARG(args, expression);
+  DFSCH_STRING_ARG(args, string);
+
+  FLAG_PARSER_BEGIN(args);
+  FLAG_UNSET("basic", REG_EXTENDED, cflags);
+  FLAG_SET("icase", REG_ICASE, cflags);
+  FLAG_SET("newline", REG_NEWLINE, cflags);
+  FLAG_SET("notbol", REG_NOTBOL, mflags);
+  FLAG_SET("noteol", REG_NOTEOL, mflags);
+  FLAG_PARSER_END(args);
+
+  regex_compile(&regex, expression, cflags);
+  r = regex_substrings(&regex, string, 
+                       get_sub_count(expression, cflags),
+                       mflags);
+
+  regfree(&regex);
+
+  return r;
+}
+
+
 dfsch_object_t* dfsch_regex_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "regex:compile", 
                    dfsch_make_primitive(&native_regex_compile,NULL));
@@ -207,5 +267,9 @@ dfsch_object_t* dfsch_regex_register(dfsch_ctx_t *ctx){
                    dfsch_make_primitive(&native_regex_match_p,NULL));
   dfsch_ctx_define(ctx, "regex:substrings", 
                    dfsch_make_primitive(&native_regex_substrings,NULL));
+  dfsch_ctx_define(ctx, "regex:match-once?", 
+                   dfsch_make_primitive(&native_regex_match_once_p,NULL));
+  dfsch_ctx_define(ctx, "regex:substrings-once", 
+                   dfsch_make_primitive(&native_regex_substrings_once, NULL));
   return NULL;
 }
