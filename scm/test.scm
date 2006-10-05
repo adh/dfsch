@@ -222,6 +222,9 @@
   (test 'basic (regex:match? r0b "baba") #f)
   (test 'substring 
         (regex:substrings r1 "aaa bbb") 
+        #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb")))
+  (test 'substring-once 
+        (regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
         #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
 ;;; End of tests
