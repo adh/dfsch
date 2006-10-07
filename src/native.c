@@ -310,6 +310,37 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   
   return head;
 }
+static object_t* native_filter(void* baton, object_t* args, 
+                               dfsch_tail_escape_t* esc){
+  object_t* func;
+  object_t* list;
+  object_t* head = NULL;
+  object_t* tail;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  while (dfsch_pair_p(list)){
+    object_t* item =  dfsch_car(list);
+    object_t* t;
+
+    if (dfsch_apply(func, 
+                    dfsch_list(1, item))){
+      t = dfsch_cons(item, NULL);
+
+      if (!head){
+        head = tail = t;
+      }else{
+        dfsch_set_cdr(tail, t);
+        tail = t;
+      }
+    }
+    list = dfsch_cdr(list);
+  }
+  
+  return head;
+}
 
 
 
@@ -614,6 +645,8 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
 							 NULL));
   dfsch_ctx_define(ctx, "map", dfsch_make_primitive(&native_map,
 							 NULL));
+  dfsch_ctx_define(ctx, "filter", dfsch_make_primitive(&native_filter,
+                                                       NULL));
   dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
                                                          NULL));
   dfsch_ctx_define(ctx, "reverse", dfsch_make_primitive(&native_reverse,
