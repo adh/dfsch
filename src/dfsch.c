@@ -295,6 +295,13 @@ int dfsch_pair_p(dfsch_object_t* obj){
     return 0;
   return obj->type == PAIR;
 }
+int dfsch_list_p(dfsch_object_t* obj){
+  if (!obj)
+    return 1;
+  if (obj->type != PAIR)
+    return 0;
+  return dfsch_list_length(obj) > 0;
+}
 int dfsch_atom_p(dfsch_object_t* obj){
   if (!obj)
     return 0;

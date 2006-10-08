@@ -137,6 +137,8 @@ extern "C" {
   extern int dfsch_null_p(dfsch_object_t* obj);
   /** Is OBJ a pair? */
   extern int dfsch_pair_p(dfsch_object_t* obj);
+  /** Is OBJ a proper list? */
+  extern int dfsch_list_p(dfsch_object_t* obj);
   /** Is OBJ an atom? (i.e. not pair) */
   extern int dfsch_atom_p(dfsch_object_t* obj); // i.e. not pair
   /** Is OBJ a symbol? */

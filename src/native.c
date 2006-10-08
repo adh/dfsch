@@ -358,6 +358,10 @@ static object_t* native_pair_p(void *baton, object_t* args, dfsch_tail_escape_t*
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
 }
+static object_t* native_list_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  NEED_ARGS(args,1);  
+  return dfsch_bool(dfsch_list_p(dfsch_car(args)));
+}
 static object_t* native_atom_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
@@ -661,6 +665,7 @@ void dfsch__native_register(dfsch_ctx_t *ctx){
   dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
   dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));
   dfsch_ctx_define(ctx, "pair?", dfsch_make_primitive(&native_pair_p,NULL));
+  dfsch_ctx_define(ctx, "list?", dfsch_make_primitive(&native_list_p,NULL));
   dfsch_ctx_define(ctx, "symbol?", dfsch_make_primitive(&native_symbol_p,
 							NULL));
   dfsch_ctx_define(ctx, "string?", dfsch_make_primitive(&native_string_p,

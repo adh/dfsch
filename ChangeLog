@@ -1,3 +1,7 @@
+2006-10-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_list_p): list? function
+
 2006-10-07  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c (native_filter): filter function
