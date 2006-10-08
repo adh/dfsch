@@ -64,7 +64,7 @@ dfsch_object_t* dfsch_regex_compile(char* expression, int flags){
   
   regex_compile(&(r->regex), expression, flags);
 
-  if (flags & REG_NOSUB == REG_NOSUB){
+  if ((flags & REG_NOSUB) == REG_NOSUB){
     r->sub_count = 0;
   }else{
     r->sub_count = get_sub_count(expression, flags);
@@ -81,7 +81,7 @@ static int regex_match(regex_t* regex, char*string, int flags){
 }
 
 int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags){
-  if (regex->type != &regex_type)
+  if (!regex || regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
 
   return regex_match(&(((dfsch_regex_t*)regex)->regex), string, flags);
@@ -129,7 +129,7 @@ static dfsch_object_t* regex_substrings(regex_t* regex, char* string,
 dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
                                        int flags){
   dfsch_regex_t* r;
-  if (regex->type != &regex_type)
+  if (!regex || regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
   if (r->sub_count == 0)
     dfsch_throw("regex:compiled-with-nosub", regex);

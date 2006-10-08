@@ -1,5 +1,8 @@
 2006-10-08  Ales Hakl  <ales at hakl dot net>
 
+	* lib/regex.c: Throw exception when passed () instead of compiled 
+	regex
+
 	* src/dfsch.c (dfsch_list_p): list? function
 
 2006-10-07  Ales Hakl  <ales at hakl dot net>
