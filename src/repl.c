@@ -282,7 +282,7 @@ int main(int argc, char**argv){
   cmd_log = NULL;
   ctx = dfsch_make_context();
 
-  dfsch_ctx_define(ctx,"version",dfsch_make_string_cstr(VERSION));
+  dfsch_ctx_define(ctx,"version",dfsch_make_string_cstr(PACKAGE_VERSION));
 
   dfsch_load_register(ctx);
   dfsch_threads_register(ctx);
