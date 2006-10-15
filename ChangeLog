@@ -1,5 +1,8 @@
 2006-10-15  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h (DFSCH_SYMBOL_CACHE): macro for defining symbol
+	caching functions
+
 	* src/dfsch.c (dfsch_eval_proc_impl): Added thread specific data 
 	caching (I expect some performance gain from this, because
 	get_thread_info() is (should be) slow)

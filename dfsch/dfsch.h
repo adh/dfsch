@@ -515,6 +515,17 @@ extern "C" {
   if (al != NULL) \
     dfsch_throw("exception:too-many-arguments",NULL)
 
+#define DFSCH_SYMBOL_CACHE(symbol, name)\
+  dfsch_object_t* name(){\
+    static cache = NULL;\
+    if (!cache)\
+      cache = dfsch_make_symbol(symbol);\
+    return cache;\
+  }
+
+#define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)\
+  static DFSCH_SYMBOL_CACHE(symbol, name)
+
 #ifdef __cplusplus
 }
 #endif
