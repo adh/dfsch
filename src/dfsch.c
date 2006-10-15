@@ -1524,6 +1524,32 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 
 }
 
+// Evaluator
+
+struct dfsch_tail_escape_t {
+  jmp_buf ret;
+  object_t *code;
+  object_t *env;
+  object_t *proc_name; 
+};
+
+typedef dfsch_tail_escape_t tail_escape_t;
+
+
+static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
+                                            dfsch_object_t* env,
+                                            dfsch_object_t* proc_name,
+                                            tail_escape_t* esc,
+                                            thread_info_t* ti);
+static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
+                                       dfsch_object_t* env,
+                                       dfsch_tail_escape_t* esc,
+                                       thread_info_t* ti);
+static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
+                                        dfsch_object_t* args,
+                                        tail_escape_t* esc,
+                                        thread_info_t* ti);
+
 
 static object_t* eval_list(object_t *list, object_t* env){
   pair_t *i;
@@ -1556,19 +1582,10 @@ static object_t* eval_list(object_t *list, object_t* env){
   return f;
 }
 
-struct dfsch_tail_escape_t {
-  jmp_buf ret;
-  object_t *code;
-  object_t *env;
-  object_t *proc_name; 
-};
-
-typedef dfsch_tail_escape_t tail_escape_t;
-
-
-dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
-                              dfsch_object_t* env,
-                              dfsch_tail_escape_t* esc){
+static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
+                                       dfsch_object_t* env,
+                                       dfsch_tail_escape_t* esc,
+                                       thread_info_t* ti){
  start:
   
   if (!exp) 
@@ -1586,21 +1603,26 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
 	
  
     if (f->type == FORM)
-      return dfsch_apply_tr(((form_t*)f)->proc,     
-                            dfsch_cons(env,
-                                       ((pair_t*)exp)->cdr),
-                            esc);
+      return dfsch_apply_impl(((form_t*)f)->proc,     
+                              dfsch_cons(env,
+                                         ((pair_t*)exp)->cdr),
+                              esc,
+                              ti);
     if (f->type == MACRO)
-      return dfsch_eval_proc_tr(dfsch_apply(((macro_t*)f)->proc,
-                                            dfsch_cons(env, 
-                                                       ((pair_t*)exp)->cdr)),
-                                env,
-                                NULL,
-                                esc);
+      return dfsch_eval_proc_impl(dfsch_apply_impl(((macro_t*)f)->proc,
+                                                   dfsch_cons(env, 
+                                                              ((pair_t*)exp)->cdr),
+                                                   NULL,
+                                                   ti),
+                                  env,
+                                  NULL,
+                                  esc,
+                                  ti);
       
-    return dfsch_apply_tr(f, 
-                          eval_list(((pair_t*)exp)->cdr,env),
-                          esc);
+    return dfsch_apply_impl(f, 
+                            eval_list(((pair_t*)exp)->cdr,env),
+                            esc,
+                            ti);
     
     
   }  
@@ -1608,8 +1630,13 @@ dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp,
   return exp;
 }
 
+dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
+                              dfsch_object_t* env,
+                              dfsch_tail_escape_t* esc){
+  return dfsch_eval_impl(exp, env, esc, get_thread_info());
+}
 dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
-  return dfsch_eval_tr(exp, env, NULL);
+  return dfsch_eval_impl(exp, env, NULL, get_thread_info());
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
@@ -1642,14 +1669,14 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   return ext_env;
 }
 
-dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
-                                   dfsch_object_t* env,
-                                   dfsch_object_t* proc_name,
-                                   tail_escape_t* esc){
+static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
+                                            dfsch_object_t* env,
+                                            dfsch_object_t* proc_name,
+                                            tail_escape_t* esc,
+                                            thread_info_t* ti){
   pair_t *i;
   object_t *r=NULL;
   tail_escape_t myesc;
-  thread_info_t *ti;
   dfsch_object_t *old_frame;
   dfsch_object_t *my_frame;
 
@@ -1657,8 +1684,6 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
     return NULL;
   if (!code)
     return NULL;
-
-  ti = get_thread_info();
 
   if (ti->break_type){
     dfsch_throw("exception:break", dfsch_make_symbol(ti->break_type));
@@ -1696,9 +1721,9 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
     ((vector_t*)my_frame)->data[0] = exp;
 
     if (i->cdr)
-      r = dfsch_eval_tr(exp,env,NULL);
+      r = dfsch_eval_impl(exp,env,NULL, ti);
     else
-      r = dfsch_eval_tr(exp,env,(tail_escape_t*)&myesc);
+      r = dfsch_eval_impl(exp,env,(tail_escape_t*)&myesc, ti);
    
     i = (pair_t*)i->cdr;
   }
@@ -1708,13 +1733,20 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
   return r;
 }
 
+dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
+                                   dfsch_object_t* env,
+                                   dfsch_object_t* proc_name,
+                                   tail_escape_t* esc){
+  return dfsch_eval_proc_impl(code, env, proc_name, esc, get_thread_info());
+}
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
-  return dfsch_eval_proc_tr(code, env, NULL, NULL);
+  return dfsch_eval_proc_impl(code, env, NULL, NULL, get_thread_info());
 }
 
-dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
-                               dfsch_object_t* args,
-                               tail_escape_t* esc){
+dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
+                                 dfsch_object_t* args,
+                                 tail_escape_t* esc,
+                                 thread_info_t* ti){
 
   if (!proc)
     return NULL;
@@ -1731,12 +1763,13 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
   }
 
   if (proc->type == CLOSURE){
-    object_t* r = dfsch_eval_proc_tr(((closure_t*)proc)->code,
-                                     lambda_extend(((closure_t*)proc)->args,
-                                                   args,
-                                                   ((closure_t*)proc)->env),
-                                     dfsch_cons(proc, args),
-                                     esc);
+    object_t* r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
+                                       lambda_extend(((closure_t*)proc)->args,
+                                                     args,
+                                                     ((closure_t*)proc)->env),
+                                       dfsch_cons(proc, args),
+                                       esc,
+                                       ti);
     return r;
   }
 
@@ -1748,8 +1781,13 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
    
 }
 
+dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
+                               dfsch_object_t* args,
+                               tail_escape_t* esc){
+  return dfsch_apply_impl(proc, args, esc, get_thread_info());
+}
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
-  return dfsch_apply_tr(proc, args, NULL);
+  return dfsch_apply_impl(proc, args, NULL, get_thread_info());
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
