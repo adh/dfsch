@@ -131,11 +131,9 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
   dfsch_regex_t* r;
   if (!regex || regex->type != &regex_type)
     dfsch_throw("regex:not-a-regex", regex);
+  r = (dfsch_regex_t*)regex;
   if (r->sub_count == 0)
     dfsch_throw("regex:compiled-with-nosub", regex);
-  
-
-  r = (dfsch_regex_t*)regex;
 
   return regex_substrings(&(r->regex), string, r->sub_count, flags);
 }

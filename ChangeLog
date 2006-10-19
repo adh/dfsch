@@ -1,3 +1,8 @@
+2006-10-20  Ales Hakl  <ales at hakl dot net>
+
+	* lib/regex.c (dfsch_regex_substrings): Dereferencing
+	uninitialized pointer leads to undefined behavior :)
+
 2006-10-15  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/dfsch.h (DFSCH_SYMBOL_CACHE): macro for defining symbol
