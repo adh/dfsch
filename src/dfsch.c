@@ -1750,6 +1750,8 @@ dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   if (!proc)
     return NULL;
+  if (!proc->type)
+    return NULL;
 
   /**
    * Two most common cases are written here explicitly (for historical

@@ -1,5 +1,8 @@
 2006-10-21  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_apply_impl): typeless-value can be applied
+	and evaluates to empty list (quite useless feature)
+
 	* src/native.c (native_reduce): More Common Lisp like reduce.
 
 2006-10-20  Ales Hakl  <ales at hakl dot net>
