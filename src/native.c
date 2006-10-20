@@ -351,11 +351,17 @@ static object_t* native_reduce(void* baton, object_t* args,
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
 
-  while (dfsch_pair_p(list)){
-    tally = dfsch_apply(func, dfsch_list(2, tally, dfsch_car(list)));
-
-    list = dfsch_cdr(list);
+  if (!dfsch_pair_p(list)){
+    return NULL;
   }
+
+  tally = dfsch_car(list);
+  list = dfsch_cdr(list);
+
+  while (dfsch_pair_p(list)) {
+    tally = dfsch_apply(func, dfsch_list(2, tally, dfsch_car(list)));
+    list = dfsch_cdr(list);
+  };
   
   return tally;
 }
