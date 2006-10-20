@@ -361,7 +361,7 @@ static object_t* native_reduce(void* baton, object_t* args,
   while (dfsch_pair_p(list)) {
     tally = dfsch_apply(func, dfsch_list(2, tally, dfsch_car(list)));
     list = dfsch_cdr(list);
-  };
+  }
   
   return tally;
 }
