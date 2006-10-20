@@ -1,5 +1,7 @@
 2006-10-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_reduce): reduce function
+
 	* src/number.c (dfsch_make_number_from_long): Smallnums allocated
 	on heap
 
