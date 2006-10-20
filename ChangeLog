@@ -1,5 +1,8 @@
 2006-10-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_make_number_from_long): Smallnums allocated
+	on heap
+
 	* lib/regex.c (dfsch_regex_substrings): Dereferencing
 	uninitialized pointer leads to undefined behavior :)
 

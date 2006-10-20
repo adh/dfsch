@@ -8,8 +8,8 @@
 #include <math.h>
 #include <errno.h>
 
-#define SMALLNUM_ORIGIN  -16
-#define SMALLNUM_COUNT   32
+#define SMALLNUM_ORIGIN  -32
+#define SMALLNUM_COUNT   64
 
 
 typedef struct number_t {
@@ -24,7 +24,7 @@ typedef struct number_t {
   };
 } number_t;
 
-number_t smallnum_buf[SMALLNUM_COUNT];
+number_t* smallnum_buf[SMALLNUM_COUNT];
 
 static int n_equal_p(number_t* a, number_t* b){
   if (a->n_type == b->n_type){
@@ -78,13 +78,11 @@ dfsch_object_t* dfsch_make_number_from_long(long num){
   number_t *n;
 
   if (num < SMALLNUM_COUNT + SMALLNUM_ORIGIN && num >= SMALLNUM_ORIGIN){
-    n = smallnum_buf + (num - SMALLNUM_ORIGIN);
-    n->type = NUMBER;
-  }else{
-    n = (number_t*)dfsch_make_object(NUMBER);
+    n = smallnum_buf[(num - SMALLNUM_ORIGIN)];
+    if (n)
+      return (dfsch_object_t*)n;
   }
-  if (!n)
-    return NULL;
+  n = (number_t*)dfsch_make_object(NUMBER);
 
   n->n_type = N_FIXNUM;
   n->fixnum = num;
