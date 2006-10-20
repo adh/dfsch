@@ -1743,7 +1743,7 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   return dfsch_eval_proc_impl(code, env, NULL, NULL, get_thread_info());
 }
 
-dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
+static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                  dfsch_object_t* args,
                                  tail_escape_t* esc,
                                  thread_info_t* ti){

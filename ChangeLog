@@ -2,6 +2,8 @@
 
 	* src/dfsch.c (dfsch_apply_impl): typeless-value can be applied
 	and evaluates to empty list (quite useless feature)
+	(dfsch_apply_impl): apply_impl is internal implementation
+	function, therefore should be static
 
 	* src/native.c (native_reduce): More Common Lisp like reduce.
 
