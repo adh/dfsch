@@ -210,6 +210,12 @@
   (test 'vector-base (vector-ref v 0) 'foo)
   (test 'vector-lit (vector-ref '#(0 1 2 3) 1) 1))
 
+(group "strings")
+
+(test 'append (string-append "abc" "def") "abcdef")
+(test 'substring (substring "abcdef" 2 4) "cd")
+
+
 (group "some special cases")
 
 (test 'degenerated-list-qq `(,@'() . foo) 'foo)

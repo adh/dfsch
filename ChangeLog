@@ -1,5 +1,7 @@
 2006-10-21  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm (strings): Some tests for strings.
+
 	* src/dfsch.c (dfsch_apply_impl): typeless-value can be applied
 	and evaluates to empty list (quite useless feature)
 	(dfsch_apply_impl): apply_impl is internal implementation
