@@ -214,7 +214,10 @@
 
 (test 'append (string-append "abc" "def") "abcdef")
 (test 'substring (substring "abcdef" 2 4) "cd")
-
+(test 'utf8-ref (string-utf8-ref "ab©" 2) 169)
+(test 'utf8->list (string-utf8->list "ab©") '(97 98 169))
+(test 'list->utf8 (list->string-utf8 '(0x3042 0x3044 0x3046 0x3048 0x304a))
+      "あいうえお")
 
 (group "some special cases")
 

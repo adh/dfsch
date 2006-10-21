@@ -1,6 +1,7 @@
 2006-10-21  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm (strings): Some tests for strings.
+	(*utf8*): utf-8 related tests 
 
 	* src/dfsch.c (dfsch_apply_impl): typeless-value can be applied
 	and evaluates to empty list (quite useless feature)
