@@ -919,7 +919,7 @@ void dfsch__number_native_register(dfsch_ctx_t *ctx){
 							NULL));
 
   dfsch_ctx_define(ctx, "pi", 
-                   dfsch_make_number_from_double(3.1415926535897931));
+                   dfsch_make_number_from_double(4*atan(1)));
 
 
   dfsch_ctx_define(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
