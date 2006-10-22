@@ -2,6 +2,7 @@
 
 	* src/number.c (dfsch__number_native_register): derive value of pi
 	from math library (pi = 4*arctan 1)
+	(native_exp): exp without arguments returns e
 
 2006-10-21  Ales Hakl  <ales at hakl dot net>
 

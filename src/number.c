@@ -591,7 +591,7 @@ static object_t* native_abs(void *baton, object_t* args,
 static object_t* native_exp(void *baton, object_t* args, 
                             dfsch_tail_escape_t* esc){
   double z;
-  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_DOUBLE_ARG_OPT(args, z, 1.0);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(exp(z));
 }
