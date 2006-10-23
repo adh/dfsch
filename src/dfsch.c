@@ -1069,6 +1069,16 @@ typedef struct thread_info_t {
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
+static void invalidate_continuations(thread_info_t* ti, continuation_t* cont){
+  continuation_t *i;
+
+  i = ti->cont_stack;
+  while (i && i != cont){
+    i->active = 0;
+    i = i->next;
+  }
+}
+
 static void thread_info_destroy(void* ptr){
   if (ptr)
     GC_FREE(ptr);
@@ -1113,14 +1123,17 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
   volatile thread_info_t *ei = (volatile thread_info_t*)get_thread_info();
   volatile jmp_buf *old_ret;
   volatile dfsch_object_t* old_frame;
+  volatile continuation_t* cont;
   
   old_ret = (volatile jmp_buf*)ei->exception_ret;
   old_frame = (volatile object_t*) ei->stack_trace;
+  cont = (volatile continuation_t*) ei->cont_stack;
   ei->exception_ret = GC_NEW(jmp_buf);
 
   if(setjmp(*ei->exception_ret) == 1){
     ei->exception_ret = (jmp_buf*)old_ret;
     ei->stack_trace = (object_t*)old_frame;
+    invalidate_continuations(ei, cont);
     return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
   }else{
     object_t *r = dfsch_apply(thunk, NULL);
@@ -1187,7 +1200,6 @@ static object_t* continuation_apply(continuation_t *cont,
   if (cont->thread != pthread_self())
     dfsch_throw("exception:cross-thread-continuation",NULL);
 
-
   cont->value = value;
   longjmp(cont->ret,1);
 }
@@ -1202,13 +1214,14 @@ static struct dfsch_type_t continuation_type = {
 
 dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   object_t* value;
-  continuation_t *cont = 
-    (continuation_t*)dfsch_make_object(&continuation_type);
-  continuation_t *i;
-  thread_info_t *ti = get_thread_info();
+  volatile continuation_t *cont = 
+    (volatile continuation_t*)dfsch_make_object(&continuation_type);
+  volatile thread_info_t *ti = get_thread_info();
+  jmp_buf* ex_ret;
 
   cont->active = 1;
   cont->next = ti->cont_stack;
+  ex_ret = ti->exception_ret;
   cont->thread = pthread_self();
   ti->cont_stack = cont;
   if(setjmp(cont->ret) == 1){
@@ -1218,15 +1231,11 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
                         dfsch_list(1, cont));
   }
   
-  i = ti->cont_stack;
-
-  while (i && i != cont){
-    i->active = 0;
-    i = i->next;
-  }
+  invalidate_continuations(ti, cont);
   
   cont->active = 0;
   ti->cont_stack = cont->next;
+  ti->exception_ret = ex_ret;
   return value;
 
 }
