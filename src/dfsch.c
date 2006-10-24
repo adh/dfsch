@@ -1069,6 +1069,16 @@ typedef struct thread_info_t {
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
+
+/*
+ * It seems so volatile really isn't needed around this magic, only automatic
+ * variables that have been _CHANGED_ since call to setjmp(3) are indeterminate
+ * and there are none such. Actually only thing that happen in these functions
+ * between setjmp(3) and opportunity to call longjmp(3) (from corresponding 
+ * wrapper function is function call). This is only case of undefined behavior
+ * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
+ */
+
 static void invalidate_continuations(thread_info_t* ti, continuation_t* cont){
   continuation_t *i;
 
@@ -1120,10 +1130,10 @@ void dfsch_raise(dfsch_object_t* exception){
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
-  volatile thread_info_t *ei = (volatile thread_info_t*)get_thread_info();
-  volatile jmp_buf *old_ret;
-  volatile dfsch_object_t* old_frame;
-  volatile continuation_t* cont;
+  thread_info_t *ei = (volatile thread_info_t*)get_thread_info();
+  jmp_buf *old_ret;
+  dfsch_object_t* old_frame;
+  continuation_t* cont;
   
   old_ret = (volatile jmp_buf*)ei->exception_ret;
   old_frame = (volatile object_t*) ei->stack_trace;
@@ -1214,9 +1224,9 @@ static struct dfsch_type_t continuation_type = {
 
 dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   object_t* value;
-  volatile continuation_t *cont = 
-    (volatile continuation_t*)dfsch_make_object(&continuation_type);
-  volatile thread_info_t *ti = get_thread_info();
+  continuation_t *cont = 
+    (continuation_t*)dfsch_make_object(&continuation_type);
+  thread_info_t *ti = get_thread_info();
   jmp_buf* ex_ret;
 
   cont->active = 1;
