@@ -1144,6 +1144,7 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
     ei->exception_ret = (jmp_buf*)old_ret;
     ei->stack_trace = (object_t*)old_frame;
     invalidate_continuations(ei, cont);
+    ei->cont_stack = cont;
     return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
   }else{
     object_t *r = dfsch_apply(thunk, NULL);
