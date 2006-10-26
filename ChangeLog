@@ -1,6 +1,7 @@
 2006-10-26  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_try): restore continuation stack.
+	(dfsch_try): removed unnecesary casts
 
 2006-10-24  Ales Hakl  <ales at hakl dot net>
 

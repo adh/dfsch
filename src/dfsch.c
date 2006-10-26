@@ -1130,14 +1130,14 @@ void dfsch_raise(dfsch_object_t* exception){
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* thunk){
 
-  thread_info_t *ei = (volatile thread_info_t*)get_thread_info();
+  thread_info_t *ei = get_thread_info();
   jmp_buf *old_ret;
   dfsch_object_t* old_frame;
   continuation_t* cont;
   
-  old_ret = (volatile jmp_buf*)ei->exception_ret;
-  old_frame = (volatile object_t*) ei->stack_trace;
-  cont = (volatile continuation_t*) ei->cont_stack;
+  old_ret = ei->exception_ret;
+  old_frame = ei->stack_trace;
+  cont = ei->cont_stack;
   ei->exception_ret = GC_NEW(jmp_buf);
 
   if(setjmp(*ei->exception_ret) == 1){
