@@ -1886,7 +1886,10 @@ dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx,
   
 }
 dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name){
-  return dfsch_lookup(ctx->env,dfsch_make_symbol(name));
+  return dfsch_lookup(dfsch_make_symbol(name), ctx->env);
+}
+dfsch_object_t* dfsch_ctx_env_get(dfsch_ctx_t *ctx, char *name){
+  return dfsch_env_get(dfsch_make_symbol(name), ctx->env);
 }
 dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx){
   return ctx->env;

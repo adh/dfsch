@@ -344,6 +344,11 @@ extern "C" {
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
+  /** Look up value of given variable, returns list of one item if sucessful,
+      empty list if not*/
+  extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
+                                       dfsch_object_t* env);
+
   /**
    * Get value of variable name in environment env. Return empty list
    * in case of failure.
@@ -405,8 +410,12 @@ extern "C" {
   extern dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code);
-  /** Looks up value of variable given by NAME. */
+  /** Looks up value of variable given by NAME. Throws 
+      exception:unbound-variable if such variable doesn't exist */
   extern dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name);
+  /** Look up value of given variable, returns list of one item if sucessful,
+      empty list if not*/
+  extern dfsch_object_t* dfsch_ctx_env_get(dfsch_ctx_t *ctx, char *name);
 
   /** Return environment wrapped by given context.. */
   extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);

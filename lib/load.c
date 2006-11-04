@@ -23,6 +23,7 @@
 #endif
 
 #include "dfsch/lib/load.h"
+#include "src/util.h"
 
 #include <dfsch/parse.h>
 #include <string.h>
@@ -32,6 +33,10 @@
 #include <dlfcn.h>
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 
 dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
                     char* so_name, 
@@ -79,7 +84,32 @@ static int load_callback(dfsch_object_t *obj, void* ctx){
 }
 
 dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
-  return dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
+  struct stat st;
+  dfsch_object_t* path;
+
+  if (stat(scm_name, &st) == 0 && S_ISREG(st.st_mode))
+    return dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
+
+  path = dfsch_ctx_env_get(ctx, "load:path");
+
+  if (path)
+    path = dfsch_car(path);
+
+  while (dfsch_pair_p(path)){
+    char *fname;
+    str_list_t* l = sl_create();
+    sl_append(l, dfsch_string_to_cstr(dfsch_car(path)));
+    sl_append(l, "/");
+    sl_append(l, scm_name);
+    fname = sl_value(l);
+    if (stat(fname, &st) == 0 && S_ISREG(st.st_mode))
+      return dfsch_ctx_eval_list(ctx, dfsch_read_scm(fname));
+
+    path = dfsch_cdr(path);
+  }
+  
+  dfsch_throw("load:file-not-found", dfsch_make_string_cstr(scm_name));
+
 }
 dfsch_object_t* dfsch_read_scm(char* scm_name){
   FILE* f = fopen(scm_name,"r");
