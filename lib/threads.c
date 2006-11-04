@@ -520,39 +520,39 @@ static dfsch_object_t* native_channel_write(void*baton,
 
 
 
-dfsch_object_t* dfsch_threads_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx, "thread:create", 
+dfsch_object_t* dfsch_threads_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "thread:create", 
                    dfsch_make_primitive(&native_thread_create,NULL));
-  dfsch_ctx_define(ctx, "thread:join", 
+  dfsch_define_cstr(ctx, "thread:join", 
                    dfsch_make_primitive(&native_thread_join,NULL));
-  dfsch_ctx_define(ctx, "thread:detach", 
+  dfsch_define_cstr(ctx, "thread:detach", 
                    dfsch_make_primitive(&native_thread_detach,NULL));
-  dfsch_ctx_define(ctx, "thread:self", 
+  dfsch_define_cstr(ctx, "thread:self", 
                    dfsch_make_primitive(&native_thread_self,NULL));
 
-  dfsch_ctx_define(ctx, "mutex:create", 
+  dfsch_define_cstr(ctx, "mutex:create", 
                    dfsch_make_primitive(&native_mutex_create,NULL));
-  dfsch_ctx_define(ctx, "mutex:lock", 
+  dfsch_define_cstr(ctx, "mutex:lock", 
                    dfsch_make_primitive(&native_mutex_lock,NULL));
-  dfsch_ctx_define(ctx, "mutex:trylock", 
+  dfsch_define_cstr(ctx, "mutex:trylock", 
                    dfsch_make_primitive(&native_mutex_trylock,NULL));
-  dfsch_ctx_define(ctx, "mutex:unlock", 
+  dfsch_define_cstr(ctx, "mutex:unlock", 
                    dfsch_make_primitive(&native_mutex_unlock,NULL));
 
-  dfsch_ctx_define(ctx, "condition:create", 
+  dfsch_define_cstr(ctx, "condition:create", 
                    dfsch_make_primitive(&native_condition_create,NULL));
-  dfsch_ctx_define(ctx, "condition:wait", 
+  dfsch_define_cstr(ctx, "condition:wait", 
                    dfsch_make_primitive(&native_condition_wait,NULL));
-  dfsch_ctx_define(ctx, "condition:signal", 
+  dfsch_define_cstr(ctx, "condition:signal", 
                    dfsch_make_primitive(&native_condition_signal,NULL));
-  dfsch_ctx_define(ctx, "condition:broadcast", 
+  dfsch_define_cstr(ctx, "condition:broadcast", 
                    dfsch_make_primitive(&native_condition_broadcast,NULL));
 
-  dfsch_ctx_define(ctx, "channel:create", 
+  dfsch_define_cstr(ctx, "channel:create", 
                    dfsch_make_primitive(&native_channel_create,NULL));
-  dfsch_ctx_define(ctx, "channel:read", 
+  dfsch_define_cstr(ctx, "channel:read", 
                    dfsch_make_primitive(&native_channel_read,NULL));
-  dfsch_ctx_define(ctx, "channel:write", 
+  dfsch_define_cstr(ctx, "channel:write", 
                    dfsch_make_primitive(&native_channel_write,NULL));
 
   return NULL;

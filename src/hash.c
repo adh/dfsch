@@ -514,22 +514,22 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
 }
 
 
-void dfsch__hash_native_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx, "make-hash", 
+void dfsch__hash_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "make-hash", 
                    dfsch_make_primitive(&native_make_hash,NULL));
-  dfsch_ctx_define(ctx, "hash?", 
+  dfsch_define_cstr(ctx, "hash?", 
                    dfsch_make_primitive(&native_hash_p,NULL));
-  dfsch_ctx_define(ctx, "hash-ref", 
+  dfsch_define_cstr(ctx, "hash-ref", 
                    dfsch_make_primitive(&native_hash_ref,NULL));
-  dfsch_ctx_define(ctx, "hash-unset!", 
+  dfsch_define_cstr(ctx, "hash-unset!", 
                    dfsch_make_primitive(&native_hash_set,NULL));
-  dfsch_ctx_define(ctx, "hash-set!", 
+  dfsch_define_cstr(ctx, "hash-set!", 
                    dfsch_make_primitive(&native_hash_set,NULL));
-  dfsch_ctx_define(ctx, "hash-set-if-exists!", 
+  dfsch_define_cstr(ctx, "hash-set-if-exists!", 
                    dfsch_make_primitive(&native_hash_set_if_exists,NULL));
-  dfsch_ctx_define(ctx, "hash->alist", 
+  dfsch_define_cstr(ctx, "hash->alist", 
                    dfsch_make_primitive(&native_hash_2_alist,NULL));
-  dfsch_ctx_define(ctx, "alist->hash", 
+  dfsch_define_cstr(ctx, "alist->hash", 
                    dfsch_make_primitive(&native_alist_2_hash,NULL));
 
 }

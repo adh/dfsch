@@ -265,16 +265,16 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
 }
 
 
-dfsch_object_t* dfsch_regex_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx, "regex:compile", 
+dfsch_object_t* dfsch_regex_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "regex:compile", 
                    dfsch_make_primitive(&native_regex_compile,NULL));
-  dfsch_ctx_define(ctx, "regex:match?", 
+  dfsch_define_cstr(ctx, "regex:match?", 
                    dfsch_make_primitive(&native_regex_match_p,NULL));
-  dfsch_ctx_define(ctx, "regex:substrings", 
+  dfsch_define_cstr(ctx, "regex:substrings", 
                    dfsch_make_primitive(&native_regex_substrings,NULL));
-  dfsch_ctx_define(ctx, "regex:match-once?", 
+  dfsch_define_cstr(ctx, "regex:match-once?", 
                    dfsch_make_primitive(&native_regex_match_once_p,NULL));
-  dfsch_ctx_define(ctx, "regex:substrings-once", 
+  dfsch_define_cstr(ctx, "regex:substrings-once", 
                    dfsch_make_primitive(&native_regex_substrings_once, NULL));
   return NULL;
 }

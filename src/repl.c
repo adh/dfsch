@@ -46,7 +46,7 @@
 FILE *cmd_log;
 
 typedef struct evaluator_ctx_t {
-  dfsch_ctx_t *ctx;
+  dfsch_object_t *ctx;
   dfsch_object_t *expr;
 } evaluator_ctx_t;
 
@@ -60,7 +60,7 @@ static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton,
 
   signal(SIGINT, sigint_handler_break);
 
-  ret = dfsch_ctx_eval(baton->ctx, baton->expr);
+  ret = dfsch_eval(baton->expr, baton->ctx);
   puts(dfsch_obj_write(ret,100,1));
 
   if (cmd_log){
@@ -187,7 +187,7 @@ static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
  */
 
 #ifdef USE_READLINE
-void interactive_repl(dfsch_ctx_t* ctx){
+void interactive_repl(dfsch_object_t* ctx){
 
   parser = dfsch_parser_create();
   dfsch_parser_callback(parser, callback, ctx);
@@ -219,7 +219,7 @@ void interactive_repl(dfsch_ctx_t* ctx){
 
 }
 #else
-void interactive_repl(dfsch_ctx_t* ctx){
+void interactive_repl(dfsch_object_t* ctx){
 
   parser = dfsch_parser_create();
   dfsch_parser_callback(parser, callback, ctx);
@@ -247,7 +247,7 @@ void interactive_repl(dfsch_ctx_t* ctx){
 }
 #endif
 
-void noninteractive_repl(dfsch_ctx_t* ctx){
+void noninteractive_repl(dfsch_object_t* ctx){
 
   parser = dfsch_parser_create();
   dfsch_parser_callback(parser, callback, ctx);
@@ -272,7 +272,7 @@ void noninteractive_repl(dfsch_ctx_t* ctx){
 
 int main(int argc, char**argv){
   int c;
-  dfsch_ctx_t* ctx;
+  dfsch_object_t* ctx;
   int interactive = 1;
   int force_interactive = 0;
 
@@ -282,15 +282,15 @@ int main(int argc, char**argv){
   cmd_log = NULL;
   ctx = dfsch_make_context();
 
-  dfsch_ctx_define(ctx,"version",dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_define_cstr(ctx,"version",dfsch_make_string_cstr(PACKAGE_VERSION));
 
   dfsch_load_register(ctx);
   dfsch_threads_register(ctx);
   dfsch_regex_register(ctx);
 
-  dfsch_ctx_define(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
-  dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
-  dfsch_ctx_define(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
+  dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
+  dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));
+  dfsch_define_cstr(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
 
   while ((c=getopt(argc, argv, "+l:L:e:E:hvO:")) != -1){
     switch (c){
@@ -307,13 +307,13 @@ int main(int argc, char**argv){
       break;
     case 'e':
       {
-        dfsch_ctx_eval_list(ctx, dfsch_list_read(optarg));
+        dfsch_eval_proc(ctx, dfsch_list_read(optarg));
         interactive = 0;
         break;
       }
     case 'E':
       {
-        puts(dfsch_obj_write(dfsch_ctx_eval_list(ctx, dfsch_list_read(optarg)),
+        puts(dfsch_obj_write(dfsch_eval_proc(dfsch_list_read(optarg), ctx),
                              100, 1));
         interactive = 0;
 
@@ -353,7 +353,7 @@ int main(int argc, char**argv){
     for (i=0; i<argc-optind; i++){
       dfsch_vector_set(args, i, dfsch_make_string_cstr(argv[optind+i]));
     }
-    dfsch_ctx_define(ctx, "argv", args);
+    dfsch_define_cstr(ctx, "argv", args);
 
     ret = dfsch_load_scm(ctx, argv[optind]);
     return 0;

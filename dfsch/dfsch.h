@@ -53,9 +53,6 @@
 extern "C" {
 #endif
 
-  /** Interpreter context */
-  typedef struct dfsch_ctx_t dfsch_ctx_t;
-
   /** Continuation used for tail-call elimination. */
   typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
 
@@ -394,31 +391,20 @@ extern "C" {
   // context
 
   /** Allocates new top-level context (environment). */
-  extern dfsch_ctx_t* dfsch_make_context();
-  /** Evaluate expression in given context. */
-  extern dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp);
-  /** Evaluate list of expressions in given context. */
-  extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
-					     dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_make_context();
   /** Define new variable in given context */
-  extern dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx, 
+  extern dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
                                           char *name, 
                                           dfsch_object_t *obj);
 
 
-  /** Creates new closure based on environment of specified context. */
-  extern dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
-                                          dfsch_object_t* args,
-                                          dfsch_object_t* code);
   /** Looks up value of variable given by NAME. Throws 
       exception:unbound-variable if such variable doesn't exist */
-  extern dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name);
+  extern dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name);
   /** Look up value of given variable, returns list of one item if sucessful,
       empty list if not*/
-  extern dfsch_object_t* dfsch_ctx_env_get(dfsch_ctx_t *ctx, char *name);
+  extern dfsch_object_t* dfsch_env_get_cstr(dfsch_object_t *ctx, char *name);
 
-  /** Return environment wrapped by given context.. */
-  extern dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx);
   /** Return stack trace for running thread. */
   extern dfsch_object_t* dfsch_get_stack_trace();
 

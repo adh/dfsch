@@ -622,121 +622,121 @@ static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_
 //
 /////////////////////////////////////////////////////////////////////////////
 
-void dfsch__native_register(dfsch_ctx_t *ctx){ 
-  dfsch_ctx_define(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
-  dfsch_ctx_define(ctx, "stack-trace",
+void dfsch__native_register(dfsch_object_t *ctx){ 
+  dfsch_define_cstr(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
+  dfsch_define_cstr(ctx, "stack-trace",
                    dfsch_make_primitive(&native_stack_trace,NULL));
-  dfsch_ctx_define(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
-  dfsch_ctx_define(ctx, "id", dfsch_make_primitive(&native_id,NULL));
+  dfsch_define_cstr(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
+  dfsch_define_cstr(ctx, "id", dfsch_make_primitive(&native_id,NULL));
 
-  dfsch_ctx_define(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
-  dfsch_ctx_define(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
-  dfsch_ctx_define(ctx, "equal?", dfsch_make_primitive(&native_equal,NULL));
+  dfsch_define_cstr(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
+  dfsch_define_cstr(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
+  dfsch_define_cstr(ctx, "equal?", dfsch_make_primitive(&native_equal,NULL));
 
-  dfsch_ctx_define(ctx, "and", 
+  dfsch_define_cstr(ctx, "and", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_and,
                                                         NULL)));
-  dfsch_ctx_define(ctx, "or", 
+  dfsch_define_cstr(ctx, "or", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_or,
                                                         NULL)));
-  dfsch_ctx_define(ctx, "not", dfsch_make_primitive(&native_not,NULL));
+  dfsch_define_cstr(ctx, "not", dfsch_make_primitive(&native_not,NULL));
 
-  dfsch_ctx_define(ctx, "lambda", 
+  dfsch_define_cstr(ctx, "lambda", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_lambda,
 							NULL)));
-  dfsch_ctx_define(ctx, "define", 
+  dfsch_define_cstr(ctx, "define", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_define,
 							 NULL)));
-  dfsch_ctx_define(ctx, "defined?", 
+  dfsch_define_cstr(ctx, "defined?", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_defined_p,
 							 NULL)));
-  dfsch_ctx_define(ctx, "set!", 
+  dfsch_define_cstr(ctx, "set!", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_set,
 							 NULL)));
 
-  dfsch_ctx_define(ctx, "make-form", 
+  dfsch_define_cstr(ctx, "make-form", 
 		   dfsch_make_primitive(&native_make_form,NULL));
-  dfsch_ctx_define(ctx, "make-macro", 
+  dfsch_define_cstr(ctx, "make-macro", 
 		   dfsch_make_primitive(&native_make_macro,NULL));
-  dfsch_ctx_define(ctx, "cons", dfsch_make_primitive(&native_cons,NULL));
-  dfsch_ctx_define(ctx, "list", dfsch_make_primitive(&native_list,NULL));
-  dfsch_ctx_define(ctx, "car", dfsch_make_primitive(&native_car,NULL));
-  dfsch_ctx_define(ctx, "cdr", dfsch_make_primitive(&native_cdr,NULL));
-  dfsch_ctx_define(ctx, "set-car!", dfsch_make_primitive(&native_set_car,
+  dfsch_define_cstr(ctx, "cons", dfsch_make_primitive(&native_cons,NULL));
+  dfsch_define_cstr(ctx, "list", dfsch_make_primitive(&native_list,NULL));
+  dfsch_define_cstr(ctx, "car", dfsch_make_primitive(&native_car,NULL));
+  dfsch_define_cstr(ctx, "cdr", dfsch_make_primitive(&native_cdr,NULL));
+  dfsch_define_cstr(ctx, "set-car!", dfsch_make_primitive(&native_set_car,
 							 NULL));
-  dfsch_ctx_define(ctx, "set-cdr!", dfsch_make_primitive(&native_set_cdr,
+  dfsch_define_cstr(ctx, "set-cdr!", dfsch_make_primitive(&native_set_cdr,
 							 NULL));
 
-  dfsch_ctx_define(ctx, "length", dfsch_make_primitive(&native_length,NULL));
-  dfsch_ctx_define(ctx, "append", dfsch_make_primitive(&native_append,NULL));
-  dfsch_ctx_define(ctx, "for-each", dfsch_make_primitive(&native_for_each,
+  dfsch_define_cstr(ctx, "length", dfsch_make_primitive(&native_length,NULL));
+  dfsch_define_cstr(ctx, "append", dfsch_make_primitive(&native_append,NULL));
+  dfsch_define_cstr(ctx, "for-each", dfsch_make_primitive(&native_for_each,
 							 NULL));
-  dfsch_ctx_define(ctx, "map", dfsch_make_primitive(&native_map,
+  dfsch_define_cstr(ctx, "map", dfsch_make_primitive(&native_map,
 							 NULL));
-  dfsch_ctx_define(ctx, "filter", dfsch_make_primitive(&native_filter,
+  dfsch_define_cstr(ctx, "filter", dfsch_make_primitive(&native_filter,
                                                        NULL));
-  dfsch_ctx_define(ctx, "reduce", dfsch_make_primitive(&native_reduce,
+  dfsch_define_cstr(ctx, "reduce", dfsch_make_primitive(&native_reduce,
                                                        NULL));
-  dfsch_ctx_define(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
+  dfsch_define_cstr(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
                                                          NULL));
-  dfsch_ctx_define(ctx, "reverse", dfsch_make_primitive(&native_reverse,
+  dfsch_define_cstr(ctx, "reverse", dfsch_make_primitive(&native_reverse,
                                                          NULL));
-  dfsch_ctx_define(ctx, "member", dfsch_make_primitive(&native_member,NULL));
-  dfsch_ctx_define(ctx, "memq", dfsch_make_primitive(&native_memq,NULL));
-  dfsch_ctx_define(ctx, "memv", dfsch_make_primitive(&native_memv,NULL));
-  dfsch_ctx_define(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
-  dfsch_ctx_define(ctx, "assq", dfsch_make_primitive(&native_assq,NULL));
-  dfsch_ctx_define(ctx, "assv", dfsch_make_primitive(&native_assv,NULL));
+  dfsch_define_cstr(ctx, "member", dfsch_make_primitive(&native_member,NULL));
+  dfsch_define_cstr(ctx, "memq", dfsch_make_primitive(&native_memq,NULL));
+  dfsch_define_cstr(ctx, "memv", dfsch_make_primitive(&native_memv,NULL));
+  dfsch_define_cstr(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
+  dfsch_define_cstr(ctx, "assq", dfsch_make_primitive(&native_assq,NULL));
+  dfsch_define_cstr(ctx, "assv", dfsch_make_primitive(&native_assv,NULL));
 
-  dfsch_ctx_define(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
-  dfsch_ctx_define(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));
-  dfsch_ctx_define(ctx, "pair?", dfsch_make_primitive(&native_pair_p,NULL));
-  dfsch_ctx_define(ctx, "list?", dfsch_make_primitive(&native_list_p,NULL));
-  dfsch_ctx_define(ctx, "symbol?", dfsch_make_primitive(&native_symbol_p,
+  dfsch_define_cstr(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
+  dfsch_define_cstr(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));
+  dfsch_define_cstr(ctx, "pair?", dfsch_make_primitive(&native_pair_p,NULL));
+  dfsch_define_cstr(ctx, "list?", dfsch_make_primitive(&native_list_p,NULL));
+  dfsch_define_cstr(ctx, "symbol?", dfsch_make_primitive(&native_symbol_p,
 							NULL));
-  dfsch_ctx_define(ctx, "string?", dfsch_make_primitive(&native_string_p,
+  dfsch_define_cstr(ctx, "string?", dfsch_make_primitive(&native_string_p,
 							NULL));
-  dfsch_ctx_define(ctx, "primitive?", 
+  dfsch_define_cstr(ctx, "primitive?", 
 		   dfsch_make_primitive(&native_primitive_p,NULL));
-  dfsch_ctx_define(ctx, "closure?", dfsch_make_primitive(&native_closure_p,
+  dfsch_define_cstr(ctx, "closure?", dfsch_make_primitive(&native_closure_p,
 							 NULL));
-  dfsch_ctx_define(ctx, "procedure?", 
+  dfsch_define_cstr(ctx, "procedure?", 
 		   dfsch_make_primitive(&native_procedure_p,NULL));
-  dfsch_ctx_define(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
-  dfsch_ctx_define(ctx, "form?", dfsch_make_primitive(&native_form_p,NULL));
-  dfsch_ctx_define(ctx, "vector?", dfsch_make_primitive(&native_vector_p,
+  dfsch_define_cstr(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
+  dfsch_define_cstr(ctx, "form?", dfsch_make_primitive(&native_form_p,NULL));
+  dfsch_define_cstr(ctx, "vector?", dfsch_make_primitive(&native_vector_p,
                                                         NULL));
 
 
-  dfsch_ctx_define(ctx, "true", dfsch_sym_true());
-  dfsch_ctx_define(ctx, "nil", NULL);
-  dfsch_ctx_define(ctx, "else", dfsch_sym_true());
-  dfsch_ctx_define(ctx, "T", dfsch_sym_true());
+  dfsch_define_cstr(ctx, "true", dfsch_sym_true());
+  dfsch_define_cstr(ctx, "nil", NULL);
+  dfsch_define_cstr(ctx, "else", dfsch_sym_true());
+  dfsch_define_cstr(ctx, "T", dfsch_sym_true());
 
 
-  dfsch_ctx_define(ctx, "make-vector", 
+  dfsch_define_cstr(ctx, "make-vector", 
                    dfsch_make_primitive(&native_make_vector,NULL));
-  dfsch_ctx_define(ctx, "vector", 
+  dfsch_define_cstr(ctx, "vector", 
                    dfsch_make_primitive(&native_vector,NULL));
-  dfsch_ctx_define(ctx, "vector-length", 
+  dfsch_define_cstr(ctx, "vector-length", 
                    dfsch_make_primitive(&native_vector_length,NULL));
-  dfsch_ctx_define(ctx, "vector-set!", 
+  dfsch_define_cstr(ctx, "vector-set!", 
                    dfsch_make_primitive(&native_vector_set,NULL));
-  dfsch_ctx_define(ctx, "vector-ref", 
+  dfsch_define_cstr(ctx, "vector-ref", 
                    dfsch_make_primitive(&native_vector_ref,NULL));
-  dfsch_ctx_define(ctx, "vector->list", 
+  dfsch_define_cstr(ctx, "vector->list", 
                    dfsch_make_primitive(&native_vector_2_list,NULL));
-  dfsch_ctx_define(ctx, "list->vector", 
+  dfsch_define_cstr(ctx, "list->vector", 
                    dfsch_make_primitive(&native_list_2_vector,NULL));
 
-  dfsch_ctx_define(ctx, "object->string", 
+  dfsch_define_cstr(ctx, "object->string", 
                    dfsch_make_primitive(&native_object_2_string,NULL));
-  dfsch_ctx_define(ctx, "string->object", 
+  dfsch_define_cstr(ctx, "string->object", 
                    dfsch_make_primitive(&native_string_2_object,NULL));
 
-  dfsch_ctx_define(ctx, "symbol->string", 
+  dfsch_define_cstr(ctx, "symbol->string", 
                    dfsch_make_primitive(&native_symbol_2_string,NULL));
-  dfsch_ctx_define(ctx, "string->symbol", 
+  dfsch_define_cstr(ctx, "string->symbol", 
                    dfsch_make_primitive(&native_string_2_symbol,NULL));
 
   dfsch__native_cxr_register(ctx);

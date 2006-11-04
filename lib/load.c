@@ -38,11 +38,11 @@
 #include <unistd.h>
 
 
-dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
+dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
                     char* so_name, 
                     char* sym_name){
   void *handle;
-  dfsch_object_t* (*entry)(dfsch_ctx_t*);
+  dfsch_object_t* (*entry)(dfsch_object_t*);
   char* err;
 
   err = dlerror();
@@ -83,14 +83,14 @@ static int load_callback(dfsch_object_t *obj, void* ctx){
   return 1;
 }
 
-dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
+dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name){
   struct stat st;
   dfsch_object_t* path;
 
   if (stat(scm_name, &st) == 0 && S_ISREG(st.st_mode))
-    return dfsch_ctx_eval_list(ctx, dfsch_read_scm(scm_name));
+    return dfsch_eval_proc(dfsch_read_scm(scm_name), ctx);
 
-  path = dfsch_ctx_env_get(ctx, "load:path");
+  path = dfsch_env_get_cstr(ctx, "load:path");
 
   if (path)
     path = dfsch_car(path);
@@ -103,7 +103,7 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
     sl_append(l, scm_name);
     fname = sl_value(l);
     if (stat(fname, &st) == 0 && S_ISREG(st.st_mode))
-      return dfsch_ctx_eval_list(ctx, dfsch_read_scm(fname));
+      return dfsch_eval_proc(dfsch_read_scm(fname), ctx);
 
     path = dfsch_cdr(path);
   }
@@ -111,16 +111,16 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
   dfsch_throw("load:file-not-found", dfsch_make_string_cstr(scm_name));
 
 }
-dfsch_object_t* dfsch_load_extend_path(dfsch_ctx_t* ctx, char* dir){
-  dfsch_object_t* path = dfsch_ctx_env_get(ctx, "load:path");
+dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
+  dfsch_object_t* path = dfsch_env_get_cstr(ctx, "load:path");
   if (path){
-    dfsch_ctx_define(ctx, "load:path", 
+    dfsch_define_cstr(ctx, "load:path", 
                      dfsch_append(dfsch_list(2,
                                              dfsch_car(path),
                                              dfsch_list(1,
                                                         dfsch_make_string_cstr(dir)))));
   }else{
-    dfsch_ctx_define(ctx, "load:path", 
+    dfsch_define_cstr(ctx, "load:path", 
                      dfsch_list(1, dfsch_make_string_cstr(dir)));
   }
 }
@@ -259,16 +259,16 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
 }
 
 
-dfsch_object_t* dfsch_load_so_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx,"load:so!",dfsch_make_primitive(native_load_so,ctx));
+dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx,"load:so!",dfsch_make_primitive(native_load_so,ctx));
   return NULL;
 }
-dfsch_object_t* dfsch_load_scm_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
-  dfsch_ctx_define(ctx,"load:read-scm",dfsch_make_primitive(native_read_scm,ctx));
+dfsch_object_t* dfsch_load_scm_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
+  dfsch_define_cstr(ctx,"load:read-scm",dfsch_make_primitive(native_read_scm,ctx));
   return NULL;
 }
-dfsch_object_t* dfsch_load_register(dfsch_ctx_t *ctx){
+dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_load_scm_register(ctx);
   dfsch_load_so_register(ctx);
   return NULL;

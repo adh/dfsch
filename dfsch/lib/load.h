@@ -31,9 +31,9 @@ extern "C" {
       in scheme variable load:path. File is loaded into top level environment 
       of context and only top level definition of load:path is taken into 
       account */
-  extern dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name);
+  extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
   /** Append directory to load:path */
-  dfsch_object_t* dfsch_load_extend_path(dfsch_ctx_t* ctx, char* dir);
+  dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
   /** Read scheme list from given file. */
   extern dfsch_object_t* dfsch_read_scm(char* scm_name);
   /** Read scheme list from given file descriptor. */
@@ -44,16 +44,16 @@ extern "C" {
                                                char* name);
 
   /** Load given binary module and register it into given context. */
-  extern dfsch_object_t* dfsch_load_so(dfsch_ctx_t* ctx, 
+  extern dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
                                        char* so_name, 
                                        char* sym_name);
 
   /** Register shared object related part of this module. */
-  extern dfsch_object_t* dfsch_load_so_register(dfsch_ctx_t *ctx);
+  extern dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx);
   /** Register scheme related part of this module. */
-  extern dfsch_object_t* dfsch_load_scm_register(dfsch_ctx_t *ctx);
+  extern dfsch_object_t* dfsch_load_scm_register(dfsch_object_t *ctx);
   /** Register this module. */
-  extern dfsch_object_t* dfsch_load_register(dfsch_ctx_t *ctx);
+  extern dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx);
 
 #ifdef __cplusplus
 }

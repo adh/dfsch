@@ -193,11 +193,11 @@ static dfsch_object_t* native_unwrap(void *baton,
   return dfsch_unwrap(type, wrapper);
 }
 
-void dfsch__wrapper_native_register(dfsch_ctx_t *ctx){ 
-  dfsch_ctx_define(ctx, "make-wrapper-type", 
+void dfsch__wrapper_native_register(dfsch_object_t *ctx){ 
+  dfsch_define_cstr(ctx, "make-wrapper-type", 
 		   dfsch_make_primitive(&native_make_wrapper_type, NULL));
-  dfsch_ctx_define(ctx, "wrap", 
+  dfsch_define_cstr(ctx, "wrap", 
 		   dfsch_make_primitive(&native_wrap, NULL));
-  dfsch_ctx_define(ctx, "unwrap", 
+  dfsch_define_cstr(ctx, "unwrap", 
 		   dfsch_make_primitive(&native_unwrap, NULL));
 }

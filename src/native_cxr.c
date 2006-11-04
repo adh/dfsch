@@ -55,11 +55,11 @@ static dfsch_object_t* native_cxr(void *baton, dfsch_object_t* args,
   return pair;
 }
 
-void dfsch__native_cxr_register(dfsch_ctx_t *ctx){
+void dfsch__native_cxr_register(dfsch_object_t *ctx){
   int i;
 
   for (i=0; i < (sizeof(cxr_table)/sizeof(cxr_table[0])); i++){
-    dfsch_ctx_define(ctx, cxr_table[i][0],
+    dfsch_define_cstr(ctx, cxr_table[i][0],
                      dfsch_make_primitive(&native_cxr,cxr_table[i][1]));
 
   }

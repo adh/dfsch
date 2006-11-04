@@ -406,68 +406,68 @@ static object_t* native_form_do(void *baton, object_t* args,
 
 /////////////////////////////////////////////////////////////////////////////
 
-void dfsch__control_register(dfsch_ctx_t *ctx){ 
-  dfsch_ctx_define(ctx, "begin", 
+void dfsch__control_register(dfsch_object_t *ctx){ 
+  dfsch_define_cstr(ctx, "begin", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_begin,
 							 NULL)));
-  dfsch_ctx_define(ctx, "let", 
+  dfsch_define_cstr(ctx, "let", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_let,
 							 NULL)));
-  dfsch_ctx_define(ctx, "let*", 
+  dfsch_define_cstr(ctx, "let*", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_let_seq,
 							 NULL)));
-  dfsch_ctx_define(ctx, "letrec", 
+  dfsch_define_cstr(ctx, "letrec", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_letrec,
 							 NULL)));
 
-  dfsch_ctx_define(ctx, "quasiquote", 
+  dfsch_define_cstr(ctx, "quasiquote", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_quasiquote,
 							 NULL)));
-  dfsch_ctx_define(ctx, "quote", 
+  dfsch_define_cstr(ctx, "quote", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_quote,
 							 NULL)));
-  dfsch_ctx_define(ctx, "if", 
+  dfsch_define_cstr(ctx, "if", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_if,
                                                          NULL)));
-  dfsch_ctx_define(ctx, "when", 
+  dfsch_define_cstr(ctx, "when", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_when,
                                                          NULL)));
-  dfsch_ctx_define(ctx, "unless", 
+  dfsch_define_cstr(ctx, "unless", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_unless,
                                                          NULL)));
-  dfsch_ctx_define(ctx, "cond", 
+  dfsch_define_cstr(ctx, "cond", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_cond,
                                                          NULL)));
-  dfsch_ctx_define(ctx, "case", 
+  dfsch_define_cstr(ctx, "case", 
 		   dfsch_make_macro(dfsch_make_primitive(&native_macro_case,
                                                          NULL)));
 
-  dfsch_ctx_define(ctx, "raise", 
+  dfsch_define_cstr(ctx, "raise", 
 		   dfsch_make_primitive(&native_raise,NULL));
-  dfsch_ctx_define(ctx, "make-exception", 
+  dfsch_define_cstr(ctx, "make-exception", 
 		   dfsch_make_primitive(&native_make_exception,NULL));
-  dfsch_ctx_define(ctx, "throw", 
+  dfsch_define_cstr(ctx, "throw", 
 		   dfsch_make_primitive(&native_throw,NULL));
-  dfsch_ctx_define(ctx, "error", 
+  dfsch_define_cstr(ctx, "error", 
 		   dfsch_make_primitive(&native_error,NULL));
-  dfsch_ctx_define(ctx, "abort", 
+  dfsch_define_cstr(ctx, "abort", 
 		   dfsch_make_primitive(&native_abort,NULL));
-  dfsch_ctx_define(ctx, "try", 
+  dfsch_define_cstr(ctx, "try", 
 		   dfsch_make_primitive(&native_try,NULL));
 
-  dfsch_ctx_define(ctx, "call-with-escape-continuation",
-                   dfsch_ctx_define(ctx, "call/ec", 
+  dfsch_define_cstr(ctx, "call-with-escape-continuation",
+                   dfsch_define_cstr(ctx, "call/ec", 
                                     dfsch_make_primitive(&native_call_ec,
                                                          NULL)));
 
 
 
-  dfsch_ctx_define(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
-  dfsch_ctx_define(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
+  dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
+  dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
                                                           NULL));
-  dfsch_ctx_define(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
+  dfsch_define_cstr(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
-  dfsch_ctx_define(ctx, "do", 
+  dfsch_define_cstr(ctx, "do", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_do,
 							 NULL)));
 

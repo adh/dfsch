@@ -1843,18 +1843,15 @@ static object_t* native_form_current_environment(void *baton, object_t* args,
   return dfsch_car(args);
 }
 
-dfsch_ctx_t* dfsch_make_context(){
-  dfsch_ctx_t* ctx=GC_malloc(sizeof(dfsch_ctx_t));
-  if (!ctx)
-    return NULL;
-
+dfsch_object_t* dfsch_make_context(){
+  dfsch_object_t* ctx;
   gsh_check_init();
 
-  ctx->env = dfsch_new_frame(NULL);
+  ctx = dfsch_new_frame(NULL);
 
-  dfsch_ctx_define(ctx, "top-level-environment", 
-                   dfsch_make_primitive(&native_top_level_environment, ctx->env));
-  dfsch_ctx_define(ctx, "current-environment", 
+  dfsch_define_cstr(ctx, "top-level-environment", 
+                   dfsch_make_primitive(&native_top_level_environment, ctx));
+  dfsch_define_cstr(ctx, "current-environment", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_current_environment,
                                                         NULL)));
 
@@ -1862,35 +1859,20 @@ dfsch_ctx_t* dfsch_make_context(){
 
   return ctx;
 }
-dfsch_object_t* dfsch_ctx_eval(dfsch_ctx_t* ctx, dfsch_object_t* exp){
-  return dfsch_eval(exp, ctx->env);
-}
-extern dfsch_object_t* dfsch_ctx_eval_list(dfsch_ctx_t* ctx, 
-					   dfsch_object_t* list){
-  return dfsch_eval_proc(list, ctx->env);
-}
 
-dfsch_object_t* dfsch_ctx_lambda(dfsch_ctx_t *ctx,
-                      dfsch_object_t* args,
-                      dfsch_object_t* code){
-  return dfsch_lambda(ctx->env, args, code);
-}
 
-dfsch_object_t* dfsch_ctx_define(dfsch_ctx_t *ctx, 
+dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
                                  char *name, 
                                  dfsch_object_t *obj){
   
   return dfsch_define(dfsch_make_symbol(name),
                       obj,
-                      ctx->env);
+                      ctx);
   
 }
-dfsch_object_t* dfsch_ctx_lookup(dfsch_ctx_t *ctx, char *name){
-  return dfsch_lookup(dfsch_make_symbol(name), ctx->env);
+dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
+  return dfsch_lookup(dfsch_make_symbol(name), ctx);
 }
-dfsch_object_t* dfsch_ctx_env_get(dfsch_ctx_t *ctx, char *name){
-  return dfsch_env_get(dfsch_make_symbol(name), ctx->env);
-}
-dfsch_object_t* dfsch_ctx_environment(dfsch_ctx_t *ctx){
-  return ctx->env;
+dfsch_object_t* dfsch_env_get_cstr(dfsch_object_t *ctx, char *name){
+  return dfsch_env_get(dfsch_make_symbol(name), ctx);
 }

@@ -2,7 +2,6 @@
 #define H__dfsch__object__
 
 typedef dfsch_object_t object_t;
-typedef dfsch_ctx_t context_t;
 
 typedef struct symbol_t symbol_t;
 
@@ -14,9 +13,6 @@ struct symbol_t{
 };
 
 
-struct dfsch_ctx_t{
-  object_t* env;
-};
 
 typedef struct pair_t{
   dfsch_type_t* type;

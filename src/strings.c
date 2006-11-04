@@ -762,61 +762,61 @@ static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_e
 }
 
 
-void dfsch__string_native_register(dfsch_ctx_t *ctx){
+void dfsch__string_native_register(dfsch_object_t *ctx){
 
-  dfsch_ctx_define(ctx, "string-append", 
+  dfsch_define_cstr(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append,NULL));
-  dfsch_ctx_define(ctx, "substring", 
+  dfsch_define_cstr(ctx, "substring", 
 		   dfsch_make_primitive(&native_substring,NULL));
-  dfsch_ctx_define(ctx, "substring-utf8", 
+  dfsch_define_cstr(ctx, "substring-utf8", 
 		   dfsch_make_primitive(&native_substring_utf8,NULL));
-  dfsch_ctx_define(ctx, "string-ref", 
+  dfsch_define_cstr(ctx, "string-ref", 
 		   dfsch_make_primitive(&native_string_ref,NULL));
-  dfsch_ctx_define(ctx, "string-utf8-ref", 
+  dfsch_define_cstr(ctx, "string-utf8-ref", 
 		   dfsch_make_primitive(&native_string_utf8_ref,NULL));
-  dfsch_ctx_define(ctx, "string-length", 
+  dfsch_define_cstr(ctx, "string-length", 
 		   dfsch_make_primitive(&native_string_length,NULL));
-  dfsch_ctx_define(ctx, "string-utf8-length", 
+  dfsch_define_cstr(ctx, "string-utf8-length", 
 		   dfsch_make_primitive(&native_string_utf8_length,NULL));
-  dfsch_ctx_define(ctx, "string->list", 
+  dfsch_define_cstr(ctx, "string->list", 
 		   dfsch_make_primitive(&native_string_2_list,NULL));
-  dfsch_ctx_define(ctx, "string-utf8->list", 
+  dfsch_define_cstr(ctx, "string-utf8->list", 
 		   dfsch_make_primitive(&native_string_utf8_2_list,NULL));
-  dfsch_ctx_define(ctx, "list->string", 
+  dfsch_define_cstr(ctx, "list->string", 
 		   dfsch_make_primitive(&native_list_2_string,NULL));
-  dfsch_ctx_define(ctx, "list->string-utf8", 
+  dfsch_define_cstr(ctx, "list->string-utf8", 
 		   dfsch_make_primitive(&native_list_2_string_utf8,NULL));
 
 
-  dfsch_ctx_define(ctx, "string=?", 
+  dfsch_define_cstr(ctx, "string=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_eq_p));
-  dfsch_ctx_define(ctx, "string<?", 
+  dfsch_define_cstr(ctx, "string<?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_lt_p));
-  dfsch_ctx_define(ctx, "string>?", 
+  dfsch_define_cstr(ctx, "string>?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_gt_p));
-  dfsch_ctx_define(ctx, "string<=?", 
+  dfsch_define_cstr(ctx, "string<=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_lte_p));
-  dfsch_ctx_define(ctx, "string>=?", 
+  dfsch_define_cstr(ctx, "string>=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_gte_p));
 
-  dfsch_ctx_define(ctx, "string-ci=?", 
+  dfsch_define_cstr(ctx, "string-ci=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_ci_eq_p));
-  dfsch_ctx_define(ctx, "string-ci<?", 
+  dfsch_define_cstr(ctx, "string-ci<?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_ci_lt_p));
-  dfsch_ctx_define(ctx, "string-ci>?", 
+  dfsch_define_cstr(ctx, "string-ci>?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_ci_gt_p));
-  dfsch_ctx_define(ctx, "string-ci<=?", 
+  dfsch_define_cstr(ctx, "string-ci<=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_ci_lte_p));
-  dfsch_ctx_define(ctx, "string-ci>=?", 
+  dfsch_define_cstr(ctx, "string-ci>=?", 
 		   dfsch_make_primitive(&native_string_cmp_p,
                                         &dfsch_string_ci_gte_p));
 

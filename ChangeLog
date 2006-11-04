@@ -1,5 +1,7 @@
 2006-11-04  Ales Hakl  <ales at hakl dot net>
 
+	* *: Removed concept of interpreter context
+
 	* src/repl.c (main): -L option
 
 	* lib/load.c (dfsch_load_scm): Searching for source files.

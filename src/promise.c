@@ -122,19 +122,19 @@ static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
   return dfsch_stream_tail(stream);
 }
 
-dfsch_object_t* dfsch__promise_native_register(dfsch_ctx_t *ctx){
-    dfsch_ctx_define(ctx, "delay", 
+dfsch_object_t* dfsch__promise_native_register(dfsch_object_t *ctx){
+    dfsch_define_cstr(ctx, "delay", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_delay,
                                                         NULL)));
-  dfsch_ctx_define(ctx, "force", 
+  dfsch_define_cstr(ctx, "force", 
                    dfsch_make_primitive(&native_force,NULL));
 
-  dfsch_ctx_define(ctx, "stream-cons", 
+  dfsch_define_cstr(ctx, "stream-cons", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_stream_cons,
                                                         NULL)));
-  dfsch_ctx_define(ctx, "stream-car", 
+  dfsch_define_cstr(ctx, "stream-car", 
                    dfsch_make_primitive(&native_stream_car,NULL));
-  dfsch_ctx_define(ctx, "stream-cdr", 
+  dfsch_define_cstr(ctx, "stream-cdr", 
                    dfsch_make_primitive(&native_stream_cdr,NULL));
 
 }

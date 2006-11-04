@@ -903,64 +903,64 @@ static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_
 // TODO: exact?, inexact?, real?, integer? ...
 // TODO: gcd, lcm
 
-void dfsch__number_native_register(dfsch_ctx_t *ctx){
-  dfsch_ctx_define(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
-  dfsch_ctx_define(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
-  dfsch_ctx_define(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
-  dfsch_ctx_define(ctx, "/", dfsch_make_primitive(&native_slash,NULL));
-  dfsch_ctx_define(ctx, "/i", dfsch_make_primitive(&native_slash_i,NULL));
-  dfsch_ctx_define(ctx, "%", dfsch_make_primitive(&native_modulo,NULL));
-  dfsch_ctx_define(ctx, "=", dfsch_make_primitive(&native_number_equal,NULL));
-  dfsch_ctx_define(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
-  dfsch_ctx_define(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
-  dfsch_ctx_define(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
-  dfsch_ctx_define(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
-  dfsch_ctx_define(ctx, "number?", dfsch_make_primitive(&native_number_p,
+void dfsch__number_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
+  dfsch_define_cstr(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
+  dfsch_define_cstr(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
+  dfsch_define_cstr(ctx, "/", dfsch_make_primitive(&native_slash,NULL));
+  dfsch_define_cstr(ctx, "/i", dfsch_make_primitive(&native_slash_i,NULL));
+  dfsch_define_cstr(ctx, "%", dfsch_make_primitive(&native_modulo,NULL));
+  dfsch_define_cstr(ctx, "=", dfsch_make_primitive(&native_number_equal,NULL));
+  dfsch_define_cstr(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
+  dfsch_define_cstr(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
+  dfsch_define_cstr(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
+  dfsch_define_cstr(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
+  dfsch_define_cstr(ctx, "number?", dfsch_make_primitive(&native_number_p,
 							NULL));
 
-  dfsch_ctx_define(ctx, "pi", 
+  dfsch_define_cstr(ctx, "pi", 
                    dfsch_make_number_from_double(4*atan(1)));
 
 
-  dfsch_ctx_define(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
+  dfsch_define_cstr(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
 
-  dfsch_ctx_define(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
-  dfsch_ctx_define(ctx, "log", dfsch_make_primitive(&native_log,NULL));
-  dfsch_ctx_define(ctx, "expt", dfsch_make_primitive(&native_expt,NULL));
+  dfsch_define_cstr(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
+  dfsch_define_cstr(ctx, "log", dfsch_make_primitive(&native_log,NULL));
+  dfsch_define_cstr(ctx, "expt", dfsch_make_primitive(&native_expt,NULL));
 
-  dfsch_ctx_define(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
-  dfsch_ctx_define(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));
-  dfsch_ctx_define(ctx, "tan", dfsch_make_primitive(&native_tan,NULL));
+  dfsch_define_cstr(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
+  dfsch_define_cstr(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));
+  dfsch_define_cstr(ctx, "tan", dfsch_make_primitive(&native_tan,NULL));
 
-  dfsch_ctx_define(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
-  dfsch_ctx_define(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
-  dfsch_ctx_define(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
+  dfsch_define_cstr(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
+  dfsch_define_cstr(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
+  dfsch_define_cstr(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
 
-  dfsch_ctx_define(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
+  dfsch_define_cstr(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
 
-  dfsch_ctx_define(ctx, "min", dfsch_make_primitive(&native_min,NULL));
-  dfsch_ctx_define(ctx, "max", dfsch_make_primitive(&native_max,NULL));
+  dfsch_define_cstr(ctx, "min", dfsch_make_primitive(&native_min,NULL));
+  dfsch_define_cstr(ctx, "max", dfsch_make_primitive(&native_max,NULL));
 
-  dfsch_ctx_define(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
+  dfsch_define_cstr(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
                                                       NULL));
-  dfsch_ctx_define(ctx, "negative?", dfsch_make_primitive(&native_negative_p,
+  dfsch_define_cstr(ctx, "negative?", dfsch_make_primitive(&native_negative_p,
                                                           NULL));
-  dfsch_ctx_define(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
+  dfsch_define_cstr(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
                                                           NULL));
 
-  dfsch_ctx_define(ctx, "even?", dfsch_make_primitive(&native_even_p,
+  dfsch_define_cstr(ctx, "even?", dfsch_make_primitive(&native_even_p,
                                                       NULL));
-  dfsch_ctx_define(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
+  dfsch_define_cstr(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
                                                      NULL));
 
-  dfsch_ctx_define(ctx, "round", dfsch_make_primitive(&native_round,NULL));
-  dfsch_ctx_define(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));
-  dfsch_ctx_define(ctx, "ceiling", dfsch_make_primitive(&native_ceiling,NULL));
-  dfsch_ctx_define(ctx, "truncate", dfsch_make_primitive(&native_truncate,NULL));
+  dfsch_define_cstr(ctx, "round", dfsch_make_primitive(&native_round,NULL));
+  dfsch_define_cstr(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));
+  dfsch_define_cstr(ctx, "ceiling", dfsch_make_primitive(&native_ceiling,NULL));
+  dfsch_define_cstr(ctx, "truncate", dfsch_make_primitive(&native_truncate,NULL));
 
-  dfsch_ctx_define(ctx, "number->string", 
+  dfsch_define_cstr(ctx, "number->string", 
 		   dfsch_make_primitive(&native_number_2_string,NULL));
-  dfsch_ctx_define(ctx, "string->number", 
+  dfsch_define_cstr(ctx, "string->number", 
 		   dfsch_make_primitive(&native_string_2_number,NULL));
   
 }
