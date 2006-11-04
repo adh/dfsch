@@ -292,7 +292,7 @@ int main(int argc, char**argv){
   dfsch_ctx_define(ctx,"print",dfsch_make_primitive(command_print,NULL));
   dfsch_ctx_define(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
 
-  while ((c=getopt(argc, argv, "+l:e:E:hvO:")) != -1){
+  while ((c=getopt(argc, argv, "+l:L:e:E:hvO:")) != -1){
     switch (c){
     case 'l':
       dfsch_load_scm(ctx, optarg);
