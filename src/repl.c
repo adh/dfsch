@@ -295,10 +295,11 @@ int main(int argc, char**argv){
   while ((c=getopt(argc, argv, "+l:e:E:hvO:")) != -1){
     switch (c){
     case 'l':
-      {
-        dfsch_load_scm(ctx, optarg);
-        break;
-      }
+      dfsch_load_scm(ctx, optarg);
+      break;
+    case 'L':
+      dfsch_load_extend_path(ctx, optarg);
+      break;
     case 'O':
       cmd_log = fopen(optarg, "a");
       if (!cmd_log)
@@ -332,6 +333,7 @@ int main(int argc, char**argv){
       printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
       puts("Options:");
       puts("  -l <filename>     Load scheme file on startup");
+      puts("  -L <directory>    Append directory to load:path");
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
       puts("  -O <filename>     Log sucessfuly executed statements");

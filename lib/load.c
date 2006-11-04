@@ -111,6 +111,19 @@ dfsch_object_t* dfsch_load_scm(dfsch_ctx_t* ctx, char* scm_name){
   dfsch_throw("load:file-not-found", dfsch_make_string_cstr(scm_name));
 
 }
+dfsch_object_t* dfsch_load_extend_path(dfsch_ctx_t* ctx, char* dir){
+  dfsch_object_t* path = dfsch_ctx_env_get(ctx, "load:path");
+  if (path){
+    dfsch_ctx_define(ctx, "load:path", 
+                     dfsch_append(dfsch_list(2,
+                                             dfsch_car(path),
+                                             dfsch_list(1,
+                                                        dfsch_make_string_cstr(dir)))));
+  }else{
+    dfsch_ctx_define(ctx, "load:path", 
+                     dfsch_list(1, dfsch_make_string_cstr(dir)));
+  }
+}
 dfsch_object_t* dfsch_read_scm(char* scm_name){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];

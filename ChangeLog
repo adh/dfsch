@@ -1,5 +1,7 @@
 2006-11-04  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): -L option
+
 	* lib/load.c (dfsch_load_scm): Searching for source files.
 
 2006-10-26  Ales Hakl  <ales at hakl dot net>
