@@ -73,31 +73,45 @@ int dfsch_hash_p(dfsch_object_t* obj){
   return obj->type == &hash_type;
 }
 
+static size_t hash_string(char* string){
+  size_t tmp=0;
+  while (*string){
+    tmp ^= *string;
+    tmp ^= (tmp << 5) ^ (*string << 13) ^ (tmp >> 7);
+  }
+  return tmp;
+}
+
 static size_t get_hash(hash_t* hash, dfsch_object_t*key){
   
   if (hash->proc){
     return (size_t)dfsch_number_to_long(dfsch_apply(hash->proc,
                                                     dfsch_list(1,key)));
   }else{
-
+    
     /*
      * We don't have any procedure for computing hashes - so we will
-     * compute something based on object pointer.
+     * compute something based on object pointer (eq? case) or object 
+     * serialization (all other cases).
      */
+    if (hash->mode == DFSCH_HASH_EQ){
+      size_t a = (size_t)key;        
+      size_t b = (size_t)key >> 16;
 
-    size_t a = (size_t)key;        
-    size_t b = (size_t)key >> 16;
+      a ^= b >> 2;
+      b ^= a >> 3;
+      a ^= b >> 5;
+      b ^= a >> 7;
+      a ^= b >> 11;
+      b ^= a >> 13;
+      a ^= b >> 17;
+      b ^= a >> 23;
 
-    a ^= b >> 2;
-    b ^= a >> 3;
-    a ^= b >> 5;
-    b ^= a >> 7;
-    a ^= b >> 11;
-    b ^= a >> 13;
-    a ^= b >> 17;
-    b ^= a >> 23;
-
-    return b ^ a;
+      return b ^ a;
+    } else {
+      return hash_string(dfsch_obj_write(key, 10, 1)); 
+      // Not so bad way to hash hash objects
+    }
   }
 }
 
