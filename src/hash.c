@@ -110,7 +110,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
       return b ^ a;
     } else {
       return hash_string(dfsch_obj_write(key, 10, 1)); 
-      // Not so bad way to hash hash objects
+      // Not so bad way to hash scheme objects
     }
   }
 }
