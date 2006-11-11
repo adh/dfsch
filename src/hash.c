@@ -33,7 +33,7 @@ typedef struct hash_t{
   size_t mask;
   hash_entry_t** vector;
   int mode;
-
+  pthread_mutex_t w_mutex;
 }hash_t;
 
 struct hash_entry_t {
@@ -55,16 +55,24 @@ static void alloc_vector(hash_t* hash){
   hash->vector = GC_MALLOC(sizeof(hash_entry_t)*(hash->mask+1));
 }
 
+static void hash_finalizer(hash_t* hash, void* cd){
+  pthread_mutex_destroy(&(hash->w_mutex));
+}
+
 dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
   hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
 
   if (hash_proc && !dfsch_procedure_p(hash_proc))
     dfsch_throw("exception:not-a-procedure", hash_proc);
 
+  GC_REGISTER_FINALIZER(h, (GC_finalization_proc)hash_finalizer,
+                        NULL, NULL, NULL);
+
   h->proc = hash_proc;
   h->count = 0;
   h->mask = 0x03;
   h->mode = mode;
+  pthread_mutex_init(&(h->w_mutex), NULL);
   alloc_vector(h);
 
   return (dfsch_object_t*)h;
@@ -119,6 +127,11 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
    if (!obj || obj->type != &hash_type)\
      dfsch_throw("exception:not-a-hash", obj); \
    hash = (hash_t*)obj;
+
+/*
+ * Synchronization is generally required only for modification - readers
+ * can read concurrently with modification and see consistent state.
+ */
 
 dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
                                dfsch_object_t* key){
@@ -204,6 +217,8 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
 
   GET_HASH(hash_obj,hash);
 
+  pthread_mutex_lock(&(hash->w_mutex));
+
   h = get_hash(hash, key);  
   i = entry = hash->vector[h & hash->mask];
 
@@ -212,6 +227,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && i->key == key){
         i->value = value;
+        pthread_mutex_unlock(&(hash->w_mutex));
         return hash_obj;
       }
       
@@ -222,6 +238,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_eqv_p(i->key, key)){
         i->value = value;
+        pthread_mutex_unlock(&(hash->w_mutex));
         return hash_obj;
       }
       
@@ -232,6 +249,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_equal_p(i->key, key)){
         i->value = value;
+        pthread_mutex_unlock(&(hash->w_mutex));
         return hash_obj;
       }
       
@@ -252,6 +270,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
                                              value,
                                              hash->vector[h & hash->mask]);
   
+  pthread_mutex_unlock(&(hash->w_mutex));
   return hash_obj;
 }
 dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
@@ -261,6 +280,8 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
   hash_entry_t *i, *j;
 
   GET_HASH(hash_obj, hash);
+
+  pthread_mutex_lock(&(hash->w_mutex));
 
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
@@ -277,6 +298,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
+        pthread_mutex_unlock(&(hash->w_mutex));
         return i->value;
       }
       
@@ -296,6 +318,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
+        pthread_mutex_unlock(&(hash->w_mutex));
         return i->value;
       }
       
@@ -315,6 +338,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
+        pthread_mutex_unlock(&(hash->w_mutex));
         return i->value;
       }
       
@@ -324,9 +348,14 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
     break;
   }
 
+  pthread_mutex_unlock(&(hash->w_mutex));
   return NULL;
   
 }
+
+/*
+ * Im not fully sure whenever synchronization is strictly necessary here.
+ */
 dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
                                          dfsch_object_t* key,
                                          dfsch_object_t* value){
@@ -337,6 +366,8 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
 
   GET_HASH(hash_obj, hash);
 
+  pthread_mutex_lock(&(hash->w_mutex));
+
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
   
@@ -345,6 +376,8 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     while (i){
       if (h = i->hash && i->key == key){
         i->value = value;
+
+        pthread_mutex_unlock(&(hash->w_mutex));
         return dfsch_list(1,value);
       }
       i = i->next;
@@ -354,6 +387,8 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     while (i){
       if (h = i->hash && dfsch_eqv_p(i->key, key)){
         i->value = value;
+
+        pthread_mutex_unlock(&(hash->w_mutex));
         return dfsch_list(1,value);
       }
       i = i->next;
@@ -363,6 +398,8 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     while (i){
       if (h = i->hash && dfsch_equal_p(i->key, key)){
         i->value = value;
+
+        pthread_mutex_unlock(&(hash->w_mutex));
         return dfsch_list(1,value);
       }
       i = i->next;
@@ -370,6 +407,7 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     break;
   }
 
+  pthread_mutex_unlock(&(hash->w_mutex));
   return NULL;
 }
 

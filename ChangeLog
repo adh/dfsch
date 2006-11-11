@@ -1,3 +1,7 @@
+2006-11-11  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (dfsch_hash_set): Synchronization of hash modifications
+
 2006-11-05  Ales Hakl  <ales at hakl dot net>
 
 	* src/hash.c (get_hash): Default hash function for all objects
