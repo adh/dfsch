@@ -3,6 +3,7 @@
 	* src/dfsch.c (dfsch_make_symbol): moved symbol table initialization 
 	here.
 	(gsh_check_init): removed locking and other unnecessary code
+	(dfsch_eval_impl): propagate thread_info_t when recursing to self
 
 2006-11-11  Ales Hakl  <ales at hakl dot net>
 

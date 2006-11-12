@@ -1614,7 +1614,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 
   if(exp->type==PAIR){
     
-    object_t *f = dfsch_eval_tr(((pair_t*)exp)->car,env,NULL);
+    object_t *f = dfsch_eval_impl(((pair_t*)exp)->car, env, NULL, ti);
     
     if (!f)
       dfsch_throw("exception:not-a-procedure-or-macro", f);
