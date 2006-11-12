@@ -4,6 +4,8 @@
 	here.
 	(gsh_check_init): removed locking and other unnecessary code
 	(dfsch_eval_impl): propagate thread_info_t when recursing to self
+	(eval_list): use dfsch_eval_impl instead of dfsch_eval
+	(dfsch_eval_impl): propagate thread_info to eval_list
 
 2006-11-11  Ales Hakl  <ales at hakl dot net>
 

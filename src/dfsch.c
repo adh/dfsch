@@ -1569,7 +1569,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                         thread_info_t* ti);
 
 
-static object_t* eval_list(object_t *list, object_t* env){
+static object_t* eval_list(object_t *list, object_t* env, thread_info_t* ti){
   pair_t *i;
   object_t *f=NULL;
   pair_t *t, *p;
@@ -1579,12 +1579,12 @@ static object_t* eval_list(object_t *list, object_t* env){
     return NULL;
 
   if (list->type!=PAIR){
-    return dfsch_eval(list,env);
+    return dfsch_eval_impl(list,env,NULL,ti);
   }
 
   i = (pair_t*)list;
   while (i && i->type==PAIR){
-    r = dfsch_eval(i->car,env);
+    r = dfsch_eval_impl(i->car, env, NULL, ti);
 
     t = (pair_t*)dfsch_cons(r,NULL);
     if (f){
@@ -1638,7 +1638,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                   ti);
       
     return dfsch_apply_impl(f, 
-                            eval_list(((pair_t*)exp)->cdr,env),
+                            eval_list(((pair_t*)exp)->cdr, env, ti),
                             esc,
                             ti);
     
