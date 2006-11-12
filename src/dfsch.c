@@ -766,17 +766,12 @@ static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
  */
 
 
-static gsh_check_init(){
-  int err;
+static void gsh_check_init(){
   if (gsh_init)
     return;
 
-  pthread_mutex_lock(&symbol_lock);
-
   memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
   gsh_init = 1;
-
-  pthread_mutex_unlock(&symbol_lock);
 }
 
 static symbol_t* lookup_symbol(char *symbol){
@@ -867,6 +862,9 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   symbol_t *s;
 
   pthread_mutex_lock(&symbol_lock);
+
+  gsh_check_init(); 
+  // This code is slow already, so this check does not matter (too much)
 
   s = lookup_symbol(symbol);
 
@@ -1845,7 +1843,6 @@ static object_t* native_form_current_environment(void *baton, object_t* args,
 
 dfsch_object_t* dfsch_make_context(){
   dfsch_object_t* ctx;
-  gsh_check_init();
 
   ctx = dfsch_new_frame(NULL);
 
