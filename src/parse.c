@@ -273,7 +273,8 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
 #ifdef P_DEBUG
   printf(";; parse_close\n");
 #endif
-  if (ctx->parser){
+  if (ctx->parser && (ctx->parser->state == P_PREEND || 
+                      ctx->parser->state == P_LIST)){
     dfsch_object_t *list;
     list = ctx->parser->front;
     parser_pop(ctx);
