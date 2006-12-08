@@ -311,11 +311,13 @@ static object_t* native_abort(void *baton, object_t* args, dfsch_tail_escape_t* 
 static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* handler;
   object_t* thunk;
-  DFSCH_OBJECT_ARG(args, handler);
+  object_t* finally;
   DFSCH_OBJECT_ARG(args, thunk);
+  DFSCH_OBJECT_ARG(args, handler);
+  DFSCH_OBJECT_ARG_OPT(args, finally, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_try(handler, thunk);
+  return dfsch_try(handler, finally, thunk);
  
 }
 

@@ -316,6 +316,7 @@ extern "C" {
 
   /** Catches exceptions */
   extern dfsch_object_t* dfsch_try(dfsch_object_t* handler,
+                                   dfsch_object_t* finally,
                                    dfsch_object_t* thunk);
   
 

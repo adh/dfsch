@@ -1,3 +1,7 @@
+2006-12-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_try): finally support
+
 2006-11-24  Ales Hakl  <ales at hakl dot net>
 
 	* src/parse.c (parse_close): check that given state is valid for

@@ -1126,13 +1126,15 @@ void dfsch_raise(dfsch_object_t* exception){
 }
 
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
+                          dfsch_object_t* finally,
                           dfsch_object_t* thunk){
 
   thread_info_t *ei = get_thread_info();
   jmp_buf *old_ret;
   dfsch_object_t* old_frame;
   continuation_t* cont;
-  
+  object_t *r = NULL;
+
   old_ret = ei->exception_ret;
   old_frame = ei->stack_trace;
   cont = ei->cont_stack;
@@ -1143,16 +1145,21 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
     ei->stack_trace = (object_t*)old_frame;
     invalidate_continuations(ei, cont);
     ei->cont_stack = cont;
-    return dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
-  }else{
-    object_t *r = dfsch_apply(thunk, NULL);
+    if (handler){
+      r = dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
+    }
+  } else {
+    r = dfsch_apply(thunk, NULL);
     ei->exception_ret = (jmp_buf*)old_ret;
     ei->stack_trace = (object_t*)old_frame;
-    return r;
   }
 
-}
+  if (finally){
+    dfsch_apply(finally, NULL);
+  }
 
+  return r;
+}
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 				     dfsch_object_t* data,

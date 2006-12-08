@@ -81,6 +81,7 @@ static int callback(dfsch_object_t *obj, void *baton){
   ctx.expr = obj;
 
   dfsch_try(dfsch_make_primitive((dfsch_primitive_t)evaluator_handler, obj),
+            NULL,
             dfsch_make_primitive((dfsch_primitive_t)evaluator_thunk, &ctx));
   return 1;
 }
