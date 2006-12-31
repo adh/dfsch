@@ -3,8 +3,9 @@
    (lambda (env signature . body)
      `((define ,(car signature) 
          (make-macro
-          (lambda (,(gensym) ,@(cdr signature))
-            ,@body)))))))
+          (let ((outer-environment ',env))
+            (lambda ,(cons (gensym) (cdr signature))
+              ,@body))))))))
 
 (define-macro (define-struct name slots)
   (define num-slots (length slots))

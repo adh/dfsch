@@ -177,6 +177,16 @@ static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
   puts("");
   return NULL;
 }
+static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  
+  while (dfsch_pair_p(args)){
+    fputs(dfsch_obj_write(dfsch_car(args), 100, 1), stdout);
+    args = dfsch_cdr(args);
+  }
+  puts("");
+  return NULL;
+}
 
 
 

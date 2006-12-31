@@ -1,3 +1,9 @@
+2006-12-31  Ales Hakl  <ales at hakl dot net>
+
+	* scm/test.scm: Structured tests
+
+	* src/repl.c: write function
+
 2006-12-08  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_try): finally support
