@@ -33,23 +33,23 @@
                             (print "*** Test failed -- ABORTING ***")
                             (exit-func)) ()))))
 
-(define (group-generator separator name statements)
+(define (group-generator indent separator name statements)
   (define tmp-passed (gensym))
   (define tmp-failed (gensym))
-  `((print ',separator " " ',name " " ',separator)
+  `((print ',indent ',separator " " ',name " " ',separator)
     (let ((,tmp-passed tests-passed)
           (,tmp-failed tests-failed))
       ,@statements
       (let ((passed (- tests-passed ,tmp-passed))
             (failed (- tests-failed ,tmp-failed)))
-        (print ',separator " " ',name ": [passed: " passed " failed: " failed 
+        (print ',indent ',separator " [passed: " passed " failed: " failed 
                " out of " (+ passed failed) "] " ',separator)))))
 
 (define-macro (group name .  statements)
-  (group-generator "=====" name statements))
+  (group-generator "" "=====" name statements))
 
 (define-macro (sub-group name . statements) 
-  (group-generator "-----" name statements))
+  (group-generator " " "----" name statements))
 
 
 ;;; Write tests here
@@ -155,7 +155,7 @@
                               (else #f))
                         2))
 
-       (sub-group 'case
+       (sub-group case
 
                   (test 'case-simple
                         (case (* 2 3)
@@ -179,7 +179,7 @@
                   (test 'or-true (or (= 2 2) (> 2 1)) true)
                   (test 'or-false (or (> 2 2) (< 2 1)) ()))
                   
-       (sub-group 'do
+       (sub-group do
 
                   (test 'do 
                         (do ((vec (make-vector 5))
