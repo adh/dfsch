@@ -29,9 +29,9 @@
         (print "!! Test failed: " id " was: " (object->string exp) 
                " should be: " (object->string val))
         (set! tests-failed (+ tests-failed 1))
-        (if one-test-fail (begin
-                            (print "*** Test failed -- ABORTING ***")
-                            (exit-func)) ()))))
+        (when
+         (print "*** Test failed -- ABORTING ***")
+         (exit-func)))))
 
 (define (group-generator indent separator name statements)
   (define tmp-passed (gensym))
