@@ -1,3 +1,7 @@
+2007-01-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c (string_write): removed redundant hexadecimal table.
+
 2007-01-03  Ales Hakl  <ales at hakl dot net>
 
 	* scm/test.scm (test): use when form

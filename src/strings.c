@@ -38,7 +38,6 @@ char escape_table[] = {
 char hex_table[] = "0123456789abcdef";
 
 char* string_write(dfsch_string_t* o, int max_depth, int readable){
-  char *hex = "0123456789abcdef";
   char *b;
   char *i;
   int j;
