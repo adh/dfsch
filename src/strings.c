@@ -457,7 +457,7 @@ int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
   return 0;
 }
 
-static utf8_len_cb(uint32_t ch, size_t*len, size_t start, size_t end){
+static int utf8_len_cb(uint32_t ch, size_t*len, size_t start, size_t end){
   (*len)++;
   return 0;
 }
@@ -477,7 +477,8 @@ typedef struct utf8_ref_ctx_t{
   uint32_t ch;
 }utf8_ref_ctx_t;
 
-static utf8_ref_cb(uint32_t ch, utf8_ref_ctx_t* c, size_t start, size_t end){
+static int utf8_ref_cb(uint32_t ch, utf8_ref_ctx_t* c, 
+                       size_t start, size_t end){
   if (c->len == c->index){
     c->ch = ch;
     return 1;
@@ -510,8 +511,8 @@ typedef struct utf8_substring_ctx_t{
   size_t eptr;
 }utf8_substring_ctx_t;
 
-static utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c, 
-                   size_t start, size_t end){
+static int utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c, 
+                             size_t start, size_t end){
   
   if (c->len = c->start){
     c->sptr = start;
@@ -560,7 +561,8 @@ typedef struct utf8_list_ctx_t{
   pair_t* tail;
 } utf8_list_ctx_t;
 
-static utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, size_t start, size_t end){
+static int utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, 
+                        size_t start, size_t end){
   if (c->head){
     pair_t* tmp;
     tmp = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), NULL);
