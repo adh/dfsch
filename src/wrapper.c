@@ -24,11 +24,6 @@ typedef struct wrapper_type_t {
   dfsch_object_t* apply;
 } wrapper_type_t;
 
-typedef struct wrapper_type_obj_t {
-  dfsch_type_t* dfsch_type;
-  wrapper_type_t type;
-} wrapper_type_obj_t;
-
 typedef struct wrapper_t {
   dfsch_type_t* type;
   dfsch_object_t* object;
@@ -64,7 +59,7 @@ static dfsch_object_t* wrapper_apply(dfsch_object_t* obj,
                         esc);
 }
 
-static char*  wrapper_type_write(wrapper_type_obj_t* t, int max_depth, int readable){
+static char*  wrapper_type_write(wrapper_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
     char buf[sizeof(void*)*2+1];
 
@@ -72,7 +67,7 @@ static char*  wrapper_type_write(wrapper_type_obj_t* t, int max_depth, int reada
     snprintf(buf, sizeof(void*)*2+1, "%x", t);
     sl_append(l, buf);   
     sl_append(l, " ");
-    sl_append(l, t->type.type.name);
+    sl_append(l, t->type.name);
     sl_append(l,">");
     
     return sl_value(l);
@@ -80,7 +75,8 @@ static char*  wrapper_type_write(wrapper_type_obj_t* t, int max_depth, int reada
 
 
 static const dfsch_type_t wrapper_type = {
-  sizeof(wrapper_type_obj_t),
+  NULL,
+  sizeof(wrapper_type_t),
   "wrapper-type",
   NULL,
   (dfsch_type_write_t)wrapper_type_write,
@@ -93,31 +89,31 @@ extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
                                                dfsch_object_t* equal_p,
                                                dfsch_object_t* apply){
 
-  wrapper_type_obj_t* t = (wrapper_type_obj_t*)
+  wrapper_type_t* t = (wrapper_type_t*)
     dfsch_make_object((dfsch_type_t*)&wrapper_type);
   
-  t->type.type.name = name;
-  t->type.type.size = sizeof(wrapper_t);
+  t->type.name = name;
+  t->type.size = sizeof(wrapper_t);
   
   if (write){
-    t->type.type.write = wrapper_write;
-    t->type.write = write;
+    t->type.write = wrapper_write;
+    t->write = write;
   }else{
-    t->type.type.write = NULL;
+    t->type.write = NULL;
   }
 
   if (equal_p){
-    t->type.type.equal_p = wrapper_equal_p;
-    t->type.equal_p = equal_p;
+    t->type.equal_p = wrapper_equal_p;
+    t->equal_p = equal_p;
   }else{
-    t->type.type.equal_p = NULL;
+    t->type.equal_p = NULL;
   }
 
   if (apply){
-    t->type.type.apply = wrapper_apply;
-    t->type.apply = apply;
+    t->type.apply = wrapper_apply;
+    t->apply = apply;
   }else{
-    t->type.type.apply = NULL;
+    t->type.apply = NULL;
   }
   
   return (dfsch_object_t*)t;
@@ -126,14 +122,14 @@ extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
 extern dfsch_object_t* dfsch_wrap(dfsch_object_t* type,
                                   dfsch_object_t* object){
   wrapper_t* w;
-  wrapper_type_obj_t* t;
+  wrapper_type_t* t;
 
   if (!type || type->type != &wrapper_type)
     dfsch_throw("exception:not-a-wrapper-type", type);
 
-  t = (wrapper_type_obj_t*)type;
+  t = (wrapper_type_t*)type;
 
-  w = (wrapper_t*)dfsch_make_object((dfsch_type_t*)&(t->type));
+  w = (wrapper_t*)dfsch_make_object((dfsch_type_t*)t);
   w->object = object;
   return (dfsch_object_t*)w;
 }
@@ -141,13 +137,13 @@ extern dfsch_object_t* dfsch_wrap(dfsch_object_t* type,
 extern dfsch_object_t* dfsch_unwrap(dfsch_object_t* type,
                                     dfsch_object_t* wrapper){
   wrapper_t* w;
-  wrapper_type_obj_t* t;
+  wrapper_type_t* t;
 
   if (!type || type->type != &wrapper_type)
     dfsch_throw("exception:not-a-wrapper-type", type);
-  t = (wrapper_type_obj_t*)type;
+  t = (wrapper_type_t*)type;
 
-  if (!wrapper || wrapper->type != (dfsch_type_t*)&(t->type))
+  if (!wrapper || wrapper->type != (dfsch_type_t*)t)
     dfsch_throw("exception:type-mismatch", type);
   w = (wrapper_t*)wrapper;
 

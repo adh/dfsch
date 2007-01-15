@@ -73,7 +73,10 @@ extern "C" {
                                                 dfsch_tail_escape_t* esc);
 
   /** Representation of scheme datatypes. */
-  typedef struct dfsch_type_t {
+  typedef struct dfsch_type_t dfsch_type_t;
+  struct dfsch_type_t {
+    /** When we want to use type_t as first-class object */
+    dfsch_type_t* type;
     /** Instance size */
     size_t size;
     /** Type name */
@@ -91,11 +94,14 @@ extern "C" {
      * in evaluator and have this field set to NULL
      */
     dfsch_type_apply_t apply;
-  } dfsch_type_t;
+  };
+
+  extern const dfsch_type_t dfsch_standard_type;
+#define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
 
   /**
    * C datatype for scheme objects. Used as abstract datatype and also 
-   * first field of any non-generic object.
+   * first field of most objects.
    */
   struct dfsch_object_t {
     /** Pointer to datatype */

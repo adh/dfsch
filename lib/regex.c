@@ -7,6 +7,7 @@ typedef struct dfsch_regex_t {
 } dfsch_regex_t;
 
 dfsch_type_t regex_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(dfsch_regex_t),
   "regex",
   NULL, // equal?

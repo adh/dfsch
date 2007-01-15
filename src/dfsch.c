@@ -99,15 +99,45 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
 
   return a->type->equal_p(a,b);
 }
+static char* type_write(dfsch_type_t* t, int max_depth, int readable){
+    str_list_t* l = sl_create();
+    char buf[sizeof(void*)*2+1];
+
+    sl_append(l, "#<standard-type 0x");
+    snprintf(buf, sizeof(void*)*2+1, "%x", t);
+    sl_append(l, buf);
+    
+    sl_append(l, " ");
+    sl_append(l, t->name);
+    sl_append(l, " instance-size: 0x");
+    snprintf(buf, sizeof(void*)*2+1, "%x", t->size);    
+    sl_append(l, buf);
+
+    sl_append(l,">");
+    
+    return sl_value(l);
+}
+
+const dfsch_type_t dfsch_standard_type = {
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_type_t),
+  "standard-type",
+  NULL,
+  (dfsch_type_write_t)type_write,
+  NULL
+};
+
 
 static int pair_equal_p(pair_t*, pair_t*);
 static char* pair_write(pair_t*, int, int);
 
 static const dfsch_type_t pair_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(pair_t), 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
-  (dfsch_type_write_t)pair_write
+  (dfsch_type_write_t)pair_write,
+  NULL
 };
 #define PAIR (&pair_type)
 
@@ -168,6 +198,7 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
 static int symbol_equal_p(object_t*, object_t*);
 static char* symbol_write(symbol_t*, int, int);
 static const dfsch_type_t symbol_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(symbol_t), 
   "symbol",
   (dfsch_type_equal_p_t)symbol_equal_p,
@@ -189,6 +220,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
 
 
 static const dfsch_type_t primitive_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(primitive_t),
   "primitive",
   NULL,
@@ -215,6 +247,7 @@ static char* closure_write(closure_t* c, int max_depth, int readable){
 }
 
 static const dfsch_type_t closure_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(closure_t),
   "closure",
   NULL,
@@ -223,6 +256,7 @@ static const dfsch_type_t closure_type = {
 #define CLOSURE (&closure_type)
 
 static const dfsch_type_t macro_type = {
+  NULL,
   sizeof(macro_t),
   "macro",
   NULL,
@@ -231,6 +265,7 @@ static const dfsch_type_t macro_type = {
 #define MACRO (&macro_type)
 
 static const dfsch_type_t form_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(form_t),
   "form",
   NULL,
@@ -239,6 +274,7 @@ static const dfsch_type_t form_type = {
 #define FORM (&form_type)
 
 static const dfsch_type_t exception_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(exception_t),
   "exception",
   NULL,
@@ -278,6 +314,7 @@ static char* vector_write(vector_t* v, int max_depth, int readable){
 }
 
 static const dfsch_type_t vector_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(vector_t),
   "vector",
   (dfsch_type_equal_p_t)vector_equal_p,
@@ -1221,6 +1258,7 @@ static object_t* continuation_apply(continuation_t *cont,
 }
 
 static struct dfsch_type_t continuation_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(continuation_t*),
   "escape-continuation",
   NULL,

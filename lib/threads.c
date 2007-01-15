@@ -15,9 +15,11 @@ static int thread_equal_p(thread_t* a, thread_t* b){
 }
 
 static const dfsch_type_t thread_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(thread_t), 
   "thread",
   (dfsch_type_equal_p_t)thread_equal_p,
+  NULL,
   NULL
 };
 
@@ -95,8 +97,10 @@ typedef struct mutex_t {
 } mutex_t;
 
 static const dfsch_type_t mutex_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(mutex_t), 
   "mutex",
+  NULL,
   NULL,
   NULL
 };
@@ -171,8 +175,10 @@ typedef struct condition_t {
 } condition_t;
 
 static const dfsch_type_t condition_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(condition_t), 
   "condition",
+  NULL,
   NULL,
   NULL
 };
@@ -276,8 +282,10 @@ typedef struct channel_t {
 } channel_t;
 
 static const dfsch_type_t channel_type = {
+  DFSCH_STANDARD_TYPE,
   sizeof(channel_t), 
   "channel",
+  NULL,
   NULL,
   NULL
 };

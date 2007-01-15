@@ -45,6 +45,7 @@ struct hash_entry_t {
 };
 
 static const dfsch_type_t hash_type = {
+  NULL,
   sizeof(hash_t),
   "hash",
   NULL,

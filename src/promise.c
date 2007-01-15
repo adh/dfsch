@@ -30,6 +30,7 @@ typedef struct promise_t {
 } promise_t;
 
 static const dfsch_type_t promise_type = {
+  NULL,
   sizeof(promise_t),
   "promise",
   NULL,
