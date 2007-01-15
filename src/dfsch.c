@@ -39,7 +39,7 @@
 #include <stdarg.h>
 #include <setjmp.h>
 
-#include "object.h"
+#include "types.h"
 
 //#define ALLOC_DEBUG
 

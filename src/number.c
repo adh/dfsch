@@ -1,7 +1,6 @@
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 #include "internal.h"
-#include "object.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -11,6 +10,7 @@
 #define SMALLNUM_ORIGIN  -32
 #define SMALLNUM_COUNT   64
 
+typedef dfsch_object_t object_t;
 
 typedef struct number_t {
   dfsch_type_t *type;

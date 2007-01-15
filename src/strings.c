@@ -1,6 +1,6 @@
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
-#include "object.h"
+#include "types.h"
 #include <string.h>
 
 typedef struct dfsch_string_t {
