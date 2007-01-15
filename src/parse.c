@@ -338,9 +338,25 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 	++in;
 	continue;
       case '0':
-	*out = '\0';
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+	*out = *in -'0';
+        ++in;
+        
+        if (*in >= '0' && *in <= '7'){
+          *out = ((*out)<<3) | (*in - '0');
+          ++in;
+          if (*in >= '0' && *in <= '7'){
+            *out = ((*out)<<3) | (*in - '0');
+            ++in;
+          }          
+        }
 	++out;
-	++in;
 	continue;
       case 'x':
         {
@@ -372,8 +388,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
         *out = *in;
         ++out;
         ++in;
-        continue;
-        
+        continue;  
       }
     default:
       *out = *in;
