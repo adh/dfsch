@@ -1,5 +1,7 @@
 2007-01-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/strings.c (escape_table): excape NUL as \x00 and not \0
+
 	* src/parse.c (dispatch_string): simplified hex byte-escape handling
 	(dispatch_string): full octal escapes
 
