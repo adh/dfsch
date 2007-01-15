@@ -1,5 +1,7 @@
 2007-01-15  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/wrapper.h, dfsch/strings.h: added extern "C" for C++
+
 	* src/parse.c (dispatch_string): unicode escapes
 
 	* src/strings.c (escape_table): excape NUL as \x00 and not \0
