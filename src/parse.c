@@ -362,9 +362,9 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
         {
           int i;
           *out = 0;
+          ++in;
           for (i=0; i<2; i++){
             *out <<= 4;
-            ++in;
             if (!*in){
               ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
               return;
@@ -384,6 +384,47 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           ++out;
           continue;
         }
+      case 'u':
+      case 'U':
+        {
+          int i;
+          uint32_t u = 0;
+          for (i = (*(in++) == 'U') ? 0 : 4; i<8; i++){ // XXX: clever and ugly
+            u <<= 4;
+            if (!*in){
+              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+              return;
+            }
+            if (*in >= 'A' && *in <= 'F'){
+              u |= *in - 'A' + 10;
+            }else if (*in >= 'a' && *in <= 'f'){
+              u |= *in - 'a' + 10;
+            }else if (*in >= '0' && *in <= '9'){
+              u |= *in - '0';
+            }else{
+              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+              return;
+            }
+            ++in;
+          }
+
+          if (u <= 0x7f){
+            *(out++) = u;
+          } else if (u <= 0x7ff) {
+            *(out++) = 0xc0 | ((u >> 6) & 0x1f); 
+            *(out++) = 0x80 | (u & 0x3f);
+          } else if (u <= 0xffff) {
+            *(out++) = 0xe0 | ((u >> 12) & 0x0f); 
+            *(out++) = 0x80 | ((u >> 6) & 0x3f);
+            *(out++) = 0x80 | (u & 0x3f);
+          } else {
+            *(out++) = 0xf0 | ((u >> 18) & 0x07); 
+            *(out++) = 0x80 | ((u >> 12) & 0x3f);
+            *(out++) = 0x80 | ((u >> 6) & 0x3f);
+            *(out++) = 0x80 | (u & 0x3f);
+          } 
+          continue;
+        }        
       default:
         *out = *in;
         ++out;
