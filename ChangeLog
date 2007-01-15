@@ -1,3 +1,7 @@
+2007-01-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/parse.c (dispatch_string): simplified hex byte-escape handling
+
 2007-01-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (string_write): removed redundant hexadecimal table.

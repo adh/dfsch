@@ -343,47 +343,37 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 	++in;
 	continue;
       case 'x':
-	{
-	  ++in;
-	  if (!*in){
-	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-	    return;
-	  }
-	  if (*in >= 'A' && *in <= 'F'){
-	    *out = *in - 'A' + 10;
-	  }else if (*in >= 'a' && *in <= 'f'){
-	    *out = *in - 'a' + 10;
-	  }else if (*in >= '0' && *in <= '9'){
-	    *out = *in - '0';
-	  }else{
-	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-	    return;
-	  }
-	  ++in;
-	  *out <<= 4;
-	  if (!*in){
-	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-	    return;
-	  }
-	  if (*in >= 'A' && *in <= 'F'){
-	    *out |= *in - 'A' + 10;
-	  }else if (*in >= 'a' && *in <= 'f'){
-	    *out |= *in - 'a' + 10;
-	  }else if (*in >= '0' && *in <= '9'){
-	    *out |= *in - '0';
-	  }else{
-	    ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-	    return;
-	  }
-	  ++in;
-	  ++out;
-	  continue;
-        default:
-          *out = *in;
+        {
+          int i;
+          *out = 0;
+          for (i=0; i<2; i++){
+            *out <<= 4;
+            ++in;
+            if (!*in){
+              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+              return;
+            }
+            if (*in >= 'A' && *in <= 'F'){
+              *out |= *in - 'A' + 10;
+            }else if (*in >= 'a' && *in <= 'f'){
+              *out |= *in - 'a' + 10;
+            }else if (*in >= '0' && *in <= '9'){
+              *out |= *in - '0';
+            }else{
+              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+              return;
+            }
+            ++in;
+          }
           ++out;
-          ++in;
           continue;
-	}
+        }
+      default:
+        *out = *in;
+        ++out;
+        ++in;
+        continue;
+        
       }
     default:
       *out = *in;
@@ -391,7 +381,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
       ++in;
     }
   }
-
+  
   *out = 0;
   
   dfsch_object_t *s = dfsch_make_string_buf(data, out-data);
