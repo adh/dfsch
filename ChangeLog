@@ -1,5 +1,8 @@
 2007-01-16  Ales Hakl  <ales at hakl dot net>
 
+	* lib/load.c (dfsch_read_scm_stream): streams are closed by
+	fclose(3) not close(2)
+
 	* dfsch/dfsch.h (dfsch_type_t): more or less first-class types
 
 2007-01-15  Ales Hakl  <ales at hakl dot net>
