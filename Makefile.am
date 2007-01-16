@@ -19,7 +19,7 @@ EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/lib.scm \
 	doc/dfsch-repl.1
 
 
-libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/object.h src/internal.h\
+libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/parse.c dfsch/parse.h \
 	src/native.c src/native_cxr.c\
 	src/control.c \
