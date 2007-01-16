@@ -102,6 +102,7 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
     char buf[sizeof(void*)*2+1];
+    char buf2[sizeof(void*)*2+1];
 
     sl_append(l, "#<standard-type 0x");
     snprintf(buf, sizeof(void*)*2+1, "%x", t);
@@ -110,8 +111,8 @@ static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     sl_append(l, " ");
     sl_append(l, t->name);
     sl_append(l, " instance-size: 0x");
-    snprintf(buf, sizeof(void*)*2+1, "%x", t->size);    
-    sl_append(l, buf);
+    snprintf(buf2, sizeof(void*)*2+1, "%x", t->size);    
+    sl_append(l, buf2);
 
     sl_append(l,">");
     

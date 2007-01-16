@@ -45,7 +45,7 @@ struct hash_entry_t {
 };
 
 static const dfsch_type_t hash_type = {
-  NULL,
+  DFSCH_STANDARD_TYPE,
   sizeof(hash_t),
   "hash",
   NULL,
@@ -294,7 +294,8 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         j->next = i->next;
         hash->count --;
         
-        if (hash->count+16 < (hash->mask+1)/2){ // Should table shrink?
+        if (hash->count+16 < (hash->mask+1)/2 
+            && hash->mask != 0x3){ // Should table shrink?
           hash_change_size(hash, ((hash->mask+1) / 2) - 1);
         }
         

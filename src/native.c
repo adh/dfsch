@@ -86,6 +86,8 @@ static object_t* native_get_type(void*baton, object_t* args,
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
+  if (!object)
+    return NULL;
   return (object_t*)object->type;
 }
 

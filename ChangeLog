@@ -1,5 +1,12 @@
 2007-01-16  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (dfsch_hash_unset): lower bound on hash table size
+
+	* src/native.c (native_get_type): handle the empty list case
+
+	* src/dfsch.c (type_write): It's not good idea to reuse same buffer
+	for two sucessive calls of sl_append()
+
 	* src/native.c (native_get_type): inspect type of given object
 	(probably useless for now)
 

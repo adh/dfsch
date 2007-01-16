@@ -54,7 +54,7 @@ static char* n_write(number_t*n, int max_depth){
 }
 
 static dfsch_type_t number_type = {
-  NULL,
+  DFSCH_STANDARD_TYPE,
   sizeof(number_t),
   "number",
   (dfsch_type_equal_p_t)n_equal_p,
