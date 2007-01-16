@@ -1,7 +1,12 @@
 2007-01-16  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (native_get_type): inspect type of given object
+	(probably useless for now)
+
 	* lib/load.c (dfsch_read_scm_stream): streams are closed by
 	fclose(3) not close(2)
+	(dfsch_read_scm_fd/_stream): dont close anything (it's
+	responsibility of caller) 
 
 	* dfsch/dfsch.h (dfsch_type_t): more or less first-class types
 

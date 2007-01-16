@@ -158,7 +158,6 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
     buf[r]=0;
     err = dfsch_parser_feed(parser,buf);
   }
-  close(f);
 
   if (r<0){
     int err = errno;
@@ -196,7 +195,6 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
 
     err = dfsch_parser_feed(parser,buf);
   }
-  fclose(f);
 
   if ((err && err != DFSCH_PARSER_STOPPED) 
       || dfsch_parser_get_level(parser)!=0){

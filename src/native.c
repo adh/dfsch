@@ -80,6 +80,14 @@ static object_t* native_id(void*baton, object_t* args, dfsch_tail_escape_t* esc)
 
   return dfsch_make_number_from_long((long)object);
 }
+static object_t* native_get_type(void*baton, object_t* args, 
+                                 dfsch_tail_escape_t* esc){
+  object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return (object_t*)object->type;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -628,6 +636,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
                    dfsch_make_primitive(&native_stack_trace,NULL));
   dfsch_define_cstr(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
   dfsch_define_cstr(ctx, "id", dfsch_make_primitive(&native_id,NULL));
+  dfsch_define_cstr(ctx, "get-type", 
+                    dfsch_make_primitive(&native_get_type,NULL));
 
   dfsch_define_cstr(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
   dfsch_define_cstr(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
