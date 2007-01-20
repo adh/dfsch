@@ -1437,8 +1437,17 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 
   return obj->type->write(obj, max_depth, readable);
 }
-char* dfsch_exception_write(dfsch_object_t* e){
+
+typedef struct ew_ctx_t {
+  dfsch_object_t* obj;
+  char* res;
+} ew_ctx_t;
+
+static dfsch_object_t* exception_write_thunk(ew_ctx_t* ctx,
+                                             dfsch_object_t* args,
+                                             dfsch_tail_escape_t* esc){
   str_list_t *l = sl_create();
+  object_t* e = ctx->obj;
 
   sl_append(l,"Exception occured: ");
 
@@ -1466,8 +1475,28 @@ char* dfsch_exception_write(dfsch_object_t* e){
   }
   sl_append(l,"\n");
 
-  return sl_value(l);
+  ctx->res = sl_value(l);
+  return NULL;
 }
+static dfsch_object_t* exception_write_handler(ew_ctx_t* ctx,
+                                               dfsch_object_t* args,
+                                               dfsch_tail_escape_t* esc){
+  ctx->res = "Exception occured during formating exception message\n\n";
+  return NULL;
+}
+
+char* dfsch_exception_write(dfsch_object_t* e){
+  ew_ctx_t ctx;
+  
+  ctx.obj = e;
+
+  dfsch_try(dfsch_make_primitive(exception_write_thunk, &ctx),
+            NULL,
+            dfsch_make_primitive(exception_write_handler, &ctx));
+
+  return ctx.res;
+}
+
 
 typedef struct read_ctx_t {
   dfsch_object_t* head;
