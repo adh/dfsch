@@ -46,7 +46,7 @@ static char* class_write(class_t* klass, int depth,
   char buf[sizeof(void*)*2+4];
   
   sl_append(sl, "#<standard-class ");
-  snprintf(buf, sizeof(void*)*2+2, "0x%x ", klass);
+  snprintf(buf, sizeof(void*)*2+4, "0x%x ", klass);
   sl_append(sl, buf);
   sl_append(sl, klass->type.name);
   sl_append(sl, ">");
@@ -65,7 +65,7 @@ static dfsch_object_t* class_apply(dfsch_object_t* object,
   
   ins->inst_vars = dfsch_hash_make(NULL, DFSCH_HASH_EQ);
 
-  dfsch_object_send_tr((dfsch_object_t*)ins, sel_init(), args, esc);
+  dfsch_object_send((dfsch_object_t*)ins, sel_init(), args);
 
   return (dfsch_object_t*)ins;
 }

@@ -1,5 +1,8 @@
 2007-01-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/object.c (class_write): correct buffer size
+	(class_apply): We don't want send_tr here
+
 	* dfsch/magic.h: exception handling in plain old C (ugly and so on)
 
 	* src/dfsch.c (dfsch_exception_write): handle exceptions
