@@ -583,11 +583,16 @@ static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_es
 
 static object_t* native_object_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* object;
+  object_t* readable;
+  long depth;
 
   DFSCH_OBJECT_ARG(args, object);
+  DFSCH_LONG_ARG_OPT(args, depth, 256);
+  DFSCH_OBJECT_ARG_OPT(args, readable, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_string_cstr(dfsch_obj_write(object, 256, 1));
+  return dfsch_make_string_cstr(dfsch_obj_write(object, depth, 
+                                                readable != NULL));
 }
 static object_t* native_string_2_object(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   char* string;
@@ -758,5 +763,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__number_native_register(ctx);
   dfsch__string_native_register(ctx);
   dfsch__wrapper_native_register(ctx);
+  dfsch__object_native_register(ctx);
 
 }

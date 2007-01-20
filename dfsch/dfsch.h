@@ -519,11 +519,11 @@ extern "C" {
 
 #define DFSCH_SYMBOL_CACHE(symbol, name)\
   dfsch_object_t* name(){\
-    static cache = NULL;\
+    static dfsch_object_t* cache = NULL;\
     if (!cache)\
       cache = dfsch_make_symbol(symbol);\
     return cache;\
-  }
+  }// This depends on full-word stores being atomic (which they generally are)
 
 #define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)\
   static DFSCH_SYMBOL_CACHE(symbol, name)

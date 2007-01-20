@@ -28,7 +28,35 @@
 extern "C" {
 #endif
 
-  extern dfsch_object_t* 
+  extern dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass,
+                                                 char* name);
+  extern void dfsch_object_define_method(dfsch_object_t* klass,
+                                         dfsch_object_t* selector,
+                                         dfsch_object_t* proc);
+
+  extern dfsch_object_t* dfsch_object_send(dfsch_object_t* object,
+                                           dfsch_object_t* selector,
+                                           dfsch_object_t* args);
+  extern dfsch_object_t* dfsch_object_send_tr(dfsch_object_t* object,
+                                              dfsch_object_t* selector,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc);
+  extern dfsch_object_t* dfsch_object_send_super(dfsch_object_t* object,
+                                                 dfsch_object_t* selector,
+                                                 dfsch_object_t* args);
+  extern dfsch_object_t* dfsch_object_send_super_tr(dfsch_object_t* object,
+                                                    dfsch_object_t* selector,
+                                                    dfsch_object_t* args,
+                                                    dfsch_tail_escape_t* esc);
+
+  extern dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
+                                               dfsch_object_t* name,
+                                               dfsch_object_t* value);
+  extern dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
+                                               dfsch_object_t* name);
+
+  extern dfsch_object_t* dfsch_object_super();
+  extern dfsch_object_t* dfsch_object_does_not_understand();
 
 #ifdef __cplusplus
 }
