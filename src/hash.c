@@ -109,12 +109,12 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 
       a ^= b >> 2;
       b ^= a >> 3;
-      a ^= b >> 5;
-      b ^= a >> 7;
+      a ^= b << 5;
+      b ^= a << 7;
       a ^= b >> 11;
       b ^= a >> 13;
-      a ^= b >> 17;
-      b ^= a >> 23;
+      a ^= b << 17;
+      b ^= a << 23;
 
       return b ^ a;
     } else {

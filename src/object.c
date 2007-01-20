@@ -295,7 +295,7 @@ static dfsch_object_t* make_object_class(){
   return klass;
 }
 
-DFSCH_SYMBOL_CACHE("delegate-to", slot_delegate_to);
+DFSCH_LOCAL_SYMBOL_CACHE("delegate-to", slot_delegate_to);
 
 static dfsch_object_t* delegator_does_not_understand(void* baton,
                                                      dfsch_object_t* args,
