@@ -1,5 +1,7 @@
 2007-01-20  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/magic.h: exception handling in plain old C (ugly and so on)
+
 	* src/dfsch.c (dfsch_exception_write): handle exceptions
 
 	* src/object.c: object system

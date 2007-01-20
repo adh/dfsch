@@ -29,6 +29,7 @@
 #include <dfsch/number.h>
 #include <dfsch/parse.h>
 #include <dfsch/strings.h>
+#include <dfsch/magic.h>
 #include "util.h"
 #include "internal.h"
 
@@ -37,7 +38,6 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
-#include <setjmp.h>
 
 #include "types.h"
 
@@ -1084,23 +1084,6 @@ object_t* dfsch_make_form(object_t *proc){
   return (object_t*)f;
 }
 
-typedef struct continuation_t continuation_t;
-struct continuation_t {
-  dfsch_type_t* type;
-  jmp_buf ret;
-  object_t* value;
-  int active;
-  pthread_t thread;
-  continuation_t* next;
-};
-
-typedef struct thread_info_t {
-  jmp_buf* exception_ret;
-  dfsch_object_t* exception_obj;
-  dfsch_object_t* stack_trace;
-  continuation_t* cont_stack;
-  char* break_type;
-} thread_info_t;
 
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
@@ -1115,8 +1098,9 @@ static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
  * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
  */
 
-static void invalidate_continuations(thread_info_t* ti, continuation_t* cont){
-  continuation_t *i;
+void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
+                                     dfsch__continuation_t* cont){
+  dfsch__continuation_t *i;
 
   i = ti->cont_stack;
   while (i && i != cont){
@@ -1132,11 +1116,11 @@ static void thread_info_destroy(void* ptr){
 static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
-static thread_info_t* get_thread_info(){
-  thread_info_t *ei = pthread_getspecific(thread_key);
+dfsch__thread_info_t* dfsch__get_thread_info(){
+  dfsch__thread_info_t *ei = pthread_getspecific(thread_key);
   if (!ei){
     pthread_once(&thread_once, thread_key_alloc);
-    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(thread_info_t));
+    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t));
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
     ei->cont_stack = NULL;
@@ -1146,13 +1130,13 @@ static thread_info_t* get_thread_info(){
 }
 
 dfsch_object_t* dfsch_get_stack_trace(){
-  thread_info_t *ti = get_thread_info();
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
   return ti->stack_trace;
 }
 
 void dfsch_raise(dfsch_object_t* exception){
 
-  thread_info_t *ei = get_thread_info();
+  dfsch__thread_info_t *ei = dfsch__get_thread_info();
 
   if (!ei->exception_ret){
     fputs(dfsch_exception_write(exception),stderr);        
@@ -1167,30 +1151,15 @@ dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* finally,
                           dfsch_object_t* thunk){
 
-  thread_info_t *ei = get_thread_info();
-  jmp_buf *old_ret;
-  dfsch_object_t* old_frame;
-  continuation_t* cont;
-  object_t *r = NULL;
+  dfsch_object_t *r = NULL;
 
-  old_ret = ei->exception_ret;
-  old_frame = ei->stack_trace;
-  cont = ei->cont_stack;
-  ei->exception_ret = GC_NEW(jmp_buf);
-
-  if(setjmp(*ei->exception_ret) == 1){
-    ei->exception_ret = (jmp_buf*)old_ret;
-    ei->stack_trace = (object_t*)old_frame;
-    invalidate_continuations(ei, cont);
-    ei->cont_stack = cont;
-    if (handler){
-      r = dfsch_apply(handler, dfsch_list(1, ei->exception_obj));
-    }
-  } else {
+  DFSCH_TRY
     r = dfsch_apply(thunk, NULL);
-    ei->exception_ret = (jmp_buf*)old_ret;
-    ei->stack_trace = (object_t*)old_frame;
-  }
+  DFSCH_CATCH(e)
+    if (handler){
+      r = dfsch_apply(handler, dfsch_list(1, e));
+    }
+  DFSCH_END_TRY
 
   if (finally){
     dfsch_apply(finally, NULL);
@@ -1223,7 +1192,7 @@ dfsch_object_t* dfsch_throw(char* type,
     
 }
 dfsch_object_t* dfsch_break(char* type){
-  thread_info_t *ti = get_thread_info();
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
   ti->break_type = type;
 }
 
@@ -1241,7 +1210,7 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 }
 
 
-static object_t* continuation_apply(continuation_t *cont, 
+static object_t* continuation_apply(dfsch__continuation_t *cont, 
                                     object_t* args,
                                     dfsch_tail_escape_t* esc){
 
@@ -1260,7 +1229,7 @@ static object_t* continuation_apply(continuation_t *cont,
 
 static struct dfsch_type_t continuation_type = {
   DFSCH_STANDARD_TYPE,
-  sizeof(continuation_t*),
+  sizeof(dfsch__continuation_t*),
   "escape-continuation",
   NULL,
   NULL,
@@ -1269,9 +1238,9 @@ static struct dfsch_type_t continuation_type = {
 
 dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   object_t* value;
-  continuation_t *cont = 
-    (continuation_t*)dfsch_make_object(&continuation_type);
-  thread_info_t *ti = get_thread_info();
+  dfsch__continuation_t *cont = 
+    (dfsch__continuation_t*)dfsch_make_object(&continuation_type);
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
   jmp_buf* ex_ret;
 
   cont->active = 1;
@@ -1286,7 +1255,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
                         dfsch_list(1, cont));
   }
   
-  invalidate_continuations(ti, cont);
+  dfsch__invalidate_continuations(ti, cont);
   
   cont->active = 0;
   ti->cont_stack = cont->next;
@@ -1443,58 +1412,41 @@ typedef struct ew_ctx_t {
   char* res;
 } ew_ctx_t;
 
-static dfsch_object_t* exception_write_thunk(ew_ctx_t* ctx,
-                                             dfsch_object_t* args,
-                                             dfsch_tail_escape_t* esc){
-  str_list_t *l = sl_create();
-  object_t* e = ctx->obj;
-
-  sl_append(l,"Exception occured: ");
-
-  if (!dfsch_exception_p(e)){
-    sl_append(l,dfsch_obj_write(e,3,1));
-  }else{
-    dfsch_object_t *i = ((exception_t*)e)->stack_trace;
-    sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3,1));
-    sl_append(l," with data: ");
-    sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
-    sl_append(l,"\n\nCall stack:\n");
-    while (i){
-      object_t* item = dfsch_car(i);
-      sl_append(l,"  ");
-
-      if (dfsch_vector_ref(item, 4) == dfsch_sym_tail_recursive())
-        sl_append(l,"...");
-        
-      sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 1),20,1));
-      sl_append(l,"\n      ");
-      sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 0),20,1));
-      sl_append(l,"\n");
-      i = dfsch_cdr(i);
-    }
-  }
-  sl_append(l,"\n");
-
-  ctx->res = sl_value(l);
-  return NULL;
-}
-static dfsch_object_t* exception_write_handler(ew_ctx_t* ctx,
-                                               dfsch_object_t* args,
-                                               dfsch_tail_escape_t* esc){
-  ctx->res = "Exception occured during formating exception message\n\n";
-  return NULL;
-}
-
 char* dfsch_exception_write(dfsch_object_t* e){
-  ew_ctx_t ctx;
-  
-  ctx.obj = e;
-
-  dfsch_try(dfsch_make_primitive(exception_write_thunk, &ctx),
-            NULL,
-            dfsch_make_primitive(exception_write_handler, &ctx));
-
-  return ctx.res;
+  str_list_t *l = sl_create();
+  char* res;
+  DFSCH_TRY {
+    sl_append(l,"Exception occured: ");
+    
+    if (!dfsch_exception_p(e)){
+      sl_append(l,dfsch_obj_write(e,3,1));
+    }else{
+      dfsch_object_t *i = ((exception_t*)e)->stack_trace;
+      sl_append(l,dfsch_obj_write(((exception_t*)e)->class,3,1));
+      sl_append(l," with data: ");
+      sl_append(l,dfsch_obj_write(((exception_t*)e)->data,3,1));
+      sl_append(l,"\n\nCall stack:\n");
+      while (i){
+        object_t* item = dfsch_car(i);
+        sl_append(l,"  ");
+        
+        if (dfsch_vector_ref(item, 4) == dfsch_sym_tail_recursive())
+          sl_append(l,"...");
+        
+        sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 1),20,1));
+        sl_append(l,"\n      ");
+        sl_append(l,dfsch_obj_write(dfsch_vector_ref(item, 0),20,1));
+        sl_append(l,"\n");
+        i = dfsch_cdr(i);
+      }
+    }
+    sl_append(l,"\n");
+    
+    res = sl_value(l);
+  } DFSCH_CATCH(e) {
+    res = "Exception occured during formatting of exception message.\n\n";
+  } DFSCH_END_TRY
+  return res;
 }
 
 
@@ -1633,18 +1585,19 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
                                             dfsch_object_t* env,
                                             dfsch_object_t* proc_name,
                                             tail_escape_t* esc,
-                                            thread_info_t* ti);
+                                            dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        dfsch_object_t* env,
                                        dfsch_tail_escape_t* esc,
-                                       thread_info_t* ti);
+                                       dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
                                         tail_escape_t* esc,
-                                        thread_info_t* ti);
+                                        dfsch__thread_info_t* ti);
 
 
-static object_t* eval_list(object_t *list, object_t* env, thread_info_t* ti){
+static object_t* eval_list(object_t *list, object_t* env, 
+                           dfsch__thread_info_t* ti){
   pair_t *i;
   object_t *f=NULL;
   pair_t *t, *p;
@@ -1678,7 +1631,7 @@ static object_t* eval_list(object_t *list, object_t* env, thread_info_t* ti){
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        dfsch_object_t* env,
                                        dfsch_tail_escape_t* esc,
-                                       thread_info_t* ti){
+                                       dfsch__thread_info_t* ti){
  start:
   
   if (!exp) 
@@ -1726,10 +1679,10 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
                               dfsch_object_t* env,
                               dfsch_tail_escape_t* esc){
-  return dfsch_eval_impl(exp, env, esc, get_thread_info());
+  return dfsch_eval_impl(exp, env, esc, dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
-  return dfsch_eval_impl(exp, env, NULL, get_thread_info());
+  return dfsch_eval_impl(exp, env, NULL, dfsch__get_thread_info());
 }
 
 static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
@@ -1766,7 +1719,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
                                             dfsch_object_t* env,
                                             dfsch_object_t* proc_name,
                                             tail_escape_t* esc,
-                                            thread_info_t* ti){
+                                            dfsch__thread_info_t* ti){
   pair_t *i;
   object_t *r=NULL;
   tail_escape_t myesc;
@@ -1830,16 +1783,18 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
                                    dfsch_object_t* env,
                                    dfsch_object_t* proc_name,
                                    tail_escape_t* esc){
-  return dfsch_eval_proc_impl(code, env, proc_name, esc, get_thread_info());
+  return dfsch_eval_proc_impl(code, env, proc_name, esc, 
+                              dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
-  return dfsch_eval_proc_impl(code, env, NULL, NULL, get_thread_info());
+  return dfsch_eval_proc_impl(code, env, NULL, NULL, 
+                              dfsch__get_thread_info());
 }
 
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                  dfsch_object_t* args,
                                  tail_escape_t* esc,
-                                 thread_info_t* ti){
+                                 dfsch__thread_info_t* ti){
 
   if (!proc)
     return NULL;
@@ -1879,10 +1834,10 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                dfsch_object_t* args,
                                tail_escape_t* esc){
-  return dfsch_apply_impl(proc, args, esc, get_thread_info());
+  return dfsch_apply_impl(proc, args, esc, dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
-  return dfsch_apply_impl(proc, args, NULL, get_thread_info());
+  return dfsch_apply_impl(proc, args, NULL, dfsch__get_thread_info());
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
