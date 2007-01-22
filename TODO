@@ -3,7 +3,6 @@
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Warnings
 * Structures (in C code)
-* Some object system (should be used for IO subsystem somehow)
 * Unicode case-insensitive string compare
 * More number types:
   - Big integers

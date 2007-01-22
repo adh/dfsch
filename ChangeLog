@@ -1,5 +1,7 @@
 2007-01-22  Ales Hakl  <ales at hakl dot net>
 
+	* TODO: removed object system from todo list
+
 	* Makefile.am: install object.h
 
 2007-01-20  Ales Hakl  <ales at hakl dot net>
