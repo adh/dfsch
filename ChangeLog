@@ -1,3 +1,7 @@
+2007-01-22  Ales Hakl  <ales at hakl dot net>
+
+	* Makefile.am: install object.h
+
 2007-01-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c (class_write): correct buffer size

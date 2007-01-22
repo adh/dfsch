@@ -9,7 +9,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/dfsch.h \
 	dfsch/number.h \
 	dfsch/wrapper.h \
-	dfsch/magic.h
+	dfsch/magic.h \
+	dfsch/object.h
 
 lib_LTLIBRARIES     = libdfsch.la \
 	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la
