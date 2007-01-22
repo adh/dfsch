@@ -8,4 +8,3 @@
   - Big integers
   - Fractions
   - Complex numbers (as pairs of two numbers of same type)
-* Real support for systems without readline

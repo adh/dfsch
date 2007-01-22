@@ -1,5 +1,8 @@
 2007-01-22  Ales Hakl  <ales at hakl dot net>
 
+	* configure.ac (READLINE_LIBS): probably working support for
+	versions without readline
+
 	* TODO: removed object system from todo list
 
 	* Makefile.am: install object.h

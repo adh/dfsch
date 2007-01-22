@@ -35,8 +35,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef USE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
+
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>

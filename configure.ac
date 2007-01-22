@@ -73,6 +73,7 @@ AC_ARG_WITH([readline],
 if test x"$with_readline" != x"no"; then 
         if test x"$have_readline" = x"yes"; then
            AC_DEFINE(USE_READLINE, [1], [Use readline for input])        
+           READLINE_LIBS=$RL_LIBS
         fi
 fi
 
@@ -80,6 +81,8 @@ CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"
 
 AC_SYS_LARGEFILE 
 
+
+AC_SUBST(READLINE_LIBS)
 
 dnl automake stuff
 AM_MAINTAINER_MODE
