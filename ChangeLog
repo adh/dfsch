@@ -1,3 +1,8 @@
+2007-01-27  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.c (dfsch__object_native_register): slot-set! should
+	have bang in name.
+
 2007-01-22  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac (READLINE_LIBS): probably working support for

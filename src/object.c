@@ -429,7 +429,7 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "define-method",
                     dfsch_make_form(dfsch_make_primitive(native_form_define_method,
                                                          NULL)));
-  dfsch_define_cstr(ctx, "slot-set",
+  dfsch_define_cstr(ctx, "slot-set!",
                     dfsch_make_primitive(native_slot_set,
                                          NULL));
   dfsch_define_cstr(ctx, "slot-ref",
