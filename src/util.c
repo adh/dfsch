@@ -135,3 +135,15 @@ int dfsch__ascii_strcasecmp(char* a, char* b){
   }
   return (*a != *b);
 }
+
+static void mutex_finalizer(pthread_mutex_t* mutex, void* cd){
+  pthread_mutex_destroy(mutex);
+}
+
+pthread_mutex_t* dfsch__create_finalized_mutex(){
+  pthread_mutex_t* mutex = GC_MALLOC_ATOMIC(sizeof(pthread_mutex_t));
+  GC_REGISTER_FINALIZER(mutex, (GC_finalization_proc)mutex_finalizer,
+                        NULL, NULL, NULL);
+  pthread_mutex_init(mutex, NULL);
+  return mutex;
+}

@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 typedef struct str_li_t str_li_t;
 typedef struct str_list_t {
@@ -56,5 +57,9 @@ extern char* dfsch__straquote(char *s);
 #define straquote dfsch__straquote
 extern int dfsch__ascii_strcasecmp(char* a, char* b);
 #define ascii_strcasecmp dfsch__ascii_strcasecmp
+
+extern pthread_mutex_t* dfsch__create_finalized_mutex();
+#define create_finalized_mutex dfsch__create_finalized_mutex
+
 
 #endif
