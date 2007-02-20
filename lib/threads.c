@@ -1,7 +1,7 @@
 #include "dfsch/lib/threads.h"
 
 #include <dfsch/number.h>
-
+#include "src/util.h"
 #include <errno.h>
 #include <string.h>
 
@@ -260,19 +260,14 @@ void dfsch_condition_broadcast(dfsch_object_t* cond){
  * Channel is simply inter-thread pipe for transferring objects. In theory,
  * it could be possible to use channel as a queue inside one thread - but you
  * are risking a deadlock here when channels' buffer becomes full or empty.
- *
- * It might be useful to use dfsch's wrapper objects here and leave resource
- * reclaimation and error handling to them, but that would have slight 
- * unnecessary overhead due to redundant type checking and would use more 
- * memory.
  */
 
 typedef struct channel_t {
   dfsch_type_t* type;
 
-  pthread_mutex_t mutex;
-  pthread_cond_t read;
-  pthread_cond_t write;
+  pthread_mutex_t* mutex;
+  pthread_cond_t* read;
+  pthread_cond_t* write;
   
   dfsch_object_t** buf;
   
@@ -290,32 +285,14 @@ static const dfsch_type_t channel_type = {
   NULL
 };
 
-static void channel_finalizer(channel_t* ch, void* cd){
-  /* 
-   * When this is called, there are no outstanding references to this
-   * so we can expect that no operations are in progress on this channel
-   * which in turn should mean that there are no locks held and no threads 
-   * waiting. This does not necessarily mean that buffer is empty.
-   */
-
-  pthread_cond_destroy(&(ch->read));
-  pthread_cond_destroy(&(ch->write));
-  pthread_mutex_destroy(&(ch->mutex));
-  GC_FREE(ch->buf);
-}
-
 dfsch_object_t* dfsch_channel_create(size_t buffer){
   channel_t* ch = (channel_t*)dfsch_make_object(&channel_type);
 
-  GC_REGISTER_FINALIZER(ch, 
-                        (GC_finalization_proc)channel_finalizer,
-                        NULL, NULL, NULL);
+  ch->read = create_finalized_cvar();
+  ch->write = create_finalized_cvar();
+  ch->mutex = create_finalized_mutex();
 
-  pthread_cond_init(&(ch->read), NULL);
-  pthread_cond_init(&(ch->write), NULL);
-  pthread_mutex_init(&(ch->mutex), NULL);
-
-  ch->buf = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch_object_t*)*buffer);
+  ch->buf = GC_MALLOC(sizeof(dfsch_object_t*)*buffer);
   ch->buf_len = buffer;
   ch->readptr = 0;
   ch->writeptr = 0;
@@ -337,18 +314,18 @@ dfsch_object_t* dfsch_channel_read(dfsch_object_t* channel){
   
   ch = (channel_t*) channel;
 
-  pthread_mutex_lock(&(ch->mutex));
+  pthread_mutex_lock(ch->mutex);
   
   while(ch->readptr == ch->writeptr){ // Buffer is empty
-    pthread_cond_wait(&(ch->read), &(ch->mutex));
+    pthread_cond_wait(ch->read, ch->mutex);
   }
 
   ret = ch->buf[ch->readptr];
   ch->buf[ch->readptr] = NULL;
   ch->readptr = (ch->readptr + 1) % ch->buf_len;
 
-  pthread_mutex_unlock(&(ch->mutex));
-  pthread_cond_signal(&(ch->write));
+  pthread_mutex_unlock(ch->mutex);
+  pthread_cond_signal(ch->write);
 
   return ret;
 }
@@ -368,19 +345,19 @@ void dfsch_channel_write(dfsch_object_t* channel,
   
   ch = (channel_t*) channel;
 
-  pthread_mutex_lock(&(ch->mutex));
+  pthread_mutex_lock(ch->mutex);
   
   new_writeptr = (ch->writeptr + 1) % ch->buf_len;
 
   while(ch->readptr == new_writeptr){ // Buffer is full
-    pthread_cond_wait(&(ch->write), &(ch->mutex));
+    pthread_cond_wait(ch->write, ch->mutex);
   }
 
   ch->buf[ch->writeptr] = object;
   ch->writeptr = new_writeptr;
 
-  pthread_mutex_unlock(&(ch->mutex));
-  pthread_cond_signal(&(ch->read));
+  pthread_mutex_unlock(ch->mutex);
+  pthread_cond_signal(ch->read);
 
 }
 

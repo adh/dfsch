@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <math.h>
 #include <errno.h>
+#include <stdio.h>
 
 #define SMALLNUM_ORIGIN  -32
 #define SMALLNUM_COUNT   64

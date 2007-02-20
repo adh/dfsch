@@ -60,6 +60,8 @@ extern int dfsch__ascii_strcasecmp(char* a, char* b);
 
 extern pthread_mutex_t* dfsch__create_finalized_mutex();
 #define create_finalized_mutex dfsch__create_finalized_mutex
+extern pthread_cond_t* dfsch__create_finalized_cvar();
+#define create_finalized_cvar dfsch__create_finalized_cvar
 
 
 #endif

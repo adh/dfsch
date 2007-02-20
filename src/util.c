@@ -147,3 +147,14 @@ pthread_mutex_t* dfsch__create_finalized_mutex(){
   pthread_mutex_init(mutex, NULL);
   return mutex;
 }
+static void cvar_finalizer(pthread_cond_t* cvar, void* cd){
+  pthread_cond_destroy(cvar);
+}
+
+pthread_cond_t* dfsch__create_finalized_cvar(){
+  pthread_cond_t* cvar = GC_MALLOC_ATOMIC(sizeof(pthread_cond_t));
+  GC_REGISTER_FINALIZER(cvar, (GC_finalization_proc)cvar_finalizer,
+                        NULL, NULL, NULL);
+  pthread_cond_init(cvar, NULL);
+  return cvar;
+}
