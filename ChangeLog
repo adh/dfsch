@@ -1,3 +1,7 @@
+2007-02-24  Ales Hakl  <ales at hakl dot net>
+
+	* scm/test.scm ("object subsystem"): basic tests of object subsystem
+
 2007-02-20  Ales Hakl  <ales at hakl dot net>
 
 	* lib/threads.c (dfsch_channel_create): use finalized

@@ -254,6 +254,36 @@
              (regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
+(group "object subsystem"
+       (sub-group 'simple-class
+                 (define-class <test-class> <object>)
+                 (define-method <test-class> (test-dispatch self)
+                   #t)
+                 (define-method <test-class> (test-ivar-set self value)
+                   (slot-set! self 'test-ivar value)
+                   #t)
+                 (define-method <test-class> (test-ivar-compare self value)
+                   (eq? value (slot-ref self 'test-ivar)))
+                 
+                 (define inst (<test-class>))
+
+                 (test 'type-introspection
+                       (get-type inst)
+                       <test-class>)
+                 (test 'message-dispatch
+                       (inst 'test-dispatch)
+                       #t)
+                 (test 'set-ivar
+                       (inst 'test-ivar-set 'test-value)
+                       #t)
+                 (test 'ref-ivar
+                       (inst 'test-ivar-compare 'test-value)
+                       #t))
+                       
+                       
+
+       )
+
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately
