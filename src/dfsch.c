@@ -1732,8 +1732,9 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     return NULL;
 
   if (ti->break_type){
-    dfsch_throw("exception:break", dfsch_make_symbol(ti->break_type));
+    char* type = ti->break_type;
     ti->break_type = NULL;
+    dfsch_throw("exception:break", dfsch_make_symbol(type));
   }
 
   if (esc){
