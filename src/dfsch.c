@@ -1407,11 +1407,6 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
   return obj->type->write(obj, max_depth, readable);
 }
 
-typedef struct ew_ctx_t {
-  dfsch_object_t* obj;
-  char* res;
-} ew_ctx_t;
-
 char* dfsch_exception_write(dfsch_object_t* e){
   str_list_t *l = sl_create();
   char* res;
