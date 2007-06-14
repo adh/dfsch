@@ -17,6 +17,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+/** \file dfsch/lib/load.h
+ *
+ * Dynamic library for reading and executing source files and loading dynamic 
+ * libraries.
+ */
+
+
 #ifndef H__dfsch__load__
 #define H__dfsch__load__
 

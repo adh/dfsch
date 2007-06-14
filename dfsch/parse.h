@@ -19,6 +19,11 @@
  *
  */
 
+/** \file dfsch/parse.h
+ *
+ * Stream based S-expression parser.
+ */
+
 #ifndef H__dfsch__parse__
 #define H__dfsch__parse__
 

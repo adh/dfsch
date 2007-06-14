@@ -19,6 +19,11 @@
  *
  */
 
+/** \file dfsch/number.h
+ *
+ * Number datatype.
+ */
+
 #ifndef H__dfsch__number__
 #define H__dfsch__number__
 

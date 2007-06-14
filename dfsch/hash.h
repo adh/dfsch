@@ -19,6 +19,11 @@
  *
  */
 
+/** \file dfsch/hash.h
+ *
+ * Hash table datatype.
+ */
+
 
 #ifndef H__dfsch__hash__
 #define H__dfsch__hash__

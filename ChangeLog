@@ -1,3 +1,13 @@
+2007-06-14  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/magic.h: added comment describing purpose, use and
+	ugliness of this file
+
+	* dfsch/lib/load.h, dfsch/parse.h, dfsch/hash.h, dfsch/number.h:
+	added file description
+
+	* dfsch/dfsch.h: removed redundant declaration of dfsch_env_get()
+
 2007-03-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_exception_write): removed redundant ew_ctx_t

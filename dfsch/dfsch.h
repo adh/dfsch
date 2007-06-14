@@ -348,11 +348,6 @@ extern "C" {
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
-  /** Look up value of given variable, returns list of one item if sucessful,
-      empty list if not*/
-  extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
-                                       dfsch_object_t* env);
-
   /**
    * Get value of variable name in environment env. Return empty list
    * in case of failure.

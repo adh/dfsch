@@ -1094,8 +1094,19 @@ static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
  * variables that have been _CHANGED_ since call to setjmp(3) are indeterminate
  * and there are none such. Actually only thing that happen in these functions
  * between setjmp(3) and opportunity to call longjmp(3) (from corresponding 
- * wrapper function is function call). This is only case of undefined behavior
+ * wrapper function) is function call. This is only case of undefined behavior
  * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
+ *
+ * This implementation has one great caveat: exceptions and 
+ * escape-continuations are implemented differently and it is not possible
+ * to intercept excpae continuation in any way (as oposed to exception), so 
+ * you cannot write something similar to try {} finally {} and use it for 
+ * clean-up unless you are sure, that it cannot be yumped over by 
+ * escape-continuation. On the other hand, excpetions properly invalidate 
+ * escape-continuations that had gone out of scope.
+ *
+ * But in most cases, such clean-up is not actually needed and in the rare 
+ * cases can be taken care of using GC_register_finalizer() or similar means.
  */
 
 void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
@@ -1120,7 +1131,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei = pthread_getspecific(thread_key);
   if (!ei){
     pthread_once(&thread_once, thread_key_alloc);
-    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t));
+    ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
     ei->cont_stack = NULL;
