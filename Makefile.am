@@ -13,7 +13,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/object.h
 
 lib_LTLIBRARIES     = libdfsch.la \
-	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la
+	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la libdfsch_unix.la
 
 man_MANS = doc/dfsch-repl.1
 
@@ -48,10 +48,15 @@ libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h
 libdfsch_regex_la_LDFLAGS = -version-info 1:0:0
 libdfsch_regex_la_LIBADD =  libdfsch.la
 
+libdfsch_unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
+libdfsch_unix_la_LDFLAGS = -version-info 1:0:0
+libdfsch_unix_la_LIBADD =  libdfsch.la
+
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la \
 	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la \
+	libdfsch_unix.la \
 	@READLINE_LIBS@		
 
 

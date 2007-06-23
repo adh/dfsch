@@ -248,6 +248,10 @@ extern "C" {
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
 
+  /** Compares value of given symbol to string. */
+  extern int dfsch_compare_symbol(dfsch_object_t* symbol,
+                                  char* string);
+
   /** Returns symbol "true" */
   extern dfsch_object_t* dfsch_sym_true();
 
@@ -479,8 +483,8 @@ extern "C" {
   if (!dfsch_pair_p((al))) \
     dfsch_throw("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
-  { dfsch_object_t* tmp = dfsch_car((al)); \
-    (name) = (type)(conv)(tmp); \
+  { dfsch_object_t* dfsch___tmp = dfsch_car((al)); \
+    (name) = (type)(conv)(dfsch___tmp); \
     (al) = dfsch_cdr((al));\
   }
   /**
@@ -498,8 +502,8 @@ extern "C" {
 #define DFSCH_GENERIC_ARG_OPT(al, name, default, type, conv)\
   if (!dfsch_pair_p((al))) \
     {(name)=(default);} else\
-  { dfsch_object_t* tmp = dfsch_car((al)); \
-    (name) = (type)(conv)(tmp); \
+  { dfsch_object_t* dfsch___tmp = dfsch_car((al)); \
+    (name) = (type)(conv)(dfsch___tmp); \
     (al) = dfsch_cdr((al));\
   }
 
@@ -514,14 +518,33 @@ extern "C" {
 
 #define DFSCH_SYMBOL_CACHE(symbol, name)\
   dfsch_object_t* name(){\
-    static dfsch_object_t* cache = NULL;\
-    if (!cache)\
-      cache = dfsch_make_symbol(symbol);\
-    return cache;\
+    static dfsch_object_t* dfsch___cache = NULL;\
+    if (!dfsch___cache)\
+      dfsch___cache = dfsch_make_symbol(symbol);\
+    return dfsch___cache;\
   }// This depends on full-word stores being atomic (which they generally are)
 
 #define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)\
   static DFSCH_SYMBOL_CACHE(symbol, name)
+
+
+#define DFSCH_FLAG_PARSER_BEGIN(args) \
+  while (dfsch_pair_p((args))){ \
+    dfsch_object_t* dfsch___flag = dfsch_car((args));
+
+#define DFSCH_FLAG_SET(name, value, variable)\
+    if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) |= (value)    
+
+#define DFSCH_FLAG_UNSET(name, value, variable)\
+    if (dfsch_compare_symbol(dfsch___flag ,(name))) (variable) &= ~(value)    
+
+#define DFSCH_FLAG_FUNC(name)\
+    if (dfsch_compare_symbol(dfsch___flag ,(name))) 
+
+#define DFSCH_FLAG_PARSER_END(args) \
+    (args) = dfsch_cdr((args)); \
+  }
+
 
 #ifdef __cplusplus
 }

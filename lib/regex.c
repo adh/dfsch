@@ -140,21 +140,6 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
 }
 
 
-#define FLAG_PARSER_BEGIN(args) \
-  while (dfsch_pair_p((args))){ \
-    dfsch_object_t* flag = dfsch_car((args));
-
-#define FLAG_SET(name, value, variable)\
-    if (flag == dfsch_make_symbol((name))) (variable) |= (value)    
-
-#define FLAG_UNSET(name, value, variable)\
-    if (flag == dfsch_make_symbol((name))) (variable) &= ~(value)    
-
-#define FLAG_PARSER_END(args) \
-    (args) = dfsch_cdr((args)); \
-  }
-
-
 static dfsch_object_t* native_regex_compile(void *baton, 
                                             dfsch_object_t* args, 
                                             dfsch_tail_escape_t* esc){
@@ -162,12 +147,12 @@ static dfsch_object_t* native_regex_compile(void *baton,
   int flags = REG_EXTENDED;
   DFSCH_STRING_ARG(args, expression);
 
-  FLAG_PARSER_BEGIN(args);
-  FLAG_UNSET("basic", REG_EXTENDED, flags);
-  FLAG_SET("icase", REG_ICASE, flags);
-  FLAG_SET("nosub", REG_NOSUB, flags);
-  FLAG_SET("newline", REG_NEWLINE, flags);
-  FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, flags);
+  DFSCH_FLAG_SET("icase", REG_ICASE, flags);
+  DFSCH_FLAG_SET("nosub", REG_NOSUB, flags);
+  DFSCH_FLAG_SET("newline", REG_NEWLINE, flags);
+  DFSCH_FLAG_PARSER_END(args);
 
   return dfsch_regex_compile(expression, flags);
 }
@@ -181,10 +166,10 @@ static dfsch_object_t* native_regex_match_p(void *baton,
   DFSCH_OBJECT_ARG(args, expression);
   DFSCH_STRING_ARG(args, string);
 
-  FLAG_PARSER_BEGIN(args);
-  FLAG_SET("notbol", REG_NOTBOL, flags);
-  FLAG_SET("noteol", REG_NOTEOL, flags);
-  FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("notbol", REG_NOTBOL, flags);
+  DFSCH_FLAG_SET("noteol", REG_NOTEOL, flags);
+  DFSCH_FLAG_PARSER_END(args);
 
   return dfsch_bool(dfsch_regex_match_p(expression, string, flags));
 }
@@ -198,10 +183,10 @@ static dfsch_object_t* native_regex_substrings(void *baton,
   DFSCH_OBJECT_ARG(args, expression);
   DFSCH_STRING_ARG(args, string);
 
-  FLAG_PARSER_BEGIN(args);
-  FLAG_SET("notbol", REG_NOTBOL, flags);
-  FLAG_SET("noteol", REG_NOTEOL, flags);
-  FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("notbol", REG_NOTBOL, flags);
+  DFSCH_FLAG_SET("noteol", REG_NOTEOL, flags);
+  DFSCH_FLAG_PARSER_END(args);
 
   return dfsch_regex_substrings(expression, string, flags);
 }
@@ -219,13 +204,13 @@ static dfsch_object_t* native_regex_match_once_p(void *baton,
   DFSCH_STRING_ARG(args, expression);
   DFSCH_STRING_ARG(args, string);
 
-  FLAG_PARSER_BEGIN(args);
-  FLAG_UNSET("basic", REG_EXTENDED, cflags);
-  FLAG_SET("icase", REG_ICASE, cflags);
-  FLAG_SET("newline", REG_NEWLINE, cflags);
-  FLAG_SET("notbol", REG_NOTBOL, mflags);
-  FLAG_SET("noteol", REG_NOTEOL, mflags);
-  FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, cflags);
+  DFSCH_FLAG_SET("icase", REG_ICASE, cflags);
+  DFSCH_FLAG_SET("newline", REG_NEWLINE, cflags);
+  DFSCH_FLAG_SET("notbol", REG_NOTBOL, mflags);
+  DFSCH_FLAG_SET("noteol", REG_NOTEOL, mflags);
+  DFSCH_FLAG_PARSER_END(args);
 
   regex_compile(&regex, expression, cflags);
   r = regex_match(&regex, string, mflags);
@@ -247,13 +232,13 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
   DFSCH_STRING_ARG(args, expression);
   DFSCH_STRING_ARG(args, string);
 
-  FLAG_PARSER_BEGIN(args);
-  FLAG_UNSET("basic", REG_EXTENDED, cflags);
-  FLAG_SET("icase", REG_ICASE, cflags);
-  FLAG_SET("newline", REG_NEWLINE, cflags);
-  FLAG_SET("notbol", REG_NOTBOL, mflags);
-  FLAG_SET("noteol", REG_NOTEOL, mflags);
-  FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, cflags);
+  DFSCH_FLAG_SET("icase", REG_ICASE, cflags);
+  DFSCH_FLAG_SET("newline", REG_NEWLINE, cflags);
+  DFSCH_FLAG_SET("notbol", REG_NOTBOL, mflags);
+  DFSCH_FLAG_SET("noteol", REG_NOTEOL, mflags);
+  DFSCH_FLAG_PARSER_END(args);
 
   regex_compile(&regex, expression, cflags);
   r = regex_substrings(&regex, string, 

@@ -31,6 +31,7 @@
 #include <dfsch/lib/load.h>
 #include <dfsch/lib/threads.h>
 #include <dfsch/lib/regex.h>
+#include <dfsch/lib/unix.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -302,6 +303,7 @@ int main(int argc, char**argv){
   dfsch_load_register(ctx);
   dfsch_threads_register(ctx);
   dfsch_regex_register(ctx);
+  dfsch_unix_register(ctx);
 
   dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));

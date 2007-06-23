@@ -916,10 +916,16 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
   if (!symbol || symbol->type!=SYMBOL)
-    return NULL;
+    dfsch_throw("exception:not-a-symbol", symbol);
 
   return ((symbol_t*)symbol)->data;
 }
+int dfsch_compare_symbol(dfsch_object_t* symbol,
+                         char* string){
+  return (ascii_strcasecmp(string, dfsch_symbol(symbol)) == 0);
+}
+
+
 dfsch_object_t* dfsch_sym_true(){
   static object_t *cache = NULL;
   if (cache)
