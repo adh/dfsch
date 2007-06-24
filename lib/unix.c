@@ -312,6 +312,25 @@ static dfsch_object_t* native_getenv(void* baton, dfsch_object_t* args,
     return NULL;
   }
 }
+static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  int fd;
+  int ret;
+  DFSCH_LONG_ARG(args, fd);
+  DFSCH_ARG_END(args);
+
+  ret = isatty(fd);
+
+  if (ret == 0){
+    if (errno != ENOTTY){
+      throw_errno(errno, "isatty");
+    }else{
+      return NULL;
+    }
+  }
+
+  return dfsch_sym_true();
+}
 static dfsch_object_t* native_link(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
   char* old;
@@ -611,6 +630,10 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_getpid, NULL));
   dfsch_define_cstr(ctx, "unix:getppid", 
                     dfsch_make_primitive(native_getppid, NULL));
+  dfsch_define_cstr(ctx, "unix:isatty", 
+                    dfsch_make_primitive(native_isatty, NULL));
+  dfsch_define_cstr(ctx, "unix:link", 
+                    dfsch_make_primitive(native_link, NULL));
   dfsch_define_cstr(ctx, "unix:lseek", 
                     dfsch_make_primitive(native_lseek, NULL));
   dfsch_define_cstr(ctx, "unix:mkdir", 

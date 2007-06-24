@@ -1,5 +1,7 @@
 2007-06-24  Ales Hakl  <ales at hakl dot net>
 
+	* lib/unix.c (native_isatty): isatty() wrapper
+
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 
 	* lib/unix.c (dfsch_unix_register): unix syscall interface (some
