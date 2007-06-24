@@ -195,12 +195,6 @@ static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
 
 
 
-/**
- * REP (read, eval, print) loop of dfsch.
- *
- * Use this code as example if you want to embbed dfsch in your application.
- *
- */
 
 #ifdef USE_READLINE
 void interactive_repl(dfsch_object_t* ctx){
