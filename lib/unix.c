@@ -10,6 +10,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 static void throw_errno(int e, char* function){
   dfsch_throw("unix:error", dfsch_list(3, 
@@ -206,6 +207,25 @@ static dfsch_object_t* native_close(void* baton, dfsch_object_t* args,
     throw_errno(errno, "close");
   }
   return NULL;
+}
+
+static dfsch_object_t* native_creat(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  int fd;
+  char* path;
+  mode_t mode;
+
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_LONG_ARG(args, mode);
+  DFSCH_ARG_END(args);
+
+  fd = creat(path, mode);
+
+  if (fd == -1){
+    throw_errno(errno, "creat");
+  }
+
+  return dfsch_make_number_from_long(fd);
 }
 
 static dfsch_object_t* native_dup(void* baton, dfsch_object_t* args,
@@ -495,6 +515,39 @@ static dfsch_object_t* native_nice(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
+static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  char* path;
+  mode_t mode = 0;
+  int oflag = 0;
+  int fd;
+
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_FLAG_PARSER_BEGIN_SYM_ONLY(args);
+  DFSCH_FLAG_SET("rdonly", O_RDONLY, oflag);
+  DFSCH_FLAG_SET("wronly", O_WRONLY, oflag);
+  DFSCH_FLAG_SET("rdwr", O_WRONLY, oflag);
+  DFSCH_FLAG_SET("append", O_APPEND, oflag);
+  DFSCH_FLAG_SET("creat", O_CREAT, oflag);
+  DFSCH_FLAG_SET("dsync", O_DSYNC, oflag);
+  DFSCH_FLAG_SET("excl", O_EXCL, oflag);
+  DFSCH_FLAG_SET("noctty", O_NOCTTY, oflag);
+  DFSCH_FLAG_SET("nonblock", O_NONBLOCK, oflag);
+  DFSCH_FLAG_SET("rsync", O_RSYNC, oflag);
+  DFSCH_FLAG_SET("sync", O_SYNC, oflag);
+  DFSCH_FLAG_SET("trunc", O_TRUNC, oflag);
+  DFSCH_FLAG_PARSER_END(args);
+  DFSCH_LONG_ARG_OPT(args, mode, 0);
+
+  fd = open(path, oflag, mode);
+  
+  if (fd == -1){
+    throw_errno(errno, "open");
+  }
+  
+  return dfsch_make_number_from_long(fd);
+}
+
 static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
   int fds[2];
@@ -698,6 +751,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_clock, NULL));
   dfsch_define_cstr(ctx, "unix:close", 
                     dfsch_make_primitive(native_close, NULL));
+  dfsch_define_cstr(ctx, "unix:creat", 
+                    dfsch_make_primitive(native_creat, NULL));
   dfsch_define_cstr(ctx, "unix:dup", 
                     dfsch_make_primitive(native_dup, NULL));
   dfsch_define_cstr(ctx, "unix:dup2", 
@@ -744,6 +799,10 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_mkfifo, NULL));
   dfsch_define_cstr(ctx, "unix:nice", 
                     dfsch_make_primitive(native_nice, NULL));
+  dfsch_define_cstr(ctx, "unix:open", 
+                    dfsch_make_primitive(native_open, NULL));
+  dfsch_define_cstr(ctx, "unix:pipe", 
+                    dfsch_make_primitive(native_pipe, NULL));
   dfsch_define_cstr(ctx, "unix:raise", 
                     dfsch_make_primitive(native_raise, NULL));
   dfsch_define_cstr(ctx, "unix:setegid", 

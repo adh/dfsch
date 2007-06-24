@@ -532,6 +532,11 @@ extern "C" {
   while (dfsch_pair_p((args))){ \
     dfsch_object_t* dfsch___flag = dfsch_car((args));
 
+#define DFSCH_FLAG_PARSER_BEGIN_SYM_ONLY(args) \
+  while (dfsch_pair_p((args))){ \
+    dfsch_object_t* dfsch___flag = dfsch_car((args));\
+    if (!dfsch_symbol_p(dfsch___flag)) break;
+
 #define DFSCH_FLAG_SET(name, value, variable)\
     if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) |= (value)    
 

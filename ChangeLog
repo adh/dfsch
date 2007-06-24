@@ -4,6 +4,8 @@
 	(native_kill, native_killpg): kill and killpg wrappers
 	(native_raise): raise wrapper
 	(native_sig): signal name to number conversion
+	(native_open): open() wrapper
+	(native_creat): creat() wrapper
 
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 
