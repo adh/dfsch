@@ -1,6 +1,7 @@
 2007-06-24  Ales Hakl  <ales at hakl dot net>
 
 	* lib/unix.c (native_isatty): isatty() wrapper
+	(native_kill, native_killpg): kill and killpg wrappers
 
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 

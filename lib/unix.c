@@ -331,6 +331,35 @@ static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
 
   return dfsch_sym_true();
 }
+static dfsch_object_t* native_kill(void* baton, dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  pid_t pid;
+  int sig;
+  DFSCH_LONG_ARG(args, pid);
+  DFSCH_LONG_ARG(args, sig);
+  DFSCH_ARG_END(args);
+
+
+  if (kill(pid, sig) != 0){
+    throw_errno(errno, "kill");
+  }
+  return NULL;
+}
+static dfsch_object_t* native_killpg(void* baton, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  pid_t pgrp;
+  int sig;
+  DFSCH_LONG_ARG(args, pgrp);
+  DFSCH_LONG_ARG(args, sig);
+  DFSCH_ARG_END(args);
+
+
+  if (killpg(pgrp, sig) != 0){
+    throw_errno(errno, "killpg");
+  }
+  return NULL;
+}
+
 static dfsch_object_t* native_link(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
   char* old;
@@ -632,6 +661,10 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_getppid, NULL));
   dfsch_define_cstr(ctx, "unix:isatty", 
                     dfsch_make_primitive(native_isatty, NULL));
+  dfsch_define_cstr(ctx, "unix:kill", 
+                    dfsch_make_primitive(native_kill, NULL));
+  dfsch_define_cstr(ctx, "unix:killpg", 
+                    dfsch_make_primitive(native_killpg, NULL));
   dfsch_define_cstr(ctx, "unix:link", 
                     dfsch_make_primitive(native_link, NULL));
   dfsch_define_cstr(ctx, "unix:lseek", 
