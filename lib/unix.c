@@ -104,6 +104,28 @@ static dfsch_object_t* native_sig(void* baton, dfsch_object_t* args,
   dfsch_throw("unix:unknown-signal", sym);
 }
 
+static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  char* path;
+  int amode;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("r", R_OK, amode);
+  DFSCH_FLAG_SET("w", W_OK, amode);
+  DFSCH_FLAG_SET("x", X_OK, amode);
+  DFSCH_FLAG_SET("f", F_OK, amode);
+  DFSCH_FLAG_PARSER_END(args);
+
+  if (access(path, amode) == -1){
+    if (errno != EPERM || errno != ENOENT){
+      throw_errno(errno, "access");
+    } else {
+      return NULL;
+    }
+  }
+
+  return dfsch_sym_true();
+}
 
 
 static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
@@ -767,10 +789,21 @@ static dfsch_object_t* native_write(void* baton, dfsch_object_t* args,
   
   if (ret == -1){
     int e = errno;
-    throw_errno(e, "read");
+    throw_errno(e, "write");
   } 
 
   return dfsch_make_number_from_long(ret);
+}
+static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  char* path;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_ARG_END(args);
+
+  if (unlink(path) != 0){
+    throw_errno(errno, "unlink");
+  }
+  return NULL;
 }
 
 
@@ -783,6 +816,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_sig, NULL));
 
 
+  dfsch_define_cstr(ctx, "unix:access", 
+                    dfsch_make_primitive(native_access, NULL));
   dfsch_define_cstr(ctx, "unix:chdir", 
                     dfsch_make_primitive(native_chdir, NULL));
   dfsch_define_cstr(ctx, "unix:fchdir", 
@@ -881,6 +916,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_waitpid, NULL));
   dfsch_define_cstr(ctx, "unix:write", 
                     dfsch_make_primitive(native_write, NULL));
+  dfsch_define_cstr(ctx, "unix:unlink", 
+                    dfsch_make_primitive(native_unlink, NULL));
 
 
 

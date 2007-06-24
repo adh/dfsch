@@ -8,6 +8,8 @@
 	(native_creat): creat() wrapper
 	(native_read): read() wrapper
 	(native_write): write() wrapper
+	(native_chdir): access() wrapper 
+	(native_unlink): unlink() wrapper
 
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 
