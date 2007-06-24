@@ -18,30 +18,6 @@ static void throw_errno(int e, char* function){
                                        dfsch_make_string_cstr(strerror(e))));
 }
 
-static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
-  char* dir;
-  DFSCH_STRING_ARG(args, dir);
-  DFSCH_ARG_END(args);
-
-  if (chdir(dir) != 0){
-    throw_errno(errno, "chdir");
-  }
-  return NULL;
-}
-
-static dfsch_object_t* native_fchdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
-  int dir;
-  DFSCH_LONG_ARG(args, dir);
-  DFSCH_ARG_END(args);
-
-  if (fchdir(dir) != 0){
-    throw_errno(errno, "fchdir");
-  }
-  return NULL;
-}
-
 static dfsch_object_t* native_mode(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
   mode_t mode = 0;
@@ -73,6 +49,86 @@ static dfsch_object_t* native_mode(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(mode);
 }
+
+typedef struct signal_name_t {
+  char * name;
+  int signal;
+} signal_name_t;
+
+static signal_name_t signals[] = {
+  {"abrt", SIGABRT},
+  {"alrm", SIGALRM},
+  {"bus", SIGBUS},
+  {"chld", SIGCHLD},
+  {"cont", SIGCONT},
+  {"fpe", SIGFPE},
+  {"hup", SIGHUP},
+  {"ill", SIGILL},
+  {"int", SIGINT},
+  {"kill", SIGKILL},
+  {"pipe", SIGPIPE},
+  {"quit", SIGQUIT},
+  {"segv", SIGSEGV},
+  {"stop", SIGSTOP},
+  {"term", SIGTERM},
+  {"tstp", SIGTSTP},
+  {"ttin", SIGTTIN},
+  {"ttou", SIGTTOU},
+  {"usr1", SIGUSR1},
+  {"usr2", SIGUSR2},
+  {"poll", SIGPOLL},
+  {"prof", SIGPROF},
+  {"sys", SIGSYS},
+  {"trap", SIGTRAP},
+  {"urg", SIGURG},
+  {"vtalrm", SIGVTALRM},
+  {"xcpu", SIGXCPU},
+  {"xfsz", SIGXFSZ}
+};
+
+static dfsch_object_t* native_sig(void* baton, dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc){
+  dfsch_object_t* sym;
+  int i;
+
+  DFSCH_OBJECT_ARG(args, sym);
+  DFSCH_ARG_END(args);
+  
+  for (i = 0; i < sizeof(signals)/sizeof(signal_name_t); i++){
+    if (dfsch_compare_symbol(sym, signals[i].name)){
+      return dfsch_make_number_from_long(signals[i].signal);
+    }
+  }
+
+  dfsch_throw("unix:unknown-signal", sym);
+}
+
+
+
+static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  char* dir;
+  DFSCH_STRING_ARG(args, dir);
+  DFSCH_ARG_END(args);
+
+  if (chdir(dir) != 0){
+    throw_errno(errno, "chdir");
+  }
+  return NULL;
+}
+
+static dfsch_object_t* native_fchdir(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  int dir;
+  DFSCH_LONG_ARG(args, dir);
+  DFSCH_ARG_END(args);
+
+  if (fchdir(dir) != 0){
+    throw_errno(errno, "fchdir");
+  }
+  return NULL;
+}
+
 
 
 static dfsch_object_t* native_chmod(void* baton, dfsch_object_t* args,
@@ -454,6 +510,17 @@ static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
 }
 
 
+static dfsch_object_t* native_raise(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  int sig;
+  DFSCH_LONG_ARG(args, sig);
+  DFSCH_ARG_END(args);
+
+  if (raise(sig) != 0){
+    throw_errno(errno, "raise");
+  }
+  return NULL;
+}
 static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
                                       dfsch_tail_escape_t* esc){
   gid_t gid;
@@ -611,6 +678,8 @@ static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
 dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "unix:mode", 
                     dfsch_make_primitive(native_mode, NULL));
+  dfsch_define_cstr(ctx, "unix:sig", 
+                    dfsch_make_primitive(native_sig, NULL));
 
 
   dfsch_define_cstr(ctx, "unix:chdir", 
@@ -675,6 +744,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_mkfifo, NULL));
   dfsch_define_cstr(ctx, "unix:nice", 
                     dfsch_make_primitive(native_nice, NULL));
+  dfsch_define_cstr(ctx, "unix:raise", 
+                    dfsch_make_primitive(native_raise, NULL));
   dfsch_define_cstr(ctx, "unix:setegid", 
                     dfsch_make_primitive(native_setegid, NULL));
   dfsch_define_cstr(ctx, "unix:seteuid", 
