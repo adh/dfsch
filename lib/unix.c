@@ -625,6 +625,30 @@ static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
   }
 
 }
+static dfsch_object_t* native_rename(void* baton, dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
+  char* old;
+  char* new;
+  DFSCH_STRING_ARG(args, old);
+  DFSCH_STRING_ARG(args, new);
+  DFSCH_ARG_END(args);
+
+  if (rename(old, new) != 0){
+    throw_errno(errno, "rename");
+  }
+  return NULL;
+}
+static dfsch_object_t* native_rmdir(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  char* path;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_ARG_END(args);
+
+  if (rmdir(path) != 0){
+    throw_errno(errno, "rmdir");
+  }
+  return NULL;
+}
 static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
                                       dfsch_tail_escape_t* esc){
   gid_t gid;
@@ -890,6 +914,10 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_raise, NULL));
   dfsch_define_cstr(ctx, "unix:read", 
                     dfsch_make_primitive(native_read, NULL));
+  dfsch_define_cstr(ctx, "unix:rename", 
+                    dfsch_make_primitive(native_rename, NULL));
+  dfsch_define_cstr(ctx, "unix:rmdir", 
+                    dfsch_make_primitive(native_rmdir, NULL));
   dfsch_define_cstr(ctx, "unix:setegid", 
                     dfsch_make_primitive(native_setegid, NULL));
   dfsch_define_cstr(ctx, "unix:seteuid", 

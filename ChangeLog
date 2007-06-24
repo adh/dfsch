@@ -10,6 +10,8 @@
 	(native_write): write() wrapper
 	(native_chdir): access() wrapper 
 	(native_unlink): unlink() wrapper
+	(native_rename): rename() wrapper
+	(native_rmdir): rmdir() wrapper
 
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 
