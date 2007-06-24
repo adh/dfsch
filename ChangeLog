@@ -6,6 +6,8 @@
 	(native_sig): signal name to number conversion
 	(native_open): open() wrapper
 	(native_creat): creat() wrapper
+	(native_read): read() wrapper
+	(native_write): write() wrapper
 
 	* src/dfsch.c (dfsch_compare_symbol): symbol-string comparison
 

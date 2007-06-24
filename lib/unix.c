@@ -574,6 +574,35 @@ static dfsch_object_t* native_raise(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
+static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  int fd;
+  size_t len;
+  char* buf;
+  ssize_t ret;
+  dfsch_object_t* obj;
+
+  DFSCH_LONG_ARG(args, fd);
+  DFSCH_LONG_ARG(args, len);
+  DFSCH_ARG_END(args);
+
+  buf = GC_MALLOC_ATOMIC(len);
+  ret = read(fd, buf, len);
+  
+  if (ret == -1){
+    int e = errno;
+    GC_FREE(buf);
+    throw_errno(e, "read");
+  } else if (ret == 0) {
+    GC_FREE(buf);
+    return NULL;
+  } else {
+    obj = dfsch_make_string_buf(buf, ret);
+    GC_FREE(buf);
+    return obj;
+  }
+
+}
 static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
                                       dfsch_tail_escape_t* esc){
   gid_t gid;
@@ -724,6 +753,25 @@ static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
                       dfsch_make_number_from_long(stat));
   }
 }
+static dfsch_object_t* native_write(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  int fd;
+  ssize_t ret;
+  dfsch_strbuf_t* buf;
+
+  DFSCH_LONG_ARG(args, fd);
+  DFSCH_BUFFER_ARG(args, buf);
+  DFSCH_ARG_END(args);
+
+  ret = write(fd, buf->ptr, buf->len);
+  
+  if (ret == -1){
+    int e = errno;
+    throw_errno(e, "read");
+  } 
+
+  return dfsch_make_number_from_long(ret);
+}
 
 
 
@@ -805,6 +853,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_pipe, NULL));
   dfsch_define_cstr(ctx, "unix:raise", 
                     dfsch_make_primitive(native_raise, NULL));
+  dfsch_define_cstr(ctx, "unix:read", 
+                    dfsch_make_primitive(native_read, NULL));
   dfsch_define_cstr(ctx, "unix:setegid", 
                     dfsch_make_primitive(native_setegid, NULL));
   dfsch_define_cstr(ctx, "unix:seteuid", 
@@ -829,6 +879,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_wait, NULL));
   dfsch_define_cstr(ctx, "unix:waitpid", 
                     dfsch_make_primitive(native_waitpid, NULL));
+  dfsch_define_cstr(ctx, "unix:write", 
+                    dfsch_make_primitive(native_write, NULL));
 
 
 
