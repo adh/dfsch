@@ -49,6 +49,7 @@
 
 
 FILE *cmd_log;
+FILE *transcript;
 
 typedef struct evaluator_ctx_t {
   dfsch_object_t *ctx;
@@ -73,9 +74,20 @@ static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton,
     fputs("\n",cmd_log);
     fflush(cmd_log);
   }
+  if (transcript){
+    fputs(";; Response\n",transcript);    
+    fputs(dfsch_obj_write(ret,1000,1),transcript);
+    fputs("\n",transcript);
+    fflush(transcript);
+  }
 }
 static dfsch_object_t* evaluator_handler(dfsch_object_t *baton, 
                                          dfsch_object_t *args){
+  if (transcript){
+    fputs(";; Exception occured\n",transcript);
+    fputs(dfsch_obj_write(dfsch_car(args),1000,1),transcript);
+    fputs("\n",transcript);
+  }
   fputs(dfsch_exception_write(dfsch_car(args)),stderr);      
 }
 
@@ -84,6 +96,12 @@ static int callback(dfsch_object_t *obj, void *baton){
 
   ctx.ctx = baton;
   ctx.expr = obj;
+  
+  if (transcript){
+    fputs(";; Expression\n",transcript);
+    fputs(dfsch_obj_write(obj,1000,1),transcript);
+    fputs("\n",transcript);
+  }
 
   dfsch_try(dfsch_make_primitive((dfsch_primitive_t)evaluator_handler, obj),
             NULL,
@@ -170,6 +188,32 @@ static dfsch_object_t* command_sleep(void*baton, dfsch_object_t* args,
 
   return NULL;
 }
+static dfsch_object_t* command_transcript_on(void*baton, dfsch_object_t* args,
+					     dfsch_tail_escape_t* esc){
+  char* fname;
+
+  DFSCH_STRING_ARG(args, fname);
+  DFSCH_ARG_END(args);
+
+  transcript = fopen(fname, "a");
+  if (!transcript){
+    dfsch_throw("exception:unable-to-open-transcript", 
+		dfsch_make_string_cstr(strerror(errno)));
+  }
+
+  return NULL;
+}
+static dfsch_object_t* command_transcript_off(void*baton, dfsch_object_t* args,
+					      dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+
+  if (transcript){
+    fclose(transcript);
+    transcript = NULL;
+  }
+
+  return NULL;
+}
 
 
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
@@ -194,6 +238,11 @@ static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
 }
 
 
+static void interactive_transcript(char * prompt, char* input){
+  if (transcript){
+    fprintf(transcript, ";;; %s %s\n", prompt, input);
+  }
+}
 
 
 #ifdef USE_READLINE
@@ -216,6 +265,7 @@ void interactive_repl(dfsch_object_t* ctx){
     if (!str)
       break;
     add_history(str);
+    interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
 
     if (rc = dfsch_parser_feed(parser,str)!=0){
       fprintf(stderr,"Parse error\n",rc);
@@ -242,6 +292,8 @@ void interactive_repl(dfsch_object_t* ctx){
     
     if(fgets(str, 4096, stdin) == NULL)
       break;
+
+    interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
 
     if (rc = dfsch_parser_feed(parser,str)!=0){
       fprintf(stderr,"Parse error\n",rc);
@@ -302,8 +354,12 @@ int main(int argc, char**argv){
   dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));
   dfsch_define_cstr(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
+  dfsch_define_cstr(ctx,"transcript-on",
+		    dfsch_make_primitive(command_transcript_on,NULL));
+  dfsch_define_cstr(ctx,"transcript-off",
+		    dfsch_make_primitive(command_transcript_off,NULL));
 
-  while ((c=getopt(argc, argv, "+l:L:e:E:hvO:")) != -1){
+  while ((c=getopt(argc, argv, "+l:L:e:E:hvO:t:")) != -1){
     switch (c){
     case 'l':
       dfsch_load_scm(ctx, optarg);
@@ -314,6 +370,11 @@ int main(int argc, char**argv){
     case 'O':
       cmd_log = fopen(optarg, "a");
       if (!cmd_log)
+	perror(optarg);
+      break;
+    case 't':
+      transcript = fopen(optarg, "a");
+      if (!transcript)
 	perror(optarg);
       break;
     case 'e':
@@ -348,6 +409,7 @@ int main(int argc, char**argv){
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
       puts("  -O <filename>     Log sucessfuly executed statements");
+      puts("  -t <filename>     Produce session transcript");
       puts("  -i                Force interactive mode");
 
       puts("First non-option argument is treated as filename of program to run");
