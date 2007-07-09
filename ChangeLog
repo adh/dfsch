@@ -1,5 +1,8 @@
 2007-07-10  Ales Hakl  <ales at hakl dot net>
 
+	* src/promise.c (dfsch_force_promise): more R5RS style semantics
+	of promises.
+
 	* src/control.c (native_form_unwind_protect): unwind-protect
 	special form
 
