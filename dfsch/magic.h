@@ -35,27 +35,53 @@
 #include <dfsch/dfsch.h>
 #include <setjmp.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  /*
+   * Mechanism used for unwind-protect should be unified between continuations 
+   * and exceptions, but this works for now.
+   */
+
 typedef struct dfsch__continuation_t dfsch__continuation_t;
+typedef struct dfsch__unwind_protect_t dfsch__unwind_protect_t;
+typedef struct dfsch__thread_info_t dfsch__thread_info_t;
+
 struct dfsch__continuation_t {
   dfsch_type_t* type;
   jmp_buf ret;
   dfsch_object_t* value;
   int active;
-  pthread_t thread;
+  dfsch__thread_info_t* ti;
+  dfsch__unwind_protect_t* top;
   dfsch__continuation_t* next;
 };
 
-typedef struct dfsch__thread_info_t {
+struct dfsch__unwind_protect_t {
+  jmp_buf after;  
+  dfsch__unwind_protect_t* next;
+};
+
+struct dfsch__thread_info_t {
   jmp_buf* exception_ret;
   dfsch_object_t* exception_obj;
+  dfsch__unwind_protect_t* exception_top;
+
   dfsch_object_t* stack_trace;
+
   dfsch__continuation_t* cont_stack;
+  dfsch__unwind_protect_t* protect_stack;
+
+  dfsch__continuation_t* in_continuation;
+
   char* break_type;
-} dfsch__thread_info_t;
+};
 
 extern void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
                                             dfsch__continuation_t* cont);
 extern dfsch__thread_info_t* dfsch__get_thread_info();
+extern void dfsch__continue_continuation(dfsch__thread_info_t* ti);
 
 #define DFSCH_TRY \
 {  \
@@ -63,10 +89,12 @@ extern dfsch__thread_info_t* dfsch__get_thread_info();
   jmp_buf *dfsch___old_ret;\
   dfsch_object_t* dfsch___old_frame;\
   dfsch__continuation_t* dfsch___cont;\
+  dfsch__unwind_protect_t* dfsch___protect;\
   \
   dfsch___old_ret = dfsch___ei->exception_ret;\
   dfsch___old_frame = dfsch___ei->stack_trace;\
   dfsch___cont = dfsch___ei->cont_stack;\
+  dfsch___protect = dfsch___ei->protect_stack;\
   dfsch___ei->exception_ret = GC_NEW(jmp_buf);\
   \
   if(setjmp(*dfsch___ei->exception_ret) != 1){
@@ -79,9 +107,34 @@ extern dfsch__thread_info_t* dfsch__get_thread_info();
     dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;\
     dfsch__invalidate_continuations(dfsch___ei, dfsch___cont);\
     dfsch___ei->cont_stack = dfsch___cont;\
+    dfsch___ei->protect_stack = dfsch___protect;\
   { dfsch_object_t* var = dfsch___ei->exception_obj;
 
 #define DFSCH_END_TRY \
 }}}
+
+#define DFSCH_UNWIND {  \
+  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();\
+  dfsch__unwind_protect_t* dfsch___protect;\
+  int dfsch___unwinded = 0;\
+  dfsch___protect = GC_NEW(dfsch__unwind_protect_t);\
+  dfsch___protect->next = dfsch___ei->protect_stack;\
+  dfsch___ei->protect_stack = dfsch___protect;\
+  if(setjmp(dfsch___protect->after) != 1){
+
+#define DFSCH_PROTECT \
+    dfsch___ei->protect_stack = dfsch___ei->protect_stack->next;\
+  } else { dfsch___unwinded = 1; }
+
+#define DFSCH_END_UNWIND \
+    if (dfsch___unwinded){ \
+      dfsch__continue_continuation(dfsch___ei);\
+    }\
+  }
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

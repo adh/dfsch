@@ -1141,6 +1141,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
     ei->cont_stack = NULL;
+    ei->in_continuation = NULL;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -1161,7 +1162,7 @@ void dfsch_raise(dfsch_object_t* exception){
   }
 
   ei->exception_obj = exception;
-  longjmp(*ei->exception_ret, 1);
+  dfsch__continue_continuation(ei);
 }
 
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
@@ -1226,22 +1227,47 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
   return ((exception_t*)e)->data;
 }
 
+static void unwind_protect(dfsch__thread_info_t* ti){
+  dfsch__unwind_protect_t* up;
+  up = ti->protect_stack;
+  ti->protect_stack = up->next;
+  longjmp(up->after, 1);
+}
+
+void dfsch__continue_continuation(dfsch__thread_info_t* ti){
+  if (ti->in_continuation){
+    if (ti->in_continuation->top != ti->protect_stack){
+      unwind_protect(ti);
+    }
+    longjmp(ti->in_continuation->ret,1);
+  } else {
+    if (!ti->exception_ret){ /* Something is borked */
+      abort();
+    }
+    if (ti->exception_top != ti->protect_stack){
+      unwind_protect(ti);
+    }
+    longjmp(*ti->exception_ret, 1);    
+  }
+}
 
 static object_t* continuation_apply(dfsch__continuation_t *cont, 
                                     object_t* args,
                                     dfsch_tail_escape_t* esc){
 
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
   object_t* value;
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
   
   if (!cont->active)
     dfsch_throw("exception:already-returned",NULL);
-  if (cont->thread != pthread_self())
+  if (cont->ti != ti)
     dfsch_throw("exception:cross-thread-continuation",NULL);
 
   cont->value = value;
-  longjmp(cont->ret,1);
+  ti->in_continuation = cont;
+  dfsch__continue_continuation(ti);
 }
 
 static struct dfsch_type_t continuation_type = {
@@ -1262,10 +1288,12 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
 
   cont->active = 1;
   cont->next = ti->cont_stack;
+  cont->top = ti->protect_stack;
   ex_ret = ti->exception_ret;
-  cont->thread = pthread_self();
+  cont->ti = ti;
   ti->cont_stack = cont;
   if(setjmp(cont->ret) == 1){
+    ti->in_continuation = NULL;
     value = cont->value;
   }else{
     value = dfsch_apply(proc,
