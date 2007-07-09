@@ -26,6 +26,7 @@
 
 #include "internal.h"
 #include <dfsch/promise.h>
+#include <dfsch/magic.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -336,6 +337,24 @@ static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t
   return dfsch_call_ec(proc);
 }
 
+static object_t* native_form_unwind_protect(void *baton, object_t* args, 
+                                            dfsch_tail_escape_t* esc){
+  object_t* env;
+  object_t* protect;
+  object_t* ret;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, protect);
+ 
+  DFSCH_UNWIND {
+    dfsch_eval(protect, env);
+  } DFSCH_PROTECT {
+    ret = dfsch_eval_proc(args, env);
+  } DFSCH_END_UNWIND;
+
+  return ret;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // do
@@ -461,6 +480,9 @@ void dfsch__control_register(dfsch_object_t *ctx){
                    dfsch_define_cstr(ctx, "call/ec", 
                                     dfsch_make_primitive(&native_call_ec,
                                                          NULL)));
+  dfsch_define_cstr(ctx, "unwind-protect", 
+                    dfsch_make_form(dfsch_make_primitive(&native_form_unwind_protect,
+							 NULL)));
 
 
 

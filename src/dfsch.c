@@ -1285,7 +1285,9 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
     (dfsch__continuation_t*)dfsch_make_object(&continuation_type);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
   jmp_buf* ex_ret;
+  dfsch_object_t* old_frame;
 
+  old_frame = ti->stack_trace;
   cont->active = 1;
   cont->next = ti->cont_stack;
   cont->top = ti->protect_stack;
@@ -1304,6 +1306,7 @@ dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
   
   cont->active = 0;
   ti->cont_stack = cont->next;
+  ti->stack_trace = old_frame;
   ti->exception_ret = ex_ret;
   return value;
 

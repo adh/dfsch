@@ -116,7 +116,9 @@ extern void dfsch__continue_continuation(dfsch__thread_info_t* ti);
 #define DFSCH_UNWIND {  \
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();\
   dfsch__unwind_protect_t* dfsch___protect;\
+  dfsch_object_t* dfsch___old_frame;\
   int dfsch___unwinded = 0;\
+  dfsch___old_frame = dfsch___ei->stack_trace;\
   dfsch___protect = GC_NEW(dfsch__unwind_protect_t);\
   dfsch___protect->next = dfsch___ei->protect_stack;\
   dfsch___ei->protect_stack = dfsch___protect;\
@@ -124,7 +126,8 @@ extern void dfsch__continue_continuation(dfsch__thread_info_t* ti);
 
 #define DFSCH_PROTECT \
     dfsch___ei->protect_stack = dfsch___ei->protect_stack->next;\
-  } else { dfsch___unwinded = 1; }
+  } else { dfsch___unwinded = 1; }\
+ dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;
 
 #define DFSCH_END_UNWIND \
     if (dfsch___unwinded){ \

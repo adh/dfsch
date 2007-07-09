@@ -186,7 +186,21 @@
                              (i 0 (+ i 1)))
                             ((= i 5) vec)
                           (vector-set! vec i i))
-                        #(0 1 2 3 4))))
+                        #(0 1 2 3 4)))
+       (sub-group non-local-exits
+                 (test 'call/ec
+                       (call/ec (lambda (cont)
+                                  (cont #t)
+                                  #f))
+                       #t)
+                 (test 'unwind-protect
+                       (let ((a #f))
+                         (call/ec (lambda (exit)
+                                    (unwind-protect
+                                     (exit ())
+                                     (set! a #t))))
+                         a)
+                       #t)))
 
 (group "Binding constructs"
 
@@ -255,7 +269,7 @@
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
 (group "object subsystem"
-       (sub-group 'simple-class
+       (sub-group simple-class
                  (define-class <test-class> <object>)
                  (define-method <test-class> (test-dispatch self)
                    #t)
