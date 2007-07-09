@@ -40,8 +40,8 @@ extern "C" {
 #endif
 
   /*
-   * Mechanism used for unwind-protect should be unified between continuations 
-   * and exceptions, but this works for now.
+   * TODO: Mechanism used for unwind-protect should be unified between 
+   * continuations and exceptions, but this works for now.
    */
 
 typedef struct dfsch__continuation_t dfsch__continuation_t;
