@@ -31,7 +31,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/number.c dfsch/number.h \
 	src/strings.c dfsch/strings.h \
 	src/wrapper.c dfsch/wrapper.h \
-	src/object.c dfsch/object.h
+	src/object.c dfsch/object.h\
+	src/weak.c src/weak.h
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
