@@ -32,7 +32,8 @@ dfsch_object_t* dfsch_make_weak_reference(dfsch_object_t* refered){
   
   ref->object = refered;
   ref->live = 1;
-  if (refered && GC_base(refered)){
+  if (refered && GC_base(refered)){ 
+    /* Causes random crashes with non GC'able objects*/
     GC_general_register_disappearing_link((void**)&ref->live, refered);
   }
 
