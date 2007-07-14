@@ -1,6 +1,8 @@
 2007-07-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/weak.c: support for weak refrences (probably working)
+	REmoved ptr_diff_check_array - gcc hapily alocates array of zero
+	items
 
 	* src/promise.c (dfsch_force_promise): 
 	FIXED: object_t -> dfsch_object_t

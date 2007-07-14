@@ -7,8 +7,6 @@
 #include <stdlib.h>
 
 
-static int ptr_diff_check_array[sizeof(size_t) == sizeof(void*)];
-
 typedef struct reference_t {
   dfsch_type_t* type;
   dfsch_object_t* object;
