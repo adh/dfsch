@@ -515,6 +515,53 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   return dfsch_car((object_t*)it);
 }
 
+dfsch_object_t* dfsch_list_from_array(dfsch_object_t** array, size_t length){
+  pair_t *head; 
+  pair_t *tail;
+  size_t i;
+
+  if (length == 0)
+    return NULL;
+
+  head = tail = (pair_t*)dfsch_cons(array[0], NULL);
+
+  for(i = 1; i < length; ++i){
+    object_t *tmp;
+    
+    tmp = dfsch_cons(array[i],NULL);
+    tail->cdr = tmp;
+    tail = (pair_t*)tmp;
+
+  }
+
+  return (object_t*)head;
+}
+dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
+  pair_t* j = (pair_t*)list;
+  size_t i=0;
+  size_t len;
+  object_t** data;
+
+  len = dfsch_list_length_check(list);
+  data = GC_MALLOC(sizeof(object_t*)*len);
+  
+  while (j && j->type == PAIR){
+    if (i >= len){
+      break; /* Can happen due to race condition in user code */
+    }
+    data[i] = j->car;
+    j = (pair_t*)j->cdr;
+    i++;
+  }
+
+  if (length){
+    *length = len;
+  }
+
+  return data;
+}
+
+
 dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   pair_t* head=NULL;
   pair_t* tail=NULL;
@@ -1353,6 +1400,28 @@ size_t dfsch_vector_length(dfsch_object_t *vector){
   return ((vector_t*)vector)->length;  
 }
 
+dfsch_object_t** dfsch_vector_as_array(dfsch_object_t *vector, size_t *length){
+  if (!vector || vector->type != VECTOR)
+    dfsch_throw("exception:not-a-vector",vector);
+
+  if (length){
+    *length = ((vector_t*)vector)->length;
+  }
+
+  return ((vector_t*)vector)->data;
+}
+
+dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array, 
+                                        size_t length){
+  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
+
+  v->length = length;
+  v->data = GC_MALLOC(sizeof(object_t*) * length);
+  memcpy(v->data, array, sizeof(object_t*) * length);
+
+  return (object_t*)v;
+}
+
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
   if (!vector || vector->type != VECTOR)
     dfsch_throw("exception:not-a-vector",vector);
@@ -1376,47 +1445,19 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
   return vector;
 }
 
-
-
 dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
-  pair_t *head; 
-  pair_t *tail;
-  size_t i;
 
   if (!vector || vector->type != VECTOR)
     dfsch_throw("exception:not-a-vector",vector);
 
-  if (((vector_t*)vector)->length == 0)
-    return NULL;
-
-  head = tail = (pair_t*)dfsch_cons(((vector_t*)vector)->data[0], NULL);
-
-  for(i = 1; i< ((vector_t*)vector)->length; ++i){
-    object_t *tmp;
-    
-    tmp = dfsch_cons(((vector_t*)vector)->data[i],NULL);
-    tail->cdr = tmp;
-    tail = (pair_t*)tmp;
-
-  }
-
-  return (object_t*)head;
+  return dfsch_list_from_array(((vector_t*)vector)->data, 
+                               ((vector_t*)vector)->length);
 }
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   vector_t* vector;
-  pair_t* j = (pair_t*)list;
-  size_t i=0;
   vector = (vector_t*)dfsch_make_object(VECTOR);
-  vector->length = dfsch_list_length_check(list);
-  vector->data = GC_MALLOC(sizeof(object_t*)*vector->length);
-  
-  while (j && j->type == PAIR){
-    vector->data[i] = j->car;
-    j = (pair_t*)j->cdr;
-    i++;
-  }
-
+  vector->data = dfsch_list_as_array(list, &vector->length);
   return (object_t*)vector;
 }
 

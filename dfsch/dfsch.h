@@ -201,6 +201,12 @@ extern "C" {
   extern long dfsch_list_length_check(dfsch_object_t* list);
   /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
+  /** Construct list from C array. */
+  extern dfsch_object_t* dfsch_list_from_array(dfsch_object_t** array, 
+                                               size_t length);
+  /** Convert struct to C array */
+  extern dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, 
+                                              size_t* length);
 
   /** Concatenate lists */
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
@@ -297,6 +303,12 @@ extern "C" {
   extern dfsch_object_t* dfsch_vector(size_t count, ...);
   /** Returns length of given vector. */
   extern size_t dfsch_vector_length(dfsch_object_t *vector);
+  /** Returns pointer to internal object array of vector */
+  extern dfsch_object_t** dfsch_vector_as_array(dfsch_object_t *vector,
+                                                size_t *length);
+  /** Creates vector from C array */
+  extern dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array, 
+                                                 size_t length);
   /** Returns contents of k-th slot of vector. */
   extern dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k);
   /** Sets value of k-th slot of vector to obj. */

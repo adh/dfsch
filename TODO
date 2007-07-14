@@ -12,3 +12,4 @@
 * Read macros (at least rudimentary, useful for example for include-like 
   constructs with path relative to file they are in as this is near impossible 
   to implement outside parser.)
+* Type predicates for all types
