@@ -1,3 +1,8 @@
+2007-07-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/promise.c (dfsch_force_promise): 
+	FIXED: object_t -> dfsch_object_t
+
 2007-07-10  Ales Hakl  <ales at hakl dot net>
 
 	* src/promise.c (dfsch_force_promise): more R5RS style semantics
