@@ -308,6 +308,8 @@ static dfsch_object_t* make_object_class(){
   return klass;
 }
 
+DFSCH_OBJECT_CACHE(make_object_class(), dfsch_class_object);
+
 DFSCH_LOCAL_SYMBOL_CACHE("delegate-to", slot_delegate_to);
 
 static dfsch_object_t* delegator_does_not_understand(void* baton,
@@ -334,8 +336,9 @@ static dfsch_object_t* delegator_init(void* baton,
   return object;
 }
 
-static dfsch_object_t* make_delegator_class(dfsch_object_t* superclass){
-  dfsch_object_t* klass = dfsch_object_make_class(superclass, "<delegator>");
+static dfsch_object_t* make_delegator_class(){
+  dfsch_object_t* klass = dfsch_object_make_class(dfsch_class_object(), 
+                                                  "<delegator>");
 
   dfsch_object_define_method(klass, dfsch_object_does_not_understand(), 
                              dfsch_make_primitive(delegator_does_not_understand,
@@ -345,6 +348,8 @@ static dfsch_object_t* make_delegator_class(dfsch_object_t* superclass){
                                                   NULL));
   return klass;
 }
+
+DFSCH_OBJECT_CACHE(make_delegator_class(), dfsch_class_delegator)
 
 // Scheme binding
 
@@ -425,7 +430,7 @@ static dfsch_object_t* native_slot_unset(void* baton,
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_ARG_END(args);
   
-  return dfsch_object_slot_unset(object, name);
+  return dfsch_bool(dfsch_object_slot_unset(object, name));
 }
 static dfsch_object_t* native_slot_ref(void* baton,
                                        dfsch_object_t* args,
@@ -449,9 +454,8 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
 }
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
-  dfsch_object_t* object_class = make_object_class();
-  dfsch_define_cstr(ctx, "<object>", object_class);
-  dfsch_define_cstr(ctx, "<delegator>", make_delegator_class(object_class));
+  dfsch_define_cstr(ctx, "<object>", dfsch_class_object());
+  dfsch_define_cstr(ctx, "<delegator>", dfsch_class_delegator());
 
   dfsch_define_cstr(ctx, "make-class",
                     dfsch_make_primitive(native_make_class,

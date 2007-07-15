@@ -1,5 +1,7 @@
 2007-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/object.c: <object> and <delegator> caches for C code.
+
 	* dfsch/dfsch.h (DFSCH_OBJECT_CACHE): generalized symbol and
 	object caching
 

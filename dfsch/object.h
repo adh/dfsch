@@ -58,8 +58,13 @@ extern "C" {
                                                dfsch_object_t* name);
   extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
 
+  extern dfsch_object_t* dfsch_class_object();
+  extern dfsch_object_t* dfsch_class_delegator();
+
   extern dfsch_object_t* dfsch_object_super();
   extern dfsch_object_t* dfsch_object_does_not_understand();
+
+  
 
 #ifdef __cplusplus
 }
