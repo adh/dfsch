@@ -1150,16 +1150,10 @@ static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
  * wrapper function) is function call. This is only case of undefined behavior
  * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
  *
- * This implementation has one great caveat: exceptions and 
- * escape-continuations are implemented differently and it is not possible
- * to intercept excpae continuation in any way (as oposed to exception), so 
- * you cannot write something similar to try {} finally {} and use it for 
- * clean-up unless you are sure, that it cannot be yumped over by 
- * escape-continuation. On the other hand, excpetions properly invalidate 
- * escape-continuations that had gone out of scope.
- *
- * But in most cases, such clean-up is not actually needed and in the rare 
- * cases can be taken care of using GC_register_finalizer() or similar means.
+ * Beware that exceptions and escape-continuations propagate using "separate"
+ * mechanisms, both honor unwind-protect, but this causes some complications
+ * in unwind-protect handling (because unwind-protect is implemented as C 
+ * macros in magic.h and uses setjmp/longjmp).
  */
 
 void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
