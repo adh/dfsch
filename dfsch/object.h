@@ -58,13 +58,16 @@ extern "C" {
                                                dfsch_object_t* name);
   extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
 
-  extern dfsch_object_t* dfsch_class_object();
-  extern dfsch_object_t* dfsch_class_delegator();
-
   extern dfsch_object_t* dfsch_object_super();
   extern dfsch_object_t* dfsch_object_does_not_understand();
 
+  typedef void (*dfsch_class_constructor_t)(dfsch_object_t* klass, 
+                                            void* baton);
   
+  extern void dfsch_object_define_class(dfsch_object_t* env,
+                                 char* classname, char* superclassname, 
+                                 dfsch_class_constructor_t constructor,
+                                 void* baton);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,7 @@
 2007-07-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c: <object> and <delegator> caches for C code.
+	(dfsch_object_define_class): helper function for subclasing
 
 	* dfsch/dfsch.h (DFSCH_OBJECT_CACHE): generalized symbol and
 	object caching

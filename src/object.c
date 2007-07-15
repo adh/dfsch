@@ -229,6 +229,22 @@ dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
   return dfsch_hash_2_alist(((instance_t*)object)->inst_vars);
 }
 
+void dfsch_object_define_class(dfsch_object_t* env,
+                               char* classname, char* superclassname, 
+                               dfsch_class_constructor_t constructor,
+                               void* baton){
+  dfsch_object_t* klass;
+  klass = dfsch_object_make_class(dfsch_lookup_cstr(env, superclassname),
+                                  classname);
+  
+  if (constructor){
+    constructor(klass, baton);
+  }
+  
+  dfsch_define_cstr(env, classname, klass);
+}
+
+
 // <object> class
 
 static dfsch_object_t* object_does_not_understand(void* baton,
@@ -308,8 +324,6 @@ static dfsch_object_t* make_object_class(){
   return klass;
 }
 
-DFSCH_OBJECT_CACHE(make_object_class(), dfsch_class_object);
-
 DFSCH_LOCAL_SYMBOL_CACHE("delegate-to", slot_delegate_to);
 
 static dfsch_object_t* delegator_does_not_understand(void* baton,
@@ -336,20 +350,14 @@ static dfsch_object_t* delegator_init(void* baton,
   return object;
 }
 
-static dfsch_object_t* make_delegator_class(){
-  dfsch_object_t* klass = dfsch_object_make_class(dfsch_class_object(), 
-                                                  "<delegator>");
-
+static void class_delegator_constructor(dfsch_object_t* klass){
   dfsch_object_define_method(klass, dfsch_object_does_not_understand(), 
                              dfsch_make_primitive(delegator_does_not_understand,
                                            NULL));
   dfsch_object_define_method(klass, sel_init(), 
                              dfsch_make_primitive(delegator_init,
                                                   NULL));
-  return klass;
 }
-
-DFSCH_OBJECT_CACHE(make_delegator_class(), dfsch_class_delegator)
 
 // Scheme binding
 
@@ -454,8 +462,9 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
 }
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<object>", dfsch_class_object());
-  dfsch_define_cstr(ctx, "<delegator>", dfsch_class_delegator());
+  dfsch_define_cstr(ctx, "<object>", make_object_class());
+  dfsch_object_define_class(ctx, "<delegator>", "<object>", 
+                            class_delegator_constructor, NULL);
 
   dfsch_define_cstr(ctx, "make-class",
                     dfsch_make_primitive(native_make_class,
