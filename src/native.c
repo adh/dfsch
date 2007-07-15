@@ -137,6 +137,19 @@ static object_t* native_form_set(void *baton, object_t* args, dfsch_tail_escape_
   return dfsch_set(name, value, env);
 
 }
+static object_t* native_form_unset(void *baton, object_t* args, 
+                                 dfsch_tail_escape_t* esc){
+  object_t* env;
+  object_t* name;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_unset(name, env);
+
+  return NULL;
+}
 static object_t* native_form_defined_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(dfsch_cdr(args),1);
   object_t* env = dfsch_car(args);
@@ -669,6 +682,9 @@ void dfsch__native_register(dfsch_object_t *ctx){
 							 NULL)));
   dfsch_define_cstr(ctx, "set!", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_set,
+							 NULL)));
+  dfsch_define_cstr(ctx, "unset!", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_unset,
 							 NULL)));
 
   dfsch_define_cstr(ctx, "make-form", 

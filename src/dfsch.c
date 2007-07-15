@@ -1641,6 +1641,23 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
 
   dfsch_throw("exception:unbound-variable",name);
 }
+void dfsch_unset(object_t* name, object_t* env){
+  pair_t *i;
+  if (!env || env->type!=PAIR){
+    dfsch_throw("exception:not-a-pair",env);
+  }
+
+  i = (pair_t*)env;
+  while (i && i->type==PAIR){
+    if(dfsch_hash_unset(i->car, name))
+      return;
+
+    i = (pair_t*)i->cdr;
+  }
+  
+
+  dfsch_throw("exception:unbound-variable",name);
+}
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){

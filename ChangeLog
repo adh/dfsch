@@ -1,5 +1,11 @@
 2007-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (dfsch_hash_unset): FIXED: now works even for buckets
+	that would become empty.
+
+	* src/dfsch.c (dfsch_unset): function for unsetting variables in
+	environments.
+
 	* src/hash.c (dfsch_hash_unset): hash-unset returns boolean value
 	- true if given key existed and false if not.
 

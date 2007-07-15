@@ -375,6 +375,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_set(dfsch_object_t* name,
 				   dfsch_object_t* value,
 				   dfsch_object_t* env);
+  /** Unset variable name in environment env */
+  extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
   /** Define variable name in environment env */
   extern dfsch_object_t* dfsch_define(dfsch_object_t* name,

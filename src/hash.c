@@ -282,12 +282,17 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
 
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
-  
+  j = NULL;
+
   switch (hash->mode){
   case DFSCH_HASH_EQ:
     while (i){
       if (h == i->hash && (i->key == key)) {
-        j->next = i->next;
+        if (j){
+          j->next = i->next;
+        } else {
+          hash->vector[h & hash->mask] = NULL;
+        }
         hash->count --;
         
         if (hash->count+16 < (hash->mask+1)/2 
@@ -308,7 +313,11 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
   case DFSCH_HASH_EQV:
     while (i){
       if (h == i->hash && dfsch_eqv_p(i->key, key)) {
-        j->next = i->next;
+        if (j){
+          j->next = i->next;
+        } else {
+          hash->vector[h & hash->mask] = NULL;
+        }
         hash->count --;
         
         if (hash->count+16 < (hash->mask+1)/2 
@@ -329,7 +338,12 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
   case DFSCH_HASH_EQUAL:
     while (i){
       if (h == i->hash && dfsch_equal_p(i->key, key)) {
-        j->next = i->next;
+        if (j){
+          j->next = i->next;
+        } else {
+          hash->vector[h & hash->mask] = NULL;
+        }
+
         hash->count --;
         
         if (hash->count+16 < (hash->mask+1)/2
@@ -574,7 +588,7 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "hash-ref", 
                    dfsch_make_primitive(&native_hash_ref,NULL));
   dfsch_define_cstr(ctx, "hash-unset!", 
-                   dfsch_make_primitive(&native_hash_set,NULL));
+                   dfsch_make_primitive(&native_hash_unset,NULL));
   dfsch_define_cstr(ctx, "hash-set!", 
                    dfsch_make_primitive(&native_hash_set,NULL));
   dfsch_define_cstr(ctx, "hash-set-if-exists!", 
