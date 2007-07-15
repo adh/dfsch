@@ -1,5 +1,8 @@
 2007-07-15  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/dfsch.h (DFSCH_OBJECT_CACHE): generalized symbol and
+	object caching
+
 	* src/hash.c (dfsch_hash_unset): FIXED: now works even for buckets
 	that would become empty.
 	(dfsch_hash_set_if_exists): hash-set-if-exists! now returns

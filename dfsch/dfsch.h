@@ -530,13 +530,19 @@ extern "C" {
   if (al != NULL) \
     dfsch_throw("exception:too-many-arguments",NULL)
 
-#define DFSCH_SYMBOL_CACHE(symbol, name)\
+
+
+#define DFSCH_OBJECT_CACHE(constructor, name)\
   dfsch_object_t* name(){\
     static dfsch_object_t* dfsch___cache = NULL;\
     if (!dfsch___cache)\
-      dfsch___cache = dfsch_make_symbol(symbol);\
+      dfsch___cache = constructor;\
     return dfsch___cache;\
   }// This depends on full-word stores being atomic (which they generally are)
+
+
+#define DFSCH_SYMBOL_CACHE(symbol, name)\
+  DFSCH_OBJECT_CACHE(dfsch_make_symbol(symbol), name)
 
 #define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)\
   static DFSCH_SYMBOL_CACHE(symbol, name)
