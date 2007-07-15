@@ -75,9 +75,9 @@ extern "C" {
    * Set value associated with given key only when there is already such 
    * key.
    */
-  extern dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash,
-                                                  dfsch_object_t* key,
-                                                  dfsch_object_t* value);
+  extern int dfsch_hash_set_if_exists(dfsch_object_t* hash,
+                                      dfsch_object_t* key,
+                                      dfsch_object_t* value);
   
   /**
    * Convert hash table to list of associations.

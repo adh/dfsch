@@ -2,6 +2,9 @@
 
 	* src/hash.c (dfsch_hash_unset): FIXED: now works even for buckets
 	that would become empty.
+	(dfsch_hash_set_if_exists): hash-set-if-exists! now returns
+	boolean value (most code is not affected in any way by this
+	change)
 
 	* src/dfsch.c (dfsch_unset): function for unsetting variables in
 	environments.

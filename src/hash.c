@@ -370,9 +370,9 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
 /*
  * Im not fully sure whenever synchronization is strictly necessary here.
  */
-dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
-                                         dfsch_object_t* key,
-                                         dfsch_object_t* value){
+int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
+                             dfsch_object_t* key,
+                             dfsch_object_t* value){
   
   size_t h;
   hash_t *hash;
@@ -392,7 +392,7 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
         i->value = value;
 
         pthread_mutex_unlock(hash->w_mutex);
-        return dfsch_list(1,value);
+        return 1;
       }
       i = i->next;
     }
@@ -403,7 +403,7 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
         i->value = value;
 
         pthread_mutex_unlock(hash->w_mutex);
-        return dfsch_list(1,value);
+        return 1;
       }
       i = i->next;
     }
@@ -414,7 +414,7 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
         i->value = value;
 
         pthread_mutex_unlock(hash->w_mutex);
-        return dfsch_list(1,value);
+        return 1;
       }
       i = i->next;
     }
@@ -422,7 +422,7 @@ dfsch_object_t* dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
   }
 
   pthread_mutex_unlock(hash->w_mutex);
-  return NULL;
+  return 0;
 }
 
 
@@ -544,7 +544,7 @@ static dfsch_object_t* native_hash_set_if_exists(void* baton,
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
-  return dfsch_hash_set_if_exists(hash, key, value);
+  return dfsch_bool(dfsch_hash_set_if_exists(hash, key, value));
 }
 static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args,
                                            dfsch_tail_escape_t* esc){
