@@ -199,8 +199,15 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
   if (!object || !object->type || object->type->type != &class_type) // XXX
     dfsch_throw("exception:not-a-object", object);
 
-  return dfsch_hash_set(((instance_t*)object)->inst_vars, name, value);
-  
+  return dfsch_hash_set(((instance_t*)object)->inst_vars, name, value);  
+}
+int dfsch_object_slot_unset(dfsch_object_t* object,
+                            dfsch_object_t* name){
+
+  if (!object || !object->type || object->type->type != &class_type) // XXX
+    dfsch_throw("exception:not-a-object", object);
+
+  return dfsch_hash_unset(((instance_t*)object)->inst_vars, name);  
 }
 dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                       dfsch_object_t* name){
@@ -214,6 +221,12 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
   } else {
     return dfsch_car(ret);
   }
+}
+dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
+  if (!object || !object->type || object->type->type != &class_type) // XXX
+    dfsch_throw("exception:not-a-object", object);
+
+  return dfsch_hash_2_alist(((instance_t*)object)->inst_vars);
 }
 
 // <object> class
@@ -403,6 +416,17 @@ static dfsch_object_t* native_slot_set(void* baton,
   
   return dfsch_object_slot_set(object, name, value);
 }
+static dfsch_object_t* native_slot_unset(void* baton,
+                                         dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc){
+  dfsch_object_t* object;
+  dfsch_object_t* name;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_object_slot_unset(object, name);
+}
 static dfsch_object_t* native_slot_ref(void* baton,
                                        dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc){
@@ -413,6 +437,15 @@ static dfsch_object_t* native_slot_ref(void* baton,
   DFSCH_ARG_END(args);
   
   return dfsch_object_slot_ref(object, name);
+}
+static dfsch_object_t* native_slots_2_alist(void* baton,
+                                            dfsch_object_t* args,
+                                            dfsch_tail_escape_t* esc){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_object_slots_2_alist(object);
 }
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
@@ -432,8 +465,14 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "slot-set!",
                     dfsch_make_primitive(native_slot_set,
                                          NULL));
+  dfsch_define_cstr(ctx, "slot-unset!",
+                    dfsch_make_primitive(native_slot_unset,
+                                         NULL));
   dfsch_define_cstr(ctx, "slot-ref",
                     dfsch_make_primitive(native_slot_ref,
+                                         NULL));
+  dfsch_define_cstr(ctx, "slots->alist",
+                    dfsch_make_primitive(native_slots_2_alist,
                                          NULL));
   
 }

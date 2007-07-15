@@ -269,8 +269,9 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   pthread_mutex_unlock(hash->w_mutex);
   return hash_obj;
 }
-dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
-                                 dfsch_object_t* key){
+
+int dfsch_hash_unset(dfsch_object_t* hash_obj,
+                     dfsch_object_t* key){
   size_t h;
   hash_t *hash;
   hash_entry_t *i, *j;
@@ -296,7 +297,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         
         
         pthread_mutex_unlock(hash->w_mutex);
-        return i->value;
+        return 1;
       }
       
       j = i;
@@ -317,7 +318,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         
         
         pthread_mutex_unlock(hash->w_mutex);
-        return i->value;
+        return 1;
       }
       
       j = i;
@@ -338,7 +339,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
         
         
         pthread_mutex_unlock(hash->w_mutex);
-        return i->value;
+        return 1;
       }
       
       j = i;
@@ -348,7 +349,7 @@ dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash_obj,
   }
 
   pthread_mutex_unlock(hash->w_mutex);
-  return NULL;
+  return 0;
   
 }
 
@@ -504,7 +505,7 @@ static dfsch_object_t* native_hash_unset(void* baton, dfsch_object_t* args,
   DFSCH_OBJECT_ARG(args, key);
   DFSCH_ARG_END(args);
 
-  return dfsch_hash_unset(hash, key);
+  return dfsch_bool(dfsch_hash_unset(hash, key));
 }
 static dfsch_object_t* native_hash_set(void* baton, dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc){

@@ -68,9 +68,9 @@ extern "C" {
   /**
    * Delete given key.
    */
-  extern dfsch_object_t* dfsch_hash_unset(dfsch_object_t* hash,
-                                          dfsch_object_t* key);
-
+  extern int dfsch_hash_unset(dfsch_object_t* hash,
+                              dfsch_object_t* key);
+  
   /**
    * Set value associated with given key only when there is already such 
    * key.

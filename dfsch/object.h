@@ -52,8 +52,11 @@ extern "C" {
   extern dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                                dfsch_object_t* name,
                                                dfsch_object_t* value);
+  extern int dfsch_object_slot_unset(dfsch_object_t* object,
+                                     dfsch_object_t* name);
   extern dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                                dfsch_object_t* name);
+  extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
 
   extern dfsch_object_t* dfsch_object_super();
   extern dfsch_object_t* dfsch_object_does_not_understand();

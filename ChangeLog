@@ -1,3 +1,12 @@
+2007-07-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (dfsch_hash_unset): hash-unset returns boolean value
+	- true if given key existed and false if not.
+
+	* src/object.c (dfsch_object_slots_2_alist): function for getting
+	all slots of object
+	(dfsch_object_slot_unset): function for removing slots from object.
+
 2007-07-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_vector_as_array): conversion of vectors to C
