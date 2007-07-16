@@ -33,6 +33,12 @@ extern "C" {
   extern void dfsch_object_define_method(dfsch_object_t* klass,
                                          dfsch_object_t* selector,
                                          dfsch_object_t* proc);
+  extern dfsch_object_t* dfsch_object_class_superclass(dfsch_object_t* klass);
+  extern dfsch_object_t* dfsch_object_class_method_ref(dfsch_object_t* klass,
+                                                       dfsch_object_t* name);
+  extern int dfsch_object_class_method_unset(dfsch_object_t* klass,
+                                             dfsch_object_t* name);
+  extern dfsch_object_t* dfsch_object_class_methods_2_alist(dfsch_object_t* klass);
 
   extern dfsch_object_t* dfsch_object_send(dfsch_object_t* object,
                                            dfsch_object_t* selector,
@@ -65,10 +71,10 @@ extern "C" {
                                             void* baton);
   
   extern void dfsch_object_define_class(dfsch_object_t* env,
-                                 char* classname, char* superclassname, 
-                                 dfsch_class_constructor_t constructor,
-                                 void* baton);
-
+                                        char* classname, char* superclassname, 
+                                        dfsch_class_constructor_t constructor,
+                                        void* baton);
+  
 #ifdef __cplusplus
 }
 #endif

@@ -1,3 +1,8 @@
+2007-07-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.c: more class acessors for runtime class
+	modification.
+
 2007-07-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c: <object> and <delegator> caches for C code.
