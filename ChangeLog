@@ -1,3 +1,9 @@
+2007-07-24  Ales Hakl  <ales at hakl dot net>
+
+	* Makefile.am (nobase_include_HEADERS): added weak.h to installed
+	headers
+	(nobase_include_HEADERS): added lib/unix.h to installed headersd
+
 2007-07-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c: more class acessors for runtime class

@@ -1,6 +1,7 @@
 
 bin_PROGRAMS = dfsch-repl
 nobase_include_HEADERS = dfsch/lib/threads.h \
+	dfsch/lib/unix.h \
 	dfsch/lib/load.h \
 	dfsch/strings.h \
 	dfsch/parse.h \
@@ -10,7 +11,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/number.h \
 	dfsch/wrapper.h \
 	dfsch/magic.h \
-	dfsch/object.h
+	dfsch/object.h\
+	dfsch/weak.h
 
 lib_LTLIBRARIES     = libdfsch.la \
 	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la libdfsch_unix.la
