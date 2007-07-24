@@ -1,5 +1,8 @@
 2007-07-24  Ales Hakl  <ales at hakl dot net>
 
+	* src/pprint.c: placeholder for future pretty printer
+	implementation
+
 	* Makefile.am (nobase_include_HEADERS): added weak.h to installed
 	headers
 	(nobase_include_HEADERS): added lib/unix.h to installed headersd
