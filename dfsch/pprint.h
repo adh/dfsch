@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-  extern char* dfsch__pprint(dfsch_object_t* object, 
+  extern char* dfsch_pprint(dfsch_object_t* object, 
                              int margin_l, int margin_r,
                              int depth);
 
