@@ -19,6 +19,13 @@
  * USA
  */
 
+/*
+ * Instances of standard-class created here must be separate for each 
+ * top-level environment and thus cannot use any kind of caching 
+ * (DFSCH_OBJECT_CACHE and friends). When they are not distinct, method
+ * (re)definitions are shared too, which clearly is not desirable behavior.
+ */
+
 #include "dfsch/object.h"
 
 #include <dfsch/hash.h>
