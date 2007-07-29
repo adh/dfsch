@@ -45,6 +45,8 @@ extern str_list_t* dfsch__sl_create();
 #define sl_create dfsch__sl_create
 extern void dfsch__sl_append(str_list_t* list, char* string);
 #define sl_append dfsch__sl_append
+extern void dfsch__sl_nappend(str_list_t* list, char* string, size_t l);
+#define sl_nappend dfsch__sl_nappend
 extern char* dfsch__sl_value(str_list_t* list);
 #define sl_value dfsch__sl_value
 extern char* dfsch__stracat(char* a, char* b);

@@ -54,6 +54,22 @@ void dfsch__sl_append(str_list_t* list, char* string){
     list->len = i->len;
   }
 }
+void dfsch__sl_nappend(str_list_t* list, char* string, size_t l){
+  str_li_t* i = GC_MALLOC(sizeof(str_li_t));
+
+  i->str = string;
+  i->len = l;
+  i->next = NULL;
+
+  if (list->head){
+    list->tail->next = i;
+    list->tail = i;
+    list->len = list->len + i->len;
+  }else{
+    list->head = list->tail = i;
+    list->len = i->len;
+  }
+}
 
 char* dfsch__sl_value(str_list_t* list){
   char *buf = GC_MALLOC_ATOMIC(list->len+1);

@@ -13,7 +13,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/magic.h \
 	dfsch/object.h\
 	dfsch/weak.h\
-	dfsch/pprint.h
+	dfsch/pprint.h\
+	dfsch/format.h	
 
 lib_LTLIBRARIES     = libdfsch.la \
 	libdfsch_load.la libdfsch_threads.la libdfsch_regex.la libdfsch_unix.la
@@ -36,7 +37,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/wrapper.c dfsch/wrapper.h \
 	src/object.c dfsch/object.h\
 	src/weak.c dfsch/weak.h\
-	src/pprint.c dfsch/pprint.h
+	src/pprint.c dfsch/pprint.h\
+	src/format.c dfsch/format.h
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm

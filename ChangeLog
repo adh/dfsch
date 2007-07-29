@@ -1,3 +1,8 @@
+2007-07-29  Ales Hakl  <ales at hakl dot net>
+
+	* src/format.c: simple future-proof format implementation,
+	currently supporting ~a, ~s and ~*
+
 2007-07-24  Ales Hakl  <ales at hakl dot net>
 
 	* src/pprint.c: placeholder for future pretty printer
