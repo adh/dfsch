@@ -211,6 +211,10 @@ static object_t* native_set_cdr(void *baton, object_t* args, dfsch_tail_escape_t
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
+static object_t* native_zip(void* baton, object_t* args, 
+			    dfsch_tail_escape_t* esc){
+  return dfsch_zip(args);
+}
 static object_t* native_append(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   return dfsch_append(args);
 }
@@ -295,14 +299,18 @@ static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* e
 static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* func;
   object_t* list;
+  size_t len;
+  size_t i;
 
   DFSCH_OBJECT_ARG(args, func);
-  DFSCH_OBJECT_ARG(args, list);
-  DFSCH_ARG_END(args);
+  list = dfsch_zip(args);
+
+  if (!list){
+    dfsch_throw("exception:too-few-arguments", args);    
+  }
 
   while (dfsch_pair_p(list)){
-    dfsch_apply(func, dfsch_list(1, dfsch_car(list)));
-
+    dfsch_apply(func, dfsch_car(list));
     list = dfsch_cdr(list);
   }
   
@@ -315,13 +323,14 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   object_t* tail;
 
   DFSCH_OBJECT_ARG(args, func);
-  DFSCH_OBJECT_ARG(args, list);
-  DFSCH_ARG_END(args);
+  list = dfsch_zip(args);
+
+  if (!list){
+    dfsch_throw("exception:too-few-arguments", args);    
+  }
 
   while (dfsch_pair_p(list)){
-    object_t *t = dfsch_cons(dfsch_apply(func, 
-					 dfsch_list(1, dfsch_car(list))),
-			     NULL);
+    object_t *t = dfsch_cons(dfsch_apply(func, dfsch_car(list)), NULL);
     if (!head){
       head = tail = t;
     }else{
@@ -701,6 +710,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
 							 NULL));
 
   dfsch_define_cstr(ctx, "length", dfsch_make_primitive(&native_length,NULL));
+  dfsch_define_cstr(ctx, "zip", dfsch_make_primitive(&native_zip, NULL));
   dfsch_define_cstr(ctx, "append", dfsch_make_primitive(&native_append,NULL));
   dfsch_define_cstr(ctx, "for-each", dfsch_make_primitive(&native_for_each,
 							 NULL));

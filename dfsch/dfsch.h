@@ -208,6 +208,7 @@ extern "C" {
   extern dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, 
                                               size_t* length);
 
+  extern dfsch_object_t* dfsch_zip(dfsch_object_t* llist);
   /** Concatenate lists */
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
   /** Construct list from arguments */

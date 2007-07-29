@@ -561,6 +561,56 @@ dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
   return data;
 }
 
+dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
+  size_t len;
+  object_t** args = dfsch_list_as_array(llist, &len);
+  object_t** buf = GC_MALLOC(sizeof(object_t)*len);
+  object_t* tmp;
+  pair_t *head = NULL; 
+  pair_t *tail;
+  size_t i;
+
+  if (len == 0){
+    return NULL;
+  }
+
+  while(1){
+    for (i = 0; i<len; i++){
+      if (!args[i]){
+	if (i != 0){
+	  goto fail;
+	}
+	goto out;
+      }
+      if (args[i]->type != PAIR){
+	dfsch_throw("exception:not-a-pair", args[i]);
+      }
+
+      buf[i] = ((pair_t*)(args[i]))->car;
+      args[i] = ((pair_t*)(args[i]))->cdr;
+    }
+
+    if (head){
+      tmp = dfsch_cons(dfsch_list_from_array(buf, len), NULL);
+      ((pair_t*)tail)->cdr = tmp;
+      tail = tmp;
+    } else {
+      head = tail = dfsch_cons(dfsch_list_from_array(buf, len), NULL);
+    }
+  }
+  
+
+ out:
+  for (i = 0; i<len; i++){
+    if (args[i]){
+    fail:
+      dfsch_throw("exception:not-a-list-of-same-length-lists", llist);
+    }
+  }
+  
+  return head;
+}
+
 
 dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   pair_t* head=NULL;
