@@ -302,6 +302,15 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
     case '\\':
       ++in;
       switch (*in){
+      case '\n':
+	++in;
+	continue;        
+      case '\r':
+	++in;
+        if (*in == '\n'){
+          ++in;
+        }
+	continue;        
       case 'n':
 	*out = '\n';
 	++out;

@@ -1,3 +1,7 @@
+2007-08-01  Ales Hakl  <ales at hakl dot net>
+
+	* src/parse.c (dispatch_string): ignore escaped newlines
+
 2007-07-29  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_zip): zip function (transposition of nested lists)
