@@ -230,7 +230,7 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                       dfsch_object_t* value){
 
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-object", object);
+    dfsch_throw("exception:not-a-class-instance", object);
 
   return dfsch_hash_set(((instance_t*)object)->inst_vars, name, value);  
 }
@@ -238,7 +238,7 @@ int dfsch_object_slot_unset(dfsch_object_t* object,
                             dfsch_object_t* name){
 
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-object", object);
+    dfsch_throw("exception:not-a-class-instance", object);
 
   return dfsch_hash_unset(((instance_t*)object)->inst_vars, name);
 }
@@ -246,7 +246,7 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                       dfsch_object_t* name){
   dfsch_object_t* ret;
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-object", object);
+    dfsch_throw("exception:not-a-class-instance", object);
 
   ret = dfsch_hash_ref(((instance_t*)object)->inst_vars, name);
   if (!ret){
@@ -257,7 +257,7 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
 }
 dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-object", object);
+    dfsch_throw("exception:not-a-class-instance", object);
 
   return dfsch_hash_2_alist(((instance_t*)object)->inst_vars);
 }
@@ -321,7 +321,7 @@ static dfsch_object_t* object_init(void* baton,
   args = dfsch_cdr(args);
 
   if (!ins || !ins->type || ins->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-ins", ins);
+    dfsch_throw("exception:not-a-class-instance", ins);
 
   while (dfsch_pair_p(args)){
     if (key){

@@ -1,3 +1,7 @@
+2007-08-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.c: unified exceptions to not-a-class-instance
+
 2007-08-01  Ales Hakl  <ales at hakl dot net>
 
 	* src/parse.c (dispatch_string): ignore escaped newlines
