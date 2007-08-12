@@ -149,6 +149,15 @@ char* dfsch_string_to_cstr(dfsch_object_t* obj){
 
   return ((dfsch_string_t*)obj)->ptr;
 }
+char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
+  if (dfsch_symbol_p(obj)){
+    return dfsch_symbol(obj);
+  }
+
+  TYPE_CHECK(obj, STRING, "string");
+
+  return ((dfsch_string_t*)obj)->ptr;
+}
 dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
   TYPE_CHECK(obj, STRING, "string");
 

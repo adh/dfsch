@@ -1773,6 +1773,10 @@ static object_t* eval_list(object_t *list, object_t* env,
   return f;
 }
 
+dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
+  return eval_list(list, env, dfsch__get_thread_info());
+}
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        dfsch_object_t* env,
                                        dfsch_tail_escape_t* esc,
@@ -2039,6 +2043,15 @@ dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx,
                                  dfsch_object_t *obj){
   
   return dfsch_define(dfsch_make_symbol(name),
+                      obj,
+                      ctx);
+  
+}
+dfsch_object_t* dfsch_set_cstr(dfsch_object_t *ctx, 
+			       char *name, 
+			       dfsch_object_t *obj){
+  
+  return dfsch_set(dfsch_make_symbol(name),
                       obj,
                       ctx);
   

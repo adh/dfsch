@@ -55,6 +55,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
                                        char* so_name, 
                                        char* sym_name);
+  /** Load given module (as by require, but unconditionally) */
+  extern dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
+				    dfsch_object_t* path_list);
 
   /** Register shared object related part of this module. */
   extern dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx);

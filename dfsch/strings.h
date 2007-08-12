@@ -22,6 +22,7 @@ extern "C" {
 
   extern char* dfsch_string_to_cstr(dfsch_object_t* obj);
   extern dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj);
+  extern char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj);
 
   extern int dfsch_string_cmp(dfsch_object_t* a, dfsch_object_t* b);
   extern int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b);
@@ -76,6 +77,11 @@ extern "C" {
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
 #define DFSCH_STRING_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string_to_cstr)
+
+#define DFSCH_STRING_OR_SYMBOL_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_or_symbol_to_cstr)
+#define DFSCH_STRING_OR_SYMBOL_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string_or_symbol_to_cstr)
 
 #define DFSCH_BUFFER_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, dfsch_strbuf_t*, dfsch_string_to_buf)

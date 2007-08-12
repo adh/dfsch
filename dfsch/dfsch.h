@@ -392,6 +392,9 @@ extern "C" {
   /** Evaluate multiple expressions returning value of final one. */
   extern dfsch_object_t* dfsch_eval_proc(dfsch_object_t* exp, 
                                          dfsch_object_t* env);
+  /** Evaluate multiple expressions and return values of all of them */
+  extern dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, 
+					 dfsch_object_t* env);
   /** Apply procedure to given arguments*/
   extern dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args);
   /** Extended variant of dfsch_eval_proc with support for tail recursion */
@@ -418,6 +421,10 @@ extern "C" {
                                           char *name, 
                                           dfsch_object_t *obj);
 
+  /** Change value of variable. */
+  extern dfsch_object_t* dfsch_set_cstr(dfsch_object_t *env, 
+					char *name, 
+					dfsch_object_t *obj);
 
   /** Looks up value of variable given by NAME. Throws 
       exception:unbound-variable if such variable doesn't exist */

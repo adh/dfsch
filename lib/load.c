@@ -36,11 +36,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
+//#define DFSCH_DEFAULT_LIBDIR "."
 
 dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
-                    char* so_name, 
-                    char* sym_name){
+			      char* so_name, 
+			      char* sym_name){
   void *handle;
   dfsch_object_t* (*entry)(dfsch_object_t*);
   char* err;
@@ -83,47 +85,189 @@ static int load_callback(dfsch_object_t *obj, void* ctx){
   return 1;
 }
 
-dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name){
+dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, 
+			       char* fname){
+  return dfsch_eval_proc(dfsch_read_scm(fname), ctx);
+}
+
+static int qs_strcmp(const void* a, const void* b){ /* To suppress warning */
+  return strcmp(*((char**)a), *((char**)b));
+}
+
+static char** scandir(char* dirname){
+  char **buf;
+  size_t allocd;
+  size_t count;
+  DIR *dir;
+  struct dirent* e;
+
+  buf = GC_MALLOC(sizeof(char*)*16);
+  allocd = 16;
+
+  dir = opendir(dirname);
+  if (!dir){
+    return NULL;
+  }
+
+  count = 0;
+
+  while((e = readdir(dir))){
+    if (count >= (allocd - 1)){
+      allocd *= 2;
+      buf = GC_REALLOC(buf, sizeof(char*) * allocd);
+    }
+
+    buf[count] = stracpy(e->d_name);
+    count++;
+  }
+
+  qsort(buf, count, sizeof(char*), qs_strcmp);
+
+  buf[count] = NULL;
+  return buf;
+}
+
+static char* get_module_symbol(char* name){
+  str_list_t* l = sl_create();
+  char* buf = stracpy(name);
+  char* i = buf;
+
+  while(*i){
+    if (!strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", *i)){
+      *i = '_';
+    }
+    i++;
+  }
+  
+  sl_append(l, "dfsch_module_");
+  sl_append(l, buf);
+  sl_append(l, "_register");
+
+  return sl_value(l);
+}
+
+
+dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
   struct stat st;
   dfsch_object_t* path;
+  char *pathpart;
+  char *fname;
+  str_list_t* l;
 
-  if (stat(scm_name, &st) == 0 && S_ISREG(st.st_mode))
-    return dfsch_eval_proc(dfsch_read_scm(scm_name), ctx);
-
-  path = dfsch_env_get_cstr(ctx, "load:path");
-
-  if (path)
-    path = dfsch_car(path);
+  if (path_list){
+    path = path_list;
+  } else {
+    path = dfsch_env_get_cstr(env, "load:*path*");
+    if (path)
+      path = dfsch_car(path);
+  }
 
   while (dfsch_pair_p(path)){
-    char *fname;
-    str_list_t* l = sl_create();
+    l = sl_create();
     sl_append(l, dfsch_string_to_cstr(dfsch_car(path)));
     sl_append(l, "/");
-    sl_append(l, scm_name);
-    fname = sl_value(l);
-    if (stat(fname, &st) == 0 && S_ISREG(st.st_mode))
-      return dfsch_eval_proc(dfsch_read_scm(fname), ctx);
-
+    sl_append(l, name);
+    pathpart = sl_value(l);
+    if (stat(pathpart, &st)){ 
+      if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
+	if (strcmp(".so", pathpart+strlen(pathpart)-3) == 0){
+	  return dfsch_load_so(env, pathpart, get_module_symbol(name));	      
+	} else {
+	  return dfsch_load_scm(env, pathpart);
+	}
+      }
+      if (S_ISDIR(st.st_mode)){
+	char** list = scandir(pathpart);
+	
+	while(*list){
+	  l = sl_create();
+	  sl_append(l, pathpart);
+	  sl_append(l, "/");
+	  sl_append(l, *list);
+	  
+	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
+	    dfsch_load_so(env, fname, get_module_symbol(name));	      
+	  } else {
+	    dfsch_load_scm(env, fname);
+	  }
+	  
+	  list++;
+	}
+	return NULL;
+      }
+    }
+    fname = stracat(pathpart, ".scm");
+    if (stat(fname, &st) || (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+      return dfsch_load_scm(env, fname);	      
+    }
+    fname = stracat(pathpart, ".so");
+    if (stat(fname, &st) || (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+      return dfsch_load_so(env, fname, get_module_symbol(name));	      
+    }
+    
     path = dfsch_cdr(path);
   }
   
-  dfsch_throw("load:file-not-found", dfsch_make_string_cstr(scm_name));
-
+  dfsch_throw("load:module-not-found", dfsch_make_string_cstr(name));
 }
+
+static int search_modules(dfsch_object_t* modules, char* name){
+  while(modules){
+    if (strcmp(name, dfsch_string_to_cstr(dfsch_car(modules))) == 0){
+      return 1;
+    }
+    modules = dfsch_cdr(modules);
+  }
+  return 0;
+}
+
+dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
+  dfsch_object_t* modules = dfsch_env_get_cstr(env, "*modules*");
+  if (modules){
+    modules = dfsch_car(modules);
+  }
+
+  if (search_modules(modules, name)){
+    return NULL;
+  }
+
+  return dfsch_load(env, name, path_list);
+}
+
+void dfsch_provide(dfsch_object_t* env, char* name){
+  dfsch_object_t* modules = dfsch_env_get_cstr(env, "*modules*");
+  if (modules){
+    modules = dfsch_car(modules);
+  }
+
+  if (search_modules(modules, name)){
+    dfsch_throw("provide:module-already-provided", dfsch_make_string_cstr(name));
+  }
+
+
+  /*
+   * there should be define - module list is related to environment, but
+   * this distinction is in most cases totallz irrelevant, because modules
+   * are mostly loaded into toplevel environment.
+   */
+  dfsch_define_cstr(env, "*modules*", dfsch_cons(dfsch_make_string_cstr(name),
+						 modules));
+}
+
 dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
-  dfsch_object_t* path = dfsch_env_get_cstr(ctx, "load:path");
+  dfsch_object_t* path = dfsch_env_get_cstr(ctx, "load:*path*");
   if (path){
-    dfsch_define_cstr(ctx, "load:path", 
-                     dfsch_append(dfsch_list(2,
-                                             dfsch_car(path),
-                                             dfsch_list(1,
-                                                        dfsch_make_string_cstr(dir)))));
+    dfsch_set_cstr(ctx, "load:*path*", 
+		   dfsch_append(dfsch_list(2,
+					   dfsch_car(path),
+					   dfsch_list(1,
+						      dfsch_make_string_cstr(dir)))));
   }else{
-    dfsch_define_cstr(ctx, "load:path", 
+    dfsch_define_cstr(ctx, "load:*path*", 
                      dfsch_list(1, dfsch_make_string_cstr(dir)));
   }
 }
+
 dfsch_object_t* dfsch_read_scm(char* scm_name){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];
@@ -143,6 +287,7 @@ dfsch_object_t* dfsch_read_scm(char* scm_name){
     
   return obj;
 }
+
 dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
   char buf[8193];
   import_ctx_t ictx;
@@ -209,40 +354,77 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   }
 
   return ictx.head;
-  
 }
 
+static dfsch_object_t* native_form_load_scm(void *baton, dfsch_object_t* args,
+					    dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  char* file_name;
 
-static dfsch_object_t* native_load_scm(void *baton, dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
-  dfsch_object_t* arg;
-  if (dfsch_list_length(args)!=1)
-    dfsch_throw("wrong-number-of-arguments",args);
+  DFSCH_OBJECT_ARG(args, env);
+  args = dfsch_eval_list(args, env);
+  DFSCH_STRING_ARG(args, file_name);
+  DFSCH_ARG_END(args);
 
-  arg = dfsch_car(args);
-  if (!dfsch_string_p(arg))
-    dfsch_throw("not-a-string",arg);
-
-  return dfsch_load_scm(baton, dfsch_string_to_cstr(arg));
+  return dfsch_load_scm(env, file_name);
 }
 
-static dfsch_object_t* native_load_so(void *baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
-  dfsch_object_t *so, *sym;
-  if (dfsch_list_length(args)!=2)
-    dfsch_throw("wrong-number-of-arguments",args);
+static dfsch_object_t* native_form_load_so(void *baton, dfsch_object_t* args,
+					   dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  char* sym_name;
+  char* so_name;
 
-  so = dfsch_car(args);
-  if (!dfsch_string_p(so))
-    dfsch_throw("not-a-string",so);
-  sym = dfsch_car(dfsch_cdr(args));
-  if (!dfsch_string_p(sym))
-    dfsch_throw("not-a-string",sym);
+  DFSCH_OBJECT_ARG(args, env);
+  args = dfsch_eval_list(args, env);
+  DFSCH_STRING_ARG(args, so_name);
+  DFSCH_STRING_ARG(args, sym_name);
+  DFSCH_ARG_END(args);
 
-  return dfsch_load_so(baton, dfsch_string_to_cstr(so), 
-                       dfsch_string_to_cstr(sym));
+  return dfsch_load_so(env, so_name, sym_name);
 }
 
+static dfsch_object_t* native_form_load(void *baton, dfsch_object_t* args,
+					dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  char* name;
+  dfsch_object_t* path_list;
+
+  DFSCH_OBJECT_ARG(args, env);
+  args = dfsch_eval_list(args, env);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
+  DFSCH_ARG_END(args);
+
+  return dfsch_load(env, name, path_list);  
+}
+static dfsch_object_t* native_form_require(void *baton, dfsch_object_t* args,
+					   dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  char* name;
+  dfsch_object_t* path_list;
+
+  DFSCH_OBJECT_ARG(args, env);
+  args = dfsch_eval_list(args, env);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
+  DFSCH_ARG_END(args);
+
+  return dfsch_require(env, name, path_list);  
+}
+static dfsch_object_t* native_form_provide(void *baton, dfsch_object_t* args,
+					   dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  char* name;
+
+  DFSCH_OBJECT_ARG(args, env);
+  args = dfsch_eval_list(args, env);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_provide(env, name);  
+  return NULL;
+}
 
 static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc){
@@ -257,17 +439,27 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
 }
 
 
-dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx,"load:so!",dfsch_make_primitive(native_load_so,ctx));
-  return NULL;
-}
-dfsch_object_t* dfsch_load_scm_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx,"load:scm!",dfsch_make_primitive(native_load_scm,ctx));
-  dfsch_define_cstr(ctx,"load:read-scm",dfsch_make_primitive(native_read_scm,ctx));
-  return NULL;
-}
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
-  dfsch_load_scm_register(ctx);
-  dfsch_load_so_register(ctx);
+  dfsch_define_cstr(ctx, "load:*path*", 
+		    dfsch_list(1, 
+			       dfsch_make_string_cstr(".")));
+  dfsch_define_cstr(ctx, "*modules*", NULL);
+  dfsch_define_cstr(ctx, "load:scm!",
+		    dfsch_make_form(dfsch_make_primitive(native_form_load_scm,
+							 ctx)));
+  dfsch_define_cstr(ctx, "load:read-scm",
+		    dfsch_make_primitive(native_read_scm,ctx));
+  dfsch_define_cstr(ctx,"load:so!",
+		    dfsch_make_form(dfsch_make_primitive(native_form_load_so,
+							 ctx)));
+  dfsch_define_cstr(ctx, "load!",
+		    dfsch_make_form(dfsch_make_primitive(native_form_load,
+							 ctx)));
+  dfsch_define_cstr(ctx, "require",
+		    dfsch_make_form(dfsch_make_primitive(native_form_require,
+							 ctx)));
+  dfsch_define_cstr(ctx, "provide",
+		    dfsch_make_form(dfsch_make_primitive(native_form_provide,
+							 ctx)));
   return NULL;
 }
