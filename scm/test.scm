@@ -1,4 +1,4 @@
-(load:scm! "lib.scm")
+(require 'lib)
 
 (define tests-passed 0)
 (define tests-failed 0)

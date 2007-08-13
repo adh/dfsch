@@ -168,7 +168,7 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path
     sl_append(l, "/");
     sl_append(l, name);
     pathpart = sl_value(l);
-    if (stat(pathpart, &st)){ 
+    if (stat(pathpart, &st) == 0){ 
       if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
 	if (strcmp(".so", pathpart+strlen(pathpart)-3) == 0){
 	  return dfsch_load_so(env, pathpart, get_module_symbol(name));	      
@@ -197,11 +197,11 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path
       }
     }
     fname = stracat(pathpart, ".scm");
-    if (stat(fname, &st) || (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
       return dfsch_load_scm(env, fname);	      
     }
     fname = stracat(pathpart, ".so");
-    if (stat(fname, &st) || (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
       return dfsch_load_so(env, fname, get_module_symbol(name));	      
     }
     

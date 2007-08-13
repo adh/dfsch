@@ -1,3 +1,7 @@
+2007-08-13  Ales Hakl  <ales at hakl dot net>
+
+	* lib/load.c (dfsch_load): fixed path searching logic.
+
 2007-08-12  Ales Hakl  <ales at hakl dot net>
 
 	* lib/load.c: provide/require mechanism

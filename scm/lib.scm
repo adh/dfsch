@@ -1,3 +1,5 @@
+(provide 'lib)
+
 (define define-macro 
   (make-macro 
    (lambda (env signature . body)
