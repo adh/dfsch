@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "util.h"
 
+#include <stdio.h>
 
 typedef struct hash_entry_t hash_entry_t;
 typedef struct hash_t{
@@ -66,7 +67,7 @@ dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
 
   h->proc = hash_proc;
   h->count = 0;
-  h->mask = 0x03;
+  h->mask = 0x07;
   h->mode = mode;
   h->w_mutex = create_finalized_mutex();
   alloc_vector(h);
@@ -100,7 +101,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
      */
     if (hash->mode == DFSCH_HASH_EQ){
       size_t a = (size_t)key;        
-      size_t b = (size_t)key >> 16;
+      size_t b = (size_t)key >> 16 | (size_t)key << 16;
 
       a ^= b >> 2;
       b ^= a >> 3;
@@ -144,8 +145,9 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
   switch (hash->mode){
   case DFSCH_HASH_EQ:
     while (i){
-      if (h == i->hash && (i->key == key))
+      if (h == i->hash && (i->key == key)){
         return dfsch_list(1,i->value);
+      }
       
       i = i->next;
     }
