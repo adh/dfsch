@@ -1,15 +1,28 @@
-* IO
+Non-version-specific:
+* More tests
+
+For 0.2.0:
+* Simplified IO (something along the lines of scheme ports, but not
+   fully compatible)
+* Missing parts of unix library (notably dirent.h and friends)
+* What about standard C functions related to OS?
 * Documentation
-* Some platform- and locale-independent conversion of numbers from/to strings
+
+For 0.2.1:
+* Generic functions
+
+When needed by other code:
+* Type predicates for all types
 * Warnings
 * Structures (in C code)
+
+Sometimes:
+* Some platform- and locale-independent conversion of numbers from/to strings
 * Unicode case-insensitive string compare
 * More number types:
   - Big integers
   - Fractions
   - Complex numbers (as pairs of two numbers of same type)
-* More tests
 * Read macros (at least rudimentary, useful for example for include-like 
   constructs with path relative to file they are in as this is near impossible 
   to implement outside parser.)
-* Type predicates for all types
