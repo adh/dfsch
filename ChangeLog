@@ -1,3 +1,7 @@
+2007-08-17  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/lib/regex.h: Documentation comments
+
 2007-08-13  Ales Hakl  <ales at hakl dot net>
 
 	* lib/load.c (dfsch_load): fixed path searching logic.

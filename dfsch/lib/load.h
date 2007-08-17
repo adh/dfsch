@@ -35,10 +35,12 @@
 extern "C" {
 #endif
 
-  /** Load scheme file into given context. Search for file in directories named
-      in scheme variable load:path. File is loaded into top level environment 
-      of context and only top level definition of load:path is taken into 
-      account */
+  /** 
+   * Load scheme file into given context. Search for file in directories named
+   * in scheme variable load:path. File is loaded into top level environment 
+   * of context and only top level definition of load:path is taken into 
+   * account 
+   */
   extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
   /** Append directory to load:path */
   dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
