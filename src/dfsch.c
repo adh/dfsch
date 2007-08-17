@@ -1716,6 +1716,28 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 
 // Evaluator
 
+/*
+ * There are some kinds of structures that are passed extensively inside the 
+ * evaluator, but are not exposed to public API much. Idea there is that 
+ * dfsch__get_thread_info() can be somewhat slow (on linux, it isn't 
+ * noticeably slow, but who knows) and thus it is not exactly bad idea to 
+ * cache it's result, but passing this value to user code causes marginal 
+ * speedup at cost of having one additional argument that is not useful in 
+ * any meaningful way to user code.
+ *
+ * dfsch_tail_escape_t is used to implement tail recursion, it is used only 
+ * in dfsch_eval_proc_impl() but it has to be passed through much of evaluator 
+ * and some native functions. General idea is that dfsch_eval_proc_impl stores
+ * jmp_buf to it's start here and passes it to dfsch_eval_impl() during 
+ * evaluation of last form of procedure body. Native functions have to 
+ * implement same mechanism (pass dfsch_tail_escape_t argument only to 
+ * functions whose return value is return value of native function itself). 
+ * When dfsch_eval_proc_impl() is called with non-NULL tail_escape it simply
+ * jumps back to previous activation record. This actually causes slow-down,
+ * but enables us to do tail-recursion in simple and consistent way, that 
+ * works even through C-code.
+ */
+
 struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *code;
