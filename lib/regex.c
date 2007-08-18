@@ -6,7 +6,7 @@ typedef struct dfsch_regex_t {
   int sub_count;
 } dfsch_regex_t;
 
-dfsch_type_t regex_type = {
+static dfsch_type_t regex_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_regex_t),
   "regex",

@@ -1,8 +1,26 @@
 -----------------------------------------------------------------------------
-version 0.2.0-pre3           YYYY-MM-DD              svn rev. RRR
+version 0.2.0                YYYY-MM-DD              svn rev. RRR
 -----------------------------------------------------------------------------
 
+General changes:
+
         * Garbage collected symbols
+        * More math functions and predicates
+        * length checks for circularity
+        * Threading module
+        * Better tail-recursion support
+        * Nested car and cdr functions (cadr...)
+        * Regular expression support
+        * Message passing based object system
+        * unwind-protect
+        * require/provide + load with path searching
+        * Unix interface module
+        * Trivial format implementation
+
+C API Changes:
+      
+        * removed old dfsch_(make_)string() API
+        * CPP macro interface to try and unwind-protect
 
 -----------------------------------------------------------------------------
 version 0.2.0-pre2           2006-05-17              svn rev. 360

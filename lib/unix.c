@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 static void throw_errno(int e, char* function){
   dfsch_throw("unix:error", dfsch_list(3, 
@@ -18,6 +19,82 @@ static void throw_errno(int e, char* function){
                                        dfsch_make_number_from_long(e),
                                        dfsch_make_string_cstr(strerror(e))));
 }
+
+
+typedef struct dir_t {
+  dfsch_type_t *type;
+  DIR *dir;
+  int open;
+} dir_t;
+
+static dfsch_type_t dir_type = {
+  DFSCH_STANDARD_TYPE,
+  sizeof(dir_t),
+  "unix:directory",
+  NULL, // equal?
+  NULL, // write
+  NULL, // apply
+};
+
+
+static void dir_finalizer(dir_t* dir, void* cd){
+  if (dir->open){
+    closedir(dir->dir);
+    dir->open = 0;
+  }
+}
+
+dfsch_object_t* dfsch_unix_opendir(char* name){
+  dir_t* dir = (dir_t*)dfsch_make_object(&dir_type);
+
+  dir->dir = opendir(name);
+  if (!dir->dir){
+    throw_errno(errno, "opendir");
+  }
+  dir->open = 1;
+  GC_REGISTER_FINALIZER(dir, (GC_finalization_proc)dir_finalizer,
+                        NULL, NULL, NULL);
+  return (dfsch_object_t*) dir;
+}
+
+void dfsch_unix_closedir(dfsch_object_t* dir_obj){
+  dir_t* dir;
+  if (!dir_obj || dir_obj->type != &dir_type){
+    dfsch_throw("unix:not-a-directory", dir_obj);
+  }
+  dir = (dir_t*)dir_obj;
+
+  if (dir->open){
+    closedir(dir->dir);
+    dir->open = 0;
+  }
+}
+
+char* dfsch_unix_readdir(dfsch_object_t* dir_obj){
+  dir_t* dir;
+  struct dirent* dent;
+  if (!dir_obj || dir_obj->type != &dir_type){
+    dfsch_throw("unix:not-a-directory", dir_obj);
+  }
+  dir = (dir_t*)dir_obj;
+
+  if (!dir->open){
+    dfsch_throw("unix:directory-object-is-closed", dir_obj);    
+  }
+
+  errno = 0;
+  dent = readdir(dir->dir);
+  if (!dent){
+    if (errno != 0){
+      throw_errno(errno, "readdir");    
+    } else {
+      return NULL;
+    }
+  }
+
+  return dent->d_name;
+}
+
 
 static dfsch_object_t* native_mode(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
@@ -228,6 +305,16 @@ static dfsch_object_t* native_close(void* baton, dfsch_object_t* args,
   if (close(fd) != 0){
     throw_errno(errno, "close");
   }
+  return NULL;
+}
+static dfsch_object_t* native_closedir(void* baton, dfsch_object_t* args,
+                                       dfsch_tail_escape_t* esc){
+  dfsch_object_t* dir;
+  DFSCH_OBJECT_ARG(args, dir);
+  DFSCH_ARG_END(args);
+
+  dfsch_unix_closedir(dir);
+
   return NULL;
 }
 
@@ -569,7 +656,14 @@ static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
   
   return dfsch_make_number_from_long(fd);
 }
+static dfsch_object_t* native_opendir(void* baton, dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
+  char* path;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_ARG_END(args);
 
+  return dfsch_unix_opendir(path);
+}
 static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
   int fds[2];
@@ -624,6 +718,14 @@ static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
     return obj;
   }
 
+}
+static dfsch_object_t* native_readdir(void* baton, dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
+  dfsch_object_t* dir;
+  DFSCH_OBJECT_ARG(args, dir);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_unix_readdir(dir));
 }
 static dfsch_object_t* native_rename(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
@@ -833,6 +935,8 @@ static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
 
 
 
+
+
 dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "unix:mode", 
                     dfsch_make_primitive(native_mode, NULL));
@@ -858,6 +962,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_clock, NULL));
   dfsch_define_cstr(ctx, "unix:close", 
                     dfsch_make_primitive(native_close, NULL));
+  dfsch_define_cstr(ctx, "unix:closedir", 
+                    dfsch_make_primitive(native_closedir, NULL));
   dfsch_define_cstr(ctx, "unix:creat", 
                     dfsch_make_primitive(native_creat, NULL));
   dfsch_define_cstr(ctx, "unix:dup", 
@@ -908,12 +1014,16 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_nice, NULL));
   dfsch_define_cstr(ctx, "unix:open", 
                     dfsch_make_primitive(native_open, NULL));
+  dfsch_define_cstr(ctx, "unix:opendir", 
+                    dfsch_make_primitive(native_opendir, NULL));
   dfsch_define_cstr(ctx, "unix:pipe", 
                     dfsch_make_primitive(native_pipe, NULL));
   dfsch_define_cstr(ctx, "unix:raise", 
                     dfsch_make_primitive(native_raise, NULL));
   dfsch_define_cstr(ctx, "unix:read", 
                     dfsch_make_primitive(native_read, NULL));
+  dfsch_define_cstr(ctx, "unix:readdir", 
+                    dfsch_make_primitive(native_readdir, NULL));
   dfsch_define_cstr(ctx, "unix:rename", 
                     dfsch_make_primitive(native_rename, NULL));
   dfsch_define_cstr(ctx, "unix:rmdir", 

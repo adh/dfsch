@@ -94,7 +94,7 @@ static int qs_strcmp(const void* a, const void* b){ /* To suppress warning */
   return strcmp(*((char**)a), *((char**)b));
 }
 
-static char** scandir(char* dirname){
+static char** my_scandir(char* dirname){
   char **buf;
   size_t allocd;
   size_t count;
@@ -177,7 +177,7 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path
 	}
       }
       if (S_ISDIR(st.st_mode)){
-	char** list = scandir(pathpart);
+	char** list = my_scandir(pathpart);
 	
 	while(*list){
 	  l = sl_create();

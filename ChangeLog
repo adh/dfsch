@@ -1,3 +1,7 @@
+2007-08-18  Ales Hakl  <ales at hakl dot net>
+
+	* lib/unix.c (dir_type): support for directory streams
+
 2007-08-17  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/lib/regex.h: Documentation comments

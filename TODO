@@ -4,7 +4,7 @@ Non-version-specific:
 For 0.2.0:
 * Simplified IO (something along the lines of scheme ports, but not
    fully compatible)
-* Missing parts of unix library (notably dirent.h and friends)
+* Missing parts of unix library
 * What about standard C functions related to OS?
 * Documentation
 
