@@ -666,6 +666,10 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case '<':
         ctx->error = DFSCH_PARSER_UNREADABLE;
         return;        
+      case '!': /* for shebang */
+        ++data;
+        ctx->tokenizer_state = T_COMMENT;
+        break;
       default:
         ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
         return;

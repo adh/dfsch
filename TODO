@@ -28,4 +28,5 @@ Sometimes:
   constructs with path relative to file they are in as this is near impossible 
   to implement outside parser.)
 * Parser-level namespaces
+* Use standard exception mechanism in parser
 
