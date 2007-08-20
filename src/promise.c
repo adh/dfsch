@@ -20,12 +20,14 @@
  */
 
 #include <dfsch/promise.h>
+#include "util.h"
 
 typedef struct promise_t {
   dfsch_type_t *type;
   dfsch_object_t* expr;
   dfsch_object_t* env;
   dfsch_object_t* value;
+  pthread_mutex_t* mutex;
   int set;
 } promise_t;
 
@@ -44,9 +46,17 @@ dfsch_object_t* dfsch_make_promise(dfsch_object_t* expr, dfsch_object_t* env){
   p->env = env;
   p->value = NULL;
   p->set = 0;
+  p->mutex = create_finalized_mutex();
 
   return (dfsch_object_t*)p;
 }
+
+/*
+ * What are correct semantics of this function in multithreaded program is 
+ * somehow ill-defined. With this implementation only one value will be ever 
+ * returned, but underlying function could be called multiple times (which is 
+ * simple extension of original single threaded R5RS semantics).
+ */
 
 dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
   dfsch_object_t* val;
@@ -56,16 +66,18 @@ dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
 
   if (!p->set){
     val = dfsch_eval_proc(p->expr, p->env);
+    pthread_mutex_lock(p->mutex);
     if (!p->set){
       p->set = 1;
       p->value = val;
     }
+    pthread_mutex_unlock(p->mutex);
   }
 
   return p->value;
 
 }
-dfsch_object_t* dfsch_stream_tail(dfsch_object_t* stream){
+dfsch_object_t* dfsch_stream_cdr(dfsch_object_t* stream){
   return dfsch_force_promise(dfsch_cdr(stream));
 }
 
@@ -124,7 +136,7 @@ static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
 
-  return dfsch_stream_tail(stream);
+  return dfsch_stream_cdr(stream);
 }
 
 dfsch_object_t* dfsch__promise_native_register(dfsch_object_t *ctx){

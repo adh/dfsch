@@ -5,7 +5,8 @@ For 0.2.0:
 * Simplified IO (something along the lines of scheme ports, but not
    fully compatible)
 * Missing parts of unix library
-* What about standard C functions related to OS?
+* Selected standard C functions that are not covered by rest of
+   libraries in lib/libc.h
 * Documentation
 
 For 0.2.1:
@@ -26,3 +27,5 @@ Sometimes:
 * Read macros (at least rudimentary, useful for example for include-like 
   constructs with path relative to file they are in as this is near impossible 
   to implement outside parser.)
+* Parser-level namespaces
+

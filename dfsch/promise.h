@@ -31,7 +31,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_promise(dfsch_object_t* expr, 
                                             dfsch_object_t* env);
   extern dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise);
-  extern dfsch_object_t* dfsch_stream_tail(dfsch_object_t* stream);
+  extern dfsch_object_t* dfsch_stream_cdr(dfsch_object_t* stream);
   
 #ifdef __cplusplus
 }

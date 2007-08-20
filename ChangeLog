@@ -1,3 +1,7 @@
+2007-08-21  Ales Hakl  <ales at hakl dot net>
+
+	* src/promise.c (dfsch_force_promise): more MT-safe promises
+
 2007-08-18  Ales Hakl  <ales at hakl dot net>
 
 	* lib/unix.c (dir_type): support for directory streams
