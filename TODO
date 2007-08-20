@@ -4,11 +4,13 @@ Non-version-specific:
 For 0.2.0:
 * Simplified IO (something along the lines of scheme ports, but not
    fully compatible)
-* Missing parts of unix library
 * Documentation
+* Date and time handling
+* stat(2) in unix library
 
 For 0.2.1:
 * Generic functions
+* Missing parts of unix library (ftw, various system databases...)
 
 When needed by other code:
 * Type predicates for all types
