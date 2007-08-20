@@ -5,8 +5,6 @@ For 0.2.0:
 * Simplified IO (something along the lines of scheme ports, but not
    fully compatible)
 * Missing parts of unix library
-* Selected standard C functions that are not covered by rest of
-   libraries in lib/libc.h
 * Documentation
 
 For 0.2.1:
