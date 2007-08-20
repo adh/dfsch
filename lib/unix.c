@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <sys/time.h>
+#include <time.h>
 
 static void throw_errno(int e, char* function){
   dfsch_throw("unix:error", dfsch_list(3, 
@@ -496,6 +498,23 @@ static dfsch_object_t* native_getenv(void* baton, dfsch_object_t* args,
   } else {
     return NULL;
   }
+}
+static dfsch_object_t* native_gettimeofday(void* baton, dfsch_object_t* args,
+                                           dfsch_tail_escape_t* esc){
+  struct timeval tv;
+  DFSCH_ARG_END(args);
+
+  gettimeofday(&tv, NULL);
+
+  /*
+   * SUSv3 says that "No errors are defined", Linux man page says something 
+   * about EFAULT (which clearly cannot happen here, and if it does, it's not 
+   * because of client code) and EINVAL (which seems like utter bullshit).
+   */
+
+  return dfsch_vector(2, 
+                      dfsch_make_number_from_long(tv.tv_sec),
+                      dfsch_make_number_from_long(tv.tv_usec));
 }
 static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
@@ -996,6 +1015,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_getpid, NULL));
   dfsch_define_cstr(ctx, "unix:getppid", 
                     dfsch_make_primitive(native_getppid, NULL));
+  dfsch_define_cstr(ctx, "unix:gettimeofday", 
+                    dfsch_make_primitive(native_gettimeofday, NULL));
   dfsch_define_cstr(ctx, "unix:isatty", 
                     dfsch_make_primitive(native_isatty, NULL));
   dfsch_define_cstr(ctx, "unix:kill", 

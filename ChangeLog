@@ -1,5 +1,7 @@
 2007-08-21  Ales Hakl  <ales at hakl dot net>
 
+	* lib/unix.c (native_gettimeofday): gettimeofday(2)
+
 	* src/promise.c (dfsch_force_promise): more MT-safe promises
 
 2007-08-18  Ales Hakl  <ales at hakl dot net>
