@@ -491,6 +491,20 @@ static dfsch_object_t* native_fork(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(pid);
 }
+static dfsch_object_t* native_fstat(void* baton, dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  int fd;
+  dfsch_object_t* res;
+  DFSCH_LONG_ARG(args, fd);
+  DFSCH_ARG_END(args);
+
+  res = dfsch_unix_make_stat_struct();
+
+  if (fstat(fd, dfsch_unix_get_stat(res)) != 0){
+    throw_errno(errno, "fstat");
+  }
+  return res;
+}
 static dfsch_object_t* native_getcwd(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   char* buf;
@@ -701,6 +715,20 @@ static dfsch_object_t* native_lseek(void* baton, dfsch_object_t* args,
     throw_errno(errno, "lseek");
   }
   return NULL;
+}
+static dfsch_object_t* native_lstat(void* baton, dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  char* path;
+  dfsch_object_t* res;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_ARG_END(args);
+
+  res = dfsch_unix_make_stat_struct();
+
+  if (lstat(path, dfsch_unix_get_stat(res)) != 0){
+    throw_errno(errno, "lstat");
+  }
+  return res;
 }
 static dfsch_object_t* native_mkdir(void* baton, dfsch_object_t* args,
                                     dfsch_tail_escape_t* esc){
@@ -1106,6 +1134,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_exit, NULL));
   dfsch_define_cstr(ctx, "unix:fork", 
                     dfsch_make_primitive(native_fork, NULL));
+  dfsch_define_cstr(ctx, "unix:fstat", 
+                    dfsch_make_primitive(native_fstat, NULL));
   dfsch_define_cstr(ctx, "unix:getcwd", 
                     dfsch_make_primitive(native_getcwd, NULL));
   dfsch_define_cstr(ctx, "unix:getegid", 
@@ -1140,6 +1170,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_link, NULL));
   dfsch_define_cstr(ctx, "unix:lseek", 
                     dfsch_make_primitive(native_lseek, NULL));
+  dfsch_define_cstr(ctx, "unix:lstat", 
+                    dfsch_make_primitive(native_lstat, NULL));
   dfsch_define_cstr(ctx, "unix:mkdir", 
                     dfsch_make_primitive(native_mkdir, NULL));
   dfsch_define_cstr(ctx, "unix:mkfifo", 

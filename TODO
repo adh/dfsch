@@ -6,7 +6,6 @@ For 0.2.0:
    fully compatible)
 * Documentation
 * Date and time handling
-* stat(2) in unix library
 
 For 0.2.1:
 * Generic functions
