@@ -1,5 +1,7 @@
 2007-08-22  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (alloc_vector): vector was allocated too large.
+
 	* lib/unix.c (stat_t): stat(2) and struct stat wrappers 
 	(native_lstat): lstat(2) and fstat(2)
 

@@ -1317,6 +1317,12 @@ dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
 
   return ((exception_t*)e)->data;
 }
+dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e){
+  if (!dfsch_exception_p(e))
+    return NULL;
+
+  return ((exception_t*)e)->stack_trace;
+}
 
 static void unwind_protect(dfsch__thread_info_t* ti){
   dfsch__unwind_protect_t* up;

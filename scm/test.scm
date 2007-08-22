@@ -51,6 +51,8 @@
 (define-macro (sub-group name . statements) 
   (group-generator " " "----" name statements))
 
+;(define-macro (ignore . code)
+;  ())
 
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
@@ -188,19 +190,19 @@
                           (vector-set! vec i i))
                         #(0 1 2 3 4)))
        (sub-group non-local-exits
-                 (test 'call/ec
+                 (when t (test 'call/ec
                        (call/ec (lambda (cont)
                                   (cont #t)
                                   #f))
-                       #t)
-                 (test 'unwind-protect
+                       #t))
+                 (when t (test 'unwind-protect
                        (let ((a #f))
                          (call/ec (lambda (exit)
                                     (unwind-protect
                                      (exit ())
                                      (set! a #t))))
                          a)
-                       #t)))
+                       #t))))
 
 (group "Binding constructs"
 

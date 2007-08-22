@@ -55,7 +55,7 @@ static const dfsch_type_t hash_type = {
 };
 
 static void alloc_vector(hash_t* hash){
-  hash->vector = GC_MALLOC(sizeof(hash_entry_t)*(hash->mask+1));
+  hash->vector = GC_MALLOC(sizeof(hash_entry_t*)*(hash->mask+1));
 }
 
 dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
