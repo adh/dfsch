@@ -1,4 +1,11 @@
+2007-08-22  Ales Hakl  <ales at hakl dot net>
+
+	* lib/unix.c (stat_t): stat(2) and struct stat wrappers 
+
 2007-08-21  Ales Hakl  <ales at hakl dot net>
+
+	* src/util.c (dfsch__vsaprintf): sprintf() that allocates output
+	buffer
 
 	* src/parse.c (tokenizer_process): ignore shebang
 

@@ -11,6 +11,7 @@ For 0.2.0:
 For 0.2.1:
 * Generic functions
 * Missing parts of unix library (ftw, various system databases...)
+* Pretty-printer
 
 When needed by other code:
 * Type predicates for all types

@@ -174,3 +174,33 @@ pthread_cond_t* dfsch__create_finalized_cvar(){
   pthread_cond_init(cvar, NULL);
   return cvar;
 }
+char* dfsch__vsaprintf(char* format, va_list ap){
+  char* buf = GC_MALLOC_ATOMIC(128);
+  int r;
+  va_list ap2;
+
+  va_copy(ap2, ap);
+  r=vsnprintf(buf, 128, format, ap2);
+  va_end(ap2);
+  if (r<0){
+    return NULL;
+  }
+  if (r>=128){
+    buf = GC_REALLOC(buf, r+1);
+
+    r = vsnprintf(buf, r+1, format, ap);
+    if (r<0){
+      return NULL;
+    }
+  }
+
+  return buf;
+}
+char* dfsch__saprintf(char* format, ...){
+  char* ret;
+  va_list args;
+  va_start(args, format);
+  ret = vsaprintf(format, args);
+  va_end(args);
+  return ret;
+}

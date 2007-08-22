@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <pthread.h>
 
 typedef struct str_li_t str_li_t;
@@ -65,5 +66,9 @@ extern pthread_mutex_t* dfsch__create_finalized_mutex();
 extern pthread_cond_t* dfsch__create_finalized_cvar();
 #define create_finalized_cvar dfsch__create_finalized_cvar
 
+char* dfsch__vsaprintf(char* format, va_list ap);
+#define vsaprintf dfsch__vsaprintf
+char* dfsch__saprintf(char* format, ...);
+#define saprintf dfsch__saprintf
 
 #endif

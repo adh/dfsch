@@ -2,6 +2,8 @@
 
 #include <dfsch/number.h>
 
+#include "src/util.h"
+
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -97,6 +99,102 @@ char* dfsch_unix_readdir(dfsch_object_t* dir_obj){
   return dent->d_name;
 }
 
+typedef struct stat_t {
+  dfsch_type_t *type;
+  struct stat st;
+} stat_t;
+
+static char* stat_write(stat_t* st, int max_depth, int readable){
+  return saprintf("#<stat-struct 0x%x dev 0x%lx ino %ld mode 0%lo nlink %ld uid %ld "
+                  "gid %d rdev 0x%x size %lld atime %ld mtime %ld ctime %ld "
+                  "blksize %ld blocks %ld>", 
+                  st, 
+                  (long)st->st.st_dev,
+                  (long)st->st.st_ino,
+                  (long)st->st.st_mode,
+                  (long)st->st.st_nlink,
+                  (long)st->st.st_uid,
+                  (long)st->st.st_gid,
+                  (long)st->st.st_rdev,
+                  (long long)st->st.st_size,
+                  (long)st->st.st_atime,
+                  (long)st->st.st_mtime,
+                  (long)st->st.st_ctime,
+                  (long)st->st.st_blksize,
+                  (long)st->st.st_blocks);
+}
+
+static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,
+                                  dfsch_tail_escape_t *esc){
+  dfsch_object_t* selector;
+  int i;
+
+  DFSCH_OBJECT_ARG(args, selector);
+  DFSCH_ARG_END(args);
+
+  if (dfsch_compare_symbol(selector, "dev")){
+    return dfsch_make_number_from_long(st->st.st_dev);
+  } else if (dfsch_compare_symbol(selector, "ino")){
+    return dfsch_make_number_from_long(st->st.st_ino);
+  } else if (dfsch_compare_symbol(selector, "mode")){
+    return dfsch_make_number_from_long(st->st.st_mode);
+  } else if (dfsch_compare_symbol(selector, "nlink")){
+    return dfsch_make_number_from_long(st->st.st_nlink);
+  } else if (dfsch_compare_symbol(selector, "uid")){
+    return dfsch_make_number_from_long(st->st.st_uid);
+  } else if (dfsch_compare_symbol(selector, "gid")){
+    return dfsch_make_number_from_long(st->st.st_gid);
+  } else if (dfsch_compare_symbol(selector, "rdev")){
+    return dfsch_make_number_from_long(st->st.st_rdev);
+  } else if (dfsch_compare_symbol(selector, "size")){
+    return dfsch_make_number_from_long(st->st.st_size);
+  } else if (dfsch_compare_symbol(selector, "blksize")){
+    return dfsch_make_number_from_long(st->st.st_blksize);
+  } else if (dfsch_compare_symbol(selector, "blocks")){
+    return dfsch_make_number_from_long(st->st.st_blocks);
+  } else if (dfsch_compare_symbol(selector, "atime")){
+    return dfsch_make_number_from_long(st->st.st_atime);
+  } else if (dfsch_compare_symbol(selector, "mtime")){
+    return dfsch_make_number_from_long(st->st.st_mtime);
+  } else if (dfsch_compare_symbol(selector, "ctime")){
+    return dfsch_make_number_from_long(st->st.st_ctime);
+  } else if (dfsch_compare_symbol(selector, "isreg")){
+    return dfsch_bool(S_ISREG(st->st.st_mode));
+  } else if (dfsch_compare_symbol(selector, "isdir")){
+    return dfsch_bool(S_ISDIR(st->st.st_mode));
+  } else if (dfsch_compare_symbol(selector, "ischr")){
+    return dfsch_bool(S_ISCHR(st->st.st_mode));
+  } else if (dfsch_compare_symbol(selector, "isblk")){
+    return dfsch_bool(S_ISBLK(st->st.st_mode));
+  } else if (dfsch_compare_symbol(selector, "isfifo")){
+    return dfsch_bool(S_ISFIFO(st->st.st_mode));
+  } else if (dfsch_compare_symbol(selector, "islnk")){
+    return dfsch_bool(S_ISLNK(st->st.st_mode));
+  }
+
+  dfsch_throw("unix:no-such-stat-field", selector);
+}
+
+static dfsch_type_t stat_type = {
+  DFSCH_STANDARD_TYPE,
+  sizeof(stat_t),
+  "unix:stat-struct",
+  NULL, // equal?
+  (dfsch_type_write_t)stat_write, // write
+  (dfsch_type_apply_t)stat_apply, // apply
+};
+
+dfsch_object_t* dfsch_unix_make_stat_struct(){
+  return dfsch_make_object(&stat_type);
+}
+
+struct stat* dfsch_unix_get_stat(dfsch_object_t* stat){
+  if (!stat || stat->type != &stat_type){
+    dfsch_throw("unix:not-a-stat-struct", stat);
+  }
+
+  return &(((stat_t*)stat)->st);
+}
 
 static dfsch_object_t* native_mode(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
@@ -859,6 +957,21 @@ static dfsch_object_t* native_sleep(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(sleep(seconds));
 }
+static dfsch_object_t* native_stat(void* baton, dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  char* path;
+  dfsch_object_t* res;
+  DFSCH_STRING_ARG(args, path);
+  DFSCH_ARG_END(args);
+
+  res = dfsch_unix_make_stat_struct();
+
+  if (stat(path, dfsch_unix_get_stat(res)) != 0){
+    throw_errno(errno, "stat");
+  }
+  return res;
+}
+
 static dfsch_object_t* native_symlink(void* baton, dfsch_object_t* args,
                                       dfsch_tail_escape_t* esc){
   char* old;
@@ -1065,6 +1178,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_setsid, NULL));
   dfsch_define_cstr(ctx, "unix:sleep", 
                     dfsch_make_primitive(native_sleep, NULL));
+  dfsch_define_cstr(ctx, "unix:stat", 
+                    dfsch_make_primitive(native_stat, NULL));
   dfsch_define_cstr(ctx, "unix:symlink", 
                     dfsch_make_primitive(native_symlink, NULL));
   dfsch_define_cstr(ctx, "unix:sync", 
