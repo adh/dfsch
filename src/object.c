@@ -564,6 +564,10 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
                     dfsch_make_form(dfsch_make_primitive(native_form_define_class,
                                                          NULL)));
 
+  dfsch_define_cstr(ctx, "class-superclass",
+                    dfsch_make_primitive(native_class_superclass,
+                                         NULL));
+
   dfsch_define_cstr(ctx, "class-method-set!",
                     dfsch_make_primitive(native_class_method_set,
                                          NULL));
