@@ -1,3 +1,8 @@
+2007-08-31  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/ports.h: Port type definition.
+	Documentation comments
+
 2007-08-26  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c (dfsch__object_native_register): define
@@ -7,7 +12,7 @@
 
 	* src/hash.c (alloc_vector): vector was allocated too large.
 
-	* lib/unix.c (stat_t): stat(2) and struct stat wrappers 
+	* lib/unix.c (stat_t): stat(2) and struct stat wrappers
 	(native_lstat): lstat(2) and fstat(2)
 
 2007-08-21  Ales Hakl  <ales at hakl dot net>
