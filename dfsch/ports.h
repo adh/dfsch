@@ -4,6 +4,7 @@
 #include <dfsch/dfsch.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <dfsch/strings.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +69,8 @@ extern "C" {
     dfsch_port_batch_read_end_t batch_read_end;
     /**
      * Fast read of one byte that must be inside 
-     * batch_read_start()/batch_reand_end() calls.
+     * batch_read_start()/batch_reand_end() calls. When this is not 
+     * implemented it will be emulated by means of read_buf()
      */
     dfsch_port_batch_read_t batch_read;
   };
@@ -84,16 +86,17 @@ extern "C" {
 #define DFSCH_PORT_TYPE_TYPE ((dfsch_type_t*)&dfsch_port_type_type)
 
 
-  ssize_t dfsch_port_write_buf_t(dfsch_object_t* port, char*buf, size_t size);
-  ssize_t dfsch_port_read_buf_t(dfsch_object_t* port, char*buf, size_t size);
-  int dfsch_port_seek_t(dfsch_object_t* port, off_t offset, int whence);
-  off_t dfsch_port_tell_t(dfsch_object_t* port);
+  ssize_t dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
+  ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size);
+  int dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence);
+  off_t dfsch_port_tell(dfsch_object_t* port);
   
-  void dfsch_port_batch_read_start_t(dfsch_object_t* port);
-  void dfsch_port_batch_read_end_t(dfsch_object_t* port);
-  int dfsch_port_batch_read_t(dfsch_object_t* port);
+  void dfsch_port_batch_read_start(dfsch_object_t* port);
+  void dfsch_port_batch_read_end(dfsch_object_t* port);
+  int dfsch_port_batch_read(dfsch_object_t* port);
   
-  
+  dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port);
+
 
 #ifdef __cplusplus
 }

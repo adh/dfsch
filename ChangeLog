@@ -1,3 +1,7 @@
+2007-09-03  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c (dfsch_port_readline): line reading function
+
 2007-08-31  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/ports.h: Port type definition.
