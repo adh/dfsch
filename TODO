@@ -30,3 +30,9 @@ Sometimes:
 * Parser-level namespaces
 * Use standard exception mechanism in parser
 * syntax-rules
+
+External modules and libraries:
+* XML (SAX, SXML, DOM)
+* JSON
+* kyhttp/kyhttpd interface
+* SQL database access (sqlite, postgresql)
