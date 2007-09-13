@@ -118,7 +118,7 @@ extern "C" {
    *            return value of this native function.
    */
   typedef dfsch_object_t* (*dfsch_primitive_t)(void* baton,
-					       dfsch_object_t* args,
+                                               dfsch_object_t* args,
                                                dfsch_tail_escape_t* esc);
 
 
