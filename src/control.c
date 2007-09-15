@@ -148,6 +148,7 @@ static object_t* native_form_quote(void *baton, object_t* args, dfsch_tail_escap
   
   DFSCH_DISCARD_ARG(args, env);
   DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
 
   return value;
 }
@@ -157,6 +158,7 @@ static object_t* native_form_quasiquote(void *baton, object_t* args, dfsch_tail_
   object_t* arg;
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, arg);
+  DFSCH_ARG_END(args);
 
   return dfsch_quasiquote(env,arg);
 }
@@ -165,11 +167,14 @@ static object_t* native_macro_begin(void *baton, object_t* args, dfsch_tail_esca
   return dfsch_cdr(args);
 }
 static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  MIN_ARGS(args,2);
 
-  object_t *env = dfsch_car(args);
-  object_t *vars = dfsch_car(dfsch_cdr(args));
-  object_t *code = dfsch_cdr(dfsch_cdr(args));
+  object_t *env;
+  object_t *vars;
+  object_t *code;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
 
   object_t* ext_env = dfsch_new_frame(env);
 

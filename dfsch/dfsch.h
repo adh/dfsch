@@ -536,9 +536,14 @@ extern "C" {
    * @param al Argument list
    */
 #define DFSCH_ARG_END(al) \
-  if (al != NULL) \
+  if ((al) != NULL)                                     \
     dfsch_throw("exception:too-many-arguments",NULL)
 
+  /**
+   * Store all unprocessed arguments into rest. (Syntactic sugar 2.0 :))
+   */
+#define DFSCH_ARG_REST(al, rest) \
+  (rest) = (al)
 
 
 #define DFSCH_OBJECT_CACHE(constructor, name)\

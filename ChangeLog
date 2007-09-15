@@ -1,5 +1,10 @@
 2007-09-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/control.c (native_form_let): use argument parsing macros
+
+	* dfsch/dfsch.h (DFSCH_ARG_REST): macro for getting rest of
+	arguments
+
 	* src/control.c (native_form_quote): use argument parsing macros
 
 2007-09-03  Ales Hakl  <ales at hakl dot net>
