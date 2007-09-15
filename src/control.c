@@ -144,8 +144,12 @@ static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escap
 }
 
 static object_t* native_form_quote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(dfsch_cdr(args),1);  
-  return dfsch_car(dfsch_cdr(args));
+  object_t* value;
+  
+  DFSCH_DISCARD_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, value);
+
+  return value;
 }
 
 static object_t* native_form_quasiquote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
