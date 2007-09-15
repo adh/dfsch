@@ -1,6 +1,7 @@
 2007-09-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/control.c (native_form_let): use argument parsing macros
+	removed MIN_ARGS() and NEED_ARGS() macros
 
 	* dfsch/dfsch.h (DFSCH_ARG_REST): macro for getting rest of
 	arguments
