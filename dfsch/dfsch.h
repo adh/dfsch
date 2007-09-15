@@ -121,10 +121,6 @@ extern "C" {
                                                dfsch_object_t* args,
                                                dfsch_tail_escape_t* esc);
 
-
-#define DFSCH_CAR 0
-#define DFSCH_CDR 0
-
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
 
