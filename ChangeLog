@@ -1,3 +1,7 @@
+2007-09-19  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c (main): require as command line option
+
 2007-09-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/control.c (native_form_let): use argument parsing macros

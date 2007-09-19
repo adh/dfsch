@@ -247,7 +247,7 @@ void dfsch_provide(dfsch_object_t* env, char* name){
 
   /*
    * there should be define - module list is related to environment, but
-   * this distinction is in most cases totallz irrelevant, because modules
+   * this distinction is in most cases totally irrelevant, because modules
    * are mostly loaded into toplevel environment.
    */
   dfsch_define_cstr(env, "*modules*", dfsch_cons(dfsch_make_string_cstr(name),

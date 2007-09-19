@@ -35,15 +35,25 @@
 extern "C" {
 #endif
 
-  /** 
-   * Load scheme file into given context. Search for file in directories named
-   * in scheme variable load:path. File is loaded into top level environment 
-   * of context and only top level definition of load:path is taken into 
-   * account 
-   */
-  extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
   /** Append directory to load:path */
   dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
+  /** Load given module (as by require, but unconditionally) */
+  extern dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
+				    dfsch_object_t* path_list);
+  /** Load given module if it is not provided yet */
+  extern dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, 
+                                       dfsch_object_t* path_list);
+  /** Provide given module (mark as loaded) */
+  extern void dfsch_provide(dfsch_object_t* env, char* name);
+
+
+  /** Load given shared object module and register it into given context. */
+  extern dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
+                                       char* so_name, 
+                                       char* sym_name);
+  /** Load given source file (absolute path) into given environment. */
+  extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
+
   /** Read scheme list from given file. */
   extern dfsch_object_t* dfsch_read_scm(char* scm_name);
   /** Read scheme list from given file descriptor. */
@@ -52,14 +62,6 @@ extern "C" {
   /** Read scheme list from given stdio stream. */
   extern dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
                                                char* name);
-
-  /** Load given binary module and register it into given context. */
-  extern dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
-                                       char* so_name, 
-                                       char* sym_name);
-  /** Load given module (as by require, but unconditionally) */
-  extern dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
-				    dfsch_object_t* path_list);
 
   /** Register shared object related part of this module. */
   extern dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx);

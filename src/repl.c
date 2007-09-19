@@ -359,8 +359,11 @@ int main(int argc, char**argv){
   dfsch_define_cstr(ctx,"transcript-off",
 		    dfsch_make_primitive(command_transcript_off,NULL));
 
-  while ((c=getopt(argc, argv, "+l:L:e:E:hvO:t:")) != -1){
+  while ((c=getopt(argc, argv, "+r:l:L:e:E:hvO:t:")) != -1){
     switch (c){
+    case 'r':
+      dfsch_require(ctx, optarg, NULL);
+      break;
     case 'l':
       dfsch_load_scm(ctx, optarg);
       break;
@@ -405,6 +408,7 @@ int main(int argc, char**argv){
       printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
       puts("Options:");
       puts("  -l <filename>     Load scheme file on startup");
+      puts("  -r <module-name>  Require (load) module on startup");
       puts("  -L <directory>    Append directory to load:path");
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
