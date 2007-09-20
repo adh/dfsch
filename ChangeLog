@@ -1,3 +1,7 @@
+2007-09-20  Ales Hakl  <dfox@marta.sh.cvut.cz>
+
+	* lib/unix.c: use WCONTINUED only when it is defined
+
 2007-09-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (main): require as command line option

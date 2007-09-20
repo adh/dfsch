@@ -1044,7 +1044,9 @@ static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
   int options = 0;
   DFSCH_LONG_ARG(args, pid);
   DFSCH_FLAG_PARSER_BEGIN(args);
+#ifdef WCONTINUED
   DFSCH_FLAG_SET("continued", WCONTINUED, options);
+#endif
   DFSCH_FLAG_SET("nohang", WNOHANG, options);
   DFSCH_FLAG_SET("untraced", WUNTRACED, options);
   DFSCH_FLAG_PARSER_END(args);
