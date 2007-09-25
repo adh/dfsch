@@ -1,4 +1,8 @@
-2007-09-20  Ales Hakl  <dfox@marta.sh.cvut.cz>
+2007-09-23  Ales Hakl  <ales at hakl dot net>
+
+	* src/control.c (native_apply): fix apply
+
+2007-09-20  Ales Hakl  <ales at hakl dot net>
 
 	* lib/unix.c: use WCONTINUED only when it is defined
 

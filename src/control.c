@@ -306,7 +306,7 @@ static object_t* native_apply(void *baton, object_t* args,
   object_t* arglist;
 
   DFSCH_OBJECT_ARG(args, func);
-  DFSCH_OBJECT_ARG(args, args);
+  DFSCH_OBJECT_ARG(args, arglist);
   DFSCH_ARG_END(args);
 
   return dfsch_apply_tr(func, arglist, esc);
