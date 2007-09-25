@@ -1,3 +1,7 @@
+2007-09-26  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (pair_write): removed special case for simple pairs
+
 2007-09-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/control.c (native_apply): fix apply

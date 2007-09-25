@@ -146,20 +146,6 @@ static int pair_equal_p(pair_t*a, pair_t*b){
   return dfsch_equal_p(a->car,b->car) && dfsch_equal_p(a->cdr, b->cdr);
 }
 static char* pair_write(pair_t*p, int max_depth, int readable){
-  if (p->cdr && p->cdr->type!=PAIR){
-    
-    str_list_t* l = sl_create();
-    
-    sl_append(l, "(");
-    sl_append(l, dfsch_obj_write(p->car, max_depth-1, readable));
-
-    sl_append(l," . ");
-    sl_append(l, dfsch_obj_write(p->cdr, max_depth-1, readable));
-    sl_append(l, ")");
-    
-    return sl_value(l);
-  }
-  
   str_list_t* l = sl_create();
   pair_t* i=(pair_t*)p;
   pair_t* j=(pair_t*)p;
