@@ -6,6 +6,8 @@ For 0.2.0:
    fully compatible)
 * Documentation
 * Date and time handling
+* Warnings
+* Conditions
 
 For 0.2.1:
 * Generic functions
@@ -14,7 +16,6 @@ For 0.2.1:
 
 When needed by other code:
 * Type predicates for all types
-* Warnings
 * Structures (in C code)
 
 Sometimes:
