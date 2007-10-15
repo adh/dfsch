@@ -13,7 +13,7 @@
   (print "  Tests passed: " tests-passed)
   (print "  Tests failed: " tests-failed)
   (print "  ===========================")
-  (print "  Tests total: " (+ tests-passed tests-failed))
+  (print "  Tests total:  " (+ tests-passed tests-failed))
   (if (= tests-failed 0)
       (exit 0)
       (exit 'some-tests-failed)))
