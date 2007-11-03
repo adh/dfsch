@@ -1,3 +1,7 @@
+2007-11-03  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_zip): construct list directly
+
 2007-09-26  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (pair_write): removed special case for simple pairs
