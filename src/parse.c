@@ -762,3 +762,7 @@ void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->error = DFSCH_PARSER_NOERROR;
 
 }
+
+dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
+  
+}

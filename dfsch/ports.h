@@ -32,7 +32,7 @@ extern "C" {
    * Type structure for ports (this structure itself must have type of
    * DFSCH_PORT_TYPE_TYPE).
    */
-  typedef struct dfsch_port_type_t{
+  typedef struct dfsch_port_type_t {
     /**
      * Common type fields
      */
@@ -70,10 +70,12 @@ extern "C" {
     /**
      * Fast read of one byte that must be inside 
      * batch_read_start()/batch_reand_end() calls. When this is not 
-     * implemented it will be emulated by means of read_buf()
+     * implemented it will be emulated by means of read_buf().
+     * General idea is that this will use some mechanism like 
+     * unlocked_stdio(3).
      */
     dfsch_port_batch_read_t batch_read;
-  };
+  } dfsch_port_type_t;
 
   /**
    * Type of port types.

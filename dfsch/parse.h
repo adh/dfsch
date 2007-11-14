@@ -27,7 +27,8 @@
 #ifndef H__dfsch__parse__
 #define H__dfsch__parse__
 
-#include "dfsch.h"
+#include <dfsch/dfsch.h>
+#include <dfsch/ports.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,6 +80,10 @@ extern "C" {
    */
   extern void dfsch_parser_reset(dfsch_parser_ctx_t *ctx);
   
+  /** 
+   * Read one object from port.
+   */
+  extern dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port);
   
 #ifdef __cplusplus
 }
