@@ -1,3 +1,7 @@
+2007-11-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/parse.c: Throw exceptions from parser
+
 2007-11-03  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_zip): construct list directly

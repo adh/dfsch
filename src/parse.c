@@ -22,6 +22,7 @@
 #include "../dfsch/parse.h"
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/magic.h>
 
 #include "util.h"
 
@@ -141,7 +142,24 @@ struct dfsch_parser_ctx_t {
 
   int error;
   int level;
+  int line;
+  int column;
 };
+
+static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
+  dfsch_object_t* pos = dfsch_cons(dfsch_make_number_from_long(ctx->line),
+                                   dfsch_make_number_from_long(ctx->column));
+
+  empty_queue(ctx->q);
+  ctx->tokenizer_state = T_NONE;
+  ctx->parser = NULL;
+  ctx->level = 0 ;
+  ctx->line = 1;
+  ctx->column = 1;
+  ctx->error = 0;
+
+  dfsch_throw(symbol, pos);
+}
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
   dfsch_parser_ctx_t *ctx = GC_MALLOC(sizeof(dfsch_parser_ctx_t));
@@ -156,8 +174,11 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   ctx->tokenizer_state = T_NONE;
   ctx->parser = NULL;
 
+  ctx->line = 1;
+  ctx->column = 1;
+
   ctx->level = 0 ;
-  ctx->error = DFSCH_PARSER_NOERROR;
+  ctx->error = 0;
 
   return ctx;
 }
@@ -187,10 +208,6 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
   ctx->level++;
 }
 
-
-#define PARSE_ERROR(err) ctx->error = err
-
-
 static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
   if (ctx->parser){
     switch(ctx->parser->state){
@@ -212,8 +229,7 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	ctx->parser->state = P_PREEND;
 	return;
       }else{
-	ctx->error = DFSCH_PARSER_CAR_EXPECTED;
-	return;
+        parser_abort(ctx, "parser:car-expected");
       }
     case P_QUOTE:
       {
@@ -227,17 +243,15 @@ static void parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       if ((!obj) || dfsch_pair_p(obj)){
         parse_object(ctx, dfsch_list_2_vector(obj));
       }else{
-	ctx->error = DFSCH_PARSER_LIST_EXPECTED;
-	return;
+        parser_abort(ctx, "parser:list-expected");
       }
       return;
     default:
-      ctx->error = DFSCH_PARSER_UNEXPECTED_OBJECT;
-
+      parser_abort(ctx, "parser:unexpected-object");
     }
   }else{
     if (!(*ctx->callback)(obj,ctx->baton))
-      ctx->error = DFSCH_PARSER_STOPPED;
+      ctx->error = 1;
   }
 }
 
@@ -280,14 +294,14 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
     parser_pop(ctx);
     parse_object(ctx, list);
   }else{
-    ctx->error = DFSCH_PARSER_UNEXPECTED_CLOSE;
+    parser_abort(ctx, "parser:unexpected-close");
   }
 }
 static void parse_dot(dfsch_parser_ctx_t *ctx){
   if (ctx->parser){
     ctx->parser->state = P_DOT;
   }else{
-    ctx->error = DFSCH_PARSER_UNEXPECTED_DOT;
+    parser_abort(ctx, "parser:unexpected-dot");
   }
 }
 
@@ -375,8 +389,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           for (i=0; i<2; i++){
             *out <<= 4;
             if (!*in){
-              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-              return;
+              parser_abort(ctx, "parser:invalid-escape");
             }
             if (*in >= 'A' && *in <= 'F'){
               *out |= *in - 'A' + 10;
@@ -385,8 +398,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
             }else if (*in >= '0' && *in <= '9'){
               *out |= *in - '0';
             }else{
-              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-              return;
+              parser_abort(ctx, "parser:invalid-escape");
             }
             ++in;
           }
@@ -401,8 +413,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           for (i = (*(in++) == 'U') ? 0 : 4; i<8; i++){ // XXX: clever and ugly
             u <<= 4;
             if (!*in){
-              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-              return;
+              parser_abort(ctx, "parser:invalid-escape");
             }
             if (*in >= 'A' && *in <= 'F'){
               u |= *in - 'A' + 10;
@@ -411,8 +422,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
             }else if (*in >= '0' && *in <= '9'){
               u |= *in - '0';
             }else{
-              ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-              return;
+              parser_abort(ctx, "parser:invalid-escape");
             }
             ++in;
           }
@@ -479,7 +489,7 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
     {
       dfsch_object_t *d = dfsch_make_number_from_string(data);
       if (!d) {
-        ctx->error = DFSCH_PARSER_INVALID_NUMBER;
+        parser_abort(ctx, "parser:invalid-number");
       }
       parse_object(ctx, d);
       return;
@@ -702,8 +712,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
             }
           } 
 
-          ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
-          return;
+          parser_abort(ctx, "parser:invalid-escape");
 
         char_out:
           data = e;
@@ -728,25 +737,13 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 }
 
 int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
-  if (!ctx)
-    return DFSCH_PARSER_NULL;
-
-  ctx->error = DFSCH_PARSER_NOERROR;
+  ctx->error = 0;
 
   feed_queue(ctx->q, data);
-
-  
   
   tokenizer_process(ctx, get_queue(ctx->q));
 
-  if (ctx->error){
-    empty_queue(ctx->q);
-    ctx->tokenizer_state = T_NONE;
-    ctx->parser = NULL;
-    ctx->level = 0 ;    
-  }
   return ctx->error;
-
 }
 
 int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx){
@@ -754,15 +751,38 @@ int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx){
 }
 
 void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
-
   empty_queue(ctx->q);
   ctx->tokenizer_state = T_NONE;
   ctx->parser = NULL;
   ctx->level = 0 ;
-  ctx->error = DFSCH_PARSER_NOERROR;
+  ctx->error = 0;
+}
 
+static int read_callback(dfsch_object_t* obj, dfsch_object_t** res){
+  *res = obj;
+  return 0;
 }
 
 dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
-  
+  dfsch_parser_ctx_t* parser = dfsch_parser_create();
+  int ch;
+  char buf[2];
+  dfsch_object_t* res;
+
+  dfsch_port_batch_read_start(port);
+  DFSCH_UNWIND {
+    while ((ch = dfsch_port_batch_read(port)) != -1){
+      buf[0] = ch;
+      buf[1] = 0;
+      
+      if (dfsch_parser_feed(parser, buf)){
+        dfsch_port_batch_read_end(port);
+        return res;
+      }
+    }
+  } DFSCH_PROTECT {
+    dfsch_port_batch_read_end(port);
+  } DFSCH_END_UNWIND;
+
+  dfsch_throw("parser:unexpected-end-of-file", port);
 }
