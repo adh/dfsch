@@ -1,5 +1,7 @@
 2007-11-15  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (make_symbol): keyword support
+
 	* src/parse.c: Throw exceptions from parser
 
 2007-11-03  Ales Hakl  <ales at hakl dot net>

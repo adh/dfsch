@@ -518,6 +518,12 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
     switch (ctx->tokenizer_state){
     case T_NONE:
       while(*data==' ' || *data=='\n' || *data == '\t'){
+        ctx->column++;
+        if (*data == '\n'){
+          ctx->column = 1;
+          ctx->line++;
+        
+        }
 	++data;
       }
       switch (*data){
@@ -526,10 +532,13 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	return;
       case '"':
 	++data;
+        ctx->column++;
+
 	ctx->tokenizer_state = T_STRING;
 	break;
       case '(':
 	++data;
+        ctx->column++;
 	
 	parse_open(ctx);
 	if (ctx->error) return;
@@ -537,6 +546,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case '\'':
 	++data;
+        ctx->column++;
 	
 	parse_quote(ctx, dfsch_sym_quote());
 	if (ctx->error) return;
@@ -544,6 +554,8 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case '`':
 	++data;
+        ctx->column++;
+
 	
 	parse_quote(ctx, dfsch_sym_quasiquote());
 	if (ctx->error) return;
@@ -551,9 +563,12 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case ',':
 	++data;
-	
+        ctx->column++;	
+
         if (*data == '@'){
           ++data;
+          ctx->column++;
+        
           parse_quote(ctx, dfsch_sym_unquote_splicing()); 
         }else{
           parse_quote(ctx, dfsch_sym_unquote());
@@ -563,11 +578,14 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case '#':
 	++data;
+        ctx->column++;
+
 	ctx->tokenizer_state = T_HASH;	
         break;
 
       case ')':
 	++data;
+        ctx->column++;
 	
 	parse_close(ctx);
 	if (ctx->error) return;
@@ -575,12 +593,16 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	break;
       case ';':
 	++data;
+        ctx->column++;
+
 	ctx->tokenizer_state = T_COMMENT;	
 	break;
       case '.':
 	++data;
+
 	if (*data==' ' || *data=='\n' || *data=='\t' || 
 	    *data==0   || *data=='('  || *data==')'){
+          ctx->column++;
 	  parse_dot(ctx);
 	  if (ctx->error) return;
 	  
@@ -607,12 +629,13 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	dispatch_atom(ctx, s);
 	if (ctx->error) return;
 
+        ctx->column += e-data;
 	data = e;
 	ctx->tokenizer_state = T_NONE;
         STATE_TRANS(T_NONE);
 	break;
       }
-    case T_STRING:
+    case T_STRING: // TODO: count characters and lines
       {
 	char *e= strchr(data, '"');
 	if (!e){
@@ -641,9 +664,12 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       while (*data){
 	if (*data=='\n'){
 	  ctx->tokenizer_state = T_NONE;
+          ctx->column = 1;
+          ctx->line++;
 	  break;
 	}
 	++data;
+        ctx->column++;
       }
       break;
     case T_HASH:
@@ -653,6 +679,8 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case 'N':
       case 'F':
         ++data;
+        ctx->column++;
+
         parse_object(ctx,NULL);
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;
@@ -660,12 +688,16 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case 't':
       case 'T':
         ++data;
+        ctx->column++;
+
         parse_object(ctx,dfsch_sym_true());
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
       case '\\':
         ++data;
+        ctx->column++;
+
         ctx->tokenizer_state = T_CHAR;
         break;
       case '(':
@@ -678,6 +710,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         return;        
       case '!': /* for shebang */
         ++data;
+        ctx->column++;
         ctx->tokenizer_state = T_COMMENT;
         break;
       default:
@@ -701,6 +734,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           int i;
 
           strncpy(s, data, e-data);
+          ctx->column += e-data;
           s[e-data]=0;
           
           for (i=0; i < sizeof(char_table)/sizeof(char_table_entry_t); i++){
@@ -722,6 +756,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         }else{
         simple:
           ++data;
+          ctx->column++;
           parse_object(ctx, dfsch_make_number_from_long(c));
           if (ctx->error) return;
           ctx->tokenizer_state = T_NONE;  
@@ -744,6 +779,15 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   tokenizer_process(ctx, get_queue(ctx->q));
 
   return ctx->error;
+}
+
+char* dfsch_parser_feed_catch(dfsch_parser_ctx_t *ctx, char* data){
+  DFSCH_TRY {
+    dfsch_parser_feed(ctx, data);
+    return NULL;
+  } DFSCH_CATCH (ex) {
+    return dfsch_exception_write(ex);
+  } DFSCH_END_TRY;
 }
 
 int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx){

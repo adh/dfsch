@@ -142,6 +142,10 @@ extern "C" {
   extern int dfsch_atom_p(dfsch_object_t* obj); // i.e. not pair
   /** Is OBJ a symbol? */
   extern int dfsch_symbol_p(dfsch_object_t* obj);
+  /** Is OBJ a symbol? */
+  extern int dfsch_keyword_p(dfsch_object_t* obj);
+  /** Is OBJ a symbol or keyword? */
+  extern int dfsch_symbol_or_keyword_p(dfsch_object_t* obj);
   /** Is OBJ a a number? */
   extern int dfsch_number_p(dfsch_object_t* obj);
   /** Is OBJ a primitive (native) function? */
@@ -247,9 +251,16 @@ extern "C" {
 
   /** Returns unique generated symbol. */
   extern dfsch_object_t* dfsch_gensym();
+  /** Returns unique generated keyword. */
+  extern dfsch_object_t* dfsch_genkey();
 
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
+
+  /** Converts symbol to keyword with same name */
+  extern dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* symbol);
+  /** Converts keyword to symbol with same name */
+  extern dfsch_object_t* dfsch_keyword_2_symbol(dfsch_object_t* symbol);
 
   /** Compares value of given symbol to string. */
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
