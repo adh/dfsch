@@ -1,6 +1,7 @@
 2007-11-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (make_symbol): keyword support
+	(dfsch_symbol_2_keyword): fixed potential race condition
 
 	* src/parse.c: Throw exceptions from parser
 

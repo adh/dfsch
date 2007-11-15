@@ -1058,16 +1058,29 @@ char* dfsch_symbol(dfsch_object_t* symbol){
 
   return ((symbol_t*)symbol)->data;
 }
+
+
 dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* symbol){
   if (!symbol || symbol->type!=SYMBOL)
     dfsch_throw("exception:not-a-symbol", symbol);
 
   if (!((symbol_t*)symbol)->other){
     if (!((symbol_t*)symbol)->data){
-      return dfsch_genkey();
+      pthread_mutex_lock(&symbol_lock);
+
+      if (!((symbol_t*)symbol)->other){
+        ((symbol_t*)symbol)->other = dfsch_genkey();
+      }
+
+      pthread_mutex_unlock(&symbol_lock);
+    } else {
+      ((symbol_t*)symbol)->other = dfsch_make_symbol(stracat(":", ((symbol_t*)symbol)->data));
     }
-    
-    ((symbol_t*)symbol)->other = dfsch_make_symbol(stracat(":", ((symbol_t*)symbol)->data));
+    ((symbol_t*)((symbol_t*)symbol)->other)->other = symbol;
+    GC_general_register_disappearing_link(&(((symbol_t*)symbol)->other), 
+                                          ((symbol_t*)symbol)->other);
+    GC_general_register_disappearing_link(&(((symbol_t*)((symbol_t*)symbol)->other)->other),
+                                          symbol);
   }
 
   return ((symbol_t*)symbol)->other;
@@ -1078,10 +1091,21 @@ dfsch_object_t* dfsch_keyword_2_symbol(dfsch_object_t* symbol){
 
   if (!((symbol_t*)symbol)->other){
     if (!((symbol_t*)symbol)->data || !*(((symbol_t*)symbol)->data)){
-      return dfsch_gensym();
-    }
+      pthread_mutex_lock(&symbol_lock);
 
-    ((symbol_t*)symbol)->other =dfsch_make_symbol(((symbol_t*)symbol)->data+1);
+      if (!((symbol_t*)symbol)->other){
+        ((symbol_t*)symbol)->other = dfsch_gensym();
+      }
+
+      pthread_mutex_unlock(&symbol_lock);
+    } else {
+      ((symbol_t*)symbol)->other = dfsch_make_symbol(((symbol_t*)symbol)->data+1);
+    }
+    ((symbol_t*)((symbol_t*)symbol)->other)->other = symbol;
+    GC_general_register_disappearing_link(&(((symbol_t*)symbol)->other), 
+                                          ((symbol_t*)symbol)->other);
+    GC_general_register_disappearing_link(&(((symbol_t*)((symbol_t*)symbol)->other)->other),
+                                          symbol);
   }
   return ((symbol_t*)symbol)->other;
 }
