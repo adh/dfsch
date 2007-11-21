@@ -6,8 +6,8 @@ For 0.2.0:
    fully compatible)
 * Documentation
 * Date and time handling
-* Unified exceptions and continuations (current implementation fails
-  in many cases)
+* Unified exceptions and continuations (current implementation fails,
+  read segfaults, in many cases)
 * Warnings
 * Conditions
 * Better handling of locality of syntax errors

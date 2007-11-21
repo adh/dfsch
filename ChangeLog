@@ -1,3 +1,8 @@
+2007-11-21  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_compare_symbol): accept both symbols and keywords
+	in dfsch_compare_symbol
+
 2007-11-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (make_symbol): keyword support

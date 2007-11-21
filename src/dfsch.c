@@ -1111,7 +1111,15 @@ dfsch_object_t* dfsch_keyword_2_symbol(dfsch_object_t* symbol){
 }
 int dfsch_compare_symbol(dfsch_object_t* symbol,
                          char* string){
-  return (ascii_strcasecmp(string, dfsch_symbol(symbol)) == 0);
+  char *sym = dfsch_symbol(symbol);
+  if (!sym){
+    return 0;
+  }
+  if (*sym == ':'){
+    return (ascii_strcasecmp(string, sym+1) == 0);
+  } else {
+    return (ascii_strcasecmp(string, sym) == 0);
+  }
 }
 
 
