@@ -1059,6 +1059,24 @@ char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)symbol)->data;
 }
 
+char* dfsch_symbol_or_keyword(dfsch_object_t* symbol){
+  if (symbol){
+    if (symbol->type == SYMBOL){
+      return ((symbol_t*)symbol)->data;
+    }
+    
+    if (symbol->type==KEYWORD){
+      if (((symbol_t*)symbol)->data){
+        return ((symbol_t*)symbol)->data+1;
+      } else {
+        return NULL;
+      }
+    }
+  }
+  dfsch_throw("exception:not-a-symbol", symbol);
+}
+
+
 
 dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* symbol){
   if (!symbol || symbol->type!=SYMBOL)
@@ -1111,15 +1129,7 @@ dfsch_object_t* dfsch_keyword_2_symbol(dfsch_object_t* symbol){
 }
 int dfsch_compare_symbol(dfsch_object_t* symbol,
                          char* string){
-  char *sym = dfsch_symbol(symbol);
-  if (!sym){
-    return 0;
-  }
-  if (*sym == ':'){
-    return (ascii_strcasecmp(string, sym+1) == 0);
-  } else {
-    return (ascii_strcasecmp(string, sym) == 0);
-  }
+  return (ascii_strcasecmp(string, dfsch_symbol_or_keyword(symbol)) == 0);
 }
 
 

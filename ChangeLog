@@ -1,7 +1,9 @@
-2007-11-21  Ales Hakl  <ales at hakl dot net>
+2007-11-25  Ales Hakl  <ales at hakl dot net>
 
-	* src/dfsch.c (dfsch_compare_symbol): accept both symbols and keywords
-	in dfsch_compare_symbol
+	* lib/load.c (dfsch_require): rename *modules* to load:*modules*
+
+	* src/dfsch.c (dfsch_symbol_or_keyword): convert symbols or keyword to 
+	string (without the leading :)
 
 2007-11-15  Ales Hakl  <ales at hakl dot net>
 
