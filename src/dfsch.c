@@ -183,7 +183,6 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
 }
 
 static char* symbol_write(symbol_t*, int, int);
-static char* keyword_write(symbol_t*, int, int);
 static const dfsch_type_t symbol_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(symbol_t), 
@@ -191,30 +190,13 @@ static const dfsch_type_t symbol_type = {
   NULL,
   (dfsch_type_write_t)symbol_write
 };
-static const dfsch_type_t keyword_type = {
-  DFSCH_STANDARD_TYPE,
-  sizeof(symbol_t), 
-  "keyword",
-  NULL,
-  (dfsch_type_write_t)keyword_write
-};
 #define SYMBOL (&symbol_type) 
-#define KEYWORD (&keyword_type) 
 static char* symbol_write(symbol_t* s, int max_depth, int readable){
   if (s->data){
     return s->data;
   } else {
     char* buf = GC_MALLOC_ATOMIC(64);
     snprintf(buf, 64, "#<gensym 0x%x>", s);
-    return buf;
-  }
-}
-static char* keyword_write(symbol_t* s, int max_depth, int readable){
-  if (s->data){
-    return s->data;
-  } else {
-    char* buf = GC_MALLOC_ATOMIC(64);
-    snprintf(buf, 64, "#<genkey 0x%x>", s);
     return buf;
   }
 }
@@ -349,16 +331,6 @@ int dfsch_symbol_p(dfsch_object_t* obj){
   if (!obj)
     return 0;
   return obj->type == SYMBOL;
-}
-int dfsch_keyword_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == KEYWORD;
-}
-int dfsch_symbol_or_keyword_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == SYMBOL || obj->type == KEYWORD;
 }
 int dfsch_primitive_p(dfsch_object_t* obj){
   if (!obj)
@@ -602,7 +574,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 	dfsch_throw("exception:not-a-pair", args[i]);
       }
 
-      tmp = dfsch_cons(((pair_t*)(args[i]))->car, NULL);
+      tmp = (pair_t*)dfsch_cons(((pair_t*)(args[i]))->car, NULL);
       if (shead){
         stail->cdr = (object_t*) tmp;
       } else {
@@ -614,7 +586,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
     }
 
 
-    tmp = (pair_t*)dfsch_cons(shead, NULL);
+    tmp = (pair_t*)dfsch_cons((object_t*)shead, NULL);
     if (head){
       tail->cdr = (object_t*)tmp;
     } else {
@@ -983,15 +955,7 @@ static symbol_finalizer(symbol_t* symbol, void* cd){
 static symbol_t* make_symbol(char *symbol){
   symbol_t *s;
 
-  if (!symbol){
-    return dfsch_gensym();
-  }
-
-  if (*symbol && *symbol ==':'){
-    s = (symbol_t*)dfsch_make_object(KEYWORD);
-  } else {
-    s = (symbol_t*)dfsch_make_object(SYMBOL);
-  }
+  s = (symbol_t*)dfsch_make_object(SYMBOL);
 
   GC_REGISTER_FINALIZER(s, 
                         (GC_finalization_proc)symbol_finalizer, NULL, 
@@ -1012,7 +976,7 @@ static symbol_t* make_symbol(char *symbol){
 
 
 void dfsch_unintern(dfsch_object_t* symbol){
-  if (symbol->type != SYMBOL && symbol->type != KEYWORD)
+  if (!symbol || symbol->type != SYMBOL)
     dfsch_throw("exception:not-a-symbol", symbol);
 
   free_symbol((symbol_t*)symbol);
@@ -1025,17 +989,14 @@ dfsch_object_t* dfsch_gensym(){
 
   return (object_t*)s;
 }
-dfsch_object_t* dfsch_genkey(){
-  symbol_t *s = (symbol_t*)dfsch_make_object(KEYWORD);
-
-  s->data = NULL;
-
-  return (object_t*)s;
-}
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
 
   symbol_t *s;
+
+  if (!symbol){
+    return dfsch_gensym();
+  }
 
   pthread_mutex_lock(&symbol_lock);
 
@@ -1053,83 +1014,16 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
-  if (!symbol || (symbol->type!=SYMBOL && symbol->type!=KEYWORD))
+  if (!symbol || symbol->type!=SYMBOL)
     dfsch_throw("exception:not-a-symbol", symbol);
 
   return ((symbol_t*)symbol)->data;
 }
 
-char* dfsch_symbol_or_keyword(dfsch_object_t* symbol){
-  if (symbol){
-    if (symbol->type == SYMBOL){
-      return ((symbol_t*)symbol)->data;
-    }
-    
-    if (symbol->type==KEYWORD){
-      if (((symbol_t*)symbol)->data){
-        return ((symbol_t*)symbol)->data+1;
-      } else {
-        return NULL;
-      }
-    }
-  }
-  dfsch_throw("exception:not-a-symbol", symbol);
-}
 
-
-
-dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* symbol){
-  if (!symbol || symbol->type!=SYMBOL)
-    dfsch_throw("exception:not-a-symbol", symbol);
-
-  if (!((symbol_t*)symbol)->other){
-    if (!((symbol_t*)symbol)->data){
-      pthread_mutex_lock(&symbol_lock);
-
-      if (!((symbol_t*)symbol)->other){
-        ((symbol_t*)symbol)->other = dfsch_genkey();
-      }
-
-      pthread_mutex_unlock(&symbol_lock);
-    } else {
-      ((symbol_t*)symbol)->other = dfsch_make_symbol(stracat(":", ((symbol_t*)symbol)->data));
-    }
-    ((symbol_t*)((symbol_t*)symbol)->other)->other = symbol;
-    GC_general_register_disappearing_link(&(((symbol_t*)symbol)->other), 
-                                          ((symbol_t*)symbol)->other);
-    GC_general_register_disappearing_link(&(((symbol_t*)((symbol_t*)symbol)->other)->other),
-                                          symbol);
-  }
-
-  return ((symbol_t*)symbol)->other;
-}
-dfsch_object_t* dfsch_keyword_2_symbol(dfsch_object_t* symbol){
-  if (!symbol || symbol->type!=KEYWORD)
-    dfsch_throw("exception:not-a-keyword", symbol);
-
-  if (!((symbol_t*)symbol)->other){
-    if (!((symbol_t*)symbol)->data || !*(((symbol_t*)symbol)->data)){
-      pthread_mutex_lock(&symbol_lock);
-
-      if (!((symbol_t*)symbol)->other){
-        ((symbol_t*)symbol)->other = dfsch_gensym();
-      }
-
-      pthread_mutex_unlock(&symbol_lock);
-    } else {
-      ((symbol_t*)symbol)->other = dfsch_make_symbol(((symbol_t*)symbol)->data+1);
-    }
-    ((symbol_t*)((symbol_t*)symbol)->other)->other = symbol;
-    GC_general_register_disappearing_link(&(((symbol_t*)symbol)->other), 
-                                          ((symbol_t*)symbol)->other);
-    GC_general_register_disappearing_link(&(((symbol_t*)((symbol_t*)symbol)->other)->other),
-                                          symbol);
-  }
-  return ((symbol_t*)symbol)->other;
-}
 int dfsch_compare_symbol(dfsch_object_t* symbol,
                          char* string){
-  return (ascii_strcasecmp(string, dfsch_symbol_or_keyword(symbol)) == 0);
+  return (ascii_strcasecmp(string, dfsch_symbol(symbol)) == 0);
 }
 
 

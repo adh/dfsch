@@ -55,12 +55,6 @@ static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* 
 
   return dfsch_gensym();
 }
-static object_t* native_genkey(void*baton, object_t* args, dfsch_tail_escape_t* esc){
-  if (args)
-    dfsch_throw("exception:too-many-arguments", args);
-
-  return dfsch_genkey();
-}
 
 static object_t* native_stack_trace(void*baton, object_t* args, dfsch_tail_escape_t* esc){
   if (args)
@@ -77,20 +71,6 @@ static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t
 
   dfsch_unintern(symbol);
   return symbol;
-}
-static object_t* native_symbol_2_keyword(void*baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* symbol;
-  DFSCH_OBJECT_ARG(args, symbol);
-  DFSCH_ARG_END(args);
-
-  return dfsch_symbol_2_keyword(symbol);
-}
-static object_t* native_keyword_2_symbol(void*baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* keyword;
-  DFSCH_OBJECT_ARG(args, keyword);
-  DFSCH_ARG_END(args);
-
-  return dfsch_keyword_2_symbol(keyword);
 }
 
 static object_t* native_id(void*baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -681,11 +661,6 @@ static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
   dfsch_define_cstr(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
-  dfsch_define_cstr(ctx, "genkey", dfsch_make_primitive(&native_genkey,NULL));
-  dfsch_define_cstr(ctx, "symbol->keyword", 
-                    dfsch_make_primitive(&native_symbol_2_keyword, NULL));
-  dfsch_define_cstr(ctx, "keyword->symbol", 
-                    dfsch_make_primitive(&native_keyword_2_symbol, NULL));
   dfsch_define_cstr(ctx, "stack-trace",
                    dfsch_make_primitive(&native_stack_trace,NULL));
   dfsch_define_cstr(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));

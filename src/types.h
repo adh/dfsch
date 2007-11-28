@@ -8,9 +8,6 @@ typedef struct symbol_t symbol_t;
 struct symbol_t{
   dfsch_type_t* type;
   char *data;
-  dfsch_object_t* other;
-  //  object_t *next;
-  //  object_t *prev;
 };
 
 
