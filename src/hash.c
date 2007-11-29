@@ -51,6 +51,7 @@ static const dfsch_type_t hash_type = {
   sizeof(hash_t),
   "hash",
   NULL,
+  NULL,
   NULL
 };
 
@@ -259,7 +260,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   // It isn't here, so we will add new item
 
   hash->count++;
-  if (hash->count > (hash->mask+1)*2){ // Should table grow?
+  if (hash->count > (hash->mask+1)){ // Should table grow?
     hash_change_size(hash, ((hash->mask+1) * 2) - 1);
   }
 
