@@ -22,7 +22,7 @@
 # include <config.h>
 #endif
 
-#include "dfsch/lib/load.h"
+#include "dfsch/load.h"
 #include "src/util.h"
 
 #include <dfsch/parse.h>

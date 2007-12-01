@@ -28,7 +28,7 @@
 #include <dfsch/dfsch.h>
 #include <dfsch/number.h>
 #include <dfsch/parse.h>
-#include <dfsch/lib/load.h>
+#include <dfsch/load.h>
 #include <dfsch/lib/threads.h>
 #include <dfsch/lib/regex.h>
 #include <dfsch/lib/unix.h>
