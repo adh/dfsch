@@ -1,3 +1,7 @@
+2007-12-01  Ales Hakl  <ales at hakl dot net>
+
+	* lib/load.c (dfsch_load_register): predefine library directories
+
 2007-11-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Removed keywords (it's useless syntactic sugar which 

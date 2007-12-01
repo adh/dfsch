@@ -442,8 +442,10 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
 
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "load:*path*", 
-		    dfsch_list(1, 
-			       dfsch_make_string_cstr(".")));
+		    dfsch_list(3, 
+			       dfsch_make_string_cstr("."),
+                               dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
+                               dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
   dfsch_define_cstr(ctx, "load:*modules*", NULL);
   dfsch_define_cstr(ctx, "load:scm!",
 		    dfsch_make_form(dfsch_make_primitive(native_form_load_scm,

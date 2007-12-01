@@ -77,10 +77,17 @@ if test x"$with_readline" != x"no"; then
         fi
 fi
 
-CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"
 
 AC_SYS_LARGEFILE 
 
+dfschlibexecdir="${libdir}/dfsch/"
+dfschlibscmdir="${libdir}/dfsch/"
+
+CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibexecdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibscmdir)"\"'
+
+
+AC_SUBST(dfschlibexecdir)
+AC_SUBST(dfschlibscmdir)
 
 AC_SUBST(READLINE_LIBS)
 

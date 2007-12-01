@@ -51,8 +51,11 @@
 (define-macro (sub-group name . statements) 
   (group-generator " " "----" name statements))
 
-;(define-macro (ignore . code)
-;  ())
+(define-macro (ignore . code)
+  ())
+
+(define-macro (loop . code)
+  `((do () (()) ,@code)))
 
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
