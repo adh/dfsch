@@ -2,6 +2,7 @@
 
 	* Makefile.am (nobase_include_HEADERS): integrate module loader
 	into dfsch, install modules into $libdir/dfsch
+	(nobase_include_HEADERS): install load.h
 
 	* lib/load.c (dfsch_load_register): predefine library directories
 

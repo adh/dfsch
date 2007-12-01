@@ -262,5 +262,8 @@ dfsch_object_t* dfsch_regex_register(dfsch_object_t *ctx){
                    dfsch_make_primitive(&native_regex_match_once_p,NULL));
   dfsch_define_cstr(ctx, "regex:substrings-once", 
                    dfsch_make_primitive(&native_regex_substrings_once, NULL));
+
+  dfsch_provide(ctx, "regex");
+
   return NULL;
 }

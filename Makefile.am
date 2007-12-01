@@ -15,7 +15,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/weak.h\
 	dfsch/pprint.h\
 	dfsch/format.h\
-	dfsch/ports.h
+	dfsch/ports.h\
+	dfsch/load.h
 
 lib_LTLIBRARIES     = libdfsch.la
 

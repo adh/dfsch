@@ -1,6 +1,7 @@
 #include "dfsch/lib/unix.h"
 
 #include <dfsch/number.h>
+#include <dfsch/load.h>
 
 #include "src/util.h"
 
@@ -1226,8 +1227,8 @@ dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
                     dfsch_make_primitive(native_write, NULL));
   dfsch_define_cstr(ctx, "unix:unlink", 
                     dfsch_make_primitive(native_unlink, NULL));
-
-
+  
+  dfsch_provide(ctx, "unix");
 
   return NULL;
 }

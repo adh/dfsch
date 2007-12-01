@@ -540,5 +540,7 @@ dfsch_object_t* dfsch_threads_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "channel:write", 
                    dfsch_make_primitive(&native_channel_write,NULL));
 
+  dfsch_provide(ctx, "threads");
+
   return NULL;
 }
