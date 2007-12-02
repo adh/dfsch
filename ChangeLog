@@ -1,3 +1,8 @@
+2007-12-02  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch__get_thread_info): create thread specific data 
+	key before using it :)
+
 2007-12-01  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am (nobase_include_HEADERS): integrate module loader

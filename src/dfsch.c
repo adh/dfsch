@@ -1229,9 +1229,10 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 dfsch__thread_info_t* dfsch__get_thread_info(){
-  dfsch__thread_info_t *ei = pthread_getspecific(thread_key);
+  dfsch__thread_info_t *ei;
+  pthread_once(&thread_once, thread_key_alloc);
+  ei = pthread_getspecific(thread_key);
   if (!ei){
-    pthread_once(&thread_once, thread_key_alloc);
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
