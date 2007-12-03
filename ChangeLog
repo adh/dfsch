@@ -1,3 +1,7 @@
+2007-12-03  Ales Hakl  <ales at hakl dot net>
+
+	* src/control.c (native_form_let): Fixed let argument parsing
+
 2007-12-02  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac (USE_READLINE): correct SCM lib dir (in /usr/share)

@@ -38,4 +38,4 @@ External modules and libraries:
 * XML (SAX, SXML, DOM)
 * JSON
 * kyhttp/kyhttpd interface
-* SQL database access (sqlite, postgresql)
+* SQL database access (postgresql)

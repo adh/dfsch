@@ -181,8 +181,7 @@ static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_
 
     object_t* lambda;
 
-    vars = dfsch_car(dfsch_cdr(dfsch_cdr(args)));
-    code = dfsch_cdr(dfsch_cdr(dfsch_cdr(args)));
+    DFSCH_OBJECT_ARG(code, vars);
 
     while (dfsch_pair_p(vars)){
       object_t* var = dfsch_list_item(dfsch_car(vars),0);
