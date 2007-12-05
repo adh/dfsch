@@ -1,5 +1,8 @@
 2007-12-05  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/strings.h (DFSCH_STRING_ARG_OPT): fix optional string 
+	arguments
+
 	* src/hash.c (hash_string): fix infinite loop
 
 2007-12-03  Ales Hakl  <ales at hakl dot net>

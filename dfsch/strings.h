@@ -76,17 +76,17 @@ extern "C" {
 #define DFSCH_STRING_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
 #define DFSCH_STRING_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string_to_cstr)
+  DFSCH_GENERIC_ARG_OPT(al, name, default, char*, dfsch_string_to_cstr)
 
 #define DFSCH_STRING_OR_SYMBOL_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_or_symbol_to_cstr)
 #define DFSCH_STRING_OR_SYMBOL_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, char*, dfsch_string_or_symbol_to_cstr)
+  DFSCH_GENERIC_ARG_OPT(al, name, default, char*, dfsch_string_or_symbol_to_cstr)
 
 #define DFSCH_BUFFER_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, dfsch_strbuf_t*, dfsch_string_to_buf)
 #define DFSCH_BUFFER_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG(al, name, default, dfsch_strbuf_t*, dfsch_string_to_buf)
+  DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_strbuf_t*, dfsch_string_to_buf)
 
 #ifdef __cplusplus
 }
