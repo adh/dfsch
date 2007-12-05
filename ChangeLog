@@ -1,3 +1,7 @@
+2007-12-05  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (hash_string): fix infinite loop
+
 2007-12-03  Ales Hakl  <ales at hakl dot net>
 
 	* src/control.c (native_form_let): Fixed let argument parsing

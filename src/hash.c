@@ -84,6 +84,7 @@ static size_t hash_string(char* string){
   while (*string){
     tmp ^= *string;
     tmp ^= (tmp << 5) ^ (*string << 13) ^ (tmp >> 7);
+    string++;
   }
   return tmp;
 }
