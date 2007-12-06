@@ -54,12 +54,26 @@ static char* n_write(number_t*n, int max_depth){
   return s;
 }
 
+static size_t n_hash(number_t*n, int max_depth){
+  switch (n->n_type){
+  case N_FLONUM:
+    return ((size_t)n->flonum) ^ ((size_t) n->flonum * 16777216);
+    break; 
+  case N_FIXNUM:
+    return n->fixnum;
+    break;
+  }
+}
+
+
 static dfsch_type_t number_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(number_t),
   "number",
   (dfsch_type_equal_p_t)n_equal_p,
-  (dfsch_type_write_t)n_write
+  (dfsch_type_write_t)n_write,
+  NULL,
+  (dfsch_type_hash_t)n_hash
 };
 #define NUMBER (&number_type)
 

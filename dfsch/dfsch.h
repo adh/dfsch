@@ -140,6 +140,8 @@ extern "C" {
   extern int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b);
   /** Equal object? (i.e. equal contents) */
   extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
+  /** Get object hash */
+  extern uint32_t dfsch_hash(dfsch_object_t* obj);
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);

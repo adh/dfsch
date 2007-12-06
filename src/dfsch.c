@@ -99,6 +99,48 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
 
   return a->type->equal_p(a,b);
 }
+
+static size_t ptr_hash(dfsch_object_t* ptr){
+  size_t a = (size_t)ptr;        
+  size_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
+
+  a ^= b >> 2;
+  b ^= a >> 3;
+  a ^= b << 5;
+  b ^= a << 7;
+  a ^= b >> 11;
+  b ^= a >> 13;
+  a ^= b << 17;
+  b ^= a << 23;
+  
+  return b ^ a;
+}
+
+static size_t hash_combine(size_t a, size_t b){
+  a ^= b >> 2;
+  b ^= a >> 3;
+  a ^= b << 5;
+  b ^= a << 7;
+  a ^= b >> 11;
+  b ^= a >> 13;
+  a ^= b << 17;
+  b ^= a << 23;
+  
+  return b ^ a;
+}
+
+
+uint32_t dfsch_hash(dfsch_object_t* obj){
+  if (!obj){
+    return 0;
+  }
+  if (!obj->type || !obj->type->hash){
+    return ptr_hash(obj);
+  }
+
+  return obj->type->hash(obj);
+}
+
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
     char buf[sizeof(void*)*2+1];
@@ -131,6 +173,7 @@ const dfsch_type_t dfsch_standard_type = {
 
 static int pair_equal_p(pair_t*, pair_t*);
 static char* pair_write(pair_t*, int, int);
+static size_t pair_hash(pair_t* p);
 
 static const dfsch_type_t pair_type = {
   DFSCH_STANDARD_TYPE,
@@ -138,12 +181,16 @@ static const dfsch_type_t pair_type = {
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
   (dfsch_type_write_t)pair_write,
-  NULL
+  NULL,
+  (dfsch_type_hash_t)pair_hash
 };
 #define PAIR (&pair_type)
 
 static int pair_equal_p(pair_t*a, pair_t*b){
   return dfsch_equal_p(a->car,b->car) && dfsch_equal_p(a->cdr, b->cdr);
+}
+static size_t pair_hash(pair_t* p){
+  return hash_combine(dfsch_hash(p->car), dfsch_hash(p->cdr));
 }
 static char* pair_write(pair_t*p, int max_depth, int readable){
   str_list_t* l = sl_create();
@@ -188,7 +235,8 @@ static const dfsch_type_t symbol_type = {
   sizeof(symbol_t), 
   "symbol",
   NULL,
-  (dfsch_type_write_t)symbol_write
+  (dfsch_type_write_t)symbol_write,
+  NULL
 };
 #define SYMBOL (&symbol_type) 
 static char* symbol_write(symbol_t* s, int max_depth, int readable){
@@ -206,6 +254,8 @@ static const dfsch_type_t primitive_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(primitive_t),
   "primitive",
+  NULL,
+  NULL,
   NULL,
   NULL
 };
@@ -234,7 +284,8 @@ static const dfsch_type_t closure_type = {
   sizeof(closure_t),
   "closure",
   NULL,
-  (dfsch_type_write_t)closure_write
+  (dfsch_type_write_t)closure_write,
+  NULL
 };
 #define CLOSURE (&closure_type)
 
@@ -242,6 +293,7 @@ static const dfsch_type_t macro_type = {
   NULL,
   sizeof(macro_t),
   "macro",
+  NULL,
   NULL,
   NULL
 };
@@ -252,6 +304,7 @@ static const dfsch_type_t form_type = {
   sizeof(form_t),
   "form",
   NULL,
+  NULL,
   NULL
 };
 #define FORM (&form_type)
@@ -260,6 +313,7 @@ static const dfsch_type_t exception_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(exception_t),
   "exception",
+  NULL,
   NULL,
   NULL
 };
@@ -277,6 +331,18 @@ static int vector_equal_p(vector_t* a, vector_t* b){
 
   return 1;
 }
+
+static size_t vector_hash(vector_t* v){
+  size_t i;
+  size_t ret = 0;
+
+  for (i=0; i<v->length; i++){
+    ret = hash_combine(ret, dfsch_hash(v->data[i]));
+  }
+
+  return ret;
+}
+
 
 static char* vector_write(vector_t* v, int max_depth, int readable){
   str_list_t* l= sl_create();
@@ -301,7 +367,9 @@ static const dfsch_type_t vector_type = {
   sizeof(vector_t),
   "vector",
   (dfsch_type_equal_p_t)vector_equal_p,
-  (dfsch_type_write_t)vector_write
+  (dfsch_type_write_t)vector_write,
+  NULL,
+  (dfsch_type_hash_t)vector_hash
 };
 #define VECTOR (&vector_type)
 
@@ -1636,7 +1704,7 @@ dfsch_object_t* dfsch_obj_read(char* str){
 
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
-  return dfsch_cons(dfsch_hash_make(NULL, DFSCH_HASH_EQ), parent);
+  return dfsch_cons(dfsch_hash_make(DFSCH_HASH_EQ), parent);
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){

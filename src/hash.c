@@ -59,14 +59,9 @@ static void alloc_vector(hash_t* hash){
   hash->vector = GC_MALLOC(sizeof(hash_entry_t*)*(hash->mask+1));
 }
 
-dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, int mode){
+dfsch_object_t* dfsch_hash_make(int mode){
   hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
 
-  if (hash_proc && !dfsch_procedure_p(hash_proc))
-    dfsch_throw("exception:not-a-procedure", hash_proc);
-
-
-  h->proc = hash_proc;
   h->count = 0;
   h->mask = 0x07;
   h->mode = mode;
@@ -79,46 +74,28 @@ int dfsch_hash_p(dfsch_object_t* obj){
   return obj->type == &hash_type;
 }
 
-static size_t hash_string(char* string){
-  size_t tmp=0;
-  while (*string){
-    tmp ^= *string;
-    tmp ^= (tmp << 5) ^ (*string << 13) ^ (tmp >> 7);
-    string++;
-  }
-  return tmp;
+static size_t ptr_hash(dfsch_object_t* ptr){
+  size_t a = (size_t)ptr;        
+  size_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
+
+  a ^= b >> 2;
+  b ^= a >> 3;
+  a ^= b << 5;
+  b ^= a << 7;
+  a ^= b >> 11;
+  b ^= a >> 13;
+  a ^= b << 17;
+  b ^= a << 23;
+  
+  return b ^ a;
 }
 
 static size_t get_hash(hash_t* hash, dfsch_object_t*key){
   
-  if (hash->proc){
-    return (size_t)dfsch_number_to_long(dfsch_apply(hash->proc,
-                                                    dfsch_list(1,key)));
-  }else{
-    
-    /*
-     * We don't have any procedure for computing hashes - so we will
-     * compute something based on object pointer (eq? case) or object 
-     * serialization (all other cases).
-     */
-    if (hash->mode == DFSCH_HASH_EQ){
-      size_t a = (size_t)key;        
-      size_t b = (size_t)key >> 16 | (size_t)key << 16;
-
-      a ^= b >> 2;
-      b ^= a >> 3;
-      a ^= b << 5;
-      b ^= a << 7;
-      a ^= b >> 11;
-      b ^= a >> 13;
-      a ^= b << 17;
-      b ^= a << 23;
-
-      return b ^ a;
-    } else {
-      return hash_string(dfsch_obj_write(key, 10, 1)); 
-      // Not so bad way to hash scheme objects
-    }
+  if (hash->mode == DFSCH_HASH_EQ){
+    return ptr_hash(key);
+  } else {
+    return dfsch_hash(key);
   }
 }
 
@@ -453,9 +430,8 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
 }
 
 dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
-                                   dfsch_object_t* hash_proc, 
                                    int mode){
-  dfsch_object_t* hash = dfsch_hash_make(hash_proc, mode);
+  dfsch_object_t* hash = dfsch_hash_make(mode);
   dfsch_object_t* i = alist;
   
   while (dfsch_pair_p(i)){
@@ -480,20 +456,18 @@ dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
 
 static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args,
                                         dfsch_tail_escape_t* esc){
-  dfsch_object_t *proc;
   dfsch_object_t *mode;
-  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
   DFSCH_OBJECT_ARG_OPT(args, mode, NULL);
   DFSCH_ARG_END(args);
 
   if (!mode)
-    return dfsch_hash_make(proc, DFSCH_HASH_EQ);
+    return dfsch_hash_make(DFSCH_HASH_EQ);
   if (mode == dfsch_make_symbol("equal?"))
-    return dfsch_hash_make(proc, DFSCH_HASH_EQUAL);
+    return dfsch_hash_make(DFSCH_HASH_EQUAL);
   if (mode == dfsch_make_symbol("eqv?"))
-    return dfsch_hash_make(proc, DFSCH_HASH_EQV);
+    return dfsch_hash_make(DFSCH_HASH_EQV);
   if (mode == dfsch_make_symbol("eq?"))
-    return dfsch_hash_make(proc, DFSCH_HASH_EQ);
+    return dfsch_hash_make(DFSCH_HASH_EQ);
 
   dfsch_throw("exception:unknown-mode", mode);
 }
@@ -563,22 +537,20 @@ static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args,
 static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
                                            dfsch_tail_escape_t* esc){
   dfsch_object_t* alist;
-  dfsch_object_t *proc;
   dfsch_object_t *mode;
 
   DFSCH_OBJECT_ARG(args, alist);
-  DFSCH_OBJECT_ARG_OPT(args, proc, NULL);
   DFSCH_OBJECT_ARG_OPT(args, mode, NULL);
   DFSCH_ARG_END(args);
 
   if (!mode)
-    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQ);
+    return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
   if (mode == dfsch_make_symbol("equal?"))
-    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQUAL);
+    return dfsch_alist_2_hash(alist, DFSCH_HASH_EQUAL);
   if (mode == dfsch_make_symbol("eqv?"))
-    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQV);
+    return dfsch_alist_2_hash(alist, DFSCH_HASH_EQV);
   if (mode == dfsch_make_symbol("eq?"))
-    return dfsch_alist_2_hash(alist, proc, DFSCH_HASH_EQ);
+    return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
 
   dfsch_throw("exception:unknown-mode", mode);
 }

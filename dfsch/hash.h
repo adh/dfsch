@@ -41,8 +41,7 @@ extern "C" {
   /**
    * Create new hash table object
    */
-  extern dfsch_object_t* dfsch_hash_make(dfsch_object_t* hash_proc, 
-                                         int mode);
+  extern dfsch_object_t* dfsch_hash_make(int mode);
 
   /**
    * Check whenever given object is hashtable
@@ -88,7 +87,6 @@ extern "C" {
    * Convert list of associations to hash table.
    */
   extern dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
-                                            dfsch_object_t* hash_proc, 
                                             int mode);
   
 #ifdef __cplusplus

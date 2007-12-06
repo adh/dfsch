@@ -1,5 +1,7 @@
 2007-12-06  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c: use new hash method
+
 	* dfsch/dfsch.h: hash method in type descriptor
 
 2007-12-05  Ales Hakl  <ales at hakl dot net>

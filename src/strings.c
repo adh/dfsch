@@ -101,12 +101,26 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
 
 }
 
+static size_t string_hash(dfsch_string_t* s){
+  size_t ret = s->len;
+  size_t i;
+
+  for (i = 0; i < s->len; i++){
+    ret ^= s->ptr[i] ^ (ret << 7);
+    ret ^= ((size_t)s->ptr[i] << 23) ^ (ret >> 7);
+  }
+
+  return ret;
+}
+
 static const dfsch_type_t string_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_string_t),
   "string",
   (dfsch_type_equal_p_t)string_equal_p,
   (dfsch_type_write_t)string_write,
+  NULL,
+  (dfsch_type_hash_t)string_hash
 };
 #define STRING (&string_type)
 

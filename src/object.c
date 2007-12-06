@@ -63,6 +63,7 @@ static char* class_write(class_t* klass, int depth,
 
 DFSCH_LOCAL_SYMBOL_CACHE("write", sel_write);
 DFSCH_LOCAL_SYMBOL_CACHE("equal?", sel_equal_p);
+DFSCH_LOCAL_SYMBOL_CACHE("hash", sel_hash);
 DFSCH_LOCAL_SYMBOL_CACHE("init", sel_init);
 
 static dfsch_object_t* class_apply(dfsch_object_t* object, 
@@ -70,7 +71,7 @@ static dfsch_object_t* class_apply(dfsch_object_t* object,
                                    dfsch_tail_escape_t* esc){
   instance_t* ins = (instance_t*)dfsch_make_object((dfsch_type_t*)object);
   
-  ins->inst_vars = dfsch_hash_make(NULL, DFSCH_HASH_EQ);
+  ins->inst_vars = dfsch_hash_make(DFSCH_HASH_EQ);
 
   dfsch_object_send((dfsch_object_t*)ins, sel_init(), args);
 
@@ -101,6 +102,13 @@ static int instance_equal_p(dfsch_object_t* a, dfsch_object_t* b){
                             sel_equal_p(),
                             dfsch_cons(b, NULL))) != NULL;  
 }
+
+static size_t instance_hash(dfsch_object_t* a){
+  return dfsch_number_to_long(dfsch_object_send(a,
+                                                sel_hash(),
+                                                NULL));  
+}
+
 
 DFSCH_SYMBOL_CACHE("does-not-understand", dfsch_object_does_not_understand);
 
@@ -148,8 +156,9 @@ static class_t* alloc_class(class_t* superclass, char* name){
   klass->type.equal_p = instance_equal_p;
   klass->type.write = instance_write;
   klass->type.apply = instance_apply;
+  klass->type.hash = instance_hash;
 
-  klass->methods = dfsch_hash_make(NULL, DFSCH_HASH_EQ);
+  klass->methods = dfsch_hash_make(DFSCH_HASH_EQ);
   klass->superclass = superclass;
 
   return klass;
@@ -313,6 +322,29 @@ static dfsch_object_t* object_equal_p(void* baton,
   return NULL; // eq? case handled by C code in dfsch.c
 }
 
+static size_t ptr_hash(dfsch_object_t* ptr){
+  size_t a = (size_t)ptr;        
+  size_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
+
+  a ^= b >> 2;
+  b ^= a >> 3;
+  a ^= b << 5;
+  b ^= a << 7;
+  a ^= b >> 11;
+  b ^= a >> 13;
+  a ^= b << 17;
+  b ^= a << 23;
+  
+  return b ^ a;
+}
+
+
+static dfsch_object_t* object_hash(void* baton,
+                                   dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc){
+  return dfsch_make_number_from_long(ptr_hash(dfsch_car(args)));
+}
+
 static dfsch_object_t* object_init(void* baton,
                                    dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){
@@ -350,6 +382,9 @@ static dfsch_object_t* make_object_class(){
                                                   NULL));
   dfsch_object_define_method(klass, sel_write(), 
                              dfsch_make_primitive(object_write,
+                                                  NULL));
+  dfsch_object_define_method(klass, sel_hash(), 
+                             dfsch_make_primitive(object_hash,
                                                   NULL));
   dfsch_object_define_method(klass, sel_init(), 
                              dfsch_make_primitive(object_init,

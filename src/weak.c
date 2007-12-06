@@ -80,20 +80,6 @@ typedef struct weak_vector_t {
   int set;
 } weak_vector_t;
 
-
-static int weak_vector_equal_p(weak_vector_t* a, weak_vector_t* b){
-  size_t i;
-  if (a->length != b->length)
-    return 0;
-
-  for (i=0; i<a->length; i++){
-    if (!dfsch_equal_p(a->data[i], b->data[i]))
-      return 0;
-  }
-
-  return 1;
-}
-
 static char* weak_vector_write(weak_vector_t* v, int max_depth, int readable){
   str_list_t* l= sl_create();
   size_t i;
@@ -116,8 +102,10 @@ static const dfsch_type_t weak_vector_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(weak_vector_t),
   "weak-vector",
-  (dfsch_type_equal_p_t)weak_vector_equal_p,
-  (dfsch_type_write_t)weak_vector_write
+  NULL,
+  (dfsch_type_write_t)weak_vector_write,
+  NULL,
+  NULL
 };
 
 dfsch_object_t* dfsch_make_weak_vector(size_t length, dfsch_object_t* fill){
