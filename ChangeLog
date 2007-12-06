@@ -1,3 +1,7 @@
+2007-12-06  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/dfsch.h: hash method in type descriptor
+
 2007-12-05  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/strings.h (DFSCH_STRING_ARG_OPT): fix optional string 

@@ -71,6 +71,8 @@ extern "C" {
   typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object, 
                                                 dfsch_object_t* args,
                                                 dfsch_tail_escape_t* esc);
+  /** Hash method prototype */
+  typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 
   /** Representation of scheme datatypes. */
   typedef struct dfsch_type_t dfsch_type_t;
@@ -94,6 +96,13 @@ extern "C" {
      * in evaluator and have this field set to NULL
      */
     dfsch_type_apply_t apply;
+
+    /**
+     * Hash method - return hash for this object. Objects that are equal?
+     * have same hash. When NULL, hash is derived from value of object 
+     * pointer
+     */
+    dfsch_type_hash_t hash;
   };
 
   extern const dfsch_type_t dfsch_standard_type;
