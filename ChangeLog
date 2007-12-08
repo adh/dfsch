@@ -1,3 +1,7 @@
+2007-12-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c (n_hash): better hashing
+
 2007-12-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/hash.c: use new hash method

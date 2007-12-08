@@ -54,13 +54,26 @@ static char* n_write(number_t*n, int max_depth){
   return s;
 }
 
+static size_t diffusion(size_t h){
+  
+  h ^= h >> 5 | h << sizeof(size_t)*8 - 5;
+  h ^= h << 7 | h << sizeof(size_t)*8 - 7;
+  h += 0x8025f5a6;
+  h ^= h >> 11 | h << sizeof(size_t)*8 - 11;
+  h ^= h << 13 | h << sizeof(size_t)*8 - 13;
+
+  return h;
+}
+
 static size_t n_hash(number_t*n, int max_depth){
   switch (n->n_type){
   case N_FLONUM:
-    return ((size_t)n->flonum) ^ ((size_t) n->flonum * 16777216);
+    return diffusion(((size_t)n->flonum)) ^ 
+      ((size_t) (exp(round(32-log(n->flonum))) * 
+                 (n->flonum - trunc(n->flonum))));
     break; 
   case N_FIXNUM:
-    return n->fixnum;
+    return diffusion(n->fixnum);
     break;
   }
 }
