@@ -1,3 +1,7 @@
+2007-12-10  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (native_form_with_hash): with-hash special form
+
 2007-12-09  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (main): renamed argv to *posix-argv*

@@ -71,7 +71,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return obj->type == &hash_type;
+  return obj && obj->type == &hash_type;
 }
 
 static size_t ptr_hash(dfsch_object_t* ptr){
@@ -555,6 +555,26 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
   dfsch_throw("exception:unknown-mode", mode);
 }
 
+static dfsch_object_t* native_form_with_hash(void *baton, 
+                                             dfsch_object_t* args, 
+                                             dfsch_tail_escape_t* esc){
+  dfsch_object_t *env;
+  dfsch_object_t *hash;
+  dfsch_object_t *code;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, hash);
+  DFSCH_ARG_REST(args, code);
+
+  hash = dfsch_eval(hash, env);
+
+  if (!dfsch_hash_p(hash)){
+    dfsch_throw("exception:not-a-hash", hash);
+  }
+
+  return dfsch_eval_proc_tr(code, dfsch_cons(hash, env), NULL, esc);
+}
+
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "make-hash", 
@@ -573,5 +593,8 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                    dfsch_make_primitive(&native_hash_2_alist,NULL));
   dfsch_define_cstr(ctx, "alist->hash", 
                    dfsch_make_primitive(&native_alist_2_hash,NULL));
+  dfsch_define_cstr(ctx, "with-hash", 
+                    dfsch_make_form(dfsch_make_primitive(&native_form_with_hash,
+                                                         NULL)));
 
 }
