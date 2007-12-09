@@ -69,7 +69,7 @@ extern "C" {
     dfsch_port_batch_read_end_t batch_read_end;
     /**
      * Fast read of one byte that must be inside 
-     * batch_read_start()/batch_reand_end() calls. When this is not 
+     * batch_read_start()/batch_read_end() calls. When this is not 
      * implemented it will be emulated by means of read_buf().
      * General idea is that this will use some mechanism like 
      * unlocked_stdio(3).
@@ -87,6 +87,9 @@ extern "C" {
    */
 #define DFSCH_PORT_TYPE_TYPE ((dfsch_type_t*)&dfsch_port_type_type)
 
+  int dfsch_port_p(dfsch_object_t* obj);
+  int dfsch_output_port_p(dfsch_object_t* obj);
+  int dfsch_input_port_p(dfsch_object_t* obj);
 
   ssize_t dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
   ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size);
@@ -98,7 +101,14 @@ extern "C" {
   int dfsch_port_batch_read(dfsch_object_t* port);
   
   dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port);
+  
+  dfsch_object_t* dfsch_current_output_port();
+  dfsch_object_t* dfsch_current_input_port();
 
+  void dfsch_set_current_output_port(dfsch_object_t* port);
+  void dfsch_set_current_input_port(dfsch_object_t* port);
+
+  void dfsch_port_unsafe_register(dfsch_object_t* ctx);
 
 #ifdef __cplusplus
 }

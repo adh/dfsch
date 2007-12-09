@@ -29,6 +29,7 @@
 #include <dfsch/number.h>
 #include <dfsch/parse.h>
 #include <dfsch/load.h>
+#include <dfsch/ports.h>
 #include <dfsch/lib/threads.h>
 #include <dfsch/lib/regex.h>
 #include <dfsch/lib/unix.h>
@@ -350,6 +351,7 @@ int main(int argc, char**argv){
   dfsch_threads_register(ctx);
   dfsch_regex_register(ctx);
   dfsch_unix_register(ctx);
+  dfsch_port_unsafe_register(ctx);
 
   dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));
