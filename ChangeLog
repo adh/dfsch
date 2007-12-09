@@ -1,5 +1,7 @@
 2007-12-09  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): renamed argv to *posix-argv*
+
 	* src/ports.c: current-input/output-port
 
 2007-12-08  Ales Hakl  <ales at hakl dot net>

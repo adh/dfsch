@@ -432,7 +432,7 @@ int main(int argc, char**argv){
     for (i=0; i<argc-optind; i++){
       dfsch_vector_set(args, i, dfsch_make_string_cstr(argv[optind+i]));
     }
-    dfsch_define_cstr(ctx, "argv", args);
+    dfsch_define_cstr(ctx, "*posix-argv*", args);
 
     ret = dfsch_load_scm(ctx, argv[optind]);
     return 0;
