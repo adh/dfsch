@@ -586,6 +586,28 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
   
   return dfsch_object_slots_2_alist(object);
 }
+static dfsch_object_t* native_form_with_slots(void *baton, 
+                                              dfsch_object_t* args, 
+                                              dfsch_tail_escape_t* esc){
+  dfsch_object_t *env;
+  dfsch_object_t *object;
+  dfsch_object_t *code;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_REST(args, code);
+
+  object = dfsch_eval(object, env);
+
+  if (!object || !object->type || object->type->type != &class_type){
+    dfsch_throw("exception:not-a-class-instance", object);
+  }
+
+
+  return dfsch_eval_proc_tr(code, dfsch_cons(((instance_t*)object)->inst_vars
+                                             , env),
+                            NULL, esc);
+}
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<object>", make_object_class());
@@ -631,5 +653,8 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "slots->alist",
                     dfsch_make_primitive(native_slots_2_alist,
                                          NULL));
+  dfsch_define_cstr(ctx, "with-slots",
+                    dfsch_make_form(dfsch_make_primitive(native_form_with_slots,
+                                                         NULL)));
   
 }
