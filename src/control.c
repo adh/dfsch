@@ -469,6 +469,29 @@ static object_t* native_form_do(void *baton, object_t* args,
   return dfsch_eval_proc_tr(exprs, lenv, NULL, esc);
 }
 
+static dfsch_object_t* native_form_destructuring_bind(void *baton, 
+						      dfsch_object_t* args, 
+						      dfsch_tail_escape_t* esc){
+  dfsch_object_t *env;
+  dfsch_object_t *arglist;
+  dfsch_object_t *list;
+  dfsch_object_t *code;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, arglist);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_REST(args, code);
+
+  list = dfsch_eval(list, env);
+
+  return dfsch_eval_proc_tr(code, 
+			    dfsch_destructuring_bind(arglist, 
+						     list, 
+						     env), 
+                            NULL, 
+			    esc);
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -539,6 +562,9 @@ void dfsch__control_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "do", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_do,
+							 NULL)));
+  dfsch_define_cstr(ctx, "destrucutring-bind", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_destructuring_bind,
 							 NULL)));
 
 
