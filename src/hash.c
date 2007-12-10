@@ -572,7 +572,8 @@ static dfsch_object_t* native_form_with_hash(void *baton,
     dfsch_throw("exception:not-a-hash", hash);
   }
 
-  return dfsch_eval_proc_tr(code, dfsch_cons(hash, env), NULL, esc);
+  return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), 
+                            NULL, esc);
 }
 
 

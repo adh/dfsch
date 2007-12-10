@@ -370,6 +370,9 @@ extern "C" {
   // Lexical binding:
   /** Create new environment frame. */
   extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);
+  /** Create new environment frame from given hash table */
+  extern dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
+                                                   dfsch_object_t* hash);
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);

@@ -604,9 +604,12 @@ static dfsch_object_t* native_form_with_slots(void *baton,
   }
 
 
-  return dfsch_eval_proc_tr(code, dfsch_cons(((instance_t*)object)->inst_vars
-                                             , env),
-                            NULL, esc);
+  return 
+    dfsch_eval_proc_tr(code, 
+                       dfsch_new_frame_from_hash(env,
+                                                 ((instance_t*)
+                                                  object)->inst_vars),
+                       NULL, esc);
 }
 
 void dfsch__object_native_register(dfsch_object_t *ctx){

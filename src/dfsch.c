@@ -1706,6 +1706,10 @@ dfsch_object_t* dfsch_obj_read(char* str){
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
   return dfsch_cons(dfsch_hash_make(DFSCH_HASH_EQ), parent);
 }
+dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
+                                          dfsch_object_t* hash){
+  return dfsch_cons(hash, parent);
+}
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
   pair_t *i;
