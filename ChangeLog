@@ -1,5 +1,9 @@
 2007-12-10  Ales Hakl  <ales at hakl dot net>
 
+	* configure.ac: set default load:*path* correctly 
+
+2007-12-10  Ales Hakl  <ales at hakl dot net>
+
 	* src/dfsch.c (dfsch_new_frame_from_hash): function for constructing
 	environments from pre-existing hash tables (for with-foo forms)
 	(dfsch_destructure): split lamda_extend to user-accessible function

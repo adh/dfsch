@@ -81,9 +81,9 @@ fi
 AC_SYS_LARGEFILE 
 
 dfschlibexecdir="${libdir}/dfsch/"
-dfschlibscmdir="${pkgdatadir}/scm/"
+dfschlibscmdir="${datadir}/dfsch/scm/"
 
-CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibexecdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibscmdir)"\"'
+CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
 
 
 AC_SUBST(dfschlibexecdir)
