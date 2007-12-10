@@ -282,7 +282,7 @@ static char* closure_write(closure_t* c, int max_depth, int readable){
 static const dfsch_type_t closure_type = {
   DFSCH_STANDARD_TYPE,
   sizeof(closure_t),
-  "closure",
+  "function",
   NULL,
   (dfsch_type_write_t)closure_write,
   NULL
