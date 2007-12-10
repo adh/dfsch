@@ -1,8 +1,8 @@
-2007-12-10  Ales Hakl  <dfox@mahoro.dfox.org>
+2007-12-10  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c (main): rename version -> *dfsch-version*
 
 	* src/control.c (native_form_destructuring_bind): destructuring-bind
-
-2007-12-10  Ales Hakl  <ales at hakl dot net>
 
 	* configure.ac: set default load:*path* correctly 
 
