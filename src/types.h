@@ -76,6 +76,7 @@ typedef struct macro_t {
 typedef struct form_t {
   dfsch_type_t* type;
   dfsch_object_t* proc;
+  dfsch_object_t* compilation_proc;
 } form_t;
 
 

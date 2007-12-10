@@ -40,7 +40,7 @@ typedef dfsch_object_t object_t;
 
 // TODO: document all native functions somewhere
 
-static object_t* native_macro_if(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_form_if(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* test;
   object_t* consequent;
@@ -53,36 +53,40 @@ static object_t* native_macro_if(void *baton, object_t* args, dfsch_tail_escape_
 
   test = dfsch_eval(test, env);
 
-  return dfsch_list(1, test?consequent:alternate);
+  return dfsch_eval_tr((test?consequent:alternate), env, esc);
 
 }
 
-static object_t* native_macro_when(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_form_when(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,env);
   DFSCH_OBJECT_ARG(args,test);
 
-  test = dfsch_eval(test, env);
+  if (dfsch_eval(test, env)){
+    return dfsch_eval_proc_tr(args, env, NULL, esc);
+  }
 
-  return test?args:NULL;
+  return NULL;
 }
 
-static object_t* native_macro_unless(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_form_unless(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,env);
   DFSCH_OBJECT_ARG(args,test);
 
-  test = dfsch_eval(test, env);
+  if (!dfsch_eval(test, env)){
+    return dfsch_eval_proc_tr(args, env, NULL, esc);
+  }
 
-  return test?NULL:args;
+  return NULL;
 }
 
 
-static object_t* native_macro_cond(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_form_cond(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env = dfsch_car(args);
   object_t* i = dfsch_cdr(args);
 
@@ -93,15 +97,9 @@ static object_t* native_macro_cond(void *baton, object_t* args, dfsch_tail_escap
       if (dfsch_car(exp) == dfsch_sym_bold_right_arrow()){
         object_t* proc = dfsch_eval(dfsch_list_item(exp, 1), env);
 
-        return dfsch_cons(dfsch_list(2,
-                                     dfsch_sym_quote(),
-                                     dfsch_apply(proc,
-                                                 dfsch_list(1,
-                                                            o))),
-                          NULL);
-
+        return dfsch_apply(proc, dfsch_list(1, o));
       }else{
-        return exp;
+        return dfsch_eval_proc_tr(exp, env, NULL, esc);
       }
     }
     
@@ -110,7 +108,7 @@ static object_t* native_macro_cond(void *baton, object_t* args, dfsch_tail_escap
 
   return NULL;
 }
-static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_form_case(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* env;
   object_t* val;
   DFSCH_OBJECT_ARG(args, env);
@@ -122,11 +120,11 @@ static object_t* native_macro_case(void *baton, object_t* args, dfsch_tail_escap
     object_t* c = dfsch_car(args);
     object_t* i = dfsch_car(c);
     if (i == dfsch_sym_else())
-        return dfsch_cdr(c);
+      return dfsch_eval_proc_tr(dfsch_cdr(c), env, NULL, esc);
       
     while (dfsch_pair_p(i)){
       if (dfsch_eqv_p(dfsch_car(i), val))
-        return dfsch_cdr(c);
+        return dfsch_eval_proc_tr(dfsch_cdr(c), env, NULL, esc);
       i = dfsch_cdr(i);
     }
     args = dfsch_cdr(args);
@@ -156,8 +154,11 @@ static object_t* native_form_quasiquote(void *baton, object_t* args, dfsch_tail_
   return dfsch_quasiquote(env,arg);
 }
 
-static object_t* native_macro_begin(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  return dfsch_cdr(args);
+static object_t* native_form_begin(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+  object_t* env;
+  DFSCH_OBJECT_ARG(args, env);
+  
+  return dfsch_eval_proc_tr(args, env, NULL, esc);
 }
 static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_t* esc){
 
@@ -486,7 +487,7 @@ static dfsch_object_t* native_form_destructuring_bind(void *baton,
 
 void dfsch__control_register(dfsch_object_t *ctx){ 
   dfsch_define_cstr(ctx, "begin", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_begin,
+		   dfsch_make_form(dfsch_make_primitive(&native_form_begin,
 							 NULL)));
   dfsch_define_cstr(ctx, "let", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_let,
@@ -505,19 +506,19 @@ void dfsch__control_register(dfsch_object_t *ctx){
 		   dfsch_make_form(dfsch_make_primitive(&native_form_quote,
 							 NULL)));
   dfsch_define_cstr(ctx, "if", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_if,
-                                                         NULL)));
+		   dfsch_make_form(dfsch_make_primitive(&native_form_if,
+                                                        NULL)));
   dfsch_define_cstr(ctx, "when", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_when,
+		   dfsch_make_form(dfsch_make_primitive(&native_form_when,
                                                          NULL)));
   dfsch_define_cstr(ctx, "unless", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_unless,
+		   dfsch_make_form(dfsch_make_primitive(&native_form_unless,
                                                          NULL)));
   dfsch_define_cstr(ctx, "cond", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_cond,
+		   dfsch_make_form(dfsch_make_primitive(&native_form_cond,
                                                          NULL)));
   dfsch_define_cstr(ctx, "case", 
-		   dfsch_make_macro(dfsch_make_primitive(&native_macro_case,
+		   dfsch_make_form(dfsch_make_primitive(&native_form_case,
                                                          NULL)));
 
   dfsch_define_cstr(ctx, "raise", 

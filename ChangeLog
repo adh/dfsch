@@ -1,3 +1,9 @@
+2007-12-11  Ales Hakl  <ales at hakl dot net>
+
+	* src/control.c: rewritten all special forms as true special forms
+
+	* src/types.h (form_t): added hook for compiler
+
 2007-12-10  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: renamed dfsch_throw to dfsch_error
