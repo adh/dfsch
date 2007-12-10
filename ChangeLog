@@ -1,5 +1,10 @@
 2007-12-10  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm ("control flow"): call/ec really seems badly broken.
+
+	* src/control.c (dfsch__control_register): destructuring-bind not
+	destrucutring-bind :)
+
 	* src/repl.c (main): rename version -> *dfsch-version*
 
 	* src/control.c (native_form_destructuring_bind): destructuring-bind

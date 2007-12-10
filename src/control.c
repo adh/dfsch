@@ -563,7 +563,7 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "do", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_do,
 							 NULL)));
-  dfsch_define_cstr(ctx, "destrucutring-bind", 
+  dfsch_define_cstr(ctx, "destructuring-bind", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_destructuring_bind,
 							 NULL)));
 

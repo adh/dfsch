@@ -193,12 +193,12 @@
                           (vector-set! vec i i))
                         #(0 1 2 3 4)))
        (sub-group non-local-exits
-                 (when t (test 'call/ec
+                 (when () (test 'call/ec
                        (call/ec (lambda (cont)
                                   (cont #t)
                                   #f))
                        #t))
-                 (when t (test 'unwind-protect
+                 (when () (test 'unwind-protect
                        (let ((a #f))
                          (call/ec (lambda (exit)
                                     (unwind-protect
@@ -228,7 +228,12 @@
                                        ()
                                        (even? (- n 1))))))
                          (even? 88))
-                       true)))
+                       true))
+       (sub-group destructuring-bind
+                  (test 'simple
+                        (destructuring-bind (a b c) '(1 2 3)
+                                            b)
+                        2)))
 
 (group "functions"
 
