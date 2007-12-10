@@ -374,15 +374,6 @@ static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* es
 //
 /////////////////////////////////////////////////////////////////////////////
 
-
-static object_t* native_call_ec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t *proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_call_ec(proc);
-}
-
 static object_t* native_form_unwind_protect(void *baton, object_t* args, 
                                             dfsch_tail_escape_t* esc){
   object_t* env;
@@ -545,10 +536,6 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "try", 
 		   dfsch_make_primitive(&native_try,NULL));
 
-  dfsch_define_cstr(ctx, "call-with-escape-continuation",
-                   dfsch_define_cstr(ctx, "call/ec", 
-                                    dfsch_make_primitive(&native_call_ec,
-                                                         NULL)));
   dfsch_define_cstr(ctx, "unwind-protect", 
                     dfsch_make_form(dfsch_make_primitive(&native_form_unwind_protect,
 							 NULL)));

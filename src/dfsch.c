@@ -1278,17 +1278,6 @@ static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
  * macros in magic.h and uses setjmp/longjmp).
  */
 
-void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
-                                     dfsch__continuation_t* cont){
-  dfsch__continuation_t *i;
-
-  i = ti->cont_stack;
-  while (i && i != cont){
-    i->active = 0;
-    i = i->next;
-  }
-}
-
 static void thread_info_destroy(void* ptr){
   if (ptr)
     GC_FREE(ptr);
@@ -1304,8 +1293,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->exception_ret = NULL;
     ei->stack_trace = NULL;
-    ei->cont_stack = NULL;
-    ei->in_continuation = NULL;
+    ei->break_type = NULL;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -1326,7 +1314,7 @@ void dfsch_raise(dfsch_object_t* exception){
   }
 
   ei->exception_obj = exception;
-  dfsch__continue_continuation(ei);
+  longjmp(*ei->exception_ret, 1);    
 }
 
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
@@ -1395,91 +1383,6 @@ dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e){
     return NULL;
 
   return ((exception_t*)e)->stack_trace;
-}
-
-static void unwind_protect(dfsch__thread_info_t* ti){
-  dfsch__unwind_protect_t* up;
-  up = ti->protect_stack;
-  ti->protect_stack = up->next;
-  longjmp(up->after, 1);
-}
-
-void dfsch__continue_continuation(dfsch__thread_info_t* ti){
-  if (ti->in_continuation){
-    if (ti->in_continuation->top != ti->protect_stack){
-      unwind_protect(ti);
-    }
-    longjmp(ti->in_continuation->ret,1);
-  } else {
-    if (!ti->exception_ret){ /* Something is borked */
-      abort();
-    }
-    if (ti->exception_top != ti->protect_stack){
-      unwind_protect(ti);
-    }
-    longjmp(*ti->exception_ret, 1);    
-  }
-}
-
-static object_t* continuation_apply(dfsch__continuation_t *cont, 
-                                    object_t* args,
-                                    dfsch_tail_escape_t* esc){
-
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  object_t* value;
-  DFSCH_OBJECT_ARG(args, value);
-  DFSCH_ARG_END(args);
-  
-  if (!cont->active)
-    dfsch_throw("exception:already-returned",NULL);
-  if (cont->ti != ti)
-    dfsch_throw("exception:cross-thread-continuation",NULL);
-
-  cont->value = value;
-  ti->in_continuation = cont;
-  dfsch__continue_continuation(ti);
-}
-
-static struct dfsch_type_t continuation_type = {
-  DFSCH_STANDARD_TYPE,
-  sizeof(dfsch__continuation_t*),
-  "escape-continuation",
-  NULL,
-  NULL,
-  (dfsch_type_apply_t)continuation_apply
-};
-
-dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc){
-  object_t* value;
-  dfsch__continuation_t *cont = 
-    (dfsch__continuation_t*)dfsch_make_object(&continuation_type);
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  jmp_buf* ex_ret;
-  dfsch_object_t* old_frame;
-
-  old_frame = ti->stack_trace;
-  cont->active = 1;
-  cont->next = ti->cont_stack;
-  cont->top = ti->protect_stack;
-  ex_ret = ti->exception_ret;
-  cont->ti = ti;
-  ti->cont_stack = cont;
-  if(setjmp(cont->ret) == 1){
-    ti->in_continuation = NULL;
-    value = cont->value;
-  }else{
-    value = dfsch_apply(proc,
-                        dfsch_list(1, cont));
-  }
-  
-  dfsch__invalidate_continuations(ti, cont);
-  
-  cont->active = 0;
-  ti->cont_stack = cont->next;
-  ti->stack_trace = old_frame;
-  ti->exception_ret = ex_ret;
-  return value;
-
 }
 
 // Vectors
@@ -1704,11 +1607,14 @@ dfsch_object_t* dfsch_obj_read(char* str){
 
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
-  return dfsch_cons(dfsch_hash_make(DFSCH_HASH_EQ), parent);
+
+
+  return dfsch_new_frame_from_hash(parent, dfsch_hash_make(DFSCH_HASH_EQ));
 }
 dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
                                           dfsch_object_t* hash){
-  return dfsch_cons(hash, parent);
+  dfsch_object_t* frame = dfsch_cons(hash, parent);
+  return frame;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
@@ -1718,8 +1624,10 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
     dfsch_throw("exception:not-a-pair",env);
   }
 
+
   i = (pair_t*)env;
   while (i && i->type==PAIR){
+
     object_t* ret = dfsch_hash_ref(i->car, name);
     if (ret){
       return dfsch_car(ret);
@@ -1728,7 +1636,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
     i = (pair_t*)i->cdr;
   }
   
-  dfsch_throw("exception:unbound-variable",name);
+  dfsch_throw("exception:unbound-variable", dfsch_cons(name, env));
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   pair_t *i;

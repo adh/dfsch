@@ -70,70 +70,53 @@ struct dfsch__thread_info_t {
 
   dfsch_object_t* stack_trace;
 
-  dfsch__continuation_t* cont_stack;
-  dfsch__unwind_protect_t* protect_stack;
-
-  dfsch__continuation_t* in_continuation;
 
   char* break_type;
 };
 
-extern void dfsch__invalidate_continuations(dfsch__thread_info_t* ti, 
-                                            dfsch__continuation_t* cont);
 extern dfsch__thread_info_t* dfsch__get_thread_info();
 extern void dfsch__continue_continuation(dfsch__thread_info_t* ti);
 
-#define DFSCH_TRY \
-{  \
-  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();\
-  jmp_buf *dfsch___old_ret;\
-  dfsch_object_t* dfsch___old_frame;\
-  dfsch__continuation_t* dfsch___cont;\
-  dfsch__unwind_protect_t* dfsch___protect;\
-  \
-  dfsch___old_ret = dfsch___ei->exception_ret;\
-  dfsch___old_frame = dfsch___ei->stack_trace;\
-  dfsch___cont = dfsch___ei->cont_stack;\
-  dfsch___protect = dfsch___ei->protect_stack;\
-  dfsch___ei->exception_ret = GC_NEW(jmp_buf);\
-  \
-  if(setjmp(*dfsch___ei->exception_ret) != 1){
+#define DFSCH_TRY                                                       \
+  {                                                                     \
+    dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();        \
+    jmp_buf *dfsch___old_ret;                                           \
+    dfsch_object_t* dfsch___old_frame;                                  \
+                                                                        \
+    dfsch___old_ret = dfsch___ei->exception_ret;                        \
+    dfsch___old_frame = dfsch___ei->stack_trace;                        \
+    dfsch___ei->exception_ret = GC_NEW(jmp_buf);                        \
+                                                                        \
+    if(setjmp(*dfsch___ei->exception_ret) != 1){
 
-#define DFSCH_CATCH(var) \
-    dfsch___ei->exception_ret = (jmp_buf*)dfsch___old_ret;\
-    dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;\
-  } else {\
-    dfsch___ei->exception_ret = (jmp_buf*)dfsch___old_ret;\
-    dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;\
-    dfsch__invalidate_continuations(dfsch___ei, dfsch___cont);\
-    dfsch___ei->cont_stack = dfsch___cont;\
-    dfsch___ei->protect_stack = dfsch___protect;\
-  { dfsch_object_t* var = dfsch___ei->exception_obj;
+#define DFSCH_CATCH(var)                                                \
+  dfsch___ei->exception_ret = (jmp_buf*)dfsch___old_ret;                \
+  dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;         \
+} else {                                                                \
+      dfsch___ei->exception_ret = (jmp_buf*)dfsch___old_ret;            \
+      dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;     \
+      { dfsch_object_t* var = dfsch___ei->exception_obj;
+  
+#define DFSCH_END_TRY                           \
+  }}}
+  
+#define DFSCH_UNWIND                            \
+  {                                             \
+    dfsch_object_t* dfsch___exception;          \
+    int dfsch___caught;                         \
+    DFSCH_TRY {
 
-#define DFSCH_END_TRY \
-}}}
-
-#define DFSCH_UNWIND {  \
-  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();\
-  dfsch__unwind_protect_t* dfsch___protect;\
-  dfsch_object_t* dfsch___old_frame;\
-  int dfsch___unwinded = 0;\
-  dfsch___old_frame = dfsch___ei->stack_trace;\
-  dfsch___protect = GC_NEW(dfsch__unwind_protect_t);\
-  dfsch___protect->next = dfsch___ei->protect_stack;\
-  dfsch___ei->protect_stack = dfsch___protect;\
-  if(setjmp(dfsch___protect->after) != 1){
-
-#define DFSCH_PROTECT \
-    dfsch___ei->protect_stack = dfsch___ei->protect_stack->next;\
-  } else { dfsch___unwinded = 1; }\
- dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame;
-
-#define DFSCH_END_UNWIND \
-    if (dfsch___unwinded){ \
-      dfsch__continue_continuation(dfsch___ei);\
-    }\
-  }
+#define DFSCH_PROTECT              \
+  } DFSCH_CATCH(exception) {       \
+    dfsch___caught = 1;            \
+    dfsch___exception = exception; \
+  } DFSCH_END_TRY
+  
+#define DFSCH_END_UNWIND                        \
+  if (dfsch___caught){                          \
+    dfsch_raise(dfsch___exception);             \
+  }                                             \
+}
 
 #ifdef __cplusplus
 }

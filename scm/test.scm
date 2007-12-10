@@ -193,19 +193,16 @@
                           (vector-set! vec i i))
                         #(0 1 2 3 4)))
        (sub-group non-local-exits
-                 (when () (test 'call/ec
-                       (call/ec (lambda (cont)
-                                  (cont #t)
-                                  #f))
-                       #t))
-                 (when () (test 'unwind-protect
-                       (let ((a #f))
-                         (call/ec (lambda (exit)
-                                    (unwind-protect
-                                     (exit ())
-                                     (set! a #t))))
-                         a)
-                       #t))))
+                  (test 'exceptions
+                        (let ((a #f))
+                          (try
+                           (lambda () 
+                             (unwind-protect
+                              (raise ())
+                              (set! a #t)))
+                           (lambda (e)))
+                          a)
+                        #t)))
 
 (group "Binding constructs"
 

@@ -364,9 +364,6 @@ extern "C" {
   extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
   extern dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e);
 
-  /** Call given function with escape continuation as sole argument. */
-  extern dfsch_object_t* dfsch_call_ec(dfsch_object_t* proc);
-
   // Lexical binding:
   /** Create new environment frame. */
   extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);
