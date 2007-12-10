@@ -1939,15 +1939,16 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
   return dfsch_eval_impl(exp, env, NULL, dfsch__get_thread_info());
 }
 
-static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
-  pair_t* i_f=(pair_t*)fa;
-  pair_t* i_a=(pair_t*)aa;
-  object_t* ext_env = dfsch_new_frame(env);
+dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
+                                  dfsch_object_t* list){
+  pair_t* i_f=(pair_t*)arglist;
+  pair_t* i_a=(pair_t*)list;
+  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
 
   while ((i_f && i_f->type==PAIR) &&
 	 (i_a && i_a->type==PAIR)){
 
-    dfsch_define(i_f->car, i_a->car, ext_env);
+    dfsch_hash_set(hash, i_f->car, i_a->car);
 
     i_f = (pair_t*)i_f->cdr;
     i_a = (pair_t*)i_a->cdr;
@@ -1955,18 +1956,26 @@ static object_t* lambda_extend(object_t* fa, object_t* aa, object_t* env){
   }
 
   if (i_f && i_f->type==SYMBOL){
-
-    dfsch_define((object_t*)i_f, (object_t*)i_a, ext_env);
-    return ext_env;
+    dfsch_hash_set(hash, (object_t*)i_f, (object_t*)i_a);
+    return hash;
   }
 
   if (!i_a  && i_f)
-      dfsch_throw("exception:too-few-arguments", aa);
+      dfsch_throw("exception:too-few-arguments", list);
   if (!i_f && i_a) 
-      dfsch_throw("exception:too-many-arguments", aa);
+      dfsch_throw("exception:too-many-arguments", list);
   
 
-  return ext_env;
+  return hash;
+
+}
+
+dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
+                                         dfsch_object_t* list, 
+                                         dfsch_object_t* env){
+  return dfsch_new_frame_from_hash(env,
+                                   dfsch_destructure(arglist,
+                                                     list));
 }
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
@@ -2068,13 +2077,14 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (proc->type == CLOSURE){
-    object_t* r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
-                                       lambda_extend(((closure_t*)proc)->args,
-                                                     args,
-                                                     ((closure_t*)proc)->env),
-                                       dfsch_cons(proc, args),
-                                       esc,
-                                       ti);
+    object_t* r = 
+      dfsch_eval_proc_impl(((closure_t*)proc)->code,
+                           dfsch_destructuring_bind(((closure_t*)proc)->args,
+                                                    args,
+                                                    ((closure_t*)proc)->env),
+                           dfsch_cons(proc, args),
+                           esc,
+                           ti);
     return r;
   }
 

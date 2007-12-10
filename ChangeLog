@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_new_frame_from_hash): function for constructing
 	environments from pre-existing hash tables (for with-foo forms)
+	(dfsch_destructure): split lamda_extend to user-accessible function
 
 	* src/object.c (native_form_with_slots): with-slots special form
 

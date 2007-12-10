@@ -376,6 +376,13 @@ extern "C" {
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
+
+  extern dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
+                                           dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
+                                                  dfsch_object_t* list, 
+                                                  dfsch_object_t* env);
+
   /**
    * Get value of variable name in environment env. Return empty list
    * in case of failure.
