@@ -101,7 +101,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 
 #define GET_HASH(obj,hash)\
    if (!obj || obj->type != &hash_type)\
-     dfsch_throw("exception:not-a-hash", obj); \
+     dfsch_error("exception:not-a-hash", obj); \
    hash = (hash_t*)obj;
 
 /*
@@ -469,7 +469,7 @@ static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args,
   if (mode == dfsch_make_symbol("eq?"))
     return dfsch_hash_make(DFSCH_HASH_EQ);
 
-  dfsch_throw("exception:unknown-mode", mode);
+  dfsch_error("exception:unknown-mode", mode);
 }
 static dfsch_object_t* native_hash_p(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
@@ -552,7 +552,7 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
   if (mode == dfsch_make_symbol("eq?"))
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
 
-  dfsch_throw("exception:unknown-mode", mode);
+  dfsch_error("exception:unknown-mode", mode);
 }
 
 static dfsch_object_t* native_form_with_hash(void *baton, 
@@ -569,7 +569,7 @@ static dfsch_object_t* native_form_with_hash(void *baton,
   hash = dfsch_eval(hash, env);
 
   if (!dfsch_hash_p(hash)){
-    dfsch_throw("exception:not-a-hash", hash);
+    dfsch_error("exception:not-a-hash", hash);
   }
 
   return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), 

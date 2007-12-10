@@ -19,7 +19,7 @@
 #include <time.h>
 
 static void throw_errno(int e, char* function){
-  dfsch_throw("unix:error", dfsch_list(3, 
+  dfsch_error("unix:error", dfsch_list(3, 
                                        dfsch_make_symbol(function),
                                        dfsch_make_number_from_long(e),
                                        dfsch_make_string_cstr(strerror(e))));
@@ -65,7 +65,7 @@ dfsch_object_t* dfsch_unix_opendir(char* name){
 void dfsch_unix_closedir(dfsch_object_t* dir_obj){
   dir_t* dir;
   if (!dir_obj || dir_obj->type != &dir_type){
-    dfsch_throw("unix:not-a-directory", dir_obj);
+    dfsch_error("unix:not-a-directory", dir_obj);
   }
   dir = (dir_t*)dir_obj;
 
@@ -79,12 +79,12 @@ char* dfsch_unix_readdir(dfsch_object_t* dir_obj){
   dir_t* dir;
   struct dirent* dent;
   if (!dir_obj || dir_obj->type != &dir_type){
-    dfsch_throw("unix:not-a-directory", dir_obj);
+    dfsch_error("unix:not-a-directory", dir_obj);
   }
   dir = (dir_t*)dir_obj;
 
   if (!dir->open){
-    dfsch_throw("unix:directory-object-is-closed", dir_obj);    
+    dfsch_error("unix:directory-object-is-closed", dir_obj);    
   }
 
   errno = 0;
@@ -173,7 +173,7 @@ static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,
     return dfsch_bool(S_ISLNK(st->st.st_mode));
   }
 
-  dfsch_throw("unix:no-such-stat-field", selector);
+  dfsch_error("unix:no-such-stat-field", selector);
 }
 
 static dfsch_type_t stat_type = {
@@ -191,7 +191,7 @@ dfsch_object_t* dfsch_unix_make_stat_struct(){
 
 struct stat* dfsch_unix_get_stat(dfsch_object_t* stat){
   if (!stat || stat->type != &stat_type){
-    dfsch_throw("unix:not-a-stat-struct", stat);
+    dfsch_error("unix:not-a-stat-struct", stat);
   }
 
   return &(((stat_t*)stat)->st);
@@ -279,7 +279,7 @@ static dfsch_object_t* native_sig(void* baton, dfsch_object_t* args,
     }
   }
 
-  dfsch_throw("unix:unknown-signal", sym);
+  dfsch_error("unix:unknown-signal", sym);
 }
 
 static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
@@ -709,7 +709,7 @@ static dfsch_object_t* native_lseek(void* baton, dfsch_object_t* args,
   } else if (dfsch_compare_symbol(whence, "end")){
     w = SEEK_END;
   } else {
-    dfsch_throw("unix:unknown-whence-value", whence);
+    dfsch_error("unix:unknown-whence-value", whence);
   }
 
   if (lseek(fd, offset, w) != 0){

@@ -54,14 +54,14 @@ dfsch_object_t* dfsch_thread_join(dfsch_object_t* thread){
   dfsch_object_t* ret;
   int err;
   if (!thread || thread->type != &thread_type)
-    dfsch_throw("thread:not-a-thread", thread);
+    dfsch_error("thread:not-a-thread", thread);
 
   t = (thread_t*)thread;
 
   err = pthread_join(t->thread, (void*)&ret);
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 
   return ret;
@@ -70,14 +70,14 @@ void dfsch_thread_detach(dfsch_object_t* thread){
   thread_t* t;
   int err;
   if (!thread || thread->type != &thread_type)
-    dfsch_throw("thread:not-a-thread", thread);
+    dfsch_error("thread:not-a-thread", thread);
 
   t = (thread_t*)thread;
 
   err = pthread_detach(t->thread);
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 
@@ -133,20 +133,20 @@ void dfsch_mutex_lock(dfsch_object_t* mutex){
   mutex_t* m;
   int err;
   if (!mutex || mutex->type != &mutex_type)
-    dfsch_throw("thread:not-a-mutex", mutex);
+    dfsch_error("thread:not-a-mutex", mutex);
 
   m = (mutex_t*)mutex;
 
   err = pthread_mutex_lock(&(m->mutex));
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 int dfsch_mutex_trylock(dfsch_object_t* mutex){
   mutex_t* m;
   if (!mutex || mutex->type != &mutex_type)
-    dfsch_throw("thread:not-a-mutex", mutex);
+    dfsch_error("thread:not-a-mutex", mutex);
 
   m = (mutex_t*)mutex;
 
@@ -156,14 +156,14 @@ void dfsch_mutex_unlock(dfsch_object_t* mutex){
   mutex_t* m;
   int err;
   if (!mutex || mutex->type != &mutex_type)
-    dfsch_throw("thread:not-a-mutex", mutex);
+    dfsch_error("thread:not-a-mutex", mutex);
 
   m = (mutex_t*)mutex;
 
   err = pthread_mutex_unlock(&(m->mutex));
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 
@@ -210,9 +210,9 @@ void dfsch_condition_wait(dfsch_object_t* cond, dfsch_object_t* mutex){
   mutex_t* m;
 
   if (!mutex || mutex->type != &mutex_type)
-    dfsch_throw("thread:not-a-mutex", mutex);
+    dfsch_error("thread:not-a-mutex", mutex);
   if (!cond || cond->type != &condition_type)
-    dfsch_throw("thread:not-a-condition", cond);
+    dfsch_error("thread:not-a-condition", cond);
 
   c = (condition_t*)cond;
   m = (mutex_t*)mutex;
@@ -220,7 +220,7 @@ void dfsch_condition_wait(dfsch_object_t* cond, dfsch_object_t* mutex){
   err = pthread_cond_wait(&(c->cond), &(m->mutex));
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 
@@ -228,14 +228,14 @@ void dfsch_condition_signal(dfsch_object_t* cond){
   condition_t* c;
   int err;
   if (!cond || cond->type != &condition_type)
-    dfsch_throw("thread:not-a-condition", cond);
+    dfsch_error("thread:not-a-condition", cond);
 
   c = (condition_t*)cond;
 
   err = pthread_cond_signal(&(c->cond));
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 
@@ -243,14 +243,14 @@ void dfsch_condition_broadcast(dfsch_object_t* cond){
   condition_t* c;
   int err;
   if (!cond || cond->type != &condition_type)
-    dfsch_throw("thread:not-a-condition", cond);
+    dfsch_error("thread:not-a-condition", cond);
 
   c = (condition_t*)cond;
 
   err = pthread_cond_broadcast(&(c->cond));
 
   if (err != 0){
-    dfsch_throw("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_error("thread:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 }
 
@@ -310,7 +310,7 @@ dfsch_object_t* dfsch_channel_read(dfsch_object_t* channel){
    */
 
   if (!channel || channel->type != &channel_type)
-    dfsch_throw("thread:not-a-channel", channel);
+    dfsch_error("thread:not-a-channel", channel);
   
   ch = (channel_t*) channel;
 
@@ -341,7 +341,7 @@ void dfsch_channel_write(dfsch_object_t* channel,
    */
 
   if (!channel || channel->type != &channel_type)
-    dfsch_throw("thread:not-a-channel", channel);
+    dfsch_error("thread:not-a-channel", channel);
   
   ch = (channel_t*) channel;
 

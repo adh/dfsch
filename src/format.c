@@ -24,7 +24,7 @@ static int read_num_arg(char**string){
  next:
   switch(**string){
   case '\0':
-    dfsch_throw("exception:incomplete-format-sequence", NULL);
+    dfsch_error("exception:incomplete-format-sequence", NULL);
   case '0':
   case '1':
   case '2':
@@ -56,7 +56,7 @@ static char* format_a(int flags, int argc, int*argv, dfsch_object_t* obj){
   } else if (argc == 1){
     return dfsch_obj_write(obj, argv[0], 0);
   } else {
-    dfsch_throw("exception:too-many-arguments-to-format-sequence",
+    dfsch_error("exception:too-many-arguments-to-format-sequence",
                 NULL);
   }
 }
@@ -66,7 +66,7 @@ static char* format_s(int flags, int argc, int*argv, dfsch_object_t* obj){
   } else if (argc == 1){
     return dfsch_obj_write(obj, argv[0], 1);
   } else {
-    dfsch_throw("exception:too-many-arguments-to-format-sequence",
+    dfsch_error("exception:too-many-arguments-to-format-sequence",
                 NULL);
   }
 }
@@ -91,7 +91,7 @@ static dfsch_object_t* list_get(format_list_t* l){
   dfsch_object_t* ret;
   
   if (!l->cur){
-    dfsch_throw("exception:no-more-arguments", NULL);
+    dfsch_error("exception:no-more-arguments", NULL);
   }
 
   ret = dfsch_car(l->cur);
@@ -104,7 +104,7 @@ static dfsch_object_t* list_peek(format_list_t* l){
   dfsch_object_t* ret;
   
   if (!l->cur){
-    dfsch_throw("exception:no-more-arguments", NULL);
+    dfsch_error("exception:no-more-arguments", NULL);
   }
 
   ret = dfsch_car(l->cur);
@@ -119,7 +119,7 @@ static void list_skip(format_list_t* l, size_t count){
     l->cur = dfsch_cdr(l->cur);
     l->cur_pos++;
   }
-  dfsch_throw("exception:no-more-arguments", NULL);
+  dfsch_error("exception:no-more-arguments", NULL);
 }
 static void list_seek(format_list_t* l, size_t count){
   l->cur = l->head;
@@ -132,7 +132,7 @@ static void list_seek(format_list_t* l, size_t count){
     l->cur = dfsch_cdr(l->cur);
     l->cur_pos++;
   }
-  dfsch_throw("exception:no-more-arguments", NULL);
+  dfsch_error("exception:no-more-arguments", NULL);
 }
 static void list_backskip(format_list_t* l, size_t count){
   list_seek(l, l->cur_pos - count);
@@ -178,7 +178,7 @@ char* dfsch_format(char* string,
       argc = 0;
 
       if (!*string){
-        dfsch_throw("exception:incomplete-format-sequence", NULL);
+        dfsch_error("exception:incomplete-format-sequence", NULL);
       }
 
       if (strchr("0123456789'\"#v,", *string)){
@@ -220,7 +220,7 @@ char* dfsch_format(char* string,
           if (*string == ','){
             argc++;
             if (argc == ARG_MAX){
-              dfsch_throw("exception:too-many-arguments-to-format-sequence",
+              dfsch_error("exception:too-many-arguments-to-format-sequence",
                           NULL);
             }
             string++;
@@ -234,7 +234,7 @@ char* dfsch_format(char* string,
 
     flags:
       if (!*string){
-        dfsch_throw("exception:incomplete-format-sequence", NULL);
+        dfsch_error("exception:incomplete-format-sequence", NULL);
       }
       if (*string == ':'){
         flags |= FLAG_COLON;
@@ -251,7 +251,7 @@ char* dfsch_format(char* string,
 
       switch(*string){
       case '\0':
-        dfsch_throw("exception:incomplete-format-sequence", NULL);
+        dfsch_error("exception:incomplete-format-sequence", NULL);
       case 'a':
       case 'A':
         sl_append(out, format_a(flags, argc, argv, list_get(state->args)));
@@ -270,7 +270,7 @@ char* dfsch_format(char* string,
           }
         }
         if (argc != 1){
-          dfsch_throw("exception:too-many-arguments-to-format-sequence",
+          dfsch_error("exception:too-many-arguments-to-format-sequence",
                       NULL);
         }
 
@@ -285,7 +285,7 @@ char* dfsch_format(char* string,
           list_seek(state->args, argv[0]);
           break;
         default:
-          dfsch_throw("exception:unsupported-flag-combination",
+          dfsch_error("exception:unsupported-flag-combination",
                       NULL);          
 
         }

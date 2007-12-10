@@ -40,10 +40,10 @@ typedef dfsch_object_t object_t;
 
 #define NEED_ARGS(args,count) \
   if (dfsch_list_length_check(args)!=(count)) \
-    dfsch_throw("exception:wrong-number-of-arguments",(args));
+    dfsch_error("exception:wrong-number-of-arguments",(args));
 #define MIN_ARGS(args,count) \
   if (dfsch_list_length_check(args)<(count)) \
-    dfsch_throw("exception:too-few-arguments", (args));
+    dfsch_error("exception:too-few-arguments", (args));
 
 // TODO: document all native functions somewhere
 
@@ -51,14 +51,14 @@ typedef dfsch_object_t object_t;
 
 static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* esc){
   if (args)
-    dfsch_throw("exception:too-many-arguments", args);
+    dfsch_error("exception:too-many-arguments", args);
 
   return dfsch_gensym();
 }
 
 static object_t* native_stack_trace(void*baton, object_t* args, dfsch_tail_escape_t* esc){
   if (args)
-    dfsch_throw("exception:too-many-arguments", args);
+    dfsch_error("exception:too-many-arguments", args);
 
   return dfsch_get_stack_trace();
 }
@@ -206,7 +206,7 @@ static object_t* native_length(void *baton, object_t* args, dfsch_tail_escape_t*
   len = dfsch_list_length(dfsch_car(args));
 
   if (len < 0)
-    dfsch_throw("exception:not-a-list", dfsch_car(args));
+    dfsch_error("exception:not-a-list", dfsch_car(args));
   
   return dfsch_make_number_from_long(len);
 }
@@ -313,7 +313,7 @@ static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_
   list = dfsch_zip(args);
 
   if (!list){
-    dfsch_throw("exception:too-few-arguments", args);    
+    dfsch_error("exception:too-few-arguments", args);    
   }
 
   while (dfsch_pair_p(list)){
@@ -333,7 +333,7 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   list = dfsch_zip(args);
 
   if (!list){
-    dfsch_throw("exception:too-few-arguments", args);    
+    dfsch_error("exception:too-few-arguments", args);    
   }
 
   while (dfsch_pair_p(list)){
@@ -557,7 +557,7 @@ static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_es
   DFSCH_ARG_END(args);
 
   if (!dfsch_vector_p(vector))
-    dfsch_throw("exception:not-a-vector",vector);
+    dfsch_error("exception:not-a-vector",vector);
 
   return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
@@ -649,7 +649,7 @@ static object_t* native_symbol_2_string(void *baton, object_t* args, dfsch_tail_
   if (str)
     return dfsch_make_string_cstr(str);
   else
-    dfsch_throw("exception:not-a-symbol", object);
+    dfsch_error("exception:not-a-symbol", object);
 }
 static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   char* string;

@@ -351,7 +351,7 @@ extern "C" {
   
 
   /** Convenience wrapper for throwing an exception from C code */
-  extern dfsch_object_t* dfsch_throw(char* type, 
+  extern dfsch_object_t* dfsch_error(char* type, 
                                      dfsch_object_t* data);
 
   /** Set break flag (call this when throwing exception isn't safe) */
@@ -475,7 +475,7 @@ extern "C" {
    */
 #define DFSCH_OBJECT_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
-    dfsch_throw("exception:required-argument-missing",\
+    dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
   (name) = dfsch_car((al)); \
   (al) = dfsch_cdr((al))
@@ -488,7 +488,7 @@ extern "C" {
    */
 #define DFSCH_DISCARD_ARG(al, name)\
   if (!dfsch_pair_p((al))) \
-    dfsch_throw("exception:required-argument-missing",\
+    dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
   (al) = dfsch_cdr((al))
 
@@ -518,7 +518,7 @@ extern "C" {
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
   if (!dfsch_pair_p((al))) \
-    dfsch_throw("exception:required-argument-missing",\
+    dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
   { dfsch_object_t* dfsch___tmp = dfsch_car((al)); \
     (name) = (type)(conv)(dfsch___tmp); \
@@ -551,7 +551,7 @@ extern "C" {
    */
 #define DFSCH_ARG_END(al) \
   if ((al) != NULL)                                     \
-    dfsch_throw("exception:too-many-arguments",NULL)
+    dfsch_error("exception:too-many-arguments",NULL)
 
   /**
    * Store all unprocessed arguments into rest. (Syntactic sugar 2.0 :))

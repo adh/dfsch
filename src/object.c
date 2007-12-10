@@ -167,7 +167,7 @@ static class_t* alloc_class(class_t* superclass, char* name){
 dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass, 
                                           char* name){
   if (!superclass || superclass->type != &class_type)
-    dfsch_throw("exception:not-a-class", superclass);    
+    dfsch_error("exception:not-a-class", superclass);    
 
   return (dfsch_object_t*)alloc_class((class_t*) superclass, name);
 }
@@ -175,34 +175,34 @@ void dfsch_object_define_method(dfsch_object_t* klass,
                                 dfsch_object_t* selector,
                                 dfsch_object_t* proc){
   if (!klass || klass->type != &class_type)
-    dfsch_throw("exception:not-a-class", klass);
+    dfsch_error("exception:not-a-class", klass);
 
   dfsch_hash_set(((class_t*)klass)->methods, selector, proc);
 }
 
 dfsch_object_t* dfsch_object_class_superclass(dfsch_object_t* klass){
   if (!klass || klass->type != &class_type)
-    dfsch_throw("exception:not-a-class", klass);
+    dfsch_error("exception:not-a-class", klass);
   return (dfsch_object_t*)((class_t*)klass)->superclass;
 }
 dfsch_object_t* dfsch_object_class_method_ref(dfsch_object_t* klass,
                                               dfsch_object_t* selector){
   if (!klass || klass->type != &class_type)
-    dfsch_throw("exception:not-a-class", klass);
+    dfsch_error("exception:not-a-class", klass);
 
  return dfsch_hash_ref(((class_t*)klass)->methods, selector);
 }
 int dfsch_object_class_method_unset(dfsch_object_t* klass,
                                     dfsch_object_t* selector){
   if (!klass || klass->type != &class_type)
-    dfsch_throw("exception:not-a-class", klass);
+    dfsch_error("exception:not-a-class", klass);
 
   return dfsch_hash_unset(((class_t*)klass)->methods, selector);
 }
 
 dfsch_object_t* dfsch_object_class_methods_2_alist(dfsch_object_t* klass){
   if (!klass || klass->type != &class_type)
-    dfsch_throw("exception:not-a-class", klass);
+    dfsch_error("exception:not-a-class", klass);
   return dfsch_hash_2_alist(((class_t*)klass)->methods);
 }
 
@@ -239,7 +239,7 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                       dfsch_object_t* value){
 
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-class-instance", object);
+    dfsch_error("exception:not-a-class-instance", object);
 
   return dfsch_hash_set(((instance_t*)object)->inst_vars, name, value);  
 }
@@ -247,7 +247,7 @@ int dfsch_object_slot_unset(dfsch_object_t* object,
                             dfsch_object_t* name){
 
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-class-instance", object);
+    dfsch_error("exception:not-a-class-instance", object);
 
   return dfsch_hash_unset(((instance_t*)object)->inst_vars, name);
 }
@@ -255,18 +255,18 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                       dfsch_object_t* name){
   dfsch_object_t* ret;
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-class-instance", object);
+    dfsch_error("exception:not-a-class-instance", object);
 
   ret = dfsch_hash_ref(((instance_t*)object)->inst_vars, name);
   if (!ret){
-    dfsch_throw("exception:slot-undefined", name);
+    dfsch_error("exception:slot-undefined", name);
   } else {
     return dfsch_car(ret);
   }
 }
 dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
   if (!object || !object->type || object->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-class-instance", object);
+    dfsch_error("exception:not-a-class-instance", object);
 
   return dfsch_hash_2_alist(((instance_t*)object)->inst_vars);
 }
@@ -292,7 +292,7 @@ void dfsch_object_define_class(dfsch_object_t* env,
 static dfsch_object_t* object_does_not_understand(void* baton,
                                                   dfsch_object_t* args,
                                                   dfsch_tail_escape_t* esc){
-  dfsch_throw("exception:message-not-understood", args);
+  dfsch_error("exception:message-not-understood", args);
 }
 static dfsch_object_t* object_write(void* baton,
                                     dfsch_object_t* args,
@@ -353,7 +353,7 @@ static dfsch_object_t* object_init(void* baton,
   args = dfsch_cdr(args);
 
   if (!ins || !ins->type || ins->type->type != &class_type) // XXX
-    dfsch_throw("exception:not-a-class-instance", ins);
+    dfsch_error("exception:not-a-class-instance", ins);
 
   while (dfsch_pair_p(args)){
     if (key){
@@ -366,7 +366,7 @@ static dfsch_object_t* object_init(void* baton,
   }
 
   if (key)
-    dfsch_throw("exception:value-expected", key);
+    dfsch_error("exception:value-expected", key);
 
   return ins;
 }
@@ -600,7 +600,7 @@ static dfsch_object_t* native_form_with_slots(void *baton,
   object = dfsch_eval(object, env);
 
   if (!object || !object->type || object->type->type != &class_type){
-    dfsch_throw("exception:not-a-class-instance", object);
+    dfsch_error("exception:not-a-class-instance", object);
   }
 
 

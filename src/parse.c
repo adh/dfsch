@@ -158,7 +158,7 @@ static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
   ctx->column = 1;
   ctx->error = 0;
 
-  dfsch_throw(symbol, pos);
+  dfsch_error(symbol, pos);
 }
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
@@ -828,5 +828,5 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
     dfsch_port_batch_read_end(port);
   } DFSCH_END_UNWIND;
 
-  dfsch_throw("parser:unexpected-end-of-file", port);
+  dfsch_error("parser:unexpected-end-of-file", port);
 }

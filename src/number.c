@@ -148,7 +148,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
 
 double dfsch_number_to_double(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -159,16 +159,16 @@ double dfsch_number_to_double(dfsch_object_t *n){
 }
 long dfsch_number_to_long(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
   if (((number_t*)n)->n_type!=N_FIXNUM)
-    dfsch_throw("exception:not-an-exact-number", n);
+    dfsch_error("exception:not-an-exact-number", n);
   
   return (long)((number_t*)n)->fixnum;
 
 }
 char* dfsch_number_to_string(dfsch_object_t *n){
   if (!n || n->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   return n_write((number_t*)n, 2);
 }
@@ -179,17 +179,17 @@ int dfsch_number_p(dfsch_object_t* obj){
 }
 int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
 
   return n_equal_p((number_t*)a, (number_t*)b);
 }
 int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
 
   if (((number_t*)a)->n_type != ((number_t*)b)->n_type)
     return 0;
@@ -206,9 +206,9 @@ int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
 
 int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
     switch(((number_t*)a)->n_type){
@@ -223,9 +223,9 @@ int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b){
 }
 int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
     switch(((number_t*)a)->n_type){
@@ -240,9 +240,9 @@ int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b){
 }
 int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
     switch(((number_t*)a)->n_type){
@@ -257,9 +257,9 @@ int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b){
 }
 int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
   if (!a || a->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", a);
+    dfsch_error("exception:not-a-number", a);
   if (!b || b->type!=NUMBER)
-    dfsch_throw("exception:not-a-number", b);
+    dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
     switch(((number_t*)a)->n_type){
@@ -279,9 +279,9 @@ int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
 dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
   if (!a || a->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", a); 
+    dfsch_error("exception:not-a-number", a); 
   if (!b || b->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", b); 
+    dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
     switch(((number_t*)a)->n_type){ 
@@ -311,9 +311,9 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
 dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
   if (!a || a->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", a); 
+    dfsch_error("exception:not-a-number", a); 
   if (!b || b->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", b); 
+    dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
     switch(((number_t*)a)->n_type){ 
@@ -343,9 +343,9 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
 dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
   if (!a || a->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", a); 
+    dfsch_error("exception:not-a-number", a); 
   if (!b || b->type!=NUMBER) 
-    dfsch_throw("exception:not-a-number", b); 
+    dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
     switch(((number_t*)a)->n_type){ 
@@ -387,7 +387,7 @@ dfsch_object_t* dfsch_number_div (dfsch_object_t* a,
   double bn = dfsch_number_to_double((dfsch_object_t*) b);
  
   if (bn == 0.0)
-    dfsch_throw("exception:division-by-zero", NULL);
+    dfsch_error("exception:division-by-zero", NULL);
 
   return dfsch_make_number_from_double(an / bn); 
 }
@@ -398,7 +398,7 @@ dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,
   long bn = dfsch_number_to_long((dfsch_object_t*) b);
  
   if (bn == 0)
-    dfsch_throw("exception:division-by-zero", NULL);
+    dfsch_error("exception:division-by-zero", NULL);
 
   return dfsch_make_number_from_long(an / bn); 
 }
@@ -409,7 +409,7 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
   long bn = dfsch_number_to_long((dfsch_object_t*) b);
  
   if (bn == 0)
-    dfsch_throw("exception:division-by-zero", NULL);
+    dfsch_error("exception:division-by-zero", NULL);
 
   return dfsch_make_number_from_long(an % bn); 
 }
@@ -444,7 +444,7 @@ static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* 
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
-    dfsch_throw("exception:too-few-arguments",i);
+    dfsch_error("exception:too-few-arguments",i);
 
   if (!dfsch_cdr(i))
     return dfsch_number_sub(dfsch_make_number_from_long(0), dfsch_car(i));
@@ -471,7 +471,7 @@ static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* 
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
-    dfsch_throw("exception:too-few-arguments",i);
+    dfsch_error("exception:too-few-arguments",i);
 
   if (!dfsch_cdr(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
@@ -490,7 +490,7 @@ static object_t* native_slash_i(void *baton, object_t* args, dfsch_tail_escape_t
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
-    dfsch_throw("exception:too-few-arguments",i);
+    dfsch_error("exception:too-few-arguments",i);
 
   if (!dfsch_cdr(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
@@ -509,7 +509,7 @@ static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t*
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
-    dfsch_throw("exception:too-few-arguments",i);
+    dfsch_error("exception:too-few-arguments",i);
 
   if (!dfsch_cdr(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
@@ -597,7 +597,7 @@ static object_t* native_abs(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -632,7 +632,7 @@ static object_t* native_log(void *baton, object_t* args,
   DFSCH_ARG_END(args);
 
   if (z <= 0.0)
-    dfsch_throw("exception:not-in-argument-domain", 
+    dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("log"),
                            dfsch_make_number_from_double(z)));
@@ -669,7 +669,7 @@ static object_t* native_asin(void *baton, object_t* args,
   DFSCH_ARG_END(args);
 
   if (z > 1.0 || z < -1.0)
-    dfsch_throw("exception:not-in-argument-domain", 
+    dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("asin"),
                            dfsch_make_number_from_double(z)));
@@ -684,7 +684,7 @@ static object_t* native_acos(void *baton, object_t* args,
   DFSCH_ARG_END(args);
 
   if (z > 1.0 || z < -1.0)
-    dfsch_throw("exception:not-in-argument-domain", 
+    dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("acos"),
                            dfsch_make_number_from_double(z)));
@@ -708,7 +708,7 @@ static object_t* native_sqrt(void *baton, object_t* args,
   DFSCH_ARG_END(args);
 
   if (z < 0.0)
-    dfsch_throw("exception:not-in-argument-domain", 
+    dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("sqrt"),
                            dfsch_make_number_from_double(z)));
@@ -726,7 +726,7 @@ static object_t* native_expt(void *baton, object_t* args,
   errno = 0;
   v = pow(z0,z1);
   if (errno == EDOM) // XXX
-    dfsch_throw("exception:not-in-argument-domain", 
+    dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(3, 
                            dfsch_make_symbol("sqrt"),
                            dfsch_make_number_from_double(z0),
@@ -743,7 +743,7 @@ static object_t* native_zero_p(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -767,7 +767,7 @@ static object_t* native_positive_p(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -791,7 +791,7 @@ static object_t* native_negative_p(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -814,7 +814,7 @@ static object_t* native_even_p(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:
@@ -839,7 +839,7 @@ static object_t* native_odd_p(void *baton, object_t* args,
   DFSCH_ARG_END(args);
   
   if (!dfsch_number_p(n))
-    dfsch_throw("exception:not-a-number", n);
+    dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
   case N_FLONUM:

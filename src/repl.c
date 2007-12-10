@@ -198,7 +198,7 @@ static dfsch_object_t* command_transcript_on(void*baton, dfsch_object_t* args,
 
   transcript = fopen(fname, "a");
   if (!transcript){
-    dfsch_throw("exception:unable-to-open-transcript", 
+    dfsch_error("exception:unable-to-open-transcript", 
 		dfsch_make_string_cstr(strerror(errno)));
   }
 

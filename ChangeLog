@@ -1,5 +1,7 @@
 2007-12-10  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: renamed dfsch_throw to dfsch_error
+
 	* src/wrapper.c (dfsch_make_wrapper_type): support hash method in
 	wrapper types
 

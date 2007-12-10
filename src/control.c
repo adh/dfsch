@@ -336,7 +336,7 @@ static object_t* native_raise(void *baton, object_t* args, dfsch_tail_escape_t* 
 
   dfsch_raise(exception);
 }
-static object_t* native_throw(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+static object_t* native_error(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   object_t* type;
   object_t* data;
 
@@ -348,11 +348,8 @@ static object_t* native_throw(void *baton, object_t* args, dfsch_tail_escape_t* 
                                    data,
                                    dfsch_get_stack_trace()));
 }
-static object_t* native_error(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  dfsch_throw("user:error",args);
-}
 static object_t* native_abort(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  dfsch_throw("user:abort",NULL);
+  dfsch_error("user:abort",NULL);
 }
 
 static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* esc){
@@ -527,8 +524,6 @@ void dfsch__control_register(dfsch_object_t *ctx){
 		   dfsch_make_primitive(&native_raise,NULL));
   dfsch_define_cstr(ctx, "make-exception", 
 		   dfsch_make_primitive(&native_make_exception,NULL));
-  dfsch_define_cstr(ctx, "throw", 
-		   dfsch_make_primitive(&native_throw,NULL));
   dfsch_define_cstr(ctx, "error", 
 		   dfsch_make_primitive(&native_error,NULL));
   dfsch_define_cstr(ctx, "abort", 

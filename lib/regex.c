@@ -55,7 +55,7 @@ static void regex_compile(regex_t* regex, char* expression, int flags){
 
   err = regcomp(regex, expression, flags);
   if (err != 0){
-    dfsch_throw("regex:error", 
+    dfsch_error("regex:error", 
                 dfsch_make_string_cstr(regex_get_error(err, regex)));
   }
 }
@@ -83,7 +83,7 @@ static int regex_match(regex_t* regex, char*string, int flags){
 
 int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags){
   if (!regex || regex->type != &regex_type)
-    dfsch_throw("regex:not-a-regex", regex);
+    dfsch_error("regex:not-a-regex", regex);
 
   return regex_match(&(((dfsch_regex_t*)regex)->regex), string, flags);
 }
@@ -131,10 +131,10 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
                                        int flags){
   dfsch_regex_t* r;
   if (!regex || regex->type != &regex_type)
-    dfsch_throw("regex:not-a-regex", regex);
+    dfsch_error("regex:not-a-regex", regex);
   r = (dfsch_regex_t*)regex;
   if (r->sub_count == 0)
-    dfsch_throw("regex:compiled-with-nosub", regex);
+    dfsch_error("regex:compiled-with-nosub", regex);
 
   return regex_substrings(&(r->regex), string, r->sub_count, flags);
 }

@@ -54,7 +54,7 @@ dfsch_object_t* dfsch_make_weak_reference(dfsch_object_t* refered){
 int dfsch_weak_reference_live_p(dfsch_object_t* reference){
   reference_t* ref;
   if (!reference || reference->type != &reference_type)
-    dfsch_throw("exception:not-a-reference", reference);
+    dfsch_error("exception:not-a-reference", reference);
   ref = (reference_t*) reference;
 
   return ref->live;
@@ -62,7 +62,7 @@ int dfsch_weak_reference_live_p(dfsch_object_t* reference){
 dfsch_object_t* dfsch_weak_reference_dereference(dfsch_object_t* reference){
   reference_t* ref;
   if (!reference || reference->type != &reference_type)
-    dfsch_throw("exception:not-a-reference", reference);
+    dfsch_error("exception:not-a-reference", reference);
   ref = (reference_t*) reference;
 
   if (!ref->live){
@@ -133,7 +133,7 @@ size_t dfsch_weak_vector_length(dfsch_object_t *vector){
 dfsch_object_t** dfsch_weak_vector_as_array(dfsch_object_t *vector, 
                                             size_t *length){
   if (!vector || vector->type != &weak_vector_type)
-    dfsch_throw("exception:not-a-weak-vector",vector);
+    dfsch_error("exception:not-a-weak-vector",vector);
 
   if (length){
     *length = ((weak_vector_t*)vector)->length;
@@ -163,7 +163,7 @@ dfsch_object_t* dfsch_weak_vector_ref(dfsch_object_t *vector, size_t k){
   weak_vector_t* v;
 
   if (!vector || vector->type != &weak_vector_type)
-    dfsch_throw("exception:not-a-weak-vector",vector);
+    dfsch_error("exception:not-a-weak-vector",vector);
 
   return v->data[k];
 }
@@ -173,12 +173,12 @@ dfsch_object_t* dfsch_weak_vector_set(dfsch_object_t* vector, size_t k,
   weak_vector_t* v;
 
   if (!vector || vector->type != &weak_vector_type)
-    dfsch_throw("exception:not-a-weak-vector",vector);
+    dfsch_error("exception:not-a-weak-vector",vector);
 
   v = (weak_vector_t*) vector;
 
   if (v->length <= k){
-    dfsch_throw("exception:invalid-index",dfsch_make_number_from_long(k));
+    dfsch_error("exception:invalid-index",dfsch_make_number_from_long(k));
   }
   
   if (v->set){
@@ -194,7 +194,7 @@ dfsch_object_t* dfsch_weak_vector_set(dfsch_object_t* vector, size_t k,
 dfsch_object_t* dfsch_weak_vector_2_list(dfsch_object_t* vector){
 
   if (!vector || vector->type != &weak_vector_type)
-    dfsch_throw("exception:not-a-vector",vector);
+    dfsch_error("exception:not-a-vector",vector);
 
   return dfsch_list_from_array(((weak_vector_t*)vector)->data, 
                                ((weak_vector_t*)vector)->length);

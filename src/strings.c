@@ -327,7 +327,7 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
   TYPE_CHECK(s, STRING, "string");
 
   if (index >= s->len)
-    dfsch_throw("exception:index-out-of-bounds",
+    dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(index));
 
   return s->ptr[index];
@@ -346,11 +346,11 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
   TYPE_CHECK(s, STRING, "string");
 
   if (end > s->len)
-    dfsch_throw("exception:index-out-of-bounds",
+    dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(end));
 
   if (start > end)
-    dfsch_throw("exception:index-out-of-bounds",
+    dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(start));
 
   return dfsch_make_string_buf(s->ptr+start, end-start);
@@ -528,7 +528,7 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
     return c.ch;
   }
 
-  dfsch_throw("exception:index-out-of-bounds",
+  dfsch_error("exception:index-out-of-bounds",
               dfsch_make_number_from_long(index));
 }
 
@@ -562,7 +562,7 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
   dfsch_string_t *s = (dfsch_string_t*)string;
 
   if (start > end)
-    dfsch_throw("exception:index-out-of-bounds",
+    dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(start));
 
   c.start = start;
@@ -574,7 +574,7 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
                                  string, &c, NULL, NULL)){
 
     if (c.len != c.end)
-      dfsch_throw("exception:index-out-of-bounds",
+      dfsch_error("exception:index-out-of-bounds",
                   dfsch_make_number_from_long(end));
       
     c.eptr = s->len;
@@ -622,7 +622,7 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   size_t i=0;
   size_t len;
   if (list && !dfsch_pair_p(list))
-    dfsch_throw("exception:not-a-list",list);
+    dfsch_error("exception:not-a-list",list);
   
   len = 0;
   while (dfsch_pair_p((object_t*)j)){
@@ -636,7 +636,7 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
     } else if (ch <= 0x10ffff){
       len += 4;
     } else {
-      dfsch_throw("exception:invalid-unicode-character", j->car);
+      dfsch_error("exception:invalid-unicode-character", j->car);
     }
     j = (pair_t*)j->cdr;
   }
