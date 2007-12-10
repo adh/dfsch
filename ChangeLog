@@ -1,5 +1,8 @@
 2007-12-10  Ales Hakl  <ales at hakl dot net>
 
+	* src/wrapper.c (dfsch_make_wrapper_type): support hash method in
+	wrapper types
+
 	* src/dfsch.c: removed scheme-like call/ec (idea is to replace it
 	with CL-style catch/throw)
 

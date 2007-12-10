@@ -22,6 +22,7 @@ typedef struct wrapper_type_t {
   dfsch_object_t* write;
   dfsch_object_t* equal_p;
   dfsch_object_t* apply;
+  dfsch_object_t* hash;
 } wrapper_type_t;
 
 typedef struct wrapper_t {
@@ -58,6 +59,14 @@ static dfsch_object_t* wrapper_apply(dfsch_object_t* obj,
                         dfsch_list(2, obj, args),
                         esc);
 }
+static size_t wrapper_hash(dfsch_object_t* obj){
+  wrapper_type_t* type = (wrapper_type_t*) obj->type;
+
+  return 
+    dfsch_make_number_from_long(dfsch_apply(type->hash,
+                                            dfsch_list(1,
+                                                       obj)));
+}
 
 static char*  wrapper_type_write(wrapper_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
@@ -87,7 +96,8 @@ static const dfsch_type_t wrapper_type = {
 extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
                                                dfsch_object_t* write,
                                                dfsch_object_t* equal_p,
-                                               dfsch_object_t* apply){
+                                               dfsch_object_t* apply,
+                                               dfsch_object_t* hash){
 
   wrapper_type_t* t = (wrapper_type_t*)
     dfsch_make_object((dfsch_type_t*)&wrapper_type);
@@ -114,6 +124,13 @@ extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
     t->apply = apply;
   }else{
     t->type.apply = NULL;
+  }
+
+  if (hash){
+    t->type.hash = wrapper_hash;
+    t->hash = hash;
+  }else{
+    t->type.hash = NULL;
   }
   
   return (dfsch_object_t*)t;
@@ -157,13 +174,15 @@ static dfsch_object_t* native_make_wrapper_type(void *baton,
   dfsch_object_t* write;
   dfsch_object_t* equal_p;
   dfsch_object_t* apply;
+  dfsch_object_t* hash;
   DFSCH_STRING_ARG(args, name);
   DFSCH_OBJECT_ARG_OPT(args, write, NULL);
   DFSCH_OBJECT_ARG_OPT(args, equal_p, NULL);
   DFSCH_OBJECT_ARG_OPT(args, apply, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, hash, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_wrapper_type(name, write, equal_p, apply);
+  return dfsch_make_wrapper_type(name, write, equal_p, apply, hash);
 }
 
 static dfsch_object_t* native_wrap(void *baton, 

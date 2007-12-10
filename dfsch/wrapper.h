@@ -10,7 +10,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
                                                  dfsch_object_t* write,
                                                  dfsch_object_t* equal_p,
-                                                 dfsch_object_t* apply);
+                                                 dfsch_object_t* apply,
+                                                 dfsch_object_t* hash);
   
   extern dfsch_object_t* dfsch_wrap(dfsch_object_t* type,
                                     dfsch_object_t* object);
