@@ -101,12 +101,16 @@ extern "C" {
   int dfsch_port_batch_read(dfsch_object_t* port);
   
   dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port);
+
+  dfsch_object_t* dfsch_null_port();
   
   dfsch_object_t* dfsch_current_output_port();
   dfsch_object_t* dfsch_current_input_port();
+  dfsch_object_t* dfsch_current_error_port();
 
   void dfsch_set_current_output_port(dfsch_object_t* port);
   void dfsch_set_current_input_port(dfsch_object_t* port);
+  void dfsch_set_current_error_port(dfsch_object_t* port);
 
   void dfsch_port_unsafe_register(dfsch_object_t* ctx);
 

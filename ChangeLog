@@ -1,5 +1,7 @@
 2007-12-11  Ales Hakl  <ales at hakl dot net>
 
+	* dfsch/ports.h: added declarations
+
 	* src/ports.c: null-port and display and write
 
 	* src/dfsch.c: use saprintf()
