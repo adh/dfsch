@@ -5,6 +5,8 @@
 #include "internal.h"
 #include "util.h"
 
+#include <string.h>
+
 /*
  * Idea is that final implementation will fallback to calling these methods
  * on port object, but this is currently not of high priority and tedious 
@@ -166,6 +168,7 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
 typedef struct current_ports_t{
   dfsch_object_t* output_port;
   dfsch_object_t* input_port;
+  dfsch_object_t* error_port;
 } current_ports_t;
 
 current_ports_t* current_ports(){
@@ -178,6 +181,9 @@ dfsch_object_t* dfsch_current_output_port(){
 }
 dfsch_object_t* dfsch_current_input_port(){
   return current_ports()->input_port;
+}
+dfsch_object_t* dfsch_current_error_port(){
+  return current_ports()->error_port;
 }
 
 void dfsch_set_current_output_port(dfsch_object_t* port){
@@ -192,6 +198,54 @@ void dfsch_set_current_input_port(dfsch_object_t* port){
   }
   current_ports()->input_port = port;  
 }
+void dfsch_set_current_error_port(dfsch_object_t* port){
+  if (!dfsch_output_port_p(port)){
+    dfsch_error("exception:not-an-output-port", port);
+  }
+  current_ports()->error_port = port;
+}
+
+typedef struct null_port_t {
+  dfsch_port_type_t* type;
+} null_port_t;
+
+static ssize_t null_port_write_buf(dfsch_object_t* port, 
+                                   char*buf, size_t len){
+  return len;
+}
+static ssize_t null_port_read_buf(dfsch_object_t* port, 
+                                  char*buf, size_t len){
+  memset(buf, 0, len);
+  return len;
+}
+
+static dfsch_port_type_t null_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    sizeof(null_port_t),
+    "null-port",
+    NULL,
+    NULL,
+    NULL
+  },
+  null_port_write_buf,
+  null_port_read_buf,
+
+  NULL,
+  NULL,
+
+  NULL,
+  NULL,
+  NULL
+};
+
+static null_port_t null_port = {
+  &null_port_type
+};
+
+dfsch_object_t* dfsch_null_port(){
+  return (dfsch_object_t*) &null_port;
+}
 
 static dfsch_object_t* native_current_output_port(void* baton,
                                                   dfsch_object_t* args,
@@ -204,6 +258,12 @@ static dfsch_object_t* native_current_input_port(void* baton,
                                                  dfsch_tail_escape_t* esc){
   DFSCH_ARG_END(args);
   return dfsch_current_input_port();
+}
+static dfsch_object_t* native_current_error_port(void* baton,
+                                                 dfsch_object_t* args,
+                                                 dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+  return dfsch_current_error_port();
 }
 static dfsch_object_t* native_set_current_output_port(void* baton,
                                                       dfsch_object_t* args,
@@ -223,19 +283,72 @@ static dfsch_object_t* native_set_current_input_port(void* baton,
   dfsch_set_current_input_port(port);
   return NULL;
 }
+static dfsch_object_t* native_set_current_error_port(void* baton,
+                                                     dfsch_object_t* args,
+                                                     dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_ARG_END(args);
+  dfsch_set_current_error_port(port);
+  return NULL;
+}
+static dfsch_object_t* native_null_port(void* baton,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+  return dfsch_null_port();
+}
+static dfsch_object_t* native_write(void* baton,
+                                    dfsch_object_t* args,
+                                    dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  dfsch_object_t* object;
+  char *buf;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_ARG_END(args);
 
+  buf = dfsch_obj_write(object, 1, 1000);
+  dfsch_port_write_buf(port, buf, strlen(buf));
+  
+  return NULL;
+}
+static dfsch_object_t* native_display(void* baton,
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  dfsch_object_t* object;
+  char *buf;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_ARG_END(args);
 
+  buf = dfsch_obj_write(object, 0, 1000);
+  dfsch_port_write_buf(port, buf, strlen(buf));
+  
+  return NULL;
+}
 
 void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "current-output-port", 
                     dfsch_make_primitive(native_current_output_port, NULL));
   dfsch_define_cstr(ctx, "current-input-port", 
                     dfsch_make_primitive(native_current_input_port, NULL));
+  dfsch_define_cstr(ctx, "current-error-port", 
+                    dfsch_make_primitive(native_current_error_port, NULL));
+  dfsch_define_cstr(ctx, "null-port", 
+                    dfsch_make_primitive(native_null_port, NULL));
+  dfsch_define_cstr(ctx, "write", 
+                    dfsch_make_primitive(native_write, NULL));
+  dfsch_define_cstr(ctx, "display", 
+                    dfsch_make_primitive(native_display, NULL));
 }
 void dfsch_port_unsafe_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "set-current-output-port!", 
                     dfsch_make_primitive(native_set_current_output_port, NULL));
   dfsch_define_cstr(ctx, "set-current-input-port!", 
                     dfsch_make_primitive(native_set_current_input_port, NULL));
+  dfsch_define_cstr(ctx, "set-current-error-port!", 
+                    dfsch_make_primitive(native_set_current_error_port, NULL));
   
 }

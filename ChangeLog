@@ -1,5 +1,7 @@
 2007-12-11  Ales Hakl  <ales at hakl dot net>
 
+	* src/ports.c: null-port and display and write
+
 	* src/dfsch.c: use saprintf()
 
 	* src/control.c: rewritten all special forms as true special forms
