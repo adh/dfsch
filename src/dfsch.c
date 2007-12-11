@@ -143,18 +143,14 @@ uint32_t dfsch_hash(dfsch_object_t* obj){
 
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
-    char buf[sizeof(void*)*2+1];
-    char buf2[sizeof(void*)*2+1];
 
-    sl_append(l, "#<standard-type 0x");
-    snprintf(buf, sizeof(void*)*2+1, "%x", t);
-    sl_append(l, buf);
+    sl_append(l, "#<standard-type ");
+    sl_append(l, saprintf("%p", t));
     
     sl_append(l, " ");
     sl_append(l, t->name);
-    sl_append(l, " instance-size: 0x");
-    snprintf(buf2, sizeof(void*)*2+1, "%x", t->size);    
-    sl_append(l, buf2);
+    sl_append(l, " instance-size: ");
+    sl_append(l, saprintf("%d", t->size));
 
     sl_append(l,">");
     
@@ -243,9 +239,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
   if (s->data){
     return s->data;
   } else {
-    char* buf = GC_MALLOC_ATOMIC(64);
-    snprintf(buf, 64, "#<gensym 0x%x>", s);
-    return buf;
+    return saprintf("#<gensym %p>", s);
   }
 }
 
@@ -263,11 +257,9 @@ static const dfsch_type_t primitive_type = {
 
 static char* closure_write(closure_t* c, int max_depth, int readable){
     str_list_t* l = sl_create();
-    char buf[sizeof(void*)*2+1];
 
-    sl_append(l, "#<function 0x");
-    snprintf(buf, sizeof(void*)*2+1, "%x", c);
-    sl_append(l, buf);
+    sl_append(l, "#<function ");
+    sl_append(l, saprintf("%p", c));
     
     if (c->name){
       sl_append(l, " ");
