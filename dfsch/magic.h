@@ -103,7 +103,7 @@ extern void dfsch__continue_continuation(dfsch__thread_info_t* ti);
 #define DFSCH_UNWIND                            \
   {                                             \
     dfsch_object_t* dfsch___exception;          \
-    int dfsch___caught;                         \
+    int dfsch___caught = 0;                     \
     DFSCH_TRY {
 
 #define DFSCH_PROTECT              \

@@ -1,3 +1,9 @@
+2007-12-12  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c (dfsch__port_native_register): reading from ports
+
+	* dfsch/magic.h (DFSCH_UNWIND): initialize dfsch___caught
+
 2007-12-11  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/ports.h: added declarations
