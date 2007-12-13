@@ -22,6 +22,7 @@
 #ifndef H__dfsch__util__
 #define H__dfsch__util__
 
+#include <dfsch/strings.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -50,6 +51,8 @@ extern void dfsch__sl_nappend(str_list_t* list, char* string, size_t l);
 #define sl_nappend dfsch__sl_nappend
 extern char* dfsch__sl_value(str_list_t* list);
 #define sl_value dfsch__sl_value
+extern dfsch_strbuf_t* dfsch__sl_value_strbuf(str_list_t* list);
+#define sl_value_strbuf dfsch__sl_value_strbuf
 extern char* dfsch__stracat(char* a, char* b);
 #define stracat dfsch__stracat
 extern char* dfsch__stracpy(char* x);

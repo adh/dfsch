@@ -86,6 +86,25 @@ char* dfsch__sl_value(str_list_t* list){
 
   return buf;
 }
+dfsch_strbuf_t* dfsch__sl_value_strbuf(str_list_t* list){
+  dfsch_strbuf_t *buf = GC_NEW(dfsch_strbuf_t);
+  str_li_t *i = list->head;
+  char *ptr;
+
+  buf->ptr = GC_MALLOC_ATOMIC(list->len+1);
+  buf->len = list->len;
+  ptr = buf->ptr;
+
+  while (i){
+    memcpy(ptr, i->str, i->len);
+    ptr += i->len;
+    i = i->next;
+  }
+  
+  *ptr = '\0';
+
+  return buf;
+}
 
 char* dfsch__stracat(char* a, char* b){
   size_t s = strlen(a)+strlen(b)+1;

@@ -1,5 +1,6 @@
 #include "dfsch/ports.h"
 
+#include <dfsch/strings.h>
 #include <dfsch/object.h>
 #include <dfsch/number.h>
 #include <dfsch/magic.h>
@@ -262,6 +263,67 @@ void dfsch_set_current_error_port(dfsch_object_t* port){
   current_ports()->error_port = port;
 }
 
+/*
+ * string-output-port
+ */
+
+typedef struct string_output_port_t {
+  dfsch_type_t* type;
+  str_list_t* list;
+  pthread_mutex_t* mutex;
+} string_output_port_t;
+
+
+static void string_output_port_write_buf(string_output_port_t* port, 
+                               char*buf, size_t len){
+  pthread_mutex_lock(port->mutex);
+  sl_nappend(port->list, buf, len);
+  pthread_mutex_unlock(port->mutex);
+}
+
+static dfsch_port_type_t string_output_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    sizeof(string_output_port_t),
+    "string-output-port",
+    NULL,
+    NULL,
+    NULL
+  },
+  string_output_port_write_buf,
+  NULL,
+
+  NULL,
+  NULL,
+
+  NULL,
+  NULL,
+  NULL
+};
+
+dfsch_object_t* dfsch_string_output_port(){
+  string_output_port_t* port = dfsch_make_object(&string_output_port_type);
+
+  port->mutex = create_finalized_mutex();
+  port->list = sl_create();
+
+  return port;
+}
+dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
+  string_output_port_t* p;
+  dfsch_strbuf_t* buf;
+
+  if (!port || port->type != &string_output_port_type){
+    dfsch_error("exceptiion:not-a-string-output-port", port);
+  }
+  p = (string_output_port_t*) port;
+
+  pthread_mutex_lock(p->mutex);
+  buf = sl_value_strbuf(p->list);
+  pthread_mutex_unlock(p->mutex);
+  
+  return buf;
+}
 
 static dfsch_object_t* native_current_output_port(void* baton,
                                                   dfsch_object_t* args,
@@ -417,6 +479,21 @@ static dfsch_object_t* native_port_write_buf(void* baton,
 
   return NULL;
 }
+static dfsch_object_t* native_string_output_port(void* baton,
+                                                 dfsch_object_t* args,
+                                                 dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+  return dfsch_string_output_port();
+}
+static dfsch_object_t* native_string_output_port_value(void* baton,
+                                                       dfsch_object_t* args,
+                                                       dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_strbuf(dfsch_string_output_port_value(port));
+}
 
 
 void dfsch__port_native_register(dfsch_object_t *ctx){
@@ -443,6 +520,12 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_port_read_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-line", 
                     dfsch_make_primitive(native_port_read_line, NULL));
+
+  dfsch_define_cstr(ctx, "string-output-port", 
+                    dfsch_make_primitive(native_string_output_port, NULL));
+  dfsch_define_cstr(ctx, "string-output-port-value", 
+                    dfsch_make_primitive(native_string_output_port_value,
+                                         NULL));
 
 }
 void dfsch_port_unsafe_register(dfsch_object_t* ctx){

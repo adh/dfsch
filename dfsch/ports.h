@@ -112,6 +112,11 @@ extern "C" {
   void dfsch_set_current_input_port(dfsch_object_t* port);
   void dfsch_set_current_error_port(dfsch_object_t* port);
 
+  dfsch_object_t* dfsch_string_output_port();
+  dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port);
+
+
+
   void dfsch_port_unsafe_register(dfsch_object_t* ctx);
 
 #ifdef __cplusplus
