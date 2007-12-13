@@ -45,10 +45,10 @@ int dfsch_input_port_p(dfsch_object_t* port){
 }
 
 
-int dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
+void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
   if (port && port->type && port->type->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(port->type))->write_buf){
-      return ((dfsch_port_type_t*)(port->type))->write_buf(port, buf, size);
+      ((dfsch_port_type_t*)(port->type))->write_buf(port, buf, size);
     } else {
       dfsch_error("exception:not-an-output-port", port);
     }
@@ -166,21 +166,18 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
   return dfsch_strbuf_create(buf, len);
 }
 
-
-typedef struct current_ports_t{
-  dfsch_object_t* output_port;
-  dfsch_object_t* input_port;
-  dfsch_object_t* error_port;
-} current_ports_t;
-
+/*
+ * null-port
+ *
+ * Discards anything written, reads return EOF
+ */
 
 typedef struct null_port_t {
   dfsch_port_type_t* type;
 } null_port_t;
 
-static int null_port_write_buf(dfsch_object_t* port, 
+static void null_port_write_buf(dfsch_object_t* port, 
                                char*buf, size_t len){
-  return 1;
 }
 static ssize_t null_port_read_buf(dfsch_object_t* port, 
                                   char*buf, size_t len){
@@ -214,6 +211,22 @@ static null_port_t null_port = {
 dfsch_object_t* dfsch_null_port(){
   return (dfsch_object_t*) &null_port;
 }
+
+/*
+ * current-foo-port implementation
+ */
+
+/*
+ * TODO: It's actually not bad idea to have this structure thread-specific
+ * (it's more or less required for reliable operation) but this suffices
+ * as current implementation.
+ */
+
+typedef struct current_ports_t{
+  dfsch_object_t* output_port;
+  dfsch_object_t* input_port;
+  dfsch_object_t* error_port;
+} current_ports_t;
 
 current_ports_t* current_ports(){
   static current_ports_t p = {&null_port, &null_port, &null_port};
@@ -400,7 +413,9 @@ static dfsch_object_t* native_port_write_buf(void* baton,
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
-  return dfsch_bool(dfsch_port_write_buf(port, buf->ptr, buf->len));
+  dfsch_port_write_buf(port, buf->ptr, buf->len);
+
+  return NULL;
 }
 
 

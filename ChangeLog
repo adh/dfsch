@@ -1,3 +1,8 @@
+2007-12-13  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c (dfsch_port_write_buf): there is no reason for
+	write-buf! to return anything
+
 2007-12-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/ports.c (dfsch__port_native_register): reading from ports

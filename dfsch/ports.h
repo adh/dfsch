@@ -16,7 +16,7 @@ extern "C" {
    * write-buf!, seek!, tell, batch-read-start!, batch-read-end!, batch-read!)
    */
 
-  typedef int (*dfsch_port_write_buf_t)(dfsch_object_t* port, 
+  typedef void (*dfsch_port_write_buf_t)(dfsch_object_t* port, 
                                         char*buf, size_t size);
   typedef ssize_t (*dfsch_port_read_buf_t)(dfsch_object_t* port, 
                                          char*buf, size_t size);
@@ -91,7 +91,7 @@ extern "C" {
   int dfsch_output_port_p(dfsch_object_t* obj);
   int dfsch_input_port_p(dfsch_object_t* obj);
 
-  int dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
+  void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
   ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size);
   int dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence);
   off_t dfsch_port_tell(dfsch_object_t* port);
