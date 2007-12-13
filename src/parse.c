@@ -814,7 +814,8 @@ static int read_callback(dfsch_object_t* obj, dfsch_object_t** res){
 /*
  * There is slight bug - when first character after atom is (, ) or ;
  * it's silently thrown away. This clearly is undesired behavior, but
- * in my opinion does not break anyhing significant.
+ * in my opinion does not break anyhing significant. So let's call it 
+ * feature for now.
  */
 
 dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
