@@ -781,7 +781,7 @@ static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
   DFSCH_FLAG_PARSER_BEGIN_SYM_ONLY(args);
   DFSCH_FLAG_SET("rdonly", O_RDONLY, oflag);
   DFSCH_FLAG_SET("wronly", O_WRONLY, oflag);
-  DFSCH_FLAG_SET("rdwr", O_WRONLY, oflag);
+  DFSCH_FLAG_SET("rdwr", O_RDWR, oflag);
   DFSCH_FLAG_SET("append", O_APPEND, oflag);
   DFSCH_FLAG_SET("creat", O_CREAT, oflag);
   DFSCH_FLAG_SET("dsync", O_DSYNC, oflag);
