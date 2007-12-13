@@ -802,10 +802,20 @@ void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->error = 0;
 }
 
+int dfsch_parser_top_level(dfsch_parser_ctx_t *ctx){
+  return (ctx->parser == NULL) & (ctx->tokenizer_state == T_NONE);
+}
+
 static int read_callback(dfsch_object_t* obj, dfsch_object_t** res){
   *res = obj;
   return 0;
 }
+
+/*
+ * There is slight bug - when first character after atom is (, ) or ;
+ * it's silently thrown away. This clearly is undesired behavior, but
+ * in my opinion does not break anyhing significant.
+ */
 
 dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   dfsch_parser_ctx_t* parser = dfsch_parser_create();
@@ -814,6 +824,7 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   dfsch_object_t* res;
 
   dfsch_port_batch_read_start(port);
+  dfsch_parser_callback(parser, read_callback, &res);
   DFSCH_UNWIND {
     while ((ch = dfsch_port_batch_read(port)) != -1){
       buf[0] = ch;
@@ -827,6 +838,9 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   } DFSCH_PROTECT {
     dfsch_port_batch_read_end(port);
   } DFSCH_END_UNWIND;
-
-  dfsch_error("parser:unexpected-end-of-file", port);
+  if (dfsch_parser_top_level(parser)){
+    return dfsch_eof_object();
+  } else {
+    dfsch_error("parser:unexpected-end-of-file", port);
+  }
 }

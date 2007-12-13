@@ -75,6 +75,11 @@ extern "C" {
   extern int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx);
 
   /**
+   * Return true if parser is in default state.
+   */
+  extern int dfsch_parser_top_level(dfsch_parser_ctx_t *ctx);
+
+  /**
    * Destroy current parser context and start from scratch (useful for 
    * C-c in interactive applications)
    */

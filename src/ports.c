@@ -168,6 +168,35 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
 }
 
 /*
+ * eof object
+ */
+
+typedef struct eof_object_t{
+  dfsch_type_t* type;
+} eof_object_t;
+
+dfsch_type_t eof_object_type = {
+  DFSCH_STANDARD_TYPE,
+  sizeof(eof_object_t),
+  "eof-object",
+  NULL,
+  NULL,
+  NULL
+};
+
+eof_object_t eof_object = {
+  &eof_object_type
+};
+
+dfsch_object_t* dfsch_eof_object(){
+  return (dfsch_object_t*)&eof_object;
+}
+int dfsch_eof_object_p(dfsch_object_t* obj){
+  return obj == &eof_object;
+}
+
+
+/*
  * null-port
  *
  * Discards anything written, reads return EOF
@@ -566,6 +595,15 @@ static dfsch_object_t* native_string_input_port(void* baton,
 
   return dfsch_string_input_port(string->ptr, string->len);
 }
+static dfsch_object_t* native_eof_object_p(void* baton,
+                                           dfsch_object_t* args,
+                                           dfsch_tail_escape_t* esc){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);  
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_eof_object_p(object));
+}
 
 
 void dfsch__port_native_register(dfsch_object_t *ctx){
@@ -586,6 +624,9 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "read", 
                     dfsch_make_primitive(native_read, NULL));
 
+  dfsch_define_cstr(ctx, "eof-object?", 
+                    dfsch_make_primitive(native_eof_object_p, NULL));
+
   dfsch_define_cstr(ctx, "port-write-buf", 
                     dfsch_make_primitive(native_port_read_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-buf", 
@@ -600,6 +641,7 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                                          NULL));
   dfsch_define_cstr(ctx, "string-input-port", 
                     dfsch_make_primitive(native_string_input_port, NULL));
+
 
 }
 void dfsch_port_unsafe_register(dfsch_object_t* ctx){

@@ -1,9 +1,12 @@
 2007-12-13  Ales Hakl  <ales at hakl dot net>
 
+	* src/parse.c (dfsch_parser_read_from_port): fixed read
+
 	* src/ports.c (dfsch_port_write_buf): there is no reason for
 	write-buf! to return anything
 	(string_output_port_type): string-output-port
 	(string_input_port_type): partial implementation of string-input-port
+	(eof_object_type): eof-object
 
 2007-12-12  Ales Hakl  <ales at hakl dot net>
 

@@ -115,6 +115,8 @@ extern "C" {
   dfsch_object_t* dfsch_string_output_port();
   dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port);
 
+  dfsch_object_t* dfsch_eof_object();
+  int dfsch_eof_object_p(dfsch_object_t* obj);
 
 
   void dfsch_port_unsafe_register(dfsch_object_t* ctx);
