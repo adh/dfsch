@@ -3,6 +3,7 @@
 	* src/ports.c (dfsch_port_write_buf): there is no reason for
 	write-buf! to return anything
 	(string_output_port_type): string-output-port
+	(string_input_port_type): partial implementation of string-input-port
 
 2007-12-12  Ales Hakl  <ales at hakl dot net>
 
