@@ -4,10 +4,7 @@ Non-version-specific:
 For 0.2.0:
 * Documentation
 * Date and time handling
-* Unified exceptions and continuations (current implementation fails,
-  read segfaults, in many cases)
-* Warnings
-* Conditions
+* Conditions (Errors, Warnings, debugger hooks...)
 * Better handling of locality of syntax errors
 
 For 0.2.1:
