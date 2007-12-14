@@ -29,20 +29,20 @@ EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/lib.scm \
 
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
-	src/parse.c dfsch/parse.h \
-	src/native.c src/native_cxr.c\
-	src/control.c \
-	src/util.c src/util.h \
-	src/hash.c dfsch/hash.h \
-	src/promise.c dfsch/promise.h \
-	src/number.c dfsch/number.h \
-	src/strings.c dfsch/strings.h \
-	src/wrapper.c dfsch/wrapper.h \
-	src/object.c dfsch/object.h\
-	src/weak.c dfsch/weak.h\
-	src/pprint.c dfsch/pprint.h\
-	src/format.c dfsch/format.h\
-	src/ports.c dfsch/ports.h\
+	src/parse.c dfsch/parse.h 	\
+	src/native.c src/native_cxr.c	\
+	src/control.c src/system.c 	\
+	src/util.c src/util.h 		\
+	src/hash.c dfsch/hash.h 	\
+	src/promise.c dfsch/promise.h 	\
+	src/number.c dfsch/number.h 	\
+	src/strings.c dfsch/strings.h 	\
+	src/wrapper.c dfsch/wrapper.h 	\
+	src/object.c dfsch/object.h	\
+	src/weak.c dfsch/weak.h		\
+	src/pprint.c dfsch/pprint.h	\
+	src/format.c dfsch/format.h	\
+	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0

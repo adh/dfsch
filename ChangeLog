@@ -1,5 +1,9 @@
 2007-12-14  Ales Hakl  <ales at hakl dot net>
 
+	* src/system.c (native_decode_universal_time):
+	decode-universal-time function
+	(native_get_decoded_time): get-decoded-time
+
 	* src/ports.c (file_port_type): partial implementation file-port
 	(file_port_seek): seek! and tell
 
