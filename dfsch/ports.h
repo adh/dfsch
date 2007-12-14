@@ -28,6 +28,8 @@ extern "C" {
   typedef void (*dfsch_port_batch_read_end_t)(dfsch_object_t* port);
   typedef int (*dfsch_port_batch_read_t)(dfsch_object_t* port);
 
+  typedef int (*dfsch_port_get_caps_t)(dfsch_object_t* port);
+
   /**
    * Type structure for ports (this structure itself must have type of
    * DFSCH_PORT_TYPE_TYPE).
@@ -117,6 +119,10 @@ extern "C" {
 
   dfsch_object_t* dfsch_eof_object();
   int dfsch_eof_object_p(dfsch_object_t* obj);
+
+  dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name);
+  dfsch_object_t* dfsch_open_file_port(char* filename, char* mode);
+  void dfsch_close_file_port(dfsch_object_t* port);
 
 
   void dfsch_port_unsafe_register(dfsch_object_t* ctx);

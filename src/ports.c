@@ -9,6 +9,7 @@
 #include "util.h"
 
 #include <string.h>
+#include <errno.h>
 
 /*
  * Idea is that final implementation will fallback to calling these methods
@@ -319,7 +320,7 @@ static dfsch_port_type_t string_output_port_type = {
     NULL,
     NULL
   },
-  string_output_port_write_buf,
+  (dfsch_port_write_buf_t)string_output_port_write_buf,
   NULL,
 
   NULL,
@@ -337,7 +338,7 @@ dfsch_object_t* dfsch_string_output_port(){
   port->mutex = create_finalized_mutex();
   port->list = sl_create();
 
-  return port;
+  return (dfsch_object_t*)port;
 }
 dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
   string_output_port_t* p;
@@ -395,7 +396,7 @@ static dfsch_port_type_t string_input_port_type = {
     NULL
   },
   NULL,
-  string_input_port_read_buf,
+  (dfsch_port_read_buf_t)string_input_port_read_buf,
 
   NULL,
   NULL,
@@ -414,8 +415,175 @@ dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
   port->cur = 0;
   port->mutex = create_finalized_mutex();
 
-  return port;
+  return (dfsch_object_t*)port;
 }
+
+/*
+ * file-port - port based on stdio FILE*
+ *
+ * This port is somehow special, because it's both input-port? and output-port?
+ * but whenever it's usable for input, output or both directions depends on 
+ * flags used when opening.
+ */
+
+typedef struct file_port_t {
+  dfsch_type_t* type;
+  FILE* file;
+  int close;
+  int open;
+  char* name;
+} file_port_t;
+
+
+static void errno_error(char* name, dfsch_object_t* object, int e){
+  dfsch_error(name, dfsch_list(3, 
+                               object,
+                               dfsch_make_number_from_long(e),
+                               dfsch_make_string_cstr(strerror(e))));
+}
+
+static void file_port_write_buf(file_port_t* port, 
+                                char*buf, size_t len){
+  size_t ret;
+
+  if (!port->open){
+    dfsch_error("exception:port-closed", port);
+  }
+
+  ret = fwrite(buf, len, 1, port->file);
+  if (ret == 0){
+    errno_error("exception:file-port-write-failed",
+                (dfsch_object_t*)port,
+                errno);
+  }
+}
+static ssize_t file_port_read_buf(file_port_t* port,
+                                  char* buf, size_t len){
+  size_t ret;
+
+  if (!port->open){
+    dfsch_error("exception:port-closed", port);
+  }
+
+  ret = fread(buf, 1, len, port->file);
+  if (ret == 0){
+    if (feof(port->file)){
+      return 0;
+    } else {
+      errno_error("exception:file-port-read-failed",
+                  (dfsch_object_t*)port,
+                  errno);
+    }
+  }
+  return ret;
+}
+static char* file_port_write(file_port_t* port, int depth, int readable){
+  if (port->open){
+    if (port->name){
+      return saprintf("#<file-port %p name %s>", port, port->name);
+    } else {
+      return saprintf("#<file-port %p fd %d>", port);
+    }
+  } else {
+    return saprintf("#<file-port %p *closed*>", port);
+  }
+}
+
+static dfsch_port_type_t file_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    sizeof(file_port_t),
+    "file-port",
+    (dfsch_type_write_t)file_port_write,
+    NULL,
+    NULL
+  },
+  (dfsch_port_write_buf_t)file_port_write_buf,
+  (dfsch_port_read_buf_t)file_port_read_buf,
+
+  NULL, // TODO
+  NULL,
+
+  NULL, // TODO
+  NULL,
+  NULL
+};
+
+static void file_port_finalizer(file_port_t* port, void* cd){
+  if (port->open && port->close){
+    fclose(port->file);
+    port->open = 0;
+  }
+}
+
+dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
+  file_port_t* port = (file_port_t*)dfsch_make_object(&file_port_type);
+
+  port->file = file;
+  port->close = close;
+  port->name = name;
+  port->open = 1; /* Creating closed ports makes no sense */
+
+  if (close){
+    GC_REGISTER_FINALIZER(port, (GC_finalization_proc)file_port_finalizer,
+                          NULL, NULL, NULL);
+  }
+
+  return (dfsch_object_t*)port;
+}
+
+dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
+  FILE* file;
+
+  if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a'){ /// XXX
+    dfsch_error("exception:invalid-file-port-mode", 
+                dfsch_make_string_cstr(mode));
+  }
+  if (mode[1] != 0){
+    if (mode[1] != '+' && mode[1] != 'b'){
+      dfsch_error("exception:invalid-file-port-mode", 
+                  dfsch_make_string_cstr(mode));
+      
+    }
+    if (mode[2] != 0){
+      if ((mode[2] != '+' && mode[2] != 'b') 
+          || (mode[2] == mode[1])
+          || (mode[3] != 0)){
+        dfsch_error("exception:invalid-file-port-mode", 
+                    dfsch_make_string_cstr(mode));
+      }
+    }
+  }
+
+  file = fopen(filename, mode);
+  
+  if (!file){
+      errno_error("exception:file-port-open-failed",
+                  dfsch_make_string_cstr(filename),
+                  errno);
+  }
+
+  return dfsch_make_file_port(file, 1, filename);
+}
+
+void dfsch_close_file_port(dfsch_object_t* port){
+  file_port_t* p;
+
+  if (!port || port->type != &file_port_type){
+    dfsch_error("exception:not-a-file-port", port);
+  }
+
+  p = (file_port_t*) port;
+
+  if (p->close && p->open){
+    fclose(p->file);
+    p->open = 0;
+  }  
+}
+
+/*
+ * Scheme interface
+ */
 
 static dfsch_object_t* native_current_output_port(void* baton,
                                                   dfsch_object_t* args,
@@ -478,7 +646,7 @@ static dfsch_object_t* native_write(void* baton,
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
-  buf = dfsch_obj_write(object, 1, 1000);
+  buf = dfsch_obj_write(object, 1000, 0);
   dfsch_port_write_buf(port, buf, strlen(buf));
   
   return NULL;
@@ -493,7 +661,7 @@ static dfsch_object_t* native_display(void* baton,
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
-  buf = dfsch_obj_write(object, 0, 1000);
+  buf = dfsch_obj_write(object, 1000, 0);
   dfsch_port_write_buf(port, buf, strlen(buf));
   
   return NULL;
@@ -605,6 +773,27 @@ static dfsch_object_t* native_eof_object_p(void* baton,
   return dfsch_bool(dfsch_eof_object_p(object));
 }
 
+static dfsch_object_t* native_open_file_port(void* baton,
+                                             dfsch_object_t* args,
+                                             dfsch_tail_escape_t* esc){
+  char* fname;
+  char* mode;
+  DFSCH_STRING_ARG(args, fname);
+  DFSCH_STRING_ARG(args, mode);
+  DFSCH_ARG_END(args);
+
+  return dfsch_open_file_port(fname, mode);
+}
+static dfsch_object_t* native_close_file_port(void* baton,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_ARG_END(args);
+
+  dfsch_close_file_port(port);
+  return NULL;
+}
 
 void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "current-output-port", 
@@ -641,6 +830,11 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                                          NULL));
   dfsch_define_cstr(ctx, "string-input-port", 
                     dfsch_make_primitive(native_string_input_port, NULL));
+
+  dfsch_define_cstr(ctx, "open-file-port", 
+                    dfsch_make_primitive(native_open_file_port, NULL));
+  dfsch_define_cstr(ctx, "close-file-port", 
+                    dfsch_make_primitive(native_close_file_port, NULL));
 
 
 }
