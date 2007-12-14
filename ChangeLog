@@ -1,6 +1,7 @@
 2007-12-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/ports.c (file_port_type): partial implementation file-port
+	(file_port_seek): seek! and tell
 
 2007-12-13  Ales Hakl  <ales at hakl dot net>
 

@@ -69,10 +69,10 @@ ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
     dfsch_error("exception:not-a-port", port);
   }
 }
-int dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence){
+void dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence){
   if (port && port->type && port->type->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(port->type))->seek){
-      return ((dfsch_port_type_t*)(port->type))->seek(port, offset, whence);
+      ((dfsch_port_type_t*)(port->type))->seek(port, offset, whence);
     } else {
       dfsch_error("exception:port-not-seekable", port);
     }
@@ -489,20 +489,49 @@ static char* file_port_write(file_port_t* port, int depth, int readable){
   }
 }
 
+static void file_port_seek(file_port_t* port, off_t offset, int whence){
+  if (!port->open){
+    dfsch_error("exception:port-closed", port);
+  }
+
+  if (fseek(port->file, offset, whence) != 0){
+    errno_error("exception:file-port-seek-failed",
+                (dfsch_object_t*)port,
+                errno);
+  }
+}
+
+static off_t file_port_tell(file_port_t* port){
+  off_t ret;
+  if (!port->open){
+    dfsch_error("exception:port-closed", port);
+  }
+
+  ret = ftell(port->file);
+
+  if (ret == -1){
+    errno_error("exception:file-port-tell-failed",
+                (dfsch_object_t*)port,
+                errno);
+  }
+
+  return ret;
+}
+
 static dfsch_port_type_t file_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
     sizeof(file_port_t),
     "file-port",
-    (dfsch_type_write_t)file_port_write,
     NULL,
+    (dfsch_type_write_t)file_port_write,
     NULL
   },
   (dfsch_port_write_buf_t)file_port_write_buf,
   (dfsch_port_read_buf_t)file_port_read_buf,
 
-  NULL, // TODO
-  NULL,
+  (dfsch_port_seek_t)file_port_seek,
+  (dfsch_port_tell_t)file_port_tell,
 
   NULL, // TODO
   NULL,
@@ -739,6 +768,36 @@ static dfsch_object_t* native_port_write_buf(void* baton,
 
   return NULL;
 }
+static dfsch_object_t* native_port_seek(void* baton,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  off_t offset;
+  int whence = SEEK_SET;
+  
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_LONG_ARG(args, offset);
+  DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, whence);
+  DFSCH_FLAG_VALUE("set", SEEK_SET, whence);
+  DFSCH_FLAG_VALUE("cur", SEEK_CUR, whence);
+  DFSCH_FLAG_VALUE("end", SEEK_END, whence);
+  DFSCH_FLAG_PARSER_END(args);
+
+  dfsch_port_seek(port, offset, whence);
+
+  return NULL;
+}
+static dfsch_object_t* native_port_tell(void* baton,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  dfsch_object_t* port;
+  char *buf;
+  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_number_from_long(dfsch_port_tell(port));
+}
+
 static dfsch_object_t* native_string_output_port(void* baton,
                                                  dfsch_object_t* args,
                                                  dfsch_tail_escape_t* esc){
@@ -822,6 +881,10 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_port_read_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-line", 
                     dfsch_make_primitive(native_port_read_line, NULL));
+  dfsch_define_cstr(ctx, "port-seek!", 
+                    dfsch_make_primitive(native_port_seek, NULL));
+  dfsch_define_cstr(ctx, "port-tell", 
+                    dfsch_make_primitive(native_port_tell, NULL));
 
   dfsch_define_cstr(ctx, "string-output-port", 
                     dfsch_make_primitive(native_string_output_port, NULL));
@@ -833,7 +896,7 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "open-file-port", 
                     dfsch_make_primitive(native_open_file_port, NULL));
-  dfsch_define_cstr(ctx, "close-file-port", 
+  dfsch_define_cstr(ctx, "close-file-port!", 
                     dfsch_make_primitive(native_close_file_port, NULL));
 
 

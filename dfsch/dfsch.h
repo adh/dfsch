@@ -584,19 +584,42 @@ extern "C" {
   while (dfsch_pair_p((args))){ \
     dfsch_object_t* dfsch___flag = dfsch_car((args));\
     if (!dfsch_symbol_p(dfsch___flag)) break;
+  
+#define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name) \
+  if (!dfsch_pair_p((args))){                                           \
+    dfsch_error("exception:required-argument-missing", #name);          \
+  }                                                                     \
+  {                                                                     \
+    dfsch_object_t* dfsch___flag;                                       \
+    dfsch___flag = dfsch_car((args));                                   \
+    if (!dfsch_symbol_p(dfsch___flag)) {                                \
+      dfsch_error("exception:not-a-symbol", dfsch___flag);              \
+    }
 
-#define DFSCH_FLAG_SET(name, value, variable)\
-    if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) |= (value)    
+#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name) \
+  if (dfsch_pair_p((args))){                                            \
+    dfsch_object_t* dfsch___flag;                                       \
+    dfsch___flag = dfsch_car((args));                                   \
+    if (!dfsch_symbol_p(dfsch___flag)) {                                \
+      dfsch_error("exception:not-a-symbol", dfsch___flag);              \
+    }
 
-#define DFSCH_FLAG_UNSET(name, value, variable)\
-    if (dfsch_compare_symbol(dfsch___flag ,(name))) (variable) &= ~(value)    
-
-#define DFSCH_FLAG_FUNC(name)\
-    if (dfsch_compare_symbol(dfsch___flag ,(name))) 
-
+      
+#define DFSCH_FLAG_VALUE(name, value, variable)                         \
+  if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) = (value)    
+    
+#define DFSCH_FLAG_SET(name, value, variable)                           \
+  if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) |= (value)    
+  
+#define DFSCH_FLAG_UNSET(name, value, variable)                         \
+  if (dfsch_compare_symbol(dfsch___flag ,(name))) (variable) &= ~(value)    
+  
+#define DFSCH_FLAG_FUNC(name)                           \
+  if (dfsch_compare_symbol(dfsch___flag ,(name))) 
+  
 #define DFSCH_FLAG_PARSER_END(args) \
-    (args) = dfsch_cdr((args)); \
-  }
+  (args) = dfsch_cdr((args));       \
+}
 
 
 #ifdef __cplusplus
