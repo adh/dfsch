@@ -108,6 +108,25 @@ static dfsch_object_t* native_decode_universal_time(void* baton,
   return ret;
 }
 
+static dfsch_object_t* native_encode_universal_time(void* baton,
+                                                    dfsch_object_t* args,
+                                                    dfsch_tail_escape_t* esc){
+  struct tm tm;
+  DFSCH_LONG_ARG(args, tm.tm_sec);
+  DFSCH_LONG_ARG(args, tm.tm_min);
+  DFSCH_LONG_ARG(args, tm.tm_hour);
+
+  DFSCH_LONG_ARG(args, tm.tm_mday);
+  DFSCH_LONG_ARG(args, tm.tm_mon);
+  DFSCH_LONG_ARG(args, tm.tm_year);
+  DFSCH_ARG_END(args);
+
+  tm.tm_mon -= 1;
+  tm.tm_year -= 1900;
+
+  return dfsch_make_number_from_long(mktime(&tm));
+}
+
 static dfsch_object_t* native_get_decoded_time(void* baton,
                                                dfsch_object_t* args,
                                                dfsch_tail_escape_t* esc){
@@ -131,10 +150,22 @@ static dfsch_object_t* native_get_decoded_time(void* baton,
   return ret;  
 }
 
+static dfsch_object_t* native_get_universal_time(void* baton,
+                                                 dfsch_object_t* args,
+                                                 dfsch_tail_escape_t* esc){
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_long(time(NULL));
+}
+
 void dfsch__system_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "decode-universal-time", 
                     dfsch_make_primitive(native_decode_universal_time, NULL));
+  dfsch_define_cstr(ctx, "encode-universal-time", 
+                    dfsch_make_primitive(native_encode_universal_time, NULL));
   dfsch_define_cstr(ctx, "get-decoded-time", 
                     dfsch_make_primitive(native_get_decoded_time, NULL));
+  dfsch_define_cstr(ctx, "get-universal-time", 
+                    dfsch_make_primitive(native_get_universal_time, NULL));
 
 }

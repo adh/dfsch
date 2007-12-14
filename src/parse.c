@@ -101,7 +101,9 @@ static void consume_queue(string_queue_t *q, char* new){
 
 }
 static void empty_queue(string_queue_t *q){
-  *(q->buf)=0;
+  if (q->buf){
+    *(q->buf)=0;
+  }
 }
 
 typedef struct parser_stack_t parser_stack_t;
@@ -166,7 +168,7 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   if (!ctx)
     return NULL;
 
-  ctx->q  = create_queue();
+  ctx->q = create_queue();
   if (!ctx->q){
     return NULL;
   }
@@ -706,7 +708,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->tokenizer_state = T_NONE;
         break;
       case '<':
-        ctx->error = DFSCH_PARSER_UNREADABLE;
+        parser_abort(ctx, "parser:unreadable");
         return;        
       case '!': /* for shebang */
         ++data;
@@ -714,7 +716,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->tokenizer_state = T_COMMENT;
         break;
       default:
-        ctx->error = DFSCH_PARSER_INVALID_ESCAPE;
+        parser_abort(ctx, "parser:invalid-escape");
         return;
       }
       break;
@@ -767,8 +769,6 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
   }
 
   consume_queue(ctx->q, data);
-
-
 }
 
 int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
@@ -785,7 +785,7 @@ char* dfsch_parser_feed_catch(dfsch_parser_ctx_t *ctx, char* data){
   DFSCH_TRY {
     dfsch_parser_feed(ctx, data);
     return NULL;
-  } DFSCH_CATCH (ex) {
+  } DFSCH_CATCH(ex) {
     return dfsch_exception_write(ex);
   } DFSCH_END_TRY;
 }

@@ -1,3 +1,8 @@
+2007-12-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/system.c (native_encode_universal_time):
+	encode-universal-time	
+
 2007-12-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/system.c (native_decode_universal_time):
