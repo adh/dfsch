@@ -2,8 +2,6 @@ Non-version-specific:
 * More tests
 
 For 0.2.0:
-* Simplified IO (something along the lines of scheme ports, but not
-   fully compatible)
 * Documentation
 * Date and time handling
 * Unified exceptions and continuations (current implementation fails,
