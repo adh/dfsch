@@ -158,6 +158,29 @@ static dfsch_object_t* native_get_universal_time(void* baton,
   return dfsch_make_number_from_long(time(NULL));
 }
 
+static dfsch_object_t* native_iso_format_time(void* baton,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc){
+  char t = ' ';
+  dfsch_object_t* use_t;
+  dfsch_object_t* time;
+  struct tm* tm;
+  DFSCH_OBJECT_ARG(args, time);
+  DFSCH_OBJECT_ARG_OPT(args, use_t, NULL);
+  DFSCH_ARG_END(args);
+
+  if (use_t){
+    t = 'T';
+  }
+
+  tm = dfsch_decoded_time_get_tm(time);
+
+  return dfsch_make_string_cstr(saprintf("%04d-%02d-%02d%c%02d:%02d:%02d",
+                                         tm->tm_year+1900, tm->tm_mon+1, 
+                                         tm->tm_mday, t,
+                                         tm->tm_hour, tm->tm_min, tm->tm_sec));
+}
+
 void dfsch__system_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "decode-universal-time", 
                     dfsch_make_primitive(native_decode_universal_time, NULL));
@@ -167,5 +190,7 @@ void dfsch__system_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_get_decoded_time, NULL));
   dfsch_define_cstr(ctx, "get-universal-time", 
                     dfsch_make_primitive(native_get_universal_time, NULL));
+  dfsch_define_cstr(ctx, "iso-format-time", 
+                    dfsch_make_primitive(native_iso_format_time, NULL));
 
 }

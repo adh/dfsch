@@ -2,6 +2,7 @@
 
 	* src/system.c (native_encode_universal_time):
 	encode-universal-time	
+	(native_iso_format_time): iso-format-time function
 
 2007-12-14  Ales Hakl  <ales at hakl dot net>
 
