@@ -128,7 +128,6 @@ static char* stat_write(stat_t* st, int max_depth, int readable){
 static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,
                                   dfsch_tail_escape_t *esc){
   dfsch_object_t* selector;
-  int i;
 
   DFSCH_OBJECT_ARG(args, selector);
   DFSCH_ARG_END(args);
