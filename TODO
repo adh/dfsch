@@ -27,6 +27,8 @@ Sometimes:
   to implement outside parser.)
 * Parser-level namespaces
 * syntax-rules
+* Sound I/O
+* Compiler
 
 External modules and libraries:
 * XML (SAX, SXML, DOM)
