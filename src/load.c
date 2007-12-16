@@ -61,8 +61,9 @@ dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx,
   if (err)
     dfsch_error("load:dlopen-failed",dfsch_make_string_cstr(err));
   
-  return entry(ctx); // TODO: what if this routine fails?
+  entry(ctx); // TODO: what if this routine fails?
 
+  return dfsch_sym_true();
 }
 
 typedef struct import_ctx_t {

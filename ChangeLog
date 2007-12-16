@@ -1,3 +1,7 @@
+2007-12-16  Ales Hakl  <ales at hakl dot net>
+
+	* src/load.c (dfsch_load_so): return some meaningful value
+
 2007-12-15  Ales Hakl  <ales at hakl dot net>
 
 	* src/system.c (native_encode_universal_time):
