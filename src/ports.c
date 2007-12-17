@@ -675,7 +675,7 @@ static dfsch_object_t* native_write(void* baton,
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
-  buf = dfsch_obj_write(object, 1000, 0);
+  buf = dfsch_obj_write(object, 1000, 1);
   dfsch_port_write_buf(port, buf, strlen(buf));
   
   return NULL;

@@ -3,6 +3,9 @@
 	* src/repl.c (interactive_repl): handle exceptions for parser on
 	line-feeds
 
+	* src/ports.c (native_write): write readable representation
+
+
 2007-12-16  Ales Hakl  <ales at hakl dot net>
 
 	* src/load.c (dfsch_load_so): return some meaningful value
