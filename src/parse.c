@@ -782,12 +782,14 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
 }
 
 char* dfsch_parser_feed_catch(dfsch_parser_ctx_t *ctx, char* data){
+  char *ret;
   DFSCH_TRY {
     dfsch_parser_feed(ctx, data);
-    return NULL;
+    ret= NULL;
   } DFSCH_CATCH(ex) {
-    return dfsch_exception_write(ex);
+    ret = dfsch_exception_write(ex);
   } DFSCH_END_TRY;
+  return ret;
 }
 
 int dfsch_parser_get_level(dfsch_parser_ctx_t *ctx){

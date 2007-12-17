@@ -271,7 +271,9 @@ void interactive_repl(dfsch_object_t* ctx){
     if (ret = dfsch_parser_feed_catch(parser,str)){
       fputs(ret, stderr);
     }
-    dfsch_parser_feed(parser,"\n");
+    if (ret = dfsch_parser_feed_catch(parser, "\n")){
+      fputs(ret, stderr);
+    }
 
     free(str);
   }
