@@ -945,10 +945,10 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
   dfsch_define_cstr(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
   dfsch_define_cstr(ctx, "number?", dfsch_make_primitive(&native_number_p,
-							NULL));
+                                                         NULL));
 
   dfsch_define_cstr(ctx, "pi", 
-                   dfsch_make_number_from_double(4*atan(1)));
+                    dfsch_make_number_from_double(4*atan(1)));
 
 
   dfsch_define_cstr(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
@@ -971,16 +971,16 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "max", dfsch_make_primitive(&native_max,NULL));
 
   dfsch_define_cstr(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
-                                                      NULL));
+                                                       NULL));
   dfsch_define_cstr(ctx, "negative?", dfsch_make_primitive(&native_negative_p,
-                                                          NULL));
+                                                           NULL));
   dfsch_define_cstr(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
-                                                          NULL));
+                                                           NULL));
 
   dfsch_define_cstr(ctx, "even?", dfsch_make_primitive(&native_even_p,
-                                                      NULL));
+                                                       NULL));
   dfsch_define_cstr(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
-                                                     NULL));
+                                                      NULL));
 
   dfsch_define_cstr(ctx, "round", dfsch_make_primitive(&native_round,NULL));
   dfsch_define_cstr(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));

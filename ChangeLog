@@ -1,3 +1,7 @@
+2007-12-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/repl.c (main): do not load modules by default
+
 2007-12-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (interactive_repl): handle exceptions for parser on

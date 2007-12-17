@@ -505,7 +505,7 @@ static dfsch_object_t* native_channel_write(void*baton,
 
 
 
-dfsch_object_t* dfsch_threads_register(dfsch_object_t *ctx){
+dfsch_object_t* dfsch_module_threads_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "thread:create", 
                    dfsch_make_primitive(&native_thread_create,NULL));
   dfsch_define_cstr(ctx, "thread:join", 

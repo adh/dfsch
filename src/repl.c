@@ -30,9 +30,6 @@
 #include <dfsch/parse.h>
 #include <dfsch/load.h>
 #include <dfsch/ports.h>
-#include <dfsch/lib/threads.h>
-#include <dfsch/lib/regex.h>
-#include <dfsch/lib/unix.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -350,9 +347,6 @@ int main(int argc, char**argv){
   dfsch_define_cstr(ctx,"*dfsch-version*",dfsch_make_string_cstr(PACKAGE_VERSION));
 
   dfsch_load_register(ctx);
-  dfsch_threads_register(ctx);
-  dfsch_regex_register(ctx);
-  dfsch_unix_register(ctx);
   dfsch_port_unsafe_register(ctx);
 
   dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));

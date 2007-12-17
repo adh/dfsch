@@ -1099,7 +1099,7 @@ static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
 
 
 
-dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx){
+dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "unix:mode", 
                     dfsch_make_primitive(native_mode, NULL));
   dfsch_define_cstr(ctx, "unix:sig", 

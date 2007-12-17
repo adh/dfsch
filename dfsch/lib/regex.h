@@ -31,7 +31,7 @@ extern "C" {
   /**
    * Define regular expression primitives in given environment.
    */
-  dfsch_object_t* dfsch_regex_register(dfsch_object_t *ctx);
+  dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx);
 
 #ifdef __cplusplus
 }

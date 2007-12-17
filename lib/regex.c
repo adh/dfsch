@@ -251,7 +251,7 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
 }
 
 
-dfsch_object_t* dfsch_regex_register(dfsch_object_t *ctx){
+dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "regex:compile", 
                    dfsch_make_primitive(&native_regex_compile,NULL));
   dfsch_define_cstr(ctx, "regex:match?", 

@@ -1,4 +1,5 @@
 (require 'lib)
+(require 'regex)
 
 (define tests-passed 0)
 (define tests-failed 0)

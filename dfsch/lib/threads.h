@@ -28,7 +28,7 @@ extern "C" {
   extern void dfsch_channel_write(dfsch_object_t* channel,
                                   dfsch_object_t* object);
 
-  extern dfsch_object_t* dfsch_threads_register(dfsch_object_t *ctx);
+  extern dfsch_object_t* dfsch_module_threads_register(dfsch_object_t *ctx);
 
 #ifdef __cplusplus
 }

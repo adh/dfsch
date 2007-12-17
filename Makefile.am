@@ -63,7 +63,6 @@ unix_la_LIBADD =  libdfsch.la
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la \
-	threads.la regex.la unix.la \
 	@READLINE_LIBS@		
 
 

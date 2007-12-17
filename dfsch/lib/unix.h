@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-  extern dfsch_object_t* dfsch_unix_register(dfsch_object_t* ctx);
+  extern dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx);
 
 
   extern dfsch_object_t* dfsch_unix_opendir(char* name);
