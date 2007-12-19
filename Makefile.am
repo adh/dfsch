@@ -60,6 +60,10 @@ unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -version-info 1:0:0 -module
 unix_la_LIBADD =  libdfsch.la
 
+inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
+inet_la_LDFLAGS = -version-info 1:0:0 -module
+inet_la_LIBADD =  libdfsch.la
+
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la \
