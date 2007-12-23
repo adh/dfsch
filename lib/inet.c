@@ -277,6 +277,113 @@ dfsch_strbuf_t* dfsch_inet_urlencode(dfsch_strbuf_t* strbuf){
   return res;
 }
 
+static char base64_chars[] = 
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static int base64char_value(char ch){
+  if ((ch >= 'A') && (ch <= 'Z')){
+    return ch - 'A';
+  } else if ((ch >= 'a') && (ch <= 'z')){
+    return ch - 'a' + 26;
+  } else if ((ch >= '0') && (ch <= '9')){
+    return ch - '0' + 52;
+  } else if (ch == '+'){
+    return 62;
+  } else if (ch == '/'){
+    return 63;
+  }
+  return -1;
+}
+static char ubase64_chars[] = 
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
+static int ubase64char_value(char ch){
+  if ((ch >= 'A') && (ch <= 'Z')){
+    return ch - 'A';
+  } else if ((ch >= 'a') && (ch <= 'z')){
+    return ch - 'a' + 26;
+  } else if ((ch >= '0') && (ch <= '9')){
+    return ch - '0' + 52;
+  } else if (ch == '*'){
+    return 62;
+  } else if (ch == '-'){
+    return 63;
+  }
+  return -1;
+}
+
+dfsch_strbuf_t* dfsch_inet_base64_decode(dfsch_strbuf_t* str_buf){
+
+}
+dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
+                                         int wrap,
+                                         int pad){
+  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+  size_t i;
+  char* out;
+  uint32_t tmp;
+
+  switch (str_buf->len % 3){
+  case 0:
+    res->len = str_buf->len / 3 * 4;
+    break;
+  case 1:
+    res->len = str_buf->len / 3 * 4 + (pad ? 4 : 2);
+    break;
+  case 2:
+    res->len = str_buf->len / 3 * 4 + (pad ? 4 : 3);
+    break;
+  }
+  
+  if (wrap){
+    res->len += (res->len / 64) * 2;
+  }
+
+  res->ptr = out = GC_MALLOC_ATOMIC(res->len+1);
+  
+  for (i = 0; i + 2 < str_buf->len;  i+=3){
+    tmp = (str_buf->ptr[i] << 16) | 
+      (str_buf->ptr[i+1] << 8) | (str_buf->ptr[i+2]);
+
+    *out++ = base64_chars[(tmp >> 18) & 0x3f];
+    *out++ = base64_chars[(tmp >> 12) & 0x3f];
+    *out++ = base64_chars[(tmp >> 6) & 0x3f];
+    *out++ = base64_chars[tmp & 0x3f];
+
+    if (wrap && i % 48 == 45){
+      *out++ = '\r';
+      *out++ = '\n';      
+    }
+  }
+
+  switch (str_buf->len - i){
+  case 1:
+    tmp = (str_buf->ptr[i] << 16);
+
+    *out++ = base64_chars[(tmp >> 18) & 0x3f];
+    *out++ = base64_chars[(tmp >> 12) & 0x3f];
+    if (pad){
+      *out++ = '=';
+      *out++ = '=';
+    }
+    break;
+  case 2:
+    tmp = (str_buf->ptr[i] << 16) | (str_buf->ptr[i+1] << 8);
+
+    *out++ = base64_chars[(tmp >> 18) & 0x3f];
+    *out++ = base64_chars[(tmp >> 12) & 0x3f];
+    *out++ = base64_chars[(tmp >> 6) & 0x3f];
+    if (pad){
+      *out++ = '=';
+    }    
+    break;
+  }
+  
+  *out = 0;
+
+  return res;
+}
+dfsch_strbuf_t* dfsch_inet_uri_base64_decode(dfsch_strbuf_t* str_buf);
+dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf);
+
 
 
 static dfsch_object_t* http_split_query(void* baton,
@@ -346,6 +453,23 @@ static dfsch_object_t* inet_urlencode(void* baton,
   return dfsch_make_string_nocopy(dfsch_inet_urlencode(str));
 }
 
+static dfsch_object_t* inet_base64_encode(void* baton,
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
+  dfsch_strbuf_t* str;
+  dfsch_object_t* wrap;
+  dfsch_object_t* pad;
+  DFSCH_BUFFER_ARG(args, str);
+  DFSCH_OBJECT_ARG_OPT(args, wrap, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, pad, NULL);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_nocopy(dfsch_inet_base64_encode(str, 
+                                                           wrap!=NULL, 
+                                                           pad!=NULL));
+}
+
+
 
 dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
   dfsch_provide(env, "inet");
@@ -363,5 +487,9 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
                     dfsch_make_primitive(inet_urldecode, NULL));
   dfsch_define_cstr(env, "inet:urlencode",
                     dfsch_make_primitive(inet_urlencode, NULL));
+
+  dfsch_define_cstr(env, "inet:base64-encode",
+                    dfsch_make_primitive(inet_base64_encode, NULL));
+
 
 }
