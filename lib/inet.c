@@ -311,7 +311,67 @@ static int ubase64char_value(char ch){
 }
 
 dfsch_strbuf_t* dfsch_inet_base64_decode(dfsch_strbuf_t* str_buf){
+  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+  size_t i;
+  size_t valid;
+  uint32_t tmp;
+  int val;
+  char* out;
 
+  valid = 0;
+
+  for (i = 0; i < str_buf->len; i++){
+    if (base64char_value(str_buf->ptr[i]) >= 0){
+      valid++;
+    } 
+  }
+  
+  switch (valid % 4){
+  case 0:
+  case 1:
+    res->len = valid / 4 * 3;
+    break;
+  case 2:
+    res->len = valid / 4 * 3 + 1;    
+    break;
+  case 3:
+    res->len = valid / 4 * 3 + 2;    
+    break;
+  }
+
+  tmp = 0;
+  valid = 0;
+  res->ptr = out = GC_MALLOC_ATOMIC(res->len+1);
+
+  for (i = 0; i < str_buf->len; i++){
+    val = base64char_value(str_buf->ptr[i]);
+    if (val >= 0){
+      tmp <<= 6; 
+      tmp |= val;
+      valid++;
+      if (valid == 4){
+        valid = 0;
+        *out++ = (tmp >> 16) & 0xff;
+        *out++ = (tmp >> 8) & 0xff;
+        *out++ = (tmp) & 0xff;
+        tmp = 0;
+      }
+    }
+  }
+
+  switch (valid){
+  case 2:
+    tmp <<= 12;
+    *out++ = (tmp >> 16) & 0xff;
+  case 3:
+    tmp <<= 6;
+    *out++ = (tmp >> 16) & 0xff;
+    *out++ = (tmp >> 8) & 0xff;
+  }
+
+  *out = 0;
+
+  return res;
 }
 dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
                                          int wrap,
@@ -340,8 +400,9 @@ dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
   res->ptr = out = GC_MALLOC_ATOMIC(res->len+1);
   
   for (i = 0; i + 2 < str_buf->len;  i+=3){
-    tmp = (str_buf->ptr[i] << 16) | 
-      (str_buf->ptr[i+1] << 8) | (str_buf->ptr[i+2]);
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16) | 
+      ((((unsigned)str_buf->ptr[i+1]) & 0xff) << 8) | 
+      (((unsigned)str_buf->ptr[i+2]) & 0xff);
 
     *out++ = base64_chars[(tmp >> 18) & 0x3f];
     *out++ = base64_chars[(tmp >> 12) & 0x3f];
@@ -356,7 +417,7 @@ dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
 
   switch (str_buf->len - i){
   case 1:
-    tmp = (str_buf->ptr[i] << 16);
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16);
 
     *out++ = base64_chars[(tmp >> 18) & 0x3f];
     *out++ = base64_chars[(tmp >> 12) & 0x3f];
@@ -366,7 +427,8 @@ dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
     }
     break;
   case 2:
-    tmp = (str_buf->ptr[i] << 16) | (str_buf->ptr[i+1] << 8);
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16) | 
+      ((((unsigned)str_buf->ptr[i+1]) & 0xff)<< 8);
 
     *out++ = base64_chars[(tmp >> 18) & 0x3f];
     *out++ = base64_chars[(tmp >> 12) & 0x3f];
@@ -381,8 +443,121 @@ dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
 
   return res;
 }
-dfsch_strbuf_t* dfsch_inet_uri_base64_decode(dfsch_strbuf_t* str_buf);
-dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf);
+dfsch_strbuf_t* dfsch_inet_uri_base64_decode(dfsch_strbuf_t* str_buf){
+  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+  size_t i;
+  size_t valid;
+  uint32_t tmp;
+  int val;
+  char* out;
+
+  valid = 0;
+
+  for (i = 0; i < str_buf->len; i++){
+    if (ubase64char_value(str_buf->ptr[i]) >= 0){
+      valid++;
+    } 
+  }
+  
+  switch (valid % 4){
+  case 0:
+  case 1:
+    res->len = valid / 4 * 3;
+    break;
+  case 2:
+    res->len = valid / 4 * 3 + 1;    
+    break;
+  case 3:
+    res->len = valid / 4 * 3 + 2;    
+    break;
+  }
+
+  tmp = 0;
+  valid = 0;
+
+  res->ptr = out = GC_MALLOC_ATOMIC(res->len+1);
+
+  for (i = 0; i < str_buf->len; i++){
+    val = ubase64char_value(str_buf->ptr[i]);
+    if (val >= 0){
+      tmp <<= 6; 
+      tmp |= val;
+      valid++;
+      if (valid == 4){
+        valid = 0;
+        *out++ = (tmp >> 16) & 0xff;
+        *out++ = (tmp >> 8) & 0xff;
+        *out++ = (tmp) & 0xff;
+      }
+    }
+  }
+
+  switch (valid){
+  case 2:
+    tmp <<= 12;
+    *out++ = (tmp >> 16) & 0xff;
+  case 3:
+    tmp <<= 6;
+    *out++ = (tmp >> 16) & 0xff;
+    *out++ = (tmp >> 8) & 0xff;
+  }
+
+  *out = 0;
+
+  return res;
+}
+dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf){
+  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+  size_t i;
+  char* out;
+  uint32_t tmp;
+
+  switch (str_buf->len % 3){
+  case 0:
+    res->len = str_buf->len / 3 * 4;
+    break;
+  case 1:
+    res->len = str_buf->len / 3 * 4 + 2;
+    break;
+  case 2:
+    res->len = str_buf->len / 3 * 4 + 3;
+    break;
+  }
+  
+  res->ptr = out = GC_MALLOC_ATOMIC(res->len+1);
+  
+  for (i = 0; i + 2 < str_buf->len;  i+=3){
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16) | 
+      ((((unsigned)str_buf->ptr[i+1]) & 0xff) << 8) | 
+      (((unsigned)str_buf->ptr[i+2]) & 0xff);
+
+    *out++ = ubase64_chars[(tmp >> 18) & 0x3f];
+    *out++ = ubase64_chars[(tmp >> 12) & 0x3f];
+    *out++ = ubase64_chars[(tmp >> 6) & 0x3f];
+    *out++ = ubase64_chars[tmp & 0x3f];
+  }
+
+  switch (str_buf->len - i){
+  case 1:
+    tmp = (((unsigned)str_buf->ptr[i]) << 16) & 0xff;
+
+    *out++ = ubase64_chars[(tmp >> 18) & 0x3f];
+    *out++ = ubase64_chars[(tmp >> 12) & 0x3f];
+    break;
+  case 2:
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16) | 
+      ((((unsigned)str_buf->ptr[i+1]) & 0xff) << 8);
+
+    *out++ = ubase64_chars[(tmp >> 18) & 0x3f];
+    *out++ = ubase64_chars[(tmp >> 12) & 0x3f];
+    *out++ = ubase64_chars[(tmp >> 6) & 0x3f];
+    break;
+  }
+  
+  *out = 0;
+
+  return res;
+}
 
 
 
@@ -468,6 +643,34 @@ static dfsch_object_t* inet_base64_encode(void* baton,
                                                            wrap!=NULL, 
                                                            pad!=NULL));
 }
+static dfsch_object_t* inet_uri_base64_encode(void* baton,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc){
+  dfsch_strbuf_t* str;
+  DFSCH_BUFFER_ARG(args, str);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_nocopy(dfsch_inet_uri_base64_encode(str));
+}
+static dfsch_object_t* inet_base64_decode(void* baton,
+                                          dfsch_object_t* args,
+                                          dfsch_tail_escape_t* esc){
+  dfsch_strbuf_t* str;
+  DFSCH_BUFFER_ARG(args, str);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_nocopy(dfsch_inet_base64_decode(str));
+}
+static dfsch_object_t* inet_uri_base64_decode(void* baton,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc){
+  dfsch_strbuf_t* str;
+  DFSCH_BUFFER_ARG(args, str);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_nocopy(dfsch_inet_uri_base64_decode(str));
+}
+
 
 
 
@@ -490,6 +693,12 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
 
   dfsch_define_cstr(env, "inet:base64-encode",
                     dfsch_make_primitive(inet_base64_encode, NULL));
+  dfsch_define_cstr(env, "inet:uri-base64-encode",
+                    dfsch_make_primitive(inet_uri_base64_encode, NULL));
+  dfsch_define_cstr(env, "inet:base64-decode",
+                    dfsch_make_primitive(inet_base64_decode, NULL));
+  dfsch_define_cstr(env, "inet:uri-base64-decode",
+                    dfsch_make_primitive(inet_uri_base64_decode, NULL));
 
 
 }

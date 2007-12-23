@@ -4,6 +4,7 @@
 	(dfsch_inet_url..code): urlencode and urldecode
 	(urldecode_to_string): urldecode results from URI parsing
 	(dfsch_inet_base64_encode): base64 encoder
+	(dfsch_inet_base64_decode): base64 decoder
 
 2007-12-22  Ales Hakl  <ales at hakl dot net>
 
