@@ -20,6 +20,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf);
   extern dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len);
 
+  extern dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf);
+
   extern char* dfsch_string_to_cstr(dfsch_object_t* obj);
   extern dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj);
   extern char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj);

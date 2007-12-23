@@ -1,6 +1,7 @@
 2007-12-23  Ales Hakl  <ales at hakl dot net>
 
 	* lib/inet.c: internet (HTTP) data handling module
+	(dfsch_inet_url..code): urlencode and urldecode
 
 2007-12-22  Ales Hakl  <ales at hakl dot net>
 
