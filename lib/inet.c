@@ -81,7 +81,7 @@ dfsch_object_t* dfsch_http_query_2_hash(char* query){
       value++;
       dfsch_hash_set(hash, 
                      urldecode_to_string(query, value-query-1),
-                     urldecode_to_string(query, (query+delim) - value));
+                     urldecode_to_string(value, (query+delim) - value));
     } else {
       dfsch_hash_set(hash, 
                      urldecode_to_string(query, delim),
@@ -221,6 +221,7 @@ dfsch_strbuf_t* dfsch_inet_urldecode(dfsch_strbuf_t* strbuf){
         *out++ = '%'; 
       }
     } else if (strbuf->ptr[i] == '+'){
+      i++;
       *out++ = ' ';      
     } else {
       *out++ = strbuf->ptr[i++];
@@ -294,7 +295,7 @@ static int base64char_value(char ch){
   return -1;
 }
 static char ubase64_chars[] = 
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-";
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-";
 static int ubase64char_value(char ch){
   if ((ch >= 'A') && (ch <= 'Z')){
     return ch - 'A';
@@ -302,7 +303,7 @@ static int ubase64char_value(char ch){
     return ch - 'a' + 26;
   } else if ((ch >= '0') && (ch <= '9')){
     return ch - '0' + 52;
-  } else if (ch == '*'){
+  } else if (ch == '.'){
     return 62;
   } else if (ch == '-'){
     return 63;

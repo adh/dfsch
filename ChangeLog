@@ -1,3 +1,8 @@
+2007-12-24  Ales Hakl  <ales at hakl dot net>
+
+	* lib/inet.c (dfsch_http_query_2_hash): use value, not name
+	(dfsch_inet_urldecode): do not fill whole memory with spaces
+
 2007-12-23  Ales Hakl  <ales at hakl dot net>
 
 	* lib/inet.c: internet (HTTP) data handling module
