@@ -4,6 +4,13 @@
 #include <dfsch/hash.h>
 #include <string.h>
 
+static dfsch_object_t* urldecode_to_string(char* buf, size_t len){
+  dfsch_strbuf_t sb;
+  sb.ptr = buf;
+  sb.len = len;
+  return dfsch_make_string_nocopy(dfsch_inet_urldecode(&sb));
+}
+
 dfsch_object_t* dfsch_http_split_path(char* path){
   char* pos;
   dfsch_object_t* head;
@@ -30,7 +37,7 @@ dfsch_object_t* dfsch_http_split_path(char* path){
 
       pos = strchr(path, '/');
       if (!pos){
-        tmp = dfsch_cons(dfsch_make_string_cstr(path), NULL);
+        tmp = dfsch_cons(urldecode_to_string(path, strlen(path)), NULL);
 
         if (tail){
           dfsch_set_cdr(tail, tmp);
@@ -40,7 +47,7 @@ dfsch_object_t* dfsch_http_split_path(char* path){
         }
         break;
       } else {
-        tmp = dfsch_cons(dfsch_make_string_buf(path, pos - path), NULL);
+        tmp = dfsch_cons(urldecode_to_string(path, pos - path), NULL);
         path = pos;
 
         if (tail){
@@ -58,9 +65,6 @@ dfsch_object_t* dfsch_http_split_path(char* path){
 
 }
 
-void dfsch_http_for_each_query(char* query, 
-                               dfsch_object_t* callback){
-}
 dfsch_object_t* dfsch_http_query_2_hash(char* query){
   size_t delim;
   char* value;
@@ -76,11 +80,11 @@ dfsch_object_t* dfsch_http_query_2_hash(char* query){
     if (value){
       value++;
       dfsch_hash_set(hash, 
-                     dfsch_make_string_buf(query, value-query-1),
-                     dfsch_make_string_buf(query, (query+delim) - value));
+                     urldecode_to_string(query, value-query-1),
+                     urldecode_to_string(query, (query+delim) - value));
     } else {
       dfsch_hash_set(hash, 
-                     dfsch_make_string_buf(query, delim),
+                     urldecode_to_string(query, delim),
                      NULL);
     }
 
@@ -104,14 +108,14 @@ dfsch_object_t* dfsch_http_query_2_alist(char* query){
     if (value){
       value++;
       tmp = dfsch_cons(dfsch_list(2, 
-                                  dfsch_make_string_buf(query, 
-                                                        value - query - 1),
-                                  dfsch_make_string_buf(value, 
-                                                        (query+delim) - value)),
+                                  urldecode_to_string(query, 
+                                                      value - query - 1),
+                                  urldecode_to_string(value, 
+                                                      (query+delim) - value)),
                        NULL);
     } else {
       tmp = dfsch_cons(dfsch_list(1, 
-                                  dfsch_make_string_buf(query, delim)),
+                                  urldecode_to_string(query, delim)),
                        NULL);
     }
 
