@@ -313,7 +313,7 @@ static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_
   list = dfsch_zip(args);
 
   if (!list){
-    dfsch_error("exception:too-few-arguments", args);    
+    return NULL;
   }
 
   while (dfsch_pair_p(list)){
@@ -333,7 +333,7 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   list = dfsch_zip(args);
 
   if (!list){
-    dfsch_error("exception:too-few-arguments", args);    
+    return NULL;
   }
 
   while (dfsch_pair_p(list)){

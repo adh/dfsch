@@ -1,3 +1,11 @@
+2007-12-23  Ales Hakl  <ales at hakl dot net>
+
+	* lib/inet.c: internet (HTTP) data handling module
+
+2007-12-22  Ales Hakl  <ales at hakl dot net>
+
+	* src/native.c (native_for_each): fix empty list case
+
 2007-12-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (main): do not load modules by default
