@@ -560,6 +560,79 @@ dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf){
   return res;
 }
 
+dfsch_strbuf_t* dfsch_inet_xml_escape(dfsch_strbuf_t* str_buf){
+  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+  size_t i;
+  char* out;
+
+  res->len = 0;
+
+  for (i = 0; i < str_buf->len; i++){
+    switch (str_buf->ptr[i]){
+    case '<':
+    case '>':
+      res->len += 4;
+      break;
+    case '\"':
+    case '\'':
+      res->len += 6;
+      break;
+    case '&':
+      res->len += 5;
+      break;
+    default:
+      res->len++;
+    }
+  }
+
+  res->ptr = out = GC_MALLOC_ATOMIC(res->len + 1);
+
+  for (i = 0; i < str_buf->len; i++){
+    switch (str_buf->ptr[i]){
+    case '<':
+      *out++ = '&';
+      *out++ = 'l';
+      *out++ = 't';
+      *out++ = ';';
+      break;
+    case '>':
+      *out++ = '&';
+      *out++ = 'g';
+      *out++ = 't';
+      *out++ = ';';
+      break;
+    case '\"':
+      *out++ = '&';
+      *out++ = 'q';
+      *out++ = 'u';
+      *out++ = 'o';
+      *out++ = 't';
+      *out++ = ';';
+      break;
+    case '\'':
+      *out++ = '&';
+      *out++ = 'a';
+      *out++ = 'p';
+      *out++ = 'o';
+      *out++ = 's';
+      *out++ = ';';
+      break;
+    case '&':
+      *out++ = '&';
+      *out++ = 'a';
+      *out++ = 'm';
+      *out++ = 'p';
+      *out++ = ';';
+      break;
+    default:
+      *out++ = str_buf->ptr[i];
+    }
+  }
+
+  *out = 0;
+
+  return res;
+}
 
 
 static dfsch_object_t* http_split_query(void* baton,
@@ -672,6 +745,16 @@ static dfsch_object_t* inet_uri_base64_decode(void* baton,
   return dfsch_make_string_nocopy(dfsch_inet_uri_base64_decode(str));
 }
 
+static dfsch_object_t* inet_xml_escape(void* baton,
+                                       dfsch_object_t* args,
+                                       dfsch_tail_escape_t* esc){
+  dfsch_strbuf_t* str;
+  DFSCH_BUFFER_ARG(args, str);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_nocopy(dfsch_inet_xml_escape(str));
+}
+
 
 
 
@@ -701,5 +784,7 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "inet:uri-base64-decode",
                     dfsch_make_primitive(inet_uri_base64_decode, NULL));
 
+  dfsch_define_cstr(env, "inet:xml-escape",
+                    dfsch_make_primitive(inet_xml_escape, NULL));
 
 }

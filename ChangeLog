@@ -1,5 +1,10 @@
 2007-12-24  Ales Hakl  <ales at hakl dot net>
 
+	* lib/inet.c (dfsch_inet_xml_escape): special character escpaing
+	for SGML/XML
+
+	* src/parse.c (tokenizer_process): recognize CR as whitespace
+
 	* lib/inet.c (dfsch_http_query_2_hash): use value, not name
 	(dfsch_inet_urldecode): do not fill whole memory with spaces
 
