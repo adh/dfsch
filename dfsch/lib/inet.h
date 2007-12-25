@@ -22,5 +22,7 @@ dfsch_strbuf_t* dfsch_inet_base64_encode(dfsch_strbuf_t* str_buf,
 dfsch_strbuf_t* dfsch_inet_uri_base64_decode(dfsch_strbuf_t* str_buf);
 dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf);
 
+dfsch_strbuf_t* dfsch_inet_xml_escape(dfsch_strbuf_t* str_buf);
+
 
 #endif

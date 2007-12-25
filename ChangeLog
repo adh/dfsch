@@ -1,3 +1,7 @@
+2007-12-25  Ales Hakl  <ales at hakl dot net>
+
+	* lib/gcollect.c: garbage collector statistics module
+
 2007-12-24  Ales Hakl  <ales at hakl dot net>
 
 	* lib/inet.c (dfsch_inet_xml_escape): special character escpaing

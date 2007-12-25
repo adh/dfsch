@@ -20,7 +20,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 
 lib_LTLIBRARIES     = libdfsch.la
 
-dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la
+dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la gcollect.la
 
 man_MANS = doc/dfsch-repl.1
 
@@ -63,6 +63,10 @@ unix_la_LIBADD =  libdfsch.la
 inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 inet_la_LDFLAGS = -version-info 1:0:0 -module
 inet_la_LIBADD =  libdfsch.la
+
+gcollect_la_SOURCES = lib/gcollect.c dfsch/lib/gcollect.h
+gcollect_la_LDFLAGS = -version-info 1:0:0 -module
+gcollect_la_LIBADD =  libdfsch.la
 
 
 dfsch_repl_SOURCES = src/repl.c
