@@ -1,3 +1,7 @@
+2007-12-26  Ales Hakl  <ales at hakl dot net>
+
+	* src/parse.c (tokenizer_process): unicode character literals
+
 2007-12-25  Ales Hakl  <ales at hakl dot net>
 
 	* lib/gcollect.c: garbage collector statistics module

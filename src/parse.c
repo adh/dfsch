@@ -759,9 +759,66 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         simple:
           ++data;
           ctx->column++;
-          parse_object(ctx, dfsch_make_number_from_long(c));
-          if (ctx->error) return;
-          ctx->tokenizer_state = T_NONE;  
+          if (c < 0x80){
+            parse_object(ctx, dfsch_make_number_from_long(c));
+            ctx->tokenizer_state = T_NONE;
+          } else {
+            long ch;
+
+            if ((c & 0xe0) == 0xc0 && (c & 0x1f) != 0x00){
+              if (*data == 0){
+                consume_queue(ctx->q, data-1);
+                return;
+              }
+              if ((*data & 0xc0) != 0x80){
+                parser_abort(ctx, "parser:invalid-unicode-character0");
+              }
+              ch = (c & 0x1f);
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+            } else if ((c & 0xf0) == 0xe0 && (c & 0x0f) != 0x00){
+              if (data[0] == 0 || data[1] == 0){
+                consume_queue(ctx->q, data-1);
+                return;
+              }
+              if ((data[1] & 0xc0) != 0x80 || (data[1] & 0xc0) != 0x80){
+                parser_abort(ctx, "parser:invalid-unicode-character1");
+              }
+              ch = (c & 0x0f);
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+            } else if ((c & 0xf8) == 0xf0 && (c & 0x07) != 0x00){
+              if (data[0] == 0 || data[1] == 0 || data[2] == 0){
+                consume_queue(ctx->q, data-1);
+                return;
+              }
+              if ((data[0] & 0xc0) != 0x80 ||
+                  (data[1] & 0xc0) != 0x80 || 
+                  (data[2] & 0xc0) != 0x80){
+                parser_abort(ctx, "parser:invalid-unicode-character2");
+              }
+              ch = (c & 0x07);
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+              ch <<= 6;
+              ch |= (*data & 0x3f);
+              data++;
+            } else {
+              parser_abort(ctx, "parser:invalid-unicode-character3");
+            }
+
+            parse_object(ctx, dfsch_make_number_from_long(ch));
+            ctx->tokenizer_state = T_NONE;
+          }
           break;          
         }
       }
