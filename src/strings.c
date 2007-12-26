@@ -115,6 +115,7 @@ static size_t string_hash(dfsch_string_t* s){
 
 static const dfsch_type_t string_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(dfsch_string_t),
   "string",
   (dfsch_type_equal_p_t)string_equal_p,
@@ -802,6 +803,8 @@ static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_e
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "<string>", &string_type);
+
 
   dfsch_define_cstr(ctx, "string-append", 
 		   dfsch_make_primitive(&native_string_append,NULL));

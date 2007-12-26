@@ -34,6 +34,7 @@ typedef struct dir_t {
 
 static dfsch_type_t dir_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(dir_t),
   "unix:directory",
   NULL, // equal?
@@ -177,6 +178,7 @@ static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,
 
 static dfsch_type_t stat_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(stat_t),
   "unix:stat-struct",
   NULL, // equal?

@@ -84,6 +84,7 @@ static char*  wrapper_type_write(wrapper_type_t* t, int max_depth, int readable)
 
 
 static const dfsch_type_t wrapper_type = {
+  DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(wrapper_type_t),
   "wrapper-type",
@@ -209,6 +210,8 @@ static dfsch_object_t* native_unwrap(void *baton,
 }
 
 void dfsch__wrapper_native_register(dfsch_object_t *ctx){ 
+  dfsch_define_cstr(ctx, "<wrapper-type>", &wrapper_type);
+
   dfsch_define_cstr(ctx, "make-wrapper-type", 
 		   dfsch_make_primitive(&native_make_wrapper_type, NULL));
   dfsch_define_cstr(ctx, "wrap", 

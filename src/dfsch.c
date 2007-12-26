@@ -141,6 +141,35 @@ uint32_t dfsch_hash(dfsch_object_t* obj){
   return obj->type->hash(obj);
 }
 
+dfsch_type_t* dfsch_type_of(dfsch_object_t* obj){
+  return DFSCH_TYPE_OF(obj);
+}
+
+dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){
+  if (!DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
+    dfsch_error("exception:not-a-standard-type", obj);
+  }
+  
+  return (dfsch_object_t*)((dfsch_type_t*)obj)->superclass;
+}
+
+int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super){
+  if (sub == super)
+    return 1;
+
+  while (sub){
+    sub = sub->superclass;
+    if (sub==super){
+      return 1;
+    }
+  }
+
+  return 0;
+}
+int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
+  return dfsch_superclass_p(DFSCH_TYPE_OF(obj), type);
+}
+
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
 
@@ -159,6 +188,7 @@ static char* type_write(dfsch_type_t* t, int max_depth, int readable){
 
 const dfsch_type_t dfsch_standard_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(dfsch_type_t),
   "standard-type",
   NULL,
@@ -173,6 +203,7 @@ static size_t pair_hash(pair_t* p);
 
 static const dfsch_type_t pair_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(pair_t), 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
@@ -228,6 +259,7 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
 static char* symbol_write(symbol_t*, int, int);
 static const dfsch_type_t symbol_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(symbol_t), 
   "symbol",
   NULL,
@@ -246,6 +278,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
 
 static const dfsch_type_t primitive_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(primitive_t),
   "primitive",
   NULL,
@@ -273,6 +306,7 @@ static char* closure_write(closure_t* c, int max_depth, int readable){
 
 static const dfsch_type_t closure_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(closure_t),
   "function",
   NULL,
@@ -282,6 +316,7 @@ static const dfsch_type_t closure_type = {
 #define CLOSURE (&closure_type)
 
 static const dfsch_type_t macro_type = {
+  DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(macro_t),
   "macro",
@@ -293,6 +328,7 @@ static const dfsch_type_t macro_type = {
 
 static const dfsch_type_t form_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(form_t),
   "form",
   NULL,
@@ -303,6 +339,7 @@ static const dfsch_type_t form_type = {
 
 static const dfsch_type_t exception_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(exception_t),
   "exception",
   NULL,
@@ -356,6 +393,7 @@ static char* vector_write(vector_t* v, int max_depth, int readable){
 
 static const dfsch_type_t vector_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(vector_t),
   "vector",
   (dfsch_type_equal_p_t)vector_equal_p,
@@ -2040,6 +2078,16 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_object_t* ctx;
 
   ctx = dfsch_new_frame(NULL);
+
+  dfsch_define_cstr(ctx, "<pair>", PAIR);
+  dfsch_define_cstr(ctx, "<symbol>", SYMBOL);
+  dfsch_define_cstr(ctx, "<primitive>", PRIMITIVE);
+  dfsch_define_cstr(ctx, "<function>", CLOSURE);
+  dfsch_define_cstr(ctx, "<macro>", MACRO);
+  dfsch_define_cstr(ctx, "<form>", FORM);
+  dfsch_define_cstr(ctx, "<exception>", EXCEPTION);
+  dfsch_define_cstr(ctx, "<vector>", VECTOR);
+
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                    dfsch_make_primitive(&native_top_level_environment, ctx));

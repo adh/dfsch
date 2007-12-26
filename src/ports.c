@@ -27,6 +27,7 @@ DFSCH_LOCAL_SYMBOL_CACHE("batch-read", sel_batch_read);
 
 const dfsch_type_t dfsch_port_type_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(dfsch_port_type_t),
   "port-type",
   NULL,
@@ -178,6 +179,7 @@ typedef struct eof_object_t{
 
 dfsch_type_t eof_object_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(eof_object_t),
   "eof-object",
   NULL,
@@ -218,6 +220,7 @@ static ssize_t null_port_read_buf(dfsch_object_t* port,
 static dfsch_port_type_t null_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
+    NULL,
     sizeof(null_port_t),
     "null-port",
     NULL,
@@ -314,6 +317,7 @@ static void string_output_port_write_buf(string_output_port_t* port,
 static dfsch_port_type_t string_output_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
+    NULL,
     sizeof(string_output_port_t),
     "string-output-port",
     NULL,
@@ -389,6 +393,7 @@ static ssize_t string_input_port_read_buf(string_input_port_t* port,
 static dfsch_port_type_t string_input_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
+    NULL,
     sizeof(string_input_port_t),
     "string-input-port",
     NULL,
@@ -521,6 +526,7 @@ static off_t file_port_tell(file_port_t* port){
 static dfsch_port_type_t file_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
+    NULL,
     sizeof(file_port_t),
     "file-port",
     NULL,

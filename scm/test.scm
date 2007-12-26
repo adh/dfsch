@@ -276,7 +276,7 @@
              (regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
-(group "object subsystem"
+(when () group "object subsystem"
        (sub-group simple-class
                  (define-class <test-class> <object>)
                  (define-method <test-class> (test-dispatch self)

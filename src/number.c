@@ -81,6 +81,7 @@ static size_t n_hash(number_t*n, int max_depth){
 
 static dfsch_type_t number_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(number_t),
   "number",
   (dfsch_type_equal_p_t)n_equal_p,
@@ -933,6 +934,8 @@ static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_
 // TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "number-type", NUMBER);
+
   dfsch_define_cstr(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
   dfsch_define_cstr(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
   dfsch_define_cstr(ctx, "*", dfsch_make_primitive(&native_mult,NULL));

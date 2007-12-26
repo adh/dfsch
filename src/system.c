@@ -66,6 +66,7 @@ size_t decoded_time_hash(decoded_time_t* time){
 
 dfsch_type_t decoded_time_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(decoded_time_t),
   "decoded-time",
   (dfsch_type_equal_p_t)decoded_time_equal_p,
@@ -182,6 +183,9 @@ static dfsch_object_t* native_iso_format_time(void* baton,
 }
 
 void dfsch__system_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "<decoded-time>", &decoded_time_type);
+
+
   dfsch_define_cstr(ctx, "decode-universal-time", 
                     dfsch_make_primitive(native_decode_universal_time, NULL));
   dfsch_define_cstr(ctx, "encode-universal-time", 

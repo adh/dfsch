@@ -48,6 +48,7 @@ struct hash_entry_t {
 
 static const dfsch_type_t hash_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(hash_t),
   "hash",
   NULL,
@@ -578,6 +579,8 @@ static dfsch_object_t* native_form_with_hash(void *baton,
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "<hash>", &hash_type);
+
   dfsch_define_cstr(ctx, "make-hash", 
                    dfsch_make_primitive(&native_make_hash,NULL));
   dfsch_define_cstr(ctx, "hash?", 

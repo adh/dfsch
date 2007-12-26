@@ -87,16 +87,57 @@ static object_t* native_hash(void*baton, object_t* args, dfsch_tail_escape_t* es
 
   return dfsch_make_number_from_long((long)dfsch_hash(object));
 }
-static object_t* native_get_type(void*baton, object_t* args, 
-                                 dfsch_tail_escape_t* esc){
+static object_t* native_type_of(void*baton, object_t* args, 
+                                dfsch_tail_escape_t* esc){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
-  if (!object)
-    return NULL;
-  return (object_t*)object->type;
+  return (object_t*)DFSCH_TYPE_OF(object);
 }
+static object_t* native_superclass(void*baton, object_t* args, 
+                                   dfsch_tail_escape_t* esc){
+  object_t* type;
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return dfsch_superclass(type);
+}
+static object_t* native_superclass_p(void*baton, object_t* args, 
+                                      dfsch_tail_escape_t* esc){
+  dfsch_object_t* sub;
+  dfsch_object_t* super;
+  DFSCH_OBJECT_ARG(args, sub);
+  DFSCH_OBJECT_ARG(args, super);
+  DFSCH_ARG_END(args);
+
+  if (!DFSCH_INSTANCE_P(sub, DFSCH_STANDARD_TYPE)){
+    dfsch_error("excepiton:not-a-standard-type", sub);
+  }
+
+  if (super && !DFSCH_INSTANCE_P(super, DFSCH_STANDARD_TYPE)){
+    dfsch_error("excepiton:not-a-standard-type", super);
+  }
+
+  return dfsch_bool(dfsch_superclass_p((dfsch_type_t*)sub, 
+                                       (dfsch_type_t*)super));
+}
+static object_t* native_instance_p(void*baton, object_t* args, 
+                                   dfsch_tail_escape_t* esc){
+  dfsch_object_t* object;
+  dfsch_object_t* type;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  if (type && !DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
+    dfsch_error("excepiton:not-a-standard-type", type);
+  }
+
+  return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
+}
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -133,6 +174,28 @@ static object_t* native_form_define(void *baton, object_t* args, dfsch_tail_esca
   }
 
 }
+
+static object_t* native_form_define_variable(void *baton, 
+                                             object_t* args, 
+                                             dfsch_tail_escape_t* esc){
+  dfsch_object_t* env;
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
+  
+  if (!dfsch_env_get(name, env)){
+    value = dfsch_eval(value, env);
+    dfsch_define(name, value, env);
+    return value;
+  } else {
+    return NULL;
+  }
+}
+
+
 static object_t* native_form_set(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   
   NEED_ARGS(dfsch_cdr(args),2);  
@@ -673,8 +736,14 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
   dfsch_define_cstr(ctx, "id", dfsch_make_primitive(&native_id,NULL));
   dfsch_define_cstr(ctx, "hash", dfsch_make_primitive(&native_hash,NULL));
-  dfsch_define_cstr(ctx, "get-type", 
-                    dfsch_make_primitive(&native_get_type,NULL));
+  dfsch_define_cstr(ctx, "type-of", 
+                    dfsch_make_primitive(&native_type_of,NULL));
+  dfsch_define_cstr(ctx, "superclass?", 
+                    dfsch_make_primitive(&native_superclass_p,NULL));
+  dfsch_define_cstr(ctx, "instance?", 
+                    dfsch_make_primitive(&native_instance_p,NULL));
+  dfsch_define_cstr(ctx, "superclass", 
+                    dfsch_make_primitive(&native_superclass,NULL));
 
   dfsch_define_cstr(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
   dfsch_define_cstr(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
@@ -693,6 +762,9 @@ void dfsch__native_register(dfsch_object_t *ctx){
 							NULL)));
   dfsch_define_cstr(ctx, "define", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_define,
+							 NULL)));
+  dfsch_define_cstr(ctx, "define-variable", 
+		   dfsch_make_form(dfsch_make_primitive(&native_form_define_variable,
 							 NULL)));
   dfsch_define_cstr(ctx, "defined?", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_defined_p,
@@ -793,6 +865,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__native_cxr_register(ctx);
   dfsch__control_register(ctx);
   dfsch__system_register(ctx);
+  dfsch__generic_register(ctx);
   dfsch__hash_native_register(ctx);
   dfsch__promise_native_register(ctx);
   dfsch__number_native_register(ctx);

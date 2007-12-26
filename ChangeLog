@@ -1,5 +1,10 @@
 2007-12-26  Ales Hakl  <ales at hakl dot net>
 
+	* src/generic.c: generic functions (and completly new object system)
+
+	* src/native.c (native_form_define_variable): define-variable
+	special form
+
 	* src/parse.c (tokenizer_process): unicode character literals
 
 2007-12-25  Ales Hakl  <ales at hakl dot net>

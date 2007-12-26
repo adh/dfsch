@@ -30,30 +30,7 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass,
                                                  char* name);
-  extern void dfsch_object_define_method(dfsch_object_t* klass,
-                                         dfsch_object_t* selector,
-                                         dfsch_object_t* proc);
-  extern dfsch_object_t* dfsch_object_class_superclass(dfsch_object_t* klass);
-  extern dfsch_object_t* dfsch_object_class_method_ref(dfsch_object_t* klass,
-                                                       dfsch_object_t* name);
-  extern int dfsch_object_class_method_unset(dfsch_object_t* klass,
-                                             dfsch_object_t* name);
-  extern dfsch_object_t* dfsch_object_class_methods_2_alist(dfsch_object_t* klass);
-
-  extern dfsch_object_t* dfsch_object_send(dfsch_object_t* object,
-                                           dfsch_object_t* selector,
-                                           dfsch_object_t* args);
-  extern dfsch_object_t* dfsch_object_send_tr(dfsch_object_t* object,
-                                              dfsch_object_t* selector,
-                                              dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc);
-  extern dfsch_object_t* dfsch_object_send_super(dfsch_object_t* object,
-                                                 dfsch_object_t* selector,
-                                                 dfsch_object_t* args);
-  extern dfsch_object_t* dfsch_object_send_super_tr(dfsch_object_t* object,
-                                                    dfsch_object_t* selector,
-                                                    dfsch_object_t* args,
-                                                    dfsch_tail_escape_t* esc);
+  extern dfsch_object_t* dfsch_object_make_instance(dfsch_object_t* klass);
 
   extern dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                                dfsch_object_t* name,
@@ -64,17 +41,8 @@ extern "C" {
                                                dfsch_object_t* name);
   extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
 
-  extern dfsch_object_t* dfsch_object_super();
-  extern dfsch_object_t* dfsch_object_does_not_understand();
+  
 
-  typedef void (*dfsch_class_constructor_t)(dfsch_object_t* klass, 
-                                            void* baton);
-  
-  extern void dfsch_object_define_class(dfsch_object_t* env,
-                                        char* classname, char* superclassname, 
-                                        dfsch_class_constructor_t constructor,
-                                        void* baton);
-  
 #ifdef __cplusplus
 }
 #endif

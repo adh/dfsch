@@ -32,6 +32,7 @@ typedef struct promise_t {
 } promise_t;
 
 static const dfsch_type_t promise_type = {
+  DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(promise_t),
   "promise",
@@ -140,9 +141,10 @@ static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
 }
 
 dfsch_object_t* dfsch__promise_native_register(dfsch_object_t *ctx){
-    dfsch_define_cstr(ctx, "delay", 
-                   dfsch_make_form(dfsch_make_primitive(&native_form_delay,
-                                                        NULL)));
+  dfsch_define_cstr(ctx, "<promise>", &promise_type);
+  dfsch_define_cstr(ctx, "delay", 
+                    dfsch_make_form(dfsch_make_primitive(&native_form_delay,
+                                                         NULL)));
   dfsch_define_cstr(ctx, "force", 
                    dfsch_make_primitive(&native_force,NULL));
 

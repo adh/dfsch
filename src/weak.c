@@ -22,6 +22,7 @@ typedef struct reference_t {
 
 static const dfsch_type_t reference_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(reference_t),
   "weak-reference",
   NULL,
@@ -100,6 +101,7 @@ static char* weak_vector_write(weak_vector_t* v, int max_depth, int readable){
 
 static const dfsch_type_t weak_vector_type = {
   DFSCH_STANDARD_TYPE,
+  NULL,
   sizeof(weak_vector_t),
   "weak-vector",
   NULL,
@@ -329,6 +331,10 @@ static dfsch_object_t* native_list_2_weak_vector(void *baton,
 /****************************************************************/
 
 void dfsch__weak_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "<weak-reference>", &reference_type);
+  dfsch_define_cstr(ctx, "<weak-vector>", &weak_vector_type);
+
+
   dfsch_define_cstr(ctx, "make-weak-reference", 
                     dfsch_make_primitive(&native_make_weak_reference,NULL));
   dfsch_define_cstr(ctx, "weak-reference-live?", 

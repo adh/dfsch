@@ -79,6 +79,8 @@ extern "C" {
   struct dfsch_type_t {
     /** When we want to use type_t as first-class object */
     dfsch_type_t* type;
+    /** Superclass (NULL for normal objects) */
+    dfsch_type_t* superclass;
     /** Instance size */
     size_t size;
     /** Type name */
@@ -142,6 +144,20 @@ extern "C" {
   extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
   /** Get object hash */
   extern uint32_t dfsch_hash(dfsch_object_t* obj);
+
+#define DFSCH_TYPE_OF(obj) ((obj)?(obj)->type:NULL)
+
+#define DFSCH_INSTANCE_P(o, t)                                  \
+  ((DFSCH_TYPE_OF(o) == (t))||dfsch_instance_p((o), (t)))
+
+  /** Get object type */
+  extern dfsch_type_t* dfsch_type_of(dfsch_object_t* obj);
+  /* Is super superclass of sub */
+  extern int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super);
+  /** Is object direct or indirect instance of given type? */
+  extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
+  /** Get superclass of given type */
+  extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);
