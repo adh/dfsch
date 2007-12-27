@@ -1,3 +1,7 @@
+2007-12-27  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (hash_change_size): thread-safe resizing (hopefully)
+
 2007-12-26  Ales Hakl  <ales at hakl dot net>
 
 	* src/generic.c: generic functions (and completly new object system)

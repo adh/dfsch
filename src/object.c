@@ -167,6 +167,16 @@ static dfsch_object_t* native_make_class(void* baton,
   
   return dfsch_object_make_class(superclass, dfsch_symbol(name));
 }
+static dfsch_object_t* native_make_instance(void* baton,
+                                            dfsch_object_t* args,
+                                            dfsch_tail_escape_t* esc){
+  dfsch_object_t* klass;
+  DFSCH_OBJECT_ARG(args, klass);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_object_make_instance(klass);
+}
+
 
 static dfsch_object_t* native_form_define_class(void* baton,
                                                 dfsch_object_t* args,
@@ -264,6 +274,10 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "make-class",
                     dfsch_make_primitive(native_make_class,
                                          NULL));
+  dfsch_define_cstr(ctx, "make-instance",
+                    dfsch_make_primitive(native_make_instance,
+                                         NULL));
+
   dfsch_define_cstr(ctx, "define-class",
                     dfsch_make_form(dfsch_make_primitive(native_form_define_class,
                                                          NULL)));

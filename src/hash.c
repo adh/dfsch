@@ -26,9 +26,11 @@
 
 #include <stdio.h>
 
-typedef struct hash_entry_t hash_entry_t;
-typedef struct hash_t{
+#define INITIAL_MASK 0x07
 
+typedef struct hash_entry_t hash_entry_t;
+
+typedef struct hash_t{
   dfsch_type_t* type;
   dfsch_object_t* proc;
   size_t count;
@@ -36,6 +38,7 @@ typedef struct hash_t{
   hash_entry_t** vector;
   int mode;
   pthread_mutex_t* w_mutex;
+  pthread_mutex_t* r_mutex;
 }hash_t;
 
 struct hash_entry_t {
@@ -56,18 +59,20 @@ static const dfsch_type_t hash_type = {
   NULL
 };
 
-static void alloc_vector(hash_t* hash){
-  hash->vector = GC_MALLOC(sizeof(hash_entry_t*)*(hash->mask+1));
+static hash_entry_t** alloc_vector(size_t mask){
+  return GC_MALLOC((sizeof(hash_entry_t*))*(mask+1));
 }
+
 
 dfsch_object_t* dfsch_hash_make(int mode){
   hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
 
   h->count = 0;
-  h->mask = 0x07;
+  h->mask = INITIAL_MASK;
+  h->vector = alloc_vector(h->mask);
   h->mode = mode;
   h->w_mutex = create_finalized_mutex();
-  alloc_vector(h);
+  h->r_mutex = create_finalized_mutex();
 
   return (dfsch_object_t*)h;
 }
@@ -120,7 +125,10 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
   GET_HASH(hash_obj, hash);
 
   h = get_hash(hash, key);  
+
+  pthread_mutex_lock(hash->r_mutex);
   i = hash->vector[h & hash->mask];
+  pthread_mutex_unlock(hash->r_mutex);
 
   switch (hash->mode){
   case DFSCH_HASH_EQ:
@@ -167,22 +175,29 @@ static hash_entry_t* alloc_entry(size_t hash,
 static void hash_change_size(hash_t* hash, size_t new_mask){
   int j;
   hash_entry_t *i;
-  hash_entry_t **vector = hash->vector; // Save pointer to old contents
-  size_t ol = hash->mask+1;
-  hash->mask = new_mask;
-  alloc_vector(hash);
+  hash_entry_t **vector = alloc_vector(new_mask);
   
-  for (j=0; j<ol; j++){
-    i = vector[j];
+  for (j = 0; j <= hash->mask; j++){
+    i = hash->vector[j];
     while (i){
       hash_entry_t *next = i->next;
       size_t h = i->hash;
-      i->next = hash->vector[h & hash->mask];
-      hash->vector[h & hash->mask] = i;
+      if (i->next != vector[h & new_mask]){
+        vector[h & new_mask] = alloc_entry(h,
+                                           i->key,
+                                           i->value,
+                                           vector[h & new_mask]);
+      } else {
+        vector[h & new_mask] = i;
+      }
       i = next;
     }
   }
-  
+
+  pthread_mutex_lock(hash->r_mutex);
+  hash->mask = new_mask;
+  hash->vector = vector;
+  pthread_mutex_unlock(hash->r_mutex);
 }
 
 dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
