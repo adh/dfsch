@@ -49,8 +49,7 @@ typedef struct exception_t{
 typedef struct vector_t {
   dfsch_type_t* type;
   size_t length;
-  object_t** data;
-
+  object_t* data[];
 } vector_t;
 
 

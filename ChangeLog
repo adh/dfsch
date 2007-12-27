@@ -1,3 +1,7 @@
+2007-12-28  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_make_vector): vector as non-nested objects
+
 2007-12-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c (native_form_define_class): strip angle brackets

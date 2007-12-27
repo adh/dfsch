@@ -48,8 +48,8 @@ static int obj_count = 0;
 static int obj_size = 0;
 #endif
 
-object_t* dfsch_make_object(const dfsch_type_t* type){
-  object_t* o = GC_MALLOC(type->size);
+dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
+  object_t* o = GC_MALLOC(type->size + size);
   if (!o)
     return NULL;
 
@@ -64,6 +64,11 @@ object_t* dfsch_make_object(const dfsch_type_t* type){
 
   return o;
 }
+
+object_t* dfsch_make_object(const dfsch_type_t* type){
+  return dfsch_make_object_var(type, 0);
+}
+
 
 int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   return (a==b);
@@ -1418,11 +1423,11 @@ dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e){
 // Vectors
 
 dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
-  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
+  vector_t* v;
   size_t i;
 
+  v = dfsch_make_object_var(VECTOR, length * sizeof(dfsch_object_t*));
   v->length = length;
-  v->data = GC_MALLOC(sizeof(object_t*) * length);
 
   for(i = 0; i<length; ++i){
     v->data[i] = fill;
@@ -1432,13 +1437,13 @@ dfsch_object_t* dfsch_make_vector(size_t length, dfsch_object_t* fill){
 }
 dfsch_object_t* dfsch_vector(size_t count, ...){
   size_t i;
-  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
+  vector_t* v = 
+    (vector_t*)dfsch_make_object_var(VECTOR, count * sizeof(dfsch_object_t*));
   va_list al;
 
   va_start(al,count);
 
   v->length = count;
-  v->data = GC_MALLOC(sizeof(object_t*) * count);
 
   for(i = 0; i < count; ++i){
     v->data[i] = va_arg(al, dfsch_object_t*);
@@ -1469,10 +1474,11 @@ dfsch_object_t** dfsch_vector_as_array(dfsch_object_t *vector, size_t *length){
 
 dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array, 
                                         size_t length){
-  vector_t* v = (vector_t*)dfsch_make_object(VECTOR);
+  vector_t* v = 
+    (vector_t*)dfsch_make_object_var(VECTOR, 
+                                     sizeof(dfsch_object_t*) * length);
 
   v->length = length;
-  v->data = GC_MALLOC(sizeof(object_t*) * length);
   memcpy(v->data, array, sizeof(object_t*) * length);
 
   return (object_t*)v;
@@ -1512,8 +1518,13 @@ dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   vector_t* vector;
-  vector = (vector_t*)dfsch_make_object(VECTOR);
-  vector->data = dfsch_list_as_array(list, &vector->length);
+  size_t length;
+  dfsch_object_t** array;
+  array = dfsch_list_as_array(list, &length);
+  vector = (vector_t*)dfsch_make_object_var(VECTOR, 
+                                            length * sizeof(dfsch_object_t*));
+  vector->length = length;
+  memcpy(vector->data, array, sizeof(dfsch_object_t*) * length);
   return (object_t*)vector;
 }
 
