@@ -1,5 +1,8 @@
 2007-12-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/object.c (native_form_define_class): strip angle brackets
+	from class names
+
 	* src/hash.c (hash_change_size): thread-safe resizing (hopefully)
 
 2007-12-26  Ales Hakl  <ales at hakl dot net>

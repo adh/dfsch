@@ -89,7 +89,7 @@ static class_t* alloc_class(class_t* superclass, char* name){
 
   klass->type.superclass = superclass;
   klass->type.size = sizeof(instance_t);
-  klass->type.name = name;
+  klass->type.name = stracpy(name);
   klass->type.equal_p = NULL;
   klass->type.write = NULL;
   klass->type.apply = NULL;
@@ -100,6 +100,8 @@ static class_t* alloc_class(class_t* superclass, char* name){
 
 dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass, 
                                         char* name){
+  int modified = 0;
+
   if (!superclass || superclass->type != &class_type)
     dfsch_error("exception:not-a-class", superclass);    
 
@@ -184,6 +186,8 @@ static dfsch_object_t* native_form_define_class(void* baton,
   dfsch_object_t* env;
   dfsch_object_t* name;
   dfsch_object_t* superclass;
+  char* classname;
+
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
@@ -191,9 +195,14 @@ static dfsch_object_t* native_form_define_class(void* baton,
 
   superclass = dfsch_eval(superclass, env);
   
+  classname = dfsch_symbol(name);
+
+  if (*classname == '<' && classname[strlen(classname)-1] == '>'){
+    classname = strancpy(classname + 1, strlen(classname) - 2);
+  }
+
   return dfsch_define(name, 
-                      dfsch_object_make_class(superclass, 
-                                              dfsch_symbol(name)),
+                      dfsch_object_make_class(superclass, classname),
                       env);
 }
 
