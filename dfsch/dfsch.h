@@ -1,6 +1,6 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
- * Copyright (C) 2005 Ales Hakl
+ * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
  * It's not really scheme but something slightly similar, features left out 
  * include:
  * - first class continuations
- * - I/O (left out on purpose)
  * - and maybe something other 
  */
 
@@ -147,7 +146,7 @@ extern "C" {
 #define DFSCH_PRIMITIVE_PURE   2
 
 #define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
-  const dfsch_primitive_t p_##name = {          \
+  static const dfsch_primitive_t p_##name = {   \
     DFSCH_PRIMITIVE_TYPE,                       \
     p_##name##_impl,                            \
     NULL,                                       \
@@ -155,7 +154,7 @@ extern "C" {
   }
   
 #define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)       \
-  const dfsch_primitive_t p_##name = {                       \
+  static const dfsch_primitive_t p_##name = {                \
     DFSCH_PRIMITIVE_TYPE,                                    \
     p_##name##_impl,                                         \
     baton,                                                   \
