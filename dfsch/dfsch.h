@@ -136,28 +136,41 @@ extern "C" {
     dfsch_type_t* type;
     dfsch_primitive_impl_t proc;
     void *baton;
-    int cached;
+    int flags;
   } dfsch_primitive_t;
 
   extern const dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
 
-#define DFSCH_DECLARE_PRIMITIVE(name, cached)   \
+#define DFSCH_PRIMITIVE_CACHED 1
+#define DFSCH_PRIMITIVE_PURE   2
+
+#define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
   const dfsch_primitive_t name = {              \
     DFSCH_PRIMITIVE_TYPE,                       \
     name##_impl,                                \
     NULL,                                       \
-    cached                                      \
+    flags                                       \
   }
-
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, cached)  \
+  
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)   \
   const dfsch_primitive_t name = {                       \
     DFSCH_PRIMITIVE_TYPE,                                \
     name##_impl,                                         \
     baton,                                               \
-    cached                                               \
+    flags                                                \
   }
+
+#define DFSCH_PRIMITIVE_HEAD(name)                              \
+  static dfsch_object_t* name##_impl(void* baton,               \
+                                     dfsch_object_t* args,      \
+                                     dfsch_tail_escape_t* esc)
+  
+#define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
+  DFSCH_PRIMITIVE_HEAD(name);                   \
+  DFSCH_DECLARE_PRIMITIVE(name, flags)          \
+  DFSCH_PRIMITIVE_HEAD(name)
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
