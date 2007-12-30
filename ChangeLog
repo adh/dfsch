@@ -2,6 +2,7 @@
 
 	* src/native.c (dfsch__native_register): removed support for
 	user-defined forms (macros are general enough)
+	all primitives as static structs
 
 	* dfsch/dfsch.h (DFSCH_DECLARE_PRIMITIVE): support for statically
 	allocated primitives

@@ -147,30 +147,32 @@ extern "C" {
 #define DFSCH_PRIMITIVE_PURE   2
 
 #define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
-  const dfsch_primitive_t name = {              \
+  const dfsch_primitive_t p_##name = {          \
     DFSCH_PRIMITIVE_TYPE,                       \
-    name##_impl,                                \
+    p_##name##_impl,                            \
     NULL,                                       \
     flags                                       \
   }
   
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)   \
-  const dfsch_primitive_t name = {                       \
-    DFSCH_PRIMITIVE_TYPE,                                \
-    name##_impl,                                         \
-    baton,                                               \
-    flags                                                \
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)       \
+  const dfsch_primitive_t p_##name = {                       \
+    DFSCH_PRIMITIVE_TYPE,                                    \
+    p_##name##_impl,                                         \
+    baton,                                                   \
+    flags                                                    \
   }
 
-#define DFSCH_PRIMITIVE_HEAD(name)                              \
-  static dfsch_object_t* name##_impl(void* baton,               \
-                                     dfsch_object_t* args,      \
-                                     dfsch_tail_escape_t* esc)
+#define DFSCH_PRIMITIVE_HEAD(name)                                      \
+  static dfsch_object_t* p_##name##_impl(void* baton,                   \
+                                         dfsch_object_t* args,          \
+                                         dfsch_tail_escape_t* esc)
   
 #define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
   DFSCH_PRIMITIVE_HEAD(name);                   \
   DFSCH_DECLARE_PRIMITIVE(name, flags);         \
   DFSCH_PRIMITIVE_HEAD(name)
+
+#define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);

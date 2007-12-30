@@ -224,7 +224,7 @@ static object_t* native_form_defined_p(void *baton, object_t* args, dfsch_tail_e
   return dfsch_env_get(name, env);
 }
 
-static object_t* native_make_macro(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_macro, 0){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
@@ -236,22 +236,22 @@ static object_t* native_make_macro(void *baton, object_t* args, dfsch_tail_escap
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_car(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(car, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
 }
-static object_t* native_cdr(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(cdr, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_cdr(dfsch_car(args));
 }
-static object_t* native_cons(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(cons, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-static object_t* native_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list, DFSCH_PRIMITIVE_CACHED){
   return dfsch_list_copy(args);
 }
-static object_t* native_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(length, DFSCH_PRIMITIVE_CACHED){
   long len;
   NEED_ARGS(args,1);  
 
@@ -262,22 +262,21 @@ static object_t* native_length(void *baton, object_t* args, dfsch_tail_escape_t*
   
   return dfsch_make_number_from_long(len);
 }
-static object_t* native_set_car(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(set_car, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-static object_t* native_set_cdr(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(set_cdr, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-static object_t* native_zip(void* baton, object_t* args, 
-			    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(zip, 0){
   return dfsch_zip(args);
 }
-static object_t* native_append(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(append, 0){
   return dfsch_append(args);
 }
-static object_t* native_list_ref(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
   int k;
   object_t* list;
 
@@ -287,7 +286,7 @@ static object_t* native_list_ref(void* baton, object_t* args, dfsch_tail_escape_
 
   return dfsch_list_item(list, k);
 }
-static object_t* native_reverse(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(reverse, 0){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -295,7 +294,7 @@ static object_t* native_reverse(void* baton, object_t* args, dfsch_tail_escape_t
 
   return dfsch_reverse(list);
 }
-static object_t* native_member(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(member, 0){
   object_t* list;
   object_t* key;
 
@@ -305,7 +304,7 @@ static object_t* native_member(void* baton, object_t* args, dfsch_tail_escape_t*
 
   return dfsch_member(key, list);
 }
-static object_t* native_memv(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(memv, 0){
   object_t* list;
   object_t* key;
 
@@ -315,7 +314,7 @@ static object_t* native_memv(void* baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_memv(key, list);
 }
-static object_t* native_memq(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(memq, 0){
   object_t* list;
   object_t* key;
 
@@ -325,7 +324,7 @@ static object_t* native_memq(void* baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_memq(key, list);
 }
-static object_t* native_assoc(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(assoc, 0){
   object_t* alist;
   object_t* key;
 
@@ -335,7 +334,7 @@ static object_t* native_assoc(void* baton, object_t* args, dfsch_tail_escape_t* 
 
   return dfsch_assoc(key, alist);
 }
-static object_t* native_assv(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(assv, 0){
   object_t* alist;
   object_t* key;
 
@@ -345,7 +344,7 @@ static object_t* native_assv(void* baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_assv(key, alist);
 }
-static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(assq, 0){
   object_t* alist;
   object_t* key;
 
@@ -355,7 +354,7 @@ static object_t* native_assq(void* baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_assq(key, alist);
 }
-static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(for_each, 0){
   object_t* func;
   object_t* list;
   size_t len;
@@ -375,7 +374,7 @@ static object_t* native_for_each(void* baton, object_t* args, dfsch_tail_escape_
   
   return NULL;
 }
-static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(map, 0){
   object_t* func;
   object_t* list;
   object_t* head = NULL;
@@ -401,8 +400,7 @@ static object_t* native_map(void* baton, object_t* args, dfsch_tail_escape_t* es
   
   return head;
 }
-static object_t* native_filter(void* baton, object_t* args, 
-                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(filter, 0){
   object_t* func;
   object_t* list;
   object_t* head = NULL;
@@ -432,8 +430,7 @@ static object_t* native_filter(void* baton, object_t* args,
   
   return head;
 }
-static object_t* native_reduce(void* baton, object_t* args, 
-                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(reduce, 0){
   object_t* func;
   object_t* list;
   object_t* tally;
@@ -465,51 +462,51 @@ static object_t* native_reduce(void* baton, object_t* args,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_null_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(null_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
-static object_t* native_pair_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(pair_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
 }
-static object_t* native_list_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_list_p(dfsch_car(args)));
 }
-static object_t* native_atom_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(atom_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
 }
-static object_t* native_symbol_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(symbol_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
-static object_t* native_string_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
 }
-static object_t* native_primitive_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(primitive_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
 }
-static object_t* native_closure_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(closure_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_closure_p(dfsch_car(args)));  
 }
-static object_t* native_procedure_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(procedure_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_procedure_p(dfsch_car(args)));  
 }
-static object_t* native_vector_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_vector_p(dfsch_car(args)));  
 }
-static object_t* native_macro_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(macro_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
 }
-static object_t* native_form_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(form_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_form_p(dfsch_car(args)));  
 }
@@ -520,15 +517,15 @@ static object_t* native_form_p(void *baton, object_t* args, dfsch_tail_escape_t*
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_eq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(eq_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_eqv(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(eqv_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-static object_t* native_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(equal_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
@@ -575,7 +572,7 @@ static object_t* native_form_and(void *baton, object_t* args, dfsch_tail_escape_
 
   return r;
 }
-static object_t* native_not(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(not, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   object_t *a = dfsch_car(args);
   return dfsch_bool(!a);
@@ -587,8 +584,7 @@ static object_t* native_not(void *baton, object_t* args, dfsch_tail_escape_t* es
 //
 /////////////////////////////////////////////////////////////////////////////
 
-
-static object_t* native_make_vector(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_vector, DFSCH_PRIMITIVE_CACHED){
   size_t length;
   object_t* fill;
 
@@ -599,10 +595,10 @@ static object_t* native_make_vector(void* baton, object_t* args, dfsch_tail_esca
   return dfsch_make_vector(length,fill);
 }
 
-static object_t* native_vector(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector, DFSCH_PRIMITIVE_CACHED){
   return dfsch_list_2_vector(args);
 }
-static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector_length, DFSCH_PRIMITIVE_CACHED){
   object_t* vector;
   
   DFSCH_OBJECT_ARG(args,vector);
@@ -614,7 +610,7 @@ static object_t* native_vector_length(void* baton, object_t* args, dfsch_tail_es
   return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
 }
-static object_t* native_vector_ref(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector_ref, DFSCH_PRIMITIVE_CACHED){
   object_t* vector;
   size_t k;
 
@@ -625,7 +621,7 @@ static object_t* native_vector_ref(void* baton, object_t* args, dfsch_tail_escap
   return dfsch_vector_ref(vector, k);
 }
 
-static object_t* native_vector_set(void* baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector_set, DFSCH_PRIMITIVE_CACHED){
   object_t* vector;
   size_t k;
   object_t* obj;
@@ -638,7 +634,7 @@ static object_t* native_vector_set(void* baton, object_t* args, dfsch_tail_escap
   return dfsch_vector_set(vector, k, obj);
 }
 
-static object_t* native_vector_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(vector_2_list, DFSCH_PRIMITIVE_CACHED){
   object_t* vector;
 
   DFSCH_OBJECT_ARG(args, vector);
@@ -647,7 +643,7 @@ static object_t* native_vector_2_list(void *baton, object_t* args, dfsch_tail_es
   return dfsch_vector_2_list(vector);
 }
 
-static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_2_vector, DFSCH_PRIMITIVE_CACHED){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -662,7 +658,7 @@ static object_t* native_list_2_vector(void *baton, object_t* args, dfsch_tail_es
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_object_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(object_2_string, 0){
   object_t* object;
   object_t* readable;
   long depth;
@@ -675,7 +671,7 @@ static object_t* native_object_2_string(void *baton, object_t* args, dfsch_tail_
   return dfsch_make_string_cstr(dfsch_obj_write(object, depth, 
                                                 readable != NULL));
 }
-static object_t* native_string_2_object(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
@@ -690,7 +686,7 @@ static object_t* native_string_2_object(void *baton, object_t* args, dfsch_tail_
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_symbol_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 0){
   object_t* object;
   char* str;
 
@@ -703,7 +699,7 @@ static object_t* native_symbol_2_string(void *baton, object_t* args, dfsch_tail_
   else
     dfsch_error("exception:not-a-symbol", object);
 }
-static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 0){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
@@ -719,27 +715,27 @@ static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "gensym", &gensym);
-  dfsch_define_cstr(ctx, "stack-trace", &stack_trace);
-  dfsch_define_cstr(ctx, "unintern", &unintern);
-  dfsch_define_cstr(ctx, "id", &id);
-  dfsch_define_cstr(ctx, "hash", &hash);
-  dfsch_define_cstr(ctx, "type-of", &type_of);
-  dfsch_define_cstr(ctx, "superclass?", &superclass_p);
-  dfsch_define_cstr(ctx, "instance?", &instance_p);
-  dfsch_define_cstr(ctx, "superclass", &superclass);
+  dfsch_define_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
+  dfsch_define_cstr(ctx, "stack-trace", DFSCH_PRIMITIVE_REF(stack_trace));
+  dfsch_define_cstr(ctx, "unintern", DFSCH_PRIMITIVE_REF(unintern));
+  dfsch_define_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
+  dfsch_define_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
+  dfsch_define_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
+  dfsch_define_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
+  dfsch_define_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
+  dfsch_define_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
 
-  dfsch_define_cstr(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
-  dfsch_define_cstr(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));
-  dfsch_define_cstr(ctx, "equal?", dfsch_make_primitive(&native_equal,NULL));
+  dfsch_define_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
+  dfsch_define_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
+  dfsch_define_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
 
   dfsch_define_cstr(ctx, "and", 
-                   dfsch_make_form(dfsch_make_primitive(&native_form_and,
-                                                        NULL)));
+                    dfsch_make_form(dfsch_make_primitive(native_form_and,
+                                                         NULL)));
   dfsch_define_cstr(ctx, "or", 
                    dfsch_make_form(dfsch_make_primitive(&native_form_or,
                                                         NULL)));
-  dfsch_define_cstr(ctx, "not", dfsch_make_primitive(&native_not,NULL));
+  dfsch_define_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
 
   dfsch_define_cstr(ctx, "lambda", 
 		   dfsch_make_form(dfsch_make_primitive(&native_form_lambda,
@@ -761,56 +757,44 @@ void dfsch__native_register(dfsch_object_t *ctx){
 							 NULL)));
 
   dfsch_define_cstr(ctx, "make-macro", 
-		   dfsch_make_primitive(&native_make_macro,NULL));
-  dfsch_define_cstr(ctx, "cons", dfsch_make_primitive(&native_cons,NULL));
-  dfsch_define_cstr(ctx, "list", dfsch_make_primitive(&native_list,NULL));
-  dfsch_define_cstr(ctx, "car", dfsch_make_primitive(&native_car,NULL));
-  dfsch_define_cstr(ctx, "cdr", dfsch_make_primitive(&native_cdr,NULL));
-  dfsch_define_cstr(ctx, "set-car!", dfsch_make_primitive(&native_set_car,
-							 NULL));
-  dfsch_define_cstr(ctx, "set-cdr!", dfsch_make_primitive(&native_set_cdr,
-							 NULL));
+		   DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_define_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
+  dfsch_define_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
+  dfsch_define_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
+  dfsch_define_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
+  dfsch_define_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
+  dfsch_define_cstr(ctx, "set-cdr!", DFSCH_PRIMITIVE_REF(set_cdr));
 
-  dfsch_define_cstr(ctx, "length", dfsch_make_primitive(&native_length,NULL));
-  dfsch_define_cstr(ctx, "zip", dfsch_make_primitive(&native_zip, NULL));
-  dfsch_define_cstr(ctx, "append", dfsch_make_primitive(&native_append,NULL));
-  dfsch_define_cstr(ctx, "for-each", dfsch_make_primitive(&native_for_each,
-							 NULL));
-  dfsch_define_cstr(ctx, "map", dfsch_make_primitive(&native_map,
-							 NULL));
-  dfsch_define_cstr(ctx, "filter", dfsch_make_primitive(&native_filter,
-                                                       NULL));
-  dfsch_define_cstr(ctx, "reduce", dfsch_make_primitive(&native_reduce,
-                                                       NULL));
-  dfsch_define_cstr(ctx, "list-ref", dfsch_make_primitive(&native_list_ref,
-                                                         NULL));
-  dfsch_define_cstr(ctx, "reverse", dfsch_make_primitive(&native_reverse,
-                                                         NULL));
-  dfsch_define_cstr(ctx, "member", dfsch_make_primitive(&native_member,NULL));
-  dfsch_define_cstr(ctx, "memq", dfsch_make_primitive(&native_memq,NULL));
-  dfsch_define_cstr(ctx, "memv", dfsch_make_primitive(&native_memv,NULL));
-  dfsch_define_cstr(ctx, "assoc", dfsch_make_primitive(&native_assoc,NULL));
-  dfsch_define_cstr(ctx, "assq", dfsch_make_primitive(&native_assq,NULL));
-  dfsch_define_cstr(ctx, "assv", dfsch_make_primitive(&native_assv,NULL));
+  dfsch_define_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
+  dfsch_define_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
+  dfsch_define_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
+  dfsch_define_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
+  dfsch_define_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
+  dfsch_define_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
+  dfsch_define_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
+  dfsch_define_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
+  dfsch_define_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
+  dfsch_define_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
+  dfsch_define_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
+  dfsch_define_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
+  dfsch_define_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
+  dfsch_define_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
+  dfsch_define_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
 
-  dfsch_define_cstr(ctx, "null?", dfsch_make_primitive(&native_null_p,NULL));
-  dfsch_define_cstr(ctx, "atom?", dfsch_make_primitive(&native_atom_p,NULL));
-  dfsch_define_cstr(ctx, "pair?", dfsch_make_primitive(&native_pair_p,NULL));
-  dfsch_define_cstr(ctx, "list?", dfsch_make_primitive(&native_list_p,NULL));
-  dfsch_define_cstr(ctx, "symbol?", dfsch_make_primitive(&native_symbol_p,
-							NULL));
-  dfsch_define_cstr(ctx, "string?", dfsch_make_primitive(&native_string_p,
-							NULL));
+  dfsch_define_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
+  dfsch_define_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
+  dfsch_define_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
+  dfsch_define_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
+  dfsch_define_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
+  dfsch_define_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
   dfsch_define_cstr(ctx, "primitive?", 
-		   dfsch_make_primitive(&native_primitive_p,NULL));
-  dfsch_define_cstr(ctx, "closure?", dfsch_make_primitive(&native_closure_p,
-							 NULL));
+		   DFSCH_PRIMITIVE_REF(primitive_p));
+  dfsch_define_cstr(ctx, "closure?", DFSCH_PRIMITIVE_REF(closure_p));
   dfsch_define_cstr(ctx, "procedure?", 
-		   dfsch_make_primitive(&native_procedure_p,NULL));
-  dfsch_define_cstr(ctx, "macro?", dfsch_make_primitive(&native_macro_p,NULL));
-  dfsch_define_cstr(ctx, "form?", dfsch_make_primitive(&native_form_p,NULL));
-  dfsch_define_cstr(ctx, "vector?", dfsch_make_primitive(&native_vector_p,
-                                                        NULL));
+		   DFSCH_PRIMITIVE_REF(procedure_p));
+  dfsch_define_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));
+  dfsch_define_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
+  dfsch_define_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
 
 
   dfsch_define_cstr(ctx, "true", dfsch_sym_true());
@@ -820,29 +804,29 @@ void dfsch__native_register(dfsch_object_t *ctx){
 
 
   dfsch_define_cstr(ctx, "make-vector", 
-                   dfsch_make_primitive(&native_make_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(make_vector));
   dfsch_define_cstr(ctx, "vector", 
-                   dfsch_make_primitive(&native_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(vector));
   dfsch_define_cstr(ctx, "vector-length", 
-                   dfsch_make_primitive(&native_vector_length,NULL));
+                   DFSCH_PRIMITIVE_REF(vector_length));
   dfsch_define_cstr(ctx, "vector-set!", 
-                   dfsch_make_primitive(&native_vector_set,NULL));
+                   DFSCH_PRIMITIVE_REF(vector_set));
   dfsch_define_cstr(ctx, "vector-ref", 
-                   dfsch_make_primitive(&native_vector_ref,NULL));
+                   DFSCH_PRIMITIVE_REF(vector_ref));
   dfsch_define_cstr(ctx, "vector->list", 
-                   dfsch_make_primitive(&native_vector_2_list,NULL));
+                   DFSCH_PRIMITIVE_REF(vector_2_list));
   dfsch_define_cstr(ctx, "list->vector", 
-                   dfsch_make_primitive(&native_list_2_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(list_2_vector));
 
   dfsch_define_cstr(ctx, "object->string", 
-                   dfsch_make_primitive(&native_object_2_string,NULL));
+                   DFSCH_PRIMITIVE_REF(object_2_string));
   dfsch_define_cstr(ctx, "string->object", 
-                   dfsch_make_primitive(&native_string_2_object,NULL));
+                   DFSCH_PRIMITIVE_REF(string_2_object));
 
   dfsch_define_cstr(ctx, "symbol->string", 
-                   dfsch_make_primitive(&native_symbol_2_string,NULL));
+                   DFSCH_PRIMITIVE_REF(symbol_2_string));
   dfsch_define_cstr(ctx, "string->symbol", 
-                   dfsch_make_primitive(&native_string_2_symbol,NULL));
+                   DFSCH_PRIMITIVE_REF(string_2_symbol));
 
   dfsch__native_cxr_register(ctx);
   dfsch__control_register(ctx);
