@@ -281,7 +281,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
 }
 
 
-static const dfsch_type_t primitive_type = {
+const dfsch_type_t dfsch_primitive_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(primitive_t),
@@ -291,7 +291,7 @@ static const dfsch_type_t primitive_type = {
   NULL,
   NULL
 };
-#define PRIMITIVE (&primitive_type)
+#define PRIMITIVE (&dfsch_primitive_type)
 
 static char* closure_write(closure_t* c, int max_depth, int readable){
     str_list_t* l = sl_create();
@@ -331,7 +331,7 @@ static const dfsch_type_t macro_type = {
 };
 #define MACRO (&macro_type)
 
-static const dfsch_type_t form_type = {
+const dfsch_type_t dfsch_form_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(form_t),
@@ -340,7 +340,7 @@ static const dfsch_type_t form_type = {
   NULL,
   NULL
 };
-#define FORM (&form_type)
+#define FORM (&dfsch_form_type)
 
 static const dfsch_type_t exception_type = {
   DFSCH_STANDARD_TYPE,
@@ -1260,7 +1260,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
 
 // native code
 
-object_t* dfsch_make_primitive(dfsch_primitive_t prim, void *baton){
+object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
   primitive_t* p = (primitive_t*)dfsch_make_object(PRIMITIVE);
   if (!p)
     return NULL;

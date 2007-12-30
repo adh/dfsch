@@ -18,12 +18,7 @@ typedef struct pair_t{
   object_t *cdr;
 } pair_t;
 
-typedef struct primitive_t {
-  dfsch_type_t* type;
-  dfsch_primitive_t proc;
-  void *baton;
-
-} primitive_t;
+typedef dfsch_primitive_t primitive_t;
 
 typedef struct closure_t{
   dfsch_type_t* type;

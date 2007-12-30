@@ -128,9 +128,28 @@ extern "C" {
    *            to functions which accept it and their return value is also
    *            return value of this native function.
    */
-  typedef dfsch_object_t* (*dfsch_primitive_t)(void* baton,
-                                               dfsch_object_t* args,
-                                               dfsch_tail_escape_t* esc);
+  typedef dfsch_object_t* (*dfsch_primitive_impl_t)(void* baton,
+                                                    dfsch_object_t* args,
+                                                    dfsch_tail_escape_t* esc);
+
+  typedef struct dfsch_primitive_t {
+    dfsch_type_t* type;
+    dfsch_primitive_impl_t proc;
+    void *baton;
+    int cached;
+  } dfsch_primitive_t;
+
+  extern const dfsch_type_t dfsch_primitive_type;
+
+#define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
+
+#define DFSCH_DECLARE_PRIMITIVE(name, cached)   \
+  const dfsch_primitive_t name = {              \
+    DFSCH_PRIMITIVE_TYPE,                       \
+    name##_impl,                                \
+    NULL,                                       \
+    cached                                      \
+  }
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
@@ -314,7 +333,7 @@ extern "C" {
                                             dfsch_object_t* name);
 
   /** Create native function object */
-  extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_t prim,
+  extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim,
 					      void *baton);
 
 
