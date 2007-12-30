@@ -1,6 +1,6 @@
 /*
  * dfsch_import - Library for loading scheme and C code into dfsch interpreter
- * Copyright (C) 2005 Ales Hakl
+ * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

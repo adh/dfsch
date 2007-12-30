@@ -1,7 +1,7 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
  *     Exception and continuation handling implementation
- * Copyright (C) 2005 Ales Hakl
+ * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

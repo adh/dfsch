@@ -934,7 +934,7 @@ static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_
 // TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "number-type", NUMBER);
+  dfsch_define_cstr(ctx, "<number>", NUMBER);
 
   dfsch_define_cstr(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
   dfsch_define_cstr(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
