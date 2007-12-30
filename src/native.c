@@ -49,14 +49,14 @@ typedef dfsch_object_t object_t;
 
 // Native procedures:
 
-static object_t* native_gensym(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(gensym, 0){
   if (args)
     dfsch_error("exception:too-many-arguments", args);
 
   return dfsch_gensym();
 }
 
-static object_t* native_stack_trace(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(stack_trace, 0){
   if (args)
     dfsch_error("exception:too-many-arguments", args);
 
@@ -64,7 +64,7 @@ static object_t* native_stack_trace(void*baton, object_t* args, dfsch_tail_escap
 }
 
 
-static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(unintern, 0){
   object_t* symbol;
   DFSCH_OBJECT_ARG(args, symbol);
   DFSCH_ARG_END(args);
@@ -73,38 +73,35 @@ static object_t* native_unintern(void*baton, object_t* args, dfsch_tail_escape_t
   return symbol;
 }
 
-static object_t* native_id(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(id, 0){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long((long)object);
 }
-static object_t* native_hash(void*baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash, 0){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long((long)dfsch_hash(object));
 }
-static object_t* native_type_of(void*baton, object_t* args, 
-                                dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(type_of, 0){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return (object_t*)DFSCH_TYPE_OF(object);
 }
-static object_t* native_superclass(void*baton, object_t* args, 
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(superclass, 0){
   object_t* type;
   DFSCH_OBJECT_ARG(args, type);
   DFSCH_ARG_END(args);
 
   return dfsch_superclass(type);
 }
-static object_t* native_superclass_p(void*baton, object_t* args, 
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(superclass_p, 0){
   dfsch_object_t* sub;
   dfsch_object_t* super;
   DFSCH_OBJECT_ARG(args, sub);
@@ -122,8 +119,7 @@ static object_t* native_superclass_p(void*baton, object_t* args,
   return dfsch_bool(dfsch_superclass_p((dfsch_type_t*)sub, 
                                        (dfsch_type_t*)super));
 }
-static object_t* native_instance_p(void*baton, object_t* args, 
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
   dfsch_object_t* object;
   dfsch_object_t* type;
   DFSCH_OBJECT_ARG(args, object);
@@ -723,20 +719,15 @@ static object_t* native_string_2_symbol(void *baton, object_t* args, dfsch_tail_
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "gensym", dfsch_make_primitive(&native_gensym,NULL));
-  dfsch_define_cstr(ctx, "stack-trace",
-                   dfsch_make_primitive(&native_stack_trace,NULL));
-  dfsch_define_cstr(ctx, "unintern", dfsch_make_primitive(&native_unintern,NULL));
-  dfsch_define_cstr(ctx, "id", dfsch_make_primitive(&native_id,NULL));
-  dfsch_define_cstr(ctx, "hash", dfsch_make_primitive(&native_hash,NULL));
-  dfsch_define_cstr(ctx, "type-of", 
-                    dfsch_make_primitive(&native_type_of,NULL));
-  dfsch_define_cstr(ctx, "superclass?", 
-                    dfsch_make_primitive(&native_superclass_p,NULL));
-  dfsch_define_cstr(ctx, "instance?", 
-                    dfsch_make_primitive(&native_instance_p,NULL));
-  dfsch_define_cstr(ctx, "superclass", 
-                    dfsch_make_primitive(&native_superclass,NULL));
+  dfsch_define_cstr(ctx, "gensym", &gensym);
+  dfsch_define_cstr(ctx, "stack-trace", &stack_trace);
+  dfsch_define_cstr(ctx, "unintern", &unintern);
+  dfsch_define_cstr(ctx, "id", &id);
+  dfsch_define_cstr(ctx, "hash", &hash);
+  dfsch_define_cstr(ctx, "type-of", &type_of);
+  dfsch_define_cstr(ctx, "superclass?", &superclass_p);
+  dfsch_define_cstr(ctx, "instance?", &instance_p);
+  dfsch_define_cstr(ctx, "superclass", &superclass);
 
   dfsch_define_cstr(ctx, "eq?", dfsch_make_primitive(&native_eq,NULL));
   dfsch_define_cstr(ctx, "eqv?", dfsch_make_primitive(&native_eqv,NULL));

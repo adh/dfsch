@@ -169,7 +169,7 @@ extern "C" {
   
 #define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
   DFSCH_PRIMITIVE_HEAD(name);                   \
-  DFSCH_DECLARE_PRIMITIVE(name, flags)          \
+  DFSCH_DECLARE_PRIMITIVE(name, flags);         \
   DFSCH_PRIMITIVE_HEAD(name)
 
   /** Create object of given type. */
