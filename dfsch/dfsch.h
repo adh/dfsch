@@ -151,6 +151,14 @@ extern "C" {
     cached                                      \
   }
 
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, cached)  \
+  const dfsch_primitive_t name = {                       \
+    DFSCH_PRIMITIVE_TYPE,                                \
+    name##_impl,                                         \
+    baton,                                               \
+    cached                                               \
+  }
+
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
 

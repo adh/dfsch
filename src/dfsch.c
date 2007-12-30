@@ -1267,7 +1267,8 @@ object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
 
   p->proc = prim;
   p->baton = baton;
-
+  p->cached = 0;
+  
   return (object_t*)p;
 }
 

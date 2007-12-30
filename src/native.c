@@ -228,13 +228,6 @@ static object_t* native_form_defined_p(void *baton, object_t* args, dfsch_tail_e
   return dfsch_env_get(name, env);
 }
 
-
-
-
-static object_t* native_make_form(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  NEED_ARGS(args,1);  
-  return dfsch_make_form(dfsch_car(args));
-}
 static object_t* native_make_macro(void *baton, object_t* args, dfsch_tail_escape_t* esc){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
@@ -776,8 +769,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
 		   dfsch_make_form(dfsch_make_primitive(&native_form_unset,
 							 NULL)));
 
-  dfsch_define_cstr(ctx, "make-form", 
-		   dfsch_make_primitive(&native_make_form,NULL));
   dfsch_define_cstr(ctx, "make-macro", 
 		   dfsch_make_primitive(&native_make_macro,NULL));
   dfsch_define_cstr(ctx, "cons", dfsch_make_primitive(&native_cons,NULL));

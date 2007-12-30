@@ -1,5 +1,8 @@
 2007-12-30  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (dfsch__native_register): removed support for
+	user-defined forms (macros are general enough)
+
 	* dfsch/dfsch.h (DFSCH_DECLARE_PRIMITIVE): support for statically
 	allocated primitives
 
