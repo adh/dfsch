@@ -27,7 +27,7 @@ Sometimes:
   to implement outside parser.)
 * syntax-rules
 * Sound I/O
-* Compiler
+* Compiler (into threaded code)
 
 External modules and libraries:
 * XML (SAX, SXML, DOM)
