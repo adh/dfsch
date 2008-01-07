@@ -1,4 +1,6 @@
-2008-01-07  Ales Hakl  <dfox@mahoro.dfox.org>
+2008-01-07  Ales Hakl  <ales at hakl dot net>
+
+	* Makefile.am: install lib.scm
 
 	* src/dfsch.c (dfsch_eval_impl): Macros are not implicit begin
 

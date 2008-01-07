@@ -21,6 +21,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 lib_LTLIBRARIES     = libdfsch.la
 
 dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la gcollect.la
+dfschlibscm_DATA = scm/lib.scm
 
 man_MANS = doc/dfsch-repl.1
 
