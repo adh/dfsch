@@ -37,15 +37,16 @@
 (define (group-generator indent separator name statements)
   (define tmp-passed (gensym))
   (define tmp-failed (gensym))
-  `((print ',indent ',separator " " ',name " " ',separator)
-    (let ((,tmp-passed tests-passed)
-          (,tmp-failed tests-failed))
-      ,@statements
-      (let ((passed (- tests-passed ,tmp-passed))
-            (failed (- tests-failed ,tmp-failed)))
-        (print ',indent ',separator " [passed: " passed " failed: " failed 
-               " out of " (+ passed failed) "] " ',separator)))))
-
+  `(begin
+     (print ',indent ',separator " " ',name " " ',separator)
+     (let ((,tmp-passed tests-passed)
+	   (,tmp-failed tests-failed))
+       ,@statements
+       (let ((passed (- tests-passed ,tmp-passed))
+	     (failed (- tests-failed ,tmp-failed)))
+	 (print ',indent ',separator " [passed: " passed " failed: " failed 
+		" out of " (+ passed failed) "] " ',separator)))))
+  
 (define-macro (group name .  statements)
   (group-generator "" "=====" name statements))
 
@@ -56,7 +57,7 @@
   ())
 
 (define-macro (loop . code)
-  `((do () (()) ,@code)))
+  `(do () (()) ,@code))
 
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)

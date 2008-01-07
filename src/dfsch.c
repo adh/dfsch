@@ -1859,15 +1859,14 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                               esc,
                               ti);
     if (f->type == MACRO)
-      return dfsch_eval_proc_impl(dfsch_apply_impl(((macro_t*)f)->proc,
-                                                   dfsch_cons(env, 
-                                                              ((pair_t*)exp)->cdr),
-                                                   NULL,
-                                                   ti),
-                                  env,
-                                  NULL,
-                                  esc,
-                                  ti);
+      return dfsch_eval_impl(dfsch_apply_impl(((macro_t*)f)->proc,
+					      dfsch_cons(env, 
+							 ((pair_t*)exp)->cdr),
+					      NULL,
+					      ti),
+			     env,
+ 			     esc,
+			     ti);
       
     return dfsch_apply_impl(f, 
                             eval_list(((pair_t*)exp)->cdr, env, ti),

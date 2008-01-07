@@ -1,3 +1,7 @@
+2008-01-07  Ales Hakl  <dfox@mahoro.dfox.org>
+
+	* src/dfsch.c (dfsch_eval_impl): Macros are not implicit begin
+
 2007-12-30  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c (dfsch__native_register): removed support for
