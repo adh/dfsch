@@ -1888,35 +1888,49 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
   return dfsch_eval_impl(exp, env, NULL, dfsch__get_thread_info());
 }
 
-dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
-                                  dfsch_object_t* list){
-  pair_t* i_f=(pair_t*)arglist;
-  pair_t* i_a=(pair_t*)list;
-  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
+static void destructure_impl(pair_t* llist,
+                             pair_t* list,
+                             dfsch_object_t* hash){
+  while ((llist && llist->type==PAIR) &&
+	 (list && list->type==PAIR)){
 
-  while ((i_f && i_f->type==PAIR) &&
-	 (i_a && i_a->type==PAIR)){
+    if (llist->car->type == PAIR){
+      destructure_impl(llist->car, list->car, hash);
+    } else {
+      dfsch_hash_set(hash, llist->car, list->car);
+    }
 
-    dfsch_hash_set(hash, i_f->car, i_a->car);
-
-    i_f = (pair_t*)i_f->cdr;
-    i_a = (pair_t*)i_a->cdr;
+    llist = (pair_t*)llist->cdr;
+    list = (pair_t*)list->cdr;
     
   }
 
-  if (i_f && i_f->type==SYMBOL){
-    dfsch_hash_set(hash, (object_t*)i_f, (object_t*)i_a);
-    return hash;
+  if (llist && llist->type!=PAIR){
+    dfsch_hash_set(hash, (object_t*)llist, (object_t*)list);
+    return;
   }
 
-  if (!i_a  && i_f)
-      dfsch_error("exception:too-few-arguments", list);
-  if (!i_f && i_a) 
-      dfsch_error("exception:too-many-arguments", list);
+  if (!list  && llist){
+    dfsch_error("exception:too-few-arguments", dfsch_list(2, 
+                                                          llist, 
+                                                          list));
+  }
+  if (!llist && list) {
+    dfsch_error("exception:too-many-arguments", dfsch_list(2,
+                                                           llist, 
+                                                           list));
+  }
   
 
-  return hash;
+}
 
+dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
+                                  dfsch_object_t* list){
+  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
+
+  destructure_impl((pair_t*)arglist, (pair_t*)list, hash);
+
+  return hash;
 }
 
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 

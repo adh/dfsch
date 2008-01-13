@@ -1,3 +1,7 @@
+2008-01-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_destructure): recursive destructuring
+
 2008-01-07  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am: install lib.scm
