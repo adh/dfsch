@@ -1,13 +1,5 @@
 (provide 'lib)
 
-(define define-macro 
-  (make-macro 
-   (lambda (signature . body)
-     `(define ,(car signature) 
-         (make-macro
-            (lambda ,(cdr signature)
-              ,@body))))))
-
 (define-macro (define-struct name slots)
   (define num-slots (length slots))
   

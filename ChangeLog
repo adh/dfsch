@@ -1,5 +1,7 @@
 2008-01-14  Ales Hakl  <ales at hakl dot net>
 
+	* scm/lib.scm: removed define-macro macro
+
 	* src/native.c (define_macro): define-macro as special form
 
 	* src/dfsch.c (dfsch_destructure): recursive destructuring
