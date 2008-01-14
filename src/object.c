@@ -180,15 +180,11 @@ static dfsch_object_t* native_make_instance(void* baton,
 }
 
 
-static dfsch_object_t* native_form_define_class(void* baton,
-                                                dfsch_object_t* args,
-                                                dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
   char* classname;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
   DFSCH_ARG_END(args);
@@ -250,14 +246,10 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
   
   return dfsch_object_slots_2_alist(object);
 }
-static dfsch_object_t* native_form_with_slots(void *baton, 
-                                              dfsch_object_t* args, 
-                                              dfsch_tail_escape_t* esc){
-  dfsch_object_t *env;
+DFSCH_DEFINE_FORM_IMPL(with_slots, NULL){
   dfsch_object_t *object;
   dfsch_object_t *code;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_REST(args, code);
 
@@ -287,9 +279,7 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_make_instance,
                                          NULL));
 
-  dfsch_define_cstr(ctx, "define-class",
-                    dfsch_make_form(dfsch_make_primitive(native_form_define_class,
-                                                         NULL)));
+  dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
 
   dfsch_define_cstr(ctx, "slot-set!",
                     dfsch_make_primitive(native_slot_set,
@@ -303,8 +293,6 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "slots->alist",
                     dfsch_make_primitive(native_slots_2_alist,
                                          NULL));
-  dfsch_define_cstr(ctx, "with-slots",
-                    dfsch_make_form(dfsch_make_primitive(native_form_with_slots,
-                                                         NULL)));
+  dfsch_define_cstr(ctx, "with-slots",DFSCH_FORM_REF(with_slots));
   
 }

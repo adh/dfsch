@@ -26,6 +26,7 @@ typedef struct closure_t{
   object_t* code;
   object_t* env;
   object_t* name;
+  object_t* orig_code;
 } closure_t;
 
 typedef struct exception_t{

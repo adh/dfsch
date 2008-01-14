@@ -40,12 +40,13 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/strings.c dfsch/strings.h 	\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
-	src/generic.c dfsch/generic.h	\	
+	src/generic.c dfsch/generic.h	\
 	src/weak.c dfsch/weak.h		\
 	src/pprint.c dfsch/pprint.h	\
 	src/format.c dfsch/format.h	\
 	src/ports.c dfsch/ports.h	\
-	src/load.c dfsch/load.h
+	src/load.c dfsch/load.h		\
+	src/compile.c dfsch/compile.h
 
 libdfsch_la_LDFLAGS = -version-info 4:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm

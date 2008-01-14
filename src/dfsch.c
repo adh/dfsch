@@ -296,13 +296,20 @@ const dfsch_type_t dfsch_primitive_type = {
 static char* closure_write(closure_t* c, int max_depth, int readable){
     str_list_t* l = sl_create();
 
-    sl_append(l, "#<function ");
+    if (c->code == c->orig_code){
+      sl_append(l, "#<function ");
+    } else {
+      sl_append(l, "#<compiled-function ");
+    }
     sl_append(l, saprintf("%p", c));
     
     if (c->name){
       sl_append(l, " ");
-      sl_append(l, dfsch_obj_write(c->name, max_depth-1, readable));
+      sl_append(l, dfsch_obj_write(c->name, max_depth-1, 0));
     }
+
+    sl_append(l, " ");
+    sl_append(l, dfsch_obj_write(c->args, max_depth-1, 0));
 
     sl_append(l,">");
     
@@ -334,7 +341,7 @@ static const dfsch_type_t macro_type = {
 const dfsch_type_t dfsch_form_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
-  sizeof(form_t),
+  sizeof(dfsch_form_t),
   "form",
   NULL,
   NULL,
@@ -449,7 +456,8 @@ int dfsch_closure_p(dfsch_object_t* obj){
 int dfsch_procedure_p(dfsch_object_t* obj){
   if (!obj)
     return 0;
-  return obj->type == PRIMITIVE || obj->type == CLOSURE;
+  return (obj->type == PRIMITIVE || obj->type == CLOSURE) || 
+    (obj->type && obj->type->apply);
 }
 int dfsch_macro_p(dfsch_object_t* obj){
   if (!obj)
@@ -1236,6 +1244,7 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
   c->env = env;
   c->args = args;
   c->code = code;
+  c->orig_code = code;
   c->name = NULL;
 
   return (object_t*)c;
@@ -1252,6 +1261,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->env = env;
   c->args = args;
   c->code = code;
+  c->orig_code = code;
   c->name = name;
 
   return (object_t*)c;
@@ -1259,8 +1269,13 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
 }
 
 // native code
-
 object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
+  return dfsch_make_primitive_flags(prim, baton, 0);
+}
+
+object_t* dfsch_make_primitive_flags(dfsch_primitive_impl_t prim, 
+                                     void *baton, 
+                                     int flags){
   primitive_t* p = (primitive_t*)dfsch_make_object(PRIMITIVE);
   if (!p)
     return NULL;
@@ -1284,13 +1299,16 @@ object_t* dfsch_make_macro(object_t *proc){
 
   return (object_t*)m;
 }
-object_t* dfsch_make_form(object_t *proc){
-  form_t *f = (form_t*)dfsch_make_object(FORM);
+dfsch_object_t* dfsch_make_form(dfsch_form_impl_t impl,
+                                dfsch_form_compile_t compile,
+                                void* baton,
+                                char* name){
+  dfsch_form_t *f = (dfsch_form_t*)dfsch_make_object(FORM);
   
-  if (!f)
-    return NULL;
-
-  f->proc = proc;
+  f->impl = impl;
+  f->compile = compile;
+  f->baton = baton;
+  f->name = name;
 
   return (object_t*)f;
 }
@@ -1747,6 +1765,15 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 
 }
 
+dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
+                                   dfsch_object_t* args){
+  if (!DFSCH_INSTANCE_P(macro, MACRO)){
+    dfsch_error("exception:not-a-macro", macro);
+  }
+
+  return dfsch_apply(((macro_t*)macro)->proc, args);
+}
+
 // Evaluator
 
 /*
@@ -1853,17 +1880,13 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 	
  
     if (f->type == FORM)
-      return dfsch_apply_impl(((form_t*)f)->proc,     
-                              dfsch_cons(env,
-                                         ((pair_t*)exp)->cdr),
-                              esc,
-                              ti);
+      return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
+                                      env, 
+                                      ((pair_t*)exp)->cdr, 
+                                      esc);
+
     if (f->type == MACRO)
-      return dfsch_eval_impl(dfsch_apply_impl(((macro_t*)f)->proc,
-					      dfsch_cons(env, 
-							 ((pair_t*)exp)->cdr),
-					      NULL,
-					      ti),
+      return dfsch_eval_impl(dfsch_macro_expand(f, ((pair_t*)exp)->cdr),
 			     env,
  			     esc,
 			     ti);
@@ -2094,9 +2117,9 @@ static object_t* native_top_level_environment(void *baton, object_t* args,
                                               dfsch_tail_escape_t* esc){
   return baton;
 }
-static object_t* native_form_current_environment(void *baton, object_t* args,
-                                                 dfsch_tail_escape_t* esc){
-  return dfsch_car(args);
+
+DFSCH_DEFINE_FORM_IMPL(current_environment, NULL){
+  return env;
 }
 
 dfsch_object_t* dfsch_make_context(){
@@ -2117,8 +2140,7 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "top-level-environment", 
                    dfsch_make_primitive(&native_top_level_environment, ctx));
   dfsch_define_cstr(ctx, "current-environment", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_current_environment,
-                                                        NULL)));
+                    DFSCH_FORM_REF(current_environment));
 
   dfsch__native_register(ctx);
 

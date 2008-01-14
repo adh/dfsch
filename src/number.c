@@ -444,7 +444,7 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(number_p, DFSCH_PRIMITIVE_CACHED){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
@@ -452,7 +452,7 @@ static object_t* native_number_p(void *baton, object_t* args, dfsch_tail_escape_
   return dfsch_bool(dfsch_number_p(obj));  
 }
 
-static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(plus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   dfsch_object_t* s = dfsch_make_number_from_long(0);
   while(dfsch_pair_p(i)){
@@ -462,7 +462,7 @@ static object_t* native_plus(void *baton, object_t* args, dfsch_tail_escape_t* e
 
   return s; 
 }
-static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(minus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
@@ -479,7 +479,7 @@ static object_t* native_minus(void *baton, object_t* args, dfsch_tail_escape_t* 
 
   return s; 
 }
-static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(mult, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s = dfsch_make_number_from_long(1);
   while(dfsch_pair_p(i)){
@@ -489,7 +489,7 @@ static object_t* native_mult(void *baton, object_t* args, dfsch_tail_escape_t* e
 
   return s; 
 }
-static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(slash, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
@@ -508,7 +508,7 @@ static object_t* native_slash(void *baton, object_t* args, dfsch_tail_escape_t* 
 
   return s; 
 }
-static object_t* native_slash_i(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(slash_i, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
@@ -527,7 +527,7 @@ static object_t* native_slash_i(void *baton, object_t* args, dfsch_tail_escape_t
 
   return s; 
 }
-static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(modulo, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!dfsch_pair_p(i))
@@ -547,7 +547,7 @@ static object_t* native_modulo(void *baton, object_t* args, dfsch_tail_escape_t*
   return s; 
 }
 
-static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(number_equal, DFSCH_PRIMITIVE_CACHED){
   object_t* z0, *z1;
   DFSCH_OBJECT_ARG(args, z0);
   DFSCH_OBJECT_ARG(args, z1);
@@ -556,7 +556,7 @@ static object_t* native_number_equal(void *baton, object_t* args, dfsch_tail_esc
   return dfsch_bool(dfsch_number_equal_p(z0,z1));
 }
 
-static object_t* native_lt(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(lt, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
   object_t *b;
 
@@ -569,7 +569,7 @@ static object_t* native_lt(void *baton, object_t* args, dfsch_tail_escape_t* esc
   }
   return dfsch_sym_true();
 }
-static object_t* native_gt(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(gt, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
   object_t *b;
 
@@ -582,7 +582,7 @@ static object_t* native_gt(void *baton, object_t* args, dfsch_tail_escape_t* esc
   }
   return dfsch_sym_true();
 }
-static object_t* native_lte(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(lte, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
   object_t *b;
 
@@ -595,7 +595,7 @@ static object_t* native_lte(void *baton, object_t* args, dfsch_tail_escape_t* es
   }
   return dfsch_sym_true();
 }
-static object_t* native_gte(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(gte, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
   object_t *b;
 
@@ -611,8 +611,7 @@ static object_t* native_gte(void *baton, object_t* args, dfsch_tail_escape_t* es
 
 // Functions
 
-static object_t* native_abs(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(abs, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -639,16 +638,14 @@ static object_t* native_abs(void *baton, object_t* args,
   }
 }
 
-static object_t* native_exp(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(exp, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG_OPT(args, z, 1.0);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(exp(z));
 }
 
-static object_t* native_log(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(log, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -662,30 +659,26 @@ static object_t* native_log(void *baton, object_t* args,
   return dfsch_make_number_from_double(log(z));
 }
 
-static object_t* native_sin(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sin, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(sin(z));
 }
-static object_t* native_cos(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(cos, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(cos(z));
 }
-static object_t* native_tan(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(tan, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tan(z));
 }
 
-static object_t* native_asin(void *baton, object_t* args, 
-                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(asin, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -699,8 +692,7 @@ static object_t* native_asin(void *baton, object_t* args,
   return dfsch_make_number_from_double(asin(z));
 }
 
-static object_t* native_acos(void *baton, object_t* args, 
-                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(acos, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -714,8 +706,7 @@ static object_t* native_acos(void *baton, object_t* args,
   return dfsch_make_number_from_double(acos(z));
 }
 
-static object_t* native_atan(void *baton, object_t* args, 
-                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(atan, DFSCH_PRIMITIVE_CACHED){
   double z0, z1;
   DFSCH_DOUBLE_ARG(args, z0);
   DFSCH_DOUBLE_ARG_OPT(args, z1, 1.0);
@@ -723,8 +714,7 @@ static object_t* native_atan(void *baton, object_t* args,
   return dfsch_make_number_from_double(atan(z0/z1));
 }
 
-static object_t* native_sqrt(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sqrt, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -738,8 +728,7 @@ static object_t* native_sqrt(void *baton, object_t* args,
   return dfsch_make_number_from_double(sqrt(z));
 }
 
-static object_t* native_expt(void *baton, object_t* args, 
-                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(expt, DFSCH_PRIMITIVE_CACHED){
   double z0, z1, v;
   DFSCH_DOUBLE_ARG(args, z0);
   DFSCH_DOUBLE_ARG(args, z1);
@@ -757,8 +746,7 @@ static object_t* native_expt(void *baton, object_t* args,
   return dfsch_make_number_from_double(v);
 }
 
-static object_t* native_zero_p(void *baton, object_t* args, 
-                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(zero_p, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -781,8 +769,7 @@ static object_t* native_zero_p(void *baton, object_t* args,
   }
 }
 
-static object_t* native_positive_p(void *baton, object_t* args, 
-				   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(positive_p, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -805,8 +792,7 @@ static object_t* native_positive_p(void *baton, object_t* args,
   }
 }
 
-static object_t* native_negative_p(void *baton, object_t* args, 
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(negative_p, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -828,8 +814,8 @@ static object_t* native_negative_p(void *baton, object_t* args,
     }
   }
 }
-static object_t* native_even_p(void *baton, object_t* args, 
-                               dfsch_tail_escape_t* esc){
+
+DFSCH_DEFINE_PRIMITIVE(even_p, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -853,8 +839,7 @@ static object_t* native_even_p(void *baton, object_t* args,
   }
 }
 
-static object_t* native_odd_p(void *baton, object_t* args, 
-                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(odd_p, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -878,7 +863,7 @@ static object_t* native_odd_p(void *baton, object_t* args,
   }
 }
 
-static object_t* native_max(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(max, DFSCH_PRIMITIVE_CACHED){
   object_t *max;
   object_t *i;
 
@@ -891,7 +876,7 @@ static object_t* native_max(void *baton, object_t* args, dfsch_tail_escape_t* es
   return max;
 }
 
-static object_t* native_min(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(min, DFSCH_PRIMITIVE_CACHED){
   object_t *max;
   object_t *i;
 
@@ -904,43 +889,39 @@ static object_t* native_min(void *baton, object_t* args, dfsch_tail_escape_t* es
   return max;
 }
 
-static object_t* native_round(void *baton, object_t* args, 
-                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(round, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(round(z));
 }
-static object_t* native_floor(void *baton, object_t* args, 
-                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(floor, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(floor(z));
 }
-static object_t* native_ceiling(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(ceiling, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(ceil(z));
 }
-static object_t* native_truncate(void *baton, object_t* args, 
-                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(truncate, DFSCH_PRIMITIVE_CACHED){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(trunc(z));
 }
 
-static object_t* native_number_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(number_2_string, DFSCH_PRIMITIVE_CACHED){
   object_t *n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_number_to_string(n));
 }
-static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_2_number, DFSCH_PRIMITIVE_CACHED){
   char *str;
   object_t *i;
 
@@ -957,63 +938,57 @@ static object_t* native_string_2_number(void *baton, object_t* args, dfsch_tail_
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", NUMBER);
 
-  dfsch_define_cstr(ctx, "+", dfsch_make_primitive(&native_plus,NULL));
-  dfsch_define_cstr(ctx, "-", dfsch_make_primitive(&native_minus,NULL));
-  dfsch_define_cstr(ctx, "*", dfsch_make_primitive(&native_mult,NULL));
-  dfsch_define_cstr(ctx, "/", dfsch_make_primitive(&native_slash,NULL));
-  dfsch_define_cstr(ctx, "/i", dfsch_make_primitive(&native_slash_i,NULL));
-  dfsch_define_cstr(ctx, "%", dfsch_make_primitive(&native_modulo,NULL));
-  dfsch_define_cstr(ctx, "=", dfsch_make_primitive(&native_number_equal,NULL));
-  dfsch_define_cstr(ctx, "<", dfsch_make_primitive(&native_lt,NULL));
-  dfsch_define_cstr(ctx, ">", dfsch_make_primitive(&native_gt,NULL));
-  dfsch_define_cstr(ctx, "<=", dfsch_make_primitive(&native_lte,NULL));
-  dfsch_define_cstr(ctx, ">=", dfsch_make_primitive(&native_gte,NULL));
-  dfsch_define_cstr(ctx, "number?", dfsch_make_primitive(&native_number_p,
-                                                         NULL));
+  dfsch_define_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
+  dfsch_define_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
+  dfsch_define_cstr(ctx, "*", DFSCH_PRIMITIVE_REF(mult));
+  dfsch_define_cstr(ctx, "/", DFSCH_PRIMITIVE_REF(slash));
+  dfsch_define_cstr(ctx, "/i", DFSCH_PRIMITIVE_REF(slash_i));
+  dfsch_define_cstr(ctx, "%", DFSCH_PRIMITIVE_REF(modulo));
+  dfsch_define_cstr(ctx, "=", DFSCH_PRIMITIVE_REF(number_equal));
+  dfsch_define_cstr(ctx, "<", DFSCH_PRIMITIVE_REF(lt));
+  dfsch_define_cstr(ctx, ">", DFSCH_PRIMITIVE_REF(gt));
+  dfsch_define_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
+  dfsch_define_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
+  dfsch_define_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
 
   dfsch_define_cstr(ctx, "pi", 
                     dfsch_make_number_from_double(4*atan(1)));
 
 
-  dfsch_define_cstr(ctx, "abs", dfsch_make_primitive(&native_abs,NULL));
+  dfsch_define_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
 
-  dfsch_define_cstr(ctx, "exp", dfsch_make_primitive(&native_exp,NULL));
-  dfsch_define_cstr(ctx, "log", dfsch_make_primitive(&native_log,NULL));
-  dfsch_define_cstr(ctx, "expt", dfsch_make_primitive(&native_expt,NULL));
+  dfsch_define_cstr(ctx, "exp", DFSCH_PRIMITIVE_REF(exp));
+  dfsch_define_cstr(ctx, "log", DFSCH_PRIMITIVE_REF(log));
+  dfsch_define_cstr(ctx, "expt", DFSCH_PRIMITIVE_REF(expt));
 
-  dfsch_define_cstr(ctx, "sin", dfsch_make_primitive(&native_sin,NULL));
-  dfsch_define_cstr(ctx, "cos", dfsch_make_primitive(&native_cos,NULL));
-  dfsch_define_cstr(ctx, "tan", dfsch_make_primitive(&native_tan,NULL));
+  dfsch_define_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
+  dfsch_define_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
+  dfsch_define_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
 
-  dfsch_define_cstr(ctx, "asin", dfsch_make_primitive(&native_asin,NULL));
-  dfsch_define_cstr(ctx, "acos", dfsch_make_primitive(&native_acos,NULL));
-  dfsch_define_cstr(ctx, "atan", dfsch_make_primitive(&native_atan,NULL));
+  dfsch_define_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
+  dfsch_define_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
+  dfsch_define_cstr(ctx, "atan", DFSCH_PRIMITIVE_REF(atan));
 
-  dfsch_define_cstr(ctx, "sqrt", dfsch_make_primitive(&native_sqrt,NULL));
+  dfsch_define_cstr(ctx, "sqrt", DFSCH_PRIMITIVE_REF(sqrt));
 
-  dfsch_define_cstr(ctx, "min", dfsch_make_primitive(&native_min,NULL));
-  dfsch_define_cstr(ctx, "max", dfsch_make_primitive(&native_max,NULL));
+  dfsch_define_cstr(ctx, "min", DFSCH_PRIMITIVE_REF(min));
+  dfsch_define_cstr(ctx, "max", DFSCH_PRIMITIVE_REF(max));
 
-  dfsch_define_cstr(ctx, "zero?", dfsch_make_primitive(&native_zero_p,
-                                                       NULL));
-  dfsch_define_cstr(ctx, "negative?", dfsch_make_primitive(&native_negative_p,
-                                                           NULL));
-  dfsch_define_cstr(ctx, "positive?", dfsch_make_primitive(&native_positive_p,
-                                                           NULL));
+  dfsch_define_cstr(ctx, "zero?", DFSCH_PRIMITIVE_REF(zero_p));
+  dfsch_define_cstr(ctx, "negative?", DFSCH_PRIMITIVE_REF(negative_p));
+  dfsch_define_cstr(ctx, "positive?", DFSCH_PRIMITIVE_REF(positive_p));
 
-  dfsch_define_cstr(ctx, "even?", dfsch_make_primitive(&native_even_p,
-                                                       NULL));
-  dfsch_define_cstr(ctx, "odd?", dfsch_make_primitive(&native_odd_p,
-                                                      NULL));
+  dfsch_define_cstr(ctx, "even?", DFSCH_PRIMITIVE_REF(even_p));
+  dfsch_define_cstr(ctx, "odd?", DFSCH_PRIMITIVE_REF(odd_p));
 
-  dfsch_define_cstr(ctx, "round", dfsch_make_primitive(&native_round,NULL));
-  dfsch_define_cstr(ctx, "floor", dfsch_make_primitive(&native_floor,NULL));
-  dfsch_define_cstr(ctx, "ceiling", dfsch_make_primitive(&native_ceiling,NULL));
-  dfsch_define_cstr(ctx, "truncate", dfsch_make_primitive(&native_truncate,NULL));
+  dfsch_define_cstr(ctx, "round", DFSCH_PRIMITIVE_REF(round));
+  dfsch_define_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
+  dfsch_define_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
+  dfsch_define_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
 
   dfsch_define_cstr(ctx, "number->string", 
-		   dfsch_make_primitive(&native_number_2_string,NULL));
+		   DFSCH_PRIMITIVE_REF(number_2_string));
   dfsch_define_cstr(ctx, "string->number", 
-		   dfsch_make_primitive(&native_string_2_number,NULL));
+		   DFSCH_PRIMITIVE_REF(string_2_number));
   
 }

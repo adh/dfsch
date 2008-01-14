@@ -2,6 +2,9 @@
 
 	* src/dfsch.c (dfsch_destructure): recursive destructuring
 
+	* src/compile.c: compiler (expands macros, eliminates variable
+	references)
+
 2008-01-07  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am: install lib.scm

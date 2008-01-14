@@ -27,6 +27,7 @@
 #include "internal.h"
 #include <dfsch/promise.h>
 #include <dfsch/magic.h>
+#include <dfsch/compile.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -40,13 +41,11 @@ typedef dfsch_object_t object_t;
 
 // TODO: document all native functions somewhere
 
-static object_t* native_form_if(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(if, dfsch_form_compiler_eval_all){
   object_t* test;
   object_t* consequent;
   object_t* alternate;
 
-  DFSCH_OBJECT_ARG(args,env);
   DFSCH_OBJECT_ARG(args,test);
   DFSCH_OBJECT_ARG(args,consequent);
   DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
@@ -57,11 +56,9 @@ static object_t* native_form_if(void *baton, object_t* args, dfsch_tail_escape_t
 
 }
 
-static object_t* native_form_when(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(when, dfsch_form_compiler_eval_all){
   object_t* test;
 
-  DFSCH_OBJECT_ARG(args,env);
   DFSCH_OBJECT_ARG(args,test);
 
   if (dfsch_eval(test, env)){
@@ -71,11 +68,9 @@ static object_t* native_form_when(void *baton, object_t* args, dfsch_tail_escape
   return NULL;
 }
 
-static object_t* native_form_unless(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(unless, dfsch_form_compiler_eval_all){
   object_t* test;
 
-  DFSCH_OBJECT_ARG(args,env);
   DFSCH_OBJECT_ARG(args,test);
 
   if (!dfsch_eval(test, env)){
@@ -86,9 +81,8 @@ static object_t* native_form_unless(void *baton, object_t* args, dfsch_tail_esca
 }
 
 
-static object_t* native_form_cond(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env = dfsch_car(args);
-  object_t* i = dfsch_cdr(args);
+DFSCH_DEFINE_FORM_IMPL(cond, dfsch_form_compiler_cond){
+  object_t* i = args;
 
   while (dfsch_pair_p(i)){
     object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
@@ -108,10 +102,8 @@ static object_t* native_form_cond(void *baton, object_t* args, dfsch_tail_escape
 
   return NULL;
 }
-static object_t* native_form_case(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(case, dfsch_form_compiler_case){
   object_t* val;
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, val);
 
   val = dfsch_eval(val, env);
@@ -134,39 +126,31 @@ static object_t* native_form_case(void *baton, object_t* args, dfsch_tail_escape
   
 }
 
-static object_t* native_form_quote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_FORM_IMPL(quote, NULL){
   object_t* value;
   
-  DFSCH_DISCARD_ARG(args, env);
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
   return value;
 }
 
-static object_t* native_form_quasiquote(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(quasiquote, NULL){ 
+  /* This is non-trivial to compile right */
   object_t* arg;
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, arg);
   DFSCH_ARG_END(args);
 
   return dfsch_quasiquote(env,arg);
 }
 
-static object_t* native_form_begin(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* env;
-  DFSCH_OBJECT_ARG(args, env);
-  
-  return dfsch_eval_proc_tr(args, env, NULL, esc);
+DFSCH_DEFINE_FORM_IMPL(begin, dfsch_form_compiler_eval_all){
+  return dfsch_eval_proc_tr(args, env, form, esc);
 }
-static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-
-  object_t *env;
+DFSCH_DEFINE_FORM_IMPL(let, dfsch_form_compiler_let){
   object_t *vars;
   object_t *code;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, vars);
   DFSCH_ARG_REST(args, code);
 
@@ -223,13 +207,11 @@ static object_t* native_form_let(void *baton, object_t* args, dfsch_tail_escape_
 
   return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
 }
-static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_FORM_IMPL(letrec, dfsch_form_compiler_let){
 
-  object_t *env;
   object_t *vars;
   object_t *code;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, vars);
   DFSCH_ARG_REST(args, code);
 
@@ -246,12 +228,10 @@ static object_t* native_form_letrec(void *baton, object_t* args, dfsch_tail_esca
 
   return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
 }
-static object_t* native_form_let_seq(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t *env;
+DFSCH_DEFINE_FORM_IMPL(let_seq, dfsch_form_compiler_let){
   object_t *vars;
   object_t *code;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, vars);
   DFSCH_ARG_REST(args, code);
 
@@ -372,12 +352,9 @@ static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* es
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_form_unwind_protect(void *baton, object_t* args, 
-                                            dfsch_tail_escape_t* esc){
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(unwind_protect, dfsch_form_compiler_eval_all){
   object_t* protect;
   object_t* ret;
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, protect);
  
   DFSCH_UNWIND {
@@ -396,10 +373,7 @@ static object_t* native_form_unwind_protect(void *baton, object_t* args,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_form_do(void *baton, object_t* args, 
-                                dfsch_tail_escape_t* esc){
-
-  object_t* env;
+DFSCH_DEFINE_FORM_IMPL(do, NULL){
   object_t* vars;
   object_t* test;
   object_t* exprs;
@@ -407,7 +381,6 @@ static object_t* native_form_do(void *baton, object_t* args,
   object_t* lenv;
   object_t* i;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, vars);
   DFSCH_OBJECT_ARG(args, test);
   
@@ -458,15 +431,11 @@ static object_t* native_form_do(void *baton, object_t* args,
   return dfsch_eval_proc_tr(exprs, lenv, NULL, esc);
 }
 
-static dfsch_object_t* native_form_destructuring_bind(void *baton, 
-						      dfsch_object_t* args, 
-						      dfsch_tail_escape_t* esc){
-  dfsch_object_t *env;
+DFSCH_DEFINE_FORM_IMPL(destructuring_bind, dfsch_form_compiler_eval_but_first){
   dfsch_object_t *arglist;
   dfsch_object_t *list;
   dfsch_object_t *code;
 
-  DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, arglist);
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_REST(args, code);
@@ -486,40 +455,18 @@ static dfsch_object_t* native_form_destructuring_bind(void *baton,
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__control_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "begin", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_begin,
-							 NULL)));
-  dfsch_define_cstr(ctx, "let", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_let,
-							 NULL)));
-  dfsch_define_cstr(ctx, "let*", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_let_seq,
-							 NULL)));
-  dfsch_define_cstr(ctx, "letrec", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_letrec,
-							 NULL)));
+  dfsch_define_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
+  dfsch_define_cstr(ctx, "let", DFSCH_FORM_REF(let));
+  dfsch_define_cstr(ctx, "let*", DFSCH_FORM_REF(let_seq));
+  dfsch_define_cstr(ctx, "letrec", DFSCH_FORM_REF(letrec));
 
-  dfsch_define_cstr(ctx, "quasiquote", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_quasiquote,
-							 NULL)));
-  dfsch_define_cstr(ctx, "quote", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_quote,
-							 NULL)));
-  dfsch_define_cstr(ctx, "if", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_if,
-                                                        NULL)));
-  dfsch_define_cstr(ctx, "when", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_when,
-                                                         NULL)));
-  dfsch_define_cstr(ctx, "unless", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_unless,
-                                                         NULL)));
-  dfsch_define_cstr(ctx, "cond", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_cond,
-                                                         NULL)));
-  dfsch_define_cstr(ctx, "case", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_case,
-                                                         NULL)));
+  dfsch_define_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
+  dfsch_define_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
+  dfsch_define_cstr(ctx, "if", DFSCH_FORM_REF(if));
+  dfsch_define_cstr(ctx, "when", DFSCH_FORM_REF(when));
+  dfsch_define_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
+  dfsch_define_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
+  dfsch_define_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
   dfsch_define_cstr(ctx, "raise", 
 		   dfsch_make_primitive(&native_raise,NULL));
@@ -532,24 +479,16 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "try", 
 		   dfsch_make_primitive(&native_try,NULL));
 
-  dfsch_define_cstr(ctx, "unwind-protect", 
-                    dfsch_make_form(dfsch_make_primitive(&native_form_unwind_protect,
-							 NULL)));
-
-
+  dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
 
   dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
                                                           NULL));
   dfsch_define_cstr(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
-  dfsch_define_cstr(ctx, "do", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_do,
-							 NULL)));
+  dfsch_define_cstr(ctx, "do", DFSCH_FORM_REF(do));
+
   dfsch_define_cstr(ctx, "destructuring-bind", 
-		   dfsch_make_form(dfsch_make_primitive(&native_form_destructuring_bind,
-							 NULL)));
-
-
+                    DFSCH_FORM_REF(destructuring_bind));
 
 }

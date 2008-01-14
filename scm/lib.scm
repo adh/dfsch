@@ -2,12 +2,11 @@
 
 (define define-macro 
   (make-macro 
-   (lambda (env signature . body)
+   (lambda (signature . body)
      `(define ,(car signature) 
          (make-macro
-          (let ((outer-environment ',env))
-            (lambda ,(cons (gensym) (cdr signature))
-              ,@body)))))))
+            (lambda ,(cdr signature)
+              ,@body))))))
 
 (define-macro (define-struct name slots)
   (define num-slots (length slots))

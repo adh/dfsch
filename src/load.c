@@ -358,12 +358,9 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   return ictx.head;
 }
 
-static dfsch_object_t* native_form_load_scm(void *baton, dfsch_object_t* args,
-					    dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
   char* file_name;
 
-  DFSCH_OBJECT_ARG(args, env);
   args = dfsch_eval_list(args, env);
   DFSCH_STRING_ARG(args, file_name);
   DFSCH_ARG_END(args);
@@ -371,13 +368,10 @@ static dfsch_object_t* native_form_load_scm(void *baton, dfsch_object_t* args,
   return dfsch_load_scm(env, file_name);
 }
 
-static dfsch_object_t* native_form_load_so(void *baton, dfsch_object_t* args,
-					   dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
   char* sym_name;
   char* so_name;
 
-  DFSCH_OBJECT_ARG(args, env);
   args = dfsch_eval_list(args, env);
   DFSCH_STRING_ARG(args, so_name);
   DFSCH_STRING_ARG(args, sym_name);
@@ -386,13 +380,10 @@ static dfsch_object_t* native_form_load_so(void *baton, dfsch_object_t* args,
   return dfsch_load_so(env, so_name, sym_name);
 }
 
-static dfsch_object_t* native_form_load(void *baton, dfsch_object_t* args,
-					dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(load, NULL){
   char* name;
   dfsch_object_t* path_list;
 
-  DFSCH_OBJECT_ARG(args, env);
   args = dfsch_eval_list(args, env);
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
   DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
@@ -400,13 +391,10 @@ static dfsch_object_t* native_form_load(void *baton, dfsch_object_t* args,
 
   return dfsch_load(env, name, path_list);  
 }
-static dfsch_object_t* native_form_require(void *baton, dfsch_object_t* args,
-					   dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(require, NULL){
   char* name;
   dfsch_object_t* path_list;
 
-  DFSCH_OBJECT_ARG(args, env);
   args = dfsch_eval_list(args, env);
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
   DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
@@ -414,12 +402,9 @@ static dfsch_object_t* native_form_require(void *baton, dfsch_object_t* args,
 
   return dfsch_require(env, name, path_list);  
 }
-static dfsch_object_t* native_form_provide(void *baton, dfsch_object_t* args,
-					   dfsch_tail_escape_t* esc){
-  dfsch_object_t* env;
+DFSCH_DEFINE_FORM_IMPL(provide, NULL){
   char* name;
 
-  DFSCH_OBJECT_ARG(args, env);
   args = dfsch_eval_list(args, env);
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
   DFSCH_ARG_END(args);
@@ -448,22 +433,12 @@ dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
                                dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
                                dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
   dfsch_define_cstr(ctx, "load:*modules*", NULL);
-  dfsch_define_cstr(ctx, "load:scm!",
-		    dfsch_make_form(dfsch_make_primitive(native_form_load_scm,
-							 ctx)));
+  dfsch_define_cstr(ctx, "load:scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_define_cstr(ctx, "load:read-scm",
 		    dfsch_make_primitive(native_read_scm,ctx));
-  dfsch_define_cstr(ctx,"load:so!",
-		    dfsch_make_form(dfsch_make_primitive(native_form_load_so,
-							 ctx)));
-  dfsch_define_cstr(ctx, "load!",
-		    dfsch_make_form(dfsch_make_primitive(native_form_load,
-							 ctx)));
-  dfsch_define_cstr(ctx, "require",
-		    dfsch_make_form(dfsch_make_primitive(native_form_require,
-							 ctx)));
-  dfsch_define_cstr(ctx, "provide",
-		    dfsch_make_form(dfsch_make_primitive(native_form_provide,
-							 ctx)));
+  dfsch_define_cstr(ctx,"load:so!", DFSCH_FORM_REF(load_so));
+  dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
+  dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
+  dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
   return NULL;
 }

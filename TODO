@@ -32,4 +32,3 @@ Sometimes:
 External modules and libraries:
 * XML (SAX, SXML, DOM)
 * JSON
-* SQL database access (postgresql)
