@@ -215,6 +215,20 @@ DFSCH_DEFINE_PRIMITIVE(make_macro, 0){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
+DFSCH_DEFINE_FORM_IMPL(define_macro, NULL){
+  dfsch_object_t* name;
+  dfsch_object_t* arglist;
+
+  DFSCH_OBJECT_ARG(args, arglist);
+  DFSCH_OBJECT_ARG(arglist, name);
+
+  dfsch_define(name, 
+               dfsch_make_macro(dfsch_named_lambda(env,
+                                                   arglist,
+                                                   args,
+                                                   name)), 
+               env);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -715,6 +729,14 @@ DFSCH_DEFINE_PRIMITIVE(compile_function, 0){
   dfsch_compile_function(function);
   return function;
 }
+DFSCH_DEFINE_PRIMITIVE(destructure, 0){
+  dfsch_object_t* llist;
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, llist);
+  DFSCH_OBJECT_ARG(args, list);
+
+  return dfsch_destructure(llist, list);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -749,6 +771,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
   dfsch_define_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_define_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
   dfsch_define_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
   dfsch_define_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
   dfsch_define_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
@@ -825,6 +848,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
                    DFSCH_PRIMITIVE_REF(compile));
   dfsch_define_cstr(ctx, "compile-function!", 
                    DFSCH_PRIMITIVE_REF(compile_function));
+  dfsch_define_cstr(ctx, "destructure", 
+                   DFSCH_PRIMITIVE_REF(destructure));
 
 
   dfsch__native_cxr_register(ctx);

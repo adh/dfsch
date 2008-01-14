@@ -1,5 +1,7 @@
 2008-01-14  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c (define_macro): define-macro as special form
+
 	* src/dfsch.c (dfsch_destructure): recursive destructuring
 
 	* src/compile.c: compiler (expands macros, eliminates variable
