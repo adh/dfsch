@@ -133,37 +133,48 @@ dfsch_object_t* dfsch_methods_2_alist(dfsch_object_t* generic){
   return dfsch_hash_2_alist(((generic_t*)generic)->methods);
 }
 
-
-/* scheme binding */
-DFSCH_DEFINE_FORM_IMPL(define_generic, NULL){
-  dfsch_object_t* name;
+dfsch_object_t* dfsch_define_generic(dfsch_object_t* name, dfsch_object_t* env){
   dfsch_object_t* generic;
 
-  DFSCH_OBJECT_ARG(args, name);
-  
-  generic = dfsch_make_generic(dfsch_symbol(name));
-  dfsch_define(name, generic, env);
-  return generic;
-}
-DFSCH_DEFINE_FORM_IMPL(ensure_generic, NULL){
-  dfsch_object_t* name;
-  dfsch_object_t* generic;
-
-  DFSCH_OBJECT_ARG(args, name);
-  
-  generic = dfsch_env_get(env, name);
+  if (!dfsch_symbol_p(name)){
+    dfsch_error("exception:not-a-symbol", name);
+  }
+    
+  generic = dfsch_env_get(name, env);
   
   if (generic){
     generic = dfsch_car(generic);
     if (!DFSCH_INSTANCE_P(generic, &generic_type)){
       dfsch_error("exception:not-a-generic-function", generic);
     }
-    return NULL;
+    return generic;
   }
 
   generic = dfsch_make_generic(dfsch_symbol(name));
   dfsch_define(name, generic, env);
   return generic;
+}
+
+dfsch_object_t* dfsch_define_generic_cstr(char* name, dfsch_object_t* env){
+  return dfsch_define_generic(dfsch_make_symbol(name), env);
+}
+void dfsch_define_method_cstr(char* name, 
+                              dfsch_object_t* type,
+                              dfsch_object_t* method,
+                              dfsch_object_t* env){
+  dfsch_method_set(dfsch_define_generic_cstr(name, env),
+                   type,
+                   method);
+}
+
+
+/* scheme binding */
+DFSCH_DEFINE_FORM_IMPL(define_generic, NULL){
+  dfsch_object_t* name;
+
+  DFSCH_OBJECT_ARG(args, name);
+  
+  return dfsch_define_generic(name, env);
 }
 
 DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
@@ -180,7 +191,7 @@ DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
     name = dfsch_car(name);
     type = dfsch_car(lambda_list);
 
-    generic = dfsch_eval(name, env);
+    generic = dfsch_define_generic(name, env);
 
     if (dfsch_pair_p(type)){
       lambda_list = dfsch_cons(dfsch_car(type), dfsch_cdr(lambda_list));
@@ -205,7 +216,7 @@ DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
     DFSCH_OBJECT_ARG(args, type);
     DFSCH_OBJECT_ARG(args, method);
     method = dfsch_eval(method, env);
-    generic = dfsch_eval(name, env);
+    generic = dfsch_define_generic(name, env);
     type = dfsch_eval(type, env);
   }
 
@@ -283,7 +294,6 @@ static dfsch_object_t* methods_2_alist(void* baton,
 void dfsch__generic_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "<generic-function>", &generic_type);
   dfsch_define_cstr(env, "define-generic", DFSCH_FORM_REF(define_generic));
-  dfsch_define_cstr(env, "ensure-generic", DFSCH_FORM_REF(ensure_generic));
   dfsch_define_cstr(env, "define-method", DFSCH_FORM_REF(define_method));
 
   dfsch_define_cstr(env, "make-generic", 

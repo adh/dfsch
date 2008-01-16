@@ -35,5 +35,13 @@ dfsch_object_t* dfsch_method_ref(dfsch_object_t* generic,
                                  dfsch_object_t* type);
 dfsch_object_t* dfsch_methods_2_alist(dfsch_object_t* generic);
 
+dfsch_object_t* dfsch_define_generic(dfsch_object_t* name, 
+                                     dfsch_object_t* env);
+dfsch_object_t* dfsch_define_generic_cstr(char* name, 
+                                          dfsch_object_t* env);
+void dfsch_define_method_cstr(char* name, 
+                              dfsch_object_t* type,
+                              dfsch_object_t* method,
+                              dfsch_object_t* env);
 
 #endif

@@ -1,3 +1,8 @@
+2008-01-16  Ales Hakl  <ales at hakl dot net>
+
+	* src/generic.c (dfsch_define_generic): merged ensure-generic into
+	define-generic and define-method.
+
 2008-01-14  Ales Hakl  <ales at hakl dot net>
 
 	* scm/lib.scm: removed define-macro macro

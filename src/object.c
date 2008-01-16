@@ -19,18 +19,12 @@
  * USA
  */
 
-/*
- * Instances of standard-class created here must be separate for each 
- * top-level environment and thus cannot use any kind of caching 
- * (DFSCH_OBJECT_CACHE and friends). When they are not distinct, method
- * (re)definitions are shared too, which clearly is not desirable behavior.
- */
-
 #include "dfsch/object.h"
 
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/compile.h>
 #include "util.h"
 
 typedef struct instance_t {
@@ -246,7 +240,7 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
   
   return dfsch_object_slots_2_alist(object);
 }
-DFSCH_DEFINE_FORM_IMPL(with_slots, NULL){
+DFSCH_DEFINE_FORM_IMPL(with_slots, dfsch_form_compiler_eval_all){
   dfsch_object_t *object;
   dfsch_object_t *code;
 
