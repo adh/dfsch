@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_empty_list_type): empty-list type
 	(dfsch_abstract_type): abstract-type type
+	(list_type): list type (common superclass of pair and empty-list)
 
 	* src/weak.c (dfsch_weak_reference_dereference): lock allocator
 	when checking for live reference 

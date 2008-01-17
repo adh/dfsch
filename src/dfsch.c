@@ -225,10 +225,21 @@ const dfsch_type_t dfsch_standard_type = {
   NULL
 };
 
+const dfsch_type_t list_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "list",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
 
 const dfsch_type_t dfsch_empty_list_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  &list_type,
   0,
   "empty-list",
   NULL,
@@ -243,7 +254,7 @@ static size_t pair_hash(pair_t* p);
 
 static const dfsch_type_t pair_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  &list_type,
   sizeof(pair_t), 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
@@ -2162,6 +2173,11 @@ dfsch_object_t* dfsch_make_context(){
 
   ctx = dfsch_new_frame(NULL);
 
+  dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
+  dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
+
+
+  dfsch_define_cstr(ctx, "<list>", &list_type);
   dfsch_define_cstr(ctx, "<pair>", PAIR);
   dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
   dfsch_define_cstr(ctx, "<symbol>", SYMBOL);
