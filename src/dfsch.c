@@ -201,6 +201,16 @@ const dfsch_type_t dfsch_standard_type = {
   NULL
 };
 
+const dfsch_type_t dfsch_empty_list_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  0,
+  "empty-list",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
 
 static int pair_equal_p(pair_t*, pair_t*);
 static char* pair_write(pair_t*, int, int);
@@ -2128,6 +2138,7 @@ dfsch_object_t* dfsch_make_context(){
   ctx = dfsch_new_frame(NULL);
 
   dfsch_define_cstr(ctx, "<pair>", PAIR);
+  dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
   dfsch_define_cstr(ctx, "<symbol>", SYMBOL);
   dfsch_define_cstr(ctx, "<primitive>", PRIMITIVE);
   dfsch_define_cstr(ctx, "<function>", CLOSURE);

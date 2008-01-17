@@ -108,7 +108,9 @@ extern "C" {
 
   extern const dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
-
+  extern const dfsch_type_t dfsch_empty_list_type;
+#define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
+  
   /**
    * C datatype for scheme objects. Used as abstract datatype and also 
    * first field of most objects.
@@ -250,7 +252,7 @@ extern "C" {
   /** Get object hash */
   extern uint32_t dfsch_hash(dfsch_object_t* obj);
 
-#define DFSCH_TYPE_OF(obj) ((obj)?(obj)->type:NULL)
+#define DFSCH_TYPE_OF(obj) ((obj)?(obj)->type:DFSCH_EMPTY_LIST_TYPE)
 
 #define DFSCH_INSTANCE_P(o, t)                                  \
   ((DFSCH_TYPE_OF(o) == (t))||dfsch_instance_p((o), (t)))
