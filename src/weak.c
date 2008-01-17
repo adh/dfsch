@@ -81,18 +81,23 @@ int dfsch_weak_reference_live_p(dfsch_object_t* reference){
 
   return ref->live;
 }
-dfsch_object_t* dfsch_weak_reference_dereference(dfsch_object_t* reference){
-  reference_t* ref;
-  if (!reference || reference->type != &reference_type)
-    dfsch_error("exception:not-a-reference", reference);
-  ref = (reference_t*) reference;
 
+dfsch_object_t* dereference(reference_t* ref){
   if (!ref->live){
     ref->object = NULL;
     return NULL;
   } else {
     return ref->object;
   }
+}
+
+dfsch_object_t* dfsch_weak_reference_dereference(dfsch_object_t* reference){
+  reference_t* ref;
+  if (!reference || reference->type != &reference_type)
+    dfsch_error("exception:not-a-reference", reference);
+  ref = (reference_t*) reference;
+
+  return GC_call_with_alloc_lock((GC_fn_type)dereference, ref);
 }
 
 typedef struct weak_vector_t {
