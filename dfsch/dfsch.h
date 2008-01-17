@@ -106,6 +106,8 @@ extern "C" {
     dfsch_type_hash_t hash;
   };
 
+  extern const dfsch_type_t dfsch_abstract_type;
+#define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
   extern const dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
   extern const dfsch_type_t dfsch_empty_list_type;

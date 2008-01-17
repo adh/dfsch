@@ -175,6 +175,30 @@ int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
   return dfsch_superclass_p(DFSCH_TYPE_OF(obj), type);
 }
 
+static char* atype_write(dfsch_type_t* t, int max_depth, int readable){
+    str_list_t* l = sl_create();
+
+    sl_append(l, "#<abstract-type ");
+    sl_append(l, saprintf("%p", t));
+    
+    sl_append(l, " ");
+    sl_append(l, t->name);
+
+    sl_append(l,">");
+    
+    return sl_value(l);
+}
+
+const dfsch_type_t dfsch_abstract_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(dfsch_type_t),
+  "abstract-type",
+  NULL,
+  (dfsch_type_write_t)atype_write,
+  NULL
+};
+
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
     str_list_t* l = sl_create();
 
@@ -200,6 +224,7 @@ const dfsch_type_t dfsch_standard_type = {
   (dfsch_type_write_t)type_write,
   NULL
 };
+
 
 const dfsch_type_t dfsch_empty_list_type = {
   DFSCH_STANDARD_TYPE,
