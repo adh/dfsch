@@ -3,6 +3,8 @@ bin_PROGRAMS = dfsch-repl
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
 	dfsch/lib/regex.h \
+	dfsch/lib/inet.h \
+	dfsch/lib/extref.h \
 	dfsch/strings.h \
 	dfsch/parse.h \
 	dfsch/promise.h \
@@ -20,7 +22,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 
 lib_LTLIBRARIES     = libdfsch.la
 
-dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la gcollect.la
+dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la gcollect.la extref.la
 dfschlibscm_DATA = scm/lib.scm
 
 man_MANS = doc/dfsch-repl.1
@@ -70,6 +72,10 @@ inet_la_LIBADD =  libdfsch.la
 gcollect_la_SOURCES = lib/gcollect.c dfsch/lib/gcollect.h
 gcollect_la_LDFLAGS = -version-info 1:0:0 -module
 gcollect_la_LIBADD =  libdfsch.la
+
+extref_la_SOURCES = lib/extref.c dfsch/lib/extref.h
+extref_la_LDFLAGS = -version-info 1:0:0 -module
+extref_la_LIBADD =  libdfsch.la
 
 
 dfsch_repl_SOURCES = src/repl.c
