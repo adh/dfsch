@@ -32,3 +32,5 @@ Sometimes:
 External modules and libraries:
 * XML (SAX, SXML, DOM)
 * JSON
+* Cairo
+

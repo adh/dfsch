@@ -19,21 +19,18 @@
  *
  */
 
-#ifndef H__dfsch__util__
-#define H__dfsch__util__
+#ifndef H__dfsch___util__
+#define H__dfsch___util__
 
-#include <dfsch/strings.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <pthread.h>
+#include "dfsch/util.h"
 
 typedef struct str_li_t str_li_t;
-typedef struct str_list_t {
+typedef dfsch_str_list_t str_list_t;
+struct dfsch_str_list_t {
   str_li_t* head;
   str_li_t* tail;
   size_t len;
-} str_list_t;
+};
 struct str_li_t {
   char* str;
   size_t len;
@@ -43,35 +40,21 @@ struct str_li_t {
 #define ASCII_tolower(c) ((c)<='Z'&&(c)>='A'?(c)+('a'-'A'):(c))
 
 
-extern str_list_t* dfsch__sl_create();
-#define sl_create dfsch__sl_create
-extern void dfsch__sl_append(str_list_t* list, char* string);
-#define sl_append dfsch__sl_append
-extern void dfsch__sl_nappend(str_list_t* list, char* string, size_t l);
-#define sl_nappend dfsch__sl_nappend
-extern char* dfsch__sl_value(str_list_t* list);
-#define sl_value dfsch__sl_value
-extern dfsch_strbuf_t* dfsch__sl_value_strbuf(str_list_t* list);
-#define sl_value_strbuf dfsch__sl_value_strbuf
-extern char* dfsch__stracat(char* a, char* b);
-#define stracat dfsch__stracat
-extern char* dfsch__stracpy(char* x);
-#define stracpy dfsch__stracpy
-extern char* dfsch__strancpy(char* x, size_t n);
-#define strancpy dfsch__strancpy
-extern char* dfsch__straquote(char *s);
-#define straquote dfsch__straquote
-extern int dfsch__ascii_strcasecmp(char* a, char* b);
-#define ascii_strcasecmp dfsch__ascii_strcasecmp
+#define sl_create dfsch_sl_create
+#define sl_append dfsch_sl_append
+#define sl_nappend dfsch_sl_nappend
+#define sl_value dfsch_sl_value
+#define sl_value_strbuf dfsch_sl_value_strbuf
+#define stracat dfsch_stracat
+#define stracpy dfsch_stracpy
+#define strancpy dfsch_strancpy
+#define straquote dfsch_straquote
+#define ascii_strcasecmp dfsch_ascii_strcasecmp
 
-extern pthread_mutex_t* dfsch__create_finalized_mutex();
-#define create_finalized_mutex dfsch__create_finalized_mutex
-extern pthread_cond_t* dfsch__create_finalized_cvar();
-#define create_finalized_cvar dfsch__create_finalized_cvar
+#define create_finalized_mutex dfsch_create_finalized_mutex
+#define create_finalized_cvar dfsch_create_finalized_cvar
 
-char* dfsch__vsaprintf(char* format, va_list ap);
-#define vsaprintf dfsch__vsaprintf
-char* dfsch__saprintf(char* format, ...);
-#define saprintf dfsch__saprintf
+#define vsaprintf dfsch_vsaprintf
+#define saprintf dfsch_saprintf
 
 #endif

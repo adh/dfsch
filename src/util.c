@@ -28,7 +28,7 @@
 #include <dfsch/dfsch.h>
 #include <string.h>
 
-str_list_t* dfsch__sl_create(){
+str_list_t* dfsch_sl_create(){
   str_list_t* list = GC_MALLOC(sizeof(str_list_t));
   
   list->head = NULL;
@@ -38,7 +38,7 @@ str_list_t* dfsch__sl_create(){
   return list;
 }
 
-void dfsch__sl_append(str_list_t* list, char* string){
+void dfsch_sl_append(str_list_t* list, char* string){
   str_li_t* i = GC_MALLOC(sizeof(str_li_t));
 
   i->str = string;
@@ -54,7 +54,7 @@ void dfsch__sl_append(str_list_t* list, char* string){
     list->len = i->len;
   }
 }
-void dfsch__sl_nappend(str_list_t* list, char* string, size_t l){
+void dfsch_sl_nappend(str_list_t* list, char* string, size_t l){
   str_li_t* i = GC_MALLOC(sizeof(str_li_t));
 
   i->str = string;
@@ -71,7 +71,7 @@ void dfsch__sl_nappend(str_list_t* list, char* string, size_t l){
   }
 }
 
-char* dfsch__sl_value(str_list_t* list){
+char* dfsch_sl_value(str_list_t* list){
   char *buf = GC_MALLOC_ATOMIC(list->len+1);
   str_li_t *i = list->head;
   char *ptr = buf;
@@ -86,7 +86,7 @@ char* dfsch__sl_value(str_list_t* list){
 
   return buf;
 }
-dfsch_strbuf_t* dfsch__sl_value_strbuf(str_list_t* list){
+dfsch_strbuf_t* dfsch_sl_value_strbuf(str_list_t* list){
   dfsch_strbuf_t *buf = GC_NEW(dfsch_strbuf_t);
   str_li_t *i = list->head;
   char *ptr;
@@ -106,7 +106,7 @@ dfsch_strbuf_t* dfsch__sl_value_strbuf(str_list_t* list){
   return buf;
 }
 
-char* dfsch__stracat(char* a, char* b){
+char* dfsch_stracat(char* a, char* b){
   size_t s = strlen(a)+strlen(b)+1;
   char* o = GC_MALLOC_ATOMIC(s);
   strncpy(o,a,s);
@@ -114,14 +114,14 @@ char* dfsch__stracat(char* a, char* b){
   return o;
 }
 
-char* dfsch__stracpy(char* x){
+char* dfsch_stracpy(char* x){
   char *b;
   size_t s = strlen(x)+1;
   b = GC_MALLOC_ATOMIC(s);
   strncpy(b,x,s);
   return b;
 }
-char* dfsch__strancpy(char* x, size_t n){
+char* dfsch_strancpy(char* x, size_t n){
   char *b;
   size_t s = n+1;
   b = GC_MALLOC_ATOMIC(s);
@@ -129,7 +129,7 @@ char* dfsch__strancpy(char* x, size_t n){
   b[s-1]=0;
   return b;
 }
-char* dfsch__straquote(char *s){
+char* dfsch_straquote(char *s){
   char *b = GC_MALLOC_ATOMIC(strlen(s)*2+3); // worst case, to lazy to optimize
   char *i = b;
 
@@ -156,7 +156,7 @@ char* dfsch__straquote(char *s){
 
 }
 
-int dfsch__ascii_strcasecmp(char* a, char* b){ 
+int dfsch_ascii_strcasecmp(char* a, char* b){ 
   /*
    * XXX: this function HASN'T same API as strcasecmp 
    *      - it doesn't distinguish between < and >, only == and !=
@@ -175,7 +175,7 @@ static void mutex_finalizer(pthread_mutex_t* mutex, void* cd){
   pthread_mutex_destroy(mutex);
 }
 
-pthread_mutex_t* dfsch__create_finalized_mutex(){
+pthread_mutex_t* dfsch_create_finalized_mutex(){
   pthread_mutex_t* mutex = GC_MALLOC_ATOMIC(sizeof(pthread_mutex_t));
   GC_REGISTER_FINALIZER(mutex, (GC_finalization_proc)mutex_finalizer,
                         NULL, NULL, NULL);
@@ -186,14 +186,14 @@ static void cvar_finalizer(pthread_cond_t* cvar, void* cd){
   pthread_cond_destroy(cvar);
 }
 
-pthread_cond_t* dfsch__create_finalized_cvar(){
+pthread_cond_t* dfsch_create_finalized_cvar(){
   pthread_cond_t* cvar = GC_MALLOC_ATOMIC(sizeof(pthread_cond_t));
   GC_REGISTER_FINALIZER(cvar, (GC_finalization_proc)cvar_finalizer,
                         NULL, NULL, NULL);
   pthread_cond_init(cvar, NULL);
   return cvar;
 }
-char* dfsch__vsaprintf(char* format, va_list ap){
+char* dfsch_vsaprintf(char* format, va_list ap){
   char* buf = GC_MALLOC_ATOMIC(128);
   int r;
   va_list ap2;
@@ -215,7 +215,7 @@ char* dfsch__vsaprintf(char* format, va_list ap){
 
   return buf;
 }
-char* dfsch__saprintf(char* format, ...){
+char* dfsch_saprintf(char* format, ...){
   char* ret;
   va_list args;
   va_start(args, format);
