@@ -1,3 +1,8 @@
+2008-02-04  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_obj_write): print object pointers longer than
+	32 bits correctly.
+
 2008-02-03  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/util.h: utility functions in public API
