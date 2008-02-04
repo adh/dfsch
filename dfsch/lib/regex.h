@@ -54,6 +54,15 @@ extern "C" {
    */
   dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx);
 
+  int dfsch_regex_match_once_p(char* expression, 
+                               int cflags, int mflags, 
+                               char* string);
+  dfsch_object_t* dfsch_regex_substrings_once(char* expression, 
+                                              int cflags, int mflags, 
+                                              char* string);
+
+
+
 #ifdef __cplusplus
 }
 #endif

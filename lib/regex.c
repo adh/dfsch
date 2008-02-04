@@ -161,106 +161,24 @@ dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
   return regex_substrings(&(r->regex), string, r->sub_count, flags);
 }
 
-
-static dfsch_object_t* native_regex_compile(void *baton, 
-                                            dfsch_object_t* args, 
-                                            dfsch_tail_escape_t* esc){
-  char* expression;
-  int flags = REG_EXTENDED;
-  DFSCH_STRING_ARG(args, expression);
-
-  DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, flags);
-  DFSCH_FLAG_SET("icase", REG_ICASE, flags);
-  DFSCH_FLAG_SET("nosub", REG_NOSUB, flags);
-  DFSCH_FLAG_SET("newline", REG_NEWLINE, flags);
-  DFSCH_FLAG_PARSER_END(args);
-
-  return dfsch_regex_compile(expression, flags);
-}
-
-static dfsch_object_t* native_regex_match_p(void *baton, 
-                                            dfsch_object_t* args, 
-                                            dfsch_tail_escape_t* esc){
-  dfsch_object_t* expression;
-  char* string;
-  int flags = 0;
-  DFSCH_OBJECT_ARG(args, expression);
-  DFSCH_STRING_ARG(args, string);
-
-  DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_SET("notbol", REG_NOTBOL, flags);
-  DFSCH_FLAG_SET("noteol", REG_NOTEOL, flags);
-  DFSCH_FLAG_PARSER_END(args);
-
-  return dfsch_bool(dfsch_regex_match_p(expression, string, flags));
-}
-
-static dfsch_object_t* native_regex_substrings(void *baton, 
-                                               dfsch_object_t* args, 
-                                               dfsch_tail_escape_t* esc){
-  dfsch_object_t* expression;
-  char* string;
-  int flags = 0;
-  DFSCH_OBJECT_ARG(args, expression);
-  DFSCH_STRING_ARG(args, string);
-
-  DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_SET("notbol", REG_NOTBOL, flags);
-  DFSCH_FLAG_SET("noteol", REG_NOTEOL, flags);
-  DFSCH_FLAG_PARSER_END(args);
-
-  return dfsch_regex_substrings(expression, string, flags);
-}
-
-static dfsch_object_t* native_regex_match_once_p(void *baton, 
-                                                 dfsch_object_t* args, 
-                                                 dfsch_tail_escape_t* esc){
-  char* expression;
-  char* string;
-  int mflags = 0;
-  int cflags = REG_EXTENDED | REG_NOSUB;
+int dfsch_regex_match_once_p(char* expression, 
+                             int cflags, int mflags, 
+                             char* string){
   regex_t regex;
   int r;
-  
-  DFSCH_STRING_ARG(args, expression);
-  DFSCH_STRING_ARG(args, string);
-
-  DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, cflags);
-  DFSCH_FLAG_SET("icase", REG_ICASE, cflags);
-  DFSCH_FLAG_SET("newline", REG_NEWLINE, cflags);
-  DFSCH_FLAG_SET("notbol", REG_NOTBOL, mflags);
-  DFSCH_FLAG_SET("noteol", REG_NOTEOL, mflags);
-  DFSCH_FLAG_PARSER_END(args);
 
   regex_compile(&regex, expression, cflags);
   r = regex_match(&regex, string, mflags);
   regfree(&regex);
 
-  return dfsch_bool(r);
+  return r;
 }
 
-static dfsch_object_t* native_regex_substrings_once(void *baton, 
-                                                    dfsch_object_t* args, 
-                                                    dfsch_tail_escape_t* esc){
-  char* expression;
-  char* string;
-  int mflags = 0;
-  int cflags = REG_EXTENDED;
+dfsch_object_t* dfsch_regex_substrings_once(char* expression, 
+                                            int cflags, int mflags, 
+                                            char* string){
   regex_t regex;
   dfsch_object_t* r;
-  
-  DFSCH_STRING_ARG(args, expression);
-  DFSCH_STRING_ARG(args, string);
-
-  DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_UNSET("basic", REG_EXTENDED, cflags);
-  DFSCH_FLAG_SET("icase", REG_ICASE, cflags);
-  DFSCH_FLAG_SET("newline", REG_NEWLINE, cflags);
-  DFSCH_FLAG_SET("notbol", REG_NOTBOL, mflags);
-  DFSCH_FLAG_SET("noteol", REG_NOTEOL, mflags);
-  DFSCH_FLAG_PARSER_END(args);
 
   regex_compile(&regex, expression, cflags);
   r = regex_substrings(&regex, string, 
@@ -270,22 +188,4 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
   regfree(&regex);
 
   return r;
-}
-
-
-dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "regex:compile", 
-                   dfsch_make_primitive(&native_regex_compile,NULL));
-  dfsch_define_cstr(ctx, "regex:match?", 
-                   dfsch_make_primitive(&native_regex_match_p,NULL));
-  dfsch_define_cstr(ctx, "regex:substrings", 
-                   dfsch_make_primitive(&native_regex_substrings,NULL));
-  dfsch_define_cstr(ctx, "regex:match-once?", 
-                   dfsch_make_primitive(&native_regex_match_once_p,NULL));
-  dfsch_define_cstr(ctx, "regex:substrings-once", 
-                   dfsch_make_primitive(&native_regex_substrings_once, NULL));
-
-  dfsch_provide(ctx, "regex");
-
-  return NULL;
 }

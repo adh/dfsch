@@ -1,5 +1,8 @@
 2008-02-04  Ales Hakl  <ales at hakl dot net>
 
+	* Makefile.am: Splited relevant modules into shared library (C
+	API) and module (dfsch API) parts.
+
 	* src/dfsch.c (dfsch_obj_write): print object pointers longer than
 	32 bits correctly.
 
