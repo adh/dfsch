@@ -89,6 +89,35 @@ extern "C" {
   extern dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
                                             int mode);
   
+  extern const dfsch_type_t dfsch_hash_basetype;
+#define DFSCH_HASH_BASETYPE (&dfsch_hash_basetype)
+
+  typedef dfsch_object_t* (*dfsch_custom_hash_ref_t)(dfsch_object_t* hash, 
+                                                     dfsch_object_t* key);
+  typedef void (*dfsch_custom_hash_set_t)(dfsch_object_t* hash, 
+                                          dfsch_object_t* key,
+                                          dfsch_object_t* value);
+  typedef int (*dfsch_custom_hash_unset_t)(dfsch_object_t* hash, 
+                                           dfsch_object_t* key);
+  typedef int (*dfsch_custom_hash_set_if_exists_t)(dfsch_object_t* hash, 
+                                                   dfsch_object_t* key,
+                                                   dfsch_object_t* value);
+  typedef dfsch_object_t* (*dfsch_custom_hash_2_alist)(dfsch_object_t* hash);
+
+  typedef struct dfsch_custom_hash_type_t {
+    dfsch_type_t parent;
+    
+    dfsch_custom_hash_ref_t ref;
+    dfsch_custom_hash_set_t set;
+    dfsch_custom_hash_unset_t unset;
+    dfsch_custom_hash_set_if_exists_t set_if_exists;
+    dfsch_custom_hash_2_alist hash_2_alist;
+  } dfsch_custom_hash_type_t;
+
+  extern const dfsch_type_t dfsch_custom_hash_type_type;
+#define DFSCH_CUSTOM_HASH_TYPE_TYPE (&dfsch_custom_hash_type_type)
+
+
 #ifdef __cplusplus
 }
 #endif

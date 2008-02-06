@@ -1,3 +1,8 @@
+2008-02-06  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c (dfsch__hash_native_register): support for custom
+	hashes (with same API, usable even as environment entries)
+
 2008-02-04  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am: Splited relevant modules into shared library (C

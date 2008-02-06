@@ -50,15 +50,36 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
-static const dfsch_type_t hash_type = {
-  DFSCH_STANDARD_TYPE,
+const dfsch_type_t dfsch_hash_basetype = {
+  DFSCH_ABSTRACT_TYPE,
   NULL,
-  sizeof(hash_t),
+  0,
   "hash",
   NULL,
   NULL,
   NULL
 };
+
+static const dfsch_type_t standard_hash_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_HASH_BASETYPE,
+  sizeof(hash_t),
+  "standard-hash",
+  NULL,
+  NULL,
+  NULL
+};
+
+const dfsch_type_t dfsch_custom_hash_type_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_custom_hash_type_t),
+  "custom-hash-type",
+  NULL,
+  NULL,
+  NULL
+};
+
 
 static hash_entry_t** alloc_vector(size_t mask){
   return GC_MALLOC((sizeof(hash_entry_t*))*(mask+1));
@@ -66,7 +87,7 @@ static hash_entry_t** alloc_vector(size_t mask){
 
 
 dfsch_object_t* dfsch_hash_make(int mode){
-  hash_t *h = (hash_t*)dfsch_make_object(&hash_type); 
+  hash_t *h = (hash_t*)dfsch_make_object(&standard_hash_type); 
 
   h->count = 0;
   h->mask = INITIAL_MASK;
@@ -78,7 +99,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return obj && obj->type == &hash_type;
+  return obj && obj->type == &standard_hash_type;
 }
 
 static size_t ptr_hash(dfsch_object_t* ptr){
@@ -106,14 +127,30 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
   }
 }
 
-#define GET_HASH(obj,hash)\
-   if (!obj || obj->type != &hash_type)\
-     dfsch_error("exception:not-a-hash", obj); \
-   hash = (hash_t*)obj;
+#define GET_HASH(obj,hash)                                              \
+  if (obj && obj->type == &standard_hash_type){                         \
+    hash = (hash_t*)obj;                                                \
+  } else if (!obj ||                                                    \
+             !DFSCH_INSTANCE_P(obj->type, DFSCH_CUSTOM_HASH_TYPE_TYPE)){ \
+    dfsch_error("exception:not-a-hash", obj);                           \
+  }else
+
+#define HASH_TYPE(hash) ((dfsch_custom_hash_type_t*)hash->type)             
+
+#define IMPLEMENTS(hash, feature)                                       \
+  if (!HASH_TYPE(hash)->feature){                                       \
+    dfsch_error("exception:" #feature "-not-supported-by-this-hash-type", \
+                hash);                                                  \
+  }
 
 /*
  * Synchronization is generally required only for modification - readers
  * can read concurrently with modification and see consistent state.
+ *
+ * This is true when modification is done in right order and with proper 
+ * barriers, probably easiest way to accomplish this is having reading 
+ * mutex which is locked only for brief period at start of lookup, rest of
+ * lookup can be done in parallel with modification.
  */
 
 dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
@@ -123,7 +160,10 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
   hash_t *hash;
   hash_entry_t *i;
 
-  GET_HASH(hash_obj, hash);
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, ref);
+    return HASH_TYPE(hash_obj)->ref(hash_obj, key);
+  };
 
   h = get_hash(hash, key);  
 
@@ -209,7 +249,11 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   hash_entry_t *entry;
   hash_entry_t *i;
 
-  GET_HASH(hash_obj,hash);
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, set);
+    HASH_TYPE(hash_obj)->set(hash_obj, key, value);
+    return hash_obj;
+  };
 
   pthread_mutex_lock(hash->w_mutex);
 
@@ -274,7 +318,10 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
   hash_t *hash;
   hash_entry_t *i, *j;
 
-  GET_HASH(hash_obj, hash);
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, unset);
+    return HASH_TYPE(hash_obj)->unset(hash_obj, key);
+  }
 
   pthread_mutex_lock(hash->w_mutex);
 
@@ -376,7 +423,10 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
   hash_t *hash;
   hash_entry_t *i;
 
-  GET_HASH(hash_obj, hash);
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, set_if_exists);
+    return HASH_TYPE(hash_obj)->set_if_exists(hash_obj, key, value);
+  }
 
   pthread_mutex_lock(hash->w_mutex);
 
@@ -430,7 +480,10 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
   hash_entry_t *i;
   hash_t *hash;
   
-  GET_HASH(hash_obj, hash);
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, hash_2_alist);
+    return HASH_TYPE(hash_obj)->hash_2_alist(hash_obj);
+  }
   
   for (j=0; j<(hash->mask+1); j++){
     i = hash->vector[j];
@@ -591,7 +644,9 @@ DFSCH_DEFINE_FORM_IMPL(with_hash, dfsch_form_compiler_eval_all){
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<hash>", &hash_type);
+  dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
+  dfsch_define_cstr(ctx, "<standard-hash>", &standard_hash_type);
+  dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
   dfsch_define_cstr(ctx, "make-hash", 
                    dfsch_make_primitive(&native_make_hash,NULL));

@@ -191,7 +191,7 @@ static char* atype_write(dfsch_type_t* t, int max_depth, int readable){
 
 const dfsch_type_t dfsch_abstract_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_STANDARD_TYPE,
   sizeof(dfsch_type_t),
   "abstract-type",
   NULL,
