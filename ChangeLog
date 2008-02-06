@@ -1,5 +1,8 @@
 2008-02-06  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c: Eliminated most warnings (and more or less
+	redundant const declarations)
+
 	* src/hash.c (dfsch__hash_native_register): support for custom
 	hashes (with same API, usable even as environment entries)
 

@@ -106,11 +106,11 @@ extern "C" {
     dfsch_type_hash_t hash;
   };
 
-  extern const dfsch_type_t dfsch_abstract_type;
+  extern dfsch_type_t dfsch_abstract_type;
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
-  extern const dfsch_type_t dfsch_standard_type;
+  extern dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
-  extern const dfsch_type_t dfsch_empty_list_type;
+  extern dfsch_type_t dfsch_empty_list_type;
 #define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
   
   /**
@@ -142,7 +142,7 @@ extern "C" {
     int flags;
   } dfsch_primitive_t;
 
-  extern const dfsch_type_t dfsch_primitive_type;
+  extern dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
 
@@ -150,7 +150,7 @@ extern "C" {
 #define DFSCH_PRIMITIVE_PURE   2
 
 #define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
-  static const dfsch_primitive_t p_##name = {   \
+  static dfsch_primitive_t p_##name = {   \
     DFSCH_PRIMITIVE_TYPE,                       \
     p_##name##_impl,                            \
     NULL,                                       \
@@ -158,7 +158,7 @@ extern "C" {
   }
   
 #define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)       \
-  static const dfsch_primitive_t p_##name = {                \
+  static dfsch_primitive_t p_##name = {                \
     DFSCH_PRIMITIVE_TYPE,                                    \
     p_##name##_impl,                                         \
     baton,                                                   \
@@ -196,7 +196,7 @@ extern "C" {
     char* name;
   };
 
-  extern const dfsch_type_t dfsch_form_type;
+  extern dfsch_type_t dfsch_form_type;
 
 #define DFSCH_FORM_TYPE (&dfsch_form_type)
   
@@ -213,7 +213,7 @@ extern "C" {
                                                )
 
 #define DFSCH_DEFINE_FORM(name)                 \
-  static const dfsch_form_t form_##name = {     \
+  static dfsch_form_t form_##name = {           \
     DFSCH_FORM_TYPE,                            \
     form_##name##_impl,                         \
     form_##name##_compile,                      \
@@ -223,7 +223,7 @@ extern "C" {
 
 #define DFSCH_DEFINE_FORM_IMPL(name, compile)           \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
-  static const dfsch_form_t form_##name = {             \
+  static dfsch_form_t form_##name = {                   \
     DFSCH_FORM_TYPE,                                    \
     form_##name##_impl,                                 \
     compile,                                            \
