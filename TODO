@@ -28,6 +28,8 @@ Sometimes:
 * syntax-rules
 * Sound I/O
 * Compiler (into threaded code)
+* JIT (using GNU Lightning)
+* FFI
 
 External modules and libraries:
 * XML (SAX, SXML, DOM)
