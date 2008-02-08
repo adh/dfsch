@@ -26,7 +26,13 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-regex.la \
 	libdfsch-threads.la
 
-dfschlibexec_LTLIBRARIES = threads.la regex.la unix.la inet.la gcollect.la extref.la
+dfschlibexec_LTLIBRARIES = threads.la\
+	regex.la \
+	unix.la \
+	inet.la \
+	gcollect.la \
+	extref.la
+
 dfschlibscm_DATA = scm/lib.scm
 
 man_MANS = doc/dfsch-repl.1
