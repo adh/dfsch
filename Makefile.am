@@ -18,7 +18,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/pprint.h\
 	dfsch/format.h\
 	dfsch/ports.h\
-	dfsch/load.h
+	dfsch/load.h \
+	dfsch/util.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-extref.la \

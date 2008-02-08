@@ -1,5 +1,7 @@
 2008-02-08  Ales Hakl  <ales at hakl dot net>
 
+	* Makefile.am (nobase_include_HEADERS): install util.h
+
 	* src/ports.c (dfsch_port_basetype): base class for ports (not
 	used for anything, only for consistency)
 
