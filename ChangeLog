@@ -1,5 +1,8 @@
 2008-02-08  Ales Hakl  <ales at hakl dot net>
 
+	* src/parse.c: Symbol aliases and parser directives (useful for
+	many unrelated things, for example packages)
+
 	* Makefile.am (nobase_include_HEADERS): install util.h
 
 	* src/ports.c (dfsch_port_basetype): base class for ports (not
