@@ -103,12 +103,15 @@ extern "C" {
   /**
    * Type of port types.
    */
-  extern const dfsch_type_t dfsch_port_type_type;
+  extern dfsch_type_t dfsch_port_type_type;
 
   /**
    * Pointer to type of port types.
    */
-#define DFSCH_PORT_TYPE_TYPE ((dfsch_type_t*)&dfsch_port_type_type)
+#define DFSCH_PORT_TYPE_TYPE (&dfsch_port_type_type)
+
+  extern dfsch_type_t dfsch_port_basetype;
+#define DFSCH_PORT_BASETYPE (&dfsch_port_basetype);
 
   int dfsch_port_p(dfsch_object_t* obj);
   int dfsch_output_port_p(dfsch_object_t* obj);

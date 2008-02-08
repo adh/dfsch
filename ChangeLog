@@ -1,3 +1,8 @@
+2008-02-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c (dfsch_port_basetype): base class for ports (not
+	used for anything, only for consistency)
+
 2008-02-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Eliminated most warnings (and more or less

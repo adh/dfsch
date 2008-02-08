@@ -46,7 +46,17 @@ DFSCH_LOCAL_SYMBOL_CACHE("batch-read-start", sel_batch_read_start);
 DFSCH_LOCAL_SYMBOL_CACHE("batch-read-end", sel_batch_read_end);
 DFSCH_LOCAL_SYMBOL_CACHE("batch-read", sel_batch_read);
 
-const dfsch_type_t dfsch_port_type_type = {
+dfsch_type_t dfsch_port_basetype = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "port",
+  NULL,
+  NULL,
+  NULL
+};
+
+dfsch_type_t dfsch_port_type_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(dfsch_port_type_t),
