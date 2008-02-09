@@ -1,3 +1,10 @@
+2008-02-09  Ales Hakl  <ales at hakl dot net>
+
+	* src/wrapper.c (DFSCH_DEFINE_FORM_IMPL): define-wrapper-type
+
+	* dfsch/dfsch.h (DFSCH_KEYWORD): support for keyword arguments to
+	C code.
+
 2008-02-08  Ales Hakl  <ales at hakl dot net>
 
 	* src/parse.c: Symbol aliases and parser directives (useful for

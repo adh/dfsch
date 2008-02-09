@@ -759,6 +759,28 @@ extern "C" {
   (args) = dfsch_cdr((args));       \
 }
 
+#define DFSCH_KEYWORD_PARSER_BEGIN(args)                                \
+  while (dfsch_pair_p((args))){                                         \
+    dfsch_object_t* dfsch___keyword;                                    \
+    dfsch_object_t* dfsch___value;                                      \
+    dfsch___keyword = dfsch_car((args));                                \
+    (args) = dfsch_cdr((args));                                         \
+    if (!dfsch_pair_p((args))){                                         \
+      dfsch_error("exception:keyword-without-arguemnt", dfsch___keyword); \
+    }                                                                   \
+    dfsch___value = dfsch_car((args));                                  \
+    (args) = dfsch_cdr((args));
+  
+#define DFSCH_KEYWORD(name, variable)                 \
+  if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
+    (variable) = (dfsch___value);                     \
+    continue;                                         \
+  }
+  
+
+#define DFSCH_KEYWORD_PARSER_END(args)                                  \
+  dfsch_error("exception:unknown-keyword", dfsch___keyword);   \
+  }
 
 #ifdef __cplusplus
 }

@@ -22,6 +22,7 @@
 #include "dfsch/wrapper.h"
 
 #include <dfsch/strings.h>
+#include <dfsch/compile.h>
 
 #include "util.h"
 
@@ -189,20 +190,54 @@ extern dfsch_object_t* dfsch_unwrap(dfsch_object_t* type,
   return w->object;
 }
 
+DFSCH_DEFINE_FORM_IMPL(define_wrapper_type, 
+                       dfsch_form_compiler_eval_but_first){
+  dfsch_object_t* write = NULL;
+  dfsch_object_t* equal_p = NULL;
+  dfsch_object_t* apply = NULL;
+  dfsch_object_t* hash = NULL;
+  dfsch_object_t* name;
+  dfsch_object_t* type;
+  char* typename;
+
+  DFSCH_OBJECT_ARG(args, name);
+  args = dfsch_eval_list(args, env);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("write", write);
+  DFSCH_KEYWORD("equal_p", equal_p);
+  DFSCH_KEYWORD("apply", apply);
+  DFSCH_KEYWORD("hash", hash);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  typename = dfsch_symbol(name);
+
+  if (*typename == '<' && typename[strlen(typename)-1] == '>'){
+    typename = strancpy(typename + 1, strlen(typename) - 2);
+  }
+
+
+  type = dfsch_make_wrapper_type(typename, write, equal_p, apply, hash);
+
+  dfsch_define(name, type, env);
+  return type;
+}
+
 static dfsch_object_t* native_make_wrapper_type(void *baton, 
                                                 dfsch_object_t* args, 
                                                 dfsch_tail_escape_t* esc){
+  dfsch_object_t* write = NULL;
+  dfsch_object_t* equal_p = NULL;
+  dfsch_object_t* apply = NULL;
+  dfsch_object_t* hash = NULL;
   char* name;
-  dfsch_object_t* write;
-  dfsch_object_t* equal_p;
-  dfsch_object_t* apply;
-  dfsch_object_t* hash;
+
   DFSCH_STRING_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, write, NULL);
-  DFSCH_OBJECT_ARG_OPT(args, equal_p, NULL);
-  DFSCH_OBJECT_ARG_OPT(args, apply, NULL);
-  DFSCH_OBJECT_ARG_OPT(args, hash, NULL);
-  DFSCH_ARG_END(args);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("write", write);
+  DFSCH_KEYWORD("equal_p", equal_p);
+  DFSCH_KEYWORD("apply", apply);
+  DFSCH_KEYWORD("hash", hash);
+  DFSCH_KEYWORD_PARSER_END(args);
 
   return dfsch_make_wrapper_type(name, write, equal_p, apply, hash);
 }
@@ -233,6 +268,8 @@ static dfsch_object_t* native_unwrap(void *baton,
 void dfsch__wrapper_native_register(dfsch_object_t *ctx){ 
   dfsch_define_cstr(ctx, "<wrapper-type>", &wrapper_type);
 
+  dfsch_define_cstr(ctx, "define-wrapper-type", 
+                    DFSCH_FORM_REF(define_wrapper_type));
   dfsch_define_cstr(ctx, "make-wrapper-type", 
 		   dfsch_make_primitive(&native_make_wrapper_type, NULL));
   dfsch_define_cstr(ctx, "wrap", 
