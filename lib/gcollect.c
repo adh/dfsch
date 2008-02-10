@@ -78,7 +78,7 @@ static dfsch_object_t* gcollect_count(void* baton,
 dfsch_object_t* dfsch_module_gcollect_register(dfsch_object_t* env){
   dfsch_provide(env, "gcollect");
 
-  dfsch_define_cstr(env, "gcollect:gcollect",
+  dfsch_define_cstr(env, "gcollect:gcollect!",
                     dfsch_make_primitive(gcollect_gcollect, NULL));
   dfsch_define_cstr(env, "gcollect:heap-size",
                     dfsch_make_primitive(gcollect_heap_size, NULL));
