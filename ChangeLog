@@ -1,6 +1,7 @@
 2008-02-09  Ales Hakl  <ales at hakl dot net>
 
 	* src/wrapper.c (DFSCH_DEFINE_FORM_IMPL): define-wrapper-type
+	(wrapper_basetype): common superclass for wrapper types
 
 	* dfsch/dfsch.h (DFSCH_KEYWORD): support for keyword arguments to
 	C code.

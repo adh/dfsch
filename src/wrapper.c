@@ -104,10 +104,21 @@ static char*  wrapper_type_write(wrapper_type_t* t, int max_depth, int readable)
     return sl_value(l);
 }
 
+static const dfsch_type_t wrapper_basetype = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "wraped-object",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
 
 static const dfsch_type_t wrapper_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_STANDARD_TYPE,
   sizeof(wrapper_type_t),
   "wrapper-type",
   NULL,
@@ -127,6 +138,7 @@ extern dfsch_object_t* dfsch_make_wrapper_type(char* name,
   
   t->type.name = name;
   t->type.size = sizeof(wrapper_t);
+  t->type.superclass = &wrapper_basetype;
   
   if (write){
     t->type.write = wrapper_write;
