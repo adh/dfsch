@@ -24,7 +24,7 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include "util.h"
 
 typedef struct instance_t {

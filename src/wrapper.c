@@ -22,7 +22,7 @@
 #include "dfsch/wrapper.h"
 
 #include <dfsch/strings.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 
 #include "util.h"
 

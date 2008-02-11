@@ -20,7 +20,7 @@
  */
 
 #include <dfsch/promise.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include "util.h"
 
 typedef struct promise_t {

@@ -27,7 +27,7 @@
 #include "internal.h"
 #include <dfsch/promise.h>
 #include <dfsch/magic.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include "util.h"
 
 #include <stdlib.h>

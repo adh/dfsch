@@ -1,5 +1,5 @@
 /*
- * dfsch - dfox's quick and dirty scheme implementation
+ * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
@@ -250,7 +250,7 @@ extern "C" {
   /** Same object or number? */
   extern int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b);
   /** Equal object? (i.e. equal contents) */
-  extern int dfsch_eqaual_p(dfsch_object_t *a, dfsch_object_t *b);
+  extern int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b);
   /** Get object hash */
   extern uint32_t dfsch_hash(dfsch_object_t* obj);
 
@@ -267,6 +267,7 @@ extern "C" {
   extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
   /** Get superclass of given type */
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
+
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);

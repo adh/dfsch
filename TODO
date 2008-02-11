@@ -1,9 +1,6 @@
 Non-version-specific:
 * More tests
 
-For 0.2.0:
-* Documentation
-
 For 0.2.1:
 * Multimethods + method combinations
 * Missing parts of unix library (ftw, various system databases...)
@@ -15,15 +12,14 @@ When needed by other code:
 * Structures (in C code)
 
 Sometimes:
+* Documentation
+* Better format
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Unicode case-insensitive string compare
 * More number types:
   - Big integers
   - Fractions
   - Complex numbers (as pairs of two numbers of same type)
-* Read macros (at least rudimentary, useful for example for include-like 
-  constructs with path relative to file they are in as this is near impossible 
-  to implement outside parser.)
 * syntax-rules
 * Sound I/O
 * Compiler (into threaded code)

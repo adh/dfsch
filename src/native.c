@@ -26,7 +26,7 @@
 
 #include "internal.h"
 #include <dfsch/promise.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -36,7 +36,7 @@
 #include <stdarg.h>
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 
 typedef dfsch_object_t object_t;
 
@@ -96,6 +96,18 @@ DFSCH_DEFINE_PRIMITIVE(type_of, 0){
 
   return (object_t*)DFSCH_TYPE_OF(object);
 }
+DFSCH_DEFINE_PRIMITIVE(type_name, 0){
+  object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  if (!DFSCH_INSTANCE_P(object, DFSCH_STANDARD_TYPE)){
+    dfsch_error("exception:not-a-type", object);
+  }
+
+  return dfsch_make_string_cstr(((dfsch_type_t*)object)->name);
+}
+
 DFSCH_DEFINE_PRIMITIVE(superclass, 0){
   object_t* type;
   DFSCH_OBJECT_ARG(args, type);
@@ -111,11 +123,11 @@ DFSCH_DEFINE_PRIMITIVE(superclass_p, 0){
   DFSCH_ARG_END(args);
 
   if (!DFSCH_INSTANCE_P(sub, DFSCH_STANDARD_TYPE)){
-    dfsch_error("excepiton:not-a-standard-type", sub);
+    dfsch_error("exception:not-a-type", sub);
   }
 
   if (super && !DFSCH_INSTANCE_P(super, DFSCH_STANDARD_TYPE)){
-    dfsch_error("excepiton:not-a-standard-type", super);
+    dfsch_error("exception:not-a-type", super);
   }
 
   return dfsch_bool(dfsch_superclass_p((dfsch_type_t*)sub, 
@@ -129,7 +141,7 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
   DFSCH_ARG_END(args);
 
   if (type && !DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
-    dfsch_error("excepiton:not-a-standard-type", type);
+    dfsch_error("exception:not-a-standard-type", type);
   }
 
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
@@ -751,6 +763,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
   dfsch_define_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
   dfsch_define_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
+  dfsch_define_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
   dfsch_define_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
   dfsch_define_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
   dfsch_define_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));

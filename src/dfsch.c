@@ -1,5 +1,5 @@
 /*
- * dfsch - dfox's quick and dirty scheme implementation
+ * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify

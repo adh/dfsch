@@ -20,7 +20,7 @@
  */
 
 #include <dfsch/hash.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include "internal.h"
 #include <stdlib.h>
 #include "util.h"

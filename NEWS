@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-version 0.2.0                YYYY-MM-DD              svn rev. RRR
+version 0.2.0                2008-02-11              svn rev. 762
 -----------------------------------------------------------------------------
 
 General changes:
@@ -11,11 +11,12 @@ General changes:
         * Better tail-recursion support
         * Nested car and cdr functions (cadr...)
         * Regular expression support
-        * Message passing based object system
         * unwind-protect
         * require/provide + load with path searching
         * Unix interface module
         * Trivial format implementation
+        * Ports for I/O
+        * Object system with generic functions (incomplete)
 
 C API Changes:
       

@@ -1,3 +1,7 @@
+2008-02-11  Ales Hakl  <ales at hakl dot net>
+
+	* NEWS: release 0.2.0
+
 2008-02-09  Ales Hakl  <ales at hakl dot net>
 
 	* src/wrapper.c (DFSCH_DEFINE_FORM_IMPL): define-wrapper-type

@@ -1,4 +1,4 @@
-#include "dfsch/compile.h"
+#include "dfsch/compiler.h"
 #include "types.h"
 
 dfsch_object_t* dfsch_compile(dfsch_object_t* expr,
