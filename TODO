@@ -3,13 +3,12 @@ Non-version-specific:
 
 For 0.2.0:
 * Documentation
-* Conditions (Errors, Warnings, debugger hooks...)
-* Better handling of locality of syntax errors
 
 For 0.2.1:
 * Multimethods + method combinations
 * Missing parts of unix library (ftw, various system databases...)
 * Pretty-printer
+* Generalized conditions (Errors, Warnings, debugger hooks...)
 
 When needed by other code:
 * Type predicates for all types

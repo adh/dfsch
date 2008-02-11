@@ -24,9 +24,7 @@
 #include <dfsch/load.h>
 
 
-static dfsch_object_t* gcollect_gcollect(void* baton,
-                                         dfsch_object_t* args,
-                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(gcollect, 0){
   DFSCH_ARG_END(args);
 
   GC_gcollect();
@@ -34,42 +32,32 @@ static dfsch_object_t* gcollect_gcollect(void* baton,
   return NULL;
 }
 
-static dfsch_object_t* gcollect_heap_size(void* baton,
-                                          dfsch_object_t* args,
-                                          dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(heap_size, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(GC_get_heap_size());
 }
 
-static dfsch_object_t* gcollect_free_bytes(void* baton,
-                                           dfsch_object_t* args,
-                                           dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(free_bytes, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(GC_get_free_bytes());
 }
 
-static dfsch_object_t* gcollect_bytes_since_gc(void* baton,
-                                               dfsch_object_t* args,
-                                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(bytes_since_gc, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(GC_get_bytes_since_gc());
 }
 
-static dfsch_object_t* gcollect_total_bytes(void* baton,
-                                            dfsch_object_t* args,
-                                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(total_bytes, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(GC_get_total_bytes());
 }
 
 
-static dfsch_object_t* gcollect_count(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(count, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(GC_gc_no);
@@ -79,17 +67,17 @@ dfsch_object_t* dfsch_module_gcollect_register(dfsch_object_t* env){
   dfsch_provide(env, "gcollect");
 
   dfsch_define_cstr(env, "gcollect:gcollect!",
-                    dfsch_make_primitive(gcollect_gcollect, NULL));
+                    DFSCH_PRIMITIVE_REF(gcollect));
   dfsch_define_cstr(env, "gcollect:heap-size",
-                    dfsch_make_primitive(gcollect_heap_size, NULL));
+                    DFSCH_PRIMITIVE_REF(heap_size));
   dfsch_define_cstr(env, "gcollect:free-bytes",
-                    dfsch_make_primitive(gcollect_free_bytes, NULL));
+                    DFSCH_PRIMITIVE_REF(free_bytes));
   dfsch_define_cstr(env, "gcollect:bytes-since-gc",
-                    dfsch_make_primitive(gcollect_bytes_since_gc, NULL));
+                    DFSCH_PRIMITIVE_REF(bytes_since_gc));
   dfsch_define_cstr(env, "gcollect:total-bytes",
-                    dfsch_make_primitive(gcollect_total_bytes, NULL));
+                    DFSCH_PRIMITIVE_REF(total_bytes));
   dfsch_define_cstr(env, "gcollect:count",
-                    dfsch_make_primitive(gcollect_count, NULL));
+                    DFSCH_PRIMITIVE_REF(count));
 
   return NULL;
 }
