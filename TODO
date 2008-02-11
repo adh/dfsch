@@ -7,7 +7,7 @@ For 0.2.0:
 * Better handling of locality of syntax errors
 
 For 0.2.1:
-* Generic functions
+* Multimethods + method combinations
 * Missing parts of unix library (ftw, various system databases...)
 * Pretty-printer
 
