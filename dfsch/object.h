@@ -41,7 +41,6 @@ extern "C" {
                                                dfsch_object_t* name);
   extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
 
-  
 
 #ifdef __cplusplus
 }

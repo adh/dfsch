@@ -54,7 +54,7 @@ static char* class_write(class_t* klass, int depth,
 }
 
 
-static const dfsch_type_t class_type = {
+static dfsch_type_t class_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(class_t),
@@ -65,9 +65,36 @@ static const dfsch_type_t class_type = {
   NULL
 };
 
+static char* abstract_class_write(class_t* klass, int depth, 
+                         int readable){
+  str_list_t *sl = sl_create();
+  char buf[sizeof(void*)*2+4];
+  
+  sl_append(sl, "#<abstract-class ");
+  snprintf(buf, sizeof(void*)*2+4, "0x%x ", klass);
+  sl_append(sl, buf);
+  sl_append(sl, klass->type.name);
+  sl_append(sl, ">");
+  
+  return sl_value(sl);
+}
+
+
+static const dfsch_type_t abstract_class_type = {
+  DFSCH_STANDARD_TYPE,
+  &class_type,
+  sizeof(class_t),
+  "abstract-class",
+  NULL,
+  (dfsch_type_write_t)abstract_class_write,
+  NULL,
+  NULL
+};
+
+
 static const class_t standard_object = {
   {
-    &class_type,
+    &abstract_class_type,
     NULL,
     sizeof(instance_t),
     "object",
@@ -96,15 +123,21 @@ dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass,
                                         char* name){
   int modified = 0;
 
-  if (!superclass || superclass->type != &class_type)
+  if (!DFSCH_INSTANCE_P(superclass ,&class_type)){
     dfsch_error("exception:not-a-class", superclass);    
+  }
 
   return (dfsch_object_t*)alloc_class((class_t*) superclass, name);
 }
 
 dfsch_object_t* dfsch_object_make_instance(dfsch_object_t* klass){
-  if (klass && klass->type != &class_type)
+  if (!DFSCH_INSTANCE_P(klass, &class_type)){
     dfsch_error("exception:not-a-class", klass);    
+  }
+
+  if (DFSCH_TYPE_OF(klass) == &abstract_class_type){
+    dfsch_error("exception:cannot-instantiate-abstract-class", klass);
+  }
 
   instance_t* ins = dfsch_make_object(klass);
   ins->inst_vars = dfsch_hash_make(DFSCH_HASH_EQ);
@@ -116,24 +149,26 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                       dfsch_object_t* name,
                                       dfsch_object_t* value){
 
-  if (!object || !object->type || object->type->type != &class_type) // XXX
+  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
+  }
 
   return dfsch_hash_set(((instance_t*)object)->inst_vars, name, value);  
 }
 int dfsch_object_slot_unset(dfsch_object_t* object,
                             dfsch_object_t* name){
-
-  if (!object || !object->type || object->type->type != &class_type) // XXX
+  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
+  }
 
   return dfsch_hash_unset(((instance_t*)object)->inst_vars, name);
 }
 dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                       dfsch_object_t* name){
   dfsch_object_t* ret;
-  if (!object || !object->type || object->type->type != &class_type) // XXX
+  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
+  }
 
   ret = dfsch_hash_ref(((instance_t*)object)->inst_vars, name);
   if (!ret){
@@ -143,8 +178,9 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
   }
 }
 dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
-  if (!object || !object->type || object->type->type != &class_type) // XXX
+  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
+  }
 
   return dfsch_hash_2_alist(((instance_t*)object)->inst_vars);
 }
@@ -249,7 +285,7 @@ DFSCH_DEFINE_FORM_IMPL(with_slots, dfsch_form_compiler_eval_all){
 
   object = dfsch_eval(object, env);
 
-  if (!object || !object->type || object->type->type != &class_type){
+  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 

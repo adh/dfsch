@@ -1,3 +1,7 @@
+2008-02-12  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.c (abstract_class_type): abstract classes
+
 2008-02-11  Ales Hakl  <ales at hakl dot net>
 
 	* NEWS: release 0.2.0
