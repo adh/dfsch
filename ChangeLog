@@ -1,5 +1,7 @@
 2008-02-12  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_obj_write): write object pointers correctly
+
 	* src/object.c (abstract_class_type): abstract classes
 
 2008-02-11  Ales Hakl  <ales at hakl dot net>
