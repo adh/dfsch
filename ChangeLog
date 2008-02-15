@@ -1,3 +1,7 @@
+2008-02-15  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_obj_write): insert space after typename
+
 2008-02-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_obj_write): write object pointers correctly
