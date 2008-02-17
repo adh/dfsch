@@ -1177,6 +1177,27 @@ char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)symbol)->data;
 }
 
+char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
+  char *name;
+  char *flt;
+
+  name = dfsch_symbol(symbol);
+
+  if (name[strlen(name)-1] == '>'){
+    flt = strchr(name, '<');
+    if (flt){
+      if (flt == name){
+        return strancpy(name+1, strlen(name) - 2);
+      } else {
+        return strancat(name, flt - name, flt+1, strlen(flt+1)-1);
+      }
+    }
+  }
+
+  return name;
+}
+
+
 
 int dfsch_compare_symbol(dfsch_object_t* symbol,
                          char* string){

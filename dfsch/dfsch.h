@@ -388,6 +388,8 @@ extern "C" {
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
 
+  extern char* dfsch_symbol_2_typename(dfsch_object_t* symbol);
+
   /** Compares value of given symbol to string. */
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
                                   char* string);

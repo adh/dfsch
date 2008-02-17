@@ -46,6 +46,7 @@ struct str_li_t {
 #define sl_value dfsch_sl_value
 #define sl_value_strbuf dfsch_sl_value_strbuf
 #define stracat dfsch_stracat
+#define strancat dfsch_strancat
 #define stracpy dfsch_stracpy
 #define strancpy dfsch_strancpy
 #define straquote dfsch_straquote

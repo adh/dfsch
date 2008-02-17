@@ -213,7 +213,6 @@ static dfsch_object_t* native_make_instance(void* baton,
 DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
-  char* classname;
 
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
@@ -221,14 +220,10 @@ DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
 
   superclass = dfsch_eval(superclass, env);
   
-  classname = dfsch_symbol(name);
-
-  if (*classname == '<' && classname[strlen(classname)-1] == '>'){
-    classname = strancpy(classname + 1, strlen(classname) - 2);
-  }
 
   return dfsch_define(name, 
-                      dfsch_object_make_class(superclass, classname),
+                      dfsch_object_make_class(superclass, 
+                                              dfsch_symbol_2_typename(name)),
                       env);
 }
 
