@@ -1,6 +1,8 @@
 ;; This is typical assignment from introductory courses on operating systems
 ;; (and good test for dfsch's multithreading support)
 
+(require 'threads)
+
 (define free-tellers (channel:create))
 (define exits (channel:create))
 (define io (mutex:create))
