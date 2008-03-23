@@ -216,19 +216,14 @@ DFSCH_DEFINE_FORM_IMPL(define_wrapper_type,
   args = dfsch_eval_list(args, env);
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("write", write);
-  DFSCH_KEYWORD("equal_p", equal_p);
+  DFSCH_KEYWORD("equal?", equal_p);
   DFSCH_KEYWORD("apply", apply);
   DFSCH_KEYWORD("hash", hash);
   DFSCH_KEYWORD_PARSER_END(args);
 
-  typename = dfsch_symbol(name);
 
-  if (*typename == '<' && typename[strlen(typename)-1] == '>'){
-    typename = strancpy(typename + 1, strlen(typename) - 2);
-  }
-
-
-  type = dfsch_make_wrapper_type(typename, write, equal_p, apply, hash);
+  type = dfsch_make_wrapper_type(dfsch_symbol_2_typename(name), 
+                                 write, equal_p, apply, hash);
 
   dfsch_define(name, type, env);
   return type;
@@ -246,7 +241,7 @@ static dfsch_object_t* native_make_wrapper_type(void *baton,
   DFSCH_STRING_ARG(args, name);
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("write", write);
-  DFSCH_KEYWORD("equal_p", equal_p);
+  DFSCH_KEYWORD("equal?", equal_p);
   DFSCH_KEYWORD("apply", apply);
   DFSCH_KEYWORD("hash", hash);
   DFSCH_KEYWORD_PARSER_END(args);

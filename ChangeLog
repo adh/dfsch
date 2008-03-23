@@ -1,3 +1,7 @@
+2008-03-23  Ales Hakl  <ales at hakl dot net>
+
+	* src/wrapper.c (define_wrapper_type): use dfsch_symbol_2_typename
+
 2008-02-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_symbol_2_typename): centralized removal of
