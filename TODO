@@ -27,7 +27,6 @@ Sometimes:
 * FFI
 
 External modules and libraries:
-* XML (SAX, SXML, DOM)
+* XML (SXML, DOM)
 * JSON
-* Cairo
 
