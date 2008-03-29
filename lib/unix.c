@@ -21,6 +21,8 @@
 
 #include "dfsch/lib/unix.h"
 
+#include "config.h"
+
 #include <dfsch/number.h>
 #include <dfsch/load.h>
 
