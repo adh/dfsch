@@ -19,9 +19,11 @@
  *
  */
 
-#include "dfsch/lib/unix.h"
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
-#include "config.h"
+#include "dfsch/lib/unix.h"
 
 #include <dfsch/number.h>
 #include <dfsch/load.h>
