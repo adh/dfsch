@@ -35,7 +35,7 @@ dfschlibexec_LTLIBRARIES = threads.la\
 	gcollect.la \
 	extref.la
 
-dfschlibscm_DATA = scm/lib.scm
+dfschlibscm_DATA = scm/struct.scm
 
 man_MANS = doc/dfsch-repl.1
 

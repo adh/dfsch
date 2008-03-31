@@ -1,4 +1,3 @@
-(require 'lib)
 (require 'regex)
 
 (define tests-passed 0)

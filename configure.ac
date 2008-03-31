@@ -4,8 +4,8 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 dnl package name and version number
 
 PACKAGE=dfsch
-VERSION=0.2.0
-AC_INIT(dfsch, 0.2.0)
+VERSION=0.2.0+svn
+AC_INIT(dfsch, 0.2.0+svn)
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE

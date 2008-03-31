@@ -1,3 +1,7 @@
+2008-03-31  Ales Hakl  <ales at hakl dot net>
+
+	* scm/test.scm: There is no real need for this to use (require 'lib) 
+
 2008-03-23  Ales Hakl  <ales at hakl dot net>
 
 	* Makefile.am: add -avoid-version to modules

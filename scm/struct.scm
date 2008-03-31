@@ -1,4 +1,4 @@
-(provide 'lib)
+(provide 'struct)
 
 (define-macro (define-struct name slots)
   (define num-slots (length slots))
