@@ -1033,7 +1033,7 @@ static size_t string_hash(char* string){
   size_t tmp=0;
 
   while (*string){
-    char c = ASCII_tolower(*string); 
+    char c = *string; 
     tmp ^= c ^ (tmp << 7); 
     tmp ^= ((size_t)c << 17) ^ (tmp >> 11); 
     ++string;
@@ -1068,7 +1068,7 @@ static symbol_t* lookup_symbol(char *symbol){
   hash_entry_t *i = global_symbol_hash[hash];
 
   while (i){
-    if (i->hash == hash && ascii_strcasecmp(i->entry->data, symbol)==0){
+    if (i->hash == hash && strcmp(i->entry->data, symbol)==0){
       return i->entry;
     }
     i = i->next;
