@@ -81,7 +81,7 @@ int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b){
   if (!a || !b)
     return 0;
 
-  if ((a->type == b->type) && dfsch_number_p(a))
+  if ((DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b)) && dfsch_number_p(a))
     return dfsch__number_eqv_p(a,b);
 
   return 0;
@@ -94,15 +94,15 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   if (!a || !b)
     return 0;
 
-  if (a->type != b->type)
+  if (DFSCH_TYPE_OF(a) != DFSCH_TYPE_OF(b))
     return 0;
 
-  if (!a->type)
+  if (!DFSCH_TYPE_OF(a))
     return 0;
-  if (!a->type->equal_p)
+  if (!DFSCH_TYPE_OF(a)->equal_p)
     return 0;
 
-  return a->type->equal_p(a,b);
+  return DFSCH_TYPE_OF(a)->equal_p(a,b);
 }
 
 static size_t ptr_hash(dfsch_object_t* ptr){
@@ -139,11 +139,11 @@ uint32_t dfsch_hash(dfsch_object_t* obj){
   if (!obj){
     return 0;
   }
-  if (!obj->type || !obj->type->hash){
+  if (!DFSCH_TYPE_OF(obj) || !DFSCH_TYPE_OF(obj)->hash){
     return ptr_hash(obj);
   }
 
-  return obj->type->hash(obj);
+  return DFSCH_TYPE_OF(obj)->hash(obj);
 }
 
 dfsch_type_t* dfsch_type_of(dfsch_object_t* obj){
@@ -225,7 +225,7 @@ dfsch_type_t dfsch_standard_type = {
   NULL
 };
 
-dfsch_type_t list_type = {
+dfsch_type_t dfsch_list_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
   0,
@@ -239,7 +239,7 @@ dfsch_type_t list_type = {
 
 dfsch_type_t dfsch_empty_list_type = {
   DFSCH_STANDARD_TYPE,
-  (dfsch_type_t*)&list_type,
+  DFSCH_LIST_TYPE,
   0,
   "empty-list",
   NULL,
@@ -254,7 +254,7 @@ static size_t pair_hash(pair_t* p);
 
 static dfsch_type_t pair_type = {
   DFSCH_STANDARD_TYPE,
-  (dfsch_type_t*)&list_type,
+  DFSCH_LIST_TYPE,
   sizeof(pair_t), 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
@@ -278,7 +278,7 @@ static char* pair_write(pair_t*p, int max_depth, int readable){
     
   sl_append(l,"(");
     
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     
     sl_append(l, dfsch_obj_write(i->car, max_depth-1, readable));
     i = (pair_t*)i->cdr;
@@ -467,65 +467,41 @@ int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
 }
 int dfsch_pair_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == PAIR;
+  return DFSCH_TYPE_OF(obj) == PAIR;
 }
 int dfsch_list_p(dfsch_object_t* obj){
-  if (!obj)
-    return 1;
-  if (obj->type != PAIR)
-    return 0;
-  return dfsch_list_length(obj) > 0;
+  return DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE);
 }
 int dfsch_atom_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type != PAIR;
+  return DFSCH_TYPE_OF(obj) != PAIR;
 }
 int dfsch_symbol_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == SYMBOL;
+  return DFSCH_TYPE_OF(obj) == SYMBOL;
 }
 int dfsch_primitive_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == PRIMITIVE;
+  return DFSCH_TYPE_OF(obj) == PRIMITIVE;
 
 }
 int dfsch_closure_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == CLOSURE;
+  return DFSCH_TYPE_OF(obj) == CLOSURE;
 }
 int dfsch_procedure_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return (obj->type == PRIMITIVE || obj->type == CLOSURE) || 
-    (obj->type && obj->type->apply);
+  return (DFSCH_TYPE_OF(obj) == PRIMITIVE || DFSCH_TYPE_OF(obj) == CLOSURE) || 
+    (DFSCH_TYPE_OF(obj)->apply);
 }
 int dfsch_macro_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == MACRO;
+  return DFSCH_TYPE_OF(obj) == MACRO;
 }
 int dfsch_form_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == FORM;
+  return DFSCH_TYPE_OF(obj) == FORM;
 }
 
 int dfsch_exception_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == EXCEPTION;
+  return DFSCH_TYPE_OF(obj) == EXCEPTION;
 }
 
 int dfsch_vector_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == VECTOR;
+  return DFSCH_TYPE_OF(obj) == VECTOR;
 }
 
 
@@ -547,13 +523,13 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
   return (object_t*)p;
 }
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
-  if (!pair || pair->type!=PAIR)
+  if (DFSCH_TYPE_OF(pair) != PAIR)
     dfsch_error("exception:not-a-pair",pair);
 
   return ((pair_t*)pair)->car;
 }
 dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
-  if (!pair || pair->type!=PAIR)
+  if (DFSCH_TYPE_OF(pair) != PAIR)
     dfsch_error("exception:not-a-pair",pair);
 
   return ((pair_t*)pair)->cdr;
@@ -561,7 +537,7 @@ dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
 
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 			      dfsch_object_t* car){
-  if (!pair || pair->type!=PAIR)
+  if (DFSCH_TYPE_OF(pair) != PAIR)
     dfsch_error("exception:not-a-pair",pair);
 
   ((pair_t*)pair)->car = car;
@@ -571,7 +547,7 @@ dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 }
 dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
-  if (!pair || pair->type!=PAIR)
+  if (DFSCH_TYPE_OF(pair) != PAIR)
     dfsch_error("exception:not-a-pair",pair);
   
   ((pair_t*)pair)->cdr = cdr;
@@ -586,13 +562,13 @@ long dfsch_list_length_fast(object_t* list){
   if (!list)
     return 0;
 
-  if (list->type!=PAIR)
+  if (DFSCH_TYPE_OF(list) != PAIR)
     return -1;
 
   i = (pair_t*)list;
   count = 0;
 
-  while (i && i->type==PAIR ){
+  while (DFSCH_TYPE_OF(i) == PAIR ){
     i = (pair_t*)i->cdr;
     ++count;
   }
@@ -607,19 +583,19 @@ long dfsch_list_length(object_t* list){
   if (!list)
     return 0;
 
-  if (list->type!=PAIR)
+  if (DFSCH_TYPE_OF(list) != PAIR)
     return -1;
 
   i = j = (pair_t*)list;
   count = 0;
 
-  while (i && i->type==PAIR ){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     i = (pair_t*)i->cdr;
     ++count;
     if (i == j)
       return -1;
     j = (pair_t*)j->cdr;
-    if (!(i && i->type==PAIR ))
+    if (!(DFSCH_TYPE_OF(i) == PAIR))
       break;
     i = (pair_t*)i->cdr;
     ++count;
@@ -645,7 +621,7 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   pair_t* it = (pair_t*)list;
   int i;
   for (i=0; i<index; ++i){
-    if (it && it->type == PAIR){
+    if (DFSCH_TYPE_OF(it) == PAIR){
       it = (pair_t*)it->cdr;
     }else{
       dfsch_error("exception:no-such-item",dfsch_make_number_from_long(index));
@@ -684,7 +660,7 @@ dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
   len = dfsch_list_length_check(list);
   data = GC_MALLOC(sizeof(object_t*)*len);
   
-  while (j && j->type == PAIR){
+  while (DFSCH_TYPE_OF(j) == PAIR){
     if (i >= len){
       break; /* Can happen due to race condition in user code */
     }
@@ -727,7 +703,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 	}
 	goto out;
       }
-      if (args[i]->type != PAIR){
+      if (DFSCH_TYPE_OF(args[i]) != PAIR){
 	dfsch_error("exception:not-a-pair", args[i]);
       }
 
@@ -774,11 +750,11 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   if (!llist)
     return NULL;
 
-  while(i && i->type == PAIR && i->cdr && 
-        i->cdr->type == PAIR){
+  while(DFSCH_TYPE_OF(i) == PAIR &&  
+        DFSCH_TYPE_OF(i->cdr) == PAIR){
     
     j = (pair_t*)i->car;
-    while(j && j->type == PAIR){
+    while(DFSCH_TYPE_OF(j) == PAIR){
       if (head){
         object_t* tmp = dfsch_cons(j->car,NULL);
         tail->cdr = tmp;
@@ -788,16 +764,14 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
       }
       j = (pair_t*)j->cdr;
     }
-    if (j && j->type != PAIR)
+    if (j && DFSCH_TYPE_OF(j) != PAIR)
       dfsch_error("exception:not-a-pair", (object_t*)j);
 
     i = (pair_t*)i->cdr;
   }
 
-  if (!i || i->type != PAIR)
+  if (DFSCH_TYPE_OF(i) != PAIR)
     dfsch_error("exception:not-a-pair", (object_t*)i);
-  /*  if (i->car && i->car->type != PAIR)
-      dfsch_error("exception:not-a-pair", i->car);*/
 
   if (tail){
     tail->cdr = i->car;
@@ -842,7 +816,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
 
   head = tail = NULL;
 
-  while(i && i->type == PAIR){
+  while(DFSCH_TYPE_OF(i) == PAIR){
     if (head){
       object_t* tmp = dfsch_cons(i->car,NULL);
       tail->cdr = tmp;
@@ -852,8 +826,8 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
       }
     i = (pair_t*)i->cdr;
   }
-  if (i && i->type != PAIR)
-    dfsch_error("exception:not-a-pair", (object_t*)i);
+  if (i && DFSCH_TYPE_OF(i) != PAIR)
+    dfsch_error("exception:not-a-list", (object_t*)i);
 
 
   return (object_t*)head;
@@ -866,12 +840,12 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
 
   head = NULL;
 
-  while(i && i->type == PAIR){
+  while(DFSCH_TYPE_OF(i) == PAIR){
     head = dfsch_cons(i->car, head);
     i = (pair_t*)i->cdr;
   }
-  if (i && i->type != PAIR)
-    dfsch_error("exception:not-a-pair", (object_t*)i);
+  if (i)
+    dfsch_error("exception:not-a-list", (object_t*)i);
 
 
   return (object_t*)head;
@@ -883,7 +857,7 @@ dfsch_object_t* dfsch_member(dfsch_object_t *key,
   pair_t* i;
   i=(pair_t*)list;
   
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     if (dfsch_equal_p(key,i->car)){
       return (object_t*)i;
     }
@@ -891,8 +865,8 @@ dfsch_object_t* dfsch_member(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
-  if (i && i->type!=PAIR)
-    dfsch_error("exception:not-a-pair", (object_t*)i);
+  if (i)
+    dfsch_error("exception:not-a-list", (object_t*)i);
 
   return NULL;
 }
@@ -902,7 +876,7 @@ dfsch_object_t* dfsch_memv(dfsch_object_t *key,
   pair_t* i;
   i=(pair_t*)list;
   
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     if (dfsch_eqv_p(key,i->car)){
       return (object_t*)i;
     }
@@ -910,8 +884,8 @@ dfsch_object_t* dfsch_memv(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
-  if (i && i->type!=PAIR)
-    dfsch_error("exception:not-a-pair", (object_t*)i);
+  if (i)
+    dfsch_error("exception:not-a-list", (object_t*)i);
 
   return NULL;
 }
@@ -921,7 +895,7 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
   pair_t* i;
   i=(pair_t*)list;
   
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     if (key == i->car){
       return (object_t*)i;
     }
@@ -929,8 +903,8 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
-  if (i && i->type!=PAIR)
-    dfsch_error("exception:not-a-pair", (object_t*)i);
+  if (i)
+    dfsch_error("exception:not-a-list", (object_t*)i);
 
   return NULL;
 }
@@ -942,13 +916,11 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 			    dfsch_object_t *alist){
   pair_t* i;
   
-  if (!alist || alist->type!=PAIR)
-    dfsch_error("exception:not-a-pair",alist);
 
   i=(pair_t*)alist;
   
-  while (i && i->type==PAIR){
-    if (!i->car || i->car->type!=PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
+    if (DFSCH_TYPE_OF(i->car) !=PAIR){
       dfsch_error("exception:not-a-alist",(object_t*)alist);
     }
 
@@ -959,21 +931,23 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
+  if (i){
+    dfsch_error("exception:not-a-list",(object_t*)i);
+  }
+
   return NULL;
 
 }
 dfsch_object_t* dfsch_assq(dfsch_object_t *key,
 			    dfsch_object_t *alist){
   pair_t* i;
-
-  if (!alist || alist->type!=PAIR)
-    dfsch_error("exception:not-a-pair",alist);
+  
 
   i=(pair_t*)alist;
   
-  while (i && i->type==PAIR){
-    if (!i->car || i->car->type!=PAIR){
-      dfsch_error("exception:not-a-alist",alist);
+  while (DFSCH_TYPE_OF(i) == PAIR){
+    if (DFSCH_TYPE_OF(i->car) !=PAIR){
+      dfsch_error("exception:not-a-alist",(object_t*)alist);
     }
 
     if (key == ((pair_t*)i->car)->car){
@@ -983,21 +957,22 @@ dfsch_object_t* dfsch_assq(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
-  return NULL;
+  if (i){
+    dfsch_error("exception:not-a-list",(object_t*)i);
+  }
 
+  return NULL;
 }
 dfsch_object_t* dfsch_assv(dfsch_object_t *key,
 			    dfsch_object_t *alist){
-  pair_t *i;
-
-  if (!alist || alist->type!=PAIR)
-    dfsch_error("exception:not-a-pair",alist);
+  pair_t* i;
+  
 
   i=(pair_t*)alist;
   
-  while (i && i->type==PAIR){
-    if (!i->car || i->car->type!=PAIR){
-      dfsch_error("exception:not-a-alist",alist);
+  while (DFSCH_TYPE_OF(i) == PAIR){
+    if (DFSCH_TYPE_OF(i->car) !=PAIR){
+      dfsch_error("exception:not-a-alist",(object_t*)alist);
     }
 
     if (dfsch_eqv_p(key,((pair_t*)i->car)->car)){
@@ -1007,8 +982,11 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
     i = (pair_t*)i->cdr;
   }
 
-  return NULL;
+  if (i){
+    dfsch_error("exception:not-a-list",(object_t*)i);
+  }
 
+  return NULL;
 }
 
 
@@ -1133,7 +1111,7 @@ static symbol_t* make_symbol(char *symbol){
 
 
 void dfsch_unintern(dfsch_object_t* symbol){
-  if (!symbol || symbol->type != SYMBOL)
+  if (DFSCH_TYPE_OF(symbol) != SYMBOL)
     dfsch_error("exception:not-a-symbol", symbol);
 
   free_symbol((symbol_t*)symbol);
@@ -1171,7 +1149,7 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
-  if (!symbol || symbol->type!=SYMBOL)
+  if (DFSCH_TYPE_OF(symbol) != SYMBOL)
     dfsch_error("exception:not-a-symbol", symbol);
 
   return ((symbol_t*)symbol)->data;
@@ -1542,14 +1520,14 @@ dfsch_object_t* dfsch_vector(size_t count, ...){
 }
 
 size_t dfsch_vector_length(dfsch_object_t *vector){
-  if (!vector || vector->type != VECTOR)
+  if (DFSCH_TYPE_OF(vector) != VECTOR)
     return 0;
 
   return ((vector_t*)vector)->length;  
 }
 
 dfsch_object_t** dfsch_vector_as_array(dfsch_object_t *vector, size_t *length){
-  if (!vector || vector->type != VECTOR)
+  if (DFSCH_TYPE_OF(vector) != VECTOR)
     dfsch_error("exception:not-a-vector",vector);
 
   if (length){
@@ -1572,7 +1550,7 @@ dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array,
 }
 
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
-  if (!vector || vector->type != VECTOR)
+  if (DFSCH_TYPE_OF(vector) != VECTOR)
     dfsch_error("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
@@ -1583,7 +1561,7 @@ dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
 
 dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
                                  dfsch_object_t* obj){
-  if (!vector || vector->type != VECTOR)
+  if (DFSCH_TYPE_OF(vector) != VECTOR)
     dfsch_error("exception:not-a-vector",vector);
 
   if (((vector_t*)vector)->length <= k)
@@ -1596,7 +1574,7 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
 
 dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
 
-  if (!vector || vector->type != VECTOR)
+  if (DFSCH_TYPE_OF(vector) != VECTOR)
     dfsch_error("exception:not-a-vector",vector);
 
   return dfsch_list_from_array(((vector_t*)vector)->data, 
@@ -1624,7 +1602,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
     return "...";
   }
 
-  if (!obj->type){
+  if (!DFSCH_TYPE_OF(obj)){
     str_list_t *sl = sl_create();
     char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<() ");
@@ -1634,17 +1612,17 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
     return sl_value(sl);
   }
 
-  if (!obj->type->write){
+  if (!(DFSCH_TYPE_OF(obj)->write)){
     str_list_t *sl = sl_create();
     char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<");
-    sl_append(sl, obj->type->name);
+    sl_append(sl, DFSCH_TYPE_OF(obj)->name);
     sl_append(sl, saprintf(" %p", obj));
     sl_append(sl, ">");
     return sl_value(sl);
   }
 
-  return obj->type->write(obj, max_depth, readable);
+  return DFSCH_TYPE_OF(obj)->write(obj, max_depth, readable);
 }
 
 char* dfsch_exception_write(dfsch_object_t* e){
@@ -1745,13 +1723,8 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
 object_t* dfsch_lookup(object_t* name, object_t* env){
   pair_t *i;
 
-  if (!env || env->type!=PAIR){
-    dfsch_error("exception:not-a-pair",env);
-  }
-
-
   i = (pair_t*)env;
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i)==PAIR){
 
     object_t* ret = dfsch_hash_ref(i->car, name);
     if (ret){
@@ -1760,24 +1733,29 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 
     i = (pair_t*)i->cdr;
   }
+
+  if (i){
+    dfsch_error("exception:not-a-proper-list",env);
+  }
   
   dfsch_error("exception:unbound-variable", dfsch_cons(name, env));
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   pair_t *i;
 
-  if (!env || env->type!=PAIR){
-    dfsch_error("exception:not-a-pair",env);
-  }
-
   i = (pair_t*)env;
-  while (i && i->type==PAIR){
+
+  while (DFSCH_TYPE_OF(i) == PAIR){
     object_t* ret = dfsch_hash_ref(i->car, name);
     if (ret){
       return ret;
     }
 
     i = (pair_t*)i->cdr;
+  }
+
+  if (i){
+    dfsch_error("exception:not-a-proper-list",env);
   }
   
   return NULL;
@@ -1786,43 +1764,44 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   pair_t *i;
-  if (!env || env->type!=PAIR){
-    dfsch_error("exception:not-a-pair",env);
-  }
 
   i = (pair_t*)env;
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) == PAIR){
     if(dfsch_hash_set_if_exists(i->car, name, value))
       return value;
 
     i = (pair_t*)i->cdr;
   }
-  
 
+  if (i){
+    dfsch_error("exception:not-a-proper-list",env);
+  }
+  
   dfsch_error("exception:unbound-variable",name);
 }
 void dfsch_unset(object_t* name, object_t* env){
   pair_t *i;
-  if (!env || env->type!=PAIR){
-    dfsch_error("exception:not-a-pair",env);
-  }
 
   i = (pair_t*)env;
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i)==PAIR){
     if(dfsch_hash_unset(i->car, name))
       return;
 
     i = (pair_t*)i->cdr;
   }
   
+  if (i){
+    dfsch_error("exception:not-a-proper-list",env);
+  }
+
 
   dfsch_error("exception:unbound-variable",name);
 }
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
-  if (!env || env->type!=PAIR)
-    dfsch_error("exception:not-a-pair",env);
+  if (DFSCH_TYPE_OF(env) != PAIR)
+    dfsch_error("exception:not-a-environment",env);
 
   dfsch_hash_set(((pair_t*)env)->car, name, value);  
 
@@ -1898,12 +1877,8 @@ static object_t* eval_list(object_t *list, object_t* env,
   if (!list)
     return NULL;
 
-  if (list->type!=PAIR){
-    return dfsch_eval_impl(list,env,NULL,ti);
-  }
-
   i = (pair_t*)list;
-  while (i && i->type==PAIR){
+  while (DFSCH_TYPE_OF(i) ==PAIR){
     r = dfsch_eval_impl(i->car, env, NULL, ti);
 
     t = (pair_t*)dfsch_cons(r,NULL);
@@ -1915,6 +1890,10 @@ static object_t* eval_list(object_t *list, object_t* env,
     }
 
     i = (pair_t*)i->cdr;
+  }
+
+  if (i){
+    dfsch_error("exception:not-a-proper-list", list);    
   }
 
   return f;
@@ -1933,10 +1912,10 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if (!exp) 
     return NULL;
 
-  if(exp->type == SYMBOL)
+  if(DFSCH_TYPE_OF(exp) == SYMBOL)
     return dfsch_lookup(exp,env);
 
-  if(exp->type==PAIR){
+  if(DFSCH_TYPE_OF(exp) == PAIR){
     
     object_t *f = dfsch_eval_impl(((pair_t*)exp)->car, env, NULL, ti);
     
@@ -1944,13 +1923,13 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
       dfsch_error("exception:not-a-procedure-or-macro", f);
 	
  
-    if (f->type == FORM)
+    if (DFSCH_TYPE_OF(f) == FORM)
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
                                       env, 
                                       ((pair_t*)exp)->cdr, 
                                       esc);
 
-    if (f->type == MACRO)
+    if (DFSCH_TYPE_OF(f) == MACRO)
       return dfsch_eval_impl(dfsch_macro_expand(f, ((pair_t*)exp)->cdr),
 			     env,
  			     esc,
@@ -1979,10 +1958,10 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 static void destructure_impl(pair_t* llist,
                              pair_t* list,
                              dfsch_object_t* hash){
-  while ((llist && llist->type==PAIR) &&
-	 (list && list->type==PAIR)){
+  while ((DFSCH_TYPE_OF(llist) == PAIR) &&
+	 (DFSCH_TYPE_OF(list) == PAIR)){
 
-    if (llist->car->type == PAIR){
+    if (DFSCH_TYPE_OF(llist->car) == PAIR){
       destructure_impl((pair_t*)llist->car, 
                        (pair_t*)list->car, 
                        hash);
@@ -1995,7 +1974,7 @@ static void destructure_impl(pair_t* llist,
     
   }
 
-  if (llist && llist->type!=PAIR){
+  if (DFSCH_TYPE_OF(llist) != PAIR){
     dfsch_hash_set(hash, (object_t*)llist, (object_t*)list);
     return;
   }
@@ -2010,8 +1989,6 @@ static void destructure_impl(pair_t* llist,
                                                            llist, 
                                                            list));
   }
-  
-
 }
 
 dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
@@ -2078,7 +2055,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     i = (pair_t*)code;
   }
 
-  while (i && i->type==PAIR ){
+  while (DFSCH_TYPE_OF(i) == PAIR ){
     object_t* exp = i->car; 
 
     ((vector_t*)my_frame)->data[0] = exp;
@@ -2115,7 +2092,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   if (!proc)
     return NULL;
-  if (!proc->type)
+  if (!(DFSCH_TYPE_OF(proc)))
     return NULL;
 
   /*
@@ -2123,13 +2100,13 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
    * and performance reasons)
    */
 
-  if (proc->type == PRIMITIVE){
+  if (DFSCH_TYPE_OF(proc) == PRIMITIVE){
     object_t* r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                              esc);
     return r;
   }
 
-  if (proc->type == CLOSURE){
+  if (DFSCH_TYPE_OF(proc) == CLOSURE){
     object_t* r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
                            dfsch_destructuring_bind(((closure_t*)proc)->args,
@@ -2141,8 +2118,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     return r;
   }
 
-  if (proc->type->apply){
-    return proc->type->apply(proc, args, esc);
+  if (DFSCH_TYPE_OF(proc)->apply){
+    return DFSCH_TYPE_OF(proc)->apply(proc, args, esc);
   }
 
   dfsch_error("exception:not-a-procedure", proc);
@@ -2198,7 +2175,7 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
 
 
-  dfsch_define_cstr(ctx, "<list>", &list_type);
+  dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
   dfsch_define_cstr(ctx, "<pair>", PAIR);
   dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
   dfsch_define_cstr(ctx, "<symbol>", SYMBOL);

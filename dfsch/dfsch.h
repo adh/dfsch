@@ -110,6 +110,8 @@ extern "C" {
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
   extern dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
+  extern dfsch_type_t dfsch_list_type;
+#define DFSCH_LIST_TYPE ((dfsch_type_t*)&dfsch_list_type)
   extern dfsch_type_t dfsch_empty_list_type;
 #define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
   

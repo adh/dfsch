@@ -75,8 +75,8 @@ typedef struct form_t {
 } form_t;
 
 
-#define TYPE_CHECK(obj, t, name) \
-  if (!obj || ((dfsch_object_t*)obj)->type != t) \
+#define TYPE_CHECK(obj, t, name)                                \
+  if (DFSCH_TYPE_OF(obj) != t)                                  \
     dfsch_error("exception:not-a-" name, (dfsch_object_t*)obj);
 
 #endif

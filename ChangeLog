@@ -1,6 +1,7 @@
 2008-04-03  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (lookup_symbol): case-sensitive symbols
+	Use DFSCH_TYPE_OF instead of direct access to type field
 
 2008-03-31  Ales Hakl  <ales at hakl dot net>
 

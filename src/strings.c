@@ -25,7 +25,7 @@
 #include <string.h>
 
 typedef struct dfsch_string_t {
-  dfsch_type_t type;
+  dfsch_type_t* type;
   char* ptr;
   size_t len;
 } dfsch_string_t;
@@ -134,7 +134,7 @@ static size_t string_hash(dfsch_string_t* s){
   return ret;
 }
 
-static const dfsch_type_t string_type = {
+static dfsch_type_t string_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(dfsch_string_t),
@@ -270,8 +270,8 @@ int dfsch_string_cmp_ci(dfsch_object_t* a_, dfsch_object_t* b_){
   dfsch_string_t* a=(dfsch_string_t*)a_;
   dfsch_string_t* b=(dfsch_string_t*)b_;
 
-  TYPE_CHECK(a, STRING, "string");
-  TYPE_CHECK(b, STRING, "string");
+  TYPE_CHECK(a_, STRING, "string");
+  TYPE_CHECK(b_, STRING, "string");
 
   l = a->len; 
   if (a->len > b->len){
