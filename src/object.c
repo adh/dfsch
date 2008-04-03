@@ -149,7 +149,7 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
                                       dfsch_object_t* name,
                                       dfsch_object_t* value){
 
-  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
+  if (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(object), &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 
@@ -157,7 +157,7 @@ dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
 }
 int dfsch_object_slot_unset(dfsch_object_t* object,
                             dfsch_object_t* name){
-  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
+  if (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(object), &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 
@@ -166,7 +166,7 @@ int dfsch_object_slot_unset(dfsch_object_t* object,
 dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
                                       dfsch_object_t* name){
   dfsch_object_t* ret;
-  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
+  if (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(object), &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 
@@ -178,7 +178,7 @@ dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
   }
 }
 dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object){
-  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
+  if (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(object), &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 
@@ -280,7 +280,7 @@ DFSCH_DEFINE_FORM_IMPL(with_slots, dfsch_form_compiler_eval_all){
 
   object = dfsch_eval(object, env);
 
-  if (!object || !DFSCH_INSTANCE_P(object->type, &class_type)){
+  if (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(object), &class_type)){
     dfsch_error("exception:not-a-class-instance", object);
   }
 
