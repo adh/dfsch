@@ -99,7 +99,8 @@ dfsch_object_t* dfsch_hash_make(int mode){
   return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return obj && obj->type == &standard_hash_type;
+  return DFSCH_TYPE_OF(obj) == &standard_hash_type ||
+    DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE);
 }
 
 static size_t ptr_hash(dfsch_object_t* ptr){
@@ -128,14 +129,14 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 }
 
 #define GET_HASH(obj,hash)                                              \
-  if (obj && obj->type == &standard_hash_type){                         \
+  if (DFSCH_TYPE_OF(obj) == &standard_hash_type){                       \
     hash = (hash_t*)obj;                                                \
   } else if (!obj ||                                                    \
-             !DFSCH_INSTANCE_P(obj->type, DFSCH_CUSTOM_HASH_TYPE_TYPE)){ \
+             !DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE)){ \
     dfsch_error("exception:not-a-hash", obj);                           \
   }else
 
-#define HASH_TYPE(hash) ((dfsch_custom_hash_type_t*)hash->type)             
+#define HASH_TYPE(hash) ((dfsch_custom_hash_type_t*)DFSCH_TYPE_OF(hash))             
 
 #define IMPLEMENTS(hash, feature)                                       \
   if (!HASH_TYPE(hash)->feature){                                       \
