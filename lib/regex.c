@@ -104,7 +104,7 @@ static int regex_match(regex_t* regex, char*string, int flags){
 }
 
 int dfsch_regex_match_p(dfsch_object_t* regex, char* string, int flags){
-  if (!regex || regex->type != &regex_type)
+  if (DFSCH_TYPE_OF(regex) != &regex_type)
     dfsch_error("regex:not-a-regex", regex);
 
   return regex_match(&(((dfsch_regex_t*)regex)->regex), string, flags);
@@ -152,7 +152,7 @@ static dfsch_object_t* regex_substrings(regex_t* regex, char* string,
 dfsch_object_t* dfsch_regex_substrings(dfsch_object_t* regex, char* string,
                                        int flags){
   dfsch_regex_t* r;
-  if (!regex || regex->type != &regex_type)
+  if (DFSCH_TYPE_OF(regex) != &regex_type)
     dfsch_error("regex:not-a-regex", regex);
   r = (dfsch_regex_t*)regex;
   if (r->sub_count == 0)

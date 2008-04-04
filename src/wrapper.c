@@ -176,7 +176,7 @@ extern dfsch_object_t* dfsch_wrap(dfsch_object_t* type,
   wrapper_t* w;
   wrapper_type_t* t;
 
-  if (!type || type->type != &wrapper_type)
+  if (DFSCH_TYPE_OF(type) != &wrapper_type)
     dfsch_error("exception:not-a-wrapper-type", type);
 
   t = (wrapper_type_t*)type;
@@ -191,11 +191,11 @@ extern dfsch_object_t* dfsch_unwrap(dfsch_object_t* type,
   wrapper_t* w;
   wrapper_type_t* t;
 
-  if (!type || type->type != &wrapper_type)
+  if (DFSCH_TYPE_OF(type) != &wrapper_type)
     dfsch_error("exception:not-a-wrapper-type", type);
   t = (wrapper_type_t*)type;
 
-  if (!wrapper || wrapper->type != (dfsch_type_t*)t)
+  if (DFSCH_TYPE_OF(wrapper) != (dfsch_type_t*)t)
     dfsch_error("exception:type-mismatch", type);
   w = (wrapper_t*)wrapper;
 

@@ -101,7 +101,7 @@ dfsch_object_t* dfsch_make_decoded_time(){
 }
 
 struct tm* dfsch_decoded_time_get_tm(dfsch_object_t* time){
-  if (!time || time->type != &decoded_time_type){
+  if (DFSCH_TYPE_OF(time) != &decoded_time_type){
     dfsch_error("exception:not-a-decoded-time", time);
   }
 

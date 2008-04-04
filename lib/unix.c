@@ -216,7 +216,7 @@ dfsch_object_t* dfsch_unix_make_stat_struct(){
 }
 
 struct stat* dfsch_unix_get_stat(dfsch_object_t* stat){
-  if (!stat || stat->type != &stat_type){
+  if (DFSCH_TYPE_OF(stat) != &stat_type){
     dfsch_error("unix:not-a-stat-struct", stat);
   }
 

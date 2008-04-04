@@ -383,7 +383,7 @@ dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
   string_output_port_t* p;
   dfsch_strbuf_t* buf;
 
-  if (!port || port->type != &string_output_port_type){
+  if (DFSCH_TYPE_OF(port) != &string_output_port_type){
     dfsch_error("exceptiion:not-a-string-output-port", port);
   }
   p = (string_output_port_t*) port;
@@ -639,7 +639,7 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
 void dfsch_close_file_port(dfsch_object_t* port){
   file_port_t* p;
 
-  if (!port || port->type != &file_port_type){
+  if (DFSCH_TYPE_OF(port) != &file_port_type){
     dfsch_error("exception:not-a-file-port", port);
   }
 

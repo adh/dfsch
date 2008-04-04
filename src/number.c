@@ -169,7 +169,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){
-  if (!n || n->type!=NUMBER)
+  if (DFSCH_TYPE_OF(n)!=NUMBER)
     dfsch_error("exception:not-a-number", n);
 
   switch (((number_t*)n)->n_type){
@@ -180,7 +180,7 @@ double dfsch_number_to_double(dfsch_object_t *n){
   }
 }
 long dfsch_number_to_long(dfsch_object_t *n){
-  if (!n || n->type!=NUMBER)
+  if (DFSCH_TYPE_OF(n)!=NUMBER)
     dfsch_error("exception:not-a-number", n);
   if (((number_t*)n)->n_type!=N_FIXNUM)
     dfsch_error("exception:not-an-exact-number", n);
@@ -189,7 +189,7 @@ long dfsch_number_to_long(dfsch_object_t *n){
 
 }
 char* dfsch_number_to_string(dfsch_object_t *n){
-  if (!n || n->type!=NUMBER)
+  if (DFSCH_TYPE_OF(n)!=NUMBER)
     dfsch_error("exception:not-a-number", n);
 
   return n_write((number_t*)n, 2);
@@ -200,17 +200,17 @@ int dfsch_number_p(dfsch_object_t* obj){
   return obj->type == NUMBER;
 }
 int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
 
   return n_equal_p((number_t*)a, (number_t*)b);
 }
 int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
 
   if (((number_t*)a)->n_type != ((number_t*)b)->n_type)
@@ -227,9 +227,9 @@ int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
 // Comparisons
 
 int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
@@ -244,9 +244,9 @@ int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b){
   }
 }
 int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
@@ -261,9 +261,9 @@ int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b){
   }
 }
 int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
@@ -278,9 +278,9 @@ int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b){
   }
 }
 int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
-  if (!a || a->type!=NUMBER)
+  if (DFSCH_TYPE_OF(a)!=NUMBER)
     dfsch_error("exception:not-a-number", a);
-  if (!b || b->type!=NUMBER)
+  if (DFSCH_TYPE_OF(b)!=NUMBER)
     dfsch_error("exception:not-a-number", b);
   
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
@@ -300,9 +300,9 @@ int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
 
 dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (!a || a->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(a)!=NUMBER) 
     dfsch_error("exception:not-a-number", a); 
-  if (!b || b->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(b)!=NUMBER) 
     dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
@@ -332,9 +332,9 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
 
 dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (!a || a->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(a)!=NUMBER) 
     dfsch_error("exception:not-a-number", a); 
-  if (!b || b->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(b)!=NUMBER) 
     dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
@@ -364,9 +364,9 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
 
 dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (!a || a->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(a)!=NUMBER) 
     dfsch_error("exception:not-a-number", a); 
-  if (!b || b->type!=NUMBER) 
+  if (DFSCH_TYPE_OF(b)!=NUMBER) 
     dfsch_error("exception:not-a-number", b); 
  
   if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
