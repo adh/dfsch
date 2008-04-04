@@ -63,7 +63,7 @@ dfsch_object_t* dfsch_make_promise(dfsch_object_t* expr, dfsch_object_t* env){
 dfsch_object_t* dfsch_force_promise(dfsch_object_t* promise){
   dfsch_object_t* val;
   promise_t* p = (promise_t*)promise;
-  if (promise->type != &promise_type)
+  if (DFSCH_TYPE_OF(promise) != &promise_type)
     dfsch_error("exception:not-a-promise", promise);
 
   if (!p->set){

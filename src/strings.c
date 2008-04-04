@@ -147,10 +147,7 @@ static dfsch_type_t string_type = {
 #define STRING (&string_type)
 
 int dfsch_string_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == &string_type;
-
+  return DFSCH_TYPE_OF(obj) == &string_type;
 }
 
 dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){

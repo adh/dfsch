@@ -195,9 +195,7 @@ char* dfsch_number_to_string(dfsch_object_t *n){
   return n_write((number_t*)n, 2);
 }
 int dfsch_number_p(dfsch_object_t* obj){
-  if (!obj)
-    return 0;
-  return obj->type == NUMBER;
+  return DFSCH_TYPE_OF(obj) == NUMBER;
 }
 int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
   if (DFSCH_TYPE_OF(a)!=NUMBER)
