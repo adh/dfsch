@@ -90,7 +90,7 @@ dfsch_object_t* dfsch_unix_opendir(char* name){
 
 void dfsch_unix_closedir(dfsch_object_t* dir_obj){
   dir_t* dir;
-  if (!dir_obj || dir_obj->type != &dir_type){
+  if (DFSCH_TYPE_OF(dir_obj) != &dir_type){
     dfsch_error("unix:not-a-directory", dir_obj);
   }
   dir = (dir_t*)dir_obj;
