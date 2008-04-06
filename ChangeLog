@@ -1,3 +1,7 @@
+2008-04-06  Ales Hakl  <ales at hakl dot net>
+
+	* lib/threads.c: solaris fixes
+
 2008-04-04  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c: use DFSCH_TYPE_OF instead of direct acess to type

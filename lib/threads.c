@@ -26,19 +26,19 @@
 #include <errno.h>
 #include <string.h>
 
-typedef struct thread_t {
+typedef struct thread_obj_t {
   dfsch_type_t* type;
   pthread_t thread;
-} thread_t;
+} thread_obj_t;
 
-static int thread_equal_p(thread_t* a, thread_t* b){
+static int thread_equal_p(thread_obj_t* a, thread_obj_t* b){
   return pthread_equal(a->thread, b->thread);
 }
 
 static const dfsch_type_t thread_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
-  sizeof(thread_t), 
+  sizeof(thread_obj_t), 
   "thread",
   (dfsch_type_equal_p_t)thread_equal_p,
   NULL,
@@ -57,7 +57,7 @@ dfsch_object_t* thread_function(thread_args_t* args){
 dfsch_object_t* dfsch_thread_create(dfsch_object_t* function,
                                     dfsch_object_t* arguments){
   
-  thread_t* thread = (thread_t*) dfsch_make_object(&thread_type);
+  thread_obj_t* thread = (thread_obj_t*) dfsch_make_object(&thread_type);
   thread_args_t* args = GC_NEW(thread_args_t);
   
   args->function = function;
@@ -72,13 +72,13 @@ dfsch_object_t* dfsch_thread_create(dfsch_object_t* function,
 }
 
 dfsch_object_t* dfsch_thread_join(dfsch_object_t* thread){
-  thread_t* t;
+  thread_obj_t* t;
   dfsch_object_t* ret;
   int err;
   if (DFSCH_TYPE_OF(thread) != &thread_type)
     dfsch_error("thread:not-a-thread", thread);
 
-  t = (thread_t*)thread;
+  t = (thread_obj_t*)thread;
 
   err = pthread_join(t->thread, (void*)&ret);
 
@@ -89,12 +89,12 @@ dfsch_object_t* dfsch_thread_join(dfsch_object_t* thread){
   return ret;
 }
 void dfsch_thread_detach(dfsch_object_t* thread){
-  thread_t* t;
+  thread_obj_t* t;
   int err;
   if (DFSCH_TYPE_OF(thread) != &thread_type)
     dfsch_error("thread:not-a-thread", thread);
 
-  t = (thread_t*)thread;
+  t = (thread_obj_t*)thread;
 
   err = pthread_detach(t->thread);
 
@@ -104,7 +104,7 @@ void dfsch_thread_detach(dfsch_object_t* thread){
 }
 
 dfsch_object_t* dfsch_thread_self(){
-  thread_t* thread = (thread_t*) dfsch_make_object(&thread_type);
+  thread_obj_t* thread = (thread_obj_t*) dfsch_make_object(&thread_type);
   
   thread->thread = pthread_self();
 
@@ -113,22 +113,22 @@ dfsch_object_t* dfsch_thread_self(){
 
 // Mutexes
 
-typedef struct mutex_t {
+typedef struct mutex_obj_t {
   dfsch_type_t* type;
   pthread_mutex_t mutex;
-} mutex_t;
+} mutex_obj_t;
 
 static const dfsch_type_t mutex_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
-  sizeof(mutex_t), 
+  sizeof(mutex_obj_t), 
   "mutex",
   NULL,
   NULL,
   NULL
 };
 
-static void mutex_finalizer(mutex_t* mutex, void* cd){
+static void mutex_finalizer(mutex_obj_t* mutex, void* cd){
   /*
    * When given mutex is locked we will do nothing. If user loses reference
    * to locked mutex, something is probably wrong.
@@ -142,7 +142,7 @@ static void mutex_finalizer(mutex_t* mutex, void* cd){
 }
 
 dfsch_object_t* dfsch_mutex_create(){
-  mutex_t* mutex = (mutex_t*)dfsch_make_object(&mutex_type);
+  mutex_obj_t* mutex = (mutex_obj_t*)dfsch_make_object(&mutex_type);
 
   GC_REGISTER_FINALIZER(mutex, 
                         (GC_finalization_proc)mutex_finalizer,
@@ -153,12 +153,12 @@ dfsch_object_t* dfsch_mutex_create(){
   return (dfsch_object_t*)mutex;
 }
 void dfsch_mutex_lock(dfsch_object_t* mutex){
-  mutex_t* m;
+  mutex_obj_t* m;
   int err;
   if (DFSCH_TYPE_OF(mutex) != &mutex_type)
     dfsch_error("thread:not-a-mutex", mutex);
 
-  m = (mutex_t*)mutex;
+  m = (mutex_obj_t*)mutex;
 
   err = pthread_mutex_lock(&(m->mutex));
 
@@ -167,21 +167,21 @@ void dfsch_mutex_lock(dfsch_object_t* mutex){
   }
 }
 int dfsch_mutex_trylock(dfsch_object_t* mutex){
-  mutex_t* m;
+  mutex_obj_t* m;
   if (DFSCH_TYPE_OF(mutex) != &mutex_type)
     dfsch_error("thread:not-a-mutex", mutex);
 
-  m = (mutex_t*)mutex;
+  m = (mutex_obj_t*)mutex;
 
   return (pthread_mutex_trylock(&(m->mutex)) == 0);
 }
 void dfsch_mutex_unlock(dfsch_object_t* mutex){
-  mutex_t* m;
+  mutex_obj_t* m;
   int err;
   if (DFSCH_TYPE_OF(mutex) != &mutex_type)
     dfsch_error("thread:not-a-mutex", mutex);
 
-  m = (mutex_t*)mutex;
+  m = (mutex_obj_t*)mutex;
 
   err = pthread_mutex_unlock(&(m->mutex));
 
@@ -231,7 +231,7 @@ dfsch_object_t* dfsch_condition_create(){
 void dfsch_condition_wait(dfsch_object_t* cond, dfsch_object_t* mutex){
   condition_t* c;
   int err;
-  mutex_t* m;
+  mutex_obj_t* m;
 
   if (DFSCH_TYPE_OF(mutex) != &mutex_type)
     dfsch_error("thread:not-a-mutex", mutex);
@@ -239,7 +239,7 @@ void dfsch_condition_wait(dfsch_object_t* cond, dfsch_object_t* mutex){
     dfsch_error("thread:not-a-condition", cond);
 
   c = (condition_t*)cond;
-  m = (mutex_t*)mutex;
+  m = (mutex_obj_t*)mutex;
 
   err = pthread_cond_wait(&(c->cond), &(m->mutex));
 
