@@ -6,6 +6,7 @@ For 0.2.1:
 * Missing parts of unix library (ftw, various system databases...)
 * Pretty-printer
 * Generalized conditions (Errors, Warnings, debugger hooks...)
+* Declarations (associated to variables, not values)
 
 When needed by other code:
 * Type predicates for all types
