@@ -462,6 +462,14 @@ static dfsch_type_t vector_type = {
 #define VECTOR (&vector_type)
 
 
+static dfsch_type_t environment_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(environment_t),
+  "environment"
+};
+
+
 
 int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
@@ -1710,52 +1718,64 @@ dfsch_object_t* dfsch_obj_read(char* str){
 
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
-
-
   return dfsch_new_frame_from_hash(parent, dfsch_hash_make(DFSCH_HASH_EQ));
 }
 dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
                                           dfsch_object_t* hash){
+  environment_t* e = (environment_t*)dfsch_make_object(&environment_type);
+
+  e->values = hash;
+  e->decls = NULL;
+  
+  if (parent && DFSCH_TYPE_OF(parent) != &environment_type){
+    dfsch_error("exception:not-an-environment", parent);
+  }
+
+  e->parent = (environment_t*)parent;
+    
+  return (dfsch_object_t*)e;
+
+
   dfsch_object_t* frame = dfsch_cons(hash, parent);
   return frame;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
-  pair_t *i;
+  environment_t *i;
+  object_t* ret;
 
-  i = (pair_t*)env;
-  while (DFSCH_TYPE_OF(i)==PAIR){
+  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+    dfsch_error("exception:not-an-environment", env);
+  }
 
-    object_t* ret = dfsch_hash_ref(i->car, name);
+  i = (environment_t*)env;
+  while (i){
+    ret = dfsch_hash_ref(i->values, name);
     if (ret){
       return dfsch_car(ret);
     }
-
-    i = (pair_t*)i->cdr;
+    
+    i = i->parent;
   }
 
-  if (i){
-    dfsch_error("exception:not-a-proper-list",env);
-  }
-  
   dfsch_error("exception:unbound-variable", dfsch_cons(name, env));
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
-  pair_t *i;
+  environment_t *i;
 
-  i = (pair_t*)env;
+  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+    dfsch_error("exception:not-an-environment", env);
+  }
 
-  while (DFSCH_TYPE_OF(i) == PAIR){
-    object_t* ret = dfsch_hash_ref(i->car, name);
+  i = (environment_t*)env;
+
+  while (i){
+    object_t* ret = dfsch_hash_ref(i->values, name);
     if (ret){
       return ret;
     }
 
-    i = (pair_t*)i->cdr;
-  }
-
-  if (i){
-    dfsch_error("exception:not-a-proper-list",env);
+    i = i->parent;
   }
   
   return NULL;
@@ -1763,47 +1783,51 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
-  pair_t *i;
+  environment_t *i;
 
-  i = (pair_t*)env;
-  while (DFSCH_TYPE_OF(i) == PAIR){
-    if(dfsch_hash_set_if_exists(i->car, name, value))
+  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+    dfsch_error("exception:not-an-environment", env);
+  }
+
+  i = (environment_t*)env;
+
+  while (i){
+    if(dfsch_hash_set_if_exists(i->values, name, value))
       return value;
 
-    i = (pair_t*)i->cdr;
+    i = i->parent;
   }
 
-  if (i){
-    dfsch_error("exception:not-a-proper-list",env);
-  }
-  
   dfsch_error("exception:unbound-variable",name);
 }
 void dfsch_unset(object_t* name, object_t* env){
-  pair_t *i;
+  environment_t *i;
 
-  i = (pair_t*)env;
-  while (DFSCH_TYPE_OF(i)==PAIR){
-    if(dfsch_hash_unset(i->car, name))
+  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+    dfsch_error("exception:not-an-environment", env);
+  }
+
+  i = (environment_t*)env;
+  while (i){
+    if (i->decls){
+      dfsch_hash_unset(i->decls, name);
+    }
+    if(dfsch_hash_unset(i->values, name))
       return;
 
-    i = (pair_t*)i->cdr;
+    i = i->parent;
   }
   
-  if (i){
-    dfsch_error("exception:not-a-proper-list",env);
-  }
-
-
   dfsch_error("exception:unbound-variable",name);
 }
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
-  if (DFSCH_TYPE_OF(env) != PAIR)
-    dfsch_error("exception:not-a-environment",env);
+  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+    dfsch_error("exception:not-an-environment", env);
+  }
 
-  dfsch_hash_set(((pair_t*)env)->car, name, value);  
+  dfsch_hash_set(((environment_t*)env)->values, name, value);  
 
   return value;
 

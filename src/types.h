@@ -74,6 +74,16 @@ typedef struct form_t {
   dfsch_object_t* compilation_proc;
 } form_t;
 
+typedef struct environment_t environment_t;
+
+struct environment_t {
+  dfsch_type_t* type;
+  dfsch_object_t* values;
+  environment_t* parent;
+  dfsch_object_t* decls;
+};
+
+
 
 #define TYPE_CHECK(obj, t, name)                                \
   if (DFSCH_TYPE_OF(obj) != t)                                  \

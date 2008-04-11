@@ -1,3 +1,8 @@
+2008-04-11  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_new_frame_from_hash): environments as special
+	object, not cons.
+
 2008-04-06  Ales Hakl  <ales at hakl dot net>
 
 	* lib/threads.c: solaris fixes
