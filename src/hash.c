@@ -154,16 +154,16 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
  * lookup can be done in parallel with modification.
  */
 
-dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
-                               dfsch_object_t* key){
-  
+int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
+                        dfsch_object_t* key,
+                        dfsch_object_t** res){
   size_t h;
   hash_t *hash;
   hash_entry_t *i;
 
   GET_HASH(hash_obj, hash){
     IMPLEMENTS(hash_obj, ref);
-    return HASH_TYPE(hash_obj)->ref(hash_obj, key);
+    return HASH_TYPE(hash_obj)->ref(hash_obj, key, res);
   };
 
   h = get_hash(hash, key);  
@@ -176,7 +176,8 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
   case DFSCH_HASH_EQ:
     while (i){
       if (h == i->hash && (i->key == key)){
-        return dfsch_list(1,i->value);
+        *res = i->value;
+        return 1;
       }
       
       i = i->next;
@@ -184,22 +185,36 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
     break;
   case DFSCH_HASH_EQV:
     while (i){
-      if (h == i->hash && dfsch_eqv_p(i->key, key))
-        return dfsch_list(1,i->value);
+      if (h == i->hash && dfsch_eqv_p(i->key, key)){
+        *res = i->value;
+        return 1;
+      }
       
       i = i->next;
     }
     break;
   case DFSCH_HASH_EQUAL:
     while (i){
-      if (h == i->hash && dfsch_equal_p(i->key, key))
-        return dfsch_list(1,i->value);
-      
+      if (h == i->hash && dfsch_equal_p(i->key, key)){
+        *res = i->value;
+        return 1;
+      }      
       i = i->next;
     }
     break;
   }
-  return NULL;
+  return 0;
+}
+
+dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj, 
+                               dfsch_object_t* key){
+  dfsch_object_t* res;
+
+  if (dfsch_hash_ref_fast(hash_obj, key, &res)){
+    return dfsch_list(1, res);
+  } else {
+    return NULL;
+  }
 }
 
 static hash_entry_t* alloc_entry(size_t hash, 

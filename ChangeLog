@@ -2,6 +2,7 @@
 
 	* src/dfsch.c (dfsch_new_frame_from_hash): environments as special
 	object, not cons.
+	(dfsch_lookup): eliminated consing
 
 2008-04-06  Ales Hakl  <ales at hakl dot net>
 

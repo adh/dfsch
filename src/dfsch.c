@@ -1746,9 +1746,8 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 
   i = (environment_t*)env;
   while (i){
-    ret = dfsch_hash_ref(i->values, name);
-    if (ret){
-      return dfsch_car(ret);
+    if (dfsch_hash_ref_fast(i->values, name, &ret)){
+      return ret;
     }
     
     i = i->parent;

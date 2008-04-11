@@ -48,6 +48,10 @@ extern "C" {
    */
   extern int dfsch_hash_p(dfsch_object_t* obj);
 
+  extern int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
+                                 dfsch_object_t* key,
+                                 dfsch_object_t** res);
+
   /**
    * Get given entry in hashtable.
    *
@@ -92,8 +96,9 @@ extern "C" {
   extern const dfsch_type_t dfsch_hash_basetype;
 #define DFSCH_HASH_BASETYPE (&dfsch_hash_basetype)
 
-  typedef dfsch_object_t* (*dfsch_custom_hash_ref_t)(dfsch_object_t* hash, 
-                                                     dfsch_object_t* key);
+  typedef int (*dfsch_custom_hash_ref_t)(dfsch_object_t* hash, 
+                                         dfsch_object_t* key,
+                                         dfsch_object_t** res);
   typedef void (*dfsch_custom_hash_set_t)(dfsch_object_t* hash, 
                                           dfsch_object_t* key,
                                           dfsch_object_t* value);
