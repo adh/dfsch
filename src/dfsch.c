@@ -1734,10 +1734,6 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
   e->parent = (environment_t*)parent;
     
   return (dfsch_object_t*)e;
-
-
-  dfsch_object_t* frame = dfsch_cons(hash, parent);
-  return frame;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
