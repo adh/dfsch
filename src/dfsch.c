@@ -1393,9 +1393,13 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 dfsch__thread_info_t* dfsch__get_thread_info(){
+#ifdef __GNUC__
+  static __thread dfsch__thread_info_t* ei;
+#else
   dfsch__thread_info_t *ei;
   pthread_once(&thread_once, thread_key_alloc);
   ei = pthread_getspecific(thread_key);
+#endif
   if (!ei){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->exception_ret = NULL;

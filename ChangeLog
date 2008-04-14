@@ -1,3 +1,7 @@
+2008-04-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch__get_thread_info): use __thread on gcc
+
 2008-04-11  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_new_frame_from_hash): environments as special
