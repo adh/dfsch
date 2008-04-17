@@ -91,7 +91,10 @@ static dfsch_object_t* native_regex_match_once_p(void *baton,
   DFSCH_FLAG_SET("noteol", REG_NOTEOL, mflags);
   DFSCH_FLAG_PARSER_END(args);
 
-  return dfsch_regex_match_once_p(expression, cflags, mflags, string);
+  return dfsch_bool(dfsch_regex_match_once_p(expression, 
+                                             cflags, 
+                                             mflags, 
+                                             string));
 }
 
 static dfsch_object_t* native_regex_substrings_once(void *baton, 
