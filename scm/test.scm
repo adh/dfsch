@@ -93,7 +93,7 @@
                         #f))
         
        (sub-group eq?
-
+                  (print "bl")
                   (test 'eq? (eq? 'a 'a) #t))
 
        (sub-group equal?
@@ -310,5 +310,4 @@
 ;;
 ;; Print some statistics and exit apropriately
 ;;
-
 (exit-func)    

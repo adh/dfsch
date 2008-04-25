@@ -55,9 +55,6 @@ extern "C" {
   /** Continuation used for tail-call elimination. */
   typedef struct dfsch_tail_escape_t dfsch_tail_escape_t;
 
-  /** Meant for functions like caaddar, currently unused */
-  typedef unsigned int dfsch_cXr_t;
-
   /** C datatype for scheme objects */
   typedef struct dfsch_object_t dfsch_object_t;
 
@@ -106,14 +103,6 @@ extern "C" {
     dfsch_type_hash_t hash;
   };
 
-  extern dfsch_type_t dfsch_abstract_type;
-#define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
-  extern dfsch_type_t dfsch_standard_type;
-#define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
-  extern dfsch_type_t dfsch_list_type;
-#define DFSCH_LIST_TYPE ((dfsch_type_t*)&dfsch_list_type)
-  extern dfsch_type_t dfsch_empty_list_type;
-#define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
   
   /**
    * C datatype for scheme objects. Used as abstract datatype and also 
@@ -137,111 +126,10 @@ extern "C" {
                                                     dfsch_object_t* args,
                                                     dfsch_tail_escape_t* esc);
 
-  typedef struct dfsch_primitive_t {
-    dfsch_type_t* type;
-    dfsch_primitive_impl_t proc;
-    void *baton;
-    int flags;
-  } dfsch_primitive_t;
 
-  extern dfsch_type_t dfsch_primitive_type;
-
-#define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
-
-#define DFSCH_PRIMITIVE_CACHED 1
-#define DFSCH_PRIMITIVE_PURE   2
-
-#define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
-  static dfsch_primitive_t p_##name = {   \
-    DFSCH_PRIMITIVE_TYPE,                       \
-    p_##name##_impl,                            \
-    NULL,                                       \
-    flags                                       \
-  }
+#include <dfsch/number.h>
+#include <dfsch/types.h>
   
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)       \
-  static dfsch_primitive_t p_##name = {                \
-    DFSCH_PRIMITIVE_TYPE,                                    \
-    p_##name##_impl,                                         \
-    baton,                                                   \
-    flags                                                    \
-  }
-
-#define DFSCH_PRIMITIVE_HEAD(name)                                      \
-  static dfsch_object_t* p_##name##_impl(void* baton,                   \
-                                         dfsch_object_t* args,          \
-                                         dfsch_tail_escape_t* esc)
-  
-#define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
-  DFSCH_PRIMITIVE_HEAD(name);                   \
-  DFSCH_DECLARE_PRIMITIVE(name, flags);         \
-  DFSCH_PRIMITIVE_HEAD(name)
-
-#define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
-
-  typedef struct dfsch_form_t dfsch_form_t;
-
-  typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
-                                               dfsch_object_t* env,
-                                               dfsch_object_t* args,
-                                               dfsch_tail_escape_t* esc);
-  typedef dfsch_object_t* (*dfsch_form_compile_t)(dfsch_form_t* form,
-                                                  dfsch_object_t* env,
-                                                  dfsch_object_t* args,
-                                                  int depth);
-
-  struct dfsch_form_t {
-    dfsch_type_t* type;
-    dfsch_form_impl_t impl;
-    dfsch_form_compile_t compile;
-    void* baton;
-    char* name;
-  };
-
-  extern dfsch_type_t dfsch_form_type;
-
-#define DFSCH_FORM_TYPE (&dfsch_form_type)
-  
-#define DFSCH_FORM_IMPLEMENTATION(name)                                 \
-  static dfsch_object_t* form_##name##_impl(dfsch_form_t* form,         \
-                                            dfsch_object_t* env,        \
-                                            dfsch_object_t* args,       \
-                                            dfsch_tail_escape_t* esc)
-#define DFSCH_FORM_COMPILATION(name)                                    \
-  static dfsch_object_t* form_##name##_compile(dfsch_form_t* form,      \
-                                               dfsch_object_t* env,     \
-                                               dfsch_object_t* args,    \
-                                               int depth                \
-                                               )
-
-#define DFSCH_DEFINE_FORM(name)                 \
-  static dfsch_form_t form_##name = {           \
-    DFSCH_FORM_TYPE,                            \
-    form_##name##_impl,                         \
-    form_##name##_compile,                      \
-    NULL,                                       \
-    #name                                       \
-  }
-
-#define DFSCH_DEFINE_FORM_IMPL(name, compile)           \
-  DFSCH_FORM_IMPLEMENTATION(name);                      \
-  static dfsch_form_t form_##name = {                   \
-    DFSCH_FORM_TYPE,                                    \
-    form_##name##_impl,                                 \
-    compile,                                            \
-    NULL,                                               \
-    #name                                               \
-  };                                                    \
-  DFSCH_FORM_IMPLEMENTATION(name)
-
-
-#define DFSCH_FORM_REF(name) ((dfsch_object_t*)&form_##name)
-
-#define DFSCH_MAKE_FORM(name,baton)                                     \
-  (dfsch_make_form(form_##name##_impl,                                  \
-                   form_##name##_compile,                               \
-                   (baton),                                             \
-                   #name))
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
@@ -256,10 +144,6 @@ extern "C" {
   /** Get object hash */
   extern uint32_t dfsch_hash(dfsch_object_t* obj);
 
-#define DFSCH_TYPE_OF(obj) ((obj)?(obj)->type:DFSCH_EMPTY_LIST_TYPE)
-
-#define DFSCH_INSTANCE_P(o, t)                                  \
-  ((DFSCH_TYPE_OF(o) == (t))||dfsch_instance_p((o), (t)))
 
   /** Get object type */
   extern dfsch_type_t* dfsch_type_of(dfsch_object_t* obj);
@@ -318,8 +202,6 @@ extern "C" {
   extern dfsch_object_t* dfsch_car(dfsch_object_t* pair);
   /** Return second (cdr) item of pair */
   extern dfsch_object_t* dfsch_cdr(dfsch_object_t* pair);
-  /** Unimplemented */
-  extern dfsch_object_t* dfsch_cXr(dfsch_object_t* pair, dfsch_cXr_t x);
 
   /** Set first (car) item of pair */
   extern dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,

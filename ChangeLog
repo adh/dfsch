@@ -1,3 +1,9 @@
+2008-04-25  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: pairs identified by tag in pointer, not first word
+
+	* src/number.c: Direct fixnums (promotion is currently broken)
+
 2008-04-17  Ales Hakl  <ales at hakl dot net>
 
 	* lib/regex_mod.c (native_regex_match_once_p): missing dfsch_bool()

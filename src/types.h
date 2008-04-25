@@ -11,13 +11,6 @@ struct symbol_t{
 };
 
 
-
-typedef struct pair_t{
-  dfsch_type_t* type;
-  object_t *car;
-  object_t *cdr;
-} pair_t;
-
 typedef dfsch_primitive_t primitive_t;
 
 typedef struct closure_t{

@@ -388,8 +388,8 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
 
   dfsch_string_t* s = (dfsch_string_t*) string;
-  pair_t *head; 
-  pair_t *tail;
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
   size_t i;
 
   TYPE_CHECK(s, STRING, "string");
@@ -397,31 +397,31 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
   if (s->len == 0)
     return NULL;
 
-  head = tail = (pair_t*)dfsch_cons(dfsch_make_number_from_long(s->ptr[0]), 
-                                    NULL);
+  head = tail = dfsch_cons(dfsch_make_number_from_long(s->ptr[0]), 
+                           NULL);
 
   for(i = 1; i < s->len; ++i){
     object_t *tmp;
     
     tmp = dfsch_cons(dfsch_make_number_from_long(s->ptr[i]),NULL);
-    tail->cdr = tmp;
-    tail = (pair_t*)tmp;
+    DFSCH_FAST_CDR(tail) = tmp;
+    tail = tmp;
 
   }
-  return (object_t*)head;
+  return head;
 }
 
 dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   dfsch_string_t* string;
-  pair_t* j = (pair_t*)list;
+  dfsch_object_t* j = list;
   size_t i=0;
   string = 
     (dfsch_string_t*)dfsch_make_string_buf(NULL,
                                            dfsch_list_length_check(list));
   
   while (dfsch_pair_p((object_t*)j)){
-    string->ptr[i] = dfsch_number_to_long(j->car);
-    j = (pair_t*)j->cdr;
+    string->ptr[i] = dfsch_number_to_long(DFSCH_FAST_CAR(j));
+    j = DFSCH_FAST_CDR(j);
     i++;
   }
 
@@ -614,20 +614,20 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
 
 }
 typedef struct utf8_list_ctx_t{
-  pair_t* head;
-  pair_t* tail;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
 } utf8_list_ctx_t;
 
 static int utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, 
                         size_t start, size_t end){
   if (c->head){
-    pair_t* tmp;
-    tmp = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), NULL);
-    c->tail->cdr = (object_t*)tmp;
+    dfsch_object_t* tmp;
+    tmp = dfsch_cons(dfsch_make_number_from_long(ch), NULL);
+    DFSCH_FAST_CDR(c->tail) = tmp;
     c->tail = tmp;
   }else{
-    c->head = c->tail = (pair_t*)dfsch_cons(dfsch_make_number_from_long(ch), 
-                                            NULL);
+    c->head = c->tail = dfsch_cons(dfsch_make_number_from_long(ch), 
+                                   NULL);
   }
   return 0;
 }
@@ -640,13 +640,13 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
                              utf8_list_cb, 
                              string, &ctx, NULL, NULL);
   
-  return (object_t*)ctx.head;           
+  return ctx.head;           
 }
 
 dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   
   dfsch_string_t* string;
-  pair_t* j = (pair_t*)list;
+  dfsch_object_t* j = list;
   size_t i=0;
   size_t len;
   if (list && !dfsch_pair_p(list))
@@ -654,7 +654,7 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   
   len = 0;
   while (dfsch_pair_p((object_t*)j)){
-    uint32_t ch = dfsch_number_to_long(j->car);
+    uint32_t ch = dfsch_number_to_long(DFSCH_FAST_CAR(j));
     if (ch <= 0x7f){
       len += 1;
     } else if (ch <= 0x7ff) {
@@ -664,16 +664,16 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
     } else if (ch <= 0x10ffff){
       len += 4;
     } else {
-      dfsch_error("exception:invalid-unicode-character", j->car);
+      dfsch_error("exception:invalid-unicode-character", DFSCH_FAST_CAR(j));
     }
-    j = (pair_t*)j->cdr;
+    j = DFSCH_FAST_CDR(j);
   }
 
   string = (dfsch_string_t*)dfsch_make_string_buf(NULL, len);
 
-  j = (pair_t*)list;
+  j = list;
   while (dfsch_pair_p((object_t*)j)){
-    uint32_t ch = dfsch_number_to_long(j->car);
+    uint32_t ch = dfsch_number_to_long(DFSCH_FAST_CAR(j));
 
     if (ch <= 0x7f){
       string->ptr[i] = ch;
@@ -695,7 +695,7 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
       i += 4;
     } 
 
-    j = (pair_t*)j->cdr;
+    j = DFSCH_FAST_CDR(j);
   }
 
   return (object_t*)string;

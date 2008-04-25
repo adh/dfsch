@@ -21,6 +21,7 @@
 
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
+#include "util.h"
 #include "internal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,46 +35,11 @@
 
 typedef dfsch_object_t object_t;
 
-typedef struct number_t {
+typedef struct flonum_t {
   dfsch_type_t *type;
-  enum {
-    N_FIXNUM,
-    N_FLONUM
-  } n_type;
-  union {
-    long fixnum;
-    double flonum;
-  };
-} number_t;
+  double flonum;
+} flonum_t;
 
-number_t* smallnum_buf[SMALLNUM_COUNT];
-
-static int n_equal_p(number_t* a, number_t* b){
-  if (a->n_type == b->n_type){
-    switch(a->n_type){
-    case N_FIXNUM:
-      return a->fixnum == b->fixnum;
-    case N_FLONUM:
-      return a->flonum == b->flonum;
-    }
-  }else{
-    return dfsch_number_to_double((dfsch_object_t*) a) == 
-      dfsch_number_to_double((dfsch_object_t*) b);
-  }
-}
-static char* n_write(number_t*n, int max_depth){
-  char  *s = GC_malloc(64);   
-  // 64 bytes should be enought, even for 128 bit machines ^_~
-  switch (n->n_type){
-  case N_FLONUM:
-    snprintf(s, 64, "%.32lg", n->flonum);
-    break; 
-  case N_FIXNUM:
-    snprintf(s, 64, "%ld", n->fixnum);
-    break;
-  }
-  return s;
-}
 
 static size_t diffusion(size_t h){
   
@@ -86,59 +52,68 @@ static size_t diffusion(size_t h){
   return h;
 }
 
-static size_t n_hash(number_t*n, int max_depth){
-  switch (n->n_type){
-  case N_FLONUM:
-    return diffusion(((size_t)n->flonum)) ^ 
-      ((size_t) (exp(round(32-log(n->flonum))) * 
-                 (n->flonum - trunc(n->flonum))));
-    break; 
-  case N_FIXNUM:
-    return diffusion(n->fixnum);
-    break;
-  }
+dfsch_type_t dfsch_number_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "number",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+static char* fixnum_write(dfsch_object_t* n, int max_depth, int readable){
+  return saprintf("%d", DFSCH_FIXNUM_REF(n));
 }
 
-
-static dfsch_type_t number_type = {
+dfsch_number_type_t dfsch_fixnum_type = {
   DFSCH_STANDARD_TYPE,
+  DFSCH_NUMBER_TYPE,
+  0,
+  "fixnum",
   NULL,
-  sizeof(number_t),
-  "number",
-  (dfsch_type_equal_p_t)n_equal_p,
-  (dfsch_type_write_t)n_write,
+  (dfsch_type_write_t)fixnum_write,
   NULL,
-  (dfsch_type_hash_t)n_hash
+  NULL
 };
-#define NUMBER (&number_type)
+
+static char* flonum_write(flonum_t* n, int max_depth, int readable){
+  return saprintf("%.32g", n->flonum);
+}
+static uint32_t flonum_hash(flonum_t* n){
+  return diffusion(((size_t)n->flonum) ^ 
+    ((size_t) (exp(round(32-log(n->flonum))) * 
+               (n->flonum - trunc(n->flonum)))));
+}
+static int flonum_equal_p(flonum_t* a, flonum_t* b){
+  return a->flonum == b->flonum;
+}
+
+dfsch_number_type_t dfsch_flonum_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_NUMBER_TYPE,
+  sizeof(flonum_t),
+  "flonum",
+  (dfsch_type_equal_p_t)flonum_equal_p,
+  (dfsch_type_write_t)flonum_write,
+  NULL,
+  (dfsch_type_hash_t)flonum_hash,
+};
 
 
 
 dfsch_object_t* dfsch_make_number_from_double(double num){
-  number_t *n;
-  n = (number_t*)dfsch_make_object(NUMBER);
-  if (!n)
-    return NULL;
+  flonum_t *n;
+  n = (flonum_t*)dfsch_make_object(DFSCH_FLONUM_TYPE);
 
-  n->n_type = N_FLONUM;
   n->flonum = num;
 
   return (dfsch_object_t*)n;
 }
 dfsch_object_t* dfsch_make_number_from_long(long num){
-  number_t *n;
-
-  if (num < SMALLNUM_COUNT + SMALLNUM_ORIGIN && num >= SMALLNUM_ORIGIN){
-    n = smallnum_buf[(num - SMALLNUM_ORIGIN)];
-    if (n)
-      return (dfsch_object_t*)n;
-  }
-  n = (number_t*)dfsch_make_object(NUMBER);
-
-  n->n_type = N_FIXNUM;
-  n->fixnum = num;
-
-  return (dfsch_object_t*)n;
+  // TODO: num \in <FIXNUM_MAX, LONG_MAX>
+  return DFSCH_MAKE_FIXNUM(num);
 }
 
 dfsch_object_t* dfsch_make_number_from_string(char* string){
@@ -161,7 +136,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
     if (*eptr)
       return NULL;
 
-    if (n == LONG_MAX || n == LONG_MIN)
+    if (n >= LONG_MAX/2 || n <= LONG_MIN/2)
       // overflow... so we will made it floating point
       goto flonum;
     return dfsch_make_number_from_long(n);
@@ -169,125 +144,76 @@ dfsch_object_t* dfsch_make_number_from_string(char* string){
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){
-  if (DFSCH_TYPE_OF(n)!=NUMBER)
-    dfsch_error("exception:not-a-number", n);
-
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    return ((number_t*)n)->flonum;
-  case N_FIXNUM:
-    return (double)((number_t*)n)->fixnum;
+  if (DFSCH_TYPE_OF(n)==DFSCH_FIXNUM_TYPE){
+    return (double)DFSCH_FIXNUM_REF(n);
   }
+  if (DFSCH_TYPE_OF(n)==DFSCH_FLONUM_TYPE){
+    return ((flonum_t*)n)->flonum;
+  }  
+
+  dfsch_error("exception:not-a-real-number", n);
 }
 long dfsch_number_to_long(dfsch_object_t *n){
-  if (DFSCH_TYPE_OF(n)!=NUMBER)
-    dfsch_error("exception:not-a-number", n);
-  if (((number_t*)n)->n_type!=N_FIXNUM)
-    dfsch_error("exception:not-an-exact-number", n);
+  if (DFSCH_TYPE_OF(n)!=DFSCH_FIXNUM_TYPE)
+    dfsch_error("exception:not-a-exact-number", n);
   
-  return (long)((number_t*)n)->fixnum;
+  return DFSCH_FIXNUM_REF(n);
 
 }
 char* dfsch_number_to_string(dfsch_object_t *n){
-  if (DFSCH_TYPE_OF(n)!=NUMBER)
-    dfsch_error("exception:not-a-number", n);
-
-  return n_write((number_t*)n, 2);
 }
 int dfsch_number_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == NUMBER;
+  return DFSCH_INSTANCE_P(obj, DFSCH_NUMBER_TYPE);
 }
 int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
-
-  return n_equal_p((number_t*)a, (number_t*)b);
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
+      return DFSCH_FIXNUM_REF(a) == DFSCH_FIXNUM_REF(b);
+  }else{
+    return dfsch_number_to_double(a) == dfsch_number_to_double(b);
+  }
+  
 }
 int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
+  /* 
+   * No need to handle fixnum case, fixnums are eq? and thus eqv?
+   *
+   * So thus we have either two flonums or flonum + fixnum
+   */
 
-  if (((number_t*)a)->n_type != ((number_t*)b)->n_type)
-    return 0;
-
-  switch(((number_t*)a)->n_type){
-  case N_FIXNUM:
-    return ((number_t*)a)->fixnum == ((number_t*)b)->fixnum;
-  case N_FLONUM:
-    return ((number_t*)a)->flonum == ((number_t*)b)->flonum;
-  }
+  return dfsch_number_to_double(a) == dfsch_number_to_double(b);
 }
 
 // Comparisons
 
 int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
-  
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
-    switch(((number_t*)a)->n_type){
-    case N_FIXNUM:
-      return ((number_t*)a)->fixnum < ((number_t*)b)->fixnum;
-    case N_FLONUM:
-      return ((number_t*)a)->flonum < ((number_t*)b)->flonum;
-    }
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
+      return DFSCH_FIXNUM_REF(a) < DFSCH_FIXNUM_REF(b);
   }else{
     return dfsch_number_to_double(a) < dfsch_number_to_double(b);
   }
 }
 int dfsch_number_gt(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
-  
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
-    switch(((number_t*)a)->n_type){
-    case N_FIXNUM:
-      return ((number_t*)a)->fixnum > ((number_t*)b)->fixnum;
-    case N_FLONUM:
-      return ((number_t*)a)->flonum > ((number_t*)b)->flonum;
-    }
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+      return DFSCH_FIXNUM_REF(a) > DFSCH_FIXNUM_REF(b);
   }else{
     return dfsch_number_to_double(a) > dfsch_number_to_double(b);
   }
 }
 int dfsch_number_lte(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
-  
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
-    switch(((number_t*)a)->n_type){
-    case N_FIXNUM:
-      return ((number_t*)a)->fixnum <= ((number_t*)b)->fixnum;
-    case N_FLONUM:
-      return ((number_t*)a)->flonum <= ((number_t*)b)->flonum;
-    }
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+      return DFSCH_FIXNUM_REF(a) <= DFSCH_FIXNUM_REF(b);
   }else{
     return dfsch_number_to_double(a) <= dfsch_number_to_double(b);
   }
 }
 int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
-  if (DFSCH_TYPE_OF(a)!=NUMBER)
-    dfsch_error("exception:not-a-number", a);
-  if (DFSCH_TYPE_OF(b)!=NUMBER)
-    dfsch_error("exception:not-a-number", b);
-  
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){
-    switch(((number_t*)a)->n_type){
-    case N_FIXNUM:
-      return ((number_t*)a)->fixnum >= ((number_t*)b)->fixnum;
-    case N_FLONUM:
-      return ((number_t*)a)->flonum >= ((number_t*)b)->flonum;
-    }
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+      return DFSCH_FIXNUM_REF(a) >= DFSCH_FIXNUM_REF(b);
   }else{
     return dfsch_number_to_double(a) >= dfsch_number_to_double(b);
   }
@@ -298,71 +224,41 @@ int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
 
 dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a)!=NUMBER) 
-    dfsch_error("exception:not-a-number", a); 
-  if (DFSCH_TYPE_OF(b)!=NUMBER) 
-    dfsch_error("exception:not-a-number", b); 
- 
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
-    switch(((number_t*)a)->n_type){ 
-    case N_FIXNUM: 
-      {
-        long an = ((number_t*)a)->fixnum;
-        long bn = ((number_t*)b)->fixnum;
-        long x = an + bn;
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+    long an = DFSCH_FIXNUM_REF(a)<<1;
+    long bn = DFSCH_FIXNUM_REF(b)<<1;
+    long x = an + bn;
 
-        if ((an^x) >= 0 || (bn^x) >= 0)
-          return dfsch_make_number_from_long(x);
-        goto fallback;
-      }
-    case N_FLONUM: 
-      return dfsch_make_number_from_double(((number_t*)a)->flonum +
-                                           ((number_t*)b)->flonum); 
-    } 
-  }else{ 
-  fallback:
-    return dfsch_make_number_from_double 
-      (dfsch_number_to_double((dfsch_object_t*) a) + 
-       dfsch_number_to_double((dfsch_object_t*) b)); 
-  } 
-  
+    if ((an^x) >= 0 || (bn^x) >= 0)
+      return DFSCH_MAKE_FIXNUM(x>>1);
+  }
+
+  return dfsch_make_number_from_double 
+    (dfsch_number_to_double((dfsch_object_t*) a) + 
+     dfsch_number_to_double((dfsch_object_t*) b));   
 }
 
 dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a)!=NUMBER) 
-    dfsch_error("exception:not-a-number", a); 
-  if (DFSCH_TYPE_OF(b)!=NUMBER) 
-    dfsch_error("exception:not-a-number", b); 
- 
-  if (((number_t*)a)->n_type == ((number_t*)b)->n_type){ 
-    switch(((number_t*)a)->n_type){ 
-    case N_FIXNUM: 
-      {
-        long an = ((number_t*)a)->fixnum;
-        long bn = ((number_t*)b)->fixnum;
-        long x = an - bn;
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+    long an = DFSCH_FIXNUM_REF(a)<<1;
+    long bn = DFSCH_FIXNUM_REF(b)<<1;
+    long x = an - bn;
 
-        if ((an^x) >= 0 || (~bn^x) >= 0)
-          return dfsch_make_number_from_long(x);
-        goto fallback;
-      }
-    case N_FLONUM: 
-      return dfsch_make_number_from_double(((number_t*)a)->flonum -
-                                           ((number_t*)b)->flonum); 
-    } 
-  }else{ 
-  fallback:
-    return dfsch_make_number_from_double 
-      (dfsch_number_to_double((dfsch_object_t*) a) - 
-       dfsch_number_to_double((dfsch_object_t*) b)); 
-  } 
-  
+    if ((an^x) >= 0 || (~bn^x) >= 0)
+      return DFSCH_MAKE_FIXNUM(x>>1);
+  }
+
+  return dfsch_make_number_from_double 
+    (dfsch_number_to_double((dfsch_object_t*) a) - 
+     dfsch_number_to_double((dfsch_object_t*) b));   
 }
 
 dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a)!=NUMBER) 
+  /*  if (DFSCH_TYPE_OF(a)!=NUMBER) 
     dfsch_error("exception:not-a-number", a); 
   if (DFSCH_TYPE_OF(b)!=NUMBER) 
     dfsch_error("exception:not-a-number", b); 
@@ -388,16 +284,16 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
             return dfsch_make_number_from_double(xd);
         }
       }
-    case N_FLONUM: 
+      case N_FLONUM: 
       return dfsch_make_number_from_double(((number_t*)a)->flonum *
                                            ((number_t*)b)->flonum); 
-    } 
+          } 
   }else{ 
-  fallback:
-    return dfsch_make_number_from_double 
-      (dfsch_number_to_double((dfsch_object_t*) a) * 
-       dfsch_number_to_double((dfsch_object_t*) b)); 
-  } 
+  fallback:*/
+
+  return dfsch_make_number_from_double 
+    (dfsch_number_to_double((dfsch_object_t*) a) * 
+     dfsch_number_to_double((dfsch_object_t*) b)); 
 }
 
 dfsch_object_t* dfsch_number_div (dfsch_object_t* a,  
@@ -618,22 +514,15 @@ DFSCH_DEFINE_PRIMITIVE(abs, DFSCH_PRIMITIVE_CACHED){
   if (!dfsch_number_p(n))
     dfsch_error("exception:not-a-number", n);
 
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      if (num >= 0)
-        return n;
-      return dfsch_make_number_from_double(-num);
-    }
-  case N_FIXNUM:
-    {
-      long num = ((number_t*)n)->fixnum;
-      if (num >= 0)
-        return n;
-      return dfsch_make_number_from_long(-num);
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    if (DFSCH_FIXNUM_REF(n) >= 0){
+      return n;
+    } else {
+      return DFSCH_MAKE_FIXNUM(-DFSCH_FIXNUM_REF(n));
     }
   }
+
+  return dfsch_make_number_from_double(fabs(dfsch_number_to_double(n)));
 }
 
 DFSCH_DEFINE_PRIMITIVE(exp, DFSCH_PRIMITIVE_CACHED){
@@ -750,21 +639,8 @@ DFSCH_DEFINE_PRIMITIVE(zero_p, DFSCH_PRIMITIVE_CACHED){
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   
-  if (!dfsch_number_p(n))
-    dfsch_error("exception:not-a-number", n);
 
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      return dfsch_bool(num == 0.0);
-    }
-  case N_FIXNUM:
-    {
-      long num = ((number_t*)n)->fixnum;
-      return dfsch_bool(num == 0);
-    }
-  }
+  return dfsch_bool(dfsch_number_to_double(n) == 0.0);
 }
 
 DFSCH_DEFINE_PRIMITIVE(positive_p, DFSCH_PRIMITIVE_CACHED){
@@ -772,22 +648,8 @@ DFSCH_DEFINE_PRIMITIVE(positive_p, DFSCH_PRIMITIVE_CACHED){
 
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  
-  if (!dfsch_number_p(n))
-    dfsch_error("exception:not-a-number", n);
 
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      return dfsch_bool(num > 0.0);
-    }
-  case N_FIXNUM:
-    {
-      long num = ((number_t*)n)->fixnum;
-      return dfsch_bool(num > 0);
-    }
-  }
+  return dfsch_bool(dfsch_number_to_double(n) > 0.0);  
 }
 
 DFSCH_DEFINE_PRIMITIVE(negative_p, DFSCH_PRIMITIVE_CACHED){
@@ -795,70 +657,28 @@ DFSCH_DEFINE_PRIMITIVE(negative_p, DFSCH_PRIMITIVE_CACHED){
 
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  
-  if (!dfsch_number_p(n))
-    dfsch_error("exception:not-a-number", n);
 
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      return dfsch_bool(num < 0.0);
-    }
-  case N_FIXNUM:
-    {
-      long num = ((number_t*)n)->fixnum;
-      return dfsch_bool(num < 0);
-    }
-  }
+  return dfsch_bool(dfsch_number_to_double(n) < 0.0);    
 }
 
 DFSCH_DEFINE_PRIMITIVE(even_p, DFSCH_PRIMITIVE_CACHED){
-  object_t *n;
+  double n;
 
-  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_DOUBLE_ARG(args, n);
   DFSCH_ARG_END(args);
   
-  if (!dfsch_number_p(n))
-    dfsch_error("exception:not-a-number", n);
-
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      num = num / 2;
-      return dfsch_bool(num == round(num));
-    }
-  case N_FIXNUM:
-    {
-      long z = ((number_t*)n)->fixnum;
-      return dfsch_bool(z % 2 == 0);
-    }
-  }
+  n = n / 2;
+  return dfsch_bool(n == round(n));
 }
 
 DFSCH_DEFINE_PRIMITIVE(odd_p, DFSCH_PRIMITIVE_CACHED){
-  object_t *n;
+  double n;
 
-  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_DOUBLE_ARG(args, n);
   DFSCH_ARG_END(args);
   
-  if (!dfsch_number_p(n))
-    dfsch_error("exception:not-a-number", n);
-
-  switch (((number_t*)n)->n_type){
-  case N_FLONUM:
-    {
-      double num = ((number_t*)n)->flonum;
-      num = (num + 1) / 2;
-      return dfsch_bool(num == round(num));
-    }
-  case N_FIXNUM:
-    {
-      long z = ((number_t*)n)->fixnum;
-      return dfsch_bool(z % 2 == 1);
-    }
-  }
+  n = (n + 1) / 2;
+  return dfsch_bool(n == round(n));
 }
 
 DFSCH_DEFINE_PRIMITIVE(max, DFSCH_PRIMITIVE_CACHED){
@@ -934,7 +754,9 @@ DFSCH_DEFINE_PRIMITIVE(string_2_number, DFSCH_PRIMITIVE_CACHED){
 // TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<number>", NUMBER);
+  dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
+  dfsch_define_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
+  dfsch_define_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
 
   dfsch_define_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
   dfsch_define_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));

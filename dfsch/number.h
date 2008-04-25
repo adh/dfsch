@@ -33,6 +33,16 @@
 extern "C" {
 #endif
 
+  typedef dfsch_type_t dfsch_number_type_t;
+
+  extern dfsch_type_t dfsch_number_type;
+#define DFSCH_NUMBER_TYPE (&dfsch_number_type)
+
+  extern dfsch_number_type_t dfsch_fixnum_type;
+#define DFSCH_FIXNUM_TYPE ((dfsch_type_t*)&dfsch_fixnum_type)
+  extern dfsch_number_type_t dfsch_flonum_type;
+#define DFSCH_FLONUM_TYPE ((dfsch_type_t*)&dfsch_flonum_type)
+
   /** Makes number object from given floating-point number. */
   extern dfsch_object_t* dfsch_make_number_from_double(double n);
   /** Makes number object from given integer number. */
