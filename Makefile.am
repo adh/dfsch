@@ -10,6 +10,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/promise.h \
 	dfsch/hash.h \
 	dfsch/dfsch.h \
+	dfsch/types.h \
 	dfsch/number.h \
 	dfsch/wrapper.h \
 	dfsch/magic.h \

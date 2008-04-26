@@ -1,5 +1,7 @@
 2008-04-26  Ales Hakl  <ales at hakl dot net>
 
+	* Makefile.am (nobase_include_HEADERS): install types.h
+
 	* src/hash.c (hash_t): use rwlock instead of two mutexes
 
 2008-04-25  Ales Hakl  <ales at hakl dot net>
