@@ -142,16 +142,6 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
                 hash);                                                  \
   }
 
-/*
- * Synchronization is generally required only for modification - readers
- * can read concurrently with modification and see consistent state.
- *
- * This is true when modification is done in right order and with proper 
- * barriers, probably easiest way to accomplish this is having reading 
- * mutex which is locked only for brief period at start of lookup, rest of
- * lookup can be done in parallel with modification.
- */
-
 int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
                         dfsch_object_t* key,
                         dfsch_object_t** res){
@@ -428,9 +418,6 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
   
 }
 
-/*
- * Im not fully sure whenever synchronization is strictly necessary here.
- */
 int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj, 
                              dfsch_object_t* key,
                              dfsch_object_t* value){
