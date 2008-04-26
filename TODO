@@ -7,6 +7,8 @@ For 0.2.1:
 * Pretty-printer
 * Generalized conditions (Errors, Warnings, debugger hooks...)
 * Declarations (associated to variables, not values)
+* Dynamic variables (as implicit top-level environment, shadowed by
+   everything else)
 
 When needed by other code:
 * Type predicates for all types
@@ -23,7 +25,7 @@ Sometimes:
   - Complex numbers (as pairs of two numbers of same type)
 * syntax-rules
 * Sound I/O
-* Compiler (into threaded code)
+* Compiler (into bytecode)
 * JIT (using GNU Lightning)
 * FFI
 
