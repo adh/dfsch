@@ -46,6 +46,7 @@ extern int dfsch_ascii_strcasecmp(char* a, char* b);
 
 extern pthread_mutex_t* dfsch_create_finalized_mutex();
 extern pthread_cond_t* dfsch_create_finalized_cvar();
+extern pthread_rwlock_t* dfsch_create_finalized_rwlock();
 
 char* dfsch_vsaprintf(char* format, va_list ap);
 char* dfsch_saprintf(char* format, ...);

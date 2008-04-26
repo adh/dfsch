@@ -54,6 +54,7 @@ struct str_li_t {
 
 #define create_finalized_mutex dfsch_create_finalized_mutex
 #define create_finalized_cvar dfsch_create_finalized_cvar
+#define create_finalized_rwlock dfsch_create_finalized_rwlock
 
 #define vsaprintf dfsch_vsaprintf
 #define saprintf dfsch_saprintf

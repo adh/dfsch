@@ -38,8 +38,7 @@ typedef struct hash_t{
   size_t mask;
   hash_entry_t** vector;
   int mode;
-  pthread_mutex_t* w_mutex;
-  pthread_mutex_t* r_mutex;
+  pthread_rwlock_t* lock;
 }hash_t;
 
 struct hash_entry_t {
@@ -93,8 +92,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   h->mask = INITIAL_MASK;
   h->vector = alloc_vector(h->mask);
   h->mode = mode;
-  h->w_mutex = create_finalized_mutex();
-  h->r_mutex = create_finalized_mutex();
+  h->lock = create_finalized_rwlock();
 
   return (dfsch_object_t*)h;
 }
@@ -168,15 +166,15 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
 
   h = get_hash(hash, key);  
 
-  pthread_mutex_lock(hash->r_mutex);
+  pthread_rwlock_rdlock(hash->lock);
   i = hash->vector[h & hash->mask];
-  pthread_mutex_unlock(hash->r_mutex);
 
   switch (hash->mode){
   case DFSCH_HASH_EQ:
     while (i){
       if (h == i->hash && (i->key == key)){
         *res = i->value;
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       
@@ -187,6 +185,7 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_eqv_p(i->key, key)){
         *res = i->value;
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       
@@ -197,12 +196,15 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_equal_p(i->key, key)){
         *res = i->value;
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }      
       i = i->next;
     }
     break;
   }
+
+  pthread_rwlock_unlock(hash->lock);
   return 0;
 }
 
@@ -251,10 +253,8 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
     }
   }
 
-  pthread_mutex_lock(hash->r_mutex);
   hash->mask = new_mask;
   hash->vector = vector;
-  pthread_mutex_unlock(hash->r_mutex);
 }
 
 dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
@@ -271,7 +271,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     return hash_obj;
   };
 
-  pthread_mutex_lock(hash->w_mutex);
+  pthread_rwlock_wrlock(hash->lock);
 
   h = get_hash(hash, key);  
   i = entry = hash->vector[h & hash->mask];
@@ -281,7 +281,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && i->key == key){
         i->value = value;
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return hash_obj;
       }
       
@@ -292,7 +292,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_eqv_p(i->key, key)){
         i->value = value;
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return hash_obj;
       }
       
@@ -303,7 +303,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_equal_p(i->key, key)){
         i->value = value;
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return hash_obj;
       }
       
@@ -324,7 +324,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
                                              value,
                                              hash->vector[h & hash->mask]);
   
-  pthread_mutex_unlock(hash->w_mutex);
+  pthread_rwlock_unlock(hash->lock);
   return hash_obj;
 }
 
@@ -339,7 +339,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
     return HASH_TYPE(hash_obj)->unset(hash_obj, key);
   }
 
-  pthread_mutex_lock(hash->w_mutex);
+  pthread_rwlock_wrlock(hash->lock);
 
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
@@ -362,7 +362,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       
@@ -387,7 +387,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       
@@ -413,7 +413,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
         }
         
         
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       
@@ -423,7 +423,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
     break;
   }
 
-  pthread_mutex_unlock(hash->w_mutex);
+  pthread_rwlock_unlock(hash->lock);
   return 0;
   
 }
@@ -444,7 +444,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     return HASH_TYPE(hash_obj)->set_if_exists(hash_obj, key, value);
   }
 
-  pthread_mutex_lock(hash->w_mutex);
+  pthread_rwlock_wrlock(hash->lock);
 
   h = get_hash(hash, key);  
   i = hash->vector[h & hash->mask];
@@ -455,7 +455,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
       if (h = i->hash && i->key == key){
         i->value = value;
 
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       i = i->next;
@@ -466,7 +466,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
       if (h = i->hash && dfsch_eqv_p(i->key, key)){
         i->value = value;
 
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       i = i->next;
@@ -477,7 +477,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
       if (h = i->hash && dfsch_equal_p(i->key, key)){
         i->value = value;
 
-        pthread_mutex_unlock(hash->w_mutex);
+        pthread_rwlock_unlock(hash->lock);
         return 1;
       }
       i = i->next;
@@ -485,7 +485,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
     break;
   }
 
-  pthread_mutex_unlock(hash->w_mutex);
+  pthread_rwlock_unlock(hash->lock);
   return 0;
 }
 
@@ -500,6 +500,8 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
     IMPLEMENTS(hash_obj, hash_2_alist);
     return HASH_TYPE(hash_obj)->hash_2_alist(hash_obj);
   }
+
+  pthread_rwlock_rdlock(hash->lock);
   
   for (j=0; j<(hash->mask+1); j++){
     i = hash->vector[j];
@@ -511,6 +513,7 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
       i = i->next;
     }
   }
+  pthread_rwlock_unlock(hash->lock);
 
   return alist;
 }
