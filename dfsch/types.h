@@ -163,6 +163,8 @@ typedef struct dfsch_pair_t {
   (DFSCH_PAIR_REF(obj)->car)
 #define DFSCH_FAST_CDR(obj)                     \
   (DFSCH_PAIR_REF(obj)->cdr)
+#define DFSCH_PAIR_P(obj)                       \
+  ((((size_t)(obj)) & 0x03) == 2)
 
 #define DFSCH_FIXNUM_REF(obj)\
   (((long)(((size_t)(obj)) & ~0x01)) >> 1)

@@ -499,11 +499,11 @@ extern "C" {
    * @param name Variable or l-value (also used as argument name in exceptions)
    */
 #define DFSCH_OBJECT_ARG(al, name)\
-  if (!dfsch_pair_p((al))) \
+  if (!DFSCH_PAIR_P((al))) \
     dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
-  (name) = dfsch_car((al)); \
-  (al) = dfsch_cdr((al))
+  (name) = DFSCH_FAST_CAR((al)); \
+  (al) = DFSCH_FAST_CDR((al))
 
   /**
    * Parses one argument of no specific type from argument list and discards it
@@ -512,10 +512,10 @@ extern "C" {
    * @param name Argument name (used only in exceptions)
    */
 #define DFSCH_DISCARD_ARG(al, name)\
-  if (!dfsch_pair_p((al))) \
+  if (!DFSCH_PAIR_P((al))) \
     dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
-  (al) = dfsch_cdr((al))
+  (al) = DFSCH_FAST_CDR((al))
 
   /**
    * Parses one argument of no specific type from argument list and assigns it
@@ -527,10 +527,10 @@ extern "C" {
    * @param default Default value 
    */
 #define DFSCH_OBJECT_ARG_OPT(al, name,default)\
-  if (!dfsch_pair_p((al))) \
+  if (!DFSCH_PAIR_P((al))) \
    { (name) = (default);}else\
-  {(name) = dfsch_car((al)); \
-  (al) = dfsch_cdr((al));}
+  {(name) = DFSCH_FAST_CAR((al)); \
+  (al) = DFSCH_FAST_CDR((al));}
 
   /**
    * Parses one argument from arguments list and converts it using given 
@@ -542,12 +542,12 @@ extern "C" {
    * @param conv Function for conversion from dfsch_object_t* to given type.
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
-  if (!dfsch_pair_p((al))) \
+  if (!DFSCH_PAIR_P((al))) \
     dfsch_error("exception:required-argument-missing",\
                 dfsch_make_string_cstr(#name));\
-  { dfsch_object_t* dfsch___tmp = dfsch_car((al)); \
+  { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \
     (name) = (type)(conv)(dfsch___tmp); \
-    (al) = dfsch_cdr((al));\
+    (al) = DFSCH_FAST_CDR((al));\
   }
   /**
    * Parses one argument from arguments list and converts it using given 
@@ -562,11 +562,11 @@ extern "C" {
    * @param conv Function for conversion from dfsch_object_t* to given type.
    */
 #define DFSCH_GENERIC_ARG_OPT(al, name, default, type, conv)\
-  if (!dfsch_pair_p((al))) \
+  if (!DFSCH_PAIR_P((al))) \
     {(name)=(default);} else\
-  { dfsch_object_t* dfsch___tmp = dfsch_car((al)); \
+  { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \
     (name) = (type)(conv)(dfsch___tmp); \
-    (al) = dfsch_cdr((al));\
+    (al) = DFSCH_FAST_CDR((al));\
   }
 
   /**
@@ -585,46 +585,46 @@ extern "C" {
   (rest) = (al)
 
 
-#define DFSCH_OBJECT_CACHE(constructor, name)\
-  dfsch_object_t* name(){\
-    static dfsch_object_t* dfsch___cache = NULL;\
-    if (!dfsch___cache)\
-      dfsch___cache = constructor;\
-    return dfsch___cache;\
+#define DFSCH_OBJECT_CACHE(constructor, name)                           \
+  dfsch_object_t* name(){                                               \
+    static dfsch_object_t* dfsch___cache = NULL;                        \
+    if (!dfsch___cache)                                                 \
+      dfsch___cache = constructor;                                      \
+    return dfsch___cache;                                               \
   }// This depends on full-word stores being atomic (which they generally are)
 
 
-#define DFSCH_SYMBOL_CACHE(symbol, name)\
+#define DFSCH_SYMBOL_CACHE(symbol, name)                \
   DFSCH_OBJECT_CACHE(dfsch_make_symbol(symbol), name)
 
-#define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)\
+#define DFSCH_LOCAL_SYMBOL_CACHE(symbol, name)  \
   static DFSCH_SYMBOL_CACHE(symbol, name)
 
 
-#define DFSCH_FLAG_PARSER_BEGIN(args) \
-  while (dfsch_pair_p((args))){ \
-    dfsch_object_t* dfsch___flag = dfsch_car((args));
+#define DFSCH_FLAG_PARSER_BEGIN(args)                           \
+  while (DFSCH_PAIR_P((args))){                                 \
+    dfsch_object_t* dfsch___flag = DFSCH_FAST_CAR((args));
 
-#define DFSCH_FLAG_PARSER_BEGIN_SYM_ONLY(args) \
-  while (dfsch_pair_p((args))){ \
-    dfsch_object_t* dfsch___flag = dfsch_car((args));\
+#define DFSCH_FLAG_PARSER_BEGIN_SYM_ONLY(args)                  \
+  while (DFSCH_PAIR_P((args))){                                 \
+    dfsch_object_t* dfsch___flag = DFSCH_FAST_CAR((args));      \
     if (!dfsch_symbol_p(dfsch___flag)) break;
   
 #define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name) \
-  if (!dfsch_pair_p((args))){                                           \
+  if (!DFSCH_PAIR_P((args))){                                           \
     dfsch_error("exception:required-argument-missing", #name);          \
   }                                                                     \
   {                                                                     \
     dfsch_object_t* dfsch___flag;                                       \
-    dfsch___flag = dfsch_car((args));                                   \
+    dfsch___flag = DFSCH_FAST_CAR((args));                              \
     if (!dfsch_symbol_p(dfsch___flag)) {                                \
       dfsch_error("exception:not-a-symbol", dfsch___flag);              \
     }
 
-#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name) \
-  if (dfsch_pair_p((args))){                                            \
+#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name)                     \
+  if (DFSCH_PAIR_P((args))){                                            \
     dfsch_object_t* dfsch___flag;                                       \
-    dfsch___flag = dfsch_car((args));                                   \
+    dfsch___flag = DFSCH_FAST_CAR((args));                              \
     if (!dfsch_symbol_p(dfsch___flag)) {                                \
       dfsch_error("exception:not-a-symbol", dfsch___flag);              \
     }
@@ -643,20 +643,20 @@ extern "C" {
   if (dfsch_compare_symbol(dfsch___flag ,(name))) 
   
 #define DFSCH_FLAG_PARSER_END(args) \
-  (args) = dfsch_cdr((args));       \
+  (args) = DFSCH_FAST_CDR((args));  \
 }
 
 #define DFSCH_KEYWORD_PARSER_BEGIN(args)                                \
-  while (dfsch_pair_p((args))){                                         \
+  while (DFSCH_PAIR_P((args))){                                         \
     dfsch_object_t* dfsch___keyword;                                    \
     dfsch_object_t* dfsch___value;                                      \
-    dfsch___keyword = dfsch_car((args));                                \
-    (args) = dfsch_cdr((args));                                         \
-    if (!dfsch_pair_p((args))){                                         \
+    dfsch___keyword = DFSCH_FAST_CAR((args));                           \
+    (args) = DFSCH_FAST_CDR((args));                                    \
+    if (!DFSCH_PAIR_P((args))){                                         \
       dfsch_error("exception:keyword-without-arguemnt", dfsch___keyword); \
     }                                                                   \
-    dfsch___value = dfsch_car((args));                                  \
-    (args) = dfsch_cdr((args));
+    dfsch___value = DFSCH_FAST_CAR((args));                             \
+    (args) = DFSCH_FAST_CDR((args));
   
 #define DFSCH_KEYWORD(name, variable)                 \
   if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
