@@ -1,5 +1,7 @@
 2008-04-27  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c: use _FACT_CADR() for numeric operators
+
 	* dfsch/dfsch.h: use _FAST_CADR() macros in argument destructuring
 
 2008-04-26  Ales Hakl  <ales at hakl dot net>

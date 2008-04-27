@@ -349,9 +349,9 @@ DFSCH_DEFINE_PRIMITIVE(number_p, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(plus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   dfsch_object_t* s = dfsch_make_number_from_long(0);
-  while(dfsch_pair_p(i)){
-    s = dfsch_number_add(s, dfsch_car(i));
-    i = dfsch_cdr(i);
+  while(DFSCH_PAIR_P(i)){
+    s = dfsch_number_add(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
@@ -359,16 +359,16 @@ DFSCH_DEFINE_PRIMITIVE(plus, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(minus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
-  if (!dfsch_pair_p(i))
+  if (!DFSCH_PAIR_P(i))
     dfsch_error("exception:too-few-arguments",i);
 
-  if (!dfsch_cdr(i))
-    return dfsch_number_sub(dfsch_make_number_from_long(0), dfsch_car(i));
-  s = dfsch_car(i);
-  i = dfsch_cdr(i);
-  while(dfsch_pair_p(i)){
-    s= dfsch_number_sub(s, dfsch_car(i));
-    i = dfsch_cdr(i);
+  if (!DFSCH_FAST_CDR(i))
+    return dfsch_number_sub(dfsch_make_number_from_long(0), DFSCH_FAST_CAR(i));
+  s = DFSCH_FAST_CAR(i);
+  i = DFSCH_FAST_CDR(i);
+  while(DFSCH_PAIR_P(i)){
+    s= dfsch_number_sub(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
@@ -376,9 +376,9 @@ DFSCH_DEFINE_PRIMITIVE(minus, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(mult, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s = dfsch_make_number_from_long(1);
-  while(dfsch_pair_p(i)){
-    s = dfsch_number_mul(s,dfsch_car(i));
-    i = dfsch_cdr(i);
+  while(DFSCH_PAIR_P(i)){
+    s = dfsch_number_mul(s,DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
@@ -386,18 +386,18 @@ DFSCH_DEFINE_PRIMITIVE(mult, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(slash, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
-  if (!dfsch_pair_p(i))
+  if (!DFSCH_PAIR_P(i))
     dfsch_error("exception:too-few-arguments",i);
 
-  if (!dfsch_cdr(i))
+  if (!DFSCH_FAST_CDR(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
-                            dfsch_car(i));
-  s = dfsch_car(i);
-  i = dfsch_cdr(i);
+                            DFSCH_FAST_CAR(i));
+  s = DFSCH_FAST_CAR(i);
+  i = DFSCH_FAST_CDR(i);
   
-  while(dfsch_pair_p(i)){
-    s=dfsch_number_div(s, dfsch_car(i));
-    i = dfsch_cdr(i);
+  while(DFSCH_PAIR_P(i)){
+    s=dfsch_number_div(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
@@ -405,18 +405,18 @@ DFSCH_DEFINE_PRIMITIVE(slash, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(slash_i, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
-  if (!dfsch_pair_p(i))
+  if (!DFSCH_PAIR_P(i))
     dfsch_error("exception:too-few-arguments",i);
 
-  if (!dfsch_cdr(i))
+  if (!DFSCH_FAST_CDR(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
-                            dfsch_car(i));
-  s = dfsch_car(i);
-  i = dfsch_cdr(i);
+                            DFSCH_FAST_CAR(i));
+  s = DFSCH_FAST_CAR(i);
+  i = DFSCH_FAST_CDR(i);
   
-  while(dfsch_pair_p(i)){
-    s=dfsch_number_div_i(s, dfsch_car(i));
-    i = dfsch_cdr(i);
+  while(DFSCH_PAIR_P(i)){
+    s=dfsch_number_div_i(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
@@ -424,18 +424,18 @@ DFSCH_DEFINE_PRIMITIVE(slash_i, DFSCH_PRIMITIVE_CACHED){
 DFSCH_DEFINE_PRIMITIVE(modulo, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
-  if (!dfsch_pair_p(i))
+  if (!DFSCH_PAIR_P(i))
     dfsch_error("exception:too-few-arguments",i);
 
-  if (!dfsch_cdr(i))
+  if (!DFSCH_FAST_CDR(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
-                            dfsch_car(i));
-  s = dfsch_car(i);
-  i = dfsch_cdr(i);
+                            DFSCH_FAST_CAR(i));
+  s = DFSCH_FAST_CAR(i);
+  i = DFSCH_FAST_CDR(i);
   
-  while(dfsch_pair_p(i)){
-    s=dfsch_number_mod(s, dfsch_car(i));
-    i = dfsch_cdr(i);
+  while(DFSCH_PAIR_P(i)){
+    s=dfsch_number_mod(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
   }
 
   return s; 
