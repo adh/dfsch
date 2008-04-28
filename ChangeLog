@@ -1,3 +1,8 @@
+2008-04-28  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c (dfsch_number_mul): correct promotions for
+	multiplication
+
 2008-04-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: use _FACT_CADR() for numeric operators
