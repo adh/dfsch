@@ -359,7 +359,7 @@ int main(int argc, char**argv){
   dfsch_define_cstr(ctx,"transcript-off",
 		    dfsch_make_primitive(command_transcript_off,NULL));
 
-  while ((c=getopt(argc, argv, "+r:l:L:e:E:hvO:t:")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvO:t:")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);

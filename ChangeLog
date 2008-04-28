@@ -1,5 +1,7 @@
 2008-04-28  Ales Hakl  <ales at hakl dot net>
 
+	* src/repl.c (main): fix -i
+
 	* src/number.c (dfsch_number_mul): correct promotions for
 	multiplication
 

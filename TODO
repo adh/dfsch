@@ -22,7 +22,7 @@ Sometimes:
 * More number types:
   - Big integers
   - Fractions
-  - Complex numbers (as pairs of two numbers of same type)
+  - Complex numbers (FP-only)
 * syntax-rules
 * Sound I/O
 * Compiler (into bytecode)
