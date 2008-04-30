@@ -49,7 +49,7 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
-const dfsch_type_t dfsch_hash_basetype = {
+dfsch_type_t dfsch_hash_basetype = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
   0,
@@ -59,7 +59,7 @@ const dfsch_type_t dfsch_hash_basetype = {
   NULL
 };
 
-static const dfsch_type_t standard_hash_type = {
+dfsch_type_t dfsch_standard_hash_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_HASH_BASETYPE,
   sizeof(hash_t),
@@ -69,7 +69,7 @@ static const dfsch_type_t standard_hash_type = {
   NULL
 };
 
-const dfsch_type_t dfsch_custom_hash_type_type = {
+dfsch_type_t dfsch_custom_hash_type_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_custom_hash_type_t),
@@ -86,7 +86,7 @@ static hash_entry_t** alloc_vector(size_t mask){
 
 
 dfsch_object_t* dfsch_hash_make(int mode){
-  hash_t *h = (hash_t*)dfsch_make_object(&standard_hash_type); 
+  hash_t *h = (hash_t*)dfsch_make_object(DFSCH_STANDARD_HASH_TYPE); 
 
   h->count = 0;
   h->mask = INITIAL_MASK;
@@ -97,7 +97,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == &standard_hash_type ||
+  return DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE ||
     DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE);
 }
 
@@ -127,7 +127,7 @@ static size_t get_hash(hash_t* hash, dfsch_object_t*key){
 }
 
 #define GET_HASH(obj,hash)                                              \
-  if (DFSCH_TYPE_OF(obj) == &standard_hash_type){                       \
+  if (DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE){                       \
     hash = (hash_t*)obj;                                                \
   } else if (!obj ||                                                    \
              !DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE)){ \
@@ -651,7 +651,7 @@ DFSCH_DEFINE_FORM_IMPL(with_hash, dfsch_form_compiler_eval_all){
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
-  dfsch_define_cstr(ctx, "<standard-hash>", &standard_hash_type);
+  dfsch_define_cstr(ctx, "<standard-hash>", DFSCH_STANDARD_HASH_TYPE);
   dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
   dfsch_define_cstr(ctx, "make-hash", 

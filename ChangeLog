@@ -1,3 +1,7 @@
+2008-04-30  Ales Hakl  <ales at hakl dot net>
+
+	* src/hash.c: export DFSCH_STANDARD_HASH_TYPE
+
 2008-04-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/repl.c (main): fix -i
