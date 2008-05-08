@@ -1626,17 +1626,14 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 
   if (!DFSCH_TYPE_OF(obj)){
     str_list_t *sl = sl_create();
-    char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<() ");
     sl_append(sl, saprintf("%p", obj));
-    sl_append(sl, buf);
     sl_append(sl, ">");
     return sl_value(sl);
   }
 
   if (!(DFSCH_TYPE_OF(obj)->write)){
     str_list_t *sl = sl_create();
-    char buf[sizeof(void*)*2+1];
     sl_append(sl, "#<");
     sl_append(sl, DFSCH_TYPE_OF(obj)->name);
     sl_append(sl, saprintf(" %p", obj));

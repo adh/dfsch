@@ -1,3 +1,7 @@
+2008-05-09  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_obj_write): removed redundant append of buf
+
 2008-04-30  Ales Hakl  <ales at hakl dot net>
 
 	* src/hash.c: export DFSCH_STANDARD_HASH_TYPE
