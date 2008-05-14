@@ -1,3 +1,7 @@
+2008-05-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c: coorect promotion of large longs to flonum
+
 2008-05-09  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_obj_write): removed redundant append of buf

@@ -113,6 +113,10 @@ dfsch_object_t* dfsch_make_number_from_double(double num){
 }
 dfsch_object_t* dfsch_make_number_from_long(long num){
   // TODO: num \in <FIXNUM_MAX, LONG_MAX>
+  if ((num << 1) >> 1 != num){
+    return dfsch_make_number_from_double(num);
+  }
+
   return DFSCH_MAKE_FIXNUM(num);
 }
 
@@ -158,7 +162,6 @@ long dfsch_number_to_long(dfsch_object_t *n){
     dfsch_error("exception:not-a-exact-number", n);
   
   return DFSCH_FIXNUM_REF(n);
-
 }
 char* dfsch_number_to_string(dfsch_object_t *n){
 }
@@ -299,13 +302,13 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
     double xd = (double)an * (double)bn;
     
     if (x == xd){
-      return dfsch_make_number_from_long(x>>1);
+      return DFSCH_MAKE_FIXNUM(x>>1);
     }else{
       double d = x > xd ? x - xd : xd - x;
       double p = xd >= 0 ? xd : -xd;
       
       if (32.0 * d <= p){
-	return dfsch_make_number_from_long(x>>1);
+	return DFSCH_MAKE_FIXNUM(x>>1);
       }
     }
   }
