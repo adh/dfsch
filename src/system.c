@@ -25,6 +25,10 @@
 #include <dfsch/number.h>
 
 #include <time.h>
+#include <sys/times.h>
+#include <unistd.h>
+#include <limits.h>
+
 
 typedef struct decoded_time_t {
   dfsch_type_t* type;
@@ -203,6 +207,23 @@ static dfsch_object_t* native_iso_format_time(void* baton,
                                          tm->tm_hour, tm->tm_min, tm->tm_sec));
 }
 
+DFSCH_DEFINE_PRIMITIVE(get_internal_real_time, NULL){
+  struct tms t;
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_long(times(&t) & LONG_MAX);
+}
+DFSCH_DEFINE_PRIMITIVE(get_internal_run_time, NULL){
+  struct tms t;
+  DFSCH_ARG_END(args);
+
+  times(&t);
+
+  return dfsch_make_number_from_long((t.tms_utime + t.tms_stime) & LONG_MAX);
+}
+
+
+
 void dfsch__system_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<decoded-time>", &decoded_time_type);
 
@@ -217,5 +238,10 @@ void dfsch__system_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_get_universal_time, NULL));
   dfsch_define_cstr(ctx, "iso-format-time", 
                     dfsch_make_primitive(native_iso_format_time, NULL));
-
+  dfsch_define_cstr(ctx, "get-internal-real-time", 
+                    DFSCH_PRIMITIVE_REF(get_internal_real_time));
+  dfsch_define_cstr(ctx, "get-internal-run-time", 
+                    DFSCH_PRIMITIVE_REF(get_internal_run_time));
+  dfsch_define_cstr(ctx, "internal-time-units-per-second", 
+                    dfsch_make_number_from_long(sysconf(_SC_CLK_TCK)));
 }
