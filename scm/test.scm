@@ -11,7 +11,9 @@
   (print)
   (print "***** RESULTS: *****")
   (print "  Tests passed: " tests-passed)
-  (print "  Tests failed: " tests-failed)
+  (if (> tests-failed 0)
+      (print "\033[0;31m  Tests failed: " tests-failed "\033[0;39m")
+      (print "  Tests failed: " tests-failed))
   (print "  ===========================")
   (print "  Tests total:  " (+ tests-passed tests-failed))
   (if (= tests-failed 0)
@@ -23,10 +25,11 @@
 ;;  (print (object->string val))
   (if (equal? exp val)
       (begin 
-        (print "   Test passed: " id)
+        (print "   Test passed: \033[0;32m" id "\033[0;39m")
         (set! tests-passed (+ tests-passed 1)))
       (begin
-        (print "!! Test failed: " id " was: " (object->string exp) 
+        (print "\033[0;31m!!\033[0;39m Test failed: \033[0;31m" id 
+               "\033[0;39m was: " (object->string exp) 
                " should be: " (object->string val))
         (set! tests-failed (+ tests-failed 1))
         (when one-test-fail
