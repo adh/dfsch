@@ -2221,6 +2221,8 @@ dfsch_object_t* dfsch_make_context(){
                    dfsch_make_primitive(&native_top_level_environment, ctx));
   dfsch_define_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
+  dfsch_define_cstr(ctx,"*dfsch-version*",dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_define_cstr(ctx,"*dfsch-platform*",dfsch_make_string_cstr(HOST_TRIPLET));
 
   dfsch__native_register(ctx);
 
