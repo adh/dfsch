@@ -92,7 +92,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   h->mask = INITIAL_MASK;
   h->vector = alloc_vector(h->mask);
   h->mode = mode;
-  h->lock = create_finalized_rwlock();
+  h->lock = DFSCH_CREATE_RWLOCK();
 
   return (dfsch_object_t*)h;
 }
