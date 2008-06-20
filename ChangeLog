@@ -1,3 +1,7 @@
+2008-06-20  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/util.h (DFSCH_RWLOCK_RDLOCK): emulation of rwlock using mutex
+
 2008-05-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_make_context): *dfsch-platform*
