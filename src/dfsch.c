@@ -1403,7 +1403,7 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 dfsch__thread_info_t* dfsch__get_thread_info(){
-#if defined(__GNUC__) && !defined(__arm)
+#if defined(__GNUC__) && !defined(__arm__)
   static __thread dfsch__thread_info_t* ei;
 #else
   dfsch__thread_info_t *ei;
