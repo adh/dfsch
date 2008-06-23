@@ -16,5 +16,6 @@ extern void dfsch__format_native_register(dfsch_object_t *ctx);
 extern void dfsch__port_native_register(dfsch_object_t *ctx);
 extern void dfsch__system_register(dfsch_object_t *ctx);
 extern void dfsch__generic_register(dfsch_object_t *ctx);
+extern void dfsch__bignum_register(dfsch_object_t* ctx);
 
 #endif

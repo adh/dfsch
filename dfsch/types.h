@@ -167,10 +167,11 @@ typedef struct dfsch_pair_t {
   ((((size_t)(obj)) & 0x03) == 2)
 
 #define DFSCH_FIXNUM_REF(obj)\
-  (((long)(((size_t)(obj)) & ~0x01)) >> 1)
+  (((long)(((ptrdiff_t)(obj)) & ~0x01)) >> 1)
 #define DFSCH_MAKE_FIXNUM(obj)\
-  ((dfsch_object_t*) ((((size_t)(obj)) << 1) | 0x01))
-
+  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 1) | 0x01))
+#define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 2)
+#define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 2)
 
 #define DFSCH_TYPE_OF(obj) \
   ((obj)?(                                                              \

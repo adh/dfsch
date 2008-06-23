@@ -50,8 +50,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/control.c src/system.c 	\
 	src/util.c src/util.h 		\
 	src/hash.c dfsch/hash.h 	\
-	src/promise.c dfsch/promise.h 	\
-	src/number.c dfsch/number.h 	\
+	src/promise.c dfsch/promise.h 	\	
+	src/number.c dfsch/number.h src/bignum.c	\
 	src/strings.c dfsch/strings.h 	\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\

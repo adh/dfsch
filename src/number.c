@@ -112,8 +112,7 @@ dfsch_object_t* dfsch_make_number_from_double(double num){
   return (dfsch_object_t*)n;
 }
 dfsch_object_t* dfsch_make_number_from_long(long num){
-  // TODO: num \in <FIXNUM_MAX, LONG_MAX>
-  if ((num << 1) >> 1 != num){
+  if ((num << 1) >> 1 != num){ // XXX
     return dfsch_make_number_from_double(num);
   }
 
@@ -832,5 +831,9 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(number_2_string));
   dfsch_define_cstr(ctx, "string->number", 
 		   DFSCH_PRIMITIVE_REF(string_2_number));
+  dfsch_define_cstr(ctx, "most-positive-fixnum",
+                    DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
+  dfsch_define_cstr(ctx, "most-negative-fixnum",
+                    DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
   
 }

@@ -1,3 +1,7 @@
+2008-06-23  Ales Hakl  <ales at hakl dot net>
+
+	* src/bignum.c (bignum_add): bignum addition (definitely not usable)
+
 2008-06-20  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/util.h (DFSCH_RWLOCK_RDLOCK): emulation of rwlock using mutex
