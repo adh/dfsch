@@ -90,15 +90,37 @@ static void compact_bignum(bignum_t* n){
   }
 }
 
-static bignum_t* bignum_add(bignum_t* a, bignum_t* b){
+static int bignum_cmp(bignum_t* a, bignum_t* b){
+  size_t i;
+  if (a->negative && !b->negative){
+    return -1;
+  }
+  if (b->negative && !a->negative){
+    return 1;
+  }
+  if (a->length < b->length){
+    return a->negative ? 1 : -1;
+  }
+  if (a->length > b->length){
+    return a->negative ? -1 : 1;
+  }
+  for (i = a->length; i > 0; i--){
+    if (a->words[i-1] != b->words[i-1]){
+      if (a->words[i-1] < b->words[i-1]){
+        return a->negative ? 1 : -1;
+      } else {
+        return a->negative ? -1 : 1;
+      }
+    }
+  }
+  return 0;
+}
+
+static bignum_t* bignum_add_abs(bignum_t* a, bignum_t* b){
   bignum_t* res;
   bignum_t* tmp;
   size_t i;
   dword_t cy;
-
-  if (a->negative != b->negative){
-    dfsch_error("unimplemented", NULL);
-  }
 
   if (a->length < b->length){
     tmp = a;
@@ -130,8 +152,99 @@ static bignum_t* bignum_add(bignum_t* a, bignum_t* b){
   compact_bignum(res);
   return res;
 }
+static bignum_t* bignum_sub_abs(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  bignum_t* tmp;
+  int res_negative;
+  size_t i;
+  dword_t cy;
+
+  res_negative = 0;
+
+  if (a->length < b->length){
+    tmp = a;
+    a = b;
+    b = tmp;
+    res_negative = 1;
+  } else if (a->length == b->length) {
+    switch (bignum_cmp(a, b)) {
+    case -1: 
+      tmp = a;
+      a = b;
+      b = tmp;
+      res_negative = 1;
+      break;
+    case 0:
+      return make_bignum(0);
+    case 1:
+      break;
+    }
+  }
+
+  res = make_bignum(a->length);
+  res->negative = res_negative;
+
+  cy = 0;
+  i = 0;
+
+  while (i < b->length){
+    cy >>= WORD_BITS;
+    cy &= 1;
+    cy = a->words[i] - b->words[i] - cy;
+    res->words[i] = cy;
+    i++;
+  }
+
+  while (i < a->length){
+    cy >>= WORD_BITS;
+    cy &= 1;
+    cy = a->words[i] - cy;
+    res->words[i] = cy; 
+    i++;
+  }
+
+  return res;
+}
 
 
+static bignum_t* bignum_add(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  if (a->negative == b->negative){
+    res = bignum_add_abs(a, b);
+    res->negative = a->negative;
+  } else if (a->negative){
+    res = bignum_sub_abs(b, a);
+  } else {
+    res = bignum_sub_abs(a, b);
+  }
+
+  return res;
+}
+
+static bignum_t* bignum_sub(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+
+  if (a->negative == b->negative){
+    res = bignum_sub_abs(a, b);
+    if (a->negative){
+      res->negative = !res->negative;
+    }
+  } else {
+    res = bignum_add_abs(a, b);
+    res->negative = a->negative;
+  }
+
+
+  return res;
+}
+
+static bignum_t* bignum_mul_abs(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  size_t i;
+  size_t j;
+  
+  res = make_bignum(a->length, b->length);
+}
 
 static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
   size_t len;
@@ -160,10 +273,30 @@ DFSCH_DEFINE_PRIMITIVE(bignum_add, 0){
 
   return bignum_add(a, b);
 }
+DFSCH_DEFINE_PRIMITIVE(bignum_sub, 0){
+  bignum_t* a;
+  bignum_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+
+
+  return bignum_sub(a, b);
+}
+DFSCH_DEFINE_PRIMITIVE(bignum_cmp, 0){
+  bignum_t* a;
+  bignum_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+
+
+  return bignum_cmp(a, b);
+}
 
 void dfsch__bignum_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
   dfsch_define_cstr(ctx, "make-bignum", DFSCH_PRIMITIVE_REF(make_bignum));
   dfsch_define_cstr(ctx, "bignum+", DFSCH_PRIMITIVE_REF(bignum_add));
+  dfsch_define_cstr(ctx, "bignum-", DFSCH_PRIMITIVE_REF(bignum_sub));
+  dfsch_define_cstr(ctx, "bignum-cmp", DFSCH_PRIMITIVE_REF(bignum_cmp));
   
 }

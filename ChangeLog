@@ -1,3 +1,7 @@
+2008-06-24  Ales Hakl  <ales at hakl dot net>
+
+	* src/bignum.c (bignum_sub): bignum subtraction (working)
+
 2008-06-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/bignum.c (bignum_add): bignum addition (definitely not usable)
