@@ -148,7 +148,6 @@ static bignum_t* bignum_add_abs(bignum_t* a, bignum_t* b){
   }
 
   res->words[i] = cy >> WORD_BITS;
-
   compact_bignum(res);
   return res;
 }
@@ -203,6 +202,7 @@ static bignum_t* bignum_sub_abs(bignum_t* a, bignum_t* b){
     i++;
   }
 
+  compact_bignum(res);
   return res;
 }
 
@@ -238,12 +238,30 @@ static bignum_t* bignum_sub(bignum_t* a, bignum_t* b){
   return res;
 }
 
-static bignum_t* bignum_mul_abs(bignum_t* a, bignum_t* b){
+/*
+ * Long multiplication (HAC 14.12, elementary school :))
+ * O(n^2), but simple and works
+ */
+static bignum_t* bignum_mul(bignum_t* a, bignum_t* b){
   bignum_t* res;
   size_t i;
   size_t j;
-  
-  res = make_bignum(a->length, b->length);
+  dword_t cy;
+
+  res = make_bignum(a->length + b->length);
+  for (i = 0; i < a->length; i++){
+    cy = 0;
+    for (j = 0; j < b->length; j++){
+      cy >>= WORD_BITS;
+      cy = res->words[i+j] + a->words[i] * b->words[j] + cy;
+      res->words[i+j] = cy;
+    }
+  }
+
+  res->negative = !(a->negative == b->negative);
+
+  compact_bignum(res);
+  return res;
 }
 
 static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
@@ -282,6 +300,15 @@ DFSCH_DEFINE_PRIMITIVE(bignum_sub, 0){
 
   return bignum_sub(a, b);
 }
+DFSCH_DEFINE_PRIMITIVE(bignum_mul, 0){
+  bignum_t* a;
+  bignum_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+
+
+  return bignum_mul(a, b);
+}
 DFSCH_DEFINE_PRIMITIVE(bignum_cmp, 0){
   bignum_t* a;
   bignum_t* b;
@@ -297,6 +324,7 @@ void dfsch__bignum_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "make-bignum", DFSCH_PRIMITIVE_REF(make_bignum));
   dfsch_define_cstr(ctx, "bignum+", DFSCH_PRIMITIVE_REF(bignum_add));
   dfsch_define_cstr(ctx, "bignum-", DFSCH_PRIMITIVE_REF(bignum_sub));
+  dfsch_define_cstr(ctx, "bignum*", DFSCH_PRIMITIVE_REF(bignum_mul));
   dfsch_define_cstr(ctx, "bignum-cmp", DFSCH_PRIMITIVE_REF(bignum_cmp));
   
 }
