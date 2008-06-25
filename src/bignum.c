@@ -374,7 +374,6 @@ static void bignum_div_impl(bignum_t* a, bignum_t* b,
   size_t i;
 
   if (bignum_cmp_abs(a, b) < 0){
-    puts("out1");
     if (qp){
       *qp = make_bignum(0);
     }
