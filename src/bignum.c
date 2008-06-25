@@ -83,13 +83,44 @@ static bignum_t* make_bignum(size_t length){
   b->length = length;
   return b;
 }
+static bignum_t* make_bignum_digit(word_t d){
+  bignum_t* res = make_bignum(1);
+  res->negative = 0;
+  res->words[0] = d;
+  return res;
+}
+static bignum_t* copy_bignum(bignum_t* s){
+  bignum_t* b = make_bignum(s->length);
+  b->negative = s->negative;
+  memcpy(b->words, s->words, sizeof(word_t)*s->length);
+  return b;
+}
 
-static void compact_bignum(bignum_t* n){
-  while (n->words[n->length-1] == 0){
+static void normalize_bignum(bignum_t* n){
+  while (n->length > 0 && n->words[n->length-1] == 0){
     n->length--;
   }
 }
 
+static int bignum_cmp_abs(bignum_t* a, bignum_t* b){
+  size_t i;
+  if (a->length < b->length){
+    return -1;
+  }
+  if (a->length > b->length){
+    return 1;
+  }
+  for (i = a->length; i > 0; i--){
+    if (a->words[i-1] != b->words[i-1]){
+      if (a->words[i-1] < b->words[i-1]){
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
 static int bignum_cmp(bignum_t* a, bignum_t* b){
   size_t i;
   if (a->negative && !b->negative){
@@ -148,7 +179,7 @@ static bignum_t* bignum_add_abs(bignum_t* a, bignum_t* b){
   }
 
   res->words[i] = cy >> WORD_BITS;
-  compact_bignum(res);
+  normalize_bignum(res);
   return res;
 }
 static bignum_t* bignum_sub_abs(bignum_t* a, bignum_t* b){
@@ -166,7 +197,7 @@ static bignum_t* bignum_sub_abs(bignum_t* a, bignum_t* b){
     b = tmp;
     res_negative = 1;
   } else if (a->length == b->length) {
-    switch (bignum_cmp(a, b)) {
+    switch (bignum_cmp_abs(a, b)) {
     case -1: 
       tmp = a;
       a = b;
@@ -202,7 +233,7 @@ static bignum_t* bignum_sub_abs(bignum_t* a, bignum_t* b){
     i++;
   }
 
-  compact_bignum(res);
+  normalize_bignum(res);
   return res;
 }
 
@@ -260,8 +291,120 @@ static bignum_t* bignum_mul(bignum_t* a, bignum_t* b){
 
   res->negative = !(a->negative == b->negative);
 
-  compact_bignum(res);
+  normalize_bignum(res);
   return res;
+}
+
+static bignum_t* bignum_mul_digit(bignum_t* a, word_t d){
+  size_t i;
+  dword_t cy;
+  bignum_t* res;
+
+  res = make_bignum(a->length+1);
+  
+  cy = 0;
+  for (i = 0; i < a->length; i++){
+    cy >>= WORD_BITS;
+    cy = d * a->words[i] + cy;
+    res->words[i] = cy;
+  }
+  res->words[a->length] = cy >> WORD_BITS;
+
+  res->negative = a->negative;
+
+  normalize_bignum(res);
+  return res;
+}
+
+static bignum_t* bignum_add_abs_digit(bignum_t* a, word_t d){
+  size_t i;
+  dword_t cy;
+  bignum_t* res;
+
+  if (a->length == 0){
+    return make_bignum_digit(d);
+  }
+
+  res = make_bignum(a->length+1);
+  
+  cy = a->words[0] + d;
+  res->words[0] = cy;
+  for (i = 1; i < a->length; i++){
+    cy >>= WORD_BITS;
+    cy = a->words[i] + cy;
+    res->words[i] = cy;
+  }
+  res->words[a->length] = cy >> WORD_BITS;
+
+  res->negative = a->negative;
+
+  normalize_bignum(res);
+  return res;
+  
+}
+
+static bignum_t* bignum_shl_words(bignum_t* b, size_t count){
+  bignum_t* res;
+
+  res = make_bignum(b->length+count);
+  memcpy(res->words + count, b->words, b->length*sizeof(word_t));
+
+  return res;
+}
+static bignum_t* bignum_shr_words(bignum_t* b, size_t count){
+  bignum_t* res;
+
+  if (b->length <= count){
+    return make_bignum(0);
+  }
+
+  res = make_bignum(b->length - count);
+  memcpy(res->words, b->words + count, (b->length - count)*sizeof(word_t));
+
+  return res;
+}
+
+
+
+static void bignum_div_impl(bignum_t* a, bignum_t* b, 
+                            bignum_t**qp, bignum_t** rp){
+  bignum_t* q;
+  bignum_t* r;
+  bignum_t* t;
+  size_t i;
+
+  if (bignum_cmp_abs(a, b) < 0){
+    puts("out1");
+    if (qp){
+      *qp = make_bignum(0);
+    }
+    if (rp){
+      *rp = a;
+    }
+    return;
+  }
+
+  q = make_bignum(0);
+  r = a;
+  t = bignum_shl_words(b, a->length - b->length);
+  
+  for (i = 0; i <= a->length - b->length; i++){
+    q = bignum_shl_words(q, 1);
+    while (bignum_cmp_abs(r, t) >= 0){
+      r = bignum_sub_abs(r, t);
+      q = bignum_add_abs_digit(q, 1);
+    }
+    t = bignum_shr_words(t, 1);
+  }
+
+
+
+  if (qp){
+    *qp = q;
+  }
+  if (rp){
+    *rp = r;
+  }
 }
 
 static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
@@ -309,6 +452,18 @@ DFSCH_DEFINE_PRIMITIVE(bignum_mul, 0){
 
   return bignum_mul(a, b);
 }
+DFSCH_DEFINE_PRIMITIVE(bignum_divmod, 0){
+  bignum_t* a;
+  bignum_t* b;
+  bignum_t* q;
+  bignum_t* r;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  
+  bignum_div_impl(a, b, &q, &r);
+
+  return dfsch_vector(2, q, r);
+}
 DFSCH_DEFINE_PRIMITIVE(bignum_cmp, 0){
   bignum_t* a;
   bignum_t* b;
@@ -325,6 +480,7 @@ void dfsch__bignum_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "bignum+", DFSCH_PRIMITIVE_REF(bignum_add));
   dfsch_define_cstr(ctx, "bignum-", DFSCH_PRIMITIVE_REF(bignum_sub));
   dfsch_define_cstr(ctx, "bignum*", DFSCH_PRIMITIVE_REF(bignum_mul));
+  dfsch_define_cstr(ctx, "bignum/%", DFSCH_PRIMITIVE_REF(bignum_divmod));
   dfsch_define_cstr(ctx, "bignum-cmp", DFSCH_PRIMITIVE_REF(bignum_cmp));
   
 }

@@ -1,3 +1,7 @@
+2008-06-25  Ales Hakl  <ales at hakl dot net>
+
+	* src/bignum.c (bignum_div_impl): unsigned bignum division
+
 2008-06-24  Ales Hakl  <ales at hakl dot net>
 
 	* src/bignum.c (bignum_sub): bignum subtraction (working)
