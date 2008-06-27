@@ -1,3 +1,24 @@
+/*
+ * dfsch - dfox's quick and dirty scheme implementation
+ *   Bignums
+ * Copyright (C) 2005-2008 Ales Hakl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include "dfsch/number.h"
 #include "dfsch/bignum.h"
 
@@ -76,6 +97,11 @@ dfsch_number_type_t dfsch_bignum_type = {
   (dfsch_type_hash_t)bignum_hash
 };
 
+static void normalize_bignum(bignum_t* n){
+  while (n->length > 0 && n->words[n->length-1] == 0){
+    n->length--;
+  }
+}
 static bignum_t* make_bignum(size_t length){
   bignum_t* b = (bignum_t*) dfsch_make_object_var(DFSCH_BIGNUM_TYPE,
                                                   length * sizeof(word_t));
@@ -86,6 +112,7 @@ static bignum_t* make_bignum_digit(word_t d){
   bignum_t* res = make_bignum(1);
   res->negative = 0;
   res->words[0] = d;
+  normalize_bignum(res);
   return res;
 }
 static bignum_t* copy_bignum(bignum_t* s){
@@ -95,11 +122,6 @@ static bignum_t* copy_bignum(bignum_t* s){
   return b;
 }
 
-static void normalize_bignum(bignum_t* n){
-  while (n->length > 0 && n->words[n->length-1] == 0){
-    n->length--;
-  }
-}
 
 bignum_t* dfsch_make_bignum_uint64(uint64_t n){
   int i;
@@ -212,7 +234,7 @@ dfsch_bignum_t* dfsch_bignum_from_number(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return dfsch_make_bignum_int64(DFSCH_FIXNUM_REF(n));
   }
-  dfsch_error("exception:not-a-whole-number", n);
+  dfsch_error("exception:not-an-integer", n);
 }
 
 
@@ -259,6 +281,19 @@ int dfsch_bignum_cmp(bignum_t* a, bignum_t* b){
     }
   }
   return 0;
+}
+int dfsch_bignum_sign(dfsch_bignum_t* a){
+  if (a->length == 0){
+    return 0;
+  } else {
+    return a->negative ? -1 : 1;
+  }
+}
+int dfsch_bignum_even_p(dfsch_bignum_t* a){
+  if (a->length == 0){
+    return 1;
+  }
+  return a->words[0] & 0x01 == 0;
 }
 
 static size_t bignum_num_bits(bignum_t* b){
@@ -783,12 +818,6 @@ dfsch_bignum_t* dfsch_bignum_from_bytes(char* buf, size_t len){
 
   return b;
 }
-int dfsch_bignum_even_p(dfsch_bignum_t* b){
-  if (b->length == 0){
-    return 1;
-  }
-  return b->words[0] & 0x01 == 0;
-}
 
 dfsch_object_t* dfsch_bignum_to_number(dfsch_bignum_t* b){
   int64_t n;
@@ -819,13 +848,13 @@ static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
   return b;
 }
 
-DFSCH_DEFINE_PRIMITIVE(mod_expt, 0){
+DFSCH_DEFINE_PRIMITIVE(integer_expt, 0){
   bignum_t* b;
   bignum_t* e;
   bignum_t* m;
   DFSCH_BIGNUM_ARG(args, b);
   DFSCH_BIGNUM_ARG(args, e);
-  DFSCH_BIGNUM_ARG(args, m);
+  DFSCH_BIGNUM_ARG_OPT(args, m, NULL);
   DFSCH_ARG_END(args);
 
   return dfsch_bignum_exp(b, e, m);
@@ -843,13 +872,13 @@ DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
   DFSCH_BUFFER_ARG(args, a);
   DFSCH_ARG_END(args);
 
-  return dfsch_bignum_from_bytes(a->ptr, a->len);
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(a->ptr, a->len));
 }
 
 
 void dfsch__bignum_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
-  dfsch_define_cstr(ctx, "mod-expt", DFSCH_PRIMITIVE_REF(mod_expt));
+  dfsch_define_cstr(ctx, "integer-expt", DFSCH_PRIMITIVE_REF(integer_expt));
   dfsch_define_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
   dfsch_define_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
 }

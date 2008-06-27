@@ -41,6 +41,11 @@ typedef struct flonum_t {
   double flonum;
 } flonum_t;
 
+typedef struct fracnum_t {
+  dfsch_type_t* type;
+  dfsch_object_t* num;
+  dfsch_object_t* denom;
+} fracnum_t;
 
 static size_t diffusion(size_t h){
   
@@ -63,9 +68,29 @@ dfsch_type_t dfsch_number_type = {
   NULL,
   NULL
 };
-dfsch_type_t dfsch_integer_type = {
+dfsch_type_t dfsch_real_type = {
   DFSCH_ABSTRACT_TYPE,
   DFSCH_NUMBER_TYPE,
+  0,
+  "rational",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+dfsch_type_t dfsch_rational_type = {
+  DFSCH_ABSTRACT_TYPE,
+  DFSCH_REAL_TYPE,
+  0,
+  "rational",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+dfsch_type_t dfsch_integer_type = {
+  DFSCH_ABSTRACT_TYPE,
+  DFSCH_RATIONAL_TYPE,
   0,
   "integer",
   NULL,
@@ -113,7 +138,85 @@ dfsch_number_type_t dfsch_flonum_type = {
   (dfsch_type_hash_t)flonum_hash,
 };
 
+static char* fracnum_write(fracnum_t* n, int max_depth, int readable){
+  str_list_t* sl = sl_create();
+  sl_append(sl, dfsch_number_to_string(n->num, 10));
+  sl_append(sl, "/");
+  sl_append(sl, dfsch_number_to_string(n->denom, 10));
+  return sl_value(sl);
+}
+static int fracnum_equal_p(fracnum_t* a, fracnum_t* b){
+  return  
+    dfsch_equal_p(a->num, b->num) &&
+    dfsch_equal_p(a->denom, b->denom);
+}
+static uint32_t fracnum_hash(fracnum_t* n){
+  uint32_t h;
+  h = 0x7e9aa806;
 
+  h ^= dfsch_hash(n->num);
+  h = h << 16 | h >> 16;
+  h ^= dfsch_hash(n->denom);
+  return h;
+}
+
+dfsch_number_type_t dfsch_fracnum_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_NUMBER_TYPE,
+  sizeof(fracnum_t),
+  "fracnum",
+  (dfsch_type_equal_p_t)fracnum_equal_p,
+  (dfsch_type_write_t)fracnum_write,
+  NULL,
+  (dfsch_type_hash_t)fracnum_hash,
+};
+
+static dfsch_object_t* frac_cons(dfsch_object_t* num, dfsch_object_t* denom){
+  fracnum_t* f = (fracnum_t*)dfsch_make_object(DFSCH_FRACNUM_TYPE);
+  dfsch_object_t* n;
+  dfsch_object_t* d;
+  dfsch_object_t* x;
+  int negative = dfsch_number_negative_p(num) != dfsch_number_negative_p(denom);
+
+  n = dfsch_number_abs(num);
+  d = dfsch_number_abs(denom);
+
+  x = dfsch_number_gcd(n, d);
+  d = dfsch_number_div_i(d, x);
+  n = dfsch_number_div_i(n, x);
+
+  if (negative){
+    n = dfsch_number_neg(n);
+  }
+
+  if (d == DFSCH_MAKE_FIXNUM(1)){
+    return n;
+  }
+
+  f->num = n;
+  f->denom = d;
+
+  return (dfsch_object_t*)f;
+}
+
+dfsch_object_t* dfsch_number_numerator(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return ((fracnum_t*)n)->num;
+  }
+  if (dfsch_integer_p(n)){
+    return n;
+  }
+  dfsch_error("exception:not-a-rational-number", n);
+}
+dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return ((fracnum_t*)n)->denom;
+  }
+  if (dfsch_integer_p(n)){
+    return DFSCH_MAKE_FIXNUM(1);
+  }
+  dfsch_error("exception:not-a-rational-number", n);
+}
 
 dfsch_object_t* dfsch_make_number_from_double(double num){
   flonum_t *n;
@@ -144,9 +247,9 @@ static int dig_val[128] = {
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
   0,  1,  2,  3,   4,  5,  6,  7,   8,  9,  37, 37,  37, 37, 37, 37,
 
-  37, 10, 11, 12, 12,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
+  37, 10, 11, 12, 13,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
   25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37,
-  37, 10, 11, 12, 12,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
+  37, 10, 11, 12, 13,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
   25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37
 };
 
@@ -160,7 +263,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
 
   if (strchr(string, '.') != NULL || 
       (base == 10 && strpbrk(string, "eE") != NULL)){
-    if (base != 10){
+    if (base != 10 && base != 0){
       dfsch_error("exception:non-supported-base-for-real-numbers",
                   DFSCH_MAKE_FIXNUM(base));
     }
@@ -185,13 +288,14 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
     }
   }
 
-  while (*string && *string != '/' && on <= sn){
+  while (*string && *string != '/' && 
+         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
     d = dig_val[*string];
-    if (d > 36){
+    if (d >= base){
       dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
     }
-    sn *= base;
     on = sn;
+    sn *= base;
     sn += d;
     string++;
   }
@@ -214,11 +318,11 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
 
   while (*string && *string != '/'){
     d = dig_val[*string];
-    if (d > 36){
+    if (d >= base){
       dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
     }
     n = dfsch_number_mul(n, DFSCH_MAKE_FIXNUM(base));
-    n = dfsch_number_add(n, d);
+    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(d));
     string++;
   }
 
@@ -249,14 +353,17 @@ double dfsch_number_to_double(dfsch_object_t *n){
   if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_to_double((dfsch_bignum_t*)n);
   }
-
+  if (DFSCH_TYPE_OF(n)==DFSCH_FRACNUM_TYPE){
+    return dfsch_number_to_double(((fracnum_t*)n)->num) /
+    dfsch_number_to_double(((fracnum_t*)n)->denom);
+  }
   dfsch_error("exception:not-a-real-number", n);
 }
 long dfsch_number_to_long(dfsch_object_t *n){
   int64_t r;
 
   if (DFSCH_TYPE_OF(n)==DFSCH_FIXNUM_TYPE){
-    return DFSCH_FIXNUM_REF(n);
+    return DFSCH_FIXNUM_REF(n); /* we expect that fixnum fits in long */
   } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r) || 
         r < LONG_MIN || r > LONG_MAX){
@@ -265,7 +372,7 @@ long dfsch_number_to_long(dfsch_object_t *n){
 
     return r;
   }
-  dfsch_error("exception:not-a-exact-number", n);
+  dfsch_error("exception:not-an-integer", n);
 }
 
 int64_t dfsch_number_to_int64(dfsch_object_t *n){
@@ -280,10 +387,13 @@ int64_t dfsch_number_to_int64(dfsch_object_t *n){
 
     return r;
   }
-  dfsch_error("exception:not-a-exact-number", n);
+  dfsch_error("exception:not-an-integer", n);
 }
 
 char* dfsch_number_to_string(dfsch_object_t *n, int base){
+  
+
+  return dfsch_obj_write(n, 1, 1); /* fallback */
 }
 
 int dfsch_number_p(dfsch_object_t* obj){
@@ -360,28 +470,102 @@ int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b){
   return dfsch_number_cmp(a, b) >= 0;
 }
 
+int dfsch_number_sign(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    if (DFSCH_FIXNUM_REF(n) == 0){
+      return 0;
+    } else {
+      return (DFSCH_FIXNUM_REF(n) < 0) ? - 1 : 1;
+    }
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+    return dfsch_bignum_sign(n);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return dfsch_number_sign(((fracnum_t*)n)->num);
+  } else {
+    double nn = dfsch_number_to_double(n);
+    if (nn == 0.0){
+      return 0;
+    } else {
+      return (DFSCH_FIXNUM_REF(n) < 0) ? - 1 : 1;      
+    }
+  } 
+}
+
+/* numeric predicates */
+int dfsch_number_negative_p(dfsch_object_t* n){
+  return dfsch_number_sign(n) < 0;
+}
+int dfsch_number_positive_p(dfsch_object_t* n){
+  return dfsch_number_sign(n) > 0;
+}
+int dfsch_number_zero_p(dfsch_object_t* n){
+  return dfsch_number_sign(n) == 0;
+}
+int dfsch_number_even_p(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    return (DFSCH_FIXNUM_REF(n) & 0x01 == 0);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+      return dfsch_bignum_even_p(n);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return 0; /* proper fracnum cannot be integer */
+  } else {
+    double nn = dfsch_number_to_double(n);
+    nn /= 2.0;
+    return dfsch_bool(nn == round(nn));
+  }   
+}
+int dfsch_number_odd_p(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    return (DFSCH_FIXNUM_REF(n) & 0x01 == 1);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+      return !dfsch_bignum_even_p(n);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return 0; /* proper fracnum cannot be integer */
+  } else {
+    double nn = dfsch_number_to_double(n);
+    nn = (nn + 1.0) /2.0;
+    return dfsch_bool(nn == round(nn));
+  } 
+  
+}
+
+
 
 // Arithmetics
 
 dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b)){
-    if (DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
       long an = DFSCH_FIXNUM_REF(a)<<1;
       long bn = DFSCH_FIXNUM_REF(b)<<1;
       long x = an + bn;
       
-      if ((an^x) >= 0 || (bn^x) >= 0)
+      if ((an^x) >= 0 || (bn^x) >= 0) {
         return DFSCH_MAKE_FIXNUM(x>>1);
     }
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||
-      DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE){
+      DFSCH_TYPE_OF(b) == DFSCH_FLONUM_TYPE){
     return dfsch_make_number_from_double 
       (dfsch_number_to_double((dfsch_object_t*) a) + 
        dfsch_number_to_double((dfsch_object_t*) b));   
   }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
+    dfsch_object_t* c = dfsch_number_mul(dfsch_number_denominator(a), 
+                                         dfsch_number_denominator(b));
+
+    return 
+      frac_cons(dfsch_number_add(dfsch_number_mul(dfsch_number_numerator(a), 
+                                                  dfsch_number_denominator(b)),
+                                 dfsch_number_mul(dfsch_number_numerator(b),
+                                                  dfsch_number_denominator(a))),
+                c);
+  }
+
 
   return dfsch_bignum_to_number(dfsch_bignum_add(dfsch_bignum_from_number(a),
                                                  dfsch_bignum_from_number(b)));
@@ -400,10 +584,23 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||
-      DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE){
+      DFSCH_TYPE_OF(b) == DFSCH_FLONUM_TYPE){
     return dfsch_make_number_from_double 
       (dfsch_number_to_double((dfsch_object_t*) a) - 
        dfsch_number_to_double((dfsch_object_t*) b));   
+  }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
+    dfsch_object_t* c = dfsch_number_mul(dfsch_number_denominator(a), 
+                                         dfsch_number_denominator(b));
+
+    return 
+      frac_cons(dfsch_number_sub(dfsch_number_mul(dfsch_number_numerator(a), 
+                                                  dfsch_number_denominator(b)),
+                                 dfsch_number_mul(dfsch_number_numerator(b),
+                                                  dfsch_number_denominator(a))),
+                c);
   }
 
   return dfsch_bignum_to_number(dfsch_bignum_add(dfsch_bignum_from_number(a),
@@ -412,14 +609,22 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
 
 dfsch_object_t* dfsch_number_neg(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
-    
+    return dfsch_make_number_from_long(DFSCH_FIXNUM_REF(n));
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_to_number(dfsch_bignum_neg(n));
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
+    return frac_cons(dfsch_number_neg(((fracnum_t*)n)->num),
+                     ((fracnum_t*)n)->denom);
   } else {
     return dfsch_make_number_from_double(-dfsch_number_to_double(n));
   } 
-
-
+}
+dfsch_object_t* dfsch_number_abs(dfsch_object_t* n){
+  if (dfsch_number_negative_p(n)){
+    return dfsch_number_neg(n);
+  } else {
+    return n;
+  }
 }
 
 
@@ -445,11 +650,24 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||
-      DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE){
+      DFSCH_TYPE_OF(b) == DFSCH_FLONUM_TYPE){
     return dfsch_make_number_from_double 
       (dfsch_number_to_double((dfsch_object_t*) a) * 
        dfsch_number_to_double((dfsch_object_t*) b)); 
   }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
+    dfsch_object_t* c = dfsch_number_mul(dfsch_number_denominator(a), 
+                                         dfsch_number_denominator(b));
+
+    return 
+      frac_cons(dfsch_number_mul(dfsch_number_numerator(a), 
+                                 dfsch_number_numerator(b)),
+                dfsch_number_mul(dfsch_number_denominator(b),
+                                 dfsch_number_denominator(a)));
+  }
+
 
   return dfsch_bignum_to_number(dfsch_bignum_mul(dfsch_bignum_from_number(a),
                                                  dfsch_bignum_from_number(b)));
@@ -458,25 +676,48 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
 dfsch_object_t* dfsch_number_div (dfsch_object_t* a,  
                                   dfsch_object_t* b){ 
 
-  double an = dfsch_number_to_double((dfsch_object_t*) a);
-  double bn = dfsch_number_to_double((dfsch_object_t*) b);
- 
-  if (bn == 0.0)
-    dfsch_error("exception:division-by-zero", NULL);
+  if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FLONUM_TYPE){
+    double an = dfsch_number_to_double((dfsch_object_t*) a);
+    double bn = dfsch_number_to_double((dfsch_object_t*) b);
+  
+    if (bn == 0.0)
+      dfsch_error("exception:division-by-zero", NULL);
 
-  return dfsch_make_number_from_double(an / bn); 
+    return dfsch_make_number_from_double(an / bn); 
+  }
+
+  if (b == DFSCH_MAKE_FIXNUM(0)){
+      dfsch_error("exception:division-by-zero", NULL);
+  }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
+    dfsch_object_t* c = dfsch_number_mul(dfsch_number_denominator(a), 
+                                         dfsch_number_denominator(b));
+
+    return 
+      frac_cons(dfsch_number_mul(dfsch_number_numerator(a), 
+                                 dfsch_number_denominator(b)),
+                dfsch_number_mul(dfsch_number_denominator(a),
+                                 dfsch_number_numerator(b)));
+  }
+
+  return frac_cons(a, b);
 }
 dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,  
                                    dfsch_object_t* b){ 
   dfsch_bignum_t* r;
 
+  if (b == DFSCH_MAKE_FIXNUM(0)){
+      dfsch_error("exception:division-by-zero", NULL);
+  }
+
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
-    long an = dfsch_number_to_long((dfsch_object_t*) a);
-    long bn = dfsch_number_to_long((dfsch_object_t*) b);
+    long an = DFSCH_FIXNUM_REF(a);
+    long bn = DFSCH_FIXNUM_REF(b);
  
-    if (bn == 0)
-      dfsch_error("exception:division-by-zero", NULL);
     
     return dfsch_make_number_from_long(an / bn); 
   }
@@ -508,6 +749,29 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
 
   return dfsch_bignum_to_number(r);
 }
+
+dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
+                                 dfsch_object_t* b){
+  dfsch_object_t* t;
+  
+  if (dfsch_number_lt(a, b)){
+    t = a;
+    a = b;
+    b = t;
+  }
+
+  while (dfsch_number_sign(b) != 0){
+    a = dfsch_number_mod(a, b);
+    if (dfsch_number_lt(a, b)){
+      t = a;
+      a = b;
+      b = t;
+    }
+  }
+
+  return a;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -588,8 +852,8 @@ DFSCH_DEFINE_PRIMITIVE(slash_i, DFSCH_PRIMITIVE_CACHED){
     dfsch_error("exception:too-few-arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
-    return dfsch_number_div(dfsch_make_number_from_long(1), 
-                            DFSCH_FAST_CAR(i));
+    dfsch_error("exception:too-few-arguments",i);
+
   s = DFSCH_FAST_CAR(i);
   i = DFSCH_FAST_CDR(i);
   
@@ -698,7 +962,7 @@ DFSCH_DEFINE_PRIMITIVE(abs, DFSCH_PRIMITIVE_CACHED){
     }
   }
 
-  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+  if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_to_number(dfsch_bignum_abs((dfsch_bignum_t*)n));
   }
 
@@ -806,7 +1070,7 @@ DFSCH_DEFINE_PRIMITIVE(expt, DFSCH_PRIMITIVE_CACHED){
   if (errno == EDOM) // XXX
     dfsch_error("exception:not-in-argument-domain", 
                 dfsch_list(3, 
-                           dfsch_make_symbol("sqrt"),
+                           dfsch_make_symbol("expt"),
                            dfsch_make_number_from_double(z0),
                            dfsch_make_number_from_double(z1)));
 
@@ -814,51 +1078,38 @@ DFSCH_DEFINE_PRIMITIVE(expt, DFSCH_PRIMITIVE_CACHED){
 }
 
 DFSCH_DEFINE_PRIMITIVE(zero_p, DFSCH_PRIMITIVE_CACHED){
-  object_t *n;
-
+  dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  
-
-  return dfsch_bool(dfsch_number_to_double(n) == 0.0);
+  return dfsch_number_sign(n) == 0;
 }
 
 DFSCH_DEFINE_PRIMITIVE(positive_p, DFSCH_PRIMITIVE_CACHED){
-  object_t *n;
-
+  dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-
-  return dfsch_bool(dfsch_number_to_double(n) > 0.0);  
+  return dfsch_number_sign(n) > 0;
 }
 
 DFSCH_DEFINE_PRIMITIVE(negative_p, DFSCH_PRIMITIVE_CACHED){
-  object_t *n;
-
+  dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-
-  return dfsch_bool(dfsch_number_to_double(n) < 0.0);    
+  return dfsch_number_sign(n) < 0;
 }
 
 DFSCH_DEFINE_PRIMITIVE(even_p, DFSCH_PRIMITIVE_CACHED){
-  double n;
-
-  DFSCH_DOUBLE_ARG(args, n);
+  dfsch_object_t* n;
+  DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  
-  n = n / 2;
-  return dfsch_bool(n == round(n));
+  return dfsch_number_even_p(n);
 }
 
 DFSCH_DEFINE_PRIMITIVE(odd_p, DFSCH_PRIMITIVE_CACHED){
-  double n;
-
-  DFSCH_DOUBLE_ARG(args, n);
+  dfsch_object_t* n;
+  DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  
-  n = (n + 1) / 2;
-  return dfsch_bool(n == round(n));
+  return dfsch_number_odd_p(n);
 }
 
 DFSCH_DEFINE_PRIMITIVE(max, DFSCH_PRIMITIVE_CACHED){
@@ -924,7 +1175,6 @@ DFSCH_DEFINE_PRIMITIVE(number_2_string, DFSCH_PRIMITIVE_CACHED){
 }
 DFSCH_DEFINE_PRIMITIVE(string_2_number, DFSCH_PRIMITIVE_CACHED){
   char *str;
-  object_t *i;
   long base;
 
   DFSCH_STRING_ARG(args, str);
@@ -933,16 +1183,30 @@ DFSCH_DEFINE_PRIMITIVE(string_2_number, DFSCH_PRIMITIVE_CACHED){
 
   return dfsch_make_number_from_string(str, base);
 }
+DFSCH_DEFINE_PRIMITIVE(gcd, DFSCH_PRIMITIVE_CACHED){
+  object_t* a;
+  object_t* b;
 
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_gcd(a, b);
+}
 
 // TODO: exact?, inexact?, real?, integer? ...
 // TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
+  dfsch_define_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
+  dfsch_define_cstr(ctx, "<rational>", DFSCH_RATIONAL_TYPE);
   dfsch_define_cstr(ctx, "<integer>", DFSCH_INTEGER_TYPE);
+
   dfsch_define_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
   dfsch_define_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
+  dfsch_define_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
 
   dfsch_define_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
   dfsch_define_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
@@ -1000,5 +1264,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
                     DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
   dfsch_define_cstr(ctx, "most-negative-fixnum",
                     DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
+
+  dfsch_define_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
   
 }

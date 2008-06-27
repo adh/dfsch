@@ -1,6 +1,7 @@
 2008-06-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: bignum support in standard numeric API
+	(frac_cons): fracnums
 
 	* src/bignum.c: usable bignums (without reasonable input)
 

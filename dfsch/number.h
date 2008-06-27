@@ -37,6 +37,10 @@ extern "C" {
 
   extern dfsch_type_t dfsch_number_type;
 #define DFSCH_NUMBER_TYPE (&dfsch_number_type)
+  extern dfsch_type_t dfsch_real_type;
+#define DFSCH_REAL_TYPE (&dfsch_real_type)
+  extern dfsch_type_t dfsch_rational_type;
+#define DFSCH_RATIONAL_TYPE (&dfsch_rational_type)
   extern dfsch_type_t dfsch_integer_type;
 #define DFSCH_INTEGER_TYPE (&dfsch_integer_type)
 
@@ -46,6 +50,8 @@ extern "C" {
 #define DFSCH_FLONUM_TYPE ((dfsch_type_t*)&dfsch_flonum_type)
   extern dfsch_number_type_t dfsch_bignum_type;
 #define DFSCH_BIGNUM_TYPE ((dfsch_type_t*)&dfsch_bignum_type)
+  extern dfsch_number_type_t dfsch_fracnum_type;
+#define DFSCH_FRACNUM_TYPE ((dfsch_type_t*)&dfsch_fracnum_type)
 
   int dfsch_number_p(dfsch_object_t* obj);
   int dfsch_integer_p(dfsch_object_t* obj);
@@ -64,9 +70,13 @@ extern "C" {
   extern long dfsch_number_to_long(dfsch_object_t *n);
   /** Returns value of given number as int64_t. */
   extern int64_t dfsch_number_to_int64(dfsch_object_t *n);
+  extern char* dfsch_number_to_string(dfsch_object_t *n, int base);
 
   /** Creates number from external representation. */
   extern dfsch_object_t* dfsch_make_number_from_string(char* str, int base);
+
+  extern dfsch_object_t* dfsch_number_numerator(dfsch_object_t* n);
+  extern dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n);
 
   /** Add arguments. */
   extern dfsch_object_t* dfsch_number_add(dfsch_object_t* a, 
@@ -76,6 +86,8 @@ extern "C" {
                                           dfsch_object_t* b);
   /** Additive inverse */
   extern dfsch_object_t* dfsch_number_neg(dfsch_object_t* n);
+  /** Absolute value */
+  extern dfsch_object_t* dfsch_number_abs(dfsch_object_t* n);
 
   /** Multiply arguments */
   extern dfsch_object_t* dfsch_number_mul(dfsch_object_t* a, 
@@ -99,6 +111,16 @@ extern "C" {
   /** Greater than or equal operator */
   extern int dfsch_number_gte(dfsch_object_t* a, dfsch_object_t* b);
 
+  extern int dfsch_number_sign(dfsch_object_t* n);
+  extern int dfsch_number_negative_p(dfsch_object_t* n);
+  extern int dfsch_number_positive_p(dfsch_object_t* n);
+  extern int dfsch_number_zero_p(dfsch_object_t* n);
+  extern int dfsch_number_even_p(dfsch_object_t* n);
+  extern int dfsch_number_odd_p(dfsch_object_t* n);
+
+
+  extern dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
+                                          dfsch_object_t* b);
 
 #ifdef __cplusplus
 }

@@ -49,6 +49,8 @@ dfsch_bignum_t* dfsch_make_bignum_int64(int64_t n);
 int dfsch_bignum_cmp_abs(dfsch_bignum_t* a, dfsch_bignum_t* b);
 int dfsch_bignum_cmp(dfsch_bignum_t* a, dfsch_bignum_t* b);
 int dfsch_bignum_equal_p(dfsch_bignum_t* a, dfsch_bignum_t* b);
+int dfsch_bignum_sign(dfsch_bignum_t* a);
+int dfsch_bignum_even_p(dfsch_bignum_t* a);
 
 dfsch_bignum_t* dfsch_bignum_add(dfsch_bignum_t* a, dfsch_bignum_t* b);
 dfsch_bignum_t* dfsch_bignum_sub(dfsch_bignum_t* a, dfsch_bignum_t* b);
