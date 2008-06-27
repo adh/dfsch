@@ -1,3 +1,7 @@
+2008-06-27  Ales Hakl  <ales at hakl dot net>
+
+	* src/bignum.c: usable bignums (without reasonable input)
+
 2008-06-26  Ales Hakl  <ales at hakl dot net>
 
 	* src/bignum.c (bignum_div_big): reasonable bignum division
