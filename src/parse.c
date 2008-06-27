@@ -688,7 +688,7 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '8':
   case '9':
     {
-      dfsch_object_t *d = dfsch_make_number_from_string(data);
+      dfsch_object_t *d = dfsch_make_number_from_string(data, 0);
       if (!d) {
         parser_abort(ctx, "parser:invalid-number");
       }

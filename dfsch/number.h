@@ -37,6 +37,8 @@ extern "C" {
 
   extern dfsch_type_t dfsch_number_type;
 #define DFSCH_NUMBER_TYPE (&dfsch_number_type)
+  extern dfsch_type_t dfsch_integer_type;
+#define DFSCH_INTEGER_TYPE (&dfsch_integer_type)
 
   extern dfsch_number_type_t dfsch_fixnum_type;
 #define DFSCH_FIXNUM_TYPE ((dfsch_type_t*)&dfsch_fixnum_type)
@@ -45,17 +47,26 @@ extern "C" {
   extern dfsch_number_type_t dfsch_bignum_type;
 #define DFSCH_BIGNUM_TYPE ((dfsch_type_t*)&dfsch_bignum_type)
 
+  int dfsch_number_p(dfsch_object_t* obj);
+  int dfsch_integer_p(dfsch_object_t* obj);
+
+
   /** Makes number object from given floating-point number. */
   extern dfsch_object_t* dfsch_make_number_from_double(double n);
   /** Makes number object from given integer number. */
   extern dfsch_object_t* dfsch_make_number_from_long(long n);
+  /** Makes number object from int64_t */
+  extern dfsch_object_t* dfsch_make_number_from_int64(int64_t n);
+  
   /** Returns value of given number as double. */
   extern double dfsch_number_to_double(dfsch_object_t *n);
   /** Returns value of given number as long. */
   extern long dfsch_number_to_long(dfsch_object_t *n);
+  /** Returns value of given number as int64_t. */
+  extern int64_t dfsch_number_to_int64(dfsch_object_t *n);
 
   /** Creates number from external representation. */
-  extern dfsch_object_t* dfsch_make_number_from_string(char* str);
+  extern dfsch_object_t* dfsch_make_number_from_string(char* str, int base);
 
   /** Add arguments. */
   extern dfsch_object_t* dfsch_number_add(dfsch_object_t* a, 
@@ -63,6 +74,9 @@ extern "C" {
   /** Substract arguments. */
   extern dfsch_object_t* dfsch_number_sub(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  /** Additive inverse */
+  extern dfsch_object_t* dfsch_number_neg(dfsch_object_t* n);
+
   /** Multiply arguments */
   extern dfsch_object_t* dfsch_number_mul(dfsch_object_t* a, 
                                           dfsch_object_t* b);

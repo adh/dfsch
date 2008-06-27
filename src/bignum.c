@@ -31,6 +31,7 @@ struct dfsch_bignum_t {
 
 #define UINT64_DIGITS (64 / WORD_BITS + 1)
 
+
 typedef dfsch_bignum_t bignum_t;
 
 static uint32_t bignum_hash(bignum_t* n){
@@ -49,8 +50,11 @@ static uint32_t bignum_hash(bignum_t* n){
   return r;
 }
 
-static int bignum_equal_p(bignum_t* a, bignum_t* b){
+int dfsch_bignum_equal_p(bignum_t* a, bignum_t* b){
   if (a->length != b->length){
+    return 0;
+  }
+  if (a->length != 0 && a->negative != b->negative){
     return 0;
   }
   return memcmp(a->words, b->words, a->length*sizeof(word_t)) == 0;
@@ -63,10 +67,10 @@ static char* bignum_write(bignum_t* b, int max_depth, int readable){
 
 dfsch_number_type_t dfsch_bignum_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_NUMBER_TYPE,
+  DFSCH_INTEGER_TYPE,
   sizeof(bignum_t),
   "transient-bignum",
-  (dfsch_type_equal_p_t)bignum_equal_p,
+  (dfsch_type_equal_p_t)dfsch_bignum_equal_p,
   (dfsch_type_write_t)bignum_write,
   NULL,
   (dfsch_type_hash_t)bignum_hash
@@ -117,11 +121,89 @@ bignum_t* dfsch_make_bignum_int64(int64_t n){
     b = dfsch_make_bignum_uint64(-n);
     b->negative = 1;
   } else {
-    b = dfsch_make_bignum_uint64(-n);
+    b = dfsch_make_bignum_uint64(n);
     b->negative = 0;
   }
   return b;
 }
+
+static int word_mag(word_t w){
+  int i = 0;
+  while (w){
+    i++;
+    w >>= 1;
+  }
+  return i;
+}
+
+int dfsch_bignum_to_uint64(dfsch_bignum_t* b, uint64_t* rp){
+  uint64_t r = 0;
+  int i;
+
+  if (b->length == 0){
+    return 1;
+    if (rp){
+      *rp = 0;
+    }
+  }
+  if ((b->length-1)*WORD_BITS + word_mag(b->words[b->length - 1]) > 64 ){
+    return 0;
+  }
+  
+  if (rp){
+    if (UINT64_DIGITS > b->length + 1){
+      i = b->length + 1;
+    } else {
+      i = UINT64_DIGITS;
+    }
+
+    for (; i > 0; i--){
+      r |= b->words[i-1] & WORD_MASK;    return 0;
+      r <<= WORD_BITS;
+    }
+    
+    *rp = r;
+  }
+  return 1;
+}
+
+int dfsch_bignum_to_int64(bignum_t* b, int64_t* rp){
+  uint64_t t;
+  if (!dfsch_bignum_to_uint64(b, &t)){
+    return 0;
+
+  }
+  if (b->negative){
+    if (t > ((uint64_t)INT64_MAX) + 1){
+      return 0;
+    }
+    if (rp){
+      *rp = -t;
+    }
+    return 1;
+  } else {
+    if (t > INT64_MAX){
+      return 0;
+    }
+    if (rp){
+      *rp = t;
+    }
+    return 1;
+  }
+}
+
+double dfsch_bignum_to_double(dfsch_bignum_t* b){
+  double r= 0;
+  int i;
+
+  for (i = b->length+1; i > 0; i--){
+    r += b->words[i-1] & WORD_MASK;    return 0;
+    r *= WORD_BASE;
+  }
+
+  return r;
+}
+
 
 dfsch_bignum_t* dfsch_bignum_from_number(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
@@ -130,6 +212,7 @@ dfsch_bignum_t* dfsch_bignum_from_number(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return dfsch_make_bignum_int64(DFSCH_FIXNUM_REF(n));
   }
+  dfsch_error("exception:not-a-whole-number", n);
 }
 
 
@@ -339,6 +422,18 @@ bignum_t* dfsch_bignum_sub(bignum_t* a, bignum_t* b){
 
 
   return res;
+}
+dfsch_bignum_t* dfsch_bignum_neg(dfsch_bignum_t* a){
+  bignum_t* r = copy_bignum(a);
+  r->negative = ! a->negative;
+  return r;
+}
+dfsch_bignum_t* dfsch_bignum_abs(dfsch_bignum_t* a){
+  if (a->negative){
+    return dfsch_bignum_neg(a);
+  } else {
+    return a;
+  }
 }
 
 /*
@@ -688,7 +783,26 @@ dfsch_bignum_t* dfsch_bignum_from_bytes(char* buf, size_t len){
 
   return b;
 }
+int dfsch_bignum_even_p(dfsch_bignum_t* b){
+  if (b->length == 0){
+    return 1;
+  }
+  return b->words[0] & 0x01 == 0;
+}
 
+dfsch_object_t* dfsch_bignum_to_number(dfsch_bignum_t* b){
+  int64_t n;
+
+  if (!dfsch_bignum_to_int64(b, &n)){
+    return (dfsch_object_t*)b;
+  }
+
+  if (n > DFSCH_FIXNUM_MAX || n < DFSCH_FIXNUM_MIN){
+    return (dfsch_object_t*)b;
+  }
+
+  return DFSCH_MAKE_FIXNUM(n);
+}
 
 static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
   size_t len;
@@ -705,78 +819,29 @@ static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
   return b;
 }
 
-DFSCH_DEFINE_PRIMITIVE(make_bignum, 0){
-  return make_bignum_from_digits(args);
-}
-DFSCH_DEFINE_PRIMITIVE(bignum_add, 0){
-  bignum_t* a;
-  bignum_t* b;
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-
-
-  return dfsch_bignum_add(a, b);
-}
-DFSCH_DEFINE_PRIMITIVE(bignum_sub, 0){
-  bignum_t* a;
-  bignum_t* b;
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-
-
-  return dfsch_bignum_sub(a, b);
-}
-DFSCH_DEFINE_PRIMITIVE(bignum_mul, 0){
-  bignum_t* a;
-  bignum_t* b;
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-
-
-  return dfsch_bignum_mul(a, b);
-}
-DFSCH_DEFINE_PRIMITIVE(bignum_divmod, 0){
-  bignum_t* a;
-  bignum_t* b;
-  bignum_t* q;
-  bignum_t* r;
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-  
-  dfsch_bignum_div(a, b, &q, &r);
-
-  return dfsch_vector(2, q, r);
-}
-DFSCH_DEFINE_PRIMITIVE(bignum_exp, 0){
+DFSCH_DEFINE_PRIMITIVE(mod_expt, 0){
   bignum_t* b;
   bignum_t* e;
   bignum_t* m;
-  DFSCH_OBJECT_ARG(args, b);
-  DFSCH_OBJECT_ARG(args, e);
-  DFSCH_OBJECT_ARG_OPT(args, m, NULL);
+  DFSCH_BIGNUM_ARG(args, b);
+  DFSCH_BIGNUM_ARG(args, e);
+  DFSCH_BIGNUM_ARG(args, m);
+  DFSCH_ARG_END(args);
 
   return dfsch_bignum_exp(b, e, m);
 }
 
-DFSCH_DEFINE_PRIMITIVE(bignum_cmp, 0){
-  bignum_t* a;
-  bignum_t* b;
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-
-
-  return dfsch_bignum_cmp(a, b);
-}
-
 DFSCH_DEFINE_PRIMITIVE(bignum_2_bytes, 0){
   bignum_t* a;
-  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_BIGNUM_ARG(args, a);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_string_strbuf(dfsch_bignum_to_bytes(a));
 }
 DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
   dfsch_strbuf_t* a;
   DFSCH_BUFFER_ARG(args, a);
+  DFSCH_ARG_END(args);
 
   return dfsch_bignum_from_bytes(a->ptr, a->len);
 }
@@ -784,14 +849,8 @@ DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
 
 void dfsch__bignum_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
-  dfsch_define_cstr(ctx, "make-bignum", DFSCH_PRIMITIVE_REF(make_bignum));
-  dfsch_define_cstr(ctx, "bignum+", DFSCH_PRIMITIVE_REF(bignum_add));
-  dfsch_define_cstr(ctx, "bignum-", DFSCH_PRIMITIVE_REF(bignum_sub));
-  dfsch_define_cstr(ctx, "bignum*", DFSCH_PRIMITIVE_REF(bignum_mul));
-  dfsch_define_cstr(ctx, "bignum/%", DFSCH_PRIMITIVE_REF(bignum_divmod));
-  dfsch_define_cstr(ctx, "bignum-exp", DFSCH_PRIMITIVE_REF(bignum_exp));
-  dfsch_define_cstr(ctx, "bignum-cmp", DFSCH_PRIMITIVE_REF(bignum_cmp));
-  dfsch_define_cstr(ctx, "bignum->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
-  dfsch_define_cstr(ctx, "bytes->bignum", DFSCH_PRIMITIVE_REF(bytes_2_bignum));
-  
+  dfsch_define_cstr(ctx, "mod-expt", DFSCH_PRIMITIVE_REF(mod_expt));
+  dfsch_define_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
+  dfsch_define_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
 }
+

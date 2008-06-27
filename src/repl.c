@@ -167,7 +167,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
   case 0:
     exit(0);
   case 1:
-    if (dfsch_number_p(dfsch_car(args))){
+    if (dfsch_integer_p(dfsch_car(args))){
       exit((int)dfsch_number_to_long(dfsch_car(args)));
     }
   default:

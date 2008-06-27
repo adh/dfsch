@@ -173,6 +173,7 @@ typedef struct dfsch_pair_t {
 #define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 2)
 #define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 2)
 
+
 #define DFSCH_TYPE_OF(obj) \
   ((obj)?(                                                              \
           (((size_t)(obj)) & 0x03) == 0 ? (obj)->type:                  \
