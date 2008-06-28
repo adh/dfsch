@@ -353,7 +353,14 @@ static int weak_key_hash_ref(weak_key_hash_t* h,
   weak_hash_entry_t* e;
   uint32_t hash = ptr_hash(key);
   
-  /* TODO: GC locking */
+  /* 
+   * There is no need to perform any special locking regarding GC,
+   * worst possible outcome of race condition with GC here is returning
+   * value that should be instead discarded, but this is still perfectly 
+   * valid value. It is reasonable to expect that user code can cope with 
+   * this in some meaningful manner (with doing nothing being pretty 
+   * reasonable).
+   */
   DFSCH_RWLOCK_RDLOCK(h->lock);
 
   e = find_entry(&h->buckets[hash & h->mask], HIDE_OBJECT(key), &h->count);
