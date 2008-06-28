@@ -24,6 +24,7 @@
 #define H__dfsch__weak__
 
 #include <dfsch/dfsch.h>
+#include <dfsch/hash.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +47,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_weak_vector_set(dfsch_object_t* vector, 
                                                size_t k, 
                                                dfsch_object_t* obj);
+
+  extern dfsch_custom_hash_type_t dfsch_weak_key_hash_type;
+#define DFSCH_WEAK_KEY_HASH_TYPE ((dfsch_type_t*)&dfsch_weak_key_hash_type)
 
 #ifdef __cplusplus
 }

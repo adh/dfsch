@@ -2,6 +2,9 @@
 version 0.2.1                YYYY-MM-DD              svn rev. RRRR
 -----------------------------------------------------------------------------
 
+        * Bignums and fractions
+        * Effective representation of fixnums and conses
+        * Custom hash types
 
 -----------------------------------------------------------------------------
 version 0.2.0                2008-02-11              svn rev. 762

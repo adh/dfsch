@@ -772,7 +772,11 @@ dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
   return a;
 }
 
-
+dfsch_object_t* dfsch_number_lcm(dfsch_object_t* a,
+                                 dfsch_object_t* b){
+  return dfsch_number_div_i(dfsch_number_mul(a, b),
+                            dfsch_number_gcd(a, b));
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1194,9 +1198,19 @@ DFSCH_DEFINE_PRIMITIVE(gcd, DFSCH_PRIMITIVE_CACHED){
 
   return dfsch_number_gcd(a, b);
 }
+DFSCH_DEFINE_PRIMITIVE(lcm, DFSCH_PRIMITIVE_CACHED){
+  object_t* a;
+  object_t* b;
+
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_lcm(a, b);
+}
 
 // TODO: exact?, inexact?, real?, integer? ...
-// TODO: gcd, lcm
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
@@ -1266,5 +1280,6 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
                     DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
 
   dfsch_define_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
+  dfsch_define_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
   
 }

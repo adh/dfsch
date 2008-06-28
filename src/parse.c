@@ -186,6 +186,16 @@ static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
 
   dfsch_error(symbol, pos);
 }
+static void parser_abort_ex(dfsch_parser_ctx_t *ctx, dfsch_object_t* ex){
+  empty_queue(ctx->q);
+  ctx->tokenizer_state = T_NONE;
+  ctx->parser = NULL;
+  ctx->level = 0 ;
+  ctx->line = 1;
+  ctx->column = 1;
+  ctx->error = 0;
+  dfsch_raise(ex);
+}
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
   dfsch_parser_ctx_t *ctx = GC_MALLOC(sizeof(dfsch_parser_ctx_t));
@@ -432,8 +442,13 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       parser_abort(ctx, "parser:unexpected-object");
     }
   }else{
-    if (!(*ctx->callback)(obj,ctx->baton))
-      ctx->error = 1;
+    DFSCH_TRY {
+      if (!(*ctx->callback)(obj,ctx->baton)){
+        ctx->error = 1;
+      }
+    } DFSCH_CATCH(ex) {
+      parser_abort_ex(ctx, ex);
+    } DFSCH_END_TRY;
   }
 }
 
@@ -688,7 +703,12 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '8':
   case '9':
     {
-      dfsch_object_t *d = dfsch_make_number_from_string(data, 0);
+      dfsch_object_t *d;
+      DFSCH_TRY {
+        d = dfsch_make_number_from_string(data, 0);
+      } DFSCH_CATCH(ex) {
+        parser_abort_ex(ctx, ex);
+      } DFSCH_END_TRY;
       if (!d) {
         parser_abort(ctx, "parser:invalid-number");
       }
@@ -1041,7 +1061,7 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   ctx->error = 0;
 
   feed_queue(ctx->q, data);
-  
+
   tokenizer_process(ctx, get_queue(ctx->q));
 
   return ctx->error;

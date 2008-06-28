@@ -235,6 +235,178 @@ dfsch_object_t* dfsch_list_2_weak_vector(dfsch_object_t* list){
   return dfsch_weak_vector_from_array(data, length);
 }
 
+/*
+ * weak-key-hash
+ */ 
+
+#define HIDE_OBJECT(o) ((dfsch_object_t*) ~((size_t) (o)))
+#define REVEAL_OBJECT(o) HIDE_OBJECT(o)
+
+typedef struct weak_hash_entry_t weak_hash_entry_t;
+
+struct weak_hash_entry_t {
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  size_t live;
+  weak_hash_entry_t* next;
+};
+
+static weak_hash_entry_t* weak_hash_entry_create(dfsch_object_t* key,
+                                                 dfsch_object_t* value,
+                                                 weak_hash_entry_t* next){
+  weak_hash_entry_t* e = GC_NEW(weak_hash_entry_t);
+
+  e->key = key;
+  e->value = value;
+  e->next = next;
+  e->live = 1;
+
+  return e;
+}
+static weak_hash_entry_t* find_entry(weak_hash_entry_t** head,
+                                     dfsch_object_t* key,
+                                     size_t* count){
+  weak_hash_entry_t* tmp;
+  weak_hash_entry_t* i;
+  weak_hash_entry_t* res = NULL;
+
+  i = *head;
+
+  while (i && !i->live){
+    i = i->next;
+    *head = i;
+    (*count)--;
+  }
+
+  if (!i){
+    return NULL;
+  }
+
+  if (i->key == key){
+    res = i;
+  }
+  tmp = i;
+  i = i->next;
+
+  while (i){
+    if (!i->live){
+      tmp->next = i->next;
+      i = i->next;
+      (*count)--;
+      continue;
+    }
+    if (i->key == key){
+      res = i;
+    }
+    i = i->next;
+  }
+
+  return res;
+}
+
+typedef struct weak_key_hash_t {
+  dfsch_type_t* type;
+  dfsch_rwlock_t* lock;
+  size_t mask;
+  size_t count;
+  weak_hash_entry_t** buckets;
+} weak_key_hash_t;
+
+#define DEFAULT_WEAK_KEY_HASH_SIZE 128
+
+dfsch_object_t* dfsch_make_weak_key_hash(){
+  weak_key_hash_t* h = dfsch_make_object(DFSCH_WEAK_KEY_HASH_TYPE);
+
+  h->mask = DEFAULT_WEAK_KEY_HASH_SIZE - 1;
+  h->buckets = GC_MALLOC(DEFAULT_WEAK_KEY_HASH_SIZE*sizeof(weak_hash_entry_t*));
+  h->count = 0;
+  h->lock = DFSCH_CREATE_RWLOCK();
+
+  return (dfsch_object_t*)h;
+}
+
+static weak_hash_entry_t* weak_key_entry_create(dfsch_object_t* key,
+                                                dfsch_object_t* value,
+                                                weak_hash_entry_t* next){
+  weak_hash_entry_t* e = weak_hash_entry_create(HIDE_OBJECT(key), value, next);
+  register_weak_pointer(&e->live, key);
+  return e;
+}
+static size_t ptr_hash(dfsch_object_t* ptr){
+  size_t a = (size_t)ptr;        
+  size_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
+
+  a ^= b >> 2;
+  b ^= a >> 3;
+  a ^= b << 5;
+  b ^= a << 7;
+  a ^= b >> 11;
+  b ^= a >> 13;
+  a ^= b << 17;
+  b ^= a << 23;
+  
+  return b ^ a;
+}
+static int weak_key_hash_ref(weak_key_hash_t* h,
+                             dfsch_object_t* key,
+                             dfsch_object_t** res){
+  weak_hash_entry_t* e;
+  uint32_t hash = ptr_hash(key);
+  
+  /* TODO: GC locking */
+  DFSCH_RWLOCK_RDLOCK(h->lock);
+
+  e = find_entry(&h->buckets[hash & h->mask], HIDE_OBJECT(key), &h->count);
+
+  if (!e){
+    DFSCH_RWLOCK_UNLOCK(h->lock);
+    return 0;
+  }
+
+  
+  *res = e->value;
+  DFSCH_RWLOCK_UNLOCK(h->lock);
+  return 1;
+}
+static void weak_key_hash_set(weak_key_hash_t* h,
+                             dfsch_object_t* key,
+                             dfsch_object_t* value){
+  uint32_t hash = ptr_hash(key);
+  weak_hash_entry_t* e;
+  
+  DFSCH_RWLOCK_WRLOCK(h->lock);
+
+  e = find_entry(&h->buckets[hash & h->mask], HIDE_OBJECT(key), &h->count);
+  
+  if (e){
+    e->value = value;
+  }else{
+    h->count++;
+    h->buckets[hash & h->mask] = 
+      weak_key_entry_create(key,
+                            value,
+                            h->buckets[hash & h->mask]); 
+  }
+
+  DFSCH_RWLOCK_UNLOCK(h->lock);
+}
+
+dfsch_custom_hash_type_t dfsch_weak_key_hash_type = {
+  {
+    DFSCH_CUSTOM_HASH_TYPE_TYPE,
+    DFSCH_HASH_BASETYPE,
+    sizeof(weak_key_hash_t),
+    "weak-key-hash",
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  },
+  (dfsch_custom_hash_ref_t)weak_key_hash_ref,
+  (dfsch_custom_hash_set_t)weak_key_hash_set,
+  
+};
+
 
 
 /*
@@ -271,6 +443,7 @@ static dfsch_object_t* native_weak_reference_dereference(void *baton,
 
   return dfsch_weak_reference_dereference(reference);
 }
+
 
 /***************************************************************/
 
@@ -356,6 +529,14 @@ static dfsch_object_t* native_list_2_weak_vector(void *baton,
 
 /****************************************************************/
 
+DFSCH_DEFINE_PRIMITIVE(make_weak_key_hash, 0){
+  DFSCH_ARG_END(args);
+  return dfsch_make_weak_key_hash();
+}
+
+/****************************************************************/
+
+
 void dfsch__weak_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<weak-reference>", &reference_type);
   dfsch_define_cstr(ctx, "<weak-vector>", &weak_vector_type);
@@ -383,6 +564,9 @@ void dfsch__weak_native_register(dfsch_object_t *ctx){
                    dfsch_make_primitive(&native_weak_vector_2_list,NULL));
   dfsch_define_cstr(ctx, "list->weak-vector", 
                    dfsch_make_primitive(&native_list_2_weak_vector,NULL));
+
+  dfsch_define_cstr(ctx, "make-weak-key-hash", 
+                    DFSCH_PRIMITIVE_REF(make_weak_key_hash));
 
 }
 

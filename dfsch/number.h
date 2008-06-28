@@ -121,6 +121,8 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
                                           dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_lcm(dfsch_object_t* a,
+                                          dfsch_object_t* b);
 
 #ifdef __cplusplus
 }

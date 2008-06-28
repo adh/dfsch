@@ -1,3 +1,7 @@
+2008-06-28  Ales Hakl  <ales at hakl dot net>
+
+	* src/weak.c (weak_key_hash_ref): weak-key-hash
+
 2008-06-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c: bignum support in standard numeric API
