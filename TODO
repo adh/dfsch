@@ -20,8 +20,6 @@ Sometimes:
 * Some platform- and locale-independent conversion of numbers from/to strings
 * Unicode case-insensitive string compare
 * More number types:
-  - Big integers
-  - Fractions
   - Complex numbers (FP-only)
 * syntax-rules
 * Sound I/O
@@ -30,6 +28,5 @@ Sometimes:
 * FFI
 
 External modules and libraries:
-* XML (SXML, DOM)
 * JSON
 

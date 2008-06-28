@@ -399,9 +399,20 @@ char* dfsch_number_to_string(dfsch_object_t *n, int base){
 int dfsch_number_p(dfsch_object_t* obj){
   return DFSCH_INSTANCE_P(obj, DFSCH_NUMBER_TYPE);
 }
+int dfsch_real_p(dfsch_object_t* obj){
+  return DFSCH_INSTANCE_P(obj, DFSCH_REAL_TYPE);
+}
+int dfsch_rational_p(dfsch_object_t* obj){
+  return DFSCH_INSTANCE_P(obj, DFSCH_RATIONAL_TYPE);
+}
 int dfsch_integer_p(dfsch_object_t* obj){
   return DFSCH_INSTANCE_P(obj, DFSCH_INTEGER_TYPE);
 }
+int dfsch_number_exact_p(dfsch_object_t* obj){
+  return DFSCH_INSTANCE_P(obj, DFSCH_RATIONAL_TYPE);
+}
+
+
 int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b)){
     if (DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
@@ -791,6 +802,41 @@ DFSCH_DEFINE_PRIMITIVE(number_p, DFSCH_PRIMITIVE_CACHED){
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_number_p(obj));  
+}
+DFSCH_DEFINE_PRIMITIVE(real_p, DFSCH_PRIMITIVE_CACHED){
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_real_p(obj));  
+}
+DFSCH_DEFINE_PRIMITIVE(rational_p, DFSCH_PRIMITIVE_CACHED){
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_rational_p(obj));  
+}
+DFSCH_DEFINE_PRIMITIVE(integer_p, DFSCH_PRIMITIVE_CACHED){
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_integer_p(obj));  
+}
+DFSCH_DEFINE_PRIMITIVE(exact_p, DFSCH_PRIMITIVE_CACHED){
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_number_exact_p(obj));  
+}
+DFSCH_DEFINE_PRIMITIVE(inexact_p, DFSCH_PRIMITIVE_CACHED){
+  object_t *obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(!dfsch_number_exact_p(obj));  
 }
 
 DFSCH_DEFINE_PRIMITIVE(plus, DFSCH_PRIMITIVE_CACHED){
@@ -1210,8 +1256,6 @@ DFSCH_DEFINE_PRIMITIVE(lcm, DFSCH_PRIMITIVE_CACHED){
   return dfsch_number_lcm(a, b);
 }
 
-// TODO: exact?, inexact?, real?, integer? ...
-
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
   dfsch_define_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
@@ -1234,6 +1278,11 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
   dfsch_define_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
   dfsch_define_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
+  dfsch_define_cstr(ctx, "real?", DFSCH_PRIMITIVE_REF(real_p));
+  dfsch_define_cstr(ctx, "rational?", DFSCH_PRIMITIVE_REF(rational_p));
+  dfsch_define_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
+  dfsch_define_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
+  dfsch_define_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
 
   dfsch_define_cstr(ctx, "pi", 
                     dfsch_make_number_from_double(4*atan(1)));

@@ -41,7 +41,7 @@ typedef struct reference_t {
   size_t live;
 } reference_t;
 
-static const dfsch_type_t reference_type = {
+dfsch_type_t dfsch_weak_reference_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(reference_t),
@@ -64,7 +64,7 @@ static int register_weak_pointer(void** pointer, void* object){
 dfsch_object_t* dfsch_make_weak_reference(dfsch_object_t* refered){
   reference_t* ref = (reference_t*)GC_MALLOC_ATOMIC(sizeof(reference_t));
 
-  ref->type = (dfsch_type_t*)&reference_type;
+  ref->type = DFSCH_WEAK_REFERENCE_TYPE;
   
   ref->object = refered;
   ref->live = 1;
@@ -75,7 +75,7 @@ dfsch_object_t* dfsch_make_weak_reference(dfsch_object_t* refered){
 
 int dfsch_weak_reference_live_p(dfsch_object_t* reference){
   reference_t* ref;
-  if (DFSCH_TYPE_OF(reference) != &reference_type)
+  if (DFSCH_TYPE_OF(reference) != DFSCH_WEAK_REFERENCE_TYPE)
     dfsch_error("exception:not-a-reference", reference);
   ref = (reference_t*) reference;
 
@@ -93,7 +93,7 @@ dfsch_object_t* dereference(reference_t* ref){
 
 dfsch_object_t* dfsch_weak_reference_dereference(dfsch_object_t* reference){
   reference_t* ref;
-  if (DFSCH_TYPE_OF(reference) != &reference_type)
+  if (DFSCH_TYPE_OF(reference) != DFSCH_WEAK_REFERENCE_TYPE)
     dfsch_error("exception:not-a-reference", reference);
   ref = (reference_t*) reference;
 
@@ -125,7 +125,7 @@ static char* weak_vector_write(weak_vector_t* v, int max_depth, int readable){
   return sl_value(l);
 }
 
-static const dfsch_type_t weak_vector_type = {
+dfsch_type_t dfsch_weak_vector_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(weak_vector_t),
@@ -137,7 +137,7 @@ static const dfsch_type_t weak_vector_type = {
 };
 
 dfsch_object_t* dfsch_make_weak_vector(size_t length, dfsch_object_t* fill){
-  weak_vector_t* v = (weak_vector_t*)dfsch_make_object(&weak_vector_type);
+  weak_vector_t* v = (weak_vector_t*)dfsch_make_object(DFSCH_WEAK_VECTOR_TYPE);
   size_t i;
 
   v->length = length;
@@ -152,7 +152,7 @@ dfsch_object_t* dfsch_make_weak_vector(size_t length, dfsch_object_t* fill){
   return (dfsch_object_t*)v;
 }
 size_t dfsch_weak_vector_length(dfsch_object_t *vector){
-  if (DFSCH_TYPE_OF(vector) != &weak_vector_type)
+  if (DFSCH_TYPE_OF(vector) != DFSCH_WEAK_VECTOR_TYPE)
     return 0;
 
   return ((weak_vector_t*)vector)->length;  
@@ -160,7 +160,7 @@ size_t dfsch_weak_vector_length(dfsch_object_t *vector){
 
 dfsch_object_t** dfsch_weak_vector_as_array(dfsch_object_t *vector, 
                                             size_t *length){
-  if (DFSCH_TYPE_OF(vector) != &weak_vector_type)
+  if (DFSCH_TYPE_OF(vector) != DFSCH_WEAK_VECTOR_TYPE)
     dfsch_error("exception:not-a-weak-vector",vector);
 
   if (length){
@@ -172,7 +172,7 @@ dfsch_object_t** dfsch_weak_vector_as_array(dfsch_object_t *vector,
 
 dfsch_object_t* dfsch_weak_vector_from_array(dfsch_object_t **array, 
                                              size_t length){
-  weak_vector_t* v = (weak_vector_t*)dfsch_make_object(&weak_vector_type);
+  weak_vector_t* v = (weak_vector_t*)dfsch_make_object(DFSCH_WEAK_VECTOR_TYPE);
   size_t i;
 
   v->length = length;
@@ -190,7 +190,7 @@ dfsch_object_t* dfsch_weak_vector_from_array(dfsch_object_t **array,
 dfsch_object_t* dfsch_weak_vector_ref(dfsch_object_t *vector, size_t k){
   weak_vector_t* v;
 
-  if (DFSCH_TYPE_OF(vector) != &weak_vector_type)
+  if (DFSCH_TYPE_OF(vector) != DFSCH_WEAK_VECTOR_TYPE)
     dfsch_error("exception:not-a-weak-vector",vector);
 
   return v->data[k];
@@ -200,7 +200,7 @@ dfsch_object_t* dfsch_weak_vector_set(dfsch_object_t* vector, size_t k,
                                       dfsch_object_t* obj){
   weak_vector_t* v;
 
-  if (DFSCH_TYPE_OF(vector) != &weak_vector_type)
+  if (DFSCH_TYPE_OF(vector) != DFSCH_WEAK_VECTOR_TYPE)
     dfsch_error("exception:not-a-weak-vector",vector);
 
   v = (weak_vector_t*) vector;
@@ -221,7 +221,7 @@ dfsch_object_t* dfsch_weak_vector_set(dfsch_object_t* vector, size_t k,
 
 dfsch_object_t* dfsch_weak_vector_2_list(dfsch_object_t* vector){
 
-  if (DFSCH_TYPE_OF(vector) != &weak_vector_type)
+  if (DFSCH_TYPE_OF(vector) != DFSCH_WEAK_VECTOR_TYPE)
     dfsch_error("exception:not-a-vector",vector);
 
   return dfsch_list_from_array(((weak_vector_t*)vector)->data, 
@@ -545,8 +545,9 @@ DFSCH_DEFINE_PRIMITIVE(make_weak_key_hash, 0){
 
 
 void dfsch__weak_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<weak-reference>", &reference_type);
-  dfsch_define_cstr(ctx, "<weak-vector>", &weak_vector_type);
+  dfsch_define_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);
+  dfsch_define_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
+  dfsch_define_cstr(ctx, "<weak-key-hash>", DFSCH_WEAK_KEY_HASH_TYPE);
 
 
   dfsch_define_cstr(ctx, "make-weak-reference", 

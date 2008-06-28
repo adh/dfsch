@@ -54,7 +54,10 @@ extern "C" {
 #define DFSCH_FRACNUM_TYPE ((dfsch_type_t*)&dfsch_fracnum_type)
 
   int dfsch_number_p(dfsch_object_t* obj);
+  int dfsch_real_p(dfsch_object_t* obj);
+  int dfsch_rational_p(dfsch_object_t* obj);
   int dfsch_integer_p(dfsch_object_t* obj);
+  int dfsch_number_exact_p(dfsch_object_t* obj);
 
 
   /** Makes number object from given floating-point number. */
