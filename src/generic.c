@@ -78,7 +78,7 @@ static dfsch_object_t* generic_apply(generic_t* gen,
 
 static dfsch_type_t generic_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_FUNCTION_TYPE,
   sizeof(generic_t),
   "generic-function",
   NULL,

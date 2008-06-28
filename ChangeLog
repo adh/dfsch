@@ -1,5 +1,7 @@
 2008-06-28  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_get_object_properties): object properties
+
 	* dfsch/number.h: number type and exactness predicates
 
 	* src/weak.c (weak_key_hash_ref): weak-key-hash

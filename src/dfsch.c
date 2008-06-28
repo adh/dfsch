@@ -236,6 +236,17 @@ dfsch_type_t dfsch_list_type = {
   NULL
 };
 
+dfsch_type_t dfsch_standard_function_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "standard-function",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
 
 dfsch_type_t dfsch_empty_list_type = {
   DFSCH_STANDARD_TYPE,
@@ -311,7 +322,7 @@ static char* pair_write(dfsch_object_t*p, int max_depth, int readable){
 }
 
 static char* symbol_write(symbol_t*, int, int);
-static dfsch_type_t symbol_type = {
+dfsch_type_t dfsch_symbol_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(symbol_t), 
@@ -320,7 +331,7 @@ static dfsch_type_t symbol_type = {
   (dfsch_type_write_t)symbol_write,
   NULL
 };
-#define SYMBOL (&symbol_type) 
+#define SYMBOL DFSCH_SYMBOL_TYPE 
 static char* symbol_write(symbol_t* s, int max_depth, int readable){
   if (s->data){
     return s->data;
@@ -332,7 +343,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
 
 dfsch_type_t dfsch_primitive_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_STANDARD_FUNCTION_TYPE,
   sizeof(primitive_t),
   "primitive",
   NULL,
@@ -342,11 +353,11 @@ dfsch_type_t dfsch_primitive_type = {
 };
 #define PRIMITIVE (&dfsch_primitive_type)
 
-static char* closure_write(closure_t* c, int max_depth, int readable){
+static char* function_write(closure_t* c, int max_depth, int readable){
     str_list_t* l = sl_create();
 
     if (c->code == c->orig_code){
-      sl_append(l, "#<function ");
+      sl_append(l, "#<interpreted-function ");
     } else {
       sl_append(l, "#<compiled-function ");
     }
@@ -365,18 +376,18 @@ static char* closure_write(closure_t* c, int max_depth, int readable){
     return sl_value(l);
 }
 
-static dfsch_type_t closure_type = {
+dfsch_type_t dfsch_function_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_STANDARD_FUNCTION_TYPE,
   sizeof(closure_t),
   "function",
   NULL,
-  (dfsch_type_write_t)closure_write,
+  (dfsch_type_write_t)function_write,
   NULL
 };
-#define CLOSURE (&closure_type)
+#define CLOSURE DFSCH_FUNCTION_TYPE
 
-static dfsch_type_t macro_type = {
+dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(macro_t),
@@ -385,7 +396,7 @@ static dfsch_type_t macro_type = {
   NULL,
   NULL
 };
-#define MACRO (&macro_type)
+#define MACRO DFSCH_MACRO_TYPE
 
 dfsch_type_t dfsch_form_type = {
   DFSCH_STANDARD_TYPE,
@@ -452,7 +463,7 @@ static char* vector_write(vector_t* v, int max_depth, int readable){
   return sl_value(l);
 }
 
-static dfsch_type_t vector_type = {
+dfsch_type_t dfsch_vector_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(vector_t),
@@ -462,10 +473,10 @@ static dfsch_type_t vector_type = {
   NULL,
   (dfsch_type_hash_t)vector_hash
 };
-#define VECTOR (&vector_type)
+#define VECTOR DFSCH_VECTOR_TYPE
 
 
-static dfsch_type_t environment_type = {
+dfsch_type_t dfsch_environment_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(environment_t),
@@ -1727,18 +1738,95 @@ dfsch_object_t* dfsch_obj_read(char* str){
   return dfsch_car(list);
 }
 
+static dfsch_object_t* global_property_hash;
+static pthread_mutex_t global_property_hash_mutex;
+
+static dfsch_object_t* get_global_property_hash(){
+  if (!global_property_hash){
+    global_property_hash = dfsch_make_weak_key_hash();
+  }
+  return global_property_hash;
+}
+
+static dfsch_object_t* get_phash(dfsch_object_t* o){
+  if (!global_property_hash){
+    return NULL;
+  } else {
+    dfsch_object_t* p = NULL;
+    dfsch_hash_ref_fast(global_property_hash, o, &p);
+    return p;
+  }
+}
+static dfsch_object_t* make_phash(dfsch_object_t* o){
+  dfsch_object_t* p = NULL;
+  dfsch_object_t* gp;
+  pthread_mutex_lock(&global_property_hash_mutex);
+  gp = get_global_property_hash();
+  dfsch_hash_ref_fast(gp, o, &p);
+  if (!p){
+    p = dfsch_hash_make(DFSCH_HASH_EQ);
+    dfsch_hash_set(gp, o, p);
+  }
+  pthread_mutex_unlock(&global_property_hash_mutex);
+  return p;
+}
+
+
+dfsch_object_t* dfsch_get_object_properties(dfsch_object_t* o){
+  dfsch_object_t* ph = get_phash(o);
+  if (!ph){
+    return NULL;
+  }
+  return dfsch_hash_2_alist(ph);
+}
+dfsch_object_t* dfsch_get_object_property(dfsch_object_t* o,
+                                          dfsch_object_t* name){
+  dfsch_object_t* ph = get_phash(o);
+  dfsch_object_t* res = NULL;
+
+  if (!ph){
+    return NULL;
+  }
+  dfsch_hash_ref_fast(ph, name, &res);
+  return res;
+}
+void dfsch_set_object_property(dfsch_object_t* o,
+                                dfsch_object_t* name,
+                                dfsch_object_t* value){
+  dfsch_hash_set(make_phash(o), name, value);
+}
+void dfsch_unset_object_property(dfsch_object_t* o,
+                                 dfsch_object_t* name){
+  dfsch_hash_unset(make_phash(o), name);
+}
+
+dfsch_object_t* dfsch_get_property(dfsch_object_t* o,
+                                   char* name){
+  return dfsch_get_object_property(o, dfsch_make_symbol(name));
+}
+void dfsch_set_property(dfsch_object_t* o,
+                        char* name,
+                        dfsch_object_t* value){
+  dfsch_set_object_property(o, dfsch_make_symbol(name), value);
+}
+void dfsch_unset_property(dfsch_object_t* o,
+                          char* name){
+  dfsch_unset_object_property(o, dfsch_make_symbol(name));
+}
+
+
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
   return dfsch_new_frame_from_hash(parent, dfsch_hash_make(DFSCH_HASH_EQ));
 }
 dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
                                           dfsch_object_t* hash){
-  environment_t* e = (environment_t*)dfsch_make_object(&environment_type);
+  environment_t* e = (environment_t*)dfsch_make_object(DFSCH_ENVIRONMENT_TYPE);
 
   e->values = hash;
   e->decls = NULL;
   
-  if (parent && DFSCH_TYPE_OF(parent) != &environment_type){
+  if (parent && DFSCH_TYPE_OF(parent) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", parent);
   }
 
@@ -1751,7 +1839,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
 
-  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", env);
   }
 
@@ -1769,7 +1857,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", env);
   }
 
@@ -1791,7 +1879,7 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", env);
   }
 
@@ -1809,7 +1897,7 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
 void dfsch_unset(object_t* name, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", env);
   }
 
@@ -1829,7 +1917,7 @@ void dfsch_unset(object_t* name, object_t* env){
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
-  if (env && DFSCH_TYPE_OF(env) != &environment_type){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("exception:not-an-environment", env);
   }
 
@@ -2203,18 +2291,19 @@ dfsch_object_t* dfsch_make_context(){
 
   dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
   dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
+  dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
 
 
   dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<pair>", PAIR);
+  dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
   dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<symbol>", SYMBOL);
-  dfsch_define_cstr(ctx, "<primitive>", PRIMITIVE);
-  dfsch_define_cstr(ctx, "<function>", CLOSURE);
-  dfsch_define_cstr(ctx, "<macro>", MACRO);
-  dfsch_define_cstr(ctx, "<form>", FORM);
+  dfsch_define_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
+  dfsch_define_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
+  dfsch_define_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
+  dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
+  dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
   dfsch_define_cstr(ctx, "<exception>", EXCEPTION);
-  dfsch_define_cstr(ctx, "<vector>", VECTOR);
+  dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
 
 
   dfsch_define_cstr(ctx, "top-level-environment", 

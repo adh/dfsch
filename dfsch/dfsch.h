@@ -386,6 +386,24 @@ extern "C" {
   extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
   extern dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e);
 
+  /* Object properties */
+
+  extern dfsch_object_t* dfsch_get_object_properties(dfsch_object_t* o);
+  extern dfsch_object_t* dfsch_get_object_property(dfsch_object_t* o,
+                                                   dfsch_object_t* name);
+  extern void dfsch_set_object_property(dfsch_object_t* o,
+                                        dfsch_object_t* name,
+                                        dfsch_object_t* value);
+  extern void dfsch_unset_object_property(dfsch_object_t* o,
+                                          dfsch_object_t* name);
+  extern dfsch_object_t* dfsch_get_property(dfsch_object_t* o,
+                                            char* name);
+  extern void dfsch_set_property(dfsch_object_t* o,
+                                 char* name,
+                                 dfsch_object_t* value);
+  extern void dfsch_unset_property(dfsch_object_t* o,
+                                   char* name);
+
   // Lexical binding:
   /** Create new environment frame. */
   extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);

@@ -721,6 +721,7 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
 
   DFSCH_OBJECT_ARG(args, macro);
   DFSCH_OBJECT_ARG(args, arguments);
+  DFSCH_ARG_END(args);
 
   return dfsch_macro_expand(macro, arguments);
 }
@@ -731,12 +732,14 @@ DFSCH_DEFINE_PRIMITIVE(compile, 0){
   DFSCH_OBJECT_ARG(args, expression);
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_LONG_ARG_OPT(args, depth, 256);
+  DFSCH_ARG_END(args);
 
   return dfsch_compile(expression, env, depth);
 }
 DFSCH_DEFINE_PRIMITIVE(compile_function, 0){
   dfsch_object_t* function;
   DFSCH_OBJECT_ARG(args, function);
+  DFSCH_ARG_END(args);
 
   dfsch_compile_function(function);
   return function;
@@ -746,8 +749,52 @@ DFSCH_DEFINE_PRIMITIVE(destructure, 0){
   dfsch_object_t* list;
   DFSCH_OBJECT_ARG(args, llist);
   DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
 
   return dfsch_destructure(llist, list);
+}
+
+/*
+ * Properties
+ */
+
+DFSCH_DEFINE_PRIMITIVE(get_properties, 0){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_get_object_properties(obj);
+}
+DFSCH_DEFINE_PRIMITIVE(get_property, 0){
+  dfsch_object_t* obj;
+  dfsch_object_t* name;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_get_object_property(obj, name);
+}
+DFSCH_DEFINE_PRIMITIVE(set_property, 0){
+  dfsch_object_t* obj;
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_object_property(obj, name, value);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(unset_property, 0){
+  dfsch_object_t* obj;
+  dfsch_object_t* name;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+  dfsch_unset_object_property(obj, name);
+  return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -863,6 +910,12 @@ void dfsch__native_register(dfsch_object_t *ctx){
                    DFSCH_PRIMITIVE_REF(compile_function));
   dfsch_define_cstr(ctx, "destructure", 
                    DFSCH_PRIMITIVE_REF(destructure));
+
+  dfsch_define_cstr(ctx, "get-properties", DFSCH_PRIMITIVE_REF(get_properties));
+  dfsch_define_cstr(ctx, "get-property", DFSCH_PRIMITIVE_REF(get_property));
+  dfsch_define_cstr(ctx, "set-property!", DFSCH_PRIMITIVE_REF(set_property));
+  dfsch_define_cstr(ctx, "unset-property!", 
+                    DFSCH_PRIMITIVE_REF(unset_property));
 
 
   dfsch__native_cxr_register(ctx);

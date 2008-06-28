@@ -28,9 +28,22 @@
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
   extern dfsch_type_t dfsch_list_type;
 #define DFSCH_LIST_TYPE ((dfsch_type_t*)&dfsch_list_type)
+  extern dfsch_type_t dfsch_function_type;
+#define DFSCH_STANDARD_FUNCTION_TYPE \
+  ((dfsch_type_t*)&dfsch_standard_function_type)
   extern dfsch_type_t dfsch_empty_list_type;
 #define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
 
+extern dfsch_type_t dfsch_symbol_type;
+#define DFSCH_SYMBOL_TYPE (&dfsch_symbol_type)
+extern dfsch_type_t dfsch_function_type;
+#define DFSCH_FUNCTION_TYPE (&dfsch_function_type)
+extern dfsch_type_t dfsch_macro_type;
+#define DFSCH_MACRO_TYPE (&dfsch_macro_type)
+extern dfsch_type_t dfsch_vector_type;
+#define DFSCH_VECTOR_TYPE (&dfsch_vector_type)
+extern dfsch_type_t dfsch_environment_type;
+#define DFSCH_ENVIRONMENT_TYPE (&dfsch_environment_type)
 
   typedef struct dfsch_primitive_t {
     dfsch_type_t* type;
