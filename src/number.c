@@ -31,9 +31,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#define SMALLNUM_ORIGIN  -32
-#define SMALLNUM_COUNT   64
-
 typedef dfsch_object_t object_t;
 
 typedef struct flonum_t {
@@ -423,27 +420,11 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
                                   (dfsch_bignum_t*)b);
     }
     if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE){
-      return dfsch__number_eqv_p(((fracnum_t*)a)->num, ((fracnum_t*)a)->num) &&
-        dfsch__number_eqv_p(((fracnum_t*)a)->denom, ((fracnum_t*)a)->denom);
+      return dfsch_number_equal_p(((fracnum_t*)a)->num, ((fracnum_t*)a)->num) &&
+        dfsch_number_equal_p(((fracnum_t*)a)->denom, ((fracnum_t*)a)->denom);
     }
   }
    
-  return dfsch_number_to_double(a) == dfsch_number_to_double(b);
-}
-int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
-  /* 
-   * No need to handle fixnum case, fixnums are eq? and thus eqv?
-   */
-
-  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE){
-    return dfsch_bignum_equal_p((dfsch_bignum_t*)a, 
-                                (dfsch_bignum_t*)b);
-  }
-  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE){
-    return dfsch__number_eqv_p(((fracnum_t*)a)->num, ((fracnum_t*)a)->num) &&
-      dfsch__number_eqv_p(((fracnum_t*)a)->denom, ((fracnum_t*)a)->denom);
-  }
-
   return dfsch_number_to_double(a) == dfsch_number_to_double(b);
 }
 
