@@ -422,6 +422,10 @@ int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b){
       return dfsch_bignum_equal_p((dfsch_bignum_t*)a, 
                                   (dfsch_bignum_t*)b);
     }
+    if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE){
+      return dfsch__number_eqv_p(((fracnum_t*)a)->num, ((fracnum_t*)a)->num) &&
+        dfsch__number_eqv_p(((fracnum_t*)a)->denom, ((fracnum_t*)a)->denom);
+    }
   }
    
   return dfsch_number_to_double(a) == dfsch_number_to_double(b);
@@ -431,10 +435,13 @@ int dfsch__number_eqv_p(dfsch_object_t* a, dfsch_object_t* b){
    * No need to handle fixnum case, fixnums are eq? and thus eqv?
    */
 
-  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
-      DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE){
+  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_equal_p((dfsch_bignum_t*)a, 
                                 (dfsch_bignum_t*)b);
+  }
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE){
+    return dfsch__number_eqv_p(((fracnum_t*)a)->num, ((fracnum_t*)a)->num) &&
+      dfsch__number_eqv_p(((fracnum_t*)a)->denom, ((fracnum_t*)a)->denom);
   }
 
   return dfsch_number_to_double(a) == dfsch_number_to_double(b);
@@ -454,17 +461,27 @@ int dfsch_number_cmp(dfsch_object_t* a, dfsch_object_t* b){
     if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE){
       return dfsch_bignum_cmp((dfsch_bignum_t*)a, (dfsch_bignum_t*)b);
     }
-  }else if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE ||
+  }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE ||
+            DFSCH_TYPE_OF(b) == DFSCH_BIGNUM_TYPE){
+    return dfsch_number_cmp(dfsch_number_mul(dfsch_number_numerator(a),
+                                             dfsch_number_denominator(b)),
+                            dfsch_number_mul(dfsch_number_numerator(b),
+                                             dfsch_number_denominator(a)));
+  }
+
+  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE ||
             DFSCH_TYPE_OF(b) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_cmp(dfsch_bignum_from_number(a), 
                             dfsch_bignum_from_number(b));    
-  }else{
-    if (dfsch_number_to_double(a) == dfsch_number_to_double(b)){
-      return 0;
-    } else {
-      return (dfsch_number_to_double(a) < dfsch_number_to_double(b)) ?
-        -1 : 1;
-    }
+  }
+   
+  if (dfsch_number_to_double(a) == dfsch_number_to_double(b)){
+    return 0;
+  } else {
+    return (dfsch_number_to_double(a) < dfsch_number_to_double(b)) ?
+      -1 : 1;
   }
 }
 

@@ -82,7 +82,7 @@ int dfsch_eqv_p(dfsch_object_t *a, dfsch_object_t *b){
     return 0;
 
   if ((DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b)) && dfsch_number_p(a))
-    return dfsch__number_eqv_p(a,b);
+    return dfsch_number_equal_p(a,b);
 
   return 0;
 }
