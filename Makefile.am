@@ -21,7 +21,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/ports.h\
 	dfsch/load.h \
 	dfsch/util.h \
-	dfsch/compiler.h
+	dfsch/compiler.h\
+	dfsch/bignum.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-extref.la \
@@ -40,7 +41,7 @@ dfschlibscm_DATA = scm/struct.scm
 
 man_MANS = doc/dfsch-repl.1
 
-EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/lib.scm \
+EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/struct.scm \
 	doc/dfsch-repl.1
 
 
@@ -50,8 +51,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/control.c src/system.c 	\
 	src/util.c src/util.h 		\
 	src/hash.c dfsch/hash.h 	\
-	src/promise.c dfsch/promise.h 	\	
-	src/number.c dfsch/number.h src/bignum.c	\
+	src/promise.c dfsch/promise.h 	\
+	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
 	src/strings.c dfsch/strings.h 	\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
