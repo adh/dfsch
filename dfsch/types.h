@@ -168,9 +168,9 @@ typedef struct dfsch_pair_t {
 } dfsch_pair_t;
 
 #define DFSCH_PAIR_REF(obj)                     \
-  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x03))
+  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x03L))
 #define DFSCH_PAIR_ENCODE(obj)                  \
-  ((dfsch_object_t*)(((size_t)(obj)) | 0x02))
+  ((dfsch_object_t*)(((size_t)(obj)) | 0x02L))
 
 #define DFSCH_FAST_CAR(obj)                     \
   (DFSCH_PAIR_REF(obj)->car)
@@ -180,9 +180,9 @@ typedef struct dfsch_pair_t {
   ((((size_t)(obj)) & 0x03) == 2)
 
 #define DFSCH_FIXNUM_REF(obj)\
-  (((long)(((ptrdiff_t)(obj)) & ~0x01)) >> 1)
+  (((long)(((ptrdiff_t)(obj)) & ~0x01L)) >> 1)
 #define DFSCH_MAKE_FIXNUM(obj)\
-  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 1) | 0x01))
+  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 1) | 0x01L))
 #define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 2)
 #define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 2)
 

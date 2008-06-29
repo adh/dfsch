@@ -98,7 +98,7 @@ dfsch_type_t dfsch_integer_type = {
 
 
 static char* fixnum_write(dfsch_object_t* n, int max_depth, int readable){
-  return saprintf("%d", DFSCH_FIXNUM_REF(n));
+  return saprintf("%ld", DFSCH_FIXNUM_REF(n));
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {
