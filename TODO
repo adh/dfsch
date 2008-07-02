@@ -18,7 +18,10 @@ Sometimes:
 * Documentation
 * Better format
 * Some platform- and locale-independent conversion of numbers from/to strings
-* Unicode case-insensitive string compare
+* Unicode
+  - Case conversions
+  - Normalization
+  - Collation
 * More number types:
   - Complex numbers (FP-only)
 * syntax-rules
