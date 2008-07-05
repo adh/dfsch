@@ -260,7 +260,8 @@
        (test 'utf8->list (string->list "ab©") '(97 98 169))
        (test 'list->utf8 (list->string '(0x3042 0x3044 0x3046 
                                                 0x3048 0x304a))
-             "あいうえお"))
+             "あいうえお")
+       (test 'upcase (char-upcase 97) 65))
 
 (group "some special cases"
 
