@@ -1,7 +1,13 @@
 #include <gc/gc.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "udata.h"
+
+typedef struct udata_entry_t{
+  char category[3];
+  int32_t upper_offset;
+  int32_t lower_offset;
+  int32_t title_offset;
+} udata_entry_t;
 
 #define BLOCK_NONE  0
 #define BLOCK_START 1
@@ -207,16 +213,15 @@ void emit_tables(){
          " */\n\n");
   printf("#include <stdint.h>\n"
          "typedef struct udata_entry_t{\n"
-         "  char category[2];\n"
+         "  char category[3];\n"
          "  int32_t upper_offset;\n"
          "  int32_t lower_offset;\n"
          "  int32_t title_offset;\n"
-         "  int32_t digit_offset;\n"  
          "} udata_entry_t;\n\n");
 
   printf("#define FIRST_SIZE %d\n", FIRST_SIZE);
   printf("#define SECOND_SIZE %d\n\n", SECOND_SIZE);
-  printf("unsigned char udata_table_type[] = {\n");
+  printf("static unsigned char udata_table_type[] = {\n");
   for (i = 0; i < FIRST_SIZE/8; i++){
     printf(" ");
     for (k = 0; k < 8; k++){
@@ -226,7 +231,7 @@ void emit_tables(){
   }
 
   printf("};\n\n");
-  printf("unsigned char udata_tables[][%d] = {\n", SECOND_SIZE);
+  printf("static unsigned char udata_tables[][%d] = {\n", SECOND_SIZE);
   for (i = 0; i < tables_count; i++){
     printf("  {\n");
     for (j = 0; j < SECOND_SIZE / 8; j++) {
@@ -239,14 +244,19 @@ void emit_tables(){
     printf("  },\n");
   }
   printf("};\n\n");
-  printf("udata_entry_t udata_properties[] = {\n");
+  printf("static udata_entry_t udata_properties[] = {\n");
   for (i = 0; i < distinct_count; i++){
-    printf("  {{%d, %d}, %d, %d, %d},\n", 
+    printf("  {\"%c%c\", %d, %d, %d},\n", 
            distinct[i].category[0], distinct[i].category[1],
            distinct[i].upper_offset, distinct[i].lower_offset,
            distinct[i].title_offset);
   }
   printf("};\n");
+  printf("#define UDATA_ENTRY(n) \\\n"
+         "   (udata_properties[udata_tables["
+         "udata_table_type[((n) / SECOND_SIZE) %% FIRST_SIZE]]"
+         "[(n) %% SECOND_SIZE]])\n");
+  printf("#define UDATA_MAX %d\n", FIRST_SIZE*SECOND_SIZE);
 }
 
 int main(int argc, char**argv){

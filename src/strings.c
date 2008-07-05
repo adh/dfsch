@@ -24,6 +24,8 @@
 #include "types.h"
 #include <string.h>
 
+#include "udata.h"
+
 typedef struct dfsch_string_t {
   dfsch_type_t* type;
   char* ptr;
@@ -571,10 +573,10 @@ typedef struct utf8_substring_ctx_t{
 static int utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c, 
                              size_t start, size_t end){
   
-  if (c->len = c->start){
+  if (c->len == c->start){
     c->sptr = start;
   }
-  if (c->len = c->end){
+  if (c->len == c->end){
     c->eptr = start;
     return 1;
   }
@@ -699,7 +701,20 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   }
 
   return (object_t*)string;
+}
 
+uint32_t dfsch_char_downcase(uint32_t c){
+  return UDATA_ENTRY(c).lower_offset + c;
+}
+uint32_t dfsch_char_upcase(uint32_t c){
+  return UDATA_ENTRY(c).upper_offset + c;
+}
+uint32_t dfsch_char_titlecase(uint32_t c){
+  return UDATA_ENTRY(c).title_offset + c;
+}
+
+char* dfsch_char_category(uint32_t c){
+  return UDATA_ENTRY(c).category;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -709,12 +724,12 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
 /////////////////////////////////////////////////////////////////////////////
 
 
-static object_t* native_string_append(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_append, 0){ 
   
   return dfsch_string_list_append(args);
 
 }
-static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_ref, 0){
   size_t index;
   object_t* string;
 
@@ -725,7 +740,7 @@ static object_t* native_string_ref(void *baton, object_t* args, dfsch_tail_escap
   return dfsch_make_number_from_long((unsigned char)dfsch_string_ref(string, index));
 
 }
-static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_length, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
@@ -733,7 +748,7 @@ static object_t* native_string_length(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
-static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_utf8_ref, 0){
   size_t index;
   object_t* string;
 
@@ -744,7 +759,7 @@ static object_t* native_string_utf8_ref(void *baton, object_t* args, dfsch_tail_
   return dfsch_make_number_from_long(dfsch_string_utf8_ref(string, index));
 
 }
-static object_t* native_string_utf8_length(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_utf8_length, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
@@ -752,7 +767,7 @@ static object_t* native_string_utf8_length(void *baton, object_t* args, dfsch_ta
 
   return dfsch_make_number_from_long(dfsch_string_utf8_length(string));
 }
-static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_2_list, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
@@ -760,7 +775,7 @@ static object_t* native_string_2_list(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_string_2_list(string);
 }
-static object_t* native_string_utf8_2_list(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_utf8_2_list, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
@@ -768,7 +783,7 @@ static object_t* native_string_utf8_2_list(void *baton, object_t* args, dfsch_ta
 
   return dfsch_string_utf8_2_list(string);
 }
-static object_t* native_list_2_string(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_2_string, 0){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -776,7 +791,7 @@ static object_t* native_list_2_string(void *baton, object_t* args, dfsch_tail_es
 
   return dfsch_list_2_string(list);
 }
-static object_t* native_list_2_string_utf8(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_2_string_utf8, 0){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -784,7 +799,7 @@ static object_t* native_list_2_string_utf8(void *baton, object_t* args, dfsch_ta
 
   return dfsch_list_2_string_utf8(list);
 }
-static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_PRIMITIVE_HEAD(string_cmp_p){
   object_t* a;
   object_t* b;
 
@@ -794,7 +809,7 @@ static object_t* native_string_cmp_p(void *baton, object_t* args, dfsch_tail_esc
 
   return dfsch_bool(((int (*)(object_t*,object_t*)) baton)(a, b));
 }
-static object_t* native_substring(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(substring, 0){
   size_t start, end;
   object_t* string;
 
@@ -806,7 +821,7 @@ static object_t* native_substring(void *baton, object_t* args, dfsch_tail_escape
   return dfsch_string_substring(string, start, end);
 
 }
-static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(substring_utf8, 0){
   size_t start, end;
   object_t* string;
 
@@ -819,65 +834,100 @@ static object_t* native_substring_utf8(void *baton, object_t* args, dfsch_tail_e
 
 }
 
+DFSCH_DEFINE_PRIMITIVE(char_downcase, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_make_number_from_long(dfsch_char_downcase(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_upcase, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_make_number_from_long(dfsch_char_upcase(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_titlecase, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_make_number_from_long(dfsch_char_titlecase(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_category, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_make_string_cstr(dfsch_char_category(ch));
+}
+
+
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<string>", &string_type);
 
 
   dfsch_define_cstr(ctx, "string-append", 
-		   dfsch_make_primitive(&native_string_append,NULL));
+		   DFSCH_PRIMITIVE_REF(string_append));
+  dfsch_define_cstr(ctx, "substring-bytes", 
+		   DFSCH_PRIMITIVE_REF(substring));
   dfsch_define_cstr(ctx, "substring", 
-		   dfsch_make_primitive(&native_substring,NULL));
-  dfsch_define_cstr(ctx, "substring-utf8", 
-		   dfsch_make_primitive(&native_substring_utf8,NULL));
+		   DFSCH_PRIMITIVE_REF(substring_utf8));
+  dfsch_define_cstr(ctx, "string-ref-byte", 
+		   DFSCH_PRIMITIVE_REF(string_ref));
   dfsch_define_cstr(ctx, "string-ref", 
-		   dfsch_make_primitive(&native_string_ref,NULL));
-  dfsch_define_cstr(ctx, "string-utf8-ref", 
-		   dfsch_make_primitive(&native_string_utf8_ref,NULL));
+		   DFSCH_PRIMITIVE_REF(string_utf8_ref));
+  dfsch_define_cstr(ctx, "string-byte", 
+		   DFSCH_PRIMITIVE_REF(string_length));
   dfsch_define_cstr(ctx, "string-length", 
-		   dfsch_make_primitive(&native_string_length,NULL));
-  dfsch_define_cstr(ctx, "string-utf8-length", 
-		   dfsch_make_primitive(&native_string_utf8_length,NULL));
+		   DFSCH_PRIMITIVE_REF(string_utf8_length));
+  dfsch_define_cstr(ctx, "string->byte-list", 
+		   DFSCH_PRIMITIVE_REF(string_2_list));
   dfsch_define_cstr(ctx, "string->list", 
-		   dfsch_make_primitive(&native_string_2_list,NULL));
-  dfsch_define_cstr(ctx, "string-utf8->list", 
-		   dfsch_make_primitive(&native_string_utf8_2_list,NULL));
+		   DFSCH_PRIMITIVE_REF(string_utf8_2_list));
+  dfsch_define_cstr(ctx, "byte-list->string", 
+		   DFSCH_PRIMITIVE_REF(list_2_string));
   dfsch_define_cstr(ctx, "list->string", 
-		   dfsch_make_primitive(&native_list_2_string,NULL));
-  dfsch_define_cstr(ctx, "list->string-utf8", 
-		   dfsch_make_primitive(&native_list_2_string_utf8,NULL));
+		   DFSCH_PRIMITIVE_REF(list_2_string_utf8));
 
 
   dfsch_define_cstr(ctx, "string=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_eq_p));
   dfsch_define_cstr(ctx, "string<?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_lt_p));
   dfsch_define_cstr(ctx, "string>?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_gt_p));
   dfsch_define_cstr(ctx, "string<=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_lte_p));
   dfsch_define_cstr(ctx, "string>=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_gte_p));
 
   dfsch_define_cstr(ctx, "string-ci=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_eq_p));
   dfsch_define_cstr(ctx, "string-ci<?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_lt_p));
   dfsch_define_cstr(ctx, "string-ci>?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_gt_p));
   dfsch_define_cstr(ctx, "string-ci<=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_lte_p));
   dfsch_define_cstr(ctx, "string-ci>=?", 
-		   dfsch_make_primitive(&native_string_cmp_p,
+		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_gte_p));
+
+  dfsch_define_cstr(ctx, "char-upcase", 
+		   DFSCH_PRIMITIVE_REF(char_upcase));
+  dfsch_define_cstr(ctx, "char-downcase", 
+		   DFSCH_PRIMITIVE_REF(char_downcase));
+  dfsch_define_cstr(ctx, "char-titlecase", 
+		   DFSCH_PRIMITIVE_REF(char_titlecase));
+  dfsch_define_cstr(ctx, "char-category", 
+		   DFSCH_PRIMITIVE_REF(char_category));
 
 }
