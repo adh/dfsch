@@ -1,3 +1,8 @@
+2008-07-05  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c (dfsch_char_*case): Case conversions of characters 
+	(utf8_substring_cb): fixed substring
+
 2008-06-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_get_object_properties): object properties

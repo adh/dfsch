@@ -111,6 +111,13 @@ extern "C" {
 #define DFSCH_BUFFER_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_strbuf_t*, dfsch_string_to_buf)
 
+
+  extern uint32_t dfsch_char_downcase(uint32_t c);
+  extern uint32_t dfsch_char_upcase(uint32_t c);
+  extern uint32_t dfsch_char_titlecase(uint32_t c);
+
+  extern char* dfsch_char_category(uint32_t c);
+
 #ifdef __cplusplus
 }
 #endif
