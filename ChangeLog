@@ -1,6 +1,7 @@
 2008-07-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c: removed the for-each api
+	(dfsch_string_cmp_ci): case-insensitive comparison
 
 2008-07-05  Ales Hakl  <ales at hakl dot net>
 

@@ -262,59 +262,6 @@ int dfsch_string_gte_p(dfsch_object_t* a, dfsch_object_t* b){
   return dfsch_string_cmp(a, b) >= 0;
 }
 
-int dfsch_string_cmp_ci(dfsch_object_t* a_, dfsch_object_t* b_){
-  size_t i;
-  size_t l;
-
-  dfsch_string_t* a=(dfsch_string_t*)a_;
-  dfsch_string_t* b=(dfsch_string_t*)b_;
-
-  TYPE_CHECK(a_, STRING, "string");
-  TYPE_CHECK(b_, STRING, "string");
-
-  l = a->len; 
-  if (a->len > b->len){
-    l = b->len; 
-  }
-
-  for (i=0; i < l; i++){
-    char ac = toupper(a->ptr[i]);
-    char bc = toupper(b->ptr[i]);
-
-    if (ac < bc){
-      return -1;
-    }
-    if (ac > bc){
-      return 1;
-    }
-  }
-  
-  if (a->len == b->len)
-    return 0;
-
-  if (a->len < b->len)
-    return -1;
-
-  return 1;
-}
-
-int dfsch_string_ci_eq_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_string_cmp_ci(a, b) == 0;
-}
-int dfsch_string_ci_lt_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_string_cmp_ci(a, b) < 0;
-}
-int dfsch_string_ci_gt_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_string_cmp_ci(a, b) > 0;
-}
-int dfsch_string_ci_lte_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_string_cmp_ci(a, b) <= 0;
-}
-int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_string_cmp_ci(a, b) >= 0;
-}
-
-
 
 dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   object_t* i = list;
@@ -693,6 +640,64 @@ uint32_t dfsch_char_titlecase(uint32_t c){
 char* dfsch_char_category(uint32_t c){
   return UDATA_ENTRY(c).category;
 }
+
+/* 
+ * I assume that this is rougly the thing that R5RS means by case 
+ * insensitive comparison. Which does not necessary mean that this is useful.
+ */
+int dfsch_string_cmp_ci(dfsch_object_t* a, dfsch_object_t* b){
+  dfsch_strbuf_t* abuf = dfsch_string_to_buf(a);
+  char* ai = abuf->ptr;
+  char* ae = abuf->ptr + abuf->len;
+  dfsch_strbuf_t* bbuf = dfsch_string_to_buf(b);
+  char* bi = bbuf->ptr;
+  char* be = bbuf->ptr + bbuf->len;
+  uint32_t ac;
+  uint32_t bc;
+  
+
+
+  while (ai && bi){
+    ac = dfsch_char_upcase(get_char(ai, ae));
+    bc = dfsch_char_upcase(get_char(bi, be));
+
+    if (ac < bc){
+      return -1;
+    }
+    if (ac > bc){
+      return 1;
+    }
+
+    ai = next_char(ai, ae);
+    bi = next_char(bi, be);
+  }
+
+  if (ai) {
+    return 1;
+  } else if (bi) {
+    return -1;
+  } else {
+    return 0;
+  }
+
+}
+
+int dfsch_string_ci_eq_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) == 0;
+}
+int dfsch_string_ci_lt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) < 0;
+}
+int dfsch_string_ci_gt_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) > 0;
+}
+int dfsch_string_ci_lte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) <= 0;
+}
+int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b){
+  return dfsch_string_cmp_ci(a, b) >= 0;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
