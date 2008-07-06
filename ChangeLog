@@ -1,5 +1,8 @@
 2008-07-06  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_number_cmp): fixed number comparison (which
+	did not work for fractions and hung for bignums)
+
 	* src/strings.c: removed the for-each api
 	(dfsch_string_cmp_ci): case-insensitive comparison
 	(string_case): case conversions of strings.

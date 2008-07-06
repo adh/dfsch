@@ -444,16 +444,18 @@ int dfsch_number_cmp(dfsch_object_t* a, dfsch_object_t* b){
     }
   }
 
-  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE ||
-            DFSCH_TYPE_OF(b) == DFSCH_BIGNUM_TYPE){
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+      DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
     return dfsch_number_cmp(dfsch_number_mul(dfsch_number_numerator(a),
                                              dfsch_number_denominator(b)),
                             dfsch_number_mul(dfsch_number_numerator(b),
                                              dfsch_number_denominator(a)));
   }
 
-  if (DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE ||
-            DFSCH_TYPE_OF(b) == DFSCH_BIGNUM_TYPE){
+  if ((DFSCH_TYPE_OF(a) == DFSCH_BIGNUM_TYPE &&
+       DFSCH_TYPE_OF(b) == DFSCH_FIXNUM_TYPE) ||
+      (DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE &&
+       DFSCH_TYPE_OF(b) == DFSCH_BIGNUM_TYPE)){
     return dfsch_bignum_cmp(dfsch_bignum_from_number(a), 
                             dfsch_bignum_from_number(b));    
   }
