@@ -256,6 +256,7 @@
 
        (test 'append (string-append "abc" "def") "abcdef")
        (test 'substring (substring "abcdef" 2 4) "cd")
+       (test 'utf8-length (string-length "ěšč") 3)
        (test 'utf8-ref (string-ref "ab©" 2) 169)
        (test 'utf8->list (string->list "ab©") '(97 98 169))
        (test 'list->utf8 (list->string '(0x3042 0x3044 0x3046 

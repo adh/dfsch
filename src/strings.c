@@ -430,189 +430,149 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   return (object_t*)string;
 }
 
-
-int dfsch_string_for_each(dfsch_string_callback_t proc,
-                               dfsch_object_t* string,
-                               void *baton){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  int i;
-  TYPE_CHECK(s, STRING, "string");
-
-
-  for (i=0; i<s->len; i++){
-    int r = proc(s->ptr[i], baton);
-    if (r)
-      return r;
-  }
-
-  return 0;
-}
-
 // UTF-8 support
 
-int dfsch_string_utf8_for_each(dfsch_string_unicode_callback_t proc,
-                               dfsch_object_t* string,
-                               void *baton,
-                               dfsch_string_unicode_invalid_callback_t iproc,
-                               void* ibaton){
-
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  size_t i = 0;
-  size_t state = 0;
-  size_t char_start = 0;
-  uint32_t ch;
-  TYPE_CHECK(s, STRING, "string");
-
-  while(i<s->len){
-    if((s->ptr[i] & 0x80) == 0){ // U+0000 - U+007F, one byte
-      int r = proc(s->ptr[i], baton, i, i);
-      if (r)
-        return r;
-      i++;
-      state = 0;
-    }else{
-      if ((s->ptr[i] & 0xe0) == 0xc0 &&
-          (s->ptr[i] & 0x1f) != 0x00){ // U+0080 - U+07FF, two bytes
-        ch = s->ptr[i] & 0x1f;
-        char_start = i;
-        i++;
-        state = 1;
-      }else if ((s->ptr[i] & 0xf0) == 0xe0 &&
-                (s->ptr[i] & 0x0f) != 0x00){ // U+0800 - U+FFFF, three bytes
-        ch = s->ptr[i] & 0xf;
-        char_start = i;
-        i++;
-        state = 2;
-      }else if ((s->ptr[i] & 0xf8) == 0xf0 &&
-                (s->ptr[i] & 0x07) != 0x00){ // U+10000 - U+10FFFF, four bytes
-        ch = s->ptr[i] & 0x7;
-        char_start = i;
-        i++;
-        state = 3;
-      }else if ((s->ptr[i] & 0xc0) == 0x80 &&
-                state != 0){ // internal byte
-        state--;
-        ch = (ch << 6) | s->ptr[i] & 0x3f;
-        if (state == 0){ 
-          int r = proc(ch, baton, char_start, i);
-          if (r)
-            return r;
-        }
-        i++;
-      }else{ // Invalid byte
-        state = 0;
-        
-        if (iproc){
-          int r = iproc(s->ptr[i], ibaton, i);
-          if (r)
-            return r;
-        }
-
-        i++;
-      }
+static char* next_char(char* p, char *e){
+  p++;
+  while (p < e){
+    if ((*p & 0xc0) != 0x80){
+      return p;
     }
+    p++;
   }
-
-  return 0;
+  return NULL;
 }
 
-static int utf8_len_cb(uint32_t ch, size_t*len, size_t start, size_t end){
-  (*len)++;
-  return 0;
+static uint32_t get_char(char* p, char* e){
+  uint32_t ch;
+  int i;
+  if ((*p & 0x80) == 0){ /* one byte */
+    return *p;
+  }
+  if ((*p & 0xe0) == 0xc0){ /* two bytes */
+    ch = *p & 0x1f;
+    ch <<= 6;
+    p++;
+    if (p >= e || (*p & 0xc0) != 0x80){
+      return 0xfffd; /* REPLACEMENT CHARACTER */
+    }
+    ch |= *p & 0x3f;
+    if (ch < 0x80 && ch != 0){ 
+      /* Special case for overlong NUL, which is arguably good thing */
+      return 0xfffd; /* REPLACEMENT CHARACTER */
+    }
+    return ch;
+  }
+  if ((*p & 0xf0) == 0xe0){ /* three bytes */
+    ch = *p & 0x1f;
+    for (i = 0; i < 2; i++){
+      ch <<= 6;
+      p++;
+      if (p >= e || (*p & 0xc0) != 0x80){
+        return 0xfffd; /* REPLACEMENT CHARACTER */
+      }
+      ch |= *p & 0x3f;
+    }
+    if (ch < 0x800){
+      return 0xfffd; /* REPLACEMENT CHARACTER */
+    }
+    return ch;
+  }
+  if ((*p & 0xf8) == 0xf0){ /* four bytes */
+    ch = *p & 0x1f;
+    for (i = 0; i < 3; i++){
+      ch <<= 6;
+      p++;
+      if (p >= e || (*p & 0xc0) != 0x80){
+        return 0xfffd; /* REPLACEMENT CHARACTER */
+      }
+      ch |= *p & 0x3f;
+    }
+    if (ch > 0x10ffff){
+      return 0xfffd; /* REPLACEMENT CHARACTER */
+    }
+    return ch;
+  }
+  return 0xfffd; /* REPLACEMENT CHARACTER */
 }
+
+
+
 
 size_t dfsch_string_utf8_length(dfsch_object_t* string){
-  size_t len = 0;
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  size_t l = 0;
 
-  dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_len_cb, 
-                             string, &len, NULL, NULL);
-
-  return len;
-}
-
-typedef struct utf8_ref_ctx_t{
-  size_t len;
-  size_t index;
-  uint32_t ch;
-}utf8_ref_ctx_t;
-
-static int utf8_ref_cb(uint32_t ch, utf8_ref_ctx_t* c, 
-                       size_t start, size_t end){
-  if (c->len == c->index){
-    c->ch = ch;
-    return 1;
+  if (buf->len == 0){
+    return 0;
   }
-  c->len++;
-  return 0;
-}
 
+  while (i){
+    l++;
+    i = next_char(i, e);
+  }
+
+  return l;
+}
 
 uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
-  utf8_ref_ctx_t c;
-  
-  c.len = 0;
-  c.index = index;
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  size_t l = 0;
 
-  if (dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)utf8_ref_cb, 
-                                 string, &c, NULL, NULL)){
-    return c.ch;
+  if (buf->len == 0){
+    dfsch_error("exception:index-out-of-bounds",
+                dfsch_make_number_from_long(index));
   }
 
-  dfsch_error("exception:index-out-of-bounds",
-              dfsch_make_number_from_long(index));
+  while (i){
+    if (l == index){
+      return get_char(i, e);
+    }
+
+    l++;
+    i = next_char(i, e);
+  }
+
+  return l;
 }
-
-typedef struct utf8_substring_ctx_t{
-  size_t len;
-  size_t start;
-  size_t end;
-  size_t sptr;
-  size_t eptr;
-}utf8_substring_ctx_t;
-
-static int utf8_substring_cb(uint32_t ch, utf8_substring_ctx_t* c, 
-                             size_t start, size_t end){
-  
-  if (c->len == c->start){
-    c->sptr = start;
-  }
-  if (c->len == c->end){
-    c->eptr = start;
-    return 1;
-  }
-  c->len++;
-  return 0;
-}
-
 
 dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
                                             size_t start, size_t end){
-
-  utf8_substring_ctx_t c;
-  dfsch_string_t *s = (dfsch_string_t*)string;
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  size_t l = 0;
+  char* sp = NULL;
+  char* ep = NULL;
 
   if (start > end)
     dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(start));
 
-  c.start = start;
-  c.end = end;
-  c.len = 0;
-
-  if (!dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)
-                                  utf8_substring_cb, 
-                                 string, &c, NULL, NULL)){
-
-    if (c.len != c.end)
-      dfsch_error("exception:index-out-of-bounds",
-                  dfsch_make_number_from_long(end));
-      
-    c.eptr = s->len;
+  if (buf->len == 0){
+    dfsch_error("exception:index-out-of-bounds",
+                dfsch_make_number_from_long(start));
   }
-  
-  
 
-  return dfsch_make_string_buf(s->ptr + c.sptr, c.eptr - c.sptr);
+  while (i){
+    if (l == start){
+      sp = i;
+    }
+    if (l == end){
+      ep = i;
+    }
+    l++;
+    i = next_char(i, e);
+  }
+  if (end == l){
+    ep = e;
+  }
+
+  return dfsch_make_string_buf(sp, ep - sp);
 
 }
 typedef struct utf8_list_ctx_t{
@@ -634,15 +594,32 @@ static int utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c,
   return 0;
 }
 dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
-  utf8_list_ctx_t ctx;
-  ctx.head = NULL;
-  ctx.tail = NULL;
-
-  dfsch_string_utf8_for_each((dfsch_string_unicode_callback_t)
-                             utf8_list_cb, 
-                             string, &ctx, NULL, NULL);
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
   
-  return ctx.head;           
+
+  if (buf->len == 0){
+    return 0;
+  }
+
+  while (i){
+    dfsch_object_t* tmp;
+    tmp = dfsch_cons(dfsch_make_number_from_long(get_char(i, e)), 
+                     NULL);
+    if (head){
+      DFSCH_FAST_CDR(tail) = tmp;
+      tail = tmp;
+    }else{
+      head = tail = tmp;
+    }
+
+    i = next_char(i, e);
+  }
+  
+  return head;           
 }
 
 dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
