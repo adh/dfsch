@@ -262,7 +262,8 @@
        (test 'list->utf8 (list->string '(0x3042 0x3044 0x3046 
                                                 0x3048 0x304a))
              "あいうえお")
-       (test 'upcase (char-upcase 97) 65))
+       (test 'char-upcase (char-upcase 97) 65)
+       (test 'titlecase (string-titlecase "foo bar") "Foo Bar"))
 
 (group "some special cases"
 

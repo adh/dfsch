@@ -2,6 +2,7 @@
 
 	* src/strings.c: removed the for-each api
 	(dfsch_string_cmp_ci): case-insensitive comparison
+	(string_case): case conversions of strings.
 
 2008-07-05  Ales Hakl  <ales at hakl dot net>
 

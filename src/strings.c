@@ -569,6 +569,8 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   return head;           
 }
 
+
+
 dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   
   dfsch_string_t* string;
@@ -637,9 +639,159 @@ uint32_t dfsch_char_titlecase(uint32_t c){
   return UDATA_ENTRY(c).title_offset + c;
 }
 
+
 char* dfsch_char_category(uint32_t c){
   return UDATA_ENTRY(c).category;
 }
+
+int dfsch_char_alphabetic_p(uint32_t c){
+  return dfsch_char_category(c)[0] == 'L';
+}
+int dfsch_char_numeric_p(uint32_t c){
+  return dfsch_char_category(c)[0] == 'N';
+}
+int dfsch_char_whitespace_p(uint32_t c){
+  if (c == 13 || c == 10 || c == 9){ 
+    /* CR, LF and TAB, which are in category Cc */
+    return 1;
+  }
+  return dfsch_char_category(c)[0] == 'Z';
+}
+int dfsch_char_decimal_p(uint32_t c){
+  return strcmp(dfsch_char_category(c), "Nd") == 0;
+}
+int dfsch_char_upper_case_p(uint32_t c){
+  return strcmp(dfsch_char_category(c), "Lu") == 0;
+}
+int dfsch_char_lower_case_p(uint32_t c){
+  return strcmp(dfsch_char_category(c), "Ll") == 0;
+}
+int dfsch_char_mark_p(uint32_t c){
+  return dfsch_char_category(c)[0] == 'M';
+}
+
+
+#define UPCASE    0
+#define DOWNCASE  1
+#define TITLECASE 2
+
+static dfsch_object_t* string_case(dfsch_object_t* s, int m){
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(s);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  dfsch_string_t* string;
+  int f;
+  size_t j = 0;
+  size_t len = 0;
+  
+  if (buf->len == 0){
+    return dfsch_make_string_buf(NULL, 0);
+  }
+
+  len = 0;
+  f = 1;
+  while (i){
+    uint32_t ch = get_char(i, e);
+    switch (m) {
+    case UPCASE:
+      ch = dfsch_char_upcase(ch);
+      break;
+    case DOWNCASE:
+      ch = dfsch_char_downcase(ch);
+      break;
+    case TITLECASE:
+      if (dfsch_char_alphabetic_p(ch)){
+        if (f){
+          f = 0;
+          ch = dfsch_char_titlecase(ch);
+        }
+      } else {
+        if (!dfsch_char_mark_p(ch)){
+          f = 1;
+        }
+      }
+      break;
+    }
+
+    if (ch <= 0x7f){
+      len += 1;
+    } else if (ch <= 0x7ff) {
+      len += 2;
+    } else if (ch <= 0xffff) {
+      len += 3;
+    } else if (ch <= 0x10ffff){
+      len += 4;
+    } else {
+      dfsch_error("exception:invalid-unicode-character", DFSCH_FAST_CAR(j));
+    }
+
+    i = next_char(i, e);
+  }
+
+  string = (dfsch_string_t*)dfsch_make_string_buf(NULL, len);
+
+  i = buf->ptr;
+  j = 0;
+  f = 1;
+  while (i){
+    uint32_t ch = get_char(i, e);
+    switch (m) {
+    case UPCASE:
+      ch = dfsch_char_upcase(ch);
+      break;
+    case DOWNCASE:
+      ch = dfsch_char_downcase(ch);
+      break;
+    case TITLECASE:
+      if (dfsch_char_alphabetic_p(ch)){
+        if (f){
+          f = 0;
+          ch = dfsch_char_titlecase(ch);
+        }
+      } else {
+        if (!dfsch_char_mark_p(ch)){
+          f = 1;
+        }
+      }
+      break;
+    }
+
+    if (ch <= 0x7f){
+      string->ptr[j] = ch;
+      j += 1;
+    } else if (ch <= 0x7ff) {
+      string->ptr[j] = 0xc0 | ((ch >> 6) & 0x1f); 
+      string->ptr[j+1] = 0x80 | (ch & 0x3f);
+      j += 2;
+    } else if (ch <= 0xffff) {
+      string->ptr[j] = 0xe0 | ((ch >> 12) & 0x0f); 
+      string->ptr[j+1] = 0x80 | ((ch >> 6) & 0x3f);
+      string->ptr[j+2] = 0x80 | (ch & 0x3f);
+      j += 3;
+    } else {
+      string->ptr[j] = 0xf0 | ((ch >> 18) & 0x07); 
+      string->ptr[j+1] = 0x80 | ((ch >> 12) & 0x3f);
+      string->ptr[j+2] = 0x80 | ((ch >> 6) & 0x3f);
+      string->ptr[j+3] = 0x80 | (ch & 0x3f);
+      j += 4;
+    } 
+
+    i = next_char(i, e);
+  }
+
+  return (object_t*)string;
+}
+
+dfsch_object_t* dfsch_string_upcase(dfsch_object_t* s){
+  return string_case(s, UPCASE);
+}
+dfsch_object_t* dfsch_string_downcase(dfsch_object_t* s){
+  return string_case(s, DOWNCASE);
+}
+dfsch_object_t* dfsch_string_titlecase(dfsch_object_t* s){
+  return string_case(s, TITLECASE);
+}
+
 
 /* 
  * I assume that this is rougly the thing that R5RS means by case 
@@ -841,6 +993,75 @@ DFSCH_DEFINE_PRIMITIVE(char_category, 0){
   return dfsch_make_string_cstr(dfsch_char_category(ch));
 }
 
+DFSCH_DEFINE_PRIMITIVE(char_alphabetic_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_alphabetic_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_numeric_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_numeric_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_whitespace_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_whitespace_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_upper_case_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_upper_case_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_lower_case_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_lower_case_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_decimal_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_decimal_p(ch));
+}
+DFSCH_DEFINE_PRIMITIVE(char_mark_p, 0){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+
+  return dfsch_bool(dfsch_char_mark_p(ch));
+}
+
+
+DFSCH_DEFINE_PRIMITIVE(string_upcase, 0){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_upcase(string);
+}
+DFSCH_DEFINE_PRIMITIVE(string_downcase, 0){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_downcase(string);
+}
+DFSCH_DEFINE_PRIMITIVE(string_titlecase, 0){
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_titlecase(string);
+}
+
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -911,5 +1132,30 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(char_titlecase));
   dfsch_define_cstr(ctx, "char-category", 
 		   DFSCH_PRIMITIVE_REF(char_category));
+
+  dfsch_define_cstr(ctx, "char-alphabetic?", 
+		   DFSCH_PRIMITIVE_REF(char_alphabetic_p));
+  dfsch_define_cstr(ctx, "char-numeric?", 
+		   DFSCH_PRIMITIVE_REF(char_numeric_p));
+  dfsch_define_cstr(ctx, "char-whitespace?", 
+		   DFSCH_PRIMITIVE_REF(char_whitespace_p));
+  dfsch_define_cstr(ctx, "char-lower-case?", 
+		   DFSCH_PRIMITIVE_REF(char_lower_case_p));
+  dfsch_define_cstr(ctx, "char-upper-case?", 
+		   DFSCH_PRIMITIVE_REF(char_upper_case_p));
+  dfsch_define_cstr(ctx, "char-decimal?", 
+		   DFSCH_PRIMITIVE_REF(char_decimal_p));
+  dfsch_define_cstr(ctx, "char-mark?", 
+		   DFSCH_PRIMITIVE_REF(char_mark_p));
+
+
+
+  dfsch_define_cstr(ctx, "string-upcase", 
+		   DFSCH_PRIMITIVE_REF(string_upcase));
+  dfsch_define_cstr(ctx, "string-downcase", 
+		   DFSCH_PRIMITIVE_REF(string_downcase));
+  dfsch_define_cstr(ctx, "string-titlecase", 
+		   DFSCH_PRIMITIVE_REF(string_titlecase));
+
 
 }
