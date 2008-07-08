@@ -141,6 +141,11 @@ extern "C" {
 #define DFSCH_LONG_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, long, dfsch_number_to_long)
 
+#define DFSCH_INT64_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, long, dfsch_number_to_int64)
+#define DFSCH_INT64_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, long, dfsch_number_to_int64)
+
 
 
 #endif

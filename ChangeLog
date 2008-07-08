@@ -1,3 +1,7 @@
+2008-07-08  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c: use int64_t for file offsets
+
 2008-07-06  Ales Hakl  <ales at hakl dot net>
 
 	* src/number.c (dfsch_number_cmp): fixed number comparison (which

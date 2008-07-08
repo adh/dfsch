@@ -106,7 +106,7 @@ ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
     dfsch_error("exception:not-a-port", port);
   }
 }
-void dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence){
+void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek(port, offset, whence);
@@ -117,7 +117,7 @@ void dfsch_port_seek(dfsch_object_t* port, off_t offset, int whence){
     dfsch_error("exception:not-a-port", port);
   }
 }
-off_t dfsch_port_tell(dfsch_object_t* port){
+int64_t dfsch_port_tell(dfsch_object_t* port){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell){
       return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell(port);
@@ -530,7 +530,7 @@ static char* file_port_write(file_port_t* port, int depth, int readable){
   }
 }
 
-static void file_port_seek(file_port_t* port, off_t offset, int whence){
+static void file_port_seek(file_port_t* port, int64_t offset, int whence){
   if (!port->open){
     dfsch_error("exception:port-closed", port);
   }
@@ -542,7 +542,7 @@ static void file_port_seek(file_port_t* port, off_t offset, int whence){
   }
 }
 
-static off_t file_port_tell(file_port_t* port){
+static int64_t file_port_tell(file_port_t* port){
   off_t ret;
   if (!port->open){
     dfsch_error("exception:port-closed", port);
@@ -814,11 +814,11 @@ static dfsch_object_t* native_port_seek(void* baton,
                                         dfsch_object_t* args,
                                         dfsch_tail_escape_t* esc){
   dfsch_object_t* port;
-  off_t offset;
+  int64_t offset;
   int whence = SEEK_SET;
   
   DFSCH_OBJECT_ARG(args, port);
-  DFSCH_LONG_ARG(args, offset);
+  DFSCH_INT64_ARG(args, offset);
   DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, whence);
   DFSCH_FLAG_VALUE("set", SEEK_SET, whence);
   DFSCH_FLAG_VALUE("cur", SEEK_CUR, whence);
