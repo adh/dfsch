@@ -522,24 +522,6 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
   return dfsch_make_string_buf(sp, ep - sp);
 
 }
-typedef struct utf8_list_ctx_t{
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
-} utf8_list_ctx_t;
-
-static int utf8_list_cb(uint32_t ch, utf8_list_ctx_t* c, 
-                        size_t start, size_t end){
-  if (c->head){
-    dfsch_object_t* tmp;
-    tmp = dfsch_cons(dfsch_make_number_from_long(ch), NULL);
-    DFSCH_FAST_CDR(c->tail) = tmp;
-    c->tail = tmp;
-  }else{
-    c->head = c->tail = dfsch_cons(dfsch_make_number_from_long(ch), 
-                                   NULL);
-  }
-  return 0;
-}
 dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
@@ -547,6 +529,7 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   dfsch_object_t* head;
   dfsch_object_t* tail;
   
+  head = NULL;
 
   if (buf->len == 0){
     return 0;

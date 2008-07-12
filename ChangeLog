@@ -1,3 +1,7 @@
+2008-07-12  Ales Hkl  <ales at hakl dot net>
+
+	* src/strings.c: Initialize head to NULL
+
 2008-07-08  Ales Hakl  <ales at hakl dot net>
 
 	* src/ports.c: use int64_t for file offsets
