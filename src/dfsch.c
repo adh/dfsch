@@ -1423,7 +1423,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
 #endif
   if (!ei){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
-    ei->exception_ret = NULL;
+    ei->throw_ret = NULL;
     ei->stack_trace = NULL;
     ei->break_type = NULL;
     pthread_setspecific(thread_key, ei);
@@ -1431,43 +1431,49 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   return ei;
 }
 
+void dfsch__continue_unwind(dfsch__thread_info_t* ti){
+  if (!ti->throw_ret){
+    fputs("No unwind target!!!\n", stderr);
+    abort();
+  }
+  longjmp(*ti->throw_ret, 1);
+}
+void dfsch__finalize_unwind(dfsch__thread_info_t* ti){
+  ti->throw_tag = NULL;
+  ti->throw_value = NULL;
+}
+
 dfsch_object_t* dfsch_get_stack_trace(){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
   return ti->stack_trace;
 }
 
-void dfsch_raise(dfsch_object_t* exception){
-
-  dfsch__thread_info_t *ei = dfsch__get_thread_info();
-
-  if (!ei->exception_ret){
-    fputs(dfsch_exception_write(exception),stderr);        
-    abort();
+void dfsch_throw(dfsch_object_t* tag,
+                 dfsch_object_t* value){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  dfsch__catch_list_t* i = ti->catch_list;
+  while (i){
+    if (i->tag == tag){
+      ti->throw_tag = tag;
+      ti->throw_value = value;
+      dfsch__continue_unwind(ti);
+    }
+    i = i->next;
   }
+  dfsch_error("Invalid catch tag", tag);
+}
 
-  ei->exception_obj = exception;
-  longjmp(*ei->exception_ret, 1);    
+void dfsch_raise(dfsch_object_t* exception){
+  fputs("Exception raised!!!\n", stderr);
+  abort();
 }
 
 dfsch_object_t* dfsch_try(dfsch_object_t* handler,
                           dfsch_object_t* finally,
                           dfsch_object_t* thunk){
+  fputs("Try deprecated!!!\n", stderr);
+  abort();
 
-  dfsch_object_t *r = NULL;
-
-  DFSCH_TRY
-    r = dfsch_apply(thunk, NULL);
-  DFSCH_CATCH(e)
-    if (handler){
-      r = dfsch_apply(handler, dfsch_list(1, e));
-    }
-  DFSCH_END_TRY
-
-  if (finally){
-    dfsch_apply(finally, NULL);
-  }
-
-  return r;
 }
 
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
@@ -1658,7 +1664,6 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 char* dfsch_exception_write(dfsch_object_t* e){
   str_list_t *l = sl_create();
   char* res;
-  DFSCH_TRY {
     sl_append(l,"Exception occured: ");
     
     if (!dfsch_exception_p(e)){
@@ -1686,9 +1691,6 @@ char* dfsch_exception_write(dfsch_object_t* e){
     sl_append(l,"\n");
     
     res = sl_value(l);
-  } DFSCH_CATCH(e) {
-    res = "Exception occured during formatting of exception message.\n\n";
-  } DFSCH_END_TRY
   return res;
 }
 

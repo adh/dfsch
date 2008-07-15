@@ -22,7 +22,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/load.h \
 	dfsch/util.h \
 	dfsch/compiler.h\
-	dfsch/bignum.h
+	dfsch/bignum.h \
+	dfsch/conditions.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-extref.la \
@@ -62,7 +63,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/format.c dfsch/format.h	\
 	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h		\
-	src/compiler.c dfsch/compiler.h
+	src/compiler.c dfsch/compiler.h \
+	src/conditions.c dfsch/conditions.h
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm

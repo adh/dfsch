@@ -101,11 +101,13 @@ static int callback(dfsch_object_t *obj, void *baton){
     fputs("\n",transcript);
   }
 
-  dfsch_try(dfsch_make_primitive((dfsch_primitive_impl_t)evaluator_handler, 
+  evaluator_thunk(&ctx, NULL);
+
+  /*dfsch_try(dfsch_make_primitive((dfsch_primitive_impl_t)evaluator_handler, 
                                  obj),
             NULL,
             dfsch_make_primitive((dfsch_primitive_impl_t)evaluator_thunk, 
-                                 &ctx));
+            &ctx));*/ /* XXX */
   return 1;
 }
 

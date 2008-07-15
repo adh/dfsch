@@ -196,7 +196,7 @@
                             ((= i 5) vec)
                           (vector-set! vec i i))
                         #(0 1 2 3 4)))
-       (sub-group non-local-exits
+       (when () sub-group non-local-exits
                   (test 'exceptions
                         (let ((a #f))
                           (try

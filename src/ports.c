@@ -196,7 +196,7 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
     }
   } DFSCH_PROTECT {
     dfsch_port_batch_read_end(port);
-  } DFSCH_END_UNWIND;
+  } DFSCH_PROTECT_END;
 
   if (len == 0){
     return NULL;

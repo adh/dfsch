@@ -348,7 +348,7 @@ static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* es
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Continuations
+// Stack unwinding
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -361,10 +361,27 @@ DFSCH_DEFINE_FORM_IMPL(unwind_protect, dfsch_form_compiler_eval_all){
     dfsch_eval(protect, env);
   } DFSCH_PROTECT {
     ret = dfsch_eval_proc(args, env);
-  } DFSCH_END_UNWIND;
+  } DFSCH_PROTECT_END;
 
   return ret;
 }
+
+DFSCH_DEFINE_FORM_IMPL(catch, dfsch_form_compiler_eval_all){
+  object_t* tag;
+  object_t* ret;
+  DFSCH_OBJECT_ARG(args, tag);
+  
+  tag = dfsch_eval(tag, env);
+
+  DFSCH_CATCH_BEGIN(tag) {
+    ret = dfsch_eval_proc(args, env);
+  } DFSCH_CATCH {
+    ret = DFSCH_CATCH_VALUE;
+  } DFSCH_CATCH_END;
+
+  return ret;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -480,6 +497,7 @@ void dfsch__control_register(dfsch_object_t *ctx){
 		   dfsch_make_primitive(&native_try,NULL));
 
   dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
+  dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
 
   dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
