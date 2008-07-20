@@ -1464,19 +1464,6 @@ void dfsch_throw(dfsch_object_t* tag,
   dfsch_error("Invalid catch tag", tag);
 }
 
-void dfsch_raise(dfsch_object_t* exception){
-  fputs("Exception raised!!!\n", stderr);
-  abort();
-}
-
-dfsch_object_t* dfsch_try(dfsch_object_t* handler,
-                          dfsch_object_t* finally,
-                          dfsch_object_t* thunk){
-  fputs("Try deprecated!!!\n", stderr);
-  abort();
-
-}
-
 dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
 				     dfsch_object_t* data,
                                      dfsch_object_t* stack_trace){

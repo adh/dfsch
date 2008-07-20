@@ -291,60 +291,6 @@ static object_t* native_apply(void *baton, object_t* args,
 
   return dfsch_apply_tr(func, arglist, esc);
 }
-/////////////////////////////////////////////////////////////////////////////
-//
-// Exception handling
-//
-/////////////////////////////////////////////////////////////////////////////
-
-static object_t* native_make_exception(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* type;
-  object_t* data;
-  object_t* stack_trace;
-
-  DFSCH_OBJECT_ARG(args, type);
-  DFSCH_OBJECT_ARG_OPT(args, data, NULL);
-  DFSCH_OBJECT_ARG_OPT(args, stack_trace, dfsch_get_stack_trace());
-  DFSCH_ARG_END(args);
-
-  return dfsch_make_exception(type, data, stack_trace);
-}
-static object_t* native_raise(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* exception;
-
-  DFSCH_OBJECT_ARG(args, exception);
-  DFSCH_ARG_END(args);
-
-  dfsch_raise(exception);
-}
-static object_t* native_error(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* type;
-  object_t* data;
-
-  DFSCH_OBJECT_ARG(args, type);
-  DFSCH_OBJECT_ARG_OPT(args, data, NULL);
-  DFSCH_ARG_END(args);
-
-  dfsch_raise(dfsch_make_exception(type,
-                                   data,
-                                   dfsch_get_stack_trace()));
-}
-static object_t* native_abort(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  dfsch_error("user:abort",NULL);
-}
-
-static object_t* native_try(void *baton, object_t* args, dfsch_tail_escape_t* esc){
-  object_t* handler;
-  object_t* thunk;
-  object_t* finally;
-  DFSCH_OBJECT_ARG(args, thunk);
-  DFSCH_OBJECT_ARG(args, handler);
-  DFSCH_OBJECT_ARG_OPT(args, finally, NULL);
-  DFSCH_ARG_END(args);
-
-  return dfsch_try(handler, finally, thunk);
- 
-}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -485,16 +431,6 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
   dfsch_define_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
-  dfsch_define_cstr(ctx, "raise", 
-		   dfsch_make_primitive(&native_raise,NULL));
-  dfsch_define_cstr(ctx, "make-exception", 
-		   dfsch_make_primitive(&native_make_exception,NULL));
-  dfsch_define_cstr(ctx, "error", 
-		   dfsch_make_primitive(&native_error,NULL));
-  dfsch_define_cstr(ctx, "abort", 
-		   dfsch_make_primitive(&native_abort,NULL));
-  dfsch_define_cstr(ctx, "try", 
-		   dfsch_make_primitive(&native_try,NULL));
 
   dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));

@@ -1,5 +1,7 @@
 2008-07-20  Ales Hakl  <ales at hakl dot net>
 
+	* src/control.c: removed exception-related functions
+
 	* src/conditions.c (dfsch_signal): condition system: signal function
 
 2008-07-12  Ales Hkl  <ales at hakl dot net>
