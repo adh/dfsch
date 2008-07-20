@@ -176,10 +176,21 @@ extern "C" {
 #define DFSCH_SAVE_HANDLERS                                             \
   {                                                                     \
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
-  dfsch__handler_list_t* dfsch___saved_handlers = dfsch___ei->handlers;
+  dfsch__handler_list_t* dfsch___saved_handlers = dfsch___ei->handler_list;
+#define DFSCH_SAVED_HANDLERS dfsch___saved_handlers
 #define DFSCH_RESTORE_HANDLERS                  \
   dfsch___ei->handlers = dfsch___saved_handlers;\
 }
+
+#define DFSCH_SAVE_RESTARTS                                             \
+  {                                                                     \
+  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
+  dfsch__restart_list_t* dfsch___saved_restarts = dfsch___ei->restart_list;
+#define DFSCH_SAVED_RESTARTS dfsch___saved_restarts
+#define DFSCH_RESTORE_HANDLERS                          \
+  dfsch___ei->restart_list = dfsch___saved_restarts;    \
+}
+
 
 #ifdef __cplusplus
 }
