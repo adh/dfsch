@@ -1414,8 +1414,13 @@ static void thread_info_destroy(void* ptr){
 static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
+
+#if defined(__GNUC__) && !defined(__arm__) && !defined(__CYGWIN__)
+#define USE_TLS
+#endif
+
 dfsch__thread_info_t* dfsch__get_thread_info(){
-#if defined(__GNUC__) && !defined(__arm__)
+#ifdef USE_TLS
   static __thread dfsch__thread_info_t* ei;
 #else
   dfsch__thread_info_t *ei;

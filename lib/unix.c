@@ -605,9 +605,11 @@ static dfsch_object_t* native_getpgrp(void* baton, dfsch_object_t* args,
 }
 static dfsch_object_t* native_getsid(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
+  pid_t pid;
+  DFSCH_LONG_ARG_OPT(args, pid, 0)
   DFSCH_ARG_END(args);
 
-  return dfsch_make_number_from_long(getsid());
+  return dfsch_make_number_from_long(getsid(pid));
 }
 static dfsch_object_t* native_getpid(void* baton, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
