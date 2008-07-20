@@ -49,26 +49,26 @@
 FILE *cmd_log;
 FILE *transcript;
 
-typedef struct evaluator_ctx_t {
-  dfsch_object_t *ctx;
-  dfsch_object_t *expr;
-} evaluator_ctx_t;
-
 static void sigint_handler_break(int sig){
   dfsch_break("user:sigint"); 
 }
 
-static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton, 
-                                       dfsch_object_t *args){
-  dfsch_object_t *ret;
+static int callback(dfsch_object_t *obj, void *baton){
+  dfsch_object_t* ret;
+
+  if (transcript){
+    fputs(";; Expression\n",transcript);
+    fputs(dfsch_obj_write(obj,1000,1),transcript);
+    fputs("\n",transcript);
+  }
 
   signal(SIGINT, sigint_handler_break);
 
-  ret = dfsch_eval(baton->expr, baton->ctx);
+  ret = dfsch_eval(obj, baton);
   puts(dfsch_obj_write(ret,100,1));
 
   if (cmd_log){
-    fputs(dfsch_obj_write(baton->expr,1000,1),cmd_log);
+    fputs(dfsch_obj_write(obj,1000,1),cmd_log);
     fputs("\n",cmd_log);
     fflush(cmd_log);
   }
@@ -78,36 +78,7 @@ static dfsch_object_t* evaluator_thunk(evaluator_ctx_t *baton,
     fputs("\n",transcript);
     fflush(transcript);
   }
-}
-static dfsch_object_t* evaluator_handler(dfsch_object_t *baton, 
-                                         dfsch_object_t *args){
-  if (transcript){
-    fputs(";; Exception occured\n",transcript);
-    fputs(dfsch_obj_write(dfsch_car(args),1000,1),transcript);
-    fputs("\n",transcript);
-  }
-  fputs(dfsch_exception_write(dfsch_car(args)),stderr);      
-}
 
-static int callback(dfsch_object_t *obj, void *baton){
-  evaluator_ctx_t ctx;
-
-  ctx.ctx = baton;
-  ctx.expr = obj;
-  
-  if (transcript){
-    fputs(";; Expression\n",transcript);
-    fputs(dfsch_obj_write(obj,1000,1),transcript);
-    fputs("\n",transcript);
-  }
-
-  evaluator_thunk(&ctx, NULL);
-
-  /*dfsch_try(dfsch_make_primitive((dfsch_primitive_impl_t)evaluator_handler, 
-                                 obj),
-            NULL,
-            dfsch_make_primitive((dfsch_primitive_impl_t)evaluator_thunk, 
-            &ctx));*/ /* XXX */
   return 1;
 }
 

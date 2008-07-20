@@ -30,6 +30,7 @@
 #include <dfsch/parse.h>
 #include <dfsch/strings.h>
 #include <dfsch/magic.h>
+#include <dfsch/conditions.h>
 #include "util.h"
 #include "internal.h"
 
@@ -1491,13 +1492,11 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
   return (object_t*)e;
 }
 
-dfsch_object_t* dfsch_error(char* type, 
-                            dfsch_object_t* data){
-  object_t* e = dfsch_make_exception(dfsch_make_symbol(type), data,
-                                     dfsch_get_stack_trace());
-
-  dfsch_raise(e);
-    
+dfsch_object_t* dfsch_error(char* name, 
+                            dfsch_object_t* detail){
+  dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
+                               "name", name,
+                               "detail", detail));
 }
 dfsch_object_t* dfsch_break(char* type){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();

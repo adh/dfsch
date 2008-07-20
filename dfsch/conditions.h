@@ -1,4 +1,6 @@
 #include <dfsch/dfsch.h>
+#include <stdarg.h>
+
 
 typedef struct dfsch__condition_t {
   dfsch_type_t* type;
@@ -19,6 +21,9 @@ void dfsch_condition_put_field_cstr(dfsch_object_t* condition,
                                     dfsch_object_t* value);
 dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition);
 
+dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...);
+
+
 #define DFSCH_CONDITION_SIZE (sizeof(dfsch__condition_t))
 #define DFSCH_CONDITION_TYPE_INIT(super, name)                  \
   {DFSCH_STANDARD_TYPE, super, DFSCH_CONDITION_SIZE, name}
@@ -34,6 +39,9 @@ extern dfsch_type_t dfsch_error_type;
 
 extern dfsch_type_t dfsch_runtime_error_type;
 #define DFSCH_RUNTIME_ERROR_TYPE (&dfsch_runtime_error_type)
+
+void dfsch_signal(dfsch_object_t* condition);
+
 
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,

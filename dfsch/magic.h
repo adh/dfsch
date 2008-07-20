@@ -61,6 +61,7 @@ extern "C" {
     dfsch_type_t* type;
     dfsch_object_t* handler;
     dfsch__handler_list_t* next;
+    dfsch__handler_list_t* own_handlers;
   };
 
   struct dfsch__thread_info_t {
@@ -96,10 +97,14 @@ extern "C" {
   jmp_buf dfsch___tmpbuf;                                       \
   dfsch_object_t* dfsch___old_frame;                            \
   dfsch__catch_list_t* dfsch___old_catch;                       \
+  dfsch__handler_list_t* dfsch___old_handlers;                  \
+  dfsch__restart_list_t* dfsch___old_restarts;                  \
                                                                 \
   dfsch___old_ret = dfsch___ei->throw_ret;                      \
   dfsch___old_frame = dfsch___ei->stack_trace;                  \
   dfsch___old_catch = dfsch___ei->catch_list;                   \
+  dfsch___old_handlers = dfsch___ei->handler_list;              \
+  dfsch___old_restarts = dfsch___ei->restart_list;              \
   dfsch___ei->throw_ret = &dfsch___tmpbuf;                      \
                                                                 \
   if(setjmp(*dfsch___ei->throw_ret) != 1){
@@ -107,10 +112,15 @@ extern "C" {
 #define DFSCH_SCATCH                                            \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
+  dfsch___ei->catch_list = dfsch___old_catch;                   \
+  dfsch___ei->handler_list = dfsch___old_handlers;              \
+  dfsch___ei->restart_list = dfsch___old_restarts;              \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
+  dfsch___ei->handler_list = dfsch___old_handlers;              \
+  dfsch___ei->restart_list = dfsch___old_restarts;              \
   {
 
 #define DFSCH_CATCH_TAG (dfsch___ei->throw_tag)
@@ -161,6 +171,14 @@ extern "C" {
   }                                             \
 } DFSCH_SCATCH_END                              \
   dfsch___ei->catch_list = dfsch___cl.next;     \
+}
+
+#define DFSCH_SAVE_HANDLERS                                             \
+  {                                                                     \
+  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
+  dfsch__handler_list_t* dfsch___saved_handlers = dfsch___ei->handlers;
+#define DFSCH_RESTORE_HANDLERS                  \
+  dfsch___ei->handlers = dfsch___saved_handlers;\
 }
 
 #ifdef __cplusplus
