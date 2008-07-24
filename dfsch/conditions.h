@@ -1,3 +1,6 @@
+#ifndef H__dfsch__conditions__
+#define H__dfsch__conditions__
+
 #include <dfsch/dfsch.h>
 #include <stdarg.h>
 
@@ -49,3 +52,5 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
 extern dfsch_type_t dfsch_restart_type;
 #define DFSCH_RESTART_TYPE (&dfsch_restart_type)
 
+
+#endif

@@ -33,6 +33,7 @@
 #define H__dfsch__magic__
 
 #include <dfsch/dfsch.h>
+#include <dfsch/conditions.h>
 #include <setjmp.h>
 
 #ifdef __cplusplus
