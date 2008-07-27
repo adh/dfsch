@@ -10,6 +10,8 @@ typedef struct dfsch__condition_t {
   dfsch_object_t* fields;
 } dfsch__condition_t;
 
+char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable);
+
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type);
 
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
@@ -29,7 +31,8 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...);
 
 #define DFSCH_CONDITION_SIZE (sizeof(dfsch__condition_t))
 #define DFSCH_CONDITION_TYPE_INIT(super, name)                  \
-  {DFSCH_STANDARD_TYPE, super, DFSCH_CONDITION_SIZE, name}
+  {DFSCH_STANDARD_TYPE, super, DFSCH_CONDITION_SIZE, name,      \
+      NULL, (dfsch_type_write_t) dfsch__condition_write}
 
 extern dfsch_type_t dfsch_condition_type;
 #define DFSCH_CONDITION_TYPE (&dfsch_condition_type)

@@ -1487,8 +1487,9 @@ dfsch_object_t* dfsch_make_exception(dfsch_object_t* type,
 dfsch_object_t* dfsch_error(char* name, 
                             dfsch_object_t* detail){
   dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
-                               "name", name,
-                               "detail", detail));
+                               "name", dfsch_make_string_cstr(name),
+                               "detail", detail,
+                               NULL));
 }
 dfsch_object_t* dfsch_break(char* type){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();

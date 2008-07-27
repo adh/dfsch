@@ -1,3 +1,7 @@
+2008-07-27  Ales Hakl  <ales at hakl dot net>
+
+	* src/conditions.c (dfsch__condition_write): Print conditions
+
 2008-07-20  Ales Hakl  <ales at hakl dot net>
 
 	* src/control.c: removed exception-related functions

@@ -1,13 +1,36 @@
 #include "dfsch/conditions.h"
 #include "dfsch/magic.h"
 #include <stdio.h>
-
+#include "util.h"
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
   dfsch__condition_t* c = (dfsch__condition_t*)dfsch_make_object(type);
   c->fields = NULL;
   return (dfsch_object_t*)c;
 }
+
+char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable){
+  str_list_t* sl = sl_create();
+  dfsch_object_t* i = c->fields;
+  dfsch_object_t* j;
+  
+  sl_append(sl, saprintf("#<%s %p", c->type->name, c));
+  
+  while (DFSCH_PAIR_P(i)){
+    j = DFSCH_FAST_CAR(i);
+    while (DFSCH_PAIR_P(j)){
+      sl_append(sl, " ");
+      sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
+      j = DFSCH_FAST_CDR(j);
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  sl_append(sl, ">");
+  
+  return sl_value(sl);
+}
+
 
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
                                       dfsch_object_t* name){
