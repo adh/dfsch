@@ -52,6 +52,7 @@ extern "C" {
 
   struct dfsch__restart_list_t {
     dfsch_object_t* restart;
+    dfsch__handler_list_t* handlers;
     dfsch__restart_list_t* next;
   };
   struct dfsch__catch_list_t {
@@ -62,7 +63,6 @@ extern "C" {
     dfsch_type_t* type;
     dfsch_object_t* handler;
     dfsch__handler_list_t* next;
-    dfsch__handler_list_t* own_handlers;
   };
 
   struct dfsch__thread_info_t {
@@ -178,18 +178,18 @@ extern "C" {
   {                                                                     \
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
   dfsch__handler_list_t* dfsch___saved_handlers = dfsch___ei->handler_list;
-#define DFSCH_SAVED_HANDLERS dfsch___saved_handlers
-#define DFSCH_RESTORE_HANDLERS                  \
-  dfsch___ei->handlers = dfsch___saved_handlers;\
+
+#define DFSCH_RESTORE_HANDLERS                          \
+  dfsch___ei->handler_list = dfsch___saved_handlers;   \
 }
 
 #define DFSCH_SAVE_RESTARTS                                             \
   {                                                                     \
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
   dfsch__restart_list_t* dfsch___saved_restarts = dfsch___ei->restart_list;
-#define DFSCH_SAVED_RESTARTS dfsch___saved_restarts
+
 #define DFSCH_RESTORE_RESTARTS                          \
-  dfsch___ei->restart_list = dfsch___saved_restarts;    \
+  dfsch___ei->restart_list = dfsch___saved_restarts;   \
 }
 
 

@@ -109,7 +109,7 @@ void dfsch_signal(dfsch_object_t* condition){
 
   while (i){
     if (DFSCH_INSTANCE_P(condition, i->type)){
-      ti->handler_list = i->own_handlers;
+      ti->handler_list = i->next;
       dfsch_apply(i->handler, dfsch_cons(condition, NULL));
     }
     i = i->next;

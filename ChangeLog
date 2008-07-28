@@ -1,6 +1,9 @@
 2008-07-28  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/magic.h (DFSCH_RESTORE_RESTARTS): correct name
+	Cleaned up dynamic environment relations between handlers and
+	restarts (handler needs to see restarts enclosed, but restart
+	should only see enclosing handlers).
 
 2008-07-27  Ales Hakl  <ales at hakl dot net>
 
