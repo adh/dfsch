@@ -52,7 +52,6 @@ extern "C" {
 
   struct dfsch__restart_list_t {
     dfsch_object_t* restart;
-    dfsch__handler_list_t* handlers;
     dfsch__restart_list_t* next;
   };
   struct dfsch__catch_list_t {

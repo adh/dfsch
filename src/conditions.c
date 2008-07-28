@@ -130,6 +130,7 @@ typedef struct restart_t {
   dfsch_object_t* name;
   dfsch_object_t* proc;
   char* description;
+  dfsch__handler_list_t* handlers;
 } restart_t;
 
 dfsch_type_t dfsch_restart_type = {
@@ -148,4 +149,25 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
   r->description = description;
 
   return (dfsch_object_t*) r;
+}
+
+void dfsch_restart_bind(dfsch_object_t* restart){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__restart_list_t* l = GC_NEW(dfsch__restart_list_t);
+
+  l->next = ti->restart_list;
+  l->restart = restart;
+
+  ti->restart_list = l;
+}
+void dfsch_handler_bind(dfsch_type_t* type,
+                        dfsch_object_t* handler){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__handler_list_t* l = GC_NEW(dfsch__handler_list_t);
+  
+  l->next = ti->handler_list;
+  l->type = type;
+  l->handler = handler;
+
+  ti->handler_list = l;
 }

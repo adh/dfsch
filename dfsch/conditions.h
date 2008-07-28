@@ -55,5 +55,9 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
 extern dfsch_type_t dfsch_restart_type;
 #define DFSCH_RESTART_TYPE (&dfsch_restart_type)
 
+void dfsch_restart_bind(dfsch_object_t* restart);
+void dfsch_handler_bind(dfsch_type_t* type,
+                        dfsch_object_t* handler);
+
 
 #endif

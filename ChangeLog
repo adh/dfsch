@@ -1,5 +1,9 @@
 2008-07-28  Ales Hakl  <ales at hakl dot net>
 
+	* src/conditions.c (restart_t): handlers are property of restart,
+	not of entry in restart stack.
+	low-level routines for handler-bind and restart-bind
+
 	* dfsch/magic.h (DFSCH_RESTORE_RESTARTS): correct name
 	Cleaned up dynamic environment relations between handlers and
 	restarts (handler needs to see restarts enclosed, but restart
