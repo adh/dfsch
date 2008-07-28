@@ -113,8 +113,6 @@ extern "C" {
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
-  dfsch___ei->handler_list = dfsch___old_handlers;              \
-  dfsch___ei->restart_list = dfsch___old_restarts;              \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \

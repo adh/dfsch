@@ -1,3 +1,8 @@
+2008-07-29  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/magic.h (DFSCH_SCATCH): do not restore restarts and
+	handlers on normal return
+
 2008-07-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/conditions.c (restart_t): handlers are property of restart,
