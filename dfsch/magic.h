@@ -188,7 +188,7 @@ extern "C" {
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();          \
   dfsch__restart_list_t* dfsch___saved_restarts = dfsch___ei->restart_list;
 #define DFSCH_SAVED_RESTARTS dfsch___saved_restarts
-#define DFSCH_RESTORE_HANDLERS                          \
+#define DFSCH_RESTORE_RESTARTS                          \
   dfsch___ei->restart_list = dfsch___saved_restarts;    \
 }
 

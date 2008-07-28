@@ -1,3 +1,7 @@
+2008-07-28  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/magic.h (DFSCH_RESTORE_RESTARTS): correct name
+
 2008-07-27  Ales Hakl  <ales at hakl dot net>
 
 	* src/conditions.c (dfsch__condition_write): Print conditions
