@@ -189,8 +189,6 @@ extern "C" {
   /** Convert object to string */
   extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, 
                                int readable);
-  /** Convert exception object to descriptive message */
-  extern char* dfsch_exception_write(dfsch_object_t* e);
 
   /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();
@@ -370,13 +368,6 @@ extern "C" {
 
   /** Set break flag (call this when throwing exception isn't safe) */
   extern dfsch_object_t* dfsch_break(char* type);
-
-  /** Return exception's type. */
-  extern dfsch_object_t* dfsch_exception_type(dfsch_object_t* e);
-
-  /** Return data associated with given exception. */
-  extern dfsch_object_t* dfsch_exception_data(dfsch_object_t* e);
-  extern dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e);
 
   /* Object properties */
 
