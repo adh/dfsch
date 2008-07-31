@@ -328,6 +328,15 @@ DFSCH_DEFINE_FORM_IMPL(catch, dfsch_form_compiler_eval_all){
   return ret;
 }
 
+DFSCH_DEFINE_PRIMITIVE(throw, 0){
+  dfsch_object_t* tag;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, tag);
+  DFSCH_OBJECT_ARG(args, value);
+  
+  dfsch_throw(tag, value);
+  return NULL;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -434,6 +443,8 @@ void dfsch__control_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
+  dfsch_define_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
+  
 
   dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,

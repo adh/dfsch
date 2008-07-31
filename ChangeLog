@@ -1,3 +1,7 @@
+2008-07-31  Ales Hakl  <ales at hakl dot net>
+
+	* src/control.c (throw): throw function 
+
 2008-07-29  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/magic.h (DFSCH_SCATCH): do not restore restarts and

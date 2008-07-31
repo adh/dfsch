@@ -362,15 +362,7 @@ extern "C" {
 					      dfsch_object_t* data,
                                               dfsch_object_t* stack_trace);
   
-  /** Raises an exception (exception could be any object) */
-
-  extern void dfsch_raise(dfsch_object_t* exception);
-
-  /** Catches exceptions */
-  extern dfsch_object_t* dfsch_try(dfsch_object_t* handler,
-                                   dfsch_object_t* finally,
-                                   dfsch_object_t* thunk);
-  
+  extern void dfsch_throw(dfsch_object_t* tqag, dfsch_object_t* value);
 
   /** Convenience wrapper for throwing an exception from C code */
   extern dfsch_object_t* dfsch_error(char* type, 

@@ -1400,11 +1400,6 @@ static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
  * between setjmp(3) and opportunity to call longjmp(3) (from corresponding 
  * wrapper function) is function call. This is only case of undefined behavior
  * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
- *
- * Beware that exceptions and escape-continuations propagate using "separate"
- * mechanisms, both honor unwind-protect, but this causes some complications
- * in unwind-protect handling (because unwind-protect is implemented as C 
- * macros in magic.h and uses setjmp/longjmp).
  */
 
 static void thread_info_destroy(void* ptr){
