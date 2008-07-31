@@ -1464,21 +1464,6 @@ void dfsch_throw(dfsch_object_t* tag,
   dfsch_error("Invalid catch tag", tag);
 }
 
-dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
-				     dfsch_object_t* data,
-                                     dfsch_object_t* stack_trace){
-  exception_t* e = (exception_t*)dfsch_make_object(EXCEPTION);
-  if (!e)
-    return NULL;
-
-
-  e->class = type;
-  e->data = data;
-  e->stack_trace = stack_trace;
-  
-  return (object_t*)e;
-}
-
 dfsch_object_t* dfsch_error(char* name, 
                             dfsch_object_t* detail){
   dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
@@ -1489,25 +1474,6 @@ dfsch_object_t* dfsch_error(char* name,
 dfsch_object_t* dfsch_break(char* type){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
   ti->break_type = type;
-}
-
-dfsch_object_t* dfsch_exception_type(dfsch_object_t* e){
-  if (!dfsch_exception_p(e))
-    return NULL;
-
-  return ((exception_t*)e)->class;
-}
-dfsch_object_t* dfsch_exception_data(dfsch_object_t* e){
-  if (!dfsch_exception_p(e))
-    return NULL;
-
-  return ((exception_t*)e)->data;
-}
-dfsch_object_t* dfsch_exception_stack_trace(dfsch_object_t* e){
-  if (!dfsch_exception_p(e))
-    return NULL;
-
-  return ((exception_t*)e)->stack_trace;
 }
 
 // Vectors
