@@ -1467,8 +1467,8 @@ void dfsch_throw(dfsch_object_t* tag,
 dfsch_object_t* dfsch_error(char* name, 
                             dfsch_object_t* detail){
   dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
-                               "name", dfsch_make_string_cstr(name),
-                               "detail", detail,
+                               "message", dfsch_make_string_cstr(name),
+                               "object", detail,
                                NULL));
 }
 dfsch_object_t* dfsch_break(char* type){

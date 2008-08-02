@@ -4,8 +4,15 @@
 #include "util.h"
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
-  dfsch__condition_t* c = (dfsch__condition_t*)dfsch_make_object(type);
+  dfsch__condition_t* c;
+  if (!DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) ||
+      !dfsch_superclass_p(type, DFSCH_CONDITION_TYPE)){
+    dfsch_error("Not a condition type", (dfsch_object_t*)type);
+  }
+
+  c = (dfsch__condition_t*)dfsch_make_object(type);
   c->fields = NULL;
+  dfsch_condition_put_field_cstr(c, "stack-trace", dfsch_get_stack_trace());
   return (dfsch_object_t*)c;
 }
 
@@ -76,8 +83,6 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
   va_list al;
   dfsch_object_t* c = dfsch_make_condition(type);
   char* name;
-
-  dfsch_condition_put_field_cstr(c, "stack-trace", dfsch_get_stack_trace());
 
   va_start(al, type);
   while (name = va_arg(al, char*)){
@@ -170,4 +175,76 @@ void dfsch_handler_bind(dfsch_type_t* type,
   l->handler = handler;
 
   ti->handler_list = l;
+}
+
+
+/*
+ * Scheme binding
+ */
+
+DFSCH_DEFINE_PRIMITIVE(make_condition, 0){
+  dfsch_object_t* type;
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_condition(type);
+}
+DFSCH_DEFINE_PRIMITIVE(condition_field, 0){
+  dfsch_object_t* condition;
+  dfsch_object_t* field;
+  DFSCH_OBJECT_ARG(args, condition);
+  DFSCH_OBJECT_ARG(args, field);
+  DFSCH_ARG_END(args);
+
+  return dfsch_condition_field(condition, field);
+}
+DFSCH_DEFINE_PRIMITIVE(condition_put_field, 0){
+  dfsch_object_t* condition;
+  dfsch_object_t* field;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, condition);
+  DFSCH_OBJECT_ARG(args, field);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_condition_put_field(condition, field, value);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(condition_fields, 0){
+  dfsch_object_t* condition;
+  DFSCH_OBJECT_ARG(args, condition);
+  DFSCH_ARG_END(args);
+
+  return dfsch_condition_fields(condition);
+}
+
+
+
+DFSCH_DEFINE_PRIMITIVE(signal, 0){
+  dfsch_object_t* condition;
+  DFSCH_OBJECT_ARG(args, condition);
+  DFSCH_ARG_END(args);
+
+  dfsch_signal(condition);
+  return NULL;
+}
+
+void dfsch__conditions_register(dfsch_object_t* ctx){
+  dfsch_define_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
+  dfsch_define_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
+  dfsch_define_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
+  dfsch_define_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
+  
+  dfsch_define_cstr(ctx, "make-condition", 
+                    DFSCH_PRIMITIVE_REF(make_condition));
+  dfsch_define_cstr(ctx, "condition-field", 
+                    DFSCH_PRIMITIVE_REF(condition_field));
+  dfsch_define_cstr(ctx, "condition-put-field", 
+                    DFSCH_PRIMITIVE_REF(condition_put_field));
+  dfsch_define_cstr(ctx, "condition-fields", 
+                    DFSCH_PRIMITIVE_REF(condition_fields));
+
+
+  dfsch_define_cstr(ctx, "signal",
+                    DFSCH_PRIMITIVE_REF(signal));
 }

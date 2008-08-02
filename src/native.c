@@ -932,4 +932,5 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__format_native_register(ctx);
   dfsch__port_native_register(ctx);
   dfsch__bignum_register(ctx);
+  dfsch__conditions_register(ctx);
 }
