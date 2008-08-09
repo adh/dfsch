@@ -177,6 +177,27 @@ void dfsch_handler_bind(dfsch_type_t* type,
   ti->handler_list = l;
 }
 
+typedef struct restart_proc_t {
+  dfsch_object_t* catch_tag;
+  dfsch_object_t* value;
+} restart_proc_t;
+
+static dfsch_object_t* restart_proc(dfsch_object_t* args,
+                                    restart_proc_t* rp,
+                                    dfsch_tail_escape_t* esc){
+  dfsch_throw(rp->catch_tag, rp->value);
+}
+
+dfsch_object_t* dfsch_make_restart_proc(dfsch_object_t* catch_tag,
+                                        dfsch_object_t* value){
+  restart_proc_t* rp = GC_NEW(restart_proc_t);
+
+  rp->catch_tag = catch_tag;
+  rp->value = value;
+
+  return dfsch_make_primitive(restart_proc, rp);
+}
+
 
 /*
  * Scheme binding

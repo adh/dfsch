@@ -59,5 +59,7 @@ void dfsch_restart_bind(dfsch_object_t* restart);
 void dfsch_handler_bind(dfsch_type_t* type,
                         dfsch_object_t* handler);
 
+dfsch_object_t* dfsch_make_restart_proc(dfsch_object_t* catch_tag,
+                                        dfsch_object_t* value);
 
 #endif
