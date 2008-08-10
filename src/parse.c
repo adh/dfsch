@@ -172,28 +172,25 @@ struct dfsch_parser_ctx_t {
   dfsch_object_t* env;
 };
 
+static void parser_reset(dfsch_parser_ctx_t *ctx){
+  empty_queue(ctx->q);
+  ctx->tokenizer_state = T_NONE;
+  ctx->parser = NULL;
+  ctx->level = 0 ;
+  ctx->line = 1;
+  ctx->column = 1;
+  ctx->error = 0;
+}
+
 static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
   dfsch_object_t* pos = dfsch_cons(dfsch_make_number_from_long(ctx->line),
                                    dfsch_make_number_from_long(ctx->column));
 
-  empty_queue(ctx->q);
-  ctx->tokenizer_state = T_NONE;
-  ctx->parser = NULL;
-  ctx->level = 0 ;
-  ctx->line = 1;
-  ctx->column = 1;
-  ctx->error = 0;
-
+  parser_reset(ctx);
   dfsch_error(symbol, pos);
 }
 static void parser_abort_ex(dfsch_parser_ctx_t *ctx, dfsch_object_t* ex){
-  empty_queue(ctx->q);
-  ctx->tokenizer_state = T_NONE;
-  ctx->parser = NULL;
-  ctx->level = 0 ;
-  ctx->line = 1;
-  ctx->column = 1;
-  ctx->error = 0;
+  parser_reset(ctx);
   dfsch_raise(ex);
 }
 
@@ -1059,18 +1056,24 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
 int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   ctx->error = 0;
-
+  DFSCH_UNWIND{
   feed_queue(ctx->q, data);
 
   tokenizer_process(ctx, get_queue(ctx->q));
+  }DFSCH_PROTECT{
+    
+  }DFSCH_UNWIND_DETECT{
+    parser_reset(ctx);
+  }DFSCH_PROTECT_END;
 
   return ctx->error;
 }
 
 char* dfsch_parser_feed_catch(dfsch_parser_ctx_t *ctx, char* data){
-  char *ret;
-    dfsch_parser_feed(ctx, data);
-    ret= NULL; // XXX
+  char *ret = NULL;
+  
+  dfsch_parser_feed(ctx, data);
+    
   return ret;
 }
 

@@ -113,6 +113,8 @@ extern "C" {
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
+  dfsch___ei->handler_list = dfsch___old_handlers;              \
+  dfsch___ei->restart_list = dfsch___old_restarts;              \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
@@ -136,7 +138,7 @@ extern "C" {
 
 #define DFSCH_UNWIND                            \
   {                                             \
-  dfsch_object_t* dfsch___exception;            \
+  dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();  \
   int dfsch___caught = 0;                       \
   DFSCH_SCATCH_BEGIN {
 
@@ -144,10 +146,11 @@ extern "C" {
   } DFSCH_SCATCH {                              \
     dfsch___caught = 1;                         \
   } DFSCH_SCATCH_END
-  
+#define DFSCH_UNWIND_DETECT                     \
+  if (dfsch___caught)
 #define DFSCH_PROTECT_END                       \
   if (dfsch___caught){                          \
-    dfsch__continue_unwind();                   \
+    dfsch__continue_unwind(dfsch___ei);         \
   }                                             \
 }
 
@@ -192,10 +195,9 @@ extern "C" {
 #define DFSCH_WITH_SIMPLE_RESTART(name, description)                    \
   {                                                                     \
   dfsch_object_t* dfsch___tag = dfsch_gensym();                         \
-  DFSCH_CATCH_BEGIN(dfsch___tag){                                             \
+  DFSCH_CATCH_BEGIN(dfsch___tag){                                       \
   dfsch_restart_bind(dfsch_make_restart(name,                           \
-                                        dfsch_make_restart_proc(dfsch___tag, \
-                                                                NULL),  \
+                                        dfsch_make_throw_proc(dfsch___tag), \
                                         description));
 #define DFSCH_END_WITH_SIMPLE_RESTART           \
   } DFSCH_CATCH {} DFSCH_CATCH_END              \

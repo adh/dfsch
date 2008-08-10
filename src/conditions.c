@@ -234,25 +234,15 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart){
   return dfsch_apply(dfsch_restart_proc(restart), NULL);
 }
 
-typedef struct restart_proc_t {
-  dfsch_object_t* catch_tag;
-  dfsch_object_t* value;
-} restart_proc_t;
 
-static dfsch_object_t* restart_proc(restart_proc_t* rp,
-                                    dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
-  dfsch_throw(rp->catch_tag, rp->value);
+static dfsch_object_t* throw_proc(dfsch_object_t* tag,
+                                  dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc){
+  dfsch_throw(tag, args);
 }
 
-dfsch_object_t* dfsch_make_restart_proc(dfsch_object_t* catch_tag,
-                                        dfsch_object_t* value){
-  restart_proc_t* rp = GC_NEW(restart_proc_t);
-
-  rp->catch_tag = catch_tag;
-  rp->value = value;
-
-  return dfsch_make_primitive(restart_proc, rp);
+dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag){
+  return dfsch_make_primitive(throw_proc, catch_tag);
 }
 
 

@@ -65,10 +65,8 @@ static int callback(dfsch_object_t *obj, void *baton){
 
   signal(SIGINT, sigint_handler_break);
   
-  DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to toplevel"){
     ret = dfsch_eval(obj, baton);
     puts(dfsch_obj_write(ret,100,1));
-  }DFSCH_END_WITH_SIMPLE_RESTART;
 
   if (cmd_log){
     fputs(dfsch_obj_write(obj,1000,1),cmd_log);
@@ -243,12 +241,15 @@ void interactive_repl(dfsch_object_t* ctx){
     add_history(str);
     interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
 
-    if (ret = dfsch_parser_feed_catch(parser,str)){
-      fputs(ret, stderr);
-    }
-    if (ret = dfsch_parser_feed_catch(parser, "\n")){
-      fputs(ret, stderr);
-    }
+    DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to toplevel"){
+      if (ret = dfsch_parser_feed_catch(parser,str)){
+        fprintf(stderr, "Parse error: %s\n", ret);
+      }
+      if (ret = dfsch_parser_feed_catch(parser, "\n")){
+        fprintf(stderr, "Parse error: %s\n", ret);
+        
+      }
+    }DFSCH_END_WITH_SIMPLE_RESTART;
 
     free(str);
   }
@@ -333,6 +334,11 @@ int main(int argc, char**argv){
 		    dfsch_make_primitive(command_transcript_on,NULL));
   dfsch_define_cstr(ctx,"transcript-off",
 		    dfsch_make_primitive(command_transcript_off,NULL));
+  dfsch_restart_bind(dfsch_make_restart(dfsch_make_symbol("quit"),
+                                        dfsch_make_primitive(command_exit,
+                                                             NULL),
+                                        "Exit interpreter"));
+                                        
 
   while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvO:t:")) != -1){
     switch (c){

@@ -26,6 +26,7 @@
 
 static void debug_main(dfsch_object_t* condition){
   dfsch_object_t* restarts = dfsch_compute_restarts();
+  char buf[512];
 
   fprintf(stderr, "debugger invoked on %s:\n",
           DFSCH_TYPE_OF(condition)->name);
@@ -43,7 +44,12 @@ static void debug_main(dfsch_object_t* condition){
             dfsch_restart_description(restart));
     restarts = DFSCH_FAST_CDR(restarts);
   }
-  dfsch_invoke_restart(dfsch_make_symbol("abort"));
+  
+  fprintf(stderr, "dbg> ");
+  fgets(buf, 512, stdin);
+  buf[strlen(buf)-1]='\0';
+  dfsch_invoke_restart(dfsch_make_symbol(buf));
+
 }
 
 DFSCH_DEFINE_PRIMITIVE(debug_handler, 0){
