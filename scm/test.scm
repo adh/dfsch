@@ -96,7 +96,6 @@
                         #f))
         
        (sub-group eq?
-                  (print "bl")
                   (test 'eq? (eq? 'a 'a) #t))
 
        (sub-group equal?
