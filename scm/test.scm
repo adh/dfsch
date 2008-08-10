@@ -197,6 +197,13 @@
                           (vector-set! vec i i))
                         #(0 1 2 3 4)))
        (sub-group non-local-exits
+                  (test 'catch
+                        (catch 'foo
+                               (catch 'bar
+                                      (throw 'foo 'ok)
+                                      'fail)
+                               'fail)
+                        'ok)
                   (test 'unwind-protect
                         (let ((x 'fail))
                           (catch 'foo 
