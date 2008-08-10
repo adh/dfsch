@@ -30,6 +30,7 @@
 #include <dfsch/parse.h>
 #include <dfsch/load.h>
 #include <dfsch/ports.h>
+#include <dfsch/magic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,9 +64,11 @@ static int callback(dfsch_object_t *obj, void *baton){
   }
 
   signal(SIGINT, sigint_handler_break);
-
-  ret = dfsch_eval(obj, baton);
-  puts(dfsch_obj_write(ret,100,1));
+  
+  DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to toplevel"){
+    ret = dfsch_eval(obj, baton);
+    puts(dfsch_obj_write(ret,100,1));
+  }DFSCH_END_WITH_SIMPLE_RESTART;
 
   if (cmd_log){
     fputs(dfsch_obj_write(obj,1000,1),cmd_log);
@@ -410,6 +413,7 @@ int main(int argc, char**argv){
 
   if (interactive || force_interactive){
     if (isatty(0)){
+      dfsch_debug_register_handler();
       interactive_repl(ctx);
     }else{
       noninteractive_repl(ctx);

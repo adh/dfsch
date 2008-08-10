@@ -1,3 +1,7 @@
+2008-08-10  Ales Hakl  <ales at hakl dot net>
+
+	* src/debug.c (debug_main): debugger stub
+
 2008-08-02  Ales Hakl  <ales at hakl dot net>
 
 	* src/conditions.c (dfsch__conditions_register): interface to

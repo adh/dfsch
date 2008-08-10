@@ -155,6 +155,24 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
 
   return (dfsch_object_t*) r;
 }
+dfsch_object_t* dfsch_restart_name(dfsch_object_t* restart){
+  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
+    dfsch_error("Not a restart", restart);
+  }
+  return ((restart_t*)restart)->name;
+}
+dfsch_object_t* dfsch_restart_proc(dfsch_object_t* restart){
+  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
+    dfsch_error("Not a restart", restart);
+  }
+  return ((restart_t*)restart)->proc;
+}
+char* dfsch_restart_description(dfsch_object_t* restart){
+  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
+    dfsch_error("Not a restart", restart);
+  }
+  return ((restart_t*)restart)->description;
+}
 
 void dfsch_restart_bind(dfsch_object_t* restart){
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
@@ -177,13 +195,52 @@ void dfsch_handler_bind(dfsch_type_t* type,
   ti->handler_list = l;
 }
 
+dfsch_object_t* dfsch_compute_restarts(){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__restart_list_t* i = ti->restart_list;
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+
+  while (i){
+    dfsch_object_t* tmp = dfsch_cons(i->restart, NULL); 
+    if (head){
+      DFSCH_FAST_CDR(tail) = tmp;
+      tail = tmp;
+    } else {
+      head = tail = tmp;
+    }
+    i = i->next;
+  }
+
+  return head;
+}
+
+dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart){
+  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
+    dfsch__thread_info_t* ti = dfsch__get_thread_info();
+    dfsch__restart_list_t* i = ti->restart_list;
+    while (i){
+      if (dfsch_restart_name(i->restart) == restart){
+        break;
+      }
+      i = i->next;
+    }
+    if (!i){
+      dfsch_error("No such restart", restart);
+    }
+    restart = i->restart;
+  }
+
+  return dfsch_apply(dfsch_restart_proc(restart), NULL);
+}
+
 typedef struct restart_proc_t {
   dfsch_object_t* catch_tag;
   dfsch_object_t* value;
 } restart_proc_t;
 
-static dfsch_object_t* restart_proc(dfsch_object_t* args,
-                                    restart_proc_t* rp,
+static dfsch_object_t* restart_proc(restart_proc_t* rp,
+                                    dfsch_object_t* args,
                                     dfsch_tail_escape_t* esc){
   dfsch_throw(rp->catch_tag, rp->value);
 }

@@ -189,6 +189,18 @@ extern "C" {
   dfsch___ei->restart_list = dfsch___saved_restarts;   \
 }
 
+#define DFSCH_WITH_SIMPLE_RESTART(name, description)                    \
+  {                                                                     \
+  dfsch_object_t* dfsch___tag = dfsch_gensym();                         \
+  DFSCH_CATCH_BEGIN(dfsch___tag){                                             \
+  dfsch_restart_bind(dfsch_make_restart(name,                           \
+                                        dfsch_make_restart_proc(dfsch___tag, \
+                                                                NULL),  \
+                                        description));
+#define DFSCH_END_WITH_SIMPLE_RESTART           \
+  } DFSCH_CATCH {} DFSCH_CATCH_END              \
+}
+  
 
 #ifdef __cplusplus
 }

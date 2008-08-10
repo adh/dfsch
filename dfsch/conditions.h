@@ -54,10 +54,16 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    char* description);
 extern dfsch_type_t dfsch_restart_type;
 #define DFSCH_RESTART_TYPE (&dfsch_restart_type)
+dfsch_object_t* dfsch_restart_name(dfsch_object_t* restart);
+dfsch_object_t* dfsch_restart_proc(dfsch_object_t* restart);
+char* dfsch_restart_description(dfsch_object_t* restart);
 
 void dfsch_restart_bind(dfsch_object_t* restart);
 void dfsch_handler_bind(dfsch_type_t* type,
                         dfsch_object_t* handler);
+
+dfsch_object_t* dfsch_compute_restarts();
+dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart);
 
 dfsch_object_t* dfsch_make_restart_proc(dfsch_object_t* catch_tag,
                                         dfsch_object_t* value);
