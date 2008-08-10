@@ -1,5 +1,7 @@
 2008-08-10  Ales Hakl  <ales at hakl dot net>
 
+	* scm/test.scm: more tests
+
 	* src/debug.c (debug_main): debugger stub
 
 2008-08-02  Ales Hakl  <ales at hakl dot net>

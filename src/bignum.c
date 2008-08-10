@@ -180,8 +180,8 @@ int dfsch_bignum_to_uint64(dfsch_bignum_t* b, uint64_t* rp){
     }
 
     for (; i > 0; i--){
-      r |= b->words[i-1] & WORD_MASK;    return 0;
       r <<= WORD_BITS;
+      r |= b->words[i-1] & WORD_MASK;
     }
     
     *rp = r;
@@ -193,7 +193,6 @@ int dfsch_bignum_to_int64(bignum_t* b, int64_t* rp){
   uint64_t t;
   if (!dfsch_bignum_to_uint64(b, &t)){
     return 0;
-
   }
   if (b->negative){
     if (t > ((uint64_t)INT64_MAX) + 1){

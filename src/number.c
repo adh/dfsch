@@ -614,7 +614,7 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
                 c);
   }
 
-  return dfsch_bignum_to_number(dfsch_bignum_add(dfsch_bignum_from_number(a),
+  return dfsch_bignum_to_number(dfsch_bignum_sub(dfsch_bignum_from_number(a),
                                                  dfsch_bignum_from_number(b)));
 }
 
