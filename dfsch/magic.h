@@ -40,11 +40,6 @@
 extern "C" {
 #endif
 
-  /*
-   * TODO: Mechanism used for unwind-protect should be unified between 
-   * continuations and exceptions, but this works for now.
-   */
-
   typedef struct dfsch__thread_info_t dfsch__thread_info_t;
   typedef struct dfsch__restart_list_t dfsch__restart_list_t;
   typedef struct dfsch__catch_list_t dfsch__catch_list_t;
