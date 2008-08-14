@@ -31,6 +31,7 @@
 #include <dfsch/load.h>
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
+#include <dfsch/lib/debug.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

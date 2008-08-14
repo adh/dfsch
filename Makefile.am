@@ -5,6 +5,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/extref.h \
+	dfsch/lib/debug.h \
+	dfsch/lib/console.h \
 	dfsch/strings.h \
 	dfsch/parse.h \
 	dfsch/promise.h \
@@ -23,21 +25,24 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/util.h \
 	dfsch/compiler.h\
 	dfsch/bignum.h \
-	dfsch/conditions.h \
-	dfsch/debug.h
+	dfsch/conditions.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
 	libdfsch-regex.la \
-	libdfsch-threads.la
+	libdfsch-threads.la \
+	libdfsch-debug.la \
+	libdfsch-console.la
 
 dfschlibexec_LTLIBRARIES = threads.la\
 	regex.la \
 	unix.la \
 	inet.la \
 	gcollect.la \
-	extref.la
+	extref.la \
+	debug.la \
+	console.la
 
 dfschlibscm_DATA = scm/struct.scm
 
@@ -45,7 +50,6 @@ man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/struct.scm \
 	doc/dfsch-repl.1
-
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/parse.c dfsch/parse.h 	\
@@ -65,11 +69,26 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h		\
 	src/compiler.c dfsch/compiler.h \
-	src/conditions.c dfsch/conditions.h	\
-	src/debug.c dfsch/debug.h
+	src/conditions.c dfsch/conditions.h
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
+
+libdfsch_debug_la_SOURCES = lib/debug.c dfsch/lib/debug.h
+libdfsch_debug_la_LDFLAGS = -version-info 0:0:0
+libdfsch_debug_la_LIBADD =  libdfsch.la -lpthread
+
+debug_la_SOURCES = lib/debug_mod.c
+debug_la_LDFLAGS = -avoid-version  -module
+debug_la_LIBADD =  libdfsch.la -lpthread libdfsch-debug.la
+
+libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
+libdfsch_console_la_LDFLAGS = -version-info 0:0:0
+libdfsch_console_la_LIBADD =  libdfsch.la -lpthread
+
+console_la_SOURCES = lib/console_mod.c
+console_la_LDFLAGS = -avoid-version  -module
+console_la_LIBADD =  libdfsch.la -lpthread libdfsch-console.la
 
 libdfsch_threads_la_SOURCES = lib/threads.c dfsch/lib/threads.h
 libdfsch_threads_la_LDFLAGS = -version-info 1:0:0
@@ -112,7 +131,7 @@ extref_la_LDFLAGS = -avoid-version -module
 extref_la_LIBADD =  libdfsch.la libdfsch-extref.la
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la \
+dfsch_repl_LDADD = libdfsch.la libdfsch-debug.la libdfsch-console.la\
 	@READLINE_LIBS@		
 
 
