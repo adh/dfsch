@@ -234,7 +234,6 @@ void interactive_repl(dfsch_object_t* ctx){
     char *str;
     char *ret;
 
-
     signal(SIGINT, sigint_handler_rl);
     str = readline(get_prompt(dfsch_parser_get_level(parser)));
     if (!str)
@@ -247,8 +246,7 @@ void interactive_repl(dfsch_object_t* ctx){
         fprintf(stderr, "Parse error: %s\n", ret);
       }
       if (ret = dfsch_parser_feed_catch(parser, "\n")){
-        fprintf(stderr, "Parse error: %s\n", ret);
-        
+        fprintf(stderr, "Parse error: %s\n", ret);   
       }
     }DFSCH_END_WITH_SIMPLE_RESTART;
 
@@ -270,8 +268,9 @@ void interactive_repl(dfsch_object_t* ctx){
     char str[4096];
     char* ret;
     
-    if(fgets(str, 4096, stdin) == NULL)
+    if(fgets(str, 4096, stdin) == NULL){
       break;
+    }
 
     interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
 
@@ -279,13 +278,12 @@ void interactive_repl(dfsch_object_t* ctx){
       fputs(ret, stderr);
     }
 
-    if (str[strlen(str)-1] == '\n')
+    if (str[strlen(str)-1] == '\n'){
       fputs(get_prompt(dfsch_parser_get_level(parser)), stdout);
-
+    }
   }
   
   puts("");
-
 }
 #endif
 
