@@ -1,3 +1,7 @@
+2008-08-15  Ales Hakl  <ales at hakl dot net>
+
+	* lib/console.c: simple console input functions
+
 2008-08-14  Ales Hakl  <ales at hakl dot net>
 
 	* lib/debug.c: Moved into library

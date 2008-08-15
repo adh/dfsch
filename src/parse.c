@@ -1110,6 +1110,7 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   int ch;
   char buf[2];
   dfsch_object_t* res;
+  int ok = 0;
 
   dfsch_port_batch_read_start(port);
   dfsch_parser_callback(parser, read_callback, &res);
@@ -1120,12 +1121,16 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
       
       if (dfsch_parser_feed(parser, buf)){
         dfsch_port_batch_read_end(port);
-        return res;
+        ok = 1;
+        break;
       }
     }
   } DFSCH_PROTECT {
     dfsch_port_batch_read_end(port);
   } DFSCH_PROTECT_END;
+  if (ok){
+    return res;
+  }
   if (dfsch_parser_top_level(parser)){
     return dfsch_eof_object();
   } else {

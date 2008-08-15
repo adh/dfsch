@@ -22,7 +22,13 @@
 #ifndef H__dfsch__console__
 #define H__dfsch__console__
 
+#include <dfsch/dfsch.h>
+
 char* dfsch_console_read_line(char* prompt);
+
+void dfsch_console_set_object_completion();
+void dfsch_console_set_general_completion();
+
 dfsch_object_t* dfsch_console_read_object(char* prompt);
 
 typedef int (*dfsch_console_object_cb_t)(void* baton, dfsch_object_t* obj);
