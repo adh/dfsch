@@ -105,6 +105,8 @@ dfsch_type_t dfsch_error_type =
 dfsch_type_t dfsch_runtime_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "runtime-error");
 
+static int invoke_debugger_on_all_conditions = 0;
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
@@ -122,12 +124,49 @@ void dfsch_signal(dfsch_object_t* condition){
 
 
   if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
+    dfsch_enter_debugger(condition);
     fputs("Unhandled error condition!\n\n", stderr);
     fprintf(stderr, "%s\n", dfsch_obj_write(condition, 10, 1));
     abort();
+  } else if (invoke_debugger_on_all_conditions){
+    dfsch_enter_debugger(condition);    
   }
 
   ti->handler_list = save;
+}
+
+static dfsch_object_t* debugger_proc = NULL;
+static int max_debugger_recursion = 10;
+
+void dfsch_set_debugger(dfsch_object_t* proc){
+  debugger_proc = proc;
+}
+void dfsch_set_invoke_debugger_on_all_conditions(int val){
+  invoke_debugger_on_all_conditions = val;
+}
+
+static int debugger_depth = 0;
+static pthread_mutex_t debugger_depth_mutex= PTHREAD_MUTEX_INITIALIZER;
+
+void dfsch_enter_debugger(dfsch_object_t* reason){
+  pthread_mutex_lock(&debugger_depth_mutex);
+  if (debugger_depth > max_debugger_recursion){
+    pthread_mutex_unlock(&debugger_depth_mutex);
+    fputs("Debugger recursion limit exceeded!\n\n", stderr);
+    return;
+  }
+  debugger_depth++;
+  pthread_mutex_unlock(&debugger_depth_mutex);
+
+  DFSCH_UNWIND {
+    if (debugger_proc){
+      dfsch_apply(debugger_proc, dfsch_cons(reason, NULL));
+    }
+  } DFSCH_PROTECT {
+    pthread_mutex_lock(&debugger_depth_mutex);
+    debugger_depth--;
+    pthread_mutex_unlock(&debugger_depth_mutex);
+  } DFSCH_PROTECT_END;
 }
 
 typedef struct restart_t {
@@ -296,6 +335,38 @@ DFSCH_DEFINE_PRIMITIVE(signal, 0){
   dfsch_signal(condition);
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_debugger(proc);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(set_invoke_debugger_on_all_conditions, 0){
+  dfsch_object_t* val;
+  DFSCH_OBJECT_ARG(args, val);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_invoke_debugger_on_all_conditions(val != NULL);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
+  dfsch_object_t* reason;
+  DFSCH_OBJECT_ARG(args, reason);
+  DFSCH_ARG_END(args);
+  
+  dfsch_enter_debugger(reason);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(invoke_restart, 0){
+  dfsch_object_t* restart;
+  DFSCH_OBJECT_ARG(args, restart);
+  DFSCH_ARG_END(args);
+  dfsch_invoke_restart(restart);
+  return NULL;
+}
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
@@ -315,4 +386,6 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
 
   dfsch_define_cstr(ctx, "signal",
                     DFSCH_PRIMITIVE_REF(signal));
+  dfsch_define_cstr(ctx, "invoke-restart",
+                    DFSCH_PRIMITIVE_REF(invoke_restart));
 }

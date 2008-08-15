@@ -5,7 +5,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/extref.h \
-	dfsch/lib/debug.h \
+	dfsch/lib/cdebug.h \
 	dfsch/lib/console.h \
 	dfsch/strings.h \
 	dfsch/parse.h \
@@ -32,7 +32,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-inet.la \
 	libdfsch-regex.la \
 	libdfsch-threads.la \
-	libdfsch-debug.la \
+	libdfsch-cdebug.la \
 	libdfsch-console.la
 
 dfschlibexec_LTLIBRARIES = threads.la\
@@ -41,7 +41,7 @@ dfschlibexec_LTLIBRARIES = threads.la\
 	inet.la \
 	gcollect.la \
 	extref.la \
-	debug.la \
+	cdebug.la \
 	console.la
 
 dfschlibscm_DATA = scm/struct.scm
@@ -74,13 +74,13 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
 
-libdfsch_debug_la_SOURCES = lib/debug.c dfsch/lib/debug.h
-libdfsch_debug_la_LDFLAGS = -version-info 0:0:0
-libdfsch_debug_la_LIBADD =  libdfsch.la libdfsch-console.la -lpthread
+libdfsch_cdebug_la_SOURCES = lib/cdebug.c dfsch/lib/cdebug.h
+libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0
+libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la -lpthread
 
-debug_la_SOURCES = lib/debug_mod.c
-debug_la_LDFLAGS = -avoid-version  -module
-debug_la_LIBADD =  libdfsch.la -lpthread libdfsch-debug.la
+cdebug_la_SOURCES = lib/cdebug_mod.c
+cdebug_la_LDFLAGS = -avoid-version  -module
+cdebug_la_LIBADD =  libdfsch.la -lpthread libdfsch-cdebug.la
 
 libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
 libdfsch_console_la_LDFLAGS = -version-info 0:0:0
@@ -131,7 +131,7 @@ extref_la_LDFLAGS = -avoid-version -module
 extref_la_LIBADD =  libdfsch.la libdfsch-extref.la
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la libdfsch-debug.la libdfsch-console.la
+dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la libdfsch-console.la
 
 TESTS = tests/scm-test.sh
 

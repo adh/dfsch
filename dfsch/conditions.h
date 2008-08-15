@@ -47,7 +47,9 @@ extern dfsch_type_t dfsch_runtime_error_type;
 #define DFSCH_RUNTIME_ERROR_TYPE (&dfsch_runtime_error_type)
 
 void dfsch_signal(dfsch_object_t* condition);
-
+void dfsch_set_debugger(dfsch_object_t* proc);
+void dfsch_set_invoke_debugger_on_all_conditions(int val);
+void dfsch_enter_debugger(dfsch_object_t* reason);
 
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,

@@ -76,6 +76,7 @@ extern "C" {
   extern void dfsch__continue_unwind();
   extern void dfsch__finalize_unwind();
 
+#define DFSCH__DEBUG_TAG printf(";; %s:%d %s\n", __FILE__, __LINE__, __func__)
 
   /**
    * Low-level stack unwinding construct. throw in code between BEGIN and 

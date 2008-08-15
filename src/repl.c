@@ -31,7 +31,7 @@
 #include <dfsch/load.h>
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
-#include <dfsch/lib/debug.h>
+#include <dfsch/lib/cdebug.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -142,6 +142,8 @@ int main(int argc, char**argv){
 
   ctx = dfsch_make_context();
 
+  dfsch_set_debugger(dfsch_cdebug_get_procedure());
+
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);
 
@@ -221,7 +223,6 @@ int main(int argc, char**argv){
 
   if (interactive || force_interactive){
     if (isatty(0)){
-      dfsch_debug_register_handler();
       interactive_repl(ctx);
     }else{
       noninteractive_repl(ctx);
