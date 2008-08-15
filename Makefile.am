@@ -48,7 +48,7 @@ dfschlibscm_DATA = scm/struct.scm
 
 man_MANS = doc/dfsch-repl.1
 
-EXTRA_DIST = scm/morse.scm tests/scm-test.sh scm/test.scm scm/struct.scm \
+EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
 	doc/dfsch-repl.1
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
