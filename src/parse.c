@@ -1068,6 +1068,14 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
 
   return ctx->error;
 }
+int dfsch_parser_feed_line(dfsch_parser_ctx_t *ctx, char* data){
+  int ret;
+  if (ret = dfsch_parser_feed(ctx, data)){
+    return ret;
+  }
+  return dfsch_parser_feed(ctx, "\n");
+}
+
 
 char* dfsch_parser_feed_catch(dfsch_parser_ctx_t *ctx, char* data){
   char *ret = NULL;

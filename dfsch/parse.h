@@ -70,6 +70,7 @@ extern "C" {
    * Feed some data into parser.
    */
   extern int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data);
+  extern int dfsch_parser_feed_line(dfsch_parser_ctx_t* ctx, char* data);
 
   /**
    * Get nesting level (i.e. some value proportional to depth of parser

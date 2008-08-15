@@ -23,6 +23,7 @@
 #define H__dfsch__console__
 
 #include <dfsch/dfsch.h>
+#include <dfsch/parse.h>
 
 char* dfsch_console_read_line(char* prompt);
 
@@ -31,12 +32,20 @@ void dfsch_console_set_general_completion();
 
 dfsch_object_t* dfsch_console_read_object(char* prompt);
 
-typedef int (*dfsch_console_object_cb_t)(void* baton, dfsch_object_t* obj);
+typedef int (*dfsch_console_object_cb_t)(dfsch_object_t* obj, void* baton);
 
-int dfsch_console_read_objects(dfsch_console_object_cb_t cb,
+int dfsch_console_read_objects_parser(char* prompt,
+                                      dfsch_parser_ctx_t* parser);
+int dfsch_console_read_objects_list_parser(char* prompt,
+                                           dfsch_parser_ctx_t* parser);
+
+int dfsch_console_read_objects(char* prompt,
+                               dfsch_console_object_cb_t cb,
                                void* baton);
-int dfsch_console_read_objects_list(dfsch_console_object_cb_t cb,
+int dfsch_console_read_objects_list(char * prompt,
+                                    dfsch_console_object_cb_t cb,
                                     void* baton);
-int dfsch_console_run_repl(dfsch_object_t* env);
+int dfsch_console_run_repl(char* prompt,
+                           dfsch_object_t* env);
 
 #endif

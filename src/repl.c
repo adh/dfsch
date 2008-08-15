@@ -47,94 +47,11 @@
 #include <signal.h>
 #include <assert.h>
 
-
-FILE *cmd_log;
-FILE *transcript;
-
 static void sigint_handler_break(int sig){
   dfsch_break("user:sigint"); 
 }
 
-static int callback(dfsch_object_t *obj, void *baton){
-  dfsch_object_t* ret;
-
-  if (transcript){
-    fputs(";; Expression\n",transcript);
-    fputs(dfsch_obj_write(obj,1000,1),transcript);
-    fputs("\n",transcript);
-  }
-
-  signal(SIGINT, sigint_handler_break);
-  
-    ret = dfsch_eval(obj, baton);
-    puts(dfsch_obj_write(ret,100,1));
-
-  if (cmd_log){
-    fputs(dfsch_obj_write(obj,1000,1),cmd_log);
-    fputs("\n",cmd_log);
-    fflush(cmd_log);
-  }
-  if (transcript){
-    fputs(";; Response\n",transcript);    
-    fputs(dfsch_obj_write(ret,1000,1),transcript);
-    fputs("\n",transcript);
-    fflush(transcript);
-  }
-
-  return 1;
-}
-
 dfsch_parser_ctx_t *parser;
-
-#ifdef USE_READLINE
-static void sigint_handler_rl(int sig){
-  dfsch_parser_reset(parser);
-  rl_set_prompt("]=> ");
-  rl_replace_line("", 1);
-  rl_redisplay();
-  signal(SIGINT, sigint_handler_rl);
-}
-
-static char * symbol_completion_cb (const char* text, int state){
-  char *name;
-  static dfsch_symbol_iter_t* iter;
-  int len;
-
-
-  if (state==0)
-    iter = NULL;
-
-  len = strlen(text);
-
-  while (name = dfsch_get_next_symbol(&iter)){
-    if (strncmp (name, text, len) == 0){
-      return (char*)strdup(name);
-    }
-  }
-  
-  /* If no names matched, then return NULL. */
-  return ((char *)NULL);
-}
-
-static char ** symbol_completion (const char* text, int start, int end){
-  return rl_completion_matches (text, symbol_completion_cb);
-}
-#endif /* USE_READLINE */
-
-static char* get_prompt(int level){
-  if (level){
-    char *prompt = GC_MALLOC_ATOMIC((level*2)+5);
-    memset(prompt, ' ', level*2);
-    prompt[level*2+0] = '.';
-    prompt[level*2+1] = '.';
-    prompt[level*2+2] = '>';
-    prompt[level*2+3] = ' ';
-    prompt[level*2+4] = 0;
-    return prompt;
-  }else{
-    return "]=> ";
-  }
-}
 
 static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
                                     dfsch_tail_escape_t* esc){
@@ -163,34 +80,6 @@ static dfsch_object_t* command_sleep(void*baton, dfsch_object_t* args,
 
   return NULL;
 }
-static dfsch_object_t* command_transcript_on(void*baton, dfsch_object_t* args,
-					     dfsch_tail_escape_t* esc){
-  char* fname;
-
-  DFSCH_STRING_ARG(args, fname);
-  DFSCH_ARG_END(args);
-
-  transcript = fopen(fname, "a");
-  if (!transcript){
-    dfsch_error("exception:unable-to-open-transcript", 
-		dfsch_make_string_cstr(strerror(errno)));
-  }
-
-  return NULL;
-}
-static dfsch_object_t* command_transcript_off(void*baton, dfsch_object_t* args,
-					      dfsch_tail_escape_t* esc){
-  DFSCH_ARG_END(args);
-
-  if (transcript){
-    fclose(transcript);
-    transcript = NULL;
-  }
-
-  return NULL;
-}
-
-
 static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
@@ -213,84 +102,20 @@ static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
 }
 
 
-static void interactive_transcript(char * prompt, char* input){
-  if (transcript){
-    fprintf(transcript, ";;; %s %s\n", prompt, input);
-  }
-}
-
-
-#ifdef USE_READLINE
 void interactive_repl(dfsch_object_t* ctx){
-
-  parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, callback, ctx);
-
-  rl_readline_name = "dfsch";
-  rl_attempted_completion_function = symbol_completion;
-  rl_basic_word_break_characters = " \t\n\"()";
-
-  while (1){
-    char *str;
-    char *ret;
-
-    signal(SIGINT, sigint_handler_rl);
-    str = readline(get_prompt(dfsch_parser_get_level(parser)));
-    if (!str)
-      break;
-    add_history(str);
-    interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
-
-    DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to toplevel"){
-      if (ret = dfsch_parser_feed_catch(parser,str)){
-        fprintf(stderr, "Parse error: %s\n", ret);
-      }
-      if (ret = dfsch_parser_feed_catch(parser, "\n")){
-        fprintf(stderr, "Parse error: %s\n", ret);   
-      }
-    }DFSCH_END_WITH_SIMPLE_RESTART;
-
-    free(str);
-  }
-  
-  puts("");
-
+  dfsch_console_run_repl("]=> ", ctx);
 }
-#else
-void interactive_repl(dfsch_object_t* ctx){
 
-  parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, callback, ctx);
-
-  fputs(get_prompt(dfsch_parser_get_level(parser)), stdout);
-
-  while (!feof(stdin)){
-    char str[4096];
-    char* ret;
-    
-    if(fgets(str, 4096, stdin) == NULL){
-      break;
-    }
-
-    interactive_transcript(get_prompt(dfsch_parser_get_level(parser)), str);
-
-    if (ret = dfsch_parser_feed_catch(parser,str)){
-      fputs(ret, stderr);
-    }
-
-    if (str[strlen(str)-1] == '\n'){
-      fputs(get_prompt(dfsch_parser_get_level(parser)), stdout);
-    }
-  }
-  
-  puts("");
+static int repl_callback(dfsch_object_t *obj, void *baton){
+  dfsch_object_t* ret;
+  ret = dfsch_eval(obj, baton);
+  puts(dfsch_obj_write(ret,100,1));
 }
-#endif
 
 void noninteractive_repl(dfsch_object_t* ctx){
 
   parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, callback, ctx);
+  dfsch_parser_callback(parser, repl_callback, ctx);
 
   while (!feof(stdin)){
     char str[4096];
@@ -299,14 +124,10 @@ void noninteractive_repl(dfsch_object_t* ctx){
     if (fgets(str, 4096, stdin) == NULL)
       break;
 
-    if (ret = dfsch_parser_feed_catch(parser,str)){
-      fputs(ret, stderr);
-    }
-
+    dfsch_parser_feed_catch(parser, str);
   }
   
   puts("");
-
 }
 
 
@@ -319,9 +140,7 @@ int main(int argc, char**argv){
   GC_INIT();
   signal(SIGINT, sigint_handler_break);
 
-  cmd_log = NULL;
   ctx = dfsch_make_context();
-
 
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);
@@ -329,17 +148,13 @@ int main(int argc, char**argv){
   dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
   dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));
   dfsch_define_cstr(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
-  dfsch_define_cstr(ctx,"transcript-on",
-		    dfsch_make_primitive(command_transcript_on,NULL));
-  dfsch_define_cstr(ctx,"transcript-off",
-		    dfsch_make_primitive(command_transcript_off,NULL));
   dfsch_restart_bind(dfsch_make_restart(dfsch_make_symbol("quit"),
                                         dfsch_make_primitive(command_exit,
                                                              NULL),
                                         "Exit interpreter"));
                                         
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvO:t:")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hv")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
@@ -349,16 +164,6 @@ int main(int argc, char**argv){
       break;
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
-      break;
-    case 'O':
-      cmd_log = fopen(optarg, "a");
-      if (!cmd_log)
-	perror(optarg);
-      break;
-    case 't':
-      transcript = fopen(optarg, "a");
-      if (!transcript)
-	perror(optarg);
       break;
     case 'e':
       {
@@ -392,8 +197,6 @@ int main(int argc, char**argv){
       puts("  -L <directory>    Append directory to load:path");
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
-      puts("  -O <filename>     Log sucessfuly executed statements");
-      puts("  -t <filename>     Produce session transcript");
       puts("  -i                Force interactive mode");
 
       puts("First non-option argument is treated as filename of program to run");

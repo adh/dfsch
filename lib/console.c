@@ -6,6 +6,7 @@
 #include <dfsch/util.h>
 #include <dfsch/parse.h>
 #include <dfsch/ports.h>
+#include <dfsch/magic.h>
 
 #ifdef USE_READLINE
 #include <readline/readline.h>
@@ -106,6 +107,14 @@ void dfsch_console_set_general_completion(){
 }
 #endif
 
+char* dfsch_console_read_line_object(char* prompt){
+  char* line;
+  dfsch_console_set_object_completion();
+  line = dfsch_console_read_line(prompt);
+  dfsch_console_set_general_completion();
+  return line;
+}
+
 static int read_callback(dfsch_object_t* obj, dfsch_object_t** res){
   *res = obj;
   return 0;
@@ -141,16 +150,13 @@ dfsch_object_t* dfsch_console_read_object(char* prompt){
   dfsch_object_t* obj;
 
   dfsch_parser_callback(parser, read_callback, &obj);
-  dfsch_console_set_object_completion();
-  while (line = dfsch_console_read_line(get_prompt(parser, prompt))){
-    if (dfsch_parser_feed(parser, line)){
-      return obj;
-    }
-    if (dfsch_parser_feed(parser, "\n")){
+
+  while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
+    if (dfsch_parser_feed_line(parser, line)){
       return obj;
     }
   }
-  dfsch_console_set_general_completion();
+
   if (dfsch_parser_top_level(parser)){
     return dfsch_eof_object();
   } else {
@@ -158,20 +164,48 @@ dfsch_object_t* dfsch_console_read_object(char* prompt){
   }
 }
 
-int dfsch_console_read_objects(dfsch_console_object_cb_t cb,
+int dfsch_console_read_objects_parser(char* prompt,
+                                      dfsch_parser_ctx_t* parser){
+  int ret;
+  char* line;
+
+  while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
+    DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to reader"){
+      ret = dfsch_parser_feed_line(parser, line);
+    }DFSCH_END_WITH_SIMPLE_RESTART;
+
+    if (ret){
+      return ret;
+    }
+  }
+
+  return 0;
+}
+int dfsch_console_read_objects_list_parser(char* prompt,
+                                           dfsch_parser_ctx_t* parser){
+
+}
+
+
+int dfsch_console_read_objects(char* prompt,
+                               dfsch_console_object_cb_t cb,
                                void* baton){
-  dfsch_console_set_object_completion();
-  
-
-  dfsch_console_set_general_completion();
+  dfsch_parser_ctx_t* parser = dfsch_parser_create();
+  dfsch_parser_callback(parser, cb, baton);
+  return dfsch_console_read_objects_parser(prompt, parser);
 }
-int dfsch_console_read_objects_list(dfsch_console_object_cb_t cb,
+int dfsch_console_read_objects_list(char* prompt,
+                                    dfsch_console_object_cb_t cb,
                                     void* baton){
-  dfsch_console_set_object_completion();
-  
-
-  dfsch_console_set_general_completion();
 }
-int dfsch_console_run_repl(dfsch_object_t* env){
 
+static int repl_callback(dfsch_object_t *obj, void *baton){
+  dfsch_object_t* ret;
+  ret = dfsch_eval(obj, baton);
+  puts(dfsch_obj_write(ret,100,1));
+}
+
+int dfsch_console_run_repl(char* prompt, 
+                           dfsch_object_t* env){
+  return dfsch_console_read_objects(prompt, repl_callback, env);
 }
