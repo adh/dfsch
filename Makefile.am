@@ -76,7 +76,7 @@ libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
 
 libdfsch_debug_la_SOURCES = lib/debug.c dfsch/lib/debug.h
 libdfsch_debug_la_LDFLAGS = -version-info 0:0:0
-libdfsch_debug_la_LIBADD =  libdfsch.la -lpthread
+libdfsch_debug_la_LIBADD =  libdfsch.la libdfsch-console.la -lpthread
 
 debug_la_SOURCES = lib/debug_mod.c
 debug_la_LDFLAGS = -avoid-version  -module
@@ -84,11 +84,11 @@ debug_la_LIBADD =  libdfsch.la -lpthread libdfsch-debug.la
 
 libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
 libdfsch_console_la_LDFLAGS = -version-info 0:0:0
-libdfsch_console_la_LIBADD =  libdfsch.la -lpthread
+libdfsch_console_la_LIBADD =  libdfsch.la @READLINE_LIBS@
 
 console_la_SOURCES = lib/console_mod.c
 console_la_LDFLAGS = -avoid-version  -module
-console_la_LIBADD =  libdfsch.la -lpthread libdfsch-console.la
+console_la_LIBADD =  libdfsch.la libdfsch-console.la
 
 libdfsch_threads_la_SOURCES = lib/threads.c dfsch/lib/threads.h
 libdfsch_threads_la_LDFLAGS = -version-info 1:0:0
@@ -131,9 +131,7 @@ extref_la_LDFLAGS = -avoid-version -module
 extref_la_LIBADD =  libdfsch.la libdfsch-extref.la
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la libdfsch-debug.la libdfsch-console.la\
-	@READLINE_LIBS@		
-
+dfsch_repl_LDADD = libdfsch.la libdfsch-debug.la libdfsch-console.la
 
 TESTS = tests/scm-test.sh
 

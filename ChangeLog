@@ -1,5 +1,7 @@
 2008-08-15  Ales Hakl  <ales at hakl dot net>
 
+	* Makefile.am: correct inter-library dependencies 
+
 	* src/repl.c (interactive_repl): Use console library to read input
 
 	* lib/console.c: simple console input functions
