@@ -2,7 +2,7 @@
 
 BUILD_DIR="`pwd`"
 
-cd $srcdir/scm
+cd $srcdir/tests
 
-$BUILD_DIR/dfsch-repl test.scm
+$BUILD_DIR/dfsch-repl interp-test.scm
 
