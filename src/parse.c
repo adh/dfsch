@@ -1066,7 +1066,6 @@ int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
     DFSCH__DEBUG_TAG;
     parser_reset(ctx);
   }DFSCH_PROTECT_END;
-  DFSCH__DEBUG_TAG;
 
   return ctx->error;
 }
