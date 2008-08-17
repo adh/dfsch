@@ -31,10 +31,10 @@ Sometimes:
   - Normalization
   - Collation
 * syntax-rules
-* FFI
 * Missing parts of unix library (ftw, various system databases...)
 
 External modules and libraries:
 * JSON
 * Sound I/O
+* FFI
 
