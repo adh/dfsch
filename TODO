@@ -1,35 +1,40 @@
 Non-version-specific:
 * More tests
+* Documentation
 
-For 0.2.1:
+For 0.2.2:
+* Some simple introspection facility
+* Native representation of stack frames
+
+For 0.2.3:
+* Better format
+* Some platform- and locale-independent conversion of numbers from/to strings
+    
+For 0.2.4:
 * Multimethods + method combinations
-* Missing parts of unix library (ftw, various system databases...)
-* Pretty-printer
-* Generalized conditions (Errors, Warnings, debugger hooks...)
 * Declarations (associated to variables, not values)
-* Dynamic variables (as implicit top-level environment, shadowed by
-   everything else)
+* Pretty-printer
+
+For 0.2.x:
+* Dynamic variables
+
+For 0.3:
+* Compiler (into bytecode)
+* JIT (using GNU Lightning)
 
 When needed by other code:
 * Type predicates for all types
 * Structures (in C code)
 
 Sometimes:
-* Documentation
-* Better format
-* Some platform- and locale-independent conversion of numbers from/to strings
 * Unicode
-  - Case conversions
   - Normalization
   - Collation
-* More number types:
-  - Complex numbers (FP-only)
 * syntax-rules
-* Sound I/O
-* Compiler (into bytecode)
-* JIT (using GNU Lightning)
 * FFI
+* Missing parts of unix library (ftw, various system databases...)
 
 External modules and libraries:
 * JSON
+* Sound I/O
 
