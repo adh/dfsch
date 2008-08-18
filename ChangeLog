@@ -1,3 +1,7 @@
+2008-08-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: removed remnants of old exception mechanism
+
 2008-08-16  Ales Hakl  <ales at hakl dot net>
 
 	* lib/cdebug.c: reworked debugger. Debugger is now sellected

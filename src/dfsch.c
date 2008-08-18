@@ -410,17 +410,6 @@ dfsch_type_t dfsch_form_type = {
 };
 #define FORM (&dfsch_form_type)
 
-static dfsch_type_t exception_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(exception_t),
-  "exception",
-  NULL,
-  NULL,
-  NULL
-};
-#define EXCEPTION (&exception_type)
-
 static int vector_equal_p(vector_t* a, vector_t* b){
   size_t i;
   if (a->length != b->length)
@@ -517,10 +506,6 @@ int dfsch_macro_p(dfsch_object_t* obj){
 }
 int dfsch_form_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == FORM;
-}
-
-int dfsch_exception_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == EXCEPTION;
 }
 
 int dfsch_vector_p(dfsch_object_t* obj){
@@ -2225,7 +2210,6 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
   dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
   dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
-  dfsch_define_cstr(ctx, "<exception>", EXCEPTION);
   dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
 
 
