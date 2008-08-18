@@ -2091,7 +2091,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
                             myesc.code, 
                             myesc.env,
                             dfsch_sym_tail_recursive());
-                            dfsch_set_car(ti->stack_trace, my_frame);
+    dfsch_set_car(ti->stack_trace, my_frame);
   }else{
     i = code;
   }
