@@ -4,7 +4,7 @@
 
 2008-08-16  Ales Hakl  <ales at hakl dot net>
 
-	* lib/cdebug.c: reworked debugger. Debugger is now sellected
+	* lib/cdebug.c: reworked debugger. Debugger is now selected
 	globally and does not show up as condition handler. Also debugger
 	contains full REPL.
 
