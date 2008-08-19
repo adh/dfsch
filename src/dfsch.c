@@ -1410,7 +1410,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   if (!ei){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->throw_ret = NULL;
-    ei->stack_trace = NULL;
+    ei->stack_frame = NULL;
     ei->break_type = NULL;
     pthread_setspecific(thread_key, ei);
   }
@@ -1431,7 +1431,7 @@ void dfsch__finalize_unwind(dfsch__thread_info_t* ti){
 
 dfsch_object_t* dfsch_get_stack_trace(){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  return ti->stack_trace;
+  return (dfsch_object_t*) ti->stack_frame;
 }
 
 void dfsch_throw(dfsch_object_t* tag,
@@ -1868,6 +1868,10 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * works even through C-code.
  */
 
+/* TODO: finish new stack traces
+ * general idea is that frames are construed by apply and then filed in 
+ * relevant functions. Tail recursion handling should be part of apply. */
+
 struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *code;
@@ -1877,6 +1881,36 @@ struct dfsch_tail_escape_t {
 
 typedef dfsch_tail_escape_t tail_escape_t;
 
+static void push_stack_frame(dfsch__thread_info_t* ti,
+                             dfsch_object_t* procedure,
+                             dfsch_object_t* arguments){
+  dfsch__stack_frame_t* f = GC_NEW(dfsch__stack_frame_t);
+
+  f->procedure = procedure;
+  f->arguments = arguments;
+  f->next = (dfsch__stack_frame_t*)ti->stack_frame;
+  ti->stack_frame = f;
+}
+static void replace_stack_frame(dfsch__thread_info_t* ti,
+                                dfsch_object_t* procedure,
+                                dfsch_object_t* arguments){
+  ti->stack_frame->procedure = procedure;
+  ti->stack_frame->arguments = arguments;
+  ti->stack_frame->tail_recursive = 1;
+  ti->stack_frame->code = NULL;
+  ti->stack_frame->env = NULL;
+  ti->stack_frame->expr = NULL;
+}
+static void put_eval_proc_frame(dfsch__thread_info_t* ti,
+                                dfsch_object_t* code,
+                                dfsch_object_t* env){
+  ti->stack_frame->code = code;
+  ti->stack_frame->env = env;
+}
+static void update_eval_proc_frame(dfsch__thread_info_t* ti,
+                                   dfsch_object_t* expr){
+  ti->stack_frame->expr = expr;
+}
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
                                             dfsch_object_t* env,
@@ -2063,20 +2097,20 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     longjmp(esc->ret,1);
   }
   
-  old_frame = ti->stack_trace;  
+  /*  old_frame = ti->stack_trace;  
   my_frame = dfsch_vector(5, NULL, proc_name, code, env, NULL);
   ti->stack_trace = dfsch_cons(my_frame,
                                ti->stack_trace);
-  
+  */
   if (setjmp(myesc.ret)){  
     i = myesc.code;
     env = myesc.env;
-    my_frame = dfsch_vector(5, NULL, 
+    /*my_frame = dfsch_vector(5, NULL, 
                             myesc.proc_name, 
                             myesc.code, 
                             myesc.env,
                             dfsch_sym_tail_recursive());
-    dfsch_set_car(ti->stack_trace, my_frame);
+                            dfsch_set_car(ti->stack_trace, my_frame);*/
   }else{
     i = code;
   }
@@ -2095,7 +2129,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
   }
 
   
-  ti->stack_trace = old_frame;
+  //ti->stack_trace = old_frame;
   return r;
 }
 

@@ -44,6 +44,7 @@ extern "C" {
   typedef struct dfsch__restart_list_t dfsch__restart_list_t;
   typedef struct dfsch__catch_list_t dfsch__catch_list_t;
   typedef struct dfsch__handler_list_t dfsch__handler_list_t;
+  typedef struct dfsch__stack_frame_t dfsch__stack_frame_t;
 
   struct dfsch__restart_list_t {
     dfsch_object_t* restart;
@@ -63,7 +64,7 @@ extern "C" {
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
-    dfsch_object_t* stack_trace;
+    dfsch__stack_frame_t* stack_frame;
 
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
@@ -91,13 +92,13 @@ extern "C" {
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();  \
   jmp_buf *dfsch___old_ret;                                     \
   jmp_buf dfsch___tmpbuf;                                       \
-  dfsch_object_t* dfsch___old_frame;                            \
+  dfsch__stack_frame_t* dfsch___old_frame;                      \
   dfsch__catch_list_t* dfsch___old_catch;                       \
   dfsch__handler_list_t* dfsch___old_handlers;                  \
   dfsch__restart_list_t* dfsch___old_restarts;                  \
                                                                 \
   dfsch___old_ret = dfsch___ei->throw_ret;                      \
-  dfsch___old_frame = dfsch___ei->stack_trace;                  \
+  dfsch___old_frame = dfsch___ei->stack_frame;                  \
   dfsch___old_catch = dfsch___ei->catch_list;                   \
   dfsch___old_handlers = dfsch___ei->handler_list;              \
   dfsch___old_restarts = dfsch___ei->restart_list;              \
@@ -107,13 +108,13 @@ extern "C" {
 
 #define DFSCH_SCATCH                                            \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
-  dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
+  dfsch___ei->stack_frame = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
-  dfsch___ei->stack_trace = (dfsch_object_t*)dfsch___old_frame; \
+  dfsch___ei->stack_frame = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \

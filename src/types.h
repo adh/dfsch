@@ -1,6 +1,8 @@
 #ifndef H__dfsch__object__
 #define H__dfsch__object__
 
+#include <dfsch/magic.h>
+
 typedef dfsch_object_t object_t;
 
 typedef struct symbol_t symbol_t;
@@ -47,6 +49,17 @@ struct environment_t {
   dfsch_object_t* decls;
 };
 
+struct dfsch__stack_frame_t {
+  dfsch__stack_frame_t* next;
+
+  dfsch_object_t* procedure;
+  dfsch_object_t* arguments;
+  int tail_recursive;
+
+  dfsch_object_t* code;
+  dfsch_object_t* env;
+  dfsch_object_t* expr;
+};
 
 
 #define TYPE_CHECK(obj, t, name)                                \
