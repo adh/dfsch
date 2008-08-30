@@ -491,11 +491,13 @@ static void file_port_write_buf(file_port_t* port,
     dfsch_error("exception:port-closed", port);
   }
 
-  ret = fwrite(buf, len, 1, port->file);
-  if (ret == 0){
-    errno_error("exception:file-port-write-failed",
-                (dfsch_object_t*)port,
-                errno);
+  if (len != 0){
+    ret = fwrite(buf, len, 1, port->file);
+    if (ret == 0){
+      errno_error("exception:file-port-write-failed",
+                  (dfsch_object_t*)port,
+                  errno);
+    }
   }
 }
 static ssize_t file_port_read_buf(file_port_t* port,
@@ -918,7 +920,7 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_eof_object_p, NULL));
 
   dfsch_define_cstr(ctx, "port-write-buf", 
-                    dfsch_make_primitive(native_port_read_buf, NULL));
+                    dfsch_make_primitive(native_port_write_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-buf", 
                     dfsch_make_primitive(native_port_read_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-line", 

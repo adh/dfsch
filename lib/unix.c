@@ -876,6 +876,8 @@ static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
   DFSCH_LONG_ARG(args, len);
   DFSCH_ARG_END(args);
 
+  // TODO: do not copy string
+
   buf = GC_MALLOC_ATOMIC(len);
   ret = read(fd, buf, len);
   
@@ -1024,6 +1026,9 @@ static dfsch_object_t* native_stat(void* baton, dfsch_object_t* args,
   res = dfsch_unix_make_stat_struct();
 
   if (stat(path, dfsch_unix_get_stat(res)) != 0){
+    if (errno == ENOENT){
+      return NULL;
+    }
     throw_errno(errno, "stat");
   }
   return res;

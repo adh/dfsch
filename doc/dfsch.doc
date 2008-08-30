@@ -1,0 +1,14 @@
+;;                              -*- mode: scheme -*- 
+
+(category pairs "Pairs"
+          "Pairs are simplest data type - pair of two arbitrary objects,"
+          "they are commonly used for constructing linked lists")
+
+(function (cons car cdr) (pairs)
+          "Create pair consisting of car and cdr")
+(function (car pair) (pairs)
+          "Return first element of given pair")
+(function (cdr pair) (pairs)
+          "Return second element of given pair")
+
+ 
