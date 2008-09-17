@@ -188,7 +188,7 @@ dfsch_object_t* dfsch_compile_alist(dfsch_object_t* alist,
 
 
 DFSCH_DEFINE_FORM_IMPL(compiler_internal_progn, dfsch_form_compiler_eval_all){
-  return dfsch_eval_proc_tr(args, env, form, esc);
+  return dfsch_eval_proc_tr(args, env, esc);
 }
 
 dfsch_object_t* dfsch_compile_progn(dfsch_object_t* list,

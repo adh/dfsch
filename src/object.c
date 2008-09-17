@@ -290,7 +290,7 @@ DFSCH_DEFINE_FORM_IMPL(with_slots, dfsch_form_compiler_eval_all){
                        dfsch_new_frame_from_hash(env,
                                                  ((instance_t*)
                                                   object)->inst_vars),
-                       NULL, esc);
+                       esc);
 }
 
 void dfsch__object_native_register(dfsch_object_t *ctx){

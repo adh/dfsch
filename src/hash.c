@@ -645,8 +645,7 @@ DFSCH_DEFINE_FORM_IMPL(with_hash, dfsch_form_compiler_eval_all){
     dfsch_error("exception:not-a-hash", hash);
   }
 
-  return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), 
-                            NULL, esc);
+  return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), esc);
 }
 
 

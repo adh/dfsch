@@ -62,7 +62,7 @@ DFSCH_DEFINE_FORM_IMPL(when, dfsch_form_compiler_eval_all){
   DFSCH_OBJECT_ARG(args,test);
 
   if (dfsch_eval(test, env)){
-    return dfsch_eval_proc_tr(args, env, NULL, esc);
+    return dfsch_eval_proc_tr(args, env, esc);
   }
 
   return NULL;
@@ -74,7 +74,7 @@ DFSCH_DEFINE_FORM_IMPL(unless, dfsch_form_compiler_eval_all){
   DFSCH_OBJECT_ARG(args,test);
 
   if (!dfsch_eval(test, env)){
-    return dfsch_eval_proc_tr(args, env, NULL, esc);
+    return dfsch_eval_proc_tr(args, env, esc);
   }
 
   return NULL;
@@ -93,7 +93,7 @@ DFSCH_DEFINE_FORM_IMPL(cond, dfsch_form_compiler_cond){
 
         return dfsch_apply(proc, dfsch_list(1, o));
       }else{
-        return dfsch_eval_proc_tr(exp, env, NULL, esc);
+        return dfsch_eval_proc_tr(exp, env, esc);
       }
     }
     
@@ -112,11 +112,11 @@ DFSCH_DEFINE_FORM_IMPL(case, dfsch_form_compiler_case){
     object_t* c = dfsch_car(args);
     object_t* i = dfsch_car(c);
     if (i == dfsch_sym_else())
-      return dfsch_eval_proc_tr(dfsch_cdr(c), env, NULL, esc);
+      return dfsch_eval_proc_tr(dfsch_cdr(c), env, esc);
       
     while (dfsch_pair_p(i)){
       if (dfsch_eqv_p(dfsch_car(i), val))
-        return dfsch_eval_proc_tr(dfsch_cdr(c), env, NULL, esc);
+        return dfsch_eval_proc_tr(dfsch_cdr(c), env, esc);
       i = dfsch_cdr(i);
     }
     args = dfsch_cdr(args);
@@ -145,7 +145,7 @@ DFSCH_DEFINE_FORM_IMPL(quasiquote, NULL){
 }
 
 DFSCH_DEFINE_FORM_IMPL(begin, dfsch_form_compiler_eval_all){
-  return dfsch_eval_proc_tr(args, env, form, esc);
+  return dfsch_eval_proc_tr(args, env, esc);
 }
 DFSCH_DEFINE_FORM_IMPL(let, dfsch_form_compiler_let){
   object_t *vars;
@@ -205,7 +205,7 @@ DFSCH_DEFINE_FORM_IMPL(let, dfsch_form_compiler_let){
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
+  return dfsch_eval_proc_tr(code,ext_env, esc);
 }
 DFSCH_DEFINE_FORM_IMPL(letrec, dfsch_form_compiler_let){
 
@@ -226,7 +226,7 @@ DFSCH_DEFINE_FORM_IMPL(letrec, dfsch_form_compiler_let){
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code,ext_env,NULL,esc);
+  return dfsch_eval_proc_tr(code,ext_env, esc);
 }
 DFSCH_DEFINE_FORM_IMPL(let_seq, dfsch_form_compiler_let){
   object_t *vars;
@@ -247,7 +247,7 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, dfsch_form_compiler_let){
     vars = dfsch_cdr(vars);
   }
 
-  return dfsch_eval_proc_tr(code, ext_env, NULL, esc);
+  return dfsch_eval_proc_tr(code, ext_env, esc);
 }
 
 
@@ -275,7 +275,7 @@ static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_ARG_END(args);
 
-  return dfsch_eval_proc_tr(proc, env, NULL, esc);
+  return dfsch_eval_proc_tr(proc, env, esc);
 }
 static object_t* native_apply(void *baton, object_t* args, 
                               dfsch_tail_escape_t* esc){
@@ -400,7 +400,7 @@ DFSCH_DEFINE_FORM_IMPL(do, NULL){
     lenv = nenv;
   }
 
-  return dfsch_eval_proc_tr(exprs, lenv, NULL, esc);
+  return dfsch_eval_proc_tr(exprs, lenv, esc);
 }
 
 DFSCH_DEFINE_FORM_IMPL(destructuring_bind, dfsch_form_compiler_eval_but_first){
@@ -418,7 +418,6 @@ DFSCH_DEFINE_FORM_IMPL(destructuring_bind, dfsch_form_compiler_eval_but_first){
 			    dfsch_destructuring_bind(arglist, 
 						     list, 
 						     env), 
-                            NULL, 
 			    esc);
 }
 
