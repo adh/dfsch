@@ -11,7 +11,8 @@ typedef struct stack_frame_t {
 
   dfsch_object_t* code;
   dfsch_object_t* env;
-  dfsch_object_t* expr;
+  dfsch_object_t* expr; 
+  /* user stack frame should always contain some guess of relevant expression */
 } stack_frame_t;
 
 static char* stack_frame_write(stack_frame_t* sf, int depth, int readable){
@@ -33,6 +34,29 @@ static char* stack_frame_write(stack_frame_t* sf, int depth, int readable){
 static dfsch_object_t* stack_frame_apply(stack_frame_t* sf, 
                                          dfsch_object_t* args, 
                                          dfsch_tail_escape_t* esc){
+  dfsch_object_t* selector;
+  DFSCH_OBJECT_ARG(args, selector);
+  DFSCH_ARG_END(args);
+  
+  if (dfsch_compare_symbol(selector, "procedure")){
+    return sf->procedure;
+  }
+  if (dfsch_compare_symbol(selector, "arguments")){
+    return sf->arguments;
+  }
+  if (dfsch_compare_symbol(selector, "tail-recursive")){
+    return dfsch_bool(sf->tail_recursive);
+  }
+  if (dfsch_compare_symbol(selector, "code")){
+    return sf->code;
+  }
+  if (dfsch_compare_symbol(selector, "environment")){
+    return sf->env;
+  }
+  if (dfsch_compare_symbol(selector, "expression")){
+    return sf->expr;
+  }
+
   return NULL;
 }
 

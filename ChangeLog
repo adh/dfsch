@@ -1,6 +1,7 @@
 2008-09-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/introspect.c (dfsch_get_stack_trace): get_stack_trace works
+	(stack_frame_apply): stack frames are inspectable by user code
 
 2008-09-17  Ales Hakl  <ales at hakl dot net>
 

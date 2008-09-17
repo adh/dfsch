@@ -1932,6 +1932,9 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if (!exp) 
     return NULL;
 
+  ti->stack_frame->env = env;
+  ti->stack_frame->expr = exp;
+
   if(DFSCH_TYPE_OF(exp) == SYMBOL)
     return dfsch_lookup(exp,env);
 
@@ -2048,15 +2051,12 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     dfsch_error("exception:break", dfsch_make_symbol(type));
   }
 
-  ti->stack_frame->env = env;
   ti->stack_frame->code = code;
 
   i = code;
 
   while (DFSCH_TYPE_OF(i) == PAIR ){
     object_t* exp = DFSCH_FAST_CAR(i); 
-
-    ti->stack_frame->expr = exp;
 
     if (DFSCH_FAST_CDR(i))
       r = dfsch_eval_impl(exp, env, NULL, ti);
@@ -2066,8 +2066,6 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     i = DFSCH_FAST_CDR(i);
   }
 
-  
-  //ti->stack_trace = old_frame;
   return r;
 }
 
@@ -2103,6 +2101,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   f.next = ti->stack_frame;
+  f.env = NULL;
+  f.expr = NULL;
+  f.code = NULL;
 
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
