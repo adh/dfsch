@@ -1432,11 +1432,6 @@ void dfsch__finalize_unwind(dfsch__thread_info_t* ti){
   ti->throw_value = NULL;
 }
 
-dfsch_object_t* dfsch_get_stack_trace(){
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  return (dfsch_object_t*) ti->stack_frame;
-}
-
 void dfsch_throw(dfsch_object_t* tag,
                  dfsch_object_t* value){
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -2107,6 +2102,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     longjmp(esc->ret,1);
   }
 
+  f.next = ti->stack_frame;
+
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
     args = myesc.args;
@@ -2118,7 +2115,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   f.procedure = proc;
   f.arguments = args;
-  f.next = ti->stack_frame;
   ti->stack_frame = &f;
 
   if (!proc)
@@ -2133,7 +2129,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   if (DFSCH_TYPE_OF(proc) == PRIMITIVE){
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                   esc);
+                                   &myesc);
     goto out;
 
   }
@@ -2144,13 +2140,13 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                            dfsch_destructuring_bind(((closure_t*)proc)->args,
                                                     args,
                                                     ((closure_t*)proc)->env),
-                           esc,
+                           &myesc,
                            ti);
     goto out;
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
-    r = DFSCH_TYPE_OF(proc)->apply(proc, args, esc);
+    r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);
     goto out;
   }
 

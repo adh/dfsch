@@ -1,3 +1,7 @@
+2008-09-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/introspect.c (dfsch_get_stack_trace): get_stack_trace works
+
 2008-09-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_apply_impl): native stack frames
