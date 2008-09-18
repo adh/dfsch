@@ -50,6 +50,7 @@ void dfsch_signal(dfsch_object_t* condition);
 void dfsch_set_debugger(dfsch_object_t* proc);
 void dfsch_set_invoke_debugger_on_all_conditions(int val);
 void dfsch_enter_debugger(dfsch_object_t* reason);
+int dfsch_get_debugger_depth();
 
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
@@ -65,7 +66,8 @@ void dfsch_handler_bind(dfsch_type_t* type,
                         dfsch_object_t* handler);
 
 dfsch_object_t* dfsch_compute_restarts();
-dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart);
+dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
+                                     dfsch_object_t* args);
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag);
 

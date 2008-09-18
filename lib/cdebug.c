@@ -32,9 +32,8 @@ static dfsch_object_t* debug_invoke_restart(dfsch_object_t* list,
                                             dfsch_tail_escape_t* esc){
   int index;
   DFSCH_LONG_ARG(args, index);
-  DFSCH_ARG_END(args);
 
-  dfsch_invoke_restart(dfsch_list_item(list, index));
+  dfsch_invoke_restart(dfsch_list_item(list, index), args);
   return NULL;
 }
 
@@ -79,7 +78,9 @@ static void debug_main(dfsch_object_t* reason){
     restarts = DFSCH_FAST_CDR(restarts);
   }
 
-  dfsch_console_run_repl("debug> ", env);
+  dfsch_console_run_repl(dfsch_saprintf("dbg%d> ", 
+                                        dfsch_get_debugger_depth()), 
+                         env);
 }
 
 void dfsch_cdebug_enter_debugger(dfsch_object_t* reason){

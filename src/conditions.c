@@ -169,6 +169,14 @@ void dfsch_enter_debugger(dfsch_object_t* reason){
   } DFSCH_PROTECT_END;
 }
 
+int dfsch_get_debugger_depth(){
+  int r;
+  pthread_mutex_lock(&debugger_depth_mutex);
+  r = debugger_depth;
+  pthread_mutex_unlock(&debugger_depth_mutex);
+  return r;
+}
+
 typedef struct restart_t {
   dfsch_type_t* type;
   dfsch_object_t* name;
@@ -254,7 +262,7 @@ dfsch_object_t* dfsch_compute_restarts(){
   return head;
 }
 
-dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart){
+dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart, dfsch_object_t* args){
   if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
     dfsch__thread_info_t* ti = dfsch__get_thread_info();
     dfsch__restart_list_t* i = ti->restart_list;
@@ -270,7 +278,7 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart){
     restart = i->restart;
   }
 
-  return dfsch_apply(dfsch_restart_proc(restart), NULL);
+  return dfsch_apply(dfsch_restart_proc(restart), args);
 }
 
 
@@ -338,8 +346,8 @@ DFSCH_DEFINE_PRIMITIVE(signal, 0){
 DFSCH_DEFINE_PRIMITIVE(invoke_restart, 0){
   dfsch_object_t* restart;
   DFSCH_OBJECT_ARG(args, restart);
-  DFSCH_ARG_END(args);
-  dfsch_invoke_restart(restart);
+
+  dfsch_invoke_restart(restart, args);
   return NULL;
 }
 
