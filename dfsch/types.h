@@ -50,6 +50,7 @@ extern dfsch_type_t dfsch_environment_type;
     dfsch_primitive_impl_t proc;
     void *baton;
     int flags;
+    char* name;
   } dfsch_primitive_t;
 
   extern dfsch_type_t dfsch_primitive_type;
@@ -64,7 +65,8 @@ extern dfsch_type_t dfsch_environment_type;
     DFSCH_PRIMITIVE_TYPE,                       \
     p_##name##_impl,                            \
     NULL,                                       \
-    flags                                       \
+    flags,                                      \
+    #name                                       \
   }
   
 #define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)       \
@@ -72,7 +74,8 @@ extern dfsch_type_t dfsch_environment_type;
     DFSCH_PRIMITIVE_TYPE,                                    \
     p_##name##_impl,                                         \
     baton,                                                   \
-    flags                                                    \
+    flags,                                                   \
+    #name                                                    \
   }
 
 #define DFSCH_PRIMITIVE_HEAD(name)                                      \

@@ -4,7 +4,6 @@ Non-version-specific:
 
 For 0.2.2:
 * Some simple introspection facility
-* Native representation of stack frames
 
 For 0.2.3:
 * Better format

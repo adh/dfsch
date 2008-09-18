@@ -31,6 +31,7 @@
 #include <dfsch/strings.h>
 #include <dfsch/magic.h>
 #include <dfsch/conditions.h>
+#include <dfsch/introspect.h>
 #include "util.h"
 #include "internal.h"
 
@@ -341,6 +342,11 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
   }
 }
 
+static char* primitive_write(dfsch_primitive_t* p, 
+                            int max_depth, int readable){
+  char* name = p->name ? p->name : "()";
+  return dfsch_saprintf("#<primitive %p %s>", p, name);
+}
 
 dfsch_type_t dfsch_primitive_type = {
   DFSCH_STANDARD_TYPE,
@@ -348,7 +354,7 @@ dfsch_type_t dfsch_primitive_type = {
   sizeof(primitive_t),
   "primitive",
   NULL,
-  NULL,
+  (dfsch_type_write_t)primitive_write,
   NULL,
   NULL
 };
@@ -2218,7 +2224,6 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
   dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
   dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
-
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                     dfsch_make_primitive(&native_top_level_environment, ctx));

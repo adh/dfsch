@@ -104,11 +104,48 @@ dfsch_object_t* dfsch_get_stack_trace(){
   return head;
 }
 
+DFSCH_DEFINE_PRIMITIVE(stack_trace, 0){
+  if (args)
+    dfsch_error("exception:too-many-arguments", args);
 
-DFSCH_DEFINE_PRIMITIVE(frobnicate, 0){
+  return dfsch_get_stack_trace();
+}
 
+DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_debugger(proc);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(set_invoke_debugger_on_all_conditions, 0){
+  dfsch_object_t* val;
+  DFSCH_OBJECT_ARG(args, val);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_invoke_debugger_on_all_conditions(val != NULL);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
+  dfsch_object_t* reason;
+  DFSCH_OBJECT_ARG(args, reason);
+  DFSCH_ARG_END(args);
+  
+  dfsch_enter_debugger(reason);
+
+  return NULL;
 }
 
 void dfsch_introspect_register(dfsch_object_t* env){
-  
+  dfsch_provide(env, "introspect");
+
+  dfsch_define_cstr(env, "<user-stack-frame>", DFSCH_USER_STACK_FRAME_TYPE);
+  dfsch_define_cstr(env, "stack-trace", DFSCH_PRIMITIVE_REF(stack_trace));
+
+  dfsch_define_cstr(env, "set-invoke-debugger-on-all-conditions", 
+                    DFSCH_PRIMITIVE_REF(set_invoke_debugger_on_all_conditions));
+  dfsch_define_cstr(env, "set-debugger", DFSCH_PRIMITIVE_REF(set_debugger));
+  dfsch_define_cstr(env, "enter-debugger", DFSCH_PRIMITIVE_REF(enter_debugger));
+
 }

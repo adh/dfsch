@@ -335,31 +335,6 @@ DFSCH_DEFINE_PRIMITIVE(signal, 0){
   dfsch_signal(condition);
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-  
-  dfsch_set_debugger(proc);
-  return NULL;
-}
-DFSCH_DEFINE_PRIMITIVE(set_invoke_debugger_on_all_conditions, 0){
-  dfsch_object_t* val;
-  DFSCH_OBJECT_ARG(args, val);
-  DFSCH_ARG_END(args);
-  
-  dfsch_set_invoke_debugger_on_all_conditions(val != NULL);
-  return NULL;
-}
-DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
-  dfsch_object_t* reason;
-  DFSCH_OBJECT_ARG(args, reason);
-  DFSCH_ARG_END(args);
-  
-  dfsch_enter_debugger(reason);
-
-  return NULL;
-}
 DFSCH_DEFINE_PRIMITIVE(invoke_restart, 0){
   dfsch_object_t* restart;
   DFSCH_OBJECT_ARG(args, restart);

@@ -58,14 +58,6 @@ DFSCH_DEFINE_PRIMITIVE(gensym, 0){
   return dfsch_gensym();
 }
 
-DFSCH_DEFINE_PRIMITIVE(stack_trace, 0){
-  if (args)
-    dfsch_error("exception:too-many-arguments", args);
-
-  return dfsch_get_stack_trace();
-}
-
-
 DFSCH_DEFINE_PRIMITIVE(unintern, 0){
   object_t* symbol;
   DFSCH_OBJECT_ARG(args, symbol);
@@ -805,7 +797,6 @@ DFSCH_DEFINE_PRIMITIVE(unset_property, 0){
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
   dfsch_define_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
-  dfsch_define_cstr(ctx, "stack-trace", DFSCH_PRIMITIVE_REF(stack_trace));
   dfsch_define_cstr(ctx, "unintern", DFSCH_PRIMITIVE_REF(unintern));
   dfsch_define_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
   dfsch_define_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));

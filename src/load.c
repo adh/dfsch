@@ -33,6 +33,7 @@
 #include <dlfcn.h>
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
+#include <dfsch/introspect.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -147,6 +148,14 @@ static char* get_module_symbol(char* name){
   return sl_value(l);
 }
 
+typedef struct builtin_module_t {
+  char* name;
+  void (*register_proc)(dfsch_object_t* env);
+} builtin_module_t;
+
+static builtin_module_t builtin_modules[] = {
+  {"introspect", dfsch_introspect_register},
+};
 
 dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
   struct stat st;
@@ -154,6 +163,14 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path
   char *pathpart;
   char *fname;
   str_list_t* l;
+  int i;
+
+  for (i = 0; i < sizeof(builtin_modules) / sizeof(builtin_module_t); i++){
+    if (strcmp(builtin_modules[i].name, name) == 0){
+      builtin_modules[i].register_proc(env);
+      return NULL;
+    }
+  }
 
   if (path_list){
     path = path_list;
@@ -436,7 +453,7 @@ dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "load:scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_define_cstr(ctx, "load:read-scm",
 		    dfsch_make_primitive(native_read_scm,ctx));
-  dfsch_define_cstr(ctx,"load:so!", DFSCH_FORM_REF(load_so));
+  dfsch_define_cstr(ctx, "load:so!", DFSCH_FORM_REF(load_so));
   dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
   dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
   dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
