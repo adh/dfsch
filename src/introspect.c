@@ -137,6 +137,43 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(get_function_name, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_function_name(proc);
+}
+DFSCH_DEFINE_PRIMITIVE(get_function_environment, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_function_environment(proc);
+}
+DFSCH_DEFINE_PRIMITIVE(get_function_arguments, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_function_arguments(proc);
+}
+DFSCH_DEFINE_PRIMITIVE(get_function_code, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_function_code(proc);
+}
+DFSCH_DEFINE_PRIMITIVE(get_function_effective_code, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_function_effective_code(proc);
+}
+
+
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
 
@@ -148,4 +185,14 @@ void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "set-debugger", DFSCH_PRIMITIVE_REF(set_debugger));
   dfsch_define_cstr(env, "enter-debugger", DFSCH_PRIMITIVE_REF(enter_debugger));
 
+  dfsch_define_cstr(env, "get-function-name",
+                    DFSCH_PRIMITIVE_REF(get_function_name));
+  dfsch_define_cstr(env, "get-function-environment",
+                    DFSCH_PRIMITIVE_REF(get_function_environment));
+  dfsch_define_cstr(env, "get-function-arguments",
+                    DFSCH_PRIMITIVE_REF(get_function_arguments));
+  dfsch_define_cstr(env, "get-function-code",
+                    DFSCH_PRIMITIVE_REF(get_function_code));
+  dfsch_define_cstr(env, "get-function-effective-code",
+                    DFSCH_PRIMITIVE_REF(get_function_effective_code));
 }

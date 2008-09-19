@@ -1,3 +1,8 @@
+2008-09-19  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: ability to look inside functions (and break things
+	badly by modifing it)
+
 2008-09-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/introspect.c (dfsch_get_stack_trace): get_stack_trace works

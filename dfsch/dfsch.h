@@ -307,6 +307,13 @@ extern "C" {
                                             dfsch_object_t* code,
                                             dfsch_object_t* name);
 
+  extern dfsch_object_t* dfsch_get_function_name(dfsch_object_t* proc);
+  extern dfsch_object_t* dfsch_get_function_environment(dfsch_object_t* proc);
+  extern dfsch_object_t* dfsch_get_function_arguments(dfsch_object_t* proc);
+  extern dfsch_object_t* dfsch_get_function_code(dfsch_object_t* proc);
+  extern dfsch_object_t* dfsch_get_function_effective_code(dfsch_object_t* proc);
+
+
   /** Create native function object */
   extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim,
 					      void *baton);

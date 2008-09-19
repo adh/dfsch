@@ -157,7 +157,8 @@ static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
 };
 
-dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
+dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
+                           dfsch_object_t* path_list){
   struct stat st;
   dfsch_object_t* path;
   char *pathpart;
