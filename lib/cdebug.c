@@ -22,6 +22,7 @@
 #include "dfsch/lib/cdebug.h"
 #include <dfsch/dfsch.h>
 #include <dfsch/conditions.h>
+#include <dfsch/introspect.h>
 #include <stdio.h>
 #include <dfsch/lib/console.h>
 
@@ -78,6 +79,7 @@ static void debug_main(dfsch_object_t* reason){
     restarts = DFSCH_FAST_CDR(restarts);
   }
 
+  dfsch_introspect_register(env);
   dfsch_console_run_repl(dfsch_saprintf("dbg%d> ", 
                                         dfsch_get_debugger_depth()), 
                          env);
