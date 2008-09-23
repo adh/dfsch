@@ -2,11 +2,9 @@ Non-version-specific:
 * More tests
 * Documentation
 
-For 0.2.2:
-* Some simple introspection facility
-
 For 0.2.3:
 * Better format
+* Better writer (callback based, with support for circularity and sharing)
 * Some platform- and locale-independent conversion of numbers from/to strings
     
 For 0.2.4:
@@ -19,6 +17,8 @@ For 0.2.x:
 
 For 0.3:
 * Compiler (into bytecode)
+
+For 0.4:
 * JIT (using GNU Lightning)
 
 When needed by other code:
