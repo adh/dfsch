@@ -182,6 +182,7 @@ typedef struct restart_t {
   dfsch_object_t* name;
   dfsch_object_t* proc;
   char* description;
+  char* arg_names;
   dfsch__handler_list_t* handlers;
 } restart_t;
 
@@ -199,6 +200,7 @@ dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
   r->name = name;
   r->proc = proc;
   r->description = description;
+  r->arg_names = NULL;
 
   return (dfsch_object_t*) r;
 }
@@ -262,7 +264,8 @@ dfsch_object_t* dfsch_compute_restarts(){
   return head;
 }
 
-dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart, dfsch_object_t* args){
+dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart, 
+                                     dfsch_object_t* args){
   if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
     dfsch__thread_info_t* ti = dfsch__get_thread_info();
     dfsch__restart_list_t* i = ti->restart_list;
@@ -350,6 +353,29 @@ DFSCH_DEFINE_PRIMITIVE(invoke_restart, 0){
   dfsch_invoke_restart(restart, args);
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(compute_restarts, 0){
+  DFSCH_ARG_END(args);
+
+  return dfsch_compute_restarts();
+}
+
+
+DFSCH_DEFINE_PRIMITIVE(restart_name, 0){
+  dfsch_object_t* restart;
+  DFSCH_OBJECT_ARG(args, restart);
+  DFSCH_ARG_END(args);
+
+  return dfsch_restart_name(restart);
+}
+DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
+  dfsch_object_t* restart;
+  DFSCH_OBJECT_ARG(args, restart);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_restart_description(restart));
+}
+
+
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
@@ -371,4 +397,11 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(signal));
   dfsch_define_cstr(ctx, "invoke-restart",
                     DFSCH_PRIMITIVE_REF(invoke_restart));
+  dfsch_define_cstr(ctx, "compute-restarts",
+                    DFSCH_PRIMITIVE_REF(compute_restarts));
+
+  dfsch_define_cstr(ctx, "restart-name",
+                    DFSCH_PRIMITIVE_REF(restart_name));
+  dfsch_define_cstr(ctx, "restart-description",
+                    DFSCH_PRIMITIVE_REF(restart_description));
 }

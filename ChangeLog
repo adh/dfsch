@@ -1,3 +1,7 @@
+2008-09-23  Ales Hakl  <ales at hakl dot net>
+
+	* src/conditions.c (compute_restarts): compute-restarts function
+
 2008-09-19  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: ability to look inside functions (and break things
