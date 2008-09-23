@@ -5,12 +5,12 @@ Non-version-specific:
 For 0.2.3:
 * Better format
 * Better writer (callback based, with support for circularity and sharing)
+   - Pretty-printer
 * Some platform- and locale-independent conversion of numbers from/to strings
     
 For 0.2.4:
 * Multimethods + method combinations
 * Declarations (associated to variables, not values)
-* Pretty-printer
 
 For 0.2.x:
 * Dynamic variables
@@ -27,8 +27,8 @@ When needed by other code:
 
 Sometimes:
 * Unicode
-  - Normalization
-  - Collation
+   - Normalization
+   - Collation
 * syntax-rules
 * Missing parts of unix library (ftw, various system databases...)
 
