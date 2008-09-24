@@ -1,3 +1,8 @@
+2008-09-25  Ales Hakl  <ales at hakl dot net>
+
+	* src/conditions.c (dfsch__conditions_register): handler-bind and
+	restart-case special forms
+
 2008-09-23  Ales Hakl  <ales at hakl dot net>
 
 	* src/conditions.c (compute_restarts): compute-restarts function
