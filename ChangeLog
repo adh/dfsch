@@ -1,6 +1,7 @@
 2008-09-25  Ales Hakl  <ales at hakl dot net>
 
 	* src/format.c (format_r): radix directive
+	(dfsch_format): more directives (almost complete SRFI 48)
 
 	* src/number.c (dfsch_number_to_string): support for different
 	numeric bases

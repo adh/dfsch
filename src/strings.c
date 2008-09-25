@@ -1057,7 +1057,7 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(substring));
   dfsch_define_cstr(ctx, "substring", 
 		   DFSCH_PRIMITIVE_REF(substring_utf8));
-  dfsch_define_cstr(ctx, "string-byte-res", 
+  dfsch_define_cstr(ctx, "string-byte-ref", 
 		   DFSCH_PRIMITIVE_REF(string_ref));
   dfsch_define_cstr(ctx, "string-ref", 
 		   DFSCH_PRIMITIVE_REF(string_utf8_ref));

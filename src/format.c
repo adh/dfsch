@@ -45,7 +45,7 @@ static int read_num_arg(char**string){
  next:
   switch(**string){
   case '\0':
-    dfsch_error("exception:incomplete-format-sequence", NULL);
+    dfsch_error("Incomplete format directive", NULL);
   case '0':
   case '1':
   case '2':
@@ -74,34 +74,34 @@ static int read_num_arg(char**string){
 static char* format_a(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
     return dfsch_obj_write(obj, 1000, 0);
-  } else if (argc == 1){
-    return dfsch_obj_write(obj, argv[0], 0);
   } else {
-    dfsch_error("Too many arguments to format directive",
-                NULL);
+    return dfsch_obj_write(obj, argv[0], 0);
   }
 }
 static char* format_s(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
     return dfsch_obj_write(obj, 1000, 1);
-  } else if (argc == 1){
-    return dfsch_obj_write(obj, argv[0], 1);
   } else {
-    dfsch_error("Too many arguments to format directive",
-                NULL);
+    return dfsch_obj_write(obj, argv[0], 1);
+  } 
+}
+static char* format_w(int flags, int argc, int*argv, dfsch_object_t* obj){
+  return dfsch_obj_write(obj, 1000, 1);
+}
+static char* format_y(int flags, int argc, int*argv, dfsch_object_t* obj){
+  if (argc == 0){
+    return dfsch_obj_write(obj, 1000, 1);
+  } else {
+    return dfsch_obj_write(obj, argv[0], 1);
   }
 }
 static char* format_r(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
     return dfsch_number_to_string(obj, 10);
-  } else if (argc == 1){
-    return dfsch_number_to_string(obj, argv[0]);
   } else {
-    dfsch_error("Too many arguments to format directive",
-                NULL);
-  }
+    return dfsch_number_to_string(obj, argv[0]);
+  } 
 }
-
 
 typedef struct format_list_t {
   size_t cur_pos;
@@ -123,7 +123,7 @@ static dfsch_object_t* list_get(format_list_t* l){
   dfsch_object_t* ret;
   
   if (!l->cur){
-    dfsch_error("exception:no-more-arguments", NULL);
+    dfsch_error("No more arguments", NULL);
   }
 
   ret = dfsch_car(l->cur);
@@ -136,7 +136,7 @@ static dfsch_object_t* list_peek(format_list_t* l){
   dfsch_object_t* ret;
   
   if (!l->cur){
-    dfsch_error("exception:no-more-arguments", NULL);
+    dfsch_error("No more arguments", NULL);
   }
 
   ret = dfsch_car(l->cur);
@@ -151,7 +151,7 @@ static void list_skip(format_list_t* l, size_t count){
     l->cur = dfsch_cdr(l->cur);
     l->cur_pos++;
   }
-  dfsch_error("exception:no-more-arguments", NULL);
+  dfsch_error("No more arguments", NULL);
 }
 static void list_seek(format_list_t* l, size_t count){
   l->cur = l->head;
@@ -164,7 +164,7 @@ static void list_seek(format_list_t* l, size_t count){
     l->cur = dfsch_cdr(l->cur);
     l->cur_pos++;
   }
-  dfsch_error("exception:no-more-arguments", NULL);
+  dfsch_error("No more arguments", NULL);
 }
 static void list_backskip(format_list_t* l, size_t count){
   list_seek(l, l->cur_pos - count);
@@ -213,7 +213,7 @@ char* dfsch_format(char* string,
         dfsch_error("Incomplete format directive", NULL);
       }
 
-      if (strchr("0123456789'\"#v,", *string)){
+      if (strchr("0123456789'\",", *string)){
         argc = 1;
         while(1) {
           switch (*string){
@@ -231,16 +231,8 @@ char* dfsch_format(char* string,
           case '+':
             argv[argc-1] = read_num_arg(&string);
             break;
-          case '#':
-            argv[argc-1] = 7331;
-            string++;
-            break;
-          case 'v':
-          case 'V':
-            argv[argc-1] = 1337;
-            string++;
-            break;
           case ',':
+            argv[argc-1] = -1;
             string++;
             break;
           default:
@@ -292,10 +284,46 @@ char* dfsch_format(char* string,
       case 'S':
         sl_append(out, format_s(flags, argc, argv, list_get(state->args)));
         break;
+      case 'w':
+      case 'W':
+        sl_append(out, format_w(flags, argc, argv, list_get(state->args)));
+        break;
+      case 'y':
+      case 'Y':
+        sl_append(out, format_y(flags, argc, argv, list_get(state->args)));
+        break;
       case 'r':
       case 'R':
         sl_append(out, format_r(flags, argc, argv, list_get(state->args)));
         break;
+      case 'd':
+      case 'D':
+        sl_append(out, dfsch_number_to_string(list_get(state->args), 10));
+        break;
+      case 'x':
+      case 'X':
+        sl_append(out, dfsch_number_to_string(list_get(state->args), 16));
+        break;
+      case 'o':
+      case 'O':
+        sl_append(out, dfsch_number_to_string(list_get(state->args), 8));
+        break;
+      case 'b':
+      case 'B':
+        sl_append(out, dfsch_number_to_string(list_get(state->args), 2));
+        break;
+      case 'c':
+      case 'C':
+        dfsch_error("Unimplemented", NULL);
+        break;
+      case '?':
+        {
+          char* fmt = dfsch_string_to_cstr(list_get(state->args));
+          sl_append(out, dfsch_format(fmt, list_get(state->args)));
+        }
+        break;
+        
+
       case '*':
         if (argc == 0){
           argc = 1;
@@ -305,15 +333,8 @@ char* dfsch_format(char* string,
             argv[0] = 1;
           }
         }
-        if (argc != 1){
-          dfsch_error("Too many arguments to format directive",
-                      NULL);
-        }
 
         switch (flags){
-        case 0:
-          list_skip(state->args, argv[0]);
-          break;
         case FLAG_COLON:
           list_backskip(state->args, argv[0]);
           break;
@@ -321,15 +342,18 @@ char* dfsch_format(char* string,
           list_seek(state->args, argv[0]);
           break;
         default:
-          dfsch_error("Unsupported flag combination",
-                      NULL);          
-
+          list_skip(state->args, argv[0]);
         }
         break;
       case '~':
         sl_append(out, "~");
         break;
-
+      case '%':
+      case '&':
+        sl_append(out, "\n");
+        break;
+      default:
+        dfsch_error("Unknown format directive", NULL);
       }
       
       string++;
