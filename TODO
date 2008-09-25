@@ -9,7 +9,6 @@ For 0.2.3:
 * Better format
 * Better writer (callback based, with support for circularity and sharing)
    - Pretty-printer
-* Some platform- and locale-independent conversion of numbers from/to strings
     
 For 0.2.4:
 * Multimethods + method combinations
