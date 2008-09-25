@@ -4,10 +4,10 @@ Non-version-specific:
 
 For 0.2.2:
 * Better format
-* Better writer (callback based, with support for circularity and sharing)
-   - Pretty-printer
+* Better writer (callback based)
 
 For 0.2.4:
+* Pretty-printer
 * Multimethods + method combinations
 * Declarations (associated to variables, not values)
 
