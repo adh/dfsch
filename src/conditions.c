@@ -375,6 +375,10 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
   return dfsch_make_string_cstr(dfsch_restart_description(restart));
 }
 
+/*
+ * This is generally non-sufficient interface, but rest could be implemented 
+ * as macros.
+ */
 
 DFSCH_DEFINE_FORM_IMPL(handler_bind, NULL){
   dfsch_object_t* ret;

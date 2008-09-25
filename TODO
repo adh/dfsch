@@ -3,13 +3,10 @@ Non-version-specific:
 * Documentation
 
 For 0.2.2:
-* User-accessible condition system
-
-For 0.2.3:
 * Better format
 * Better writer (callback based, with support for circularity and sharing)
    - Pretty-printer
-    
+
 For 0.2.4:
 * Multimethods + method combinations
 * Declarations (associated to variables, not values)
