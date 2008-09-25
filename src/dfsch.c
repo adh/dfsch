@@ -1870,6 +1870,24 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 
 }
 
+void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
+                   dfsch_object_t* env){
+  dfsch_object_t* old = NULL;
+
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
+    dfsch_error("exception:not-an-environment", env);
+  }
+
+  if (!((environment_t*)env)->decls){
+    ((environment_t*)env)->decls = dfsch_hash_make(DFSCH_HASH_EQ);
+  } else {
+    dfsch_hash_ref_fast(((environment_t*)env)->decls, variable, &old);
+  }
+  
+  dfsch_hash_set(((environment_t*)env)->decls, variable, 
+                 dfsch_cons(declaration, old));  
+}
+
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
   if (!DFSCH_INSTANCE_P(macro, MACRO)){

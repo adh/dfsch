@@ -161,11 +161,12 @@ DFSCH_DEFINE_FORM_IMPL(define, NULL){
 
   object_t* name = dfsch_car(args);
 
-  if (dfsch_pair_p(name)){
+  if (DFSCH_PAIR_P(name)){
     object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
                                           dfsch_cdr(args),
                                           dfsch_car(name));
-    return dfsch_define(dfsch_car(name), lambda ,env);
+    name = DFSCH_FAST_CAR(name);
+    return dfsch_define(name, lambda ,env);
   }else{
     object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
     return dfsch_define(name,value,env);
@@ -178,6 +179,7 @@ DFSCH_DEFINE_FORM_IMPL(define_variable, dfsch_form_compiler_eval_but_first){
 
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG_OPT(args, value, NULL);
+  DFSCH_ARG_END(args);
   
   if (!dfsch_env_get(name, env)){
     value = dfsch_eval(value, env);
@@ -187,7 +189,38 @@ DFSCH_DEFINE_FORM_IMPL(define_variable, dfsch_form_compiler_eval_but_first){
     return NULL;
   }
 }
+DFSCH_DEFINE_FORM_IMPL(define_constant, dfsch_form_compiler_eval_but_first){
+  dfsch_object_t* name;
+  dfsch_object_t* value;
 
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
+  DFSCH_ARG_END(args);
+  
+  if (!dfsch_env_get(name, env)){
+    value = dfsch_eval(value, env);
+    dfsch_define(name, value, env);
+    dfsch_declare(name, dfsch_make_symbol("constant"), env);
+    return value;
+  } else {
+    return NULL;
+  }
+}
+
+DFSCH_DEFINE_FORM_IMPL(declare, NULL){
+  dfsch_object_t* name;
+  dfsch_object_t* decls;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_REST(args, decls);
+
+  while (DFSCH_PAIR_P(decls)){
+    dfsch_declare(name, DFSCH_FAST_CDR(decls), env);
+    decls = DFSCH_FAST_CDR(decls);
+  }
+
+  return NULL;
+}
 
 DFSCH_DEFINE_FORM_IMPL(set, dfsch_form_compiler_eval_but_first){
   NEED_ARGS(args,2);  
@@ -817,6 +850,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
   dfsch_define_cstr(ctx, "define", DFSCH_FORM_REF(define));
   dfsch_define_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
+  dfsch_define_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
+  dfsch_define_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
   dfsch_define_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
   dfsch_define_cstr(ctx, "set!", DFSCH_FORM_REF(set));
   dfsch_define_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));

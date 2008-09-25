@@ -6,10 +6,9 @@ For 0.2.2:
 * Better format
 * Better writer (callback based)
 
-For 0.2.4:
+For 0.2.3:
 * Pretty-printer
 * Multimethods + method combinations
-* Declarations (associated to variables, not values)
 
 For 0.2.x:
 * Dynamic variables
