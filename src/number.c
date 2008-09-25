@@ -387,8 +387,47 @@ int64_t dfsch_number_to_int64(dfsch_object_t *n){
   dfsch_error("exception:not-an-integer", n);
 }
 
+static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+static char* int_to_str(long i, int base){
+  long n;
+  char* buf = GC_MALLOC_ATOMIC(32); /* where do you have larger fixnums? */
+  buf += 31;
+  *buf = '\0';
+
+  if (base == 0 || base > 36){
+    dfsch_error("Invalid base", NULL);
+  }
+
+  n = labs(i);
+
+  while (n > 0){
+    buf--;
+    *buf = digits[n % base];
+    n /= base;
+  }
+
+  if (i < 0){
+    buf--;
+    *buf = '-';
+    return buf;
+  } else {
+    return buf;
+  }
+
+}
+
 char* dfsch_number_to_string(dfsch_object_t *n, int base){
-  
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    return int_to_str(DFSCH_FIXNUM_REF(n), base);
+  }
+  if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+    return dfsch_bignum_to_string((dfsch_bignum_t*)n, base);
+  }
+
+  if (base != 10){
+    dfsch_error("Unsupported base for this numeric type", NULL);
+  }
 
   return dfsch_obj_write(n, 1, 1); /* fallback */
 }
@@ -880,7 +919,7 @@ DFSCH_DEFINE_PRIMITIVE(slash, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
-    dfsch_error("exception:too-few-arguments",i);
+    dfsch_error("Too few arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
@@ -899,10 +938,10 @@ DFSCH_DEFINE_PRIMITIVE(slash_i, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
-    dfsch_error("exception:too-few-arguments",i);
+    dfsch_error("Too few arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
-    dfsch_error("exception:too-few-arguments",i);
+    dfsch_error("Too few arguments",i);
 
   s = DFSCH_FAST_CAR(i);
   i = DFSCH_FAST_CDR(i);
@@ -918,7 +957,7 @@ DFSCH_DEFINE_PRIMITIVE(modulo, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
-    dfsch_error("exception:too-few-arguments",i);
+    dfsch_error("Too few arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
     return dfsch_number_div(dfsch_make_number_from_long(1), 
@@ -1032,7 +1071,7 @@ DFSCH_DEFINE_PRIMITIVE(log, DFSCH_PRIMITIVE_CACHED){
   DFSCH_ARG_END(args);
 
   if (z <= 0.0)
-    dfsch_error("exception:not-in-argument-domain", 
+    dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("log"),
                            dfsch_make_number_from_double(z)));
@@ -1065,7 +1104,7 @@ DFSCH_DEFINE_PRIMITIVE(asin, DFSCH_PRIMITIVE_CACHED){
   DFSCH_ARG_END(args);
 
   if (z > 1.0 || z < -1.0)
-    dfsch_error("exception:not-in-argument-domain", 
+    dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("asin"),
                            dfsch_make_number_from_double(z)));
@@ -1079,7 +1118,7 @@ DFSCH_DEFINE_PRIMITIVE(acos, DFSCH_PRIMITIVE_CACHED){
   DFSCH_ARG_END(args);
 
   if (z > 1.0 || z < -1.0)
-    dfsch_error("exception:not-in-argument-domain", 
+    dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("acos"),
                            dfsch_make_number_from_double(z)));
@@ -1101,7 +1140,7 @@ DFSCH_DEFINE_PRIMITIVE(sqrt, DFSCH_PRIMITIVE_CACHED){
   DFSCH_ARG_END(args);
 
   if (z < 0.0)
-    dfsch_error("exception:not-in-argument-domain", 
+    dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
                            dfsch_make_symbol("sqrt"),
                            dfsch_make_number_from_double(z)));
@@ -1118,7 +1157,7 @@ DFSCH_DEFINE_PRIMITIVE(expt, DFSCH_PRIMITIVE_CACHED){
   errno = 0;
   v = pow(z0,z1);
   if (errno == EDOM) // XXX
-    dfsch_error("exception:not-in-argument-domain", 
+    dfsch_error("Argument not in domain", 
                 dfsch_list(3, 
                            dfsch_make_symbol("expt"),
                            dfsch_make_number_from_double(z0),

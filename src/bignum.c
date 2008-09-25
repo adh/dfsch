@@ -233,7 +233,7 @@ dfsch_bignum_t* dfsch_bignum_from_number(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return dfsch_make_bignum_int64(DFSCH_FIXNUM_REF(n));
   }
-  dfsch_error("exception:not-an-integer", n);
+  dfsch_error("Not an integer", n);
 }
 
 
@@ -686,7 +686,7 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   word_t wr;
 
   if (b->length == 0){
-    dfsch_error("exception:bignum-division-by-zero", NULL);
+    dfsch_error("Division by zero", NULL);
   }
   if (a->length < b->length || 
       (a->length == b->length && 
@@ -722,10 +722,10 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   size_t i;
 
   if (m && b->negative){
-    dfsch_error("exception:negative-base-for-modular-exponentation", NULL);
+    dfsch_error("Negative base for modular exponentation", NULL);
   }
   if (m && m->length == 0){
-    dfsch_error("exception:zero-modulus", NULL);
+    dfsch_error("Zero modulus", NULL);
   }
 
   r = make_bignum_digit(1);
@@ -760,7 +760,7 @@ char* dfsch_bignum_to_string(bignum_t* b, unsigned base){
   word_t d;
 
   if (base == 0 || base > 36){
-    dfsch_error("exception:invalid-base", NULL);
+    dfsch_error("Invalid base", NULL);
   }
 
   if (b->length == 0){

@@ -1,5 +1,8 @@
 2008-09-25  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_number_to_string): support for different
+	numeric bases
+
 	* src/dfsch.c (dfsch_declare): API to declarations (other side is
 	compiler, which is something that just might exist in future)
 
