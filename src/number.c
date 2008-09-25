@@ -425,6 +425,10 @@ char* dfsch_number_to_string(dfsch_object_t *n, int base){
     return dfsch_bignum_to_string((dfsch_bignum_t*)n, base);
   }
 
+  if (!dfsch_number_p(n)){
+    dfsch_error("Not a number", n);
+  }
+
   if (base != 10){
     dfsch_error("Unsupported base for this numeric type", NULL);
   }

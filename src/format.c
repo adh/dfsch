@@ -77,7 +77,7 @@ static char* format_a(int flags, int argc, int*argv, dfsch_object_t* obj){
   } else if (argc == 1){
     return dfsch_obj_write(obj, argv[0], 0);
   } else {
-    dfsch_error("exception:too-many-arguments-to-format-sequence",
+    dfsch_error("Too many arguments to format directive",
                 NULL);
   }
 }
@@ -87,10 +87,21 @@ static char* format_s(int flags, int argc, int*argv, dfsch_object_t* obj){
   } else if (argc == 1){
     return dfsch_obj_write(obj, argv[0], 1);
   } else {
-    dfsch_error("exception:too-many-arguments-to-format-sequence",
+    dfsch_error("Too many arguments to format directive",
                 NULL);
   }
 }
+static char* format_r(int flags, int argc, int*argv, dfsch_object_t* obj){
+  if (argc == 0){
+    return dfsch_number_to_string(obj, 10);
+  } else if (argc == 1){
+    return dfsch_number_to_string(obj, argv[0]);
+  } else {
+    dfsch_error("Too many arguments to format directive",
+                NULL);
+  }
+}
+
 
 typedef struct format_list_t {
   size_t cur_pos;
@@ -199,7 +210,7 @@ char* dfsch_format(char* string,
       argc = 0;
 
       if (!*string){
-        dfsch_error("exception:incomplete-format-sequence", NULL);
+        dfsch_error("Incomplete format directive", NULL);
       }
 
       if (strchr("0123456789'\"#v,", *string)){
@@ -241,7 +252,7 @@ char* dfsch_format(char* string,
           if (*string == ','){
             argc++;
             if (argc == ARG_MAX){
-              dfsch_error("exception:too-many-arguments-to-format-sequence",
+              dfsch_error("Too many arguments to format directive",
                           NULL);
             }
             string++;
@@ -255,7 +266,7 @@ char* dfsch_format(char* string,
 
     flags:
       if (!*string){
-        dfsch_error("exception:incomplete-format-sequence", NULL);
+        dfsch_error("Incomplete format directive", NULL);
       }
       if (*string == ':'){
         flags |= FLAG_COLON;
@@ -272,7 +283,7 @@ char* dfsch_format(char* string,
 
       switch(*string){
       case '\0':
-        dfsch_error("exception:incomplete-format-sequence", NULL);
+        dfsch_error("Incomplete format directive", NULL);
       case 'a':
       case 'A':
         sl_append(out, format_a(flags, argc, argv, list_get(state->args)));
@@ -280,6 +291,10 @@ char* dfsch_format(char* string,
       case 's':
       case 'S':
         sl_append(out, format_s(flags, argc, argv, list_get(state->args)));
+        break;
+      case 'r':
+      case 'R':
+        sl_append(out, format_r(flags, argc, argv, list_get(state->args)));
         break;
       case '*':
         if (argc == 0){
@@ -291,7 +306,7 @@ char* dfsch_format(char* string,
           }
         }
         if (argc != 1){
-          dfsch_error("exception:too-many-arguments-to-format-sequence",
+          dfsch_error("Too many arguments to format directive",
                       NULL);
         }
 
@@ -306,10 +321,14 @@ char* dfsch_format(char* string,
           list_seek(state->args, argv[0]);
           break;
         default:
-          dfsch_error("exception:unsupported-flag-combination",
+          dfsch_error("Unsupported flag combination",
                       NULL);          
 
         }
+        break;
+      case '~':
+        sl_append(out, "~");
+        break;
 
       }
       

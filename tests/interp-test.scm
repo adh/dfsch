@@ -298,6 +298,12 @@
              (regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
+(group "Format"
+       (test 'escaping (format "~~") "~")
+       (test 'radix 
+             (format "~2r ~:* ~8r ~:* ~10r ~:* ~16r" 123)
+             "1111011  173  123  7b"))
+
 (when () group "object subsystem"
        (sub-group simple-class
                  (define-class <test-class> <object>)
