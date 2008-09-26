@@ -316,6 +316,10 @@ char* dfsch_format(char* string,
       case 'C':
         dfsch_error("Unimplemented", NULL);
         break;
+      case 'f':
+      case 'F':
+        dfsch_error("Unimplemented", NULL);
+        break;
       case '?':
         {
           char* fmt = dfsch_string_to_cstr(list_get(state->args));
