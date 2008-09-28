@@ -50,7 +50,7 @@ dfschlibscm_DATA = scm/struct.scm
 man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
-	doc/dfsch-repl.1
+	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/parse.c dfsch/parse.h 	\
@@ -60,7 +60,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/hash.c dfsch/hash.h 	\
 	src/promise.c dfsch/promise.h 	\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
-	src/strings.c dfsch/strings.h 	\
+	src/strings.c dfsch/strings.h 	src/udata.h\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
 	src/generic.c dfsch/generic.h	\
