@@ -28,15 +28,14 @@
 
 typedef struct dfsch_string_t {
   dfsch_type_t* type;
-  char* ptr;
-  size_t len;
+  dfsch_strbuf_t buf;
 } dfsch_string_t;
 
 int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
-  if (a->len != b->len)
+  if (a->buf.len != b->buf.len)
     return 0;
 
-  return memcmp(a->ptr, b->ptr, a->len) == 0;
+  return memcmp(a->buf.ptr, b->buf.ptr, a->buf.len) == 0;
 }
 
 /*
@@ -72,11 +71,11 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
   size_t len = 0;
 
   if (!readable){
-    return o->ptr;
+    return o->buf.ptr;
   }
 
-  for (j = 0; j < o->len; ++j){
-    switch (escape_table[o->ptr[j]]){
+  for (j = 0; j < o->buf.len; ++j){
+    switch (escape_table[o->buf.ptr[j]]){
     case 0:
       len += 1;
       break;
@@ -95,22 +94,22 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
   *i='"';
   i++;
 
-  for (j = 0; j < o->len; ++j){
-    switch (escape_table[(unsigned char)(o->ptr[j])]){
+  for (j = 0; j < o->buf.len; ++j){
+    switch (escape_table[(unsigned char)(o->buf.ptr[j])]){
     case 0:
-      *i = o->ptr[j];
+      *i = o->buf.ptr[j];
       i++;
       break;
     case 1:
       i[0] = '\\';
       i[1] = 'x';
-      i[2] = hex_table[(((unsigned char)o->ptr[j]) >> 4) & 0xf];
-      i[3] = hex_table[(((unsigned char)o->ptr[j])     ) & 0xf];
+      i[2] = hex_table[(((unsigned char)o->buf.ptr[j]) >> 4) & 0xf];
+      i[3] = hex_table[(((unsigned char)o->buf.ptr[j])     ) & 0xf];
       i += 4;
       break;
     default:
       i[0] = '\\';
-      i[1] = escape_table[(unsigned char)(o->ptr[j])];
+      i[1] = escape_table[(unsigned char)(o->buf.ptr[j])];
       i += 2;
       break;
     }
@@ -125,12 +124,12 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
 }
 
 static size_t string_hash(dfsch_string_t* s){
-  size_t ret = s->len;
+  size_t ret = s->buf.len;
   size_t i;
 
-  for (i = 0; i < s->len; i++){
-    ret ^= s->ptr[i] ^ (ret << 7);
-    ret ^= ((size_t)s->ptr[i] << 23) ^ (ret >> 7);
+  for (i = 0; i < s->buf.len; i++){
+    ret ^= s->buf.ptr[i] ^ (ret << 7);
+    ret ^= ((size_t)s->buf.ptr[i] << 23) ^ (ret >> 7);
   }
 
   return ret;
@@ -171,16 +170,17 @@ dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf){
   return dfsch_make_string_buf(strbuf->ptr, strbuf->len);
 }
 dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
-  dfsch_string_t *s = 
-    (dfsch_string_t*)dfsch_make_object(&string_type);
+  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
 
-  s->ptr = GC_MALLOC_ATOMIC(len+1);
-  s->len = len;
+  s->type = &string_type;
+
+  s->buf.ptr = (char *)(s + 1);
+  s->buf.len = len;
 
   if(ptr) // For allocating space to be used later
-    memcpy(s->ptr, ptr, len);
+    memcpy(s->buf.ptr, ptr, len);
 
-  s->ptr[len] = 0;
+  s->buf.ptr[len] = 0;
 
   return (dfsch_object_t*)s;
 }
@@ -188,15 +188,15 @@ dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
   dfsch_string_t *s = 
     (dfsch_string_t*)dfsch_make_object(&string_type);
 
-  s->ptr = buf->ptr;
-  s->len = buf->len;
+  s->buf.ptr = buf->ptr;
+  s->buf.len = buf->len;
 
   return (dfsch_object_t*)s;
 }
 char* dfsch_string_to_cstr(dfsch_object_t* obj){
   TYPE_CHECK(obj, STRING, "string");
 
-  return ((dfsch_string_t*)obj)->ptr;
+  return ((dfsch_string_t*)obj)->buf.ptr;
 }
 char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
   if (dfsch_symbol_p(obj)){
@@ -205,36 +205,37 @@ char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
 
   TYPE_CHECK(obj, STRING, "string");
 
-  return ((dfsch_string_t*)obj)->ptr;
+  return ((dfsch_string_t*)obj)->buf.ptr;
 }
 dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
   TYPE_CHECK(obj, STRING, "string");
 
-  return dfsch_strbuf_create(((dfsch_string_t*)obj)->ptr, 
-			     ((dfsch_string_t*)obj)->len);  
+  return &(((dfsch_string_t*)obj)->buf);  
 }
 
 int dfsch_string_cmp(dfsch_object_t* a, dfsch_object_t* b){
   TYPE_CHECK(a, STRING, "string");
   TYPE_CHECK(b, STRING, "string");
   
-  if (((dfsch_string_t*)a)->len != ((dfsch_string_t*)b)->len){
-    size_t l = (((dfsch_string_t*)a)->len < ((dfsch_string_t*)b)->len) ?
-       ((dfsch_string_t*)a)->len : ((dfsch_string_t*)b)->len;
+  if (((dfsch_string_t*)a)->buf.len != ((dfsch_string_t*)b)->buf.len){
+    size_t l = (((dfsch_string_t*)a)->buf.len < ((dfsch_string_t*)b)->buf.len) 
+      ? ((dfsch_string_t*)a)->buf.len : ((dfsch_string_t*)b)->buf.len;
 
-    int r = memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
+    int r = memcmp(((dfsch_string_t*)a)->buf.ptr, 
+                   ((dfsch_string_t*)b)->buf.ptr, 
                    l);
 
     if (r == 0){
-      return (((dfsch_string_t*)a)->len < ((dfsch_string_t*)b)->len) ? -1 : 1;
+      return (((dfsch_string_t*)a)->buf.len < ((dfsch_string_t*)b)->buf.len)
+        ? -1 : 1;
     }else {
       return r;
     }
 
   }
 
-  return memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
-		((dfsch_string_t*)a)->len);
+  return memcmp(((dfsch_string_t*)a)->buf.ptr, ((dfsch_string_t*)b)->buf.ptr, 
+		((dfsch_string_t*)a)->buf.len);
 
 }
 
@@ -242,11 +243,11 @@ int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b){
   TYPE_CHECK(a, STRING, "string");
   TYPE_CHECK(b, STRING, "string");
   
-  if (((dfsch_string_t*)a)->len != ((dfsch_string_t*)b)->len)
+  if (((dfsch_string_t*)a)->buf.len != ((dfsch_string_t*)b)->buf.len)
       return 0;
 
-  return memcmp(((dfsch_string_t*)a)->ptr, ((dfsch_string_t*)b)->ptr, 
-		((dfsch_string_t*)a)->len) == 0;
+  return memcmp(((dfsch_string_t*)a)->buf.ptr, ((dfsch_string_t*)b)->buf.ptr, 
+		((dfsch_string_t*)a)->buf.len) == 0;
 
 }
 int dfsch_string_lt_p(dfsch_object_t* a, dfsch_object_t* b){
@@ -274,21 +275,21 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 
     TYPE_CHECK(s, STRING, "string");
     
-    len += s->len;
+    len += s->buf.len;
 
     i = dfsch_cdr(i);
   }
 
-  r->len = len;
-  r->ptr = ptr = GC_MALLOC_ATOMIC(len+1);
+  r->buf.len = len;
+  r->buf.ptr = ptr = GC_MALLOC_ATOMIC(len+1);
 
   i = list;
 
   while (i){
     dfsch_string_t *s = (dfsch_string_t*)dfsch_car(i);
 
-    memcpy(ptr, s->ptr, s->len);
-    ptr += s->len;
+    memcpy(ptr, s->buf.ptr, s->buf.len);
+    ptr += s->buf.len;
 
     i = dfsch_cdr(i);
   }
@@ -303,18 +304,18 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
   dfsch_string_t* s = (dfsch_string_t*) string;
   TYPE_CHECK(s, STRING, "string");
 
-  if (index >= s->len)
+  if (index >= s->buf.len)
     dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(index));
 
-  return s->ptr[index];
+  return s->buf.ptr[index];
 }
 
 size_t dfsch_string_length(dfsch_object_t* string){
   dfsch_string_t* s = (dfsch_string_t*) string;
   TYPE_CHECK(s, STRING, "string");
 
-  return s->len;
+  return s->buf.len;
 }
 
 dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
@@ -322,7 +323,7 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
   dfsch_string_t* s = (dfsch_string_t*) string;
   TYPE_CHECK(s, STRING, "string");
 
-  if (end > s->len)
+  if (end > s->buf.len)
     dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(end));
 
@@ -330,7 +331,7 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
     dfsch_error("exception:index-out-of-bounds",
                 dfsch_make_number_from_long(start));
 
-  return dfsch_make_string_buf(s->ptr+start, end-start);
+  return dfsch_make_string_buf(s->buf.ptr+start, end-start);
 
 }
 
@@ -343,16 +344,16 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
 
   TYPE_CHECK(s, STRING, "string");
 
-  if (s->len == 0)
+  if (s->buf.len == 0)
     return NULL;
 
-  head = tail = dfsch_cons(dfsch_make_number_from_long(s->ptr[0]), 
+  head = tail = dfsch_cons(DFSCH_MAKE_FIXNUM(s->buf.ptr[0]), 
                            NULL);
 
-  for(i = 1; i < s->len; ++i){
+  for(i = 1; i < s->buf.len; ++i){
     object_t *tmp;
     
-    tmp = dfsch_cons(dfsch_make_number_from_long(s->ptr[i]),NULL);
+    tmp = dfsch_cons(DFSCH_MAKE_FIXNUM(s->buf.ptr[i]),NULL);
     DFSCH_FAST_CDR(tail) = tmp;
     tail = tmp;
 
@@ -368,8 +369,8 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
     (dfsch_string_t*)dfsch_make_string_buf(NULL,
                                            dfsch_list_length_check(list));
   
-  while (dfsch_pair_p((object_t*)j)){
-    string->ptr[i] = dfsch_number_to_long(DFSCH_FAST_CAR(j));
+  while (DFSCH_PAIR_P((object_t*)j)){
+    string->buf.ptr[i] = dfsch_number_to_long(DFSCH_FAST_CAR(j));
     j = DFSCH_FAST_CDR(j);
     i++;
   }
@@ -587,22 +588,22 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
     uint32_t ch = dfsch_number_to_long(DFSCH_FAST_CAR(j));
 
     if (ch <= 0x7f){
-      string->ptr[i] = ch;
+      string->buf.ptr[i] = ch;
       i += 1;
     } else if (ch <= 0x7ff) {
-      string->ptr[i] = 0xc0 | ((ch >> 6) & 0x1f); 
-      string->ptr[i+1] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[i] = 0xc0 | ((ch >> 6) & 0x1f); 
+      string->buf.ptr[i+1] = 0x80 | (ch & 0x3f);
       i += 2;
     } else if (ch <= 0xffff) {
-      string->ptr[i] = 0xe0 | ((ch >> 12) & 0x0f); 
-      string->ptr[i+1] = 0x80 | ((ch >> 6) & 0x3f);
-      string->ptr[i+2] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[i] = 0xe0 | ((ch >> 12) & 0x0f); 
+      string->buf.ptr[i+1] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[i+2] = 0x80 | (ch & 0x3f);
       i += 3;
     } else {
-      string->ptr[i] = 0xf0 | ((ch >> 18) & 0x07); 
-      string->ptr[i+1] = 0x80 | ((ch >> 12) & 0x3f);
-      string->ptr[i+2] = 0x80 | ((ch >> 6) & 0x3f);
-      string->ptr[i+3] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[i] = 0xf0 | ((ch >> 18) & 0x07); 
+      string->buf.ptr[i+1] = 0x80 | ((ch >> 12) & 0x3f);
+      string->buf.ptr[i+2] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[i+3] = 0x80 | (ch & 0x3f);
       i += 4;
     } 
 
@@ -740,22 +741,22 @@ static dfsch_object_t* string_case(dfsch_object_t* s, int m){
     }
 
     if (ch <= 0x7f){
-      string->ptr[j] = ch;
+      string->buf.ptr[j] = ch;
       j += 1;
     } else if (ch <= 0x7ff) {
-      string->ptr[j] = 0xc0 | ((ch >> 6) & 0x1f); 
-      string->ptr[j+1] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[j] = 0xc0 | ((ch >> 6) & 0x1f); 
+      string->buf.ptr[j+1] = 0x80 | (ch & 0x3f);
       j += 2;
     } else if (ch <= 0xffff) {
-      string->ptr[j] = 0xe0 | ((ch >> 12) & 0x0f); 
-      string->ptr[j+1] = 0x80 | ((ch >> 6) & 0x3f);
-      string->ptr[j+2] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[j] = 0xe0 | ((ch >> 12) & 0x0f); 
+      string->buf.ptr[j+1] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[j+2] = 0x80 | (ch & 0x3f);
       j += 3;
     } else {
-      string->ptr[j] = 0xf0 | ((ch >> 18) & 0x07); 
-      string->ptr[j+1] = 0x80 | ((ch >> 12) & 0x3f);
-      string->ptr[j+2] = 0x80 | ((ch >> 6) & 0x3f);
-      string->ptr[j+3] = 0x80 | (ch & 0x3f);
+      string->buf.ptr[j] = 0xf0 | ((ch >> 18) & 0x07); 
+      string->buf.ptr[j+1] = 0x80 | ((ch >> 12) & 0x3f);
+      string->buf.ptr[j+2] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[j+3] = 0x80 | (ch & 0x3f);
       j += 4;
     } 
 
@@ -833,6 +834,35 @@ int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b){
   return dfsch_string_cmp_ci(a, b) >= 0;
 }
 
+int dfsch_string_search(dfsch_object_t* needle, dfsch_object_t* haystack){
+  dfsch_strbuf_t* n = dfsch_string_to_buf(needle);
+  dfsch_strbuf_t* h = dfsch_string_to_buf(haystack);
+  int pos = 0;
+
+  if (n->len == 0){
+    return 0;
+  }
+
+  while (h->len - pos >= n->len){
+    char* ch;
+    if (memcmp(h->ptr + pos, n->ptr, n->len) == 0){
+      return pos;
+    }
+
+    ch = memchr(h->ptr + pos, n->ptr[0], h->len - pos);
+    if (!ch){
+      break;
+    }
+    pos = ch - h->ptr;
+  }
+
+  return -1;
+}
+
+int dfsch_string_search_ci(dfsch_object_t* needle, 
+                           dfsch_object_t* haystack){
+  
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1045,6 +1075,17 @@ DFSCH_DEFINE_PRIMITIVE(string_titlecase, 0){
   return dfsch_string_titlecase(string);
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_search, 0){
+  object_t* needle;
+  object_t* haystack;
+
+  DFSCH_OBJECT_ARG(args, needle);
+  DFSCH_OBJECT_ARG(args, haystack);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_MAKE_FIXNUM(dfsch_string_search(needle, haystack));
+}
+
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -1139,6 +1180,9 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_downcase));
   dfsch_define_cstr(ctx, "string-titlecase", 
 		   DFSCH_PRIMITIVE_REF(string_titlecase));
+
+  dfsch_define_cstr(ctx, "string-search", 
+		   DFSCH_PRIMITIVE_REF(string_search));
 
 
 }
