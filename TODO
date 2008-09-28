@@ -2,11 +2,11 @@ Non-version-specific:
 * More tests
 * Documentation
 
-For 0.2.2:
-* Better format
+For 0.2.3:
+* Missing format directives (c and f)
 * Better writer (callback based)
 
-For 0.2.3:
+For 0.2.4:
 * Pretty-printer
 * Multimethods + method combinations
 

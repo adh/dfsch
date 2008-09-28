@@ -1,5 +1,80 @@
 ;;                              -*- mode: scheme -*- 
 
+(titlepage "dfsch - Scheme-like Lisp dialect"
+           "This documentation is horribly incomplete")
+
+(function (id object) ()
+          "Return object's address in memory as fixnum")
+(function (hash object) ()
+          "Return hash of objects contents. Two objects which are equal? "
+          "must have same hash")
+(function (eq? object1 object2) ()
+          "Are the two arguments same object?")
+(function (eqv? object1 object2) ()
+          "Are the two arguments same object or numbers with same type and "
+          "value?")
+(function (equal? object1 object2) ()
+          "Are the two arguments same value. (For some type-specific "
+          "definition of value. Two eq? objects are always equal?)")
+
+(category variables "Variables"
+          "")
+(category functions "Functions"
+          "")
+
+(special-form (lambda arguments . body) (functions)
+              "Create anonymous function with given arguments and body")
+(special-form (define name value) (variables)
+              "Define variable name with initial value")
+(special-form (define (name . arguments) . body) (variables functions)
+              "Define variable name whose intial value is function with "
+              "given name and arguments composed of body")
+(special-form (define-variable name value) (variables)
+              "Define variable with given intial value if it does not "
+              "already exist")
+(special-form (define-constant name value) (variables)
+              "Define variable as by define-variable and declare it to be "
+              "constant")
+(special-form (declare variable declaration) (variables)
+              "Add given declaration to variable")
+(special-form (set! variable value) (variables)
+              "Change value of given variable")
+(special-form (unset! variable) (variables)
+              "Remove given variable")
+(special-form (defined? variable) (variables)
+              "Is given variable defined in this lexical scope?")
+
+(category macros "Macros"
+          "Macros are like functions, but their value is not returned but "
+          "used as code that replaces macro invocation.")
+(function (make-macro function) (macros)
+          "Wrap given function into macro object.")
+(special-form (define-macro (name . arguments) . body)
+              "Define macro named name with given arguments and body. "
+              "(define variable name, whose value is macro object "
+              "containg function with given arguments and body)")
+
+
+
+
+(category types "Types"
+          "Each object has some type. Types are named and are organized "
+          "into inheritance tree rooted at NIL. Organization of this tree "
+          "does not necessary reflect internal implementation.")
+
+(function (type-of object) (types)
+          "Return type of given object")
+(function (type-name type) (types)
+          "Return name of given type as string")
+(function (superclass type) (types)
+          "Return superclass of given type")
+(function (superclass? sub super) (types)
+          "Is super an direct or indirect superclass of sub?")
+(function (instance? object type) (types)
+          "Is object instance of type? (Is type equal to object's type or "
+          "it's superclass?)")
+
+
 (category pairs "Pairs"
           "Pairs are simplest data type - pair of two arbitrary objects,"
           "they are commonly used for constructing linked lists")
@@ -10,5 +85,92 @@
           "Return first element of given pair")
 (function (cdr pair) (pairs)
           "Return second element of given pair")
+(function (list . items) (pairs)
+          "Return list with (copy of) given items")
+(function (length list) (pairs)
+          "Return length of given list")
+(function (set-car! pair value) (pairs)
+          "Change value of first element of pair")
+(function (set-cdr! pair value) (pairs)
+          "Change value of second element of pair")
 
- 
+(function (zip . lists) (pairs)
+          "Perform transposition of lists. ((a b) (c d)) -> ((a c) (b d))")
+(function (append . lists) (pairs)
+          "Append given lists to for one new list. Result shares structure "
+          "with last argument.")
+(function (list-ref list index) (pairs)
+          "Return index-th element of list, counting from zero")
+(function (reverse list) (pairs)
+          "Return new list with items in reverse order")
+(function (member key list) (pairs)
+          "Return first pair of list whose car is equal? to key")
+(function (memv key list) (pairs)
+          "Return first pair of list whose car is eqv? to key")
+(function (memq key list) (pairs)
+          "Return first pair of list whose car is eq? to key")
+
+(function (assoc key list) (pairs)
+          "Return first item of list whose car is equal? to key")
+(function (assv key list) (pairs)
+          "Return first item of list whose car is eqv? to key")
+(function (assq key list) (pairs)
+          "Return first item of list whose car is eq? to key")
+
+(function (for-each function . lists) (pairs)
+          "Invoke function repeatedly with consecutive items of lists")
+(function (map function . lists) (pairs)
+          "As for-each, but return list of function values")
+(function (filter function list) (pairs)
+          "Return new list containing only items for which functions "
+          "returns true")
+(function (reduce function list) (pairs)
+          "Replace pairs of items in list by value of function until only "
+          "one item remains.")
+
+
+(category symbols "Symbols"
+          "Symbols are names for things. There cannot be two symbols "
+          "with same name")
+
+(function (gensym) (symbols)
+          "Return unique symbol that cannot be refered to by any name")
+(function (unintern symbol) (symbols)
+          "Disassociate symbol from it's name (convert named symbol to "
+          "symbol returned by gensym")
+
+
+
+(function (null? object) (pairs types)
+          "Is given object an empty list?")
+(function (pair? object) (pairs types)
+          "Is object a pair?")
+(function (list? object) (pairs types)
+          "Is object a list? (pair or empty list)")
+(function (atom? object) (pairs types)
+          "Is object an atom? (not list)")
+(function (symbol? object) (symbols types)
+          "Is object a symbol?")
+(function (string? object) (strings types)
+          "Is object a string?")
+(function (primitive? object) (functions types)
+          "Is object a primitive function?")
+(function (function? object) (functions types)
+          "Is object a closure")
+(function (procedure? object) (functions types)
+          "Is object a procedure? (something usable as first argument "
+          "to apply, which means not only instances of <standard-function>, "
+          "thus the naming difference)")
+
+
+(category control-structures "Control Structures"
+          "")
+(special-form (or . clauses) (control-structures)
+              "Evaluate clauses sequentialy until one returns non-null value, "
+              "returns value of last clause evaluated")
+(special-form (and . clauses) (control-structures)
+              "Evaluate clauses sequentially until one of them returns NIL, "
+              "returns value of last clause evaluated")
+(special-form (if condition consequent alternate) (control-structures)
+              "Evaluate consequent if condition evaluates to true, alternate "
+              "otherwise")

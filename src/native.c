@@ -528,9 +528,9 @@ DFSCH_DEFINE_PRIMITIVE(primitive_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
 }
-DFSCH_DEFINE_PRIMITIVE(closure_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(function_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_closure_p(dfsch_car(args)));  
+  return dfsch_bool(dfsch_function_p(dfsch_car(args)));  
 }
 DFSCH_DEFINE_PRIMITIVE(procedure_p, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,1);  
@@ -889,7 +889,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
   dfsch_define_cstr(ctx, "primitive?", 
 		   DFSCH_PRIMITIVE_REF(primitive_p));
-  dfsch_define_cstr(ctx, "closure?", DFSCH_PRIMITIVE_REF(closure_p));
+  dfsch_define_cstr(ctx, "function?", DFSCH_PRIMITIVE_REF(function_p));
   dfsch_define_cstr(ctx, "procedure?", 
 		   DFSCH_PRIMITIVE_REF(procedure_p));
   dfsch_define_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));

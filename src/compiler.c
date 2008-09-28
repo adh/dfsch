@@ -199,7 +199,7 @@ dfsch_object_t* dfsch_compile_progn(dfsch_object_t* list,
 }
 
 void dfsch_compile_function(dfsch_object_t* function){
-  if (!dfsch_closure_p(function)){
+  if (!dfsch_function_p(function)){
     dfsch_error("exception:not-a-function", function);
   }
 

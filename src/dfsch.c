@@ -392,7 +392,7 @@ dfsch_type_t dfsch_function_type = {
   (dfsch_type_write_t)function_write,
   NULL
 };
-#define CLOSURE DFSCH_FUNCTION_TYPE
+#define FUNCTION DFSCH_FUNCTION_TYPE
 
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
@@ -500,11 +500,11 @@ int dfsch_primitive_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == PRIMITIVE;
 
 }
-int dfsch_closure_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == CLOSURE;
+int dfsch_function_p(dfsch_object_t* obj){
+  return DFSCH_TYPE_OF(obj) == FUNCTION;
 }
 int dfsch_procedure_p(dfsch_object_t* obj){
-  return (DFSCH_TYPE_OF(obj) == PRIMITIVE || DFSCH_TYPE_OF(obj) == CLOSURE) || 
+  return (DFSCH_TYPE_OF(obj) == PRIMITIVE || DFSCH_TYPE_OF(obj) == FUNCTION) || 
     (DFSCH_TYPE_OF(obj)->apply);
 }
 int dfsch_macro_p(dfsch_object_t* obj){
@@ -1303,7 +1303,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				    dfsch_object_t* args,
 				    dfsch_object_t* code){
-  closure_t *c = (closure_t*)dfsch_make_object(CLOSURE);
+  closure_t *c = (closure_t*)dfsch_make_object(FUNCTION);
   if (!c)
     return NULL;
   
@@ -1320,7 +1320,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code,
                                           dfsch_object_t* name){
-  closure_t *c = (closure_t*)dfsch_make_object(CLOSURE);
+  closure_t *c = (closure_t*)dfsch_make_object(FUNCTION);
   if (!c)
     return NULL;
   
@@ -1335,31 +1335,31 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
 }
 
 dfsch_object_t* dfsch_get_function_name(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != CLOSURE){
+  if (DFSCH_TYPE_OF(proc) != FUNCTION){
     dfsch_error("Not a function", proc);
   }
   return ((closure_t*)proc)->name;
 }
 dfsch_object_t* dfsch_get_function_environment(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != CLOSURE){
+  if (DFSCH_TYPE_OF(proc) != FUNCTION){
     dfsch_error("Not a function", proc);
   }
   return ((closure_t*)proc)->env;
 }
 dfsch_object_t* dfsch_get_function_arguments(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != CLOSURE){
+  if (DFSCH_TYPE_OF(proc) != FUNCTION){
     dfsch_error("Not a function", proc);
   }
   return ((closure_t*)proc)->args;
 }
 dfsch_object_t* dfsch_get_function_code(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != CLOSURE){
+  if (DFSCH_TYPE_OF(proc) != FUNCTION){
     dfsch_error("Not a function", proc);
   }
   return ((closure_t*)proc)->orig_code;
 }
 dfsch_object_t* dfsch_get_function_effective_code(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != CLOSURE){
+  if (DFSCH_TYPE_OF(proc) != FUNCTION){
     dfsch_error("Not a function", proc);
   }
   return ((closure_t*)proc)->code;
@@ -2190,7 +2190,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   }
 
-  if (DFSCH_TYPE_OF(proc) == CLOSURE){
+  if (DFSCH_TYPE_OF(proc) == FUNCTION){
     r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
                            dfsch_destructuring_bind(((closure_t*)proc)->args,
