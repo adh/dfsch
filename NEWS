@@ -6,6 +6,8 @@ version 0.2.2                YYYY-MM-DD              svn rev. RRRR
           - String operations use utf-8 by default
           - Simple case conversions and case insensitive comparison
         * Condition system
+        * Some ad-hoc "debugger"
+        * REPL in separate user-accessible library
 
 -----------------------------------------------------------------------------
 version 0.2.1                2008-06-29              svn rev. 866
