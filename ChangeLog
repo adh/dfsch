@@ -1,3 +1,8 @@
+2008-09-29  Ales Hakl  <ales at hakl dot net>
+
+	* src/strings.c (dfsch_string_search_ci): case insensitive
+	substring search
+
 2008-09-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/strings.c (dfsch_string_search): substring search function

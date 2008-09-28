@@ -102,6 +102,8 @@ extern "C" {
 
   extern int dfsch_string_search(dfsch_object_t* needle, 
                                  dfsch_object_t* haystack);
+  extern int dfsch_string_search_ci(dfsch_object_t* needle, 
+                                    dfsch_object_t* haystack);
 
 
 #ifdef __cplusplus

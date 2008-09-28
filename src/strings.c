@@ -859,9 +859,49 @@ int dfsch_string_search(dfsch_object_t* needle, dfsch_object_t* haystack){
   return -1;
 }
 
+static int ci_prefix_p(char* ai, char* ae, char* bi, char* be){
+  uint32_t ac;
+  uint32_t bc;
+
+  while (ai && bi){
+    ac = dfsch_char_upcase(get_char(ai, ae));
+    bc = dfsch_char_upcase(get_char(bi, be));
+
+    if (ac != bc){
+      return 0;
+    }
+
+    ai = next_char(ai, ae);
+    bi = next_char(bi, be);
+  }
+  if (ai){
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 int dfsch_string_search_ci(dfsch_object_t* needle, 
                            dfsch_object_t* haystack){
+  dfsch_strbuf_t* n = dfsch_string_to_buf(needle);
+  dfsch_strbuf_t* h = dfsch_string_to_buf(haystack);
+  char* hi = h->ptr;
+  char* he = h->ptr + h->len;
+  int pos = 0;
+
+  if (n->len == 0){
+    return 0;
+  }
+
+  while (hi){
+    if (ci_prefix_p(n->ptr, n->ptr + n->len, hi, he)){
+      return pos;
+    }
+    hi = next_char(hi, he);
+    pos++;
+  }
   
+  return -1;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1085,6 +1125,16 @@ DFSCH_DEFINE_PRIMITIVE(string_search, 0){
 
   return DFSCH_MAKE_FIXNUM(dfsch_string_search(needle, haystack));
 }
+DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
+  object_t* needle;
+  object_t* haystack;
+
+  DFSCH_OBJECT_ARG(args, needle);
+  DFSCH_OBJECT_ARG(args, haystack);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_MAKE_FIXNUM(dfsch_string_search_ci(needle, haystack));
+}
 
 
 
@@ -1183,6 +1233,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "string-search", 
 		   DFSCH_PRIMITIVE_REF(string_search));
+  dfsch_define_cstr(ctx, "string-search-ci", 
+		   DFSCH_PRIMITIVE_REF(string_search_ci));
 
 
 }
