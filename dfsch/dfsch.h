@@ -355,7 +355,6 @@ extern "C" {
 
   /** Wraps procedure for use as special form. */
   extern dfsch_object_t* dfsch_make_form(dfsch_form_impl_t impl,
-                                         dfsch_form_compile_t compile,
                                          void* baton,
                                          char* name);
 

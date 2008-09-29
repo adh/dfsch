@@ -20,7 +20,6 @@
  */
 
 #include <dfsch/hash.h>
-#include <dfsch/compiler.h>
 #include "internal.h"
 #include <stdlib.h>
 #include "util.h"
@@ -632,7 +631,7 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
   dfsch_error("exception:unknown-mode", mode);
 }
 
-DFSCH_DEFINE_FORM_IMPL(with_hash, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(with_hash){
   dfsch_object_t *hash;
   dfsch_object_t *code;
 

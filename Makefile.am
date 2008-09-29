@@ -69,7 +69,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/format.c dfsch/format.h	\
 	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h		\
-	src/compiler.c dfsch/compiler.h \
 	src/conditions.c dfsch/conditions.h \
 	src/introspect.c dfsch/introspect.h
 

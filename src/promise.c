@@ -20,7 +20,6 @@
  */
 
 #include <dfsch/promise.h>
-#include <dfsch/compiler.h>
 #include "util.h"
 
 typedef struct promise_t {
@@ -89,7 +88,7 @@ dfsch_object_t* dfsch_stream_cdr(dfsch_object_t* stream){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(delay, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(delay){
   return dfsch_make_promise(args, env);
 }
 
@@ -102,7 +101,7 @@ static dfsch_object_t* native_force(void* baton, dfsch_object_t* args,
   return dfsch_force_promise(promise);
 }
 
-DFSCH_DEFINE_FORM_IMPL(stream_cons, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(stream_cons){
   dfsch_object_t* head;
   dfsch_object_t* tail;
 

@@ -27,7 +27,6 @@
 #include "internal.h"
 #include <dfsch/promise.h>
 #include <dfsch/magic.h>
-#include <dfsch/compiler.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -41,7 +40,7 @@ typedef dfsch_object_t object_t;
 
 // TODO: document all native functions somewhere
 
-DFSCH_DEFINE_FORM_IMPL(if, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(if){
   object_t* test;
   object_t* consequent;
   object_t* alternate;
@@ -56,7 +55,7 @@ DFSCH_DEFINE_FORM_IMPL(if, dfsch_form_compiler_eval_all){
 
 }
 
-DFSCH_DEFINE_FORM_IMPL(when, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(when){
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,test);
@@ -68,7 +67,7 @@ DFSCH_DEFINE_FORM_IMPL(when, dfsch_form_compiler_eval_all){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM_IMPL(unless, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(unless){
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,test);
@@ -81,7 +80,7 @@ DFSCH_DEFINE_FORM_IMPL(unless, dfsch_form_compiler_eval_all){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(cond, dfsch_form_compiler_cond){
+DFSCH_DEFINE_FORM_IMPL(cond){
   object_t* i = args;
 
   while (dfsch_pair_p(i)){
@@ -102,7 +101,7 @@ DFSCH_DEFINE_FORM_IMPL(cond, dfsch_form_compiler_cond){
 
   return NULL;
 }
-DFSCH_DEFINE_FORM_IMPL(case, dfsch_form_compiler_case){
+DFSCH_DEFINE_FORM_IMPL(case){
   object_t* val;
   DFSCH_OBJECT_ARG(args, val);
 
@@ -126,7 +125,7 @@ DFSCH_DEFINE_FORM_IMPL(case, dfsch_form_compiler_case){
   
 }
 
-DFSCH_DEFINE_FORM_IMPL(quote, NULL){
+DFSCH_DEFINE_FORM_IMPL(quote){
   object_t* value;
   
   DFSCH_OBJECT_ARG(args, value);
@@ -135,7 +134,7 @@ DFSCH_DEFINE_FORM_IMPL(quote, NULL){
   return value;
 }
 
-DFSCH_DEFINE_FORM_IMPL(quasiquote, NULL){ 
+DFSCH_DEFINE_FORM_IMPL(quasiquote){ 
   /* This is non-trivial to compile right */
   object_t* arg;
   DFSCH_OBJECT_ARG(args, arg);
@@ -144,10 +143,10 @@ DFSCH_DEFINE_FORM_IMPL(quasiquote, NULL){
   return dfsch_quasiquote(env,arg);
 }
 
-DFSCH_DEFINE_FORM_IMPL(begin, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(begin){
   return dfsch_eval_proc_tr(args, env, esc);
 }
-DFSCH_DEFINE_FORM_IMPL(let, dfsch_form_compiler_let){
+DFSCH_DEFINE_FORM_IMPL(let){
   object_t *vars;
   object_t *code;
 
@@ -207,7 +206,7 @@ DFSCH_DEFINE_FORM_IMPL(let, dfsch_form_compiler_let){
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
 }
-DFSCH_DEFINE_FORM_IMPL(letrec, dfsch_form_compiler_let){
+DFSCH_DEFINE_FORM_IMPL(letrec){
 
   object_t *vars;
   object_t *code;
@@ -228,7 +227,7 @@ DFSCH_DEFINE_FORM_IMPL(letrec, dfsch_form_compiler_let){
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
 }
-DFSCH_DEFINE_FORM_IMPL(let_seq, dfsch_form_compiler_let){
+DFSCH_DEFINE_FORM_IMPL(let_seq){
   object_t *vars;
   object_t *code;
 
@@ -298,7 +297,7 @@ static object_t* native_apply(void *baton, object_t* args,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(unwind_protect, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(unwind_protect){
   object_t* protect;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, protect);
@@ -312,7 +311,7 @@ DFSCH_DEFINE_FORM_IMPL(unwind_protect, dfsch_form_compiler_eval_all){
   return ret;
 }
 
-DFSCH_DEFINE_FORM_IMPL(catch, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(catch){
   object_t* tag;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, tag);
@@ -345,7 +344,7 @@ DFSCH_DEFINE_PRIMITIVE(throw, 0){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(do, NULL){
+DFSCH_DEFINE_FORM_IMPL(do){
   object_t* vars;
   object_t* test;
   object_t* exprs;
@@ -403,7 +402,7 @@ DFSCH_DEFINE_FORM_IMPL(do, NULL){
   return dfsch_eval_proc_tr(exprs, lenv, esc);
 }
 
-DFSCH_DEFINE_FORM_IMPL(destructuring_bind, dfsch_form_compiler_eval_but_first){
+DFSCH_DEFINE_FORM_IMPL(destructuring_bind){
   dfsch_object_t *arglist;
   dfsch_object_t *list;
   dfsch_object_t *code;

@@ -1397,13 +1397,11 @@ object_t* dfsch_make_macro(object_t *proc){
   return (object_t*)m;
 }
 dfsch_object_t* dfsch_make_form(dfsch_form_impl_t impl,
-                                dfsch_form_compile_t compile,
                                 void* baton,
                                 char* name){
   dfsch_form_t *f = (dfsch_form_t*)dfsch_make_object(FORM);
   
   f->impl = impl;
-  f->compile = compile;
   f->baton = baton;
   f->name = name;
 
@@ -2246,7 +2244,7 @@ static object_t* native_top_level_environment(void *baton, object_t* args,
   return baton;
 }
 
-DFSCH_DEFINE_FORM_IMPL(current_environment, NULL){
+DFSCH_DEFINE_FORM_IMPL(current_environment){
   return env;
 }
 

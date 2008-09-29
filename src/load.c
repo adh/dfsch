@@ -376,7 +376,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
   return ictx.head;
 }
 
-DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
+DFSCH_DEFINE_FORM_IMPL(load_scm){
   char* file_name;
 
   args = dfsch_eval_list(args, env);
@@ -386,7 +386,7 @@ DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
   return dfsch_load_scm(env, file_name);
 }
 
-DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
+DFSCH_DEFINE_FORM_IMPL(load_so){
   char* sym_name;
   char* so_name;
 
@@ -398,7 +398,7 @@ DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
   return dfsch_load_so(env, so_name, sym_name);
 }
 
-DFSCH_DEFINE_FORM_IMPL(load, NULL){
+DFSCH_DEFINE_FORM_IMPL(load){
   char* name;
   dfsch_object_t* path_list;
 
@@ -409,7 +409,7 @@ DFSCH_DEFINE_FORM_IMPL(load, NULL){
 
   return dfsch_load(env, name, path_list);  
 }
-DFSCH_DEFINE_FORM_IMPL(require, NULL){
+DFSCH_DEFINE_FORM_IMPL(require){
   char* name;
   dfsch_object_t* path_list;
 
@@ -420,7 +420,7 @@ DFSCH_DEFINE_FORM_IMPL(require, NULL){
 
   return dfsch_require(env, name, path_list);  
 }
-DFSCH_DEFINE_FORM_IMPL(provide, NULL){
+DFSCH_DEFINE_FORM_IMPL(provide){
   char* name;
 
   args = dfsch_eval_list(args, env);

@@ -1,3 +1,7 @@
+2008-09-30  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/compiler.h: Removed unusable pseudocompiler
+
 2008-09-29  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: Readable error messages

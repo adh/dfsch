@@ -96,15 +96,9 @@ extern dfsch_type_t dfsch_environment_type;
                                                dfsch_object_t* env,
                                                dfsch_object_t* args,
                                                dfsch_tail_escape_t* esc);
-  typedef dfsch_object_t* (*dfsch_form_compile_t)(dfsch_form_t* form,
-                                                  dfsch_object_t* env,
-                                                  dfsch_object_t* args,
-                                                  int depth);
-
   struct dfsch_form_t {
     dfsch_type_t* type;
     dfsch_form_impl_t impl;
-    dfsch_form_compile_t compile;
     void* baton;
     char* name;
   };
@@ -118,28 +112,20 @@ extern dfsch_type_t dfsch_environment_type;
                                             dfsch_object_t* env,        \
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
-#define DFSCH_FORM_COMPILATION(name)                                    \
-  static dfsch_object_t* form_##name##_compile(dfsch_form_t* form,      \
-                                               dfsch_object_t* env,     \
-                                               dfsch_object_t* args,    \
-                                               int depth                \
-                                               )
 
 #define DFSCH_DEFINE_FORM(name)                 \
   static dfsch_form_t form_##name = {           \
     DFSCH_FORM_TYPE,                            \
     form_##name##_impl,                         \
-    form_##name##_compile,                      \
     NULL,                                       \
     #name                                       \
   }
 
-#define DFSCH_DEFINE_FORM_IMPL(name, compile)           \
+#define DFSCH_DEFINE_FORM_IMPL(name)                    \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
   static dfsch_form_t form_##name = {                   \
     DFSCH_FORM_TYPE,                                    \
     form_##name##_impl,                                 \
-    compile,                                            \
     NULL,                                               \
     #name                                               \
   };                                                    \
@@ -150,7 +136,6 @@ extern dfsch_type_t dfsch_environment_type;
 
 #define DFSCH_MAKE_FORM(name,baton)                                     \
   (dfsch_make_form(form_##name##_impl,                                  \
-                   form_##name##_compile,                               \
                    (baton),                                             \
                    #name))
 

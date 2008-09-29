@@ -169,7 +169,7 @@ void dfsch_define_method_cstr(char* name,
 
 
 /* scheme binding */
-DFSCH_DEFINE_FORM_IMPL(define_generic, NULL){
+DFSCH_DEFINE_FORM_IMPL(define_generic){
   dfsch_object_t* name;
 
   DFSCH_OBJECT_ARG(args, name);
@@ -177,7 +177,7 @@ DFSCH_DEFINE_FORM_IMPL(define_generic, NULL){
   return dfsch_define_generic(name, env);
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
+DFSCH_DEFINE_FORM_IMPL(define_method){
   dfsch_object_t* name;
   dfsch_object_t* type;
   dfsch_object_t* method;

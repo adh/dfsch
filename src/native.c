@@ -26,7 +26,6 @@
 
 #include "internal.h"
 #include <dfsch/promise.h>
-#include <dfsch/compiler.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -36,7 +35,6 @@
 #include <stdarg.h>
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
-#include <dfsch/compiler.h>
 
 typedef dfsch_object_t object_t;
 
@@ -148,14 +146,14 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(lambda, NULL){
+DFSCH_DEFINE_FORM_IMPL(lambda){
   MIN_ARGS(args,1);
   return dfsch_lambda(env,
 		      dfsch_car(args),
 		      dfsch_cdr(args));
 }
 
-DFSCH_DEFINE_FORM_IMPL(define, NULL){
+DFSCH_DEFINE_FORM_IMPL(define){
 
   MIN_ARGS(args,1);  
 
@@ -173,7 +171,7 @@ DFSCH_DEFINE_FORM_IMPL(define, NULL){
   }
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_variable, dfsch_form_compiler_eval_but_first){
+DFSCH_DEFINE_FORM_IMPL(define_variable){
   dfsch_object_t* name;
   dfsch_object_t* value;
 
@@ -189,7 +187,7 @@ DFSCH_DEFINE_FORM_IMPL(define_variable, dfsch_form_compiler_eval_but_first){
     return NULL;
   }
 }
-DFSCH_DEFINE_FORM_IMPL(define_constant, dfsch_form_compiler_eval_but_first){
+DFSCH_DEFINE_FORM_IMPL(define_constant){
   dfsch_object_t* name;
   dfsch_object_t* value;
 
@@ -207,7 +205,7 @@ DFSCH_DEFINE_FORM_IMPL(define_constant, dfsch_form_compiler_eval_but_first){
   }
 }
 
-DFSCH_DEFINE_FORM_IMPL(declare, NULL){
+DFSCH_DEFINE_FORM_IMPL(declare){
   dfsch_object_t* name;
   dfsch_object_t* decls;
 
@@ -222,7 +220,7 @@ DFSCH_DEFINE_FORM_IMPL(declare, NULL){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM_IMPL(set, dfsch_form_compiler_eval_but_first){
+DFSCH_DEFINE_FORM_IMPL(set){
   NEED_ARGS(args,2);  
 
   object_t* name = dfsch_car(args);
@@ -231,7 +229,7 @@ DFSCH_DEFINE_FORM_IMPL(set, dfsch_form_compiler_eval_but_first){
   return dfsch_set(name, value, env);
 
 }
-DFSCH_DEFINE_FORM_IMPL(unset, NULL){
+DFSCH_DEFINE_FORM_IMPL(unset){
   object_t* name;
 
   DFSCH_OBJECT_ARG(args, name);
@@ -241,7 +239,7 @@ DFSCH_DEFINE_FORM_IMPL(unset, NULL){
 
   return NULL;
 }
-DFSCH_DEFINE_FORM_IMPL(defined_p, NULL){
+DFSCH_DEFINE_FORM_IMPL(defined_p){
   NEED_ARGS(args,1);
   object_t* name = dfsch_car(args);
 
@@ -252,7 +250,7 @@ DFSCH_DEFINE_PRIMITIVE(make_macro, 0){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
-DFSCH_DEFINE_FORM_IMPL(define_macro, NULL){
+DFSCH_DEFINE_FORM_IMPL(define_macro){
   dfsch_object_t* name;
   dfsch_object_t* arglist;
 
@@ -575,7 +573,7 @@ DFSCH_DEFINE_PRIMITIVE(equal_p, DFSCH_PRIMITIVE_CACHED){
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_FORM_IMPL(or, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(or){
   object_t* i;
   object_t* r = NULL;
   i = args;
@@ -589,7 +587,7 @@ DFSCH_DEFINE_FORM_IMPL(or, dfsch_form_compiler_eval_all){
 
   return r;
 }
-DFSCH_DEFINE_FORM_IMPL(and, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(and){
   object_t* i;
   object_t* r = dfsch_sym_true();
   i = args;
@@ -749,25 +747,6 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_macro_expand(macro, arguments);
-}
-DFSCH_DEFINE_PRIMITIVE(compile, 0){
-  dfsch_object_t* expression;
-  dfsch_object_t* env;
-  int depth;
-  DFSCH_OBJECT_ARG(args, expression);
-  DFSCH_OBJECT_ARG(args, env);
-  DFSCH_LONG_ARG_OPT(args, depth, 256);
-  DFSCH_ARG_END(args);
-
-  return dfsch_compile(expression, env, depth);
-}
-DFSCH_DEFINE_PRIMITIVE(compile_function, 0){
-  dfsch_object_t* function;
-  DFSCH_OBJECT_ARG(args, function);
-  DFSCH_ARG_END(args);
-
-  dfsch_compile_function(function);
-  return function;
 }
 DFSCH_DEFINE_PRIMITIVE(destructure, 0){
   dfsch_object_t* llist;
@@ -930,10 +909,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "macro-expand", 
                    DFSCH_PRIMITIVE_REF(macro_expand));
-  dfsch_define_cstr(ctx, "compile", 
-                   DFSCH_PRIMITIVE_REF(compile));
-  dfsch_define_cstr(ctx, "compile-function!", 
-                   DFSCH_PRIMITIVE_REF(compile_function));
   dfsch_define_cstr(ctx, "destructure", 
                    DFSCH_PRIMITIVE_REF(destructure));
 

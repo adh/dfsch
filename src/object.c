@@ -24,7 +24,6 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
-#include <dfsch/compiler.h>
 #include "util.h"
 
 typedef struct instance_t {
@@ -210,7 +209,7 @@ static dfsch_object_t* native_make_instance(void* baton,
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
+DFSCH_DEFINE_FORM_IMPL(define_class){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
 
@@ -271,7 +270,7 @@ static dfsch_object_t* native_slots_2_alist(void* baton,
   
   return dfsch_object_slots_2_alist(object);
 }
-DFSCH_DEFINE_FORM_IMPL(with_slots, dfsch_form_compiler_eval_all){
+DFSCH_DEFINE_FORM_IMPL(with_slots){
   dfsch_object_t *object;
   dfsch_object_t *code;
 

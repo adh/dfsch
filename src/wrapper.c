@@ -22,22 +22,8 @@
 #include "dfsch/wrapper.h"
 
 #include <dfsch/strings.h>
-#include <dfsch/compiler.h>
 
 #include "util.h"
-
-/*
- * WARNING: magic ahead
- */
-
-/*
- * This is how you add your own private fields to type structure - wrap it to 
- * another structure. C guarantees that address of first field will be equal to
- * address of whole structure, so this will work (Gtk+ uses this hack too).
- *
- * Rationale: most code doesn't need this, so it's unnecessary overhead to 
- * store NULL pointer with every type.
- */
 
 typedef struct wrapper_type_t {
   dfsch_type_t type;
@@ -202,8 +188,7 @@ extern dfsch_object_t* dfsch_unwrap(dfsch_object_t* type,
   return w->object;
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_wrapper_type, 
-                       dfsch_form_compiler_eval_but_first){
+DFSCH_DEFINE_FORM_IMPL(define_wrapper_type){
   dfsch_object_t* write = NULL;
   dfsch_object_t* equal_p = NULL;
   dfsch_object_t* apply = NULL;

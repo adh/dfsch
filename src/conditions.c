@@ -380,7 +380,7 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
  * as macros.
  */
 
-DFSCH_DEFINE_FORM_IMPL(handler_bind, NULL){
+DFSCH_DEFINE_FORM_IMPL(handler_bind){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;
@@ -409,7 +409,7 @@ DFSCH_DEFINE_FORM_IMPL(handler_bind, NULL){
   return ret;
 }
 
-DFSCH_DEFINE_FORM_IMPL(restart_bind, NULL){
+DFSCH_DEFINE_FORM_IMPL(restart_bind){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;
