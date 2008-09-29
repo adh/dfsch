@@ -23,7 +23,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/ports.h\
 	dfsch/load.h \
 	dfsch/util.h \
-	dfsch/compiler.h\
 	dfsch/bignum.h \
 	dfsch/conditions.h \
 	dfsch/introspect.h
