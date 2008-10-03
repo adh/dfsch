@@ -28,12 +28,12 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/introspect.h
 
 lib_LTLIBRARIES = libdfsch.la \
+	libdfsch-console.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
 	libdfsch-regex.la \
 	libdfsch-threads.la \
-	libdfsch-cdebug.la \
-	libdfsch-console.la
+	libdfsch-cdebug.la
 
 dfschlibexec_LTLIBRARIES = threads.la\
 	regex.la \
