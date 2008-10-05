@@ -44,9 +44,9 @@ static dfsch_object_t* generic_find_method(generic_t* gen,
 
   method = dfsch_hash_ref(gen->methods, NULL);
   if (!method){
-    dfsch_error("exception:no-method-for", dfsch_list(2,
-                                                      (dfsch_object_t*)gen,
-                                                      (dfsch_object_t*)type));
+    dfsch_error("No matching method", dfsch_list(2,
+						 (dfsch_object_t*)gen,
+						 (dfsch_object_t*)type));
   }
   return dfsch_car(method);
 }
@@ -58,7 +58,7 @@ static dfsch_object_t* generic_apply(generic_t* gen,
   dfsch_type_t* type;
 
   if (!dfsch_pair_p(args)){
-    dfsch_error("exception:discriminating-argument-missing", 
+    dfsch_error("Discriminating argument missing", 
                 (dfsch_object_t*)gen);
   }
 
@@ -101,7 +101,7 @@ void dfsch_method_set(dfsch_object_t* generic,
                       dfsch_object_t* type,
                       dfsch_object_t* method){
   if (!DFSCH_INSTANCE_P(generic, &generic_type)){
-    dfsch_error("exception:not-a-generic-function", generic);
+    dfsch_error("Not a generic function", generic);
   }
 
   dfsch_hash_set(((generic_t*)generic)->methods, type, method);
@@ -110,7 +110,7 @@ void dfsch_method_set(dfsch_object_t* generic,
 void dfsch_method_unset(dfsch_object_t* generic,
                         dfsch_object_t* type){
   if (!DFSCH_INSTANCE_P(generic, &generic_type)){
-    dfsch_error("exception:not-a-generic-function", generic);
+    dfsch_error("Not a generic function", generic);
   }
 
   dfsch_hash_unset(((generic_t*)generic)->methods, type);
@@ -120,14 +120,14 @@ void dfsch_method_unset(dfsch_object_t* generic,
 dfsch_object_t* dfsch_method_ref(dfsch_object_t* generic,
                       dfsch_object_t* type){
   if (!DFSCH_INSTANCE_P(generic, &generic_type)){
-    dfsch_error("exception:not-a-generic-function", generic);
+    dfsch_error("Not a generic function", generic);
   }
 
   return generic_find_method((generic_t*)generic, type);
 }
 dfsch_object_t* dfsch_methods_2_alist(dfsch_object_t* generic){
   if (!DFSCH_INSTANCE_P(generic, &generic_type)){
-    dfsch_error("exception:not-a-generic-function", generic);
+    dfsch_error("Not a generic function", generic);
   }
 
   return dfsch_hash_2_alist(((generic_t*)generic)->methods);
@@ -137,7 +137,7 @@ dfsch_object_t* dfsch_define_generic(dfsch_object_t* name, dfsch_object_t* env){
   dfsch_object_t* generic;
 
   if (!dfsch_symbol_p(name)){
-    dfsch_error("exception:not-a-symbol", name);
+    dfsch_error("Not a symbol", name);
   }
     
   generic = dfsch_env_get(name, env);
@@ -145,7 +145,7 @@ dfsch_object_t* dfsch_define_generic(dfsch_object_t* name, dfsch_object_t* env){
   if (generic){
     generic = dfsch_car(generic);
     if (!DFSCH_INSTANCE_P(generic, &generic_type)){
-      dfsch_error("exception:not-a-generic-function", generic);
+      dfsch_error("Not a generic function", generic);
     }
     return generic;
   }
