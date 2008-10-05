@@ -28,7 +28,7 @@
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
   extern dfsch_type_t dfsch_list_type;
 #define DFSCH_LIST_TYPE ((dfsch_type_t*)&dfsch_list_type)
-  extern dfsch_type_t dfsch_function_type;
+  extern dfsch_type_t dfsch_standard_function_type;
 #define DFSCH_STANDARD_FUNCTION_TYPE \
   ((dfsch_type_t*)&dfsch_standard_function_type)
   extern dfsch_type_t dfsch_empty_list_type;
