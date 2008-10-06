@@ -1,6 +1,12 @@
 #! /bin/sh
+VERSION=
+
+if [ "x$1" != "x" ]; then
+  VERSION=-$1
+fi
+
 autoheader \
-&& aclocal-1.9 \
+&& aclocal$VERSION \
 && libtoolize \
-&& automake-1.9 --add-missing \
+&& automake$VERSION --add-missing \
 && autoconf
