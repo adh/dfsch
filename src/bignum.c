@@ -856,7 +856,7 @@ DFSCH_DEFINE_PRIMITIVE(integer_expt, 0){
   DFSCH_BIGNUM_ARG_OPT(args, m, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_bignum_exp(b, e, m);
+  return dfsch_bignum_to_number(dfsch_bignum_exp(b, e, m));
 }
 
 DFSCH_DEFINE_PRIMITIVE(bignum_2_bytes, 0){
