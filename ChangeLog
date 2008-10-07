@@ -1,3 +1,8 @@
+2008-10-07  Ales Hakl  <ales at hakl dot net>
+
+	* src/types.h (struct environment_t): add fields for procedure and
+	arguments
+
 2008-09-30  Ales Hakl  <ales at hakl dot net>
 
 	* dfsch/compiler.h: Removed unusable pseudocompiler
