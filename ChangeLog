@@ -1,5 +1,8 @@
 2008-10-07  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_set_frame_context): fill in context fields in
+	environment frame
+
 	* src/types.h (struct environment_t): add fields for procedure and
 	arguments
 

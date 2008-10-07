@@ -343,7 +343,7 @@ static char* symbol_write(symbol_t* s, int max_depth, int readable){
 }
 
 static char* primitive_write(dfsch_primitive_t* p, 
-                            int max_depth, int readable){
+                             int max_depth, int readable){
   char* name = p->name ? p->name : "()";
   return dfsch_saprintf("#<primitive %p %s>", p, name);
 }
@@ -1766,6 +1766,9 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
 
   e->values = hash;
   e->decls = NULL;
+
+  e->proc = NULL;
+  e->args = NULL;
   
   if (parent && DFSCH_TYPE_OF(parent) != DFSCH_ENVIRONMENT_TYPE){
     dfsch_error("Not an environment", parent);
@@ -1774,6 +1777,15 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
   e->parent = (environment_t*)parent;
     
   return (dfsch_object_t*)e;
+}
+void dfsch_set_frame_context(dfsch_object_t* env, 
+                             dfsch_object_t* proc, dfsch_object_t* args){
+  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
+    dfsch_error("Not an environment", env);
+  }
+  
+  ((environment_t*)env)->proc = proc;
+  ((environment_t*)env)->args = args;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
@@ -2185,11 +2197,13 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc) == FUNCTION){
+    dfsch_object_t* env = dfsch_destructuring_bind(((closure_t*)proc)->args,
+                                                   args,
+                                                   ((closure_t*)proc)->env);
+    dfsch_set_frame_context(env, proc, args);
     r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
-                           dfsch_destructuring_bind(((closure_t*)proc)->args,
-                                                    args,
-                                                    ((closure_t*)proc)->env),
+                           env,
                            &myesc,
                            ti);
     goto out;
