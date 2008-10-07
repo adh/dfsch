@@ -81,7 +81,7 @@ AC_SYS_LARGEFILE
 dfschlibexecdir="${libdir}/dfsch/"
 dfschlibscmdir="${datadir}/dfsch/scm/"
 
-CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS -D_POSIX_C_SOURCE=200112L"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
+CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
 
 AC_DEFINE_UNQUOTED(HOST_TRIPLET, "$host", [Host triplet])
 dnl AC_DEFINE_UNQUOTED(DFSCH_LIB_SCM_DIR, "$dfschlibscmdir", [Host triplet])
