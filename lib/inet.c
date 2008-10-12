@@ -581,35 +581,36 @@ dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf){
   return res;
 }
 
-dfsch_strbuf_t* dfsch_inet_xml_escape(dfsch_strbuf_t* str_buf){
-  dfsch_strbuf_t* res = GC_NEW(dfsch_strbuf_t);
+char* dfsch_inet_xml_escape(char* str){
+  char* res;
+  size_t len;
   size_t i;
   char* out;
 
-  res->len = 0;
+  len = 0;
 
-  for (i = 0; i < str_buf->len; i++){
-    switch (str_buf->ptr[i]){
+  for (i = 0; str[i]; i++){
+    switch (str[i]){
     case '<':
     case '>':
-      res->len += 4;
+      len += 4;
       break;
     case '\"':
     case '\'':
-      res->len += 6;
+      len += 6;
       break;
     case '&':
-      res->len += 5;
+      len += 5;
       break;
     default:
-      res->len++;
+      len++;
     }
   }
 
-  res->ptr = out = GC_MALLOC_ATOMIC(res->len + 1);
+  res = out = GC_MALLOC_ATOMIC(len + 1);
 
-  for (i = 0; i < str_buf->len; i++){
-    switch (str_buf->ptr[i]){
+  for (i = 0; i < str[i]; i++){
+    switch (str[i]){
     case '<':
       *out++ = '&';
       *out++ = 'l';
@@ -646,7 +647,7 @@ dfsch_strbuf_t* dfsch_inet_xml_escape(dfsch_strbuf_t* str_buf){
       *out++ = ';';
       break;
     default:
-      *out++ = str_buf->ptr[i];
+      *out++ = str[i];
     }
   }
 

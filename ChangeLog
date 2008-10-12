@@ -1,5 +1,8 @@
 2008-10-13  Ales Hakl  <ales at hakl dot net>
 
+	* lib/inet.c (dfsch_inet_xml_escape): work with c strings (XML
+	cannot contain NUL and strbuf magic is thus only added complexity)
+
 	* src/ports.c (dfsch_port_write_cstr): direct output of c strings
 	(for simple construction of callbacks)
 
