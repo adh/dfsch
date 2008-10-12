@@ -609,7 +609,7 @@ char* dfsch_inet_xml_escape(char* str){
 
   res = out = GC_MALLOC_ATOMIC(len + 1);
 
-  for (i = 0; i < str[i]; i++){
+  for (i = 0; str[i]; i++){
     switch (str[i]){
     case '<':
       *out++ = '&';
