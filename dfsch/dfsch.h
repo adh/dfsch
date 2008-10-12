@@ -500,6 +500,7 @@ extern "C" {
 
 #include <dfsch/strings.h>
 
+#define DFSCH_TRUE_P(o) ((o) != NULL)
 
   /**
    * Parses one argument of no specific type from argument list and assigns it
@@ -671,6 +672,11 @@ extern "C" {
 #define DFSCH_KEYWORD(name, variable)                 \
   if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
     (variable) = (dfsch___value);                     \
+    continue;                                         \
+  }
+#define DFSCH_KEYWORD_GENERIC(name, variable, conv)        \
+  if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
+    (variable) = conv(dfsch___value);                     \
     continue;                                         \
   }
   

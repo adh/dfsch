@@ -1117,7 +1117,7 @@ static symbol_t* make_symbol(char *symbol){
                         (GC_finalization_proc)symbol_finalizer, NULL, 
                         NULL, NULL);
   
-  s->data = symbol;
+  s->data = stracpy(symbol);
   
   hash_entry_t *e = malloc(sizeof(hash_entry_t));
 
