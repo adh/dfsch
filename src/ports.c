@@ -94,6 +94,11 @@ void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
     dfsch_error("exception:not-a-port", port);
   }
 }
+void dfsch_port_write_cstr(dfsch_object_t* port, char*str){
+  dfsch_port_write_buf(port, str, strlen(str));
+}
+
+
 ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf){

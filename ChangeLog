@@ -1,3 +1,8 @@
+2008-10-13  Ales Hakl  <ales at hakl dot net>
+
+	* src/ports.c (dfsch_port_write_cstr): direct output of c strings
+	(for simple construction of callbacks)
+
 2008-10-12  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (make_symbol): copy symbol name
