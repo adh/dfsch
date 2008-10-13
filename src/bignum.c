@@ -769,88 +769,80 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   return r;
 }
 
-dfsch_bignum_t* dfsch_bignum_logand(bignum_t* a, bignum_t* b){
-  bignum_t* res;
-  bignum_t* tmp;
-  size_t i;
+static bignum_t* logop(bignum_t* a, bignum_t* b, char op){
+  /* Heavily inspired by python's long_bitwise() */
+  word_t ma = 0;
+  word_t mb = 0;
+  bignum_t* r;
+  int inv = 0;
+  int i;
 
-  if (a->length < b->length){
-    tmp = a;
-    a = b;
-    b = tmp;
+  if (a->negative){
+    ma = WORD_MASK;
+    a = dfsch_bignum_lognot(a);
+  }
+  if (b->negative){
+    mb = WORD_MASK;
+    b = dfsch_bignum_lognot(b);
   }
   
-  res = make_bignum(a->length);
-  i = 0;
-
-  while (i < b->length){
-    res->words[i] = (a->words[i] & b->words[i]) & WORD_MASK;
-    i++;
+  switch (op){
+  case '^':
+    if (ma != mb){
+      ma ^= WORD_MASK;
+      inv = 1;
+    }
+    break;
+  case '&':
+    if (ma && mb){
+      op = '|';
+      ma ^= WORD_MASK;
+      mb ^= WORD_MASK;
+      inv = 1;
+    }
+    break;
+  case '|':
+    if (ma || mb){
+      op = '&';
+      ma ^= WORD_MASK;
+      mb ^= WORD_MASK;
+      inv = 1;
+    }
+    break;
   }
 
-  while (i < a->length){
-    res->words[i] = a->words[i]; 
-    i++;
+  r = make_bignum(a->length < b->length ? b->length : a->length);
+  
+  for (i = 0; i < r->length; i++){
+    word_t wa = (i < a->length ? a->words[i] : 0) ^ ma;
+    word_t wb = (i < b->length ? b->words[i] : 0) ^ mb;
+    switch (op) {
+    case '&': r->words[i] = wa & wb; break;
+    case '|': r->words[i] = wa | wb; break;
+    case '^': r->words[i] = wa ^ wb; break;
+    }
   }
 
-  normalize_bignum(res);
-  return res;
+  normalize_bignum(r);
+
+  if (inv){
+    return dfsch_bignum_lognot(r);
+  } else {
+    return r;
+  }
+
+}
+
+dfsch_bignum_t* dfsch_bignum_logand(bignum_t* a, bignum_t* b){
+  return logop(a, b, '&');
 }
 
 dfsch_bignum_t* dfsch_bignum_logior(bignum_t* a, bignum_t* b){
-  bignum_t* res;
-  bignum_t* tmp;
-  size_t i;
-
-  if (a->length < b->length){
-    tmp = a;
-    a = b;
-    b = tmp;
-  }
-  
-  res = make_bignum(a->length);
-  i = 0;
-
-  while (i < b->length){
-    res->words[i] = (a->words[i] | b->words[i]) & WORD_MASK;
-    i++;
-  }
-
-  while (i < a->length){
-    res->words[i] = a->words[i]; 
-    i++;
-  }
-
-  normalize_bignum(res);
-  return res;
+  return logop(a, b, '|');
 }
 
 dfsch_bignum_t* dfsch_bignum_logxor(bignum_t* a, bignum_t* b){
-  bignum_t* res;
-  bignum_t* tmp;
-  size_t i;
-
-  if (a->length < b->length){
-    tmp = a;
-    a = b;
-    b = tmp;
-  }
-  
-  res = make_bignum(a->length);
-  i = 0;
-
-  while (i < b->length){
-    res->words[i] = (a->words[i] ^ b->words[i]) & WORD_MASK;
-    i++;
-  }
-
-  while (i < a->length){
-    res->words[i] = a->words[i]; 
-    i++;
-  }
-
-  normalize_bignum(res);
-  return res;
+  return logop(a, b, '^');
 }
 dfsch_bignum_t* dfsch_bignum_lognot(dfsch_bignum_t* a){
   bignum_t* r;

@@ -1,3 +1,7 @@
+2008-10-14  Ales Hakl  <ales at hakl dot net>
+
+	* src/bignum.c (logop): correct bitwise operations for bignums
+
 2008-10-13  Ales Hakl  <ales at hakl dot net>
 
 	* src/ports.c: ports for standard stdio streams
