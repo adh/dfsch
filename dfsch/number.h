@@ -127,6 +127,12 @@ extern "C" {
   extern dfsch_object_t* dfsch_number_lcm(dfsch_object_t* a,
                                           dfsch_object_t* b);
 
+dfsch_object_t* dfsch_number_logand(dfsch_object_t* a, dfsch_object_t* b);
+dfsch_object_t* dfsch_number_logior(dfsch_object_t* a, dfsch_object_t* b);
+dfsch_object_t* dfsch_number_logxor(dfsch_object_t* a, dfsch_object_t* b);
+dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -68,6 +68,9 @@ dfsch_bignum_t* dfsch_bignum_exp(dfsch_bignum_t* b,
 dfsch_bignum_t* dfsch_bignum_logand(dfsch_bignum_t* a, dfsch_bignum_t* b);
 dfsch_bignum_t* dfsch_bignum_logior(dfsch_bignum_t* a, dfsch_bignum_t* b);
 dfsch_bignum_t* dfsch_bignum_logxor(dfsch_bignum_t* a, dfsch_bignum_t* b);
+dfsch_bignum_t* dfsch_bignum_lognot(dfsch_bignum_t* a);
+dfsch_bignum_t* dfsch_bignum_shr(dfsch_bignum_t* b, size_t count);
+dfsch_bignum_t* dfsch_bignum_shl(dfsch_bignum_t* b, size_t count);
 
 
 char* dfsch_bignum_to_string(dfsch_bignum_t* b, unsigned base);
