@@ -610,6 +610,13 @@ dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
   return (dfsch_object_t*)port;
 }
 
+DFSCH_OBJECT_CACHE(dfsch_make_file_port(stdin, 0, "(standard input)"), 
+                   dfsch_standard_input_port);
+DFSCH_OBJECT_CACHE(dfsch_make_file_port(stdout, 0, "(standard output)"), 
+                   dfsch_standard_output_port);
+DFSCH_OBJECT_CACHE(dfsch_make_file_port(stderr, 0, "(standard error)"), 
+                   dfsch_standard_error_port);
+
 dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
   FILE* file;
 
@@ -943,12 +950,6 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "string-input-port", 
                     dfsch_make_primitive(native_string_input_port, NULL));
 
-  dfsch_define_cstr(ctx, "open-file-port", 
-                    dfsch_make_primitive(native_open_file_port, NULL));
-  dfsch_define_cstr(ctx, "close-file-port!", 
-                    dfsch_make_primitive(native_close_file_port, NULL));
-
-
 }
 void dfsch_port_unsafe_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "set-current-output-port!", 
@@ -958,4 +959,17 @@ void dfsch_port_unsafe_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "set-current-error-port!", 
                     dfsch_make_primitive(native_set_current_error_port, NULL));
   
+  dfsch_define_cstr(ctx, "open-file-port", 
+                    dfsch_make_primitive(native_open_file_port, NULL));
+  dfsch_define_cstr(ctx, "close-file-port!", 
+                    dfsch_make_primitive(native_close_file_port, NULL));
+
+  dfsch_define_cstr(ctx, "*standard-input-port*",
+                    dfsch_standard_input_port());
+  dfsch_define_cstr(ctx, "*standard-output-port*",
+                    dfsch_standard_output_port());
+  dfsch_define_cstr(ctx, "*standard-error-port*",
+                    dfsch_standard_error_port());
+  
+
 }

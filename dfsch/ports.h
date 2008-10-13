@@ -136,6 +136,10 @@ extern "C" {
   dfsch_object_t* dfsch_current_input_port();
   dfsch_object_t* dfsch_current_error_port();
 
+  dfsch_object_t* dfsch_standard_output_port();
+  dfsch_object_t* dfsch_standard_input_port();
+  dfsch_object_t* dfsch_standard_error_port();
+
   void dfsch_set_current_output_port(dfsch_object_t* port);
   void dfsch_set_current_input_port(dfsch_object_t* port);
   void dfsch_set_current_error_port(dfsch_object_t* port);
