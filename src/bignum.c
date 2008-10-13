@@ -545,6 +545,33 @@ static bignum_t* bignum_add_abs_digit(bignum_t* a, word_t d){
   return res;
   
 }
+static bignum_t* bignum_sub_abs_digit(bignum_t* a, word_t d){
+  size_t i;
+  dword_t cy;
+  bignum_t* res;
+
+  if (a->length == 0){
+    return make_bignum_digit(d);
+  }
+
+  res = make_bignum(a->length+1);
+  
+  cy = a->words[0] - d;
+  res->words[0] = cy;
+  for (i = 1; i < a->length; i++){
+    cy >>= WORD_BITS;
+    cy &= 1;
+    cy = a->words[i] - cy;
+    res->words[i] = cy & WORD_MASK;
+  }
+  res->words[a->length] = (cy >> WORD_BITS) & 1;
+
+  res->negative = a->negative;
+
+  normalize_bignum(res);
+  return res;
+  
+}
 
 static bignum_t* bignum_shl_words(bignum_t* b, size_t count){
   bignum_t* res;
@@ -740,6 +767,103 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   }
   
   return r;
+}
+
+dfsch_bignum_t* dfsch_bignum_logand(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  bignum_t* tmp;
+  size_t i;
+
+  if (a->length < b->length){
+    tmp = a;
+    a = b;
+    b = tmp;
+  }
+  
+  res = make_bignum(a->length);
+  i = 0;
+
+  while (i < b->length){
+    res->words[i] = (a->words[i] & b->words[i]) & WORD_MASK;
+    i++;
+  }
+
+  while (i < a->length){
+    res->words[i] = a->words[i]; 
+    i++;
+  }
+
+  normalize_bignum(res);
+  return res;
+}
+
+dfsch_bignum_t* dfsch_bignum_logior(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  bignum_t* tmp;
+  size_t i;
+
+  if (a->length < b->length){
+    tmp = a;
+    a = b;
+    b = tmp;
+  }
+  
+  res = make_bignum(a->length);
+  i = 0;
+
+  while (i < b->length){
+    res->words[i] = (a->words[i] | b->words[i]) & WORD_MASK;
+    i++;
+  }
+
+  while (i < a->length){
+    res->words[i] = a->words[i]; 
+    i++;
+  }
+
+  normalize_bignum(res);
+  return res;
+}
+
+dfsch_bignum_t* dfsch_bignum_logxor(bignum_t* a, bignum_t* b){
+  bignum_t* res;
+  bignum_t* tmp;
+  size_t i;
+
+  if (a->length < b->length){
+    tmp = a;
+    a = b;
+    b = tmp;
+  }
+  
+  res = make_bignum(a->length);
+  i = 0;
+
+  while (i < b->length){
+    res->words[i] = (a->words[i] ^ b->words[i]) & WORD_MASK;
+    i++;
+  }
+
+  while (i < a->length){
+    res->words[i] = a->words[i]; 
+    i++;
+  }
+
+  normalize_bignum(res);
+  return res;
+}
+dfsch_bignum_t* dfsch_bignum_lognot(dfsch_bignum_t* a){
+  bignum_t* r;
+  if (a->negative){
+    r = bignum_sub_abs_digit(a, 1);
+  } else {
+    r = bignum_add_abs_digit(a, 1);
+  }
+  r->negative = ! a->negative;
+  return r;
+}
+
+dfsch_bignum_t* dfsch_bignum_shr(bignum_t* b, size_t count){
 }
 
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
