@@ -138,11 +138,11 @@ static dfsch_object_t* inet_uri_base64_decode(void* baton,
 static dfsch_object_t* inet_xml_escape(void* baton,
                                        dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc){
-  dfsch_strbuf_t* str;
-  DFSCH_BUFFER_ARG(args, str);
+  char* str;
+  DFSCH_STRING_ARG(args, str);
   DFSCH_ARG_END(args);
   
-  return dfsch_make_string_nocopy(dfsch_inet_xml_escape(str));
+  return dfsch_make_string_cstr(dfsch_inet_xml_escape(str));
 }
 
 
