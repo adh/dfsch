@@ -1,5 +1,8 @@
 2008-10-14  Ales Hakl  <ales at hakl dot net>
 
+	* src/hash.c (hash_t): only two types of hashtable (eqv? is not
+	significantly useful and all usecases are covered by equal?)
+
 	* src/bignum.c (logop): correct bitwise operations for bignums
 
 2008-10-13  Ales Hakl  <ales at hakl dot net>
