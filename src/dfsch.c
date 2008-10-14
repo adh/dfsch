@@ -2147,6 +2147,9 @@ struct dfsch_tail_escape_t {
   object_t *args; 
 };
 
+/* it might be interesting to optionally disable tail-calls for slight 
+ * performance boost (~5%) */
+
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
                                         tail_escape_t* esc,
