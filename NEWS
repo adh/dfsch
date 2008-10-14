@@ -8,6 +8,7 @@ version 0.2.2                YYYY-MM-DD              svn rev. RRRR
         * Condition system
         * Some ad-hoc "debugger"
         * REPL in separate user-accessible library
+        * Bitwise operations on integers
 
 -----------------------------------------------------------------------------
 version 0.2.1                2008-06-29              svn rev. 866
