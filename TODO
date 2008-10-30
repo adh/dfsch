@@ -36,3 +36,4 @@ External modules and libraries:
 * Sound I/O
 * FFI
 
+Application of NIL leads to NIL, is this correct?
