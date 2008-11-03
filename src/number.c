@@ -825,6 +825,30 @@ dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
 
   return a;
 }
+dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* a,
+                                     dfsch_object_t* b){
+  dfsch_object_t* t;
+  dfsch_object_t* x = DFSCH_MAKE_FIXNUM(0);
+  dfsch_object_t* lx = DFSCH_MAKE_FIXNUM(1);
+  dfsch_object_t* q;
+
+  a = dfsch_number_mod(a, b);
+
+  while (b != DFSCH_MAKE_FIXNUM(0)){
+    t = b;
+    q = dfsch_number_div_i(a, b);
+    b = dfsch_number_mod(a, b);
+    a = t;
+    
+    t = x;
+    x = dfsch_number_sub(lx, dfsch_number_mul(q, x));
+    lx = t;
+  }
+
+  return lx;
+}
+
+
 
 dfsch_object_t* dfsch_number_lcm(dfsch_object_t* a,
                                  dfsch_object_t* b){
@@ -1365,6 +1389,17 @@ DFSCH_DEFINE_PRIMITIVE(gcd, DFSCH_PRIMITIVE_CACHED){
 
   return dfsch_number_gcd(a, b);
 }
+DFSCH_DEFINE_PRIMITIVE(mod_inv, DFSCH_PRIMITIVE_CACHED){
+  object_t* a;
+  object_t* b;
+
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_mod_inv(a, b);
+}
 DFSCH_DEFINE_PRIMITIVE(lcm, DFSCH_PRIMITIVE_CACHED){
   object_t* a;
   object_t* b;
@@ -1450,6 +1485,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
                     DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
 
   dfsch_define_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
+  dfsch_define_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));
   dfsch_define_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
 
   dfsch_define_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));

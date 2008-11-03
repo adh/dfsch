@@ -134,7 +134,8 @@
                  (test 'arith5 (- 3 4 5) -6)
                  (test 'arith6 (- 3) -3)
                  (test 'arith7 (/ 3 4 5) (/ 3 20))
-                 (test 'arith-int-div (/i 8 3) 2))
+                 (test 'arith-int-div (/i 8 3) 2)
+                 (test 'arith-mod-inv (mod-inv 3 11) 4))
        (sub-group bignum-related
                  (test 'integer-expt 
                        (integer-expt 1234567890123456789 

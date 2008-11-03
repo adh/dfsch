@@ -1,3 +1,7 @@
+2008-11-03  Ales Hakl  <ales at hakl dot net>
+
+	* src/number.c (dfsch_number_mod_inv): modular multiplicative inverse
+
 2008-10-14  Ales Hakl  <ales at hakl dot net>
 
 	* src/hash.c (hash_t): only two types of hashtable (eqv? is not
