@@ -825,8 +825,10 @@ dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
 
   return a;
 }
-dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* a,
-                                     dfsch_object_t* b){
+dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* n,
+                                     dfsch_object_t* m){
+  dfsch_object_t* a = n;
+  dfsch_object_t* b = m;
   dfsch_object_t* t;
   dfsch_object_t* x = DFSCH_MAKE_FIXNUM(0);
   dfsch_object_t* lx = DFSCH_MAKE_FIXNUM(1);
@@ -843,6 +845,10 @@ dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* a,
     t = x;
     x = dfsch_number_sub(lx, dfsch_number_mul(q, x));
     lx = t;
+  }
+
+  if (dfsch_number_negative_p(lx)){
+    lx = dfsch_number_add(lx, m);
   }
 
   return lx;
