@@ -3,6 +3,9 @@ Non-version-specific:
 * Documentation
 * Packages (reasonable implementation is probably simpler than it looks)
 
+For 0.2.2:
+* WEBSITE!
+
 For 0.2.3:
 * Missing format directives (c and f)
 * Better writer (callback based)
