@@ -41,6 +41,7 @@ static dfsch_object_t* debug_invoke_restart(dfsch_object_t* list,
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
   dfsch_object_t* env;
+  dfsch_object_t* ustack = dfsch_get_stack_trace();
   char buf[512];
   int i;
 
@@ -49,7 +50,9 @@ static void debug_main(dfsch_object_t* reason){
   }
 
   env = dfsch_new_frame(debugger_env);
+
   dfsch_define_cstr(env, "reason", reason);
+  dfsch_define_cstr(env, "stack-trace", ustack);
 
   if (DFSCH_INSTANCE_P(reason, DFSCH_CONDITION_TYPE)){
     fprintf(stderr, "debugger invoked on %s:\n",
@@ -63,10 +66,12 @@ static void debug_main(dfsch_object_t* reason){
             dfsch_obj_write(reason, 10, 0));
   }
 
+  fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_stack_trace(ustack));
+
   dfsch_define_cstr(env, "restarts", restarts);
   dfsch_define_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,
                                                    restarts));
-  
+
   fprintf(stderr, "\nrestarts:\n");
   i = 0;
   while (DFSCH_PAIR_P(restarts)){

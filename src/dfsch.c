@@ -1997,15 +1997,18 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if (!exp) 
     return NULL;
 
-  ti->stack_frame->env = env;
-  ti->stack_frame->expr = exp;
-
-  if(DFSCH_TYPE_OF(exp) == SYMBOL)
+  if(DFSCH_TYPE_OF(exp) == SYMBOL){
+    ti->stack_frame->env = env;
+    ti->stack_frame->expr = exp;
     return dfsch_lookup(exp,env);
+  }
 
   if(DFSCH_TYPE_OF(exp) == PAIR){
     
     object_t *f = dfsch_eval_impl(DFSCH_FAST_CAR(exp), env, NULL, ti);
+
+    ti->stack_frame->env = env;
+    ti->stack_frame->expr = exp;
     
     if (DFSCH_TYPE_OF(f) == FORM)
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 

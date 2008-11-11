@@ -104,6 +104,34 @@ dfsch_object_t* dfsch_get_stack_trace(){
   return head;
 }
 
+static char* trace_line(dfsch_object_t* line){
+  stack_frame_t* frame;
+  if (DFSCH_TYPE_OF(line) != DFSCH_USER_STACK_FRAME_TYPE) {
+    dfsch_error("Not a user stack frame", line);
+  }
+  frame = line;
+
+  if (frame->expr){
+    return saprintf("  %s\n    %s\n", 
+		    dfsch_obj_write(frame->procedure, 3, 1),
+		    dfsch_obj_write(frame->expr, 4, 1));
+  } else {
+    return saprintf("  %s\n", 
+		    dfsch_obj_write(frame->procedure, 3, 1));
+  }
+}
+
+char* dfsch_format_stack_trace(dfsch_object_t* trace){
+  dfsch_object_t* i = trace;
+  str_list_t* sl = sl_create();
+  while (DFSCH_PAIR_P(i)){
+    sl_append(sl, trace_line(DFSCH_FAST_CAR(i)));
+    i = DFSCH_FAST_CDR(i);
+  }
+  return sl_value(sl);
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(stack_trace, 0){
   if (args)
     dfsch_error("exception:too-many-arguments", args);
