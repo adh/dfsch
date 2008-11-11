@@ -2182,11 +2182,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   f.arguments = args;
   ti->stack_frame = &f;
 
-  if (!proc)
-    return NULL;
-  if (!(DFSCH_TYPE_OF(proc)))
-    return NULL;
-
   /*
    * Two most common cases are written here explicitly (for historical
    * and performance reasons)
