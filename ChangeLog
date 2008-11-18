@@ -1,6 +1,7 @@
 2008-11-18  Ales Hakl  <ales at hakl dot net>
 
 	* src/random.c: random number generator
+	More or less complete RNG
 
 2008-11-11  Ales Hakl  <ales at hakl dot net>
 

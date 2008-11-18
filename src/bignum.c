@@ -933,7 +933,7 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
 
   return dfsch_strbuf_create(buf, len);
 }
-dfsch_bignum_t* dfsch_bignum_from_bytes(char* buf, size_t len){
+dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len){
   bignum_t* b = make_bignum(len * (WORD_BITS / 8 + 1));
   size_t i;
   
