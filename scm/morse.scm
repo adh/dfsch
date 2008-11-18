@@ -36,9 +36,9 @@
   (define (loop list root)
     (cond ((null? root) ())
 	  ((null? list) (car root))
-	  ((= (car list) '-) (loop (cdr list) 
+	  ((eq? (car list) '-) (loop (cdr list) 
 				       (car (cdr root))))
-	  ((= (car list) '--) (loop (cdr list) 
+	  ((eq? (car list) '--) (loop (cdr list) 
 				       (car (cdr (cdr root)))))))
   (loop list morse-decode-tree))
 

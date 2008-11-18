@@ -1,3 +1,7 @@
+2008-11-18  Ales Hakl  <ales at hakl dot net>
+
+	* src/random.c: random number generator
+
 2008-11-11  Ales Hakl  <ales at hakl dot net>
 
 	* src/introspect.c (dfsch_format_stack_trace): pretty-print stack
