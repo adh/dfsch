@@ -201,6 +201,31 @@ dfsch_type_t dfsch_abstract_type = {
   NULL
 };
 
+static char* mtype_write(dfsch_type_t* t, int max_depth, int readable){
+  str_list_t* l = sl_create();
+
+  sl_append(l, "#<meta-type ");
+  sl_append(l, saprintf("%p", t));
+    
+  sl_append(l, " ");
+  sl_append(l, t->name);
+
+  sl_append(l,">");
+    
+  return sl_value(l);
+}
+
+dfsch_type_t dfsch_meta_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_type_t),
+  "meta-type",
+  NULL,
+  (dfsch_type_write_t)mtype_write,
+  NULL
+};
+
+
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
   str_list_t* l = sl_create();
 
@@ -1104,21 +1129,32 @@ static void free_symbol(symbol_t* s){
   s->data = NULL;
 }
 
-static symbol_finalizer(symbol_t* symbol, void* cd){
+static void symbol_finalizer(symbol_t* symbol, void* cd){
   free_symbol(symbol);
 }
 
 static symbol_t* make_symbol(char *symbol){
   symbol_t *s;
+  symbol_t *f;
 
-  s = (symbol_t*)dfsch_make_object(SYMBOL);
+  s = (symbol_t*)dfsch_make_object(SYMBOL); /* !!! free_symbol could be called by this */
+  s->data = stracpy(symbol);
+
+  pthread_mutex_lock(&symbol_lock);
+
+  f = lookup_symbol(symbol); 
+  if (f){ 
+    GC_FREE(s->data);
+    GC_FREE(s);
+    pthread_mutex_unlock(&symbol_lock);
+    return f;
+  }
+
 
   GC_REGISTER_FINALIZER(s, 
                         (GC_finalization_proc)symbol_finalizer, NULL, 
                         NULL, NULL);
-  
-  s->data = stracpy(symbol);
-  
+    
   hash_entry_t *e = malloc(sizeof(hash_entry_t));
 
   e->entry = s;
@@ -1126,6 +1162,8 @@ static symbol_t* make_symbol(char *symbol){
 
   e->next = global_symbol_hash[e->hash];
   global_symbol_hash[e->hash] = e;
+
+  pthread_mutex_unlock(&symbol_lock);
   
   return s;
 }
@@ -1161,10 +1199,10 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
   s = lookup_symbol(symbol);
 
+  pthread_mutex_unlock(&symbol_lock);
+
   if (!s)
     s = make_symbol(symbol);
-
-  pthread_mutex_unlock(&symbol_lock);
 
   return (object_t*)s;
 
@@ -2270,6 +2308,7 @@ dfsch_object_t* dfsch_make_context(){
 
   dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
   dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
+  dfsch_define_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
   dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
 
 

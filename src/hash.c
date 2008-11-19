@@ -69,7 +69,7 @@ dfsch_type_t dfsch_standard_hash_type = {
 };
 
 dfsch_type_t dfsch_custom_hash_type_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_custom_hash_type_t),
   "custom-hash-type",

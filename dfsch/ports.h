@@ -111,8 +111,19 @@ extern "C" {
    */
 #define DFSCH_PORT_TYPE_TYPE (&dfsch_port_type_type)
 
-  extern dfsch_type_t dfsch_port_basetype;
-#define DFSCH_PORT_BASETYPE (&dfsch_port_basetype);
+  extern dfsch_type_t dfsch_port_type;
+#define DFSCH_PORT_TYPE (&dfsch_port_type)
+  extern dfsch_type_t dfsch_eof_object_type;
+#define DFSCH_EOF_OBJECT_TYPE (&dfsch_eof_object_type)
+  extern dfsch_port_type_t dfsch_null_port_type;
+#define DFSCH_NULL_PORT_TYPE (&dfsch_null_port_type)
+  extern dfsch_port_type_t dfsch_string_output_port_type;
+#define DFSCH_STRING_OUTPUT_PORT_TYPE (&dfsch_string_output_port_type)
+  extern dfsch_port_type_t dfsch_string_input_port_type;
+#define DFSCH_STRING_INPUT_PORT_TYPE (&dfsch_string_input_port_type)
+  extern dfsch_port_type_t dfsch_file_port_type;
+#define DFSCH_FILE_PORT_TYPE (&dfsch_file_port_type)
+
 
   int dfsch_port_p(dfsch_object_t* obj);
   int dfsch_output_port_p(dfsch_object_t* obj);

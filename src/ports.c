@@ -42,15 +42,8 @@
  * to get right. So these selectors are currently unused and port operations 
  * on non-port object fail unconditionally.
  */
-DFSCH_LOCAL_SYMBOL_CACHE("write-buf!", sel_write_buf);
-DFSCH_LOCAL_SYMBOL_CACHE("read-buf!", sel_read_buf);
-DFSCH_LOCAL_SYMBOL_CACHE("seek!", sel_seek);
-DFSCH_LOCAL_SYMBOL_CACHE("tell", sel_tell);
-DFSCH_LOCAL_SYMBOL_CACHE("batch-read-start", sel_batch_read_start);
-DFSCH_LOCAL_SYMBOL_CACHE("batch-read-end", sel_batch_read_end);
-DFSCH_LOCAL_SYMBOL_CACHE("batch-read", sel_batch_read);
 
-dfsch_type_t dfsch_port_basetype = {
+dfsch_type_t dfsch_port_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
   0,
@@ -61,7 +54,7 @@ dfsch_type_t dfsch_port_basetype = {
 };
 
 dfsch_type_t dfsch_port_type_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
   NULL,
   sizeof(dfsch_port_type_t),
   "port-type",
@@ -218,7 +211,7 @@ typedef struct eof_object_t{
   dfsch_type_t* type;
 } eof_object_t;
 
-dfsch_type_t eof_object_type = {
+dfsch_type_t dfsch_eof_object_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(eof_object_t),
@@ -229,7 +222,7 @@ dfsch_type_t eof_object_type = {
 };
 
 eof_object_t eof_object = {
-  &eof_object_type
+  &dfsch_eof_object_type
 };
 
 dfsch_object_t* dfsch_eof_object(){
@@ -258,10 +251,10 @@ static ssize_t null_port_read_buf(dfsch_object_t* port,
   return 0;
 }
 
-static dfsch_port_type_t null_port_type = {
+dfsch_port_type_t dfsch_null_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
-    NULL,
+    DFSCH_PORT_TYPE,
     sizeof(null_port_t),
     "null-port",
     NULL,
@@ -280,7 +273,7 @@ static dfsch_port_type_t null_port_type = {
 };
 
 static null_port_t null_port = {
-  &null_port_type
+  &dfsch_null_port_type
 };
 
 dfsch_object_t* dfsch_null_port(){
@@ -355,10 +348,10 @@ static void string_output_port_write_buf(string_output_port_t* port,
   pthread_mutex_unlock(port->mutex);
 }
 
-static dfsch_port_type_t string_output_port_type = {
+dfsch_port_type_t dfsch_string_output_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
-    NULL,
+    DFSCH_PORT_TYPE,
     sizeof(string_output_port_t),
     "string-output-port",
     NULL,
@@ -378,7 +371,7 @@ static dfsch_port_type_t string_output_port_type = {
 
 dfsch_object_t* dfsch_string_output_port(){
   string_output_port_t* port = 
-    (string_output_port_t*)dfsch_make_object(&string_output_port_type);
+    (string_output_port_t*)dfsch_make_object(DFSCH_STRING_OUTPUT_PORT_TYPE);
 
   port->mutex = create_finalized_mutex();
   port->list = sl_create();
@@ -389,7 +382,7 @@ dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
   string_output_port_t* p;
   dfsch_strbuf_t* buf;
 
-  if (DFSCH_TYPE_OF(port) != &string_output_port_type){
+  if (DFSCH_TYPE_OF(port) != DFSCH_STRING_OUTPUT_PORT_TYPE){
     dfsch_error("exceptiion:not-a-string-output-port", port);
   }
   p = (string_output_port_t*) port;
@@ -431,10 +424,10 @@ static ssize_t string_input_port_read_buf(string_input_port_t* port,
   return len;
 }
 
-static dfsch_port_type_t string_input_port_type = {
+dfsch_port_type_t dfsch_string_input_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
-    NULL,
+    DFSCH_PORT_TYPE,
     sizeof(string_input_port_t),
     "string-input-port",
     NULL,
@@ -454,7 +447,7 @@ static dfsch_port_type_t string_input_port_type = {
 
 dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
   string_input_port_t* port = 
-    (string_input_port_t*)dfsch_make_object(&string_input_port_type);
+    (string_input_port_t*)dfsch_make_object(DFSCH_STRING_INPUT_PORT_TYPE);
 
   port->buf = buf;
   port->len = len;
@@ -566,10 +559,10 @@ static int64_t file_port_tell(file_port_t* port){
   return ret;
 }
 
-static dfsch_port_type_t file_port_type = {
+dfsch_port_type_t dfsch_file_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
-    NULL,
+    DFSCH_PORT_TYPE,
     sizeof(file_port_t),
     "file-port",
     NULL,
@@ -595,7 +588,7 @@ static void file_port_finalizer(file_port_t* port, void* cd){
 }
 
 dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
-  file_port_t* port = (file_port_t*)dfsch_make_object(&file_port_type);
+  file_port_t* port = (file_port_t*)dfsch_make_object(DFSCH_FILE_PORT_TYPE);
 
   port->file = file;
   port->close = close;
@@ -654,7 +647,7 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
 void dfsch_close_file_port(dfsch_object_t* port){
   file_port_t* p;
 
-  if (DFSCH_TYPE_OF(port) != &file_port_type){
+  if (DFSCH_TYPE_OF(port) != DFSCH_FILE_PORT_TYPE){
     dfsch_error("exception:not-a-file-port", port);
   }
 
@@ -911,6 +904,13 @@ static dfsch_object_t* native_close_file_port(void* baton,
 }
 
 void dfsch__port_native_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "<port>", DFSCH_PORT_TYPE);
+  dfsch_define_cstr(ctx, "<null-port>", DFSCH_NULL_PORT_TYPE);
+  dfsch_define_cstr(ctx, "<file-port>", DFSCH_FILE_PORT_TYPE);
+  dfsch_define_cstr(ctx, "<string-input-port>", DFSCH_STRING_INPUT_PORT_TYPE);
+  dfsch_define_cstr(ctx, "<string-output-port>", DFSCH_STRING_OUTPUT_PORT_TYPE);
+  dfsch_define_cstr(ctx, "<eof-object>", DFSCH_EOF_OBJECT_TYPE);
+
   dfsch_define_cstr(ctx, "current-output-port", 
                     dfsch_make_primitive(native_current_output_port, NULL));
   dfsch_define_cstr(ctx, "current-input-port", 
