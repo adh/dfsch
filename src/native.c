@@ -137,7 +137,44 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
 }
 
+DFSCH_DEFINE_PRIMITIVE(slot_set, 0){
+  dfsch_object_t* object;
+  dfsch_object_t* value;
+  char* name;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_SYMBOL_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
 
+  dfsch_slot_set_by_name(object, name, value, 0);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(slot_ref, 0){
+  dfsch_object_t* object;
+  dfsch_object_t* value;
+  char* name;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_slot_ref_by_name(object, name, 0);  
+}
+DFSCH_DEFINE_PRIMITIVE(find_slot, 0){
+  dfsch_type_t* type;
+  char* name;
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_find_slot(type, name);  
+}
+DFSCH_DEFINE_PRIMITIVE(get_slots, 0){
+  dfsch_type_t* type;
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_slots(type);  
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -917,6 +954,11 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "set-property!", DFSCH_PRIMITIVE_REF(set_property));
   dfsch_define_cstr(ctx, "unset-property!", 
                     DFSCH_PRIMITIVE_REF(unset_property));
+
+  dfsch_define_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
+  dfsch_define_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
+  dfsch_define_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
+  dfsch_define_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
 
 
   dfsch__native_cxr_register(ctx);

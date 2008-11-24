@@ -113,6 +113,8 @@ extern "C" {
   /** Get object hash */
   extern uint32_t dfsch_hash(dfsch_object_t* obj);
 
+  extern dfsch_type_t* dfsch_object_as_type(dfsch_object_t* obj);
+
 
   /** Get object type */
   extern dfsch_type_t* dfsch_type_of(dfsch_object_t* obj);
@@ -124,6 +126,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
 
   extern dfsch_slot_t* dfsch_find_slot(dfsch_type_t* type, char* name);
+  extern dfsch_object_t* dfsch_get_slots(dfsch_type_t* type);
 
   extern dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj, 
                                         dfsch_slot_t* slot,
@@ -672,6 +675,15 @@ extern "C" {
 #define DFSCH_KEYWORD_PARSER_END(args)                                  \
   dfsch_error("exception:unknown-keyword", dfsch___keyword);   \
   }
+
+#define DFSCH_SYMBOL_ARG(al, name)                      \
+  DFSCH_GENERIC_ARG(al, name, char*, dfsch_symbol)
+#define DFSCH_SYMBOL_ARG_OPT(al, default, name)                 \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, char*, dfsch_symbol)
+#define DFSCH_TYPE_ARG(al, name)                                        \
+  DFSCH_GENERIC_ARG(al, name, dfsch_type_t*, dfsch_object_as_type)
+#define DFSCH_TYPE_ARG_OPT(al, default, name)                           \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_type_t*, dfsch_object_as_type)
 
 #ifdef __cplusplus
 }

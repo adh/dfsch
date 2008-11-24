@@ -305,18 +305,5 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
 
-  dfsch_define_cstr(ctx, "slot-set!",
-                    dfsch_make_primitive(native_slot_set,
-                                         NULL));
-  dfsch_define_cstr(ctx, "slot-unset!",
-                    dfsch_make_primitive(native_slot_unset,
-                                         NULL));
-  dfsch_define_cstr(ctx, "slot-ref",
-                    dfsch_make_primitive(native_slot_ref,
-                                         NULL));
-  dfsch_define_cstr(ctx, "slots->alist",
-                    dfsch_make_primitive(native_slots_2_alist,
-                                         NULL));
-  dfsch_define_cstr(ctx, "with-slots",DFSCH_FORM_REF(with_slots));
   
 }

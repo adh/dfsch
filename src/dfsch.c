@@ -152,6 +152,13 @@ dfsch_type_t* dfsch_type_of(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj);
 }
 
+dfsch_type_t* dfsch_object_as_type(dfsch_object_t* obj){
+  if (!DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
+    dfsch_error("Not a type", obj);
+  }
+  return (dfsch_object_t*)obj;
+}
+
 dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){
   if (!DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
     dfsch_error("Not a type", obj);
@@ -264,16 +271,42 @@ INT_ACCESSOR(int, int)
 INT_ACCESSOR(long, long)
 INT_ACCESSOR(size_t, size_t)
 
+dfsch_object_t* dfsch_get_slots(dfsch_type_t* type){
+  dfsch_slot_t* i;
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+  dfsch_object_t* tmp;
+  while(type){
+    if (type->slots){
+      i = type->slots;
+      while (i->type){
+        tmp = dfsch_cons(i, NULL);
+        if (!head) {
+          head = tail = tmp;
+        } else {
+          DFSCH_FAST_CDR(tail) = tmp;
+          tail = tmp;
+        }
+        i++;
+      }
+    }
+    type = type->superclass;
+  }
+  return head;
+}
+
 dfsch_slot_t* dfsch_find_slot(dfsch_type_t* type, 
                               char* name){
   dfsch_slot_t* i;
   while(type){
+    if (type->slots){
     i = type->slots;
     while (i->type){
       if (strcmp(i->name, name)==0){
         return i;
       }
       i++;
+    }
     }
     type = type->superclass;
   }
@@ -2452,6 +2485,14 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
   dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
 
+  dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
+  dfsch_define_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<size_t-slot>", DFSCH_SIZE_T_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<int-slot>", DFSCH_INT_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<long-slot>", DFSCH_LONG_SLOT_TYPE);
 
   dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
   dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);

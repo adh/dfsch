@@ -1,5 +1,7 @@
 2008-11-24  Ales Hakl  <ales at hakl dot net>
 
+	* src/native.c: acces to slots from LISP-code
+
 	* src/dfsch.c: basic slot accessors and related C-level API 
 
 2008-11-19  Ales Hakl  <ales at hakl dot net>
