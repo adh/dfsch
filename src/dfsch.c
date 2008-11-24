@@ -177,6 +177,147 @@ int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
   return dfsch_superclass_p(DFSCH_TYPE_OF(obj), type);
 }
 
+static dfsch_slot_t slot_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_slot_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SIZE_T_SLOT(dfsch_slot_t, offset, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_INT_SLOT(dfsch_slot_t, access, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
+dfsch_type_t dfsch_slot_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_ABSTRACT_TYPE,
+  sizeof(dfsch_slot_t),
+  "slot",
+
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
+  &slot_slots,
+};
+
+dfsch_type_t dfsch_slot_type_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
+  sizeof(dfsch_slot_type_t),
+  "slot-type",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+static dfsch_object_t* object_accessor_ref(void* ptr){
+  return *((dfsch_object_t**)ptr);
+}
+static void object_accessor_set(void* ptr, dfsch_object_t* obj){
+  *((dfsch_object_t**)ptr) = obj;
+}
+dfsch_slot_type_t dfsch_object_slot_type = {
+  DFSCH_SLOT_TYPE_HEAD("object-slot"),
+  object_accessor_ref,
+  object_accessor_set
+};
+
+static dfsch_object_t* boolean_accessor_ref(void* ptr){
+  return dfsch_bool(*((int*)ptr));
+}
+static void boolean_accessor_set(void* ptr, dfsch_object_t* obj){
+  *((int**)ptr) = obj != NULL;
+}
+dfsch_slot_type_t dfsch_boolean_slot_type = {
+  DFSCH_SLOT_TYPE_HEAD("boolean-slot"),
+  boolean_accessor_ref,
+  boolean_accessor_set
+};
+
+static dfsch_object_t* string_accessor_ref(void* ptr){
+  return dfsch_make_string_cstr(*((char**)ptr));
+}
+static void string_accessor_set(void* ptr, dfsch_object_t* obj){
+  *((char**)ptr) = dfsch_string_to_cstr(obj);
+}
+dfsch_slot_type_t dfsch_string_slot_type = {
+  DFSCH_SLOT_TYPE_HEAD("string-slot"),
+  string_accessor_ref,
+  string_accessor_set
+  
+};
+
+#define INT_ACCESSOR(type, name) \
+  static dfsch_object_t* name ## _accessor_ref(void* ptr){              \
+    return dfsch_make_number_from_long(*((type*)ptr));                  \
+  }                                                                     \
+  static void name ## _accessor_set(void* ptr, dfsch_object_t* obj){    \
+    *((type*)ptr) = dfsch_number_to_long(obj);                          \
+  }                                                                     \
+  dfsch_slot_type_t dfsch_ ## name ## _slot_type = {                    \
+    DFSCH_SLOT_TYPE_HEAD(#name "-slot"),                                \
+    name ## _accessor_ref,                                              \
+    name ## _accessor_set                                               \
+  };                                                                    \
+
+INT_ACCESSOR(int, int)
+INT_ACCESSOR(long, long)
+INT_ACCESSOR(size_t, size_t)
+
+dfsch_slot_t* dfsch_find_slot(dfsch_type_t* type, 
+                              char* name){
+  dfsch_slot_t* i;
+  while(type){
+    i = type->slots;
+    while (i->type){
+      if (strcmp(i->name, name)==0){
+        return i;
+      }
+      i++;
+    }
+    type = type->superclass;
+  }
+  dfsch_error("No such slot", dfsch_make_symbol(name));
+}
+
+dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj, 
+                               dfsch_slot_t* slot,
+                               int debug){
+  if (!debug && slot->access == DFSCH_SLOT_ACCESS_DEBUG_READ) {
+    dfsch_error("Slot not accesible", slot);
+  }
+
+  return slot->type->ref(((char*) obj)+slot->offset);
+}
+void dfsch_slot_set(dfsch_object_t* obj, 
+                    dfsch_slot_t* slot, 
+                    dfsch_object_t* value, 
+                    int debug){
+  if (!debug && slot->access != DFSCH_SLOT_ACCESS_RW) {
+    dfsch_error("Slot not accesible", slot);
+  }  
+  
+  slot->type->set(((char*) obj)+slot->offset, value);
+}
+dfsch_object_t* dfsch_slot_ref_by_name(dfsch_object_t* obj, 
+                                       char* slot,
+                                       int debug){
+  return dfsch_slot_ref(obj, dfsch_find_slot(DFSCH_TYPE_OF(obj),
+                                             slot),
+                        debug);
+}
+void dfsch_slot_set_by_name(dfsch_object_t* obj, 
+                            char* slot, 
+                            dfsch_object_t* value,
+                            int debug){
+  dfsch_slot_set(obj, dfsch_find_slot(DFSCH_TYPE_OF(obj),
+                                      slot), 
+                 value,
+                 debug);
+}
+
+
+
 static char* atype_write(dfsch_type_t* t, int max_depth, int readable){
   str_list_t* l = sl_create();
 

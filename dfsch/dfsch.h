@@ -72,37 +72,6 @@ extern "C" {
 
   /** Representation of scheme datatypes. */
   typedef struct dfsch_type_t dfsch_type_t;
-  struct dfsch_type_t {
-    /** When we want to use type_t as first-class object */
-    dfsch_type_t* type;
-    /** Superclass (NULL for normal objects) */
-    dfsch_type_t* superclass;
-    /** Instance size */
-    size_t size;
-    /** Type name */
-    char* name;
-    /** Equal method - called with two instances of this type */
-    dfsch_type_equal_p_t equal_p;
-    /** 
-     * Should return external representation of given object. In most cases
-     * something like "#&gt;my-object bla bla bla&lt;"
-     */
-    dfsch_type_write_t write;
-    /** 
-     * Apply method - called when object of this type is applyed to 
-     * something. Beware - primitives and closures are handled directly
-     * in evaluator and have this field set to NULL
-     */
-    dfsch_type_apply_t apply;
-
-    /**
-     * Hash method - return hash for this object. Objects that are equal?
-     * have same hash. When NULL, hash is derived from value of object 
-     * pointer
-     */
-    dfsch_type_hash_t hash;
-  };
-
   
   /**
    * C datatype for scheme objects. Used as abstract datatype and also 
@@ -153,6 +122,25 @@ extern "C" {
   extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
   /** Get superclass of given type */
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
+
+  extern dfsch_slot_t* dfsch_find_slot(dfsch_type_t* type, char* name);
+
+  extern dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj, 
+                                        dfsch_slot_t* slot,
+                                        int debug);
+  extern void dfsch_slot_set(dfsch_object_t* obj, 
+                             dfsch_slot_t* slot, 
+                             dfsch_object_t* value,
+                             int debug);
+  extern dfsch_object_t* dfsch_slot_ref_by_name(dfsch_object_t* obj, 
+                                                char* slot,
+                                                int debug);
+  extern void dfsch_slot_set_by_name(dfsch_object_t* obj, 
+                                     char* slot, 
+                                     dfsch_object_t* value,
+                                     int debug);
+
+  
 
 
   /** Is OBJ null? */
