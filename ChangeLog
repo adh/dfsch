@@ -1,3 +1,7 @@
+2008-11-25  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_obj_write): inherit display function
+
 2008-11-24  Ales Hakl  <ales at hakl dot net>
 
 	* src/native.c: access to slots from LISP-code

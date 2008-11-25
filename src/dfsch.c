@@ -191,14 +191,18 @@ static dfsch_slot_t slot_slots[] = {
   DFSCH_SLOT_TERMINATOR
 };
 
+static char* slot_write(dfsch_slot_t* slot, int depth, int readable){
+  return dfsch_print_unreadable(slot, "%s", slot->name);
+}
+
 dfsch_type_t dfsch_slot_type = {
-  DFSCH_STANDARD_TYPE,
   DFSCH_ABSTRACT_TYPE,
+  NULL,
   sizeof(dfsch_slot_t),
   "slot",
 
   NULL,
-  NULL,
+  (dfsch_type_write_t)slot_write,
   NULL,
   NULL,
 
@@ -206,8 +210,8 @@ dfsch_type_t dfsch_slot_type = {
 };
 
 dfsch_type_t dfsch_slot_type_type = {
-  DFSCH_STANDARD_TYPE,
   DFSCH_META_TYPE,
+  DFSCH_STANDARD_TYPE,
   sizeof(dfsch_slot_type_t),
   "slot-type",
   NULL,
@@ -366,7 +370,7 @@ static char* atype_write(dfsch_type_t* t, int max_depth, int readable){
 }
 
 dfsch_type_t dfsch_abstract_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_type_t),
   "abstract-type",
@@ -390,7 +394,7 @@ static char* mtype_write(dfsch_type_t* t, int max_depth, int readable){
 }
 
 dfsch_type_t dfsch_meta_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_type_t),
   "meta-type",
@@ -417,7 +421,7 @@ static char* type_write(dfsch_type_t* t, int max_depth, int readable){
 }
 
 dfsch_type_t dfsch_standard_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_META_TYPE,
   NULL,
   sizeof(dfsch_type_t),
   "standard-type",
@@ -1816,6 +1820,8 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 }
 
 char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
+  dfsch_type_t* type;
+
   if (!obj){
     return "()";
   }
@@ -1824,24 +1830,26 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
     return "...";
   }
 
-  if (!DFSCH_TYPE_OF(obj)){
-    str_list_t *sl = sl_create();
-    sl_append(sl, "#<() ");
-    sl_append(sl, saprintf("%p", obj));
-    sl_append(sl, ">");
-    return sl_value(sl);
+  type = DFSCH_TYPE_OF(obj);
+
+  while (type){
+    if (type->write){
+      return type->write(obj, max_depth, readable);
+    }
+    type = type->superclass;
   }
 
-  if (!(DFSCH_TYPE_OF(obj)->write)){
-    str_list_t *sl = sl_create();
-    sl_append(sl, "#<");
-    sl_append(sl, DFSCH_TYPE_OF(obj)->name);
-    sl_append(sl, saprintf(" %p", obj));
-    sl_append(sl, ">");
-    return sl_value(sl);
-  }
-
-  return DFSCH_TYPE_OF(obj)->write(obj, max_depth, readable);
+  return saprintf("#<%s %p>", DFSCH_TYPE_OF(obj)->name, obj);
+}
+char* dfsch_print_unreadable(dfsch_object_t* obj, char* format, ...){
+  str_list_t* sl = sl_create();
+  va_list args;
+  va_start(args, format);
+  sl_append(sl, saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
+  sl_append(sl, vsaprintf(format, args));
+  sl_append(sl, ">");
+  va_end(args);
+  return sl_value(sl);
 }
 
 

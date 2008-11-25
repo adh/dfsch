@@ -180,6 +180,7 @@ extern "C" {
   /** Convert object to string */
   extern char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, 
                                int readable);
+  extern char* dfsch_print_unreadable(dfsch_object_t* obj, char* format, ...);
 
   /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();
