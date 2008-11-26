@@ -55,7 +55,7 @@ dfsch_type_t dfsch_port_type = {
 
 dfsch_type_t dfsch_port_type_type = {
   DFSCH_META_TYPE,
-  NULL,
+  DFSCH_STANDARD_TYPE,
   sizeof(dfsch_port_type_t),
   "port-type",
   NULL,

@@ -169,7 +169,7 @@ int main(int argc, char**argv){
       break;
     case 'e':
       {
-        dfsch_eval_proc(ctx, dfsch_list_read(optarg));
+        dfsch_eval_proc(dfsch_list_read(optarg), ctx);
         interactive = 0;
         break;
       }

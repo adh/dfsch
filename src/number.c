@@ -69,7 +69,7 @@ dfsch_type_t dfsch_real_type = {
   DFSCH_ABSTRACT_TYPE,
   DFSCH_NUMBER_TYPE,
   0,
-  "rational",
+  "real",
   NULL,
   NULL,
   NULL,
@@ -126,7 +126,7 @@ static int flonum_equal_p(flonum_t* a, flonum_t* b){
 
 dfsch_number_type_t dfsch_flonum_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_NUMBER_TYPE,
+  DFSCH_REAL_TYPE,
   sizeof(flonum_t),
   "flonum",
   (dfsch_type_equal_p_t)flonum_equal_p,
@@ -159,7 +159,7 @@ static uint32_t fracnum_hash(fracnum_t* n){
 
 dfsch_number_type_t dfsch_fracnum_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_NUMBER_TYPE,
+  DFSCH_RATIONAL_TYPE,
   sizeof(fracnum_t),
   "fracnum",
   (dfsch_type_equal_p_t)fracnum_equal_p,

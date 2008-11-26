@@ -441,11 +441,11 @@ dfsch_type_t dfsch_list_type = {
   NULL
 };
 
-dfsch_type_t dfsch_standard_function_type = {
+dfsch_type_t dfsch_function_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
   0,
-  "standard-function",
+  "function",
   NULL,
   NULL,
   NULL,
@@ -566,11 +566,7 @@ dfsch_type_t dfsch_primitive_type = {
 static char* function_write(closure_t* c, int max_depth, int readable){
   str_list_t* l = sl_create();
 
-  if (c->code == c->orig_code){
-    sl_append(l, "#<interpreted-function ");
-  } else {
-    sl_append(l, "#<compiled-function ");
-  }
+  sl_append(l, "#<standard-function ");
   sl_append(l, saprintf("%p", c));
     
   if (c->name){
@@ -586,16 +582,16 @@ static char* function_write(closure_t* c, int max_depth, int readable){
   return sl_value(l);
 }
 
-dfsch_type_t dfsch_function_type = {
+dfsch_type_t dfsch_standard_function_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_STANDARD_FUNCTION_TYPE,
+  DFSCH_FUNCTION_TYPE,
   sizeof(closure_t),
   "function",
   NULL,
   (dfsch_type_write_t)function_write,
   NULL
 };
-#define FUNCTION DFSCH_FUNCTION_TYPE
+#define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
@@ -1519,7 +1515,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
 extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 				    dfsch_object_t* args,
 				    dfsch_object_t* code){
-  closure_t *c = (closure_t*)dfsch_make_object(FUNCTION);
+  closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
   if (!c)
     return NULL;
   
@@ -1536,7 +1532,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                           dfsch_object_t* args,
                                           dfsch_object_t* code,
                                           dfsch_object_t* name){
-  closure_t *c = (closure_t*)dfsch_make_object(FUNCTION);
+  closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
   if (!c)
     return NULL;
   
@@ -2417,7 +2413,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   }
 
-  if (DFSCH_TYPE_OF(proc) == FUNCTION){
+  if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
     dfsch_object_t* env = dfsch_destructuring_bind(((closure_t*)proc)->args,
                                                    args,
                                                    ((closure_t*)proc)->env);
