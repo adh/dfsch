@@ -184,6 +184,7 @@ typedef struct dfsch_slot_type_t {
   dfsch_type_t standard_type;
   dfsch_accessor_ref_t ref;
   dfsch_accessor_set_t set;
+  size_t size;
 } dfsch_slot_type_t;
 
 extern dfsch_type_t dfsch_slot_type_type;

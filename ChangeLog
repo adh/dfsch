@@ -1,3 +1,7 @@
+2008-11-28  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_eval_impl): note evaluated expressions correctly
+
 2008-11-26  Ales Hakl  <ales at hakl dot net>
 
 	* doc/type-hierarchy: some incomplete chart

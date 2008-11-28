@@ -209,6 +209,11 @@ dfsch_type_t dfsch_slot_type = {
   &slot_slots,
 };
 
+static dfsch_slot_t slot_type_slots[] = {
+  DFSCH_SIZE_T_SLOT(dfsch_slot_type_t, size, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_slot_type_type = {
   DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,
@@ -218,7 +223,7 @@ dfsch_type_t dfsch_slot_type_type = {
   NULL,
   NULL,
   NULL,
-  NULL
+  &slot_type_slots
 };
 
 static dfsch_object_t* object_accessor_ref(void* ptr){
@@ -230,7 +235,8 @@ static void object_accessor_set(void* ptr, dfsch_object_t* obj){
 dfsch_slot_type_t dfsch_object_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("object-slot"),
   object_accessor_ref,
-  object_accessor_set
+  object_accessor_set,
+  sizeof(dfsch_object_t*)
 };
 
 static dfsch_object_t* boolean_accessor_ref(void* ptr){
@@ -242,7 +248,8 @@ static void boolean_accessor_set(void* ptr, dfsch_object_t* obj){
 dfsch_slot_type_t dfsch_boolean_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("boolean-slot"),
   boolean_accessor_ref,
-  boolean_accessor_set
+  boolean_accessor_set,
+  sizeof(int)
 };
 
 static dfsch_object_t* string_accessor_ref(void* ptr){
@@ -254,8 +261,8 @@ static void string_accessor_set(void* ptr, dfsch_object_t* obj){
 dfsch_slot_type_t dfsch_string_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("string-slot"),
   string_accessor_ref,
-  string_accessor_set
-  
+  string_accessor_set,
+  sizeof(char*)
 };
 
 #define INT_ACCESSOR(type, name) \
@@ -268,7 +275,8 @@ dfsch_slot_type_t dfsch_string_slot_type = {
   dfsch_slot_type_t dfsch_ ## name ## _slot_type = {                    \
     DFSCH_SLOT_TYPE_HEAD(#name "-slot"),                                \
     name ## _accessor_ref,                                              \
-    name ## _accessor_set                                               \
+    name ## _accessor_set,                                              \
+    sizeof(type)                                                        \
   };                                                                    \
 
 INT_ACCESSOR(int, int)
@@ -2208,6 +2216,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        dfsch_object_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
+  dfsch_object_t* args;
  start:
   
   if (!exp) 
@@ -2223,23 +2232,31 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     
     object_t *f = dfsch_eval_impl(DFSCH_FAST_CAR(exp), env, NULL, ti);
 
-    ti->stack_frame->env = env;
-    ti->stack_frame->expr = exp;
     
-    if (DFSCH_TYPE_OF(f) == FORM)
+    if (DFSCH_TYPE_OF(f) == FORM){
+      ti->stack_frame->env = env;
+      ti->stack_frame->expr = exp;
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
                                       env, 
                                       DFSCH_FAST_CDR(exp), 
                                       esc);
+    }
 
-    if (DFSCH_TYPE_OF(f) == MACRO)
+    if (DFSCH_TYPE_OF(f) == MACRO){
+      ti->stack_frame->env = env;
+      ti->stack_frame->expr = exp;
       return dfsch_eval_impl(dfsch_macro_expand(f, DFSCH_FAST_CDR(exp)),
 			     env,
  			     esc,
 			     ti);
-      
+    }
+
+    args = eval_list(DFSCH_FAST_CDR(exp), env, ti);
+    ti->stack_frame->env = env;
+    ti->stack_frame->expr = exp;
+
     return dfsch_apply_impl(f, 
-                            eval_list(DFSCH_FAST_CDR(exp), env, ti),
+                            args,
                             esc,
                             ti);
     
