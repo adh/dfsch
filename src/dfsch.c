@@ -192,7 +192,9 @@ static dfsch_slot_t slot_slots[] = {
 };
 
 static char* slot_write(dfsch_slot_t* slot, int depth, int readable){
-  return dfsch_print_unreadable(slot, "%s", slot->name);
+  char* ret;
+  ret = dfsch_print_unreadable(slot, "%s", slot->name);
+  return ret;
 }
 
 dfsch_type_t dfsch_slot_type = {
@@ -428,6 +430,11 @@ static char* type_write(dfsch_type_t* t, int max_depth, int readable){
   return sl_value(l);
 }
 
+static dfsch_slot_t type_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_type_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_standard_type = {
   DFSCH_META_TYPE,
   NULL,
@@ -435,7 +442,9 @@ dfsch_type_t dfsch_standard_type = {
   "standard-type",
   NULL,
   (dfsch_type_write_t)type_write,
-  NULL
+  NULL,
+  NULL,
+  &type_slots
 };
 
 dfsch_type_t dfsch_list_type = {
@@ -484,7 +493,8 @@ dfsch_type_t dfsch_pair_type = {
   (dfsch_type_equal_p_t)pair_equal_p,
   (dfsch_type_write_t)pair_write,
   NULL,
-  (dfsch_type_hash_t)pair_hash
+  (dfsch_type_hash_t)pair_hash,
+  NULL
 };
 #define PAIR (&dfsch_pair_type)
 
@@ -505,7 +515,6 @@ static char* pair_write(dfsch_object_t*p, int max_depth, int readable){
   sl_append(l,"(");
     
   while (DFSCH_TYPE_OF(i) == DFSCH_PAIR_TYPE){
-    
     sl_append(l, dfsch_obj_write(DFSCH_PAIR_REF(i)->car, 
                                  max_depth-1, readable));
     i = DFSCH_PAIR_REF(i)->cdr;
@@ -534,6 +543,11 @@ static char* pair_write(dfsch_object_t*p, int max_depth, int readable){
   return sl_value(l);
 }
 
+static dfsch_slot_t symbol_slots[] = {
+  DFSCH_STRING_SLOT(symbol_t, data, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
 static char* symbol_write(symbol_t*, int, int);
 dfsch_type_t dfsch_symbol_type = {
   DFSCH_STANDARD_TYPE,
@@ -542,7 +556,9 @@ dfsch_type_t dfsch_symbol_type = {
   "symbol",
   NULL,
   (dfsch_type_write_t)symbol_write,
-  NULL
+  NULL,
+  NULL,
+  &symbol_slots
 };
 #define SYMBOL DFSCH_SYMBOL_TYPE 
 static char* symbol_write(symbol_t* s, int max_depth, int readable){
@@ -559,6 +575,11 @@ static char* primitive_write(dfsch_primitive_t* p,
   return dfsch_saprintf("#<primitive %p %s>", p, name);
 }
 
+static dfsch_slot_t primitive_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_primitive_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_primitive_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_STANDARD_FUNCTION_TYPE,
@@ -567,7 +588,8 @@ dfsch_type_t dfsch_primitive_type = {
   NULL,
   (dfsch_type_write_t)primitive_write,
   NULL,
-  NULL
+  NULL,
+  &primitive_slots
 };
 #define PRIMITIVE (&dfsch_primitive_type)
 
@@ -590,6 +612,15 @@ static char* function_write(closure_t* c, int max_depth, int readable){
   return sl_value(l);
 }
 
+static dfsch_slot_t closure_slots[] = {
+  DFSCH_OBJECT_SLOT(closure_t, args, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, code, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, env, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, name, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, orig_code, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_standard_function_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_FUNCTION_TYPE,
@@ -597,7 +628,9 @@ dfsch_type_t dfsch_standard_function_type = {
   "function",
   NULL,
   (dfsch_type_write_t)function_write,
-  NULL
+  NULL,
+  NULL,
+  &closure_slots
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
@@ -1825,6 +1858,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 
 char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
   dfsch_type_t* type;
+  char* ret;
 
   if (!obj){
     return "()";
@@ -1838,7 +1872,7 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 
   while (type){
     if (type->write){
-      return type->write(obj, max_depth, readable);
+      return type->write(obj, max_depth, readable);;
     }
     type = type->superclass;
   }
@@ -1848,12 +1882,14 @@ char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
 char* dfsch_print_unreadable(dfsch_object_t* obj, char* format, ...){
   str_list_t* sl = sl_create();
   va_list args;
+  char *ret;
   va_start(args, format);
   sl_append(sl, saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
-  sl_append(sl, vsaprintf(format, args));
+  sl_append(sl, vsaprintf(format, args)); 
   sl_append(sl, ">");
+  ret = sl_value(sl);
   va_end(args);
-  return sl_value(sl);
+  return ret;
 }
 
 

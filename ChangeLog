@@ -1,6 +1,7 @@
 2008-11-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_eval_impl): note evaluated expressions correctly
+	added slots to some types
 
 2008-11-26  Ales Hakl  <ales at hakl dot net>
 
