@@ -294,7 +294,8 @@ static dfsch_object_t* methods_2_alist(void* baton,
 void dfsch__generic_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "<generic-function>", &generic_type);
   dfsch_define_cstr(env, "define-generic", DFSCH_FORM_REF(define_generic));
-  dfsch_define_cstr(env, "define-method", DFSCH_FORM_REF(define_method));
+  dfsch_define_cstr(env, "define-generic-method", 
+                    DFSCH_FORM_REF(define_method));
 
   dfsch_define_cstr(env, "make-generic", 
                     dfsch_make_primitive(make_generic, NULL));

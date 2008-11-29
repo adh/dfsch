@@ -303,28 +303,41 @@ DFSCH_DEFINE_FORM_IMPL(define_class){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
+  dfsch_object_t* klass;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
   DFSCH_OBJECT_ARG(args, slots);
   DFSCH_ARG_END(args);
 
   superclass= dfsch_eval(superclass, env);
+  klass = dfsch_make_class(superclass, 
+                           dfsch_symbol_2_typename(name),
+                           slots);
 
-  dfsch_define(name, 
-               dfsch_make_class(superclass, 
-                                dfsch_symbol_2_typename(name),
-                                slots),
-               env);
+  dfsch_define(name, klass, env);
+  return klass;
+}
+DFSCH_DEFINE_FORM_IMPL(define_method){
+  dfsch_object_t* klass;
+  dfsch_object_t* lambda_list;
+  dfsch_object_t* selector;
+  dfsch_object_t* code;
+  dfsch_object_t* method;
+  DFSCH_OBJECT_ARG(args, klass);
+  DFSCH_OBJECT_ARG(args, lambda_list);
+  DFSCH_ARG_REST(args, code);
+  DFSCH_OBJECT_ARG(lambda_list, selector);
+
+  klass = dfsch_eval(klass, args);
+  method = dfsch_named_lambda(env, lambda_list, code,
+                              dfsch_list(2, klass, selector));
+  dfsch_class_add_method(klass, selector, method);
+  return method;
 }
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
-  dfsch_define_cstr(ctx, "<trivial-class>", 
-                    dfsch_make_class(NULL, "trivial-class", 
-                                     dfsch_list(3, dfsch_make_symbol("foo"),
-                                                dfsch_make_symbol("bar"),
-                                                dfsch_make_symbol("quux"))));
   dfsch_define_cstr(ctx, "send", DFSCH_PRIMITIVE_REF(send));
   dfsch_define_cstr(ctx, "perform", DFSCH_PRIMITIVE_REF(perform));
   dfsch_define_cstr(ctx, "responds-to?", DFSCH_PRIMITIVE_REF(responds_to_p));
@@ -336,4 +349,5 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
 
   dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
+  dfsch_define_cstr(ctx, "define-method", DFSCH_FORM_REF(define_method));
 }
