@@ -1,7 +1,7 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
  *   Object system
- * Copyright (C) 2007 Ales Hakl
+ * Copyright (C) 2007, 2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,19 +28,40 @@
 extern "C" {
 #endif
 
-  extern dfsch_object_t* dfsch_object_make_class(dfsch_object_t* superclass,
-                                                 char* name);
-  extern dfsch_object_t* dfsch_object_make_instance(dfsch_object_t* klass);
+  extern dfsch_type_t dfsch_class_type;
+#define DFSCH_CLASS_TYPE (&dfsch_class_type)
 
-  extern dfsch_object_t* dfsch_object_slot_set(dfsch_object_t* object,
-                                               dfsch_object_t* name,
-                                               dfsch_object_t* value);
-  extern int dfsch_object_slot_unset(dfsch_object_t* object,
-                                     dfsch_object_t* name);
-  extern dfsch_object_t* dfsch_object_slot_ref(dfsch_object_t* object,
-                                               dfsch_object_t* name);
-  extern dfsch_object_t* dfsch_object_slots_2_alist(dfsch_object_t* object);
+  dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
+                                   char* name,
+                                   dfsch_object_t* slots);
+  dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
+                                      dfsch_object_t* args);
+  dfsch_object_t* dfsch_find_method(dfsch_object_t* klass, 
+                                    dfsch_object_t* selector);
+  int dfsch_responds_to_p(dfsch_object_t* klass, 
+                          dfsch_object_t* selector);
+  dfsch_object_t* dfsch_perform_tr(dfsch_object_t* klass,
+                                   dfsch_object_t* selector,
+                                   dfsch_object_t* args,
+                                   dfsch_tail_escape_t* esc);
+  dfsch_object_t* dfsch_perform(dfsch_object_t* klass,
+                                dfsch_object_t* selector,
+                                dfsch_object_t* args);
+  dfsch_object_t* dfsch_send_tr(dfsch_object_t* obj, 
+                                dfsch_object_t* selector,
+                                dfsch_object_t* args,
+                                dfsch_tail_escape_t* esc);
+  dfsch_object_t* dfsch_send(dfsch_object_t* obj, 
+                             dfsch_object_t* selector,
+                             dfsch_object_t* args);
 
+
+
+  dfsch_object_t* dfsch_s_equal_instance_p();
+  dfsch_object_t* dfsch_s_write_instance();
+  dfsch_object_t* dfsch_s_apply_instance();
+  dfsch_object_t* dfsch_s_instance_hash();
+  dfsch_object_t* dfsch_s_initialize_instance();
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,9 @@
+2008-11-29  Ales Hakl  <ales at hakl dot net>
+
+	* src/object.c: reasonable mesasage-passing based object system
+	(which generally seems like better idea than some half-assed
+	attempt at CLOS)
+
 2008-11-28  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c (dfsch_eval_impl): note evaluated expressions correctly

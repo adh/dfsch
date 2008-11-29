@@ -272,11 +272,11 @@ typedef struct dfsch_pair_t {
 #define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 2)
 
 
-#define DFSCH_TYPE_OF(obj)                                      \
-  ((obj)?(                                                      \
-          (((size_t)(obj)) & 0x03) == 0 ? (obj)->type:          \
-          ((((size_t)(obj)) & 0x03) == 2 ? DFSCH_PAIR_TYPE:     \
-           DFSCH_FIXNUM_TYPE)):                                 \
+#define DFSCH_TYPE_OF(obj)                                              \
+  ((obj)?(                                                              \
+          (((size_t)(obj)) & 0x03) == 0 ? ((dfsch_object_t*)(obj))->type: \
+          ((((size_t)(obj)) & 0x03) == 2 ? DFSCH_PAIR_TYPE:             \
+           DFSCH_FIXNUM_TYPE)):                                         \
    DFSCH_EMPTY_LIST_TYPE)
 
   
