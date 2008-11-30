@@ -118,8 +118,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
       dfsch_error("Not a type", superclass);
     }
     
-    if (((dfsch_type_t*)superclass)->size == 0 && 
-        !DFSCH_INSTANCE_P(superclass, DFSCH_ABSTRACT_TYPE)){
+    if (DFSCH_INSTANCE_P(superclass, DFSCH_SPECIAL_TYPE)){
       dfsch_error("Cannot inherit from special type", superclass);
     }
 

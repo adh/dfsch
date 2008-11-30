@@ -363,45 +363,15 @@ void dfsch_slot_set_by_name(dfsch_object_t* obj,
                  debug);
 }
 
-
-
-static char* atype_write(dfsch_type_t* t, int max_depth, int readable){
-  str_list_t* l = sl_create();
-
-  sl_append(l, "#<abstract-type ");
-  sl_append(l, saprintf("%p", t));
-    
-  sl_append(l, " ");
-  sl_append(l, t->name);
-
-  sl_append(l,">");
-    
-  return sl_value(l);
-}
-
 dfsch_type_t dfsch_abstract_type = {
   DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(dfsch_type_t),
   "abstract-type",
   NULL,
-  (dfsch_type_write_t)atype_write,
+  NULL,
   NULL
 };
-
-static char* mtype_write(dfsch_type_t* t, int max_depth, int readable){
-  str_list_t* l = sl_create();
-
-  sl_append(l, "#<meta-type ");
-  sl_append(l, saprintf("%p", t));
-    
-  sl_append(l, " ");
-  sl_append(l, t->name);
-
-  sl_append(l,">");
-    
-  return sl_value(l);
-}
 
 dfsch_type_t dfsch_meta_type = {
   DFSCH_META_TYPE,
@@ -409,25 +379,13 @@ dfsch_type_t dfsch_meta_type = {
   sizeof(dfsch_type_t),
   "meta-type",
   NULL,
-  (dfsch_type_write_t)mtype_write,
+  NULL,
   NULL
 };
 
 
 static char* type_write(dfsch_type_t* t, int max_depth, int readable){
-  str_list_t* l = sl_create();
-
-  sl_append(l, "#<standard-type ");
-  sl_append(l, saprintf("%p", t));
-    
-  sl_append(l, " ");
-  sl_append(l, t->name);
-  sl_append(l, " instance-size: ");
-  sl_append(l, saprintf("%d", t->size));
-
-  sl_append(l,">");
-    
-  return sl_value(l);
+  return dfsch_print_unreadable(t, "%s instance-size: %d", t->name, t->size);
 }
 
 static dfsch_slot_t type_slots[] = {
@@ -442,6 +400,18 @@ dfsch_type_t dfsch_standard_type = {
   "standard-type",
   NULL,
   (dfsch_type_write_t)type_write,
+  NULL,
+  NULL,
+  &type_slots
+};
+
+dfsch_type_t dfsch_special_type = {
+  DFSCH_META_TYPE,
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_type_t),
+  "special-type",
+  NULL,
+  NULL,
   NULL,
   NULL,
   &type_slots
@@ -471,7 +441,7 @@ dfsch_type_t dfsch_function_type = {
 
 
 dfsch_type_t dfsch_empty_list_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_SPECIAL_TYPE,
   DFSCH_LIST_TYPE,
   0,
   "empty-list",
@@ -486,9 +456,9 @@ static char* pair_write(dfsch_object_t*, int, int);
 static size_t pair_hash(dfsch_object_t* p);
 
 dfsch_type_t dfsch_pair_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_SPECIAL_TYPE,
   DFSCH_LIST_TYPE,
-  0, 
+  sizeof(dfsch_pair_t), 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
   (dfsch_type_write_t)pair_write,
@@ -2540,6 +2510,7 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
   dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
   dfsch_define_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
+  dfsch_define_cstr(ctx, "<special-type>", DFSCH_SPECIAL_TYPE);
   dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
 
   dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);

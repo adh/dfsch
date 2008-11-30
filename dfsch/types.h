@@ -28,6 +28,8 @@ extern dfsch_type_t dfsch_abstract_type;
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
 extern dfsch_type_t dfsch_meta_type;
 #define DFSCH_META_TYPE ((dfsch_type_t*)&dfsch_meta_type)
+extern dfsch_type_t dfsch_special_type;
+#define DFSCH_SPECIAL_TYPE ((dfsch_type_t*)&dfsch_special_type)
 extern dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
 extern dfsch_type_t dfsch_list_type;

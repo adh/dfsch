@@ -2,10 +2,12 @@ nil
   standard-type
     abstract-type
     meta-type
+    special-type
     custom-hash-type
     slot-type
     port-type
     random-state-type-type
+    class
   slot
     object-slot
     int-slot

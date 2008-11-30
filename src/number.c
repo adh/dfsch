@@ -102,7 +102,7 @@ static char* fixnum_write(dfsch_object_t* n, int max_depth, int readable){
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {
-  DFSCH_STANDARD_TYPE,
+  DFSCH_SPECIAL_TYPE,
   DFSCH_INTEGER_TYPE,
   0,
   "fixnum",
