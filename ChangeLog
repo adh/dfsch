@@ -1,5 +1,7 @@
 2008-11-30  Ales Hakl  <ales at hakl dot net>
 
+	* src/dfsch.c (dfsch_sort_list): destructive sorting of list
+
 	* src/number.c (dfsch_number_to_inexact): explicit conversion to
 	inexact number
 

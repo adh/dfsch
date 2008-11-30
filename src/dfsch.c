@@ -1140,6 +1140,75 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
   return NULL;
 }
 
+/*
+ * Linked list mergesort as described by Simon Tatham at
+ * http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+ */
+dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
+                                dfsch_object_t* comp){
+  size_t k = 1;
+  dfsch_object_t* p = list;
+  size_t p_s;
+  dfsch_object_t* q;
+  size_t q_s;
+  dfsch_object_t* l;
+  dfsch_object_t* lt;
+  int nmerges;
+  size_t i;
+  dfsch_object_t* e;
+
+  l = list;
+  dfsch_list_length(list);
+
+  do {
+    nmerges = 0;
+    p = l;
+    l = NULL;
+    lt = NULL;
+    while (DFSCH_PAIR_P(p)){
+      nmerges++;
+      q = p;
+      p_s = 0;
+      for (i = 0; DFSCH_PAIR_P(q) && i < k; i++){
+        q = DFSCH_FAST_CDR(q);
+        p_s++;
+      }
+      q_s = k;
+      while (p_s > 0 || (q_s >0 && DFSCH_PAIR_P(q))){
+        if (p_s == 0){
+          q_s--;
+          e = q;
+          q = DFSCH_FAST_CDR(q);
+        } else if (q_s == 0 || !DFSCH_PAIR_P(q)){
+          p_s--;
+          e = p;
+          p = DFSCH_FAST_CDR(p);
+        } else if (dfsch_apply(comp, dfsch_list(2, DFSCH_FAST_CAR(q), 
+                                                DFSCH_FAST_CAR(p))) != NULL){
+          q_s--;
+          e = q;
+          q = DFSCH_FAST_CDR(q);          
+        } else {
+          p_s --;
+          e = p;
+          p = DFSCH_FAST_CDR(p);
+        }
+        DFSCH_FAST_CDR(e) = NULL;
+        if (l) {
+          DFSCH_FAST_CDR(lt) = e;
+          lt = e;
+        } else {
+          l = lt = e;
+        }
+      }
+      p = q;
+    }
+    k *= 2;
+  } while(nmerges > 1);
+
+  return l;
+}
+
 
 // Alists 
 

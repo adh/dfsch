@@ -397,6 +397,17 @@ DFSCH_DEFINE_PRIMITIVE(memq, 0){
 
   return dfsch_memq(key, list);
 }
+DFSCH_DEFINE_PRIMITIVE(sort_list, 0){
+  object_t* list;
+  object_t* comp;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_OBJECT_ARG(args, comp);
+  DFSCH_ARG_END(args);
+
+  return dfsch_sort_list(list, comp);
+}
+
 DFSCH_DEFINE_PRIMITIVE(assoc, 0){
   object_t* alist;
   object_t* key;
@@ -893,6 +904,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
   dfsch_define_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
   dfsch_define_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
+  dfsch_define_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
   dfsch_define_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
   dfsch_define_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
   dfsch_define_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
