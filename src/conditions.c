@@ -35,12 +35,8 @@ char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable){
       continue;
     }
     sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
-    j = DFSCH_FAST_CDR(j);
-    if (!DFSCH_PAIR_P(j)){
-      return dfsch_print_unreadable(c, "*malformed-fields*");
-    }
     sl_append(sl, " ");
-    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
+    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CDR(j), depth-1, 1));
   }
 
   sl_append(sl, ">");
@@ -59,7 +55,7 @@ dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
   if (!al){
     return NULL;
   } else {
-    return dfsch_car(dfsch_cdr(al));
+    return dfsch_cdr(al);
   }
 }
 void dfsch_condition_put_field(dfsch_object_t* condition,
@@ -70,7 +66,7 @@ void dfsch_condition_put_field(dfsch_object_t* condition,
   }
 
   ((dfsch__condition_t*)condition)->fields = 
-    dfsch_cons(dfsch_list(2, name, value), 
+    dfsch_cons(dfsch_cons(name, value), 
                ((dfsch__condition_t*)condition)->fields);
 }
 dfsch_object_t* dfsch_condition_field_cstr(dfsch_object_t* condition,
