@@ -488,7 +488,7 @@ static size_t pair_hash(dfsch_object_t* p);
 dfsch_type_t dfsch_pair_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_LIST_TYPE,
-  sizeof(dfsch_pair_t), 
+  0, 
   "pair",
   (dfsch_type_equal_p_t)pair_equal_p,
   (dfsch_type_write_t)pair_write,

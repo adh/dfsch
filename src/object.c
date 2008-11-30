@@ -118,6 +118,11 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
       dfsch_error("Not a type", superclass);
     }
     
+    if (((dfsch_type_t*)superclass)->size == 0 && 
+        !DFSCH_INSTANCE_P(superclass, DFSCH_ABSTRACT_TYPE)){
+      dfsch_error("Cannot inherit from special type", superclass);
+    }
+
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
                                              ((dfsch_type_t*)
                                               superclass)->size);
@@ -328,7 +333,7 @@ DFSCH_DEFINE_FORM_IMPL(define_method){
   DFSCH_ARG_REST(args, code);
   DFSCH_OBJECT_ARG(lambda_list, selector);
 
-  klass = dfsch_eval(klass, args);
+  klass = dfsch_eval(klass, env);
   method = dfsch_named_lambda(env, lambda_list, code,
                               dfsch_list(2, klass, selector));
   dfsch_class_add_method(klass, selector, method);

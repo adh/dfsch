@@ -307,5 +307,4 @@ void dfsch__generic_register(dfsch_object_t* env){
                     dfsch_make_primitive(method_ref, NULL));
   dfsch_define_cstr(env, "methods->alist", 
                     dfsch_make_primitive(methods_2_alist, NULL));
-
 }
