@@ -964,7 +964,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__native_cxr_register(ctx);
   dfsch__control_register(ctx);
   dfsch__system_register(ctx);
-  dfsch__generic_register(ctx);
   dfsch__hash_native_register(ctx);
   dfsch__promise_native_register(ctx);
   dfsch__number_native_register(ctx);

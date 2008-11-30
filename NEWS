@@ -9,6 +9,8 @@ version 0.2.2                YYYY-MM-DD              svn rev. RRRR
         * Some ad-hoc "debugger"
         * REPL in separate user-accessible library
         * Bitwise operations on integers
+        * Message passing object system (instead of incomplete and
+        complex one based on generic functions) 
 
 -----------------------------------------------------------------------------
 version 0.2.1                2008-06-29              svn rev. 866

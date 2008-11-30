@@ -63,7 +63,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/strings.c dfsch/strings.h 	src/udata.h\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
-	src/generic.c dfsch/generic.h	\
 	src/weak.c dfsch/weak.h		\
 	src/pprint.c dfsch/pprint.h	\
 	src/format.c dfsch/format.h	\

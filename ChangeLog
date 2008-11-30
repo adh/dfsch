@@ -1,3 +1,7 @@
+2008-11-30  Ales Hakl  <ales at hakl dot net>
+
+	* Makefile.am: removed generic function subsystem
+
 2008-11-29  Ales Hakl  <ales at hakl dot net>
 
 	* src/object.c: reasonable mesasage-passing based object system
