@@ -25,12 +25,22 @@ char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable){
   
   while (DFSCH_PAIR_P(i)){
     j = DFSCH_FAST_CAR(i);
-    while (DFSCH_PAIR_P(j)){
-      sl_append(sl, " ");
-      sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
-      j = DFSCH_FAST_CDR(j);
-    }
     i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(j)){
+      return dfsch_print_unreadable(c, "*malformed-fields*");
+    }
+    sl_append(sl, " ");
+    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(j)) == DFSCH_SYMBOL_TYPE &&
+        dfsch_compare_symbol(DFSCH_FAST_CAR(j), "stack-trace")){
+      continue;
+    }
+    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
+    j = DFSCH_FAST_CDR(j);
+    if (!DFSCH_PAIR_P(j)){
+      return dfsch_print_unreadable(c, "*malformed-fields*");
+    }
+    sl_append(sl, " ");
+    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
   }
 
   sl_append(sl, ">");

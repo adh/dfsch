@@ -1,5 +1,7 @@
 2008-11-30  Ales Hakl  <ales at hakl dot net>
 
+	* src/conditions.c (dfsch__condition_write): do not print stack-trace
+
 	* Makefile.am: removed generic function subsystem
 
 2008-11-29  Ales Hakl  <ales at hakl dot net>

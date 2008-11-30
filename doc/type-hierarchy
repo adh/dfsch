@@ -47,3 +47,8 @@ nil
   weak-reference
   weak-vector
   weak-key-hash
+  condition
+    warning
+    error
+      runtime-error
+  restart
