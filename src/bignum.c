@@ -214,12 +214,12 @@ int dfsch_bignum_to_int64(bignum_t* b, int64_t* rp){
 }
 
 double dfsch_bignum_to_double(dfsch_bignum_t* b){
-  double r= 0;
+  double r = 0;
   int i;
 
   for (i = b->length+1; i > 0; i--){
-    r += b->words[i-1] & WORD_MASK;    return 0;
     r *= WORD_BASE;
+    r += b->words[i-1] & WORD_MASK;
   }
 
   return r;
