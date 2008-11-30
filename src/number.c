@@ -356,6 +356,9 @@ double dfsch_number_to_double(dfsch_object_t *n){
   }
   dfsch_error("exception:not-a-real-number", n);
 }
+dfsch_object_t* dfsch_number_to_inexact(dfsch_object_t* n){
+  return dfsch_make_number_from_double(dfsch_number_to_double(n));
+}
 long dfsch_number_to_long(dfsch_object_t *n){
   int64_t r;
 
@@ -947,6 +950,11 @@ DFSCH_DEFINE_PRIMITIVE(inexact_p, DFSCH_PRIMITIVE_CACHED){
 
   return dfsch_bool(!dfsch_number_exact_p(obj));  
 }
+DFSCH_DEFINE_PRIMITIVE(exact_2_inexact, 0){
+  dfsch_object_t* n;
+  DFSCH_OBJECT_ARG(args, n);
+  return dfsch_number_to_inexact(n);
+}
 
 DFSCH_DEFINE_PRIMITIVE(plus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
@@ -1445,6 +1453,8 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
   dfsch_define_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
   dfsch_define_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
+  dfsch_define_cstr(ctx, "exact->inexact", 
+                    DFSCH_PRIMITIVE_REF(exact_2_inexact));
 
   dfsch_define_cstr(ctx, "pi", 
                     dfsch_make_number_from_double(4*atan(1)));

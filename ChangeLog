@@ -1,5 +1,8 @@
 2008-11-30  Ales Hakl  <ales at hakl dot net>
 
+	* src/number.c (dfsch_number_to_inexact): explicit conversion to
+	inexact number
+
 	* src/bignum.c (dfsch_bignum_to_double): fix broken bignum->flonum
 	conversion
 
