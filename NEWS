@@ -11,7 +11,8 @@ version 0.2.2                YYYY-MM-DD              svn rev. RRRR
         * Bitwise operations on integers
         * Message passing object system (instead of incomplete and
         complex one based on generic functions)
-        * Slot mechanism (working on all objects) 
+        * Slot mechanism (working on all objects)
+        * Random number generator interface
 
 -----------------------------------------------------------------------------
 version 0.2.1                2008-06-29              svn rev. 866
