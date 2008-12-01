@@ -52,7 +52,6 @@ DFSCH_DEFINE_FORM_IMPL(if){
   test = dfsch_eval(test, env);
 
   return dfsch_eval_tr((test?consequent:alternate), env, esc);
-
 }
 
 DFSCH_DEFINE_FORM_IMPL(when){

@@ -79,6 +79,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
 
   j->type = NULL;
   j->name = NULL;
+  j->access = DFSCH_SLOT_ACCESS_RW;
 
   return slots;
 }
