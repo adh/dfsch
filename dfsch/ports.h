@@ -132,6 +132,7 @@ extern "C" {
   void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
   void dfsch_port_write_cstr(dfsch_object_t* port, char*str);
   ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size);
+  dfsch_strbuf_t* dfsch_port_read_whole(dfsch_object_t* port);
   void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence);
   int64_t dfsch_port_tell(dfsch_object_t* port);
   

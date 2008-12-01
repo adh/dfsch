@@ -104,6 +104,18 @@ ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
     dfsch_error("exception:not-a-port", port);
   }
 }
+
+dfsch_strbuf_t* dfsch_port_read_whole(dfsch_object_t* port){
+  ssize_t ret;
+  char* buf = GC_MALLOC_ATOMIC(1024);
+  str_list_t* sl = sl_create();
+  while ((ret = dfsch_port_read_buf(port, buf, 1024))){
+    sl_nappend(sl, buf, ret);
+    buf = GC_MALLOC_ATOMIC(1024);
+  }
+  return sl_value_strbuf(sl);
+}
+
 void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
@@ -788,6 +800,13 @@ static dfsch_object_t* native_port_read_buf(void* baton,
   return dfsch_make_string_buf(buf, len);
 }
 
+DFSCH_DEFINE_PRIMITIVE(port_read_whole, 0){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_ARG_END(args);
+  return dfsch_make_string_strbuf(dfsch_port_read_whole(port));
+}
+
 static dfsch_object_t* native_port_read_line(void* baton,
                                              dfsch_object_t* args,
                                              dfsch_tail_escape_t* esc){
@@ -935,6 +954,8 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(native_port_write_buf, NULL));
   dfsch_define_cstr(ctx, "port-read-buf", 
                     dfsch_make_primitive(native_port_read_buf, NULL));
+  dfsch_define_cstr(ctx, "port-read-whole", 
+                    DFSCH_PRIMITIVE_REF(port_read_whole));
   dfsch_define_cstr(ctx, "port-read-line", 
                     dfsch_make_primitive(native_port_read_line, NULL));
   dfsch_define_cstr(ctx, "port-seek!", 

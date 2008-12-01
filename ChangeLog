@@ -1,5 +1,7 @@
 2008-12-02  Ales Hakl  <ales at hakl dot net>
 
+	* src/ports.c (dfsch_port_read_whole): port-read-whole function
+
 	* src/object.c (make_slots): set slot accessibility correctly
 
 2008-11-30  Ales Hakl  <ales at hakl dot net>
