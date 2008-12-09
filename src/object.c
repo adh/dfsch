@@ -115,12 +115,8 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.name = name;
   klass->standard_type.slots = make_slots(slots);
   if (superclass){
-    if (!DFSCH_INSTANCE_P(superclass, DFSCH_STANDARD_TYPE)){
-      dfsch_error("Not a type", superclass);
-    }
-    
-    if (DFSCH_INSTANCE_P(superclass, DFSCH_SPECIAL_TYPE)){
-      dfsch_error("Cannot inherit from special type", superclass);
+    if (!DFSCH_INSTANCE_P(superclass, DFSCH_CLASS_TYPE)){
+      dfsch_error("Not a class", superclass);
     }
 
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,

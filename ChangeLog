@@ -1,3 +1,7 @@
+2008-12-09  Ales Hakl  <ales at hakl dot net>
+
+	* lib/collections.c: priority queue type
+
 2008-12-02  Ales Hakl  <ales at hakl dot net>
 
 	* src/ports.c (dfsch_port_read_whole): port-read-whole function
