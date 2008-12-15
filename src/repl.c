@@ -142,7 +142,7 @@ int main(int argc, char**argv){
 
   ctx = dfsch_make_context();
 
-  dfsch_set_debugger(dfsch_cdebug_get_procedure());
+  dfsch_cdebug_set_as_debugger();
 
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);

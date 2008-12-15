@@ -165,6 +165,8 @@ void dfsch_enter_debugger(dfsch_object_t* reason){
   pthread_mutex_unlock(&debugger_depth_mutex);
 
   DFSCH_UNWIND {
+    printf(";; debugger = %s\n", dfsch_obj_write(debugger_proc, 100, 100));
+
     if (debugger_proc){
       dfsch_apply(debugger_proc, dfsch_cons(reason, NULL));
     }

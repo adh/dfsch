@@ -107,3 +107,6 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
 dfsch_object_t* dfsch_cdebug_get_procedure(){
   return DFSCH_PRIMITIVE_REF(enter_debugger);
 }
+void dfsch_cdebug_set_as_debugger(){
+  dfsch_set_debugger(DFSCH_PRIMITIVE_REF(enter_debugger));
+}
