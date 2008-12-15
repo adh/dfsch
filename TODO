@@ -9,19 +9,7 @@ For 0.2.2:
 For 0.2.3:
 * Missing format directives (c and f)
 * Better writer (callback based)
-
-For 0.2.4:
 * Pretty-printer
-* Multimethods + method combinations
-
-For 0.2.x:
-* Dynamic variables
-
-For 0.3:
-* Compiler (into bytecode)
-
-For 0.4:
-* JIT (using GNU Lightning)
 
 When needed by other code:
 * Type predicates for all types
