@@ -38,6 +38,27 @@ static dfsch_object_t* debug_invoke_restart(dfsch_object_t* list,
   return NULL;
 }
 
+static void prettyprint_condition_fields(dfsch_object_t* fields){
+  dfsch_object_t* i = fields;
+  dfsch_object_t* j;
+  while (DFSCH_PAIR_P(i)){
+    j = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(j)){
+      return;
+    }
+    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(j)) == DFSCH_SYMBOL_TYPE &&
+        (dfsch_compare_symbol(DFSCH_FAST_CAR(j), "stack-trace") ||
+         dfsch_compare_symbol(DFSCH_FAST_CAR(j), "message"))){
+      continue;
+    }
+    fprintf(stderr, "    %s: %s\n" ,
+            dfsch_obj_write(DFSCH_FAST_CAR(j), 10, 1),
+            dfsch_obj_write(DFSCH_FAST_CDR(j), 10, 1));
+  }
+  
+}
+
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
   dfsch_object_t* env;
@@ -61,6 +82,7 @@ static void debug_main(dfsch_object_t* reason){
             dfsch_obj_write(dfsch_condition_field_cstr(reason,
                                                        "message"),
                             10, 0));
+    prettyprint_condition_fields(dfsch_condition_fields(reason));
   } else {
     fprintf(stderr,"debugger invoked on:\n  %s\n", 
             dfsch_obj_write(reason, 10, 0));

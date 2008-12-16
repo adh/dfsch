@@ -1,5 +1,8 @@
 2008-12-16  Ales Hakl  <ales at hakl dot net>
 
+	* lib/cdebug.c (prettyprint_condition_fields): print condition
+	fields in debugger
+
 	* dfsch/lib/cdebug.h: synchronized declarations with actual
 	contents of cdebug.c (this inconsistency was real cause of losage
 	on amd64)
