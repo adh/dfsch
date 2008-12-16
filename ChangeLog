@@ -1,3 +1,9 @@
+2008-12-16  Ales Hakl  <ales at hakl dot net>
+
+	* dfsch/lib/cdebug.h: synchronized declarations with actual
+	contents of cdebug.c (this inconsistency was real cause of losage
+	on amd64)
+
 2008-12-09  Ales Hakl  <ales at hakl dot net>
 
 	* lib/collections.c: priority queue type

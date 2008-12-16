@@ -22,6 +22,10 @@
 #ifndef H__dfsch__debug__
 #define H__dfsch__debug__
 
-void dfsch_debug_register_handler();
+#include <dfsch/dfsch.h>
+
+void dfsch_cdebug_enter_debugger(dfsch_object_t* reason);
+dfsch_object_t* dfsch_cdebug_get_procedure();
+void dfsch_cdebug_set_as_debugger();
 
 #endif
