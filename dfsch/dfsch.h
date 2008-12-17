@@ -122,6 +122,8 @@ extern "C" {
   extern int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super);
   /** Is object direct or indirect instance of given type? */
   extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
+  extern void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type);
+  extern dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj, dfsch_type_t* type);
   /** Get superclass of given type */
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
 

@@ -1,3 +1,7 @@
+2008-12-17  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c: dfsch_assert type and assert_instance 
+
 2008-12-16  Ales Hakl  <ales at hakl dot net>
 
 	* lib/cdebug.c (prettyprint_condition_fields): print condition

@@ -195,9 +195,22 @@ extern "C" {
   DFSCH_CATCH_BEGIN(dfsch___tag){                                       \
   dfsch_restart_bind(dfsch_make_restart(name,                           \
                                         dfsch_make_throw_proc(dfsch___tag), \
-                                        description));
+                                        description,                    \
+                                        NULL));
 #define DFSCH_END_WITH_SIMPLE_RESTART           \
   } DFSCH_CATCH {} DFSCH_CATCH_END              \
+}
+
+#define DFSCH_WITH_RETRY_WITH_RESTART(name, description)                \
+  {                                                                     \
+  dfsch_object_t* dfsch___tag = dfsch_gensym();                         \
+  DFSCH_CATCH_BEGIN(dfsch___tag){                                       \
+  dfsch_restart_bind(dfsch_make_restart(name,                           \
+                                        dfsch_make_throw_proc_arg(dfsch___tag), \
+                                        description,                    \
+                                        "Alternate value"));
+#define DFSCH_END_WITH_RETRY_WITH_RESTART(obj)                          \
+  } DFSCH_CATCH { obj = DFSCH_CATCH_VALUE; } DFSCH_CATCH_END \
 }
   
 

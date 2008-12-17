@@ -94,7 +94,7 @@ static void debug_main(dfsch_object_t* reason){
   dfsch_define_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,
                                                    restarts));
 
-  fprintf(stderr, "\nrestarts:\n");
+  fprintf(stderr, "restarts:\n");
   i = 0;
   while (DFSCH_PAIR_P(restarts)){
     dfsch_object_t* restart = DFSCH_FAST_CAR(restarts);

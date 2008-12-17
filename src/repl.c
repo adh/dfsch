@@ -153,7 +153,8 @@ int main(int argc, char**argv){
   dfsch_restart_bind(dfsch_make_restart(dfsch_make_symbol("quit"),
                                         dfsch_make_primitive(command_exit,
                                                              NULL),
-                                        "Exit interpreter"));
+                                        "Exit interpreter",
+                                        NULL));
                                         
 
   while ((c=getopt(argc, argv, "+ir:l:L:e:E:hv")) != -1){

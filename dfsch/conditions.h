@@ -43,6 +43,9 @@ extern dfsch_type_t dfsch_warning_type;
 extern dfsch_type_t dfsch_error_type;
 #define DFSCH_ERROR_TYPE (&dfsch_error_type)
 
+extern dfsch_type_t dfsch_type_error_type;
+#define DFSCH_TYPE_ERROR_TYPE (&dfsch_type_error_type)
+
 extern dfsch_type_t dfsch_runtime_error_type;
 #define DFSCH_RUNTIME_ERROR_TYPE (&dfsch_runtime_error_type)
 
@@ -54,7 +57,9 @@ int dfsch_get_debugger_depth();
 
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
-                                   char* description);
+                                   char* description,
+                                   char* args_description);
+
 extern dfsch_type_t dfsch_restart_type;
 #define DFSCH_RESTART_TYPE (&dfsch_restart_type)
 dfsch_object_t* dfsch_restart_name(dfsch_object_t* restart);
@@ -70,5 +75,9 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
                                      dfsch_object_t* args);
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag);
+dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag);
+
+void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type, 
+                      int instance_suffices);
 
 #endif

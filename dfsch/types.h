@@ -285,5 +285,10 @@ typedef struct dfsch_pair_t {
 #define DFSCH_INSTANCE_P(o, t)                                  \
   ((DFSCH_TYPE_OF(o) == (t))||dfsch_instance_p((o), (t)))
 
+#define DFSCH_ASSERT_TYPE(o, t)                                         \
+  ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
+#define DFSCH_ASSERT_INSTANCE(o, t)                                     \
+  (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+
 
 #endif

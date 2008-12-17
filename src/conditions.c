@@ -44,14 +44,12 @@ char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable){
   return sl_value(sl);
 }
 
-
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
                                       dfsch_object_t* name){
   dfsch_object_t* al;
-  if (!DFSCH_INSTANCE_P(condition, DFSCH_CONDITION_TYPE)){
-    dfsch_error("exception:not-a-condition", condition);
-  }
-  al = dfsch_assq(name, ((dfsch__condition_t*)condition)->fields);
+  dfsch__condition_t* c = dfsch_assert_instance(condition, 
+                                                DFSCH_CONDITION_TYPE);
+  al = dfsch_assq(name, c->fields);
   if (!al){
     return NULL;
   } else {
@@ -61,13 +59,10 @@ dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
 void dfsch_condition_put_field(dfsch_object_t* condition,
                                dfsch_object_t* name,
                                dfsch_object_t* value){
-  if (!DFSCH_INSTANCE_P(condition, DFSCH_CONDITION_TYPE)){
-    dfsch_error("exception:not-a-condition", condition);
-  }
+  dfsch__condition_t* c = dfsch_assert_instance(condition, 
+                                                DFSCH_CONDITION_TYPE);
 
-  ((dfsch__condition_t*)condition)->fields = 
-    dfsch_cons(dfsch_cons(name, value), 
-               ((dfsch__condition_t*)condition)->fields);
+  c->fields = dfsch_cons(dfsch_cons(name, value), c->fields);
 }
 dfsch_object_t* dfsch_condition_field_cstr(dfsch_object_t* condition,
                                            char* name){
@@ -79,10 +74,9 @@ void dfsch_condition_put_field_cstr(dfsch_object_t* condition,
   return dfsch_condition_put_field(condition, dfsch_make_symbol(name), value);
 }
 dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition){
-  if (!DFSCH_INSTANCE_P(condition, DFSCH_CONDITION_TYPE)){
-    dfsch_error("exception:not-a-condition", condition);
-  }
-  return ((dfsch__condition_t*)condition)->fields;;
+  return ((dfsch__condition_t*)
+          dfsch_assert_instance(condition, 
+                                DFSCH_CONDITION_TYPE))->fields;
 }
 
 dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
@@ -107,6 +101,9 @@ dfsch_type_t dfsch_warning_type =
 
 dfsch_type_t dfsch_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "error");
+
+dfsch_type_t dfsch_type_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "type-error");
 
 dfsch_type_t dfsch_runtime_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "runtime-error");
@@ -188,7 +185,7 @@ typedef struct restart_t {
   dfsch_object_t* name;
   dfsch_object_t* proc;
   char* description;
-  char* arg_names;
+  char* arg_descriptions;
   dfsch__handler_list_t* handlers;
 } restart_t;
 
@@ -200,33 +197,25 @@ dfsch_type_t dfsch_restart_type = {
 };
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
-                                   char* description){
+                                   char* description,
+                                   char* arg_descriptions){
   restart_t* r = (restart_t*) dfsch_make_object(DFSCH_RESTART_TYPE);
 
   r->name = name;
   r->proc = proc;
   r->description = description;
-  r->arg_names = NULL;
+  r->arg_descriptions = arg_descriptions;
 
   return (dfsch_object_t*) r;
 }
 dfsch_object_t* dfsch_restart_name(dfsch_object_t* restart){
-  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
-    dfsch_error("Not a restart", restart);
-  }
-  return ((restart_t*)restart)->name;
+  return ((restart_t*)dfsch_assert_type(restart, DFSCH_RESTART_TYPE))->name;
 }
 dfsch_object_t* dfsch_restart_proc(dfsch_object_t* restart){
-  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
-    dfsch_error("Not a restart", restart);
-  }
-  return ((restart_t*)restart)->proc;
+  return ((restart_t*)dfsch_assert_type(restart, DFSCH_RESTART_TYPE))->proc;
 }
 char* dfsch_restart_description(dfsch_object_t* restart){
-  if (DFSCH_TYPE_OF(restart) != DFSCH_RESTART_TYPE){
-    dfsch_error("Not a restart", restart);
-  }
-  return ((restart_t*)restart)->description;
+  return ((restart_t*)dfsch_assert_type(restart, DFSCH_RESTART_TYPE))->description;
 }
 
 void dfsch_restart_bind(dfsch_object_t* restart){
@@ -294,11 +283,45 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
 static dfsch_object_t* throw_proc(dfsch_object_t* tag,
                                   dfsch_object_t* args,
                                   dfsch_tail_escape_t* esc){
-  dfsch_throw(tag, args);
+  DFSCH_ARG_END(args);
+  dfsch_throw(tag, NULL);
 }
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag){
   return dfsch_make_primitive(throw_proc, catch_tag);
+}
+static dfsch_object_t* throw_proc_arg(dfsch_object_t* tag,
+                                  dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc){
+  dfsch_object_t* arg;
+  DFSCH_OBJECT_ARG(args, arg);
+  DFSCH_ARG_END(args);
+  dfsch_throw(tag, arg);
+}
+
+dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag){
+  return dfsch_make_primitive(throw_proc_arg, catch_tag);
+}
+
+void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type, 
+                      int instance_suffices){
+  char* m;
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_TYPE_ERROR_TYPE);
+  dfsch_condition_put_field_cstr(c, "datum", datum);
+  dfsch_condition_put_field_cstr(c, "type", type);
+  dfsch_condition_put_field_cstr(c, "instance-suffices?", 
+                                 dfsch_bool(instance_suffices));
+  if (instance_suffices){
+    m = dfsch_saprintf("%s is not an instance of %s",
+                       dfsch_obj_write(datum, 10, 1),
+                       dfsch_obj_write((dfsch_object_t*)type, 10, 1));
+  } else {
+    m = dfsch_saprintf("%s is not of type %s",
+                       dfsch_obj_write(datum, 10, 1),
+                       dfsch_obj_write((dfsch_object_t*)type, 10, 1));
+  }
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);
 }
 
 
@@ -433,7 +456,8 @@ DFSCH_DEFINE_FORM_IMPL(restart_bind){
 
     proc = dfsch_eval(proc, env);
 
-    dfsch_restart_bind(dfsch_make_restart(name, proc, ""));
+    // TODO
+    dfsch_restart_bind(dfsch_make_restart(name, proc, "", NULL));
     bindings = DFSCH_FAST_CDR(bindings);
   }
 

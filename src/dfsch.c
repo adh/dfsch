@@ -153,18 +153,11 @@ dfsch_type_t* dfsch_type_of(dfsch_object_t* obj){
 }
 
 dfsch_type_t* dfsch_object_as_type(dfsch_object_t* obj){
-  if (!DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
-    dfsch_error("Not a type", obj);
-  }
-  return (dfsch_object_t*)obj;
+  return dfsch_assert_instance(obj, DFSCH_STANDARD_TYPE);
 }
 
-dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){
-  if (!DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
-    dfsch_error("Not a type", obj);
-  }
-  
-  return (dfsch_object_t*)((dfsch_type_t*)obj)->superclass;
+dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){  
+  return (dfsch_object_t*)dfsch_object_as_type(obj)->superclass;
 }
 
 int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super){
@@ -183,6 +176,29 @@ int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super){
 int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
   return dfsch_superclass_p(DFSCH_TYPE_OF(obj), type);
 }
+
+void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type){
+  dfsch_object_t* o = obj;
+  while (DFSCH_TYPE_OF(o) != type){
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("retry-with"), 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, type, 0);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj, 
+                                      dfsch_type_t* type){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_INSTANCE_P(o, type)){
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("retry-with"), 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, type, 1);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+
 
 static dfsch_slot_t slot_slots[] = {
   DFSCH_STRING_SLOT(dfsch_slot_t, name, DFSCH_SLOT_ACCESS_RO),
