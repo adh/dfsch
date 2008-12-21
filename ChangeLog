@@ -1,3 +1,7 @@
+2008-12-21  Ales Hakl  <ales at hakl dot net>
+
+	* src/dfsch.c (dfsch_write_object): callback-based writer/printer
+
 2008-12-17  Ales Hakl  <ales at hakl dot net>
 
 	* src/dfsch.c: dfsch_assert type and assert_instance 

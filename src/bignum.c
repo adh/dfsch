@@ -82,8 +82,8 @@ int dfsch_bignum_equal_p(bignum_t* a, bignum_t* b){
 }
 
 
-static char* bignum_write(bignum_t* b, int max_depth, int readable){
-  return dfsch_bignum_to_string(b, 10);
+static void bignum_write(bignum_t* b, dfsch_writer_state_t* state){
+  dfsch_write_string(state, dfsch_bignum_to_string(b, 10));
 }
 
 dfsch_number_type_t dfsch_bignum_type = {

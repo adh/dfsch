@@ -131,24 +131,24 @@ typedef struct stat_t {
   struct stat st;
 } stat_t;
 
-static char* stat_write(stat_t* st, int max_depth, int readable){
-  return saprintf("#<stat-struct 0x%x dev 0x%lx ino %ld mode 0%lo nlink %ld uid %ld "
-                  "gid %d rdev 0x%x size %lld atime %ld mtime %ld ctime %ld "
-                  "blksize %ld blocks %ld>", 
-                  st, 
-                  (long)st->st.st_dev,
-                  (long)st->st.st_ino,
-                  (long)st->st.st_mode,
-                  (long)st->st.st_nlink,
-                  (long)st->st.st_uid,
-                  (long)st->st.st_gid,
-                  (long)st->st.st_rdev,
-                  (long long)st->st.st_size,
-                  (long)st->st.st_atime,
-                  (long)st->st.st_mtime,
-                  (long)st->st.st_ctime,
-                  (long)st->st.st_blksize,
-                  (long)st->st.st_blocks);
+static void stat_write(stat_t* st, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, st,
+                         "dev 0x%lx ino %ld mode 0%lo nlink %ld uid %ld gid %d "
+                         "rdev 0x%x size %lld atime %ld mtime %ld ctime %ld "
+                         "blksize %ld blocks %ld", 
+                         (long)st->st.st_dev,
+                         (long)st->st.st_ino,
+                         (long)st->st.st_mode,
+                         (long)st->st.st_nlink,
+                         (long)st->st.st_uid,
+                         (long)st->st.st_gid,
+                         (long)st->st.st_rdev,
+                         (long long)st->st.st_size,
+                         (long)st->st.st_atime,
+                         (long)st->st.st_mtime,
+                         (long)st->st.st_ctime,
+                         (long)st->st.st_blksize,
+                         (long)st->st.st_blocks);
 }
 
 static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,

@@ -64,14 +64,15 @@ char escape_table[] = {
 
 char hex_table[] = "0123456789abcdef";
 
-char* string_write(dfsch_string_t* o, int max_depth, int readable){
+void string_write(dfsch_string_t* o, dfsch_writer_state_t* state){
   char *b;
   char *i;
   int j;
   size_t len = 0;
 
-  if (!readable){
-    return o->buf.ptr;
+  if (dfsch_writer_state_print_p(state)){
+    dfsch_write_string(state, o->buf.ptr);
+    return;
   }
 
   for (j = 0; j < o->buf.len; ++j){
@@ -119,8 +120,7 @@ char* string_write(dfsch_string_t* o, int max_depth, int readable){
   *i='"';
   i[1]=0;
 
-  return b;
-
+  dfsch_write_string(state, b);
 }
 
 static size_t string_hash(dfsch_string_t* s){

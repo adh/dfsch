@@ -97,8 +97,8 @@ dfsch_type_t dfsch_integer_type = {
 };
 
 
-static char* fixnum_write(dfsch_object_t* n, int max_depth, int readable){
-  return saprintf("%ld", DFSCH_FIXNUM_REF(n));
+static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
+  dfsch_write_string(state, saprintf("%ld", DFSCH_FIXNUM_REF(n)));
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {
@@ -112,8 +112,8 @@ dfsch_number_type_t dfsch_fixnum_type = {
   NULL
 };
 
-static char* flonum_write(flonum_t* n, int max_depth, int readable){
-  return saprintf("%.32g", n->flonum);
+static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
+  dfsch_write_string(state, saprintf("%.32g", n->flonum));
 }
 static uint32_t flonum_hash(flonum_t* n){
   return diffusion(((size_t)n->flonum) ^ 
@@ -135,12 +135,10 @@ dfsch_number_type_t dfsch_flonum_type = {
   (dfsch_type_hash_t)flonum_hash,
 };
 
-static char* fracnum_write(fracnum_t* n, int max_depth, int readable){
-  str_list_t* sl = sl_create();
-  sl_append(sl, dfsch_number_to_string(n->num, 10));
-  sl_append(sl, "/");
-  sl_append(sl, dfsch_number_to_string(n->denom, 10));
-  return sl_value(sl);
+static void fracnum_write(fracnum_t* n, dfsch_writer_state_t* state){
+  dfsch_write_string(state, dfsch_number_to_string(n->num, 10));
+  dfsch_write_string(state, "/");
+  dfsch_write_string(state, dfsch_number_to_string(n->denom, 10));
 }
 static int fracnum_equal_p(fracnum_t* a, fracnum_t* b){
   return  

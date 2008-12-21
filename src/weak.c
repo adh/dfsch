@@ -107,23 +107,6 @@ typedef struct weak_vector_t {
   int set;
 } weak_vector_t;
 
-static char* weak_vector_write(weak_vector_t* v, int max_depth, int readable){
-  str_list_t* l= sl_create();
-  size_t i;
-        
-  sl_append(l,"#<weak-vector ");
-  
-  if (v->length > 0){
-    for(i = 0; i < v->length-1; ++i){
-      sl_append(l, dfsch_obj_write(v->data[i], max_depth-1, readable));
-      sl_append(l, " ");
-    }
-  
-    sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1, readable));
-  }
-  sl_append(l,">");
-  return sl_value(l);
-}
 
 dfsch_type_t dfsch_weak_vector_type = {
   DFSCH_STANDARD_TYPE,
@@ -131,7 +114,7 @@ dfsch_type_t dfsch_weak_vector_type = {
   sizeof(weak_vector_t),
   "weak-vector",
   NULL,
-  (dfsch_type_write_t)weak_vector_write,
+  NULL,
   NULL,
   NULL
 };

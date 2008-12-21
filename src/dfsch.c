@@ -207,10 +207,8 @@ static dfsch_slot_t slot_slots[] = {
   DFSCH_SLOT_TERMINATOR
 };
 
-static char* slot_write(dfsch_slot_t* slot, int depth, int readable){
-  char* ret;
-  ret = dfsch_print_unreadable(slot, "%s", slot->name);
-  return ret;
+static void slot_write(dfsch_slot_t* slot, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, slot, "%s", slot->name);
 }
 
 dfsch_type_t dfsch_slot_type = {
@@ -400,8 +398,9 @@ dfsch_type_t dfsch_meta_type = {
 };
 
 
-static char* type_write(dfsch_type_t* t, int max_depth, int readable){
-  return dfsch_print_unreadable(t, "%s instance-size: %d", t->name, t->size);
+static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, t, 
+                         "%s instance-size: %d", t->name, t->size);
 }
 
 static dfsch_slot_t type_slots[] = {
@@ -467,10 +466,45 @@ dfsch_type_t dfsch_empty_list_type = {
   NULL
 };
 
-static int pair_equal_p(dfsch_object_t*, dfsch_object_t*);
-static char* pair_write(dfsch_object_t*, int, int);
-static size_t pair_hash(dfsch_object_t* p);
+static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
+  return dfsch_equal_p(DFSCH_FAST_CAR(a), DFSCH_FAST_CAR(b)) 
+    && dfsch_equal_p(DFSCH_FAST_CDR(a), DFSCH_FAST_CDR(b));
+}
+static size_t pair_hash(dfsch_object_t* p){
+  return hash_combine(dfsch_hash(DFSCH_FAST_CAR(p)), 
+                      dfsch_hash(DFSCH_FAST_CDR(p)));
+}
+static void pair_write(dfsch_object_t*p, dfsch_writer_state_t* state){
+  object_t* i=p;
+  object_t* j=p;
+  int c = 0;
+    
+  dfsch_write_string(state, "(");
+  while (DFSCH_TYPE_OF(i) == DFSCH_PAIR_TYPE){
+    dfsch_write_object(state, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
+    if (i == j){
+      dfsch_write_string(state, "... #<infinite-list>)");
+      return;
+    }
 
+    c++;
+    if (c == 2){
+      c = 0;
+      j = DFSCH_FAST_CDR(j);
+    }
+    if (i) {
+      dfsch_write_string(state, " ");  
+    }
+  }
+  
+  if (i){  
+    dfsch_write_string(state, ". ");  
+    dfsch_write_object(state, i);
+  }
+
+  dfsch_write_string(state, ")");  
+}
 dfsch_type_t dfsch_pair_type = {
   DFSCH_SPECIAL_TYPE,
   DFSCH_LIST_TYPE,
@@ -484,57 +518,19 @@ dfsch_type_t dfsch_pair_type = {
 };
 #define PAIR (&dfsch_pair_type)
 
-static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
-  return dfsch_equal_p(DFSCH_FAST_CAR(a), DFSCH_FAST_CAR(b)) 
-    && dfsch_equal_p(DFSCH_FAST_CDR(a), DFSCH_FAST_CDR(b));
-}
-static size_t pair_hash(dfsch_object_t* p){
-  return hash_combine(dfsch_hash(DFSCH_FAST_CAR(p)), 
-                      dfsch_hash(DFSCH_FAST_CDR(p)));
-}
-static char* pair_write(dfsch_object_t*p, int max_depth, int readable){
-  str_list_t* l = sl_create();
-  object_t* i=p;
-  object_t* j=p;
-  int c = 0;
-    
-  sl_append(l,"(");
-    
-  while (DFSCH_TYPE_OF(i) == DFSCH_PAIR_TYPE){
-    sl_append(l, dfsch_obj_write(DFSCH_PAIR_REF(i)->car, 
-                                 max_depth-1, readable));
-    i = DFSCH_PAIR_REF(i)->cdr;
-    if (i == j){
-      sl_append(l," ... #<infinite-list>)");
-      return sl_value(l);
-    }
-
-    c++;
-    if (c == 2){
-      c = 0;
-      j = DFSCH_PAIR_REF(j)->cdr;
-    }
-    if (i)
-      sl_append(l," ");
-    
-  }
-  
-  if (i){
-    sl_append(l, ". ");
-    sl_append(l, dfsch_obj_write((object_t*)i, max_depth-1, readable));
-  }
-  
-  sl_append(l,")");
-  
-  return sl_value(l);
-}
 
 static dfsch_slot_t symbol_slots[] = {
   DFSCH_STRING_SLOT(symbol_t, data, DFSCH_SLOT_ACCESS_RO),
   DFSCH_SLOT_TERMINATOR
 };
 
-static char* symbol_write(symbol_t*, int, int);
+static void symbol_write(symbol_t* s, dfsch_writer_state_t* state){
+  if (s->data){
+    dfsch_write_string(state, s->data);
+  } else {
+    dfsch_write_unreadable(state, s, ""); 
+  }
+}
 dfsch_type_t dfsch_symbol_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -547,18 +543,11 @@ dfsch_type_t dfsch_symbol_type = {
   &symbol_slots
 };
 #define SYMBOL DFSCH_SYMBOL_TYPE 
-static char* symbol_write(symbol_t* s, int max_depth, int readable){
-  if (s->data){
-    return s->data;
-  } else {
-    return saprintf("#<gensym %p>", s);
-  }
-}
 
-static char* primitive_write(dfsch_primitive_t* p, 
-                             int max_depth, int readable){
+static void primitive_write(dfsch_primitive_t* p, 
+                            dfsch_writer_state_t* state){
   char* name = p->name ? p->name : "()";
-  return dfsch_saprintf("#<primitive %p %s>", p, name);
+  dfsch_write_unreadable(state, p, "%s", name);
 }
 
 static dfsch_slot_t primitive_slots[] = {
@@ -579,23 +568,14 @@ dfsch_type_t dfsch_primitive_type = {
 };
 #define PRIMITIVE (&dfsch_primitive_type)
 
-static char* function_write(closure_t* c, int max_depth, int readable){
-  str_list_t* l = sl_create();
+static void function_write(closure_t* c, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_start(state, c);
 
-  sl_append(l, "#<standard-function ");
-  sl_append(l, saprintf("%p", c));
-    
-  if (c->name){
-    sl_append(l, " ");
-    sl_append(l, dfsch_obj_write(c->name, max_depth-1, 0));
-  }
+  dfsch_write_object(state, c->name);
+  dfsch_write_string(state, " ");
+  dfsch_write_object(state, c->args);
 
-  sl_append(l, " ");
-  sl_append(l, dfsch_obj_write(c->args, max_depth-1, 0));
-
-  sl_append(l,">");
-    
-  return sl_value(l);
+  dfsch_write_unreadable_end(state);
 }
 
 static dfsch_slot_t closure_slots[] = {
@@ -667,22 +647,18 @@ static size_t vector_hash(vector_t* v){
 }
 
 
-static char* vector_write(vector_t* v, int max_depth, int readable){
-  str_list_t* l= sl_create();
+static void vector_write(vector_t* v, dfsch_writer_state_t* state){
   size_t i;
-        
-  sl_append(l,"#(");
+  dfsch_write_string(state, "#(");
   
   if (v->length > 0){
     for(i = 0; i < v->length-1; ++i){
-      sl_append(l, dfsch_obj_write(v->data[i], max_depth-1, readable));
-      sl_append(l, " ");
+      dfsch_write_object(state, v->data[i]);
+      dfsch_write_string(state, " ");
     }
-  
-    sl_append(l, dfsch_obj_write(v->data[v->length-1], max_depth-1, readable));
+    dfsch_write_object(state, v->data[v->length - 1]);
   }
-  sl_append(l,")");
-  return sl_value(l);
+  dfsch_write_string(state, ")");
 }
 
 dfsch_type_t dfsch_vector_type = {
@@ -1642,36 +1618,6 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   
 }
 
-dfsch_object_t* dfsch_get_function_name(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != FUNCTION){
-    dfsch_error("Not a function", proc);
-  }
-  return ((closure_t*)proc)->name;
-}
-dfsch_object_t* dfsch_get_function_environment(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != FUNCTION){
-    dfsch_error("Not a function", proc);
-  }
-  return ((closure_t*)proc)->env;
-}
-dfsch_object_t* dfsch_get_function_arguments(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != FUNCTION){
-    dfsch_error("Not a function", proc);
-  }
-  return ((closure_t*)proc)->args;
-}
-dfsch_object_t* dfsch_get_function_code(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != FUNCTION){
-    dfsch_error("Not a function", proc);
-  }
-  return ((closure_t*)proc)->orig_code;
-}
-dfsch_object_t* dfsch_get_function_effective_code(dfsch_object_t* proc){
-  if (DFSCH_TYPE_OF(proc) != FUNCTION){
-    dfsch_error("Not a function", proc);
-  }
-  return ((closure_t*)proc)->code;
-}
 
 // native code
 object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
@@ -1911,40 +1857,120 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   return (object_t*)vector;
 }
 
-char* dfsch_obj_write(dfsch_object_t* obj, int max_depth, int readable){
+char* dfsch_obj_write(dfsch_object_t* obj, 
+                      int max_depth, int readable){
+  str_list_t* sl = sl_create();
+  dfsch_writer_state_t* state = dfsch_make_writer_state(max_depth,
+                                                        readable?
+                                                        DFSCH_WRITE:
+                                                        DFSCH_PRINT,
+                                                        sl_append,
+                                                        sl);
+  dfsch_write_object(state, obj);
+  return sl_value(sl);
+}
+
+
+struct dfsch_writer_state_t {
+  dfsch_object_t object_head;
+  dfsch_output_proc_t output_proc;
+  void* output_baton;
+  int depth;
+  int readability;
+};
+dfsch_type_t dfsch_writer_state_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(dfsch_writer_state_t),
+  "writer-state"
+};
+
+dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
+                                              int readability,
+                                              dfsch_output_proc_t proc,
+                                              void* baton){
+  dfsch_writer_state_t* state = 
+    (dfsch_writer_state_t*)dfsch_make_object(DFSCH_WRITER_STATE_TYPE);
+
+  state->output_proc = proc;
+  state->output_baton = baton;
+  state->depth = max_depth;
+  state->readability = readability;
+
+  return state;
+}
+void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
+  state->output_proc = NULL;
+  state->output_baton = NULL;
+}
+int dfsch_writer_state_print_p(dfsch_writer_state_t* state){
+  return state->readability == DFSCH_PRINT;
+}
+
+void dfsch_write_object(dfsch_writer_state_t* state,
+                        dfsch_object_t* object){
   dfsch_type_t* type;
   char* ret;
 
-  if (!obj){
-    return "()";
+  if (!object){
+    dfsch_write_string(state, "()");
+    return;
   }
 
-  if (max_depth==0){
-    return "...";
+  if (state->depth==0){
+    dfsch_write_string(state, "...");
   }
 
-  type = DFSCH_TYPE_OF(obj);
+  type = DFSCH_TYPE_OF(object);
 
   while (type){
     if (type->write){
-      return type->write(obj, max_depth, readable);;
+      state->depth--;
+      type->write(object, state);
+      state->depth++;
+      return;
     }
     type = type->superclass;
   }
 
-  return saprintf("#<%s %p>", DFSCH_TYPE_OF(obj)->name, obj);
+  dfsch_write_unreadable(state, object, "");
 }
-char* dfsch_print_unreadable(dfsch_object_t* obj, char* format, ...){
+
+
+void dfsch_write_string(dfsch_writer_state_t* state,
+                        char* str){
+  dfsch_write_strbuf(state, str, strlen(str));
+}
+void dfsch_write_strbuf(dfsch_writer_state_t* state,
+                        char* str, size_t len){
+  if (state->output_proc){
+    state->output_proc(state->output_baton, str, len);
+  } else {
+    dfsch_error("Stale writer-state", state);
+  }
+}
+
+void dfsch_write_unreadable(dfsch_writer_state_t* state,
+                            dfsch_object_t* obj, char* format, ...){
   str_list_t* sl = sl_create();
   va_list args;
   char *ret;
   va_start(args, format);
-  sl_append(sl, saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
-  sl_append(sl, vsaprintf(format, args)); 
-  sl_append(sl, ">");
-  ret = sl_value(sl);
-  va_end(args);
-  return ret;
+
+  dfsch_write_unreadable_start(state, obj);
+  dfsch_write_string(state, vsaprintf(format, args)); 
+  dfsch_write_unreadable_end(state);
+}
+void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
+                                  dfsch_object_t* obj){
+  if (state->readability == DFSCH_STRICT_WRITE){
+    dfsch_error("Object has no readable representation", obj);
+  }
+  dfsch_write_string(state, 
+                     saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
+}
+void dfsch_write_unreadable_end(dfsch_writer_state_t* state){
+  dfsch_write_string(state, ">");
 }
 
 

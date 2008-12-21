@@ -757,6 +757,28 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
 
   return dfsch_obj_read(string);
 }
+DFSCH_DEFINE_PRIMITIVE(write__object, 0){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_object(DFSCH_ASSERT_TYPE(DFSCH_WRITER_STATE_TYPE, state),
+                     object);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write__string, 0){
+  dfsch_object_t* state;
+  dfsch_strbuf_t* string;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_strbuf(DFSCH_ASSERT_TYPE(DFSCH_WRITER_STATE_TYPE, state),
+                     string->ptr, string->len);
+  return NULL;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -950,6 +972,10 @@ void dfsch__native_register(dfsch_object_t *ctx){
                    DFSCH_PRIMITIVE_REF(object_2_string));
   dfsch_define_cstr(ctx, "string->object", 
                    DFSCH_PRIMITIVE_REF(string_2_object));
+  dfsch_define_cstr(ctx, "dfsch%write-object", 
+                   DFSCH_PRIMITIVE_REF(write__object));
+  dfsch_define_cstr(ctx, "dfsch%write-string", 
+                   DFSCH_PRIMITIVE_REF(write__string));
 
   dfsch_define_cstr(ctx, "symbol->string", 
                    DFSCH_PRIMITIVE_REF(symbol_2_string));

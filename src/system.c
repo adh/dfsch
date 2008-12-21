@@ -47,10 +47,12 @@ static int decoded_time_equal_p(decoded_time_t* a, decoded_time_t* b){
     && (a->tm.tm_isdst == b->tm.tm_isdst);
 }
 
-static char* decoded_time_write(decoded_time_t* time, int depth, int readable){
-  return saprintf("#<decoded-time %04d-%02d-%02dT%02d:%02d:%02d>",
-                  time->tm.tm_year+1900, time->tm.tm_mon+1, time->tm.tm_mday,
-                  time->tm.tm_hour, time->tm.tm_min, time->tm.tm_sec);
+static void decoded_time_write(decoded_time_t* time, 
+                               dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, time, "%04d-%02d-%02dT%02d:%02d:%02d",
+                         time->tm.tm_year+1900, time->tm.tm_mon+1, 
+                         time->tm.tm_mday,
+                         time->tm.tm_hour, time->tm.tm_min, time->tm.tm_sec);
 }
 
 static dfsch_object_t* decoded_time_apply(decoded_time_t* time, 

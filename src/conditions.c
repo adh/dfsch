@@ -16,32 +16,34 @@ dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
   return (dfsch_object_t*)c;
 }
 
-char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable){
-  str_list_t* sl = sl_create();
+static void condition_write(dfsch__condition_t* c, 
+                            dfsch_writer_state_t* state){
   dfsch_object_t* i = c->fields;
   dfsch_object_t* j;
   
-  sl_append(sl, saprintf("#<%s %p", c->type->name, c));
+  dfsch_write_unreadable_start(state, c);
   
   while (DFSCH_PAIR_P(i)){
     j = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(j)){
-      return dfsch_print_unreadable(c, "*malformed-fields*");
+      dfsch_write_string(state, "*malformed-fileds*");
+      dfsch_write_unreadable_end(state);
+      return;
     }
-    sl_append(sl, " ");
     if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(j)) == DFSCH_SYMBOL_TYPE &&
         dfsch_compare_symbol(DFSCH_FAST_CAR(j), "stack-trace")){
       continue;
     }
-    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CAR(j), depth-1, 1));
-    sl_append(sl, " ");
-    sl_append(sl, dfsch_obj_write(DFSCH_FAST_CDR(j), depth-1, 1));
+    dfsch_write_object(state, DFSCH_FAST_CAR(j)); 
+    dfsch_write_string(state, " "); 
+    dfsch_write_object(state, DFSCH_FAST_CDR(j)); 
+    if (DFSCH_PAIR_P(i)){
+      dfsch_write_string(state, " ");
+    }
   }
 
-  sl_append(sl, ">");
-  
-  return sl_value(sl);
+  dfsch_write_unreadable_end(state);
 }
 
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
@@ -93,8 +95,14 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
   return c;
 }
 
-dfsch_type_t dfsch_condition_type = 
-  DFSCH_CONDITION_TYPE_INIT(NULL, "condition");
+dfsch_type_t dfsch_condition_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  DFSCH_CONDITION_SIZE,
+  "condition",
+  NULL,
+  (dfsch_type_write_t)condition_write
+};
 
 dfsch_type_t dfsch_warning_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "warning");

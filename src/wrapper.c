@@ -38,16 +38,14 @@ typedef struct wrapper_t {
   dfsch_object_t* object;
 } wrapper_t;
 
-static char* wrapper_write(dfsch_object_t* obj, int depth, int readable){
+static void wrapper_write(dfsch_object_t* obj, dfsch_writer_state_t* state){
   wrapper_type_t* type = (wrapper_type_t*) obj->type;
 
   return 
     dfsch_string_to_cstr(dfsch_apply(type->write,
-                                     dfsch_list(3,
+                                     dfsch_list(2,
                                                 obj,
-                                                dfsch_make_number_from_long
-                                                  (depth),
-                                                dfsch_bool(readable))));
+                                                state)));
 }
 
 static int wrapper_equal_p(dfsch_object_t* a, dfsch_object_t* b){
@@ -76,20 +74,6 @@ static size_t wrapper_hash(dfsch_object_t* obj){
                                                        obj)));
 }
 
-static char*  wrapper_type_write(wrapper_type_t* t, int max_depth, int readable){
-    str_list_t* l = sl_create();
-    char buf[sizeof(void*)*2+1];
-
-    sl_append(l, "#<wrapper-type 0x");
-    snprintf(buf, sizeof(void*)*2+1, "%x", t);
-    sl_append(l, buf);   
-    sl_append(l, " ");
-    sl_append(l, t->type.name);
-    sl_append(l,">");
-    
-    return sl_value(l);
-}
-
 static const dfsch_type_t wrapper_basetype = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -108,7 +92,7 @@ static const dfsch_type_t wrapper_type = {
   sizeof(wrapper_type_t),
   "wrapper-type",
   NULL,
-  (dfsch_type_write_t)wrapper_type_write,
+  NULL,
   NULL,
 };
 

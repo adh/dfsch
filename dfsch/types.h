@@ -50,6 +50,8 @@ extern dfsch_type_t dfsch_vector_type;
 #define DFSCH_VECTOR_TYPE (&dfsch_vector_type)
 extern dfsch_type_t dfsch_environment_type;
 #define DFSCH_ENVIRONMENT_TYPE (&dfsch_environment_type)
+extern dfsch_type_t dfsch_writer_state_type;
+#define DFSCH_WRITER_STATE_TYPE (&dfsch_writer_state_type)
 
 typedef struct dfsch_primitive_t {
   dfsch_type_t* type;
@@ -145,8 +147,24 @@ extern dfsch_type_t dfsch_form_type;
                    (baton),                     \
                    #name))
 
-typedef struct dfsch_slot_t dfsch_slot_t;
+/** Equivalence metod prototype */
+typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
 
+typedef (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
+typedef struct dfsch_writer_state_t dfsch_writer_state_t;
+
+/** Write / Display method prototype */
+typedef void (*dfsch_type_write_t)(dfsch_object_t* obj,
+                                   dfsch_writer_state_t* state);
+/** Apply metod prototype */
+typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object, 
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc);
+/** Hash method prototype */
+typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
+
+
+typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
   /** When we want to use type_t as first-class object */
   dfsch_type_t* type;

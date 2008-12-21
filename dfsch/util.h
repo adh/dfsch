@@ -68,5 +68,4 @@ typedef pthread_mutex_t dfsch_rwlock_t;
 #endif
 
 
-
 #endif

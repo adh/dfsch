@@ -15,20 +15,17 @@ typedef struct stack_frame_t {
   /* user stack frame should always contain some guess of relevant expression */
 } stack_frame_t;
 
-static char* stack_frame_write(stack_frame_t* sf, int depth, int readable){
+static void stack_frame_write(stack_frame_t* sf, dfsch_writer_state_t* state){
   str_list_t* sl = sl_create();
 
-  sl_append(sl, "#<user-stack-frame ");
-  sl_append(sl, dfsch_obj_write(sf->procedure, depth - 1, 1));
-  sl_append(sl, " ");
-  sl_append(sl, dfsch_obj_write(sf->arguments, depth - 1, 1));
+  dfsch_write_unreadable_start(state, sf);
+  dfsch_write_object(state, sf->procedure);
+  dfsch_write_string(state, " ");
+  dfsch_write_object(state, sf->arguments);
   if (sf->tail_recursive){
-    sl_append(sl, " tail-recursive");
-  }
-    
-  sl_append(sl, ">");
-
-  return sl_value(sl);
+    dfsch_write_string(state, " tail-recursive");
+  } 
+  dfsch_write_unreadable_end(state);   
 }
 
 static dfsch_object_t* stack_frame_apply(stack_frame_t* sf, 
@@ -165,42 +162,6 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(get_function_name, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_get_function_name(proc);
-}
-DFSCH_DEFINE_PRIMITIVE(get_function_environment, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_get_function_environment(proc);
-}
-DFSCH_DEFINE_PRIMITIVE(get_function_arguments, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_get_function_arguments(proc);
-}
-DFSCH_DEFINE_PRIMITIVE(get_function_code, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_get_function_code(proc);
-}
-DFSCH_DEFINE_PRIMITIVE(get_function_effective_code, 0){
-  dfsch_object_t* proc;
-  DFSCH_OBJECT_ARG(args, proc);
-  DFSCH_ARG_END(args);
-
-  return dfsch_get_function_effective_code(proc);
-}
-
 
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
@@ -213,14 +174,4 @@ void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "set-debugger", DFSCH_PRIMITIVE_REF(set_debugger));
   dfsch_define_cstr(env, "enter-debugger", DFSCH_PRIMITIVE_REF(enter_debugger));
 
-  dfsch_define_cstr(env, "get-function-name",
-                    DFSCH_PRIMITIVE_REF(get_function_name));
-  dfsch_define_cstr(env, "get-function-environment",
-                    DFSCH_PRIMITIVE_REF(get_function_environment));
-  dfsch_define_cstr(env, "get-function-arguments",
-                    DFSCH_PRIMITIVE_REF(get_function_arguments));
-  dfsch_define_cstr(env, "get-function-code",
-                    DFSCH_PRIMITIVE_REF(get_function_code));
-  dfsch_define_cstr(env, "get-function-effective-code",
-                    DFSCH_PRIMITIVE_REF(get_function_effective_code));
 }

@@ -530,15 +530,18 @@ static ssize_t file_port_read_buf(file_port_t* port,
   }
   return ret;
 }
-static char* file_port_write(file_port_t* port, int depth, int readable){
+static void file_port_write(file_port_t* port, dfsch_writer_state_t* state){
   if (port->open){
     if (port->name){
-      return saprintf("#<file-port %p name %s>", port, port->name);
+      dfsch_write_unreadable(state, port, 
+                             "name %s fd %d", 
+                             port->name,
+                             fileno(port->file));
     } else {
-      return saprintf("#<file-port %p fd %d>", port);
+      dfsch_write_unreadable(state, port, "fd %d", fileno(port->file));
     }
   } else {
-    return saprintf("#<file-port %p *closed*>", port);
+    dfsch_write_unreadable(state, port, "*closed*");
   }
 }
 
