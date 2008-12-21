@@ -764,7 +764,7 @@ DFSCH_DEFINE_PRIMITIVE(write__object, 0){
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
-  dfsch_write_object(DFSCH_ASSERT_TYPE(DFSCH_WRITER_STATE_TYPE, state),
+  dfsch_write_object(DFSCH_ASSERT_TYPE(state, DFSCH_WRITER_STATE_TYPE),
                      object);
   return NULL;
 }
@@ -775,7 +775,7 @@ DFSCH_DEFINE_PRIMITIVE(write__string, 0){
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  dfsch_write_strbuf(DFSCH_ASSERT_TYPE(DFSCH_WRITER_STATE_TYPE, state),
+  dfsch_write_strbuf(DFSCH_ASSERT_TYPE(state, DFSCH_WRITER_STATE_TYPE),
                      string->ptr, string->len);
   return NULL;
 }
