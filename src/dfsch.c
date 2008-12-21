@@ -754,37 +754,27 @@ dfsch_object_t* dfsch_multicons(size_t n){
 }
 
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
-  if (DFSCH_TYPE_OF(pair) != PAIR)
-    dfsch_error("Not a pair",pair);
-
-  return DFSCH_FAST_CAR(pair);
+  return DFSCH_FAST_CAR(DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE));
 }
 dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
-  if (DFSCH_TYPE_OF(pair) != PAIR)
-    dfsch_error("Not a pair",pair);
-
-  return DFSCH_FAST_CDR(pair);
+  return DFSCH_FAST_CDR(DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE));
 }
 
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 			      dfsch_object_t* car){
-  if (DFSCH_TYPE_OF(pair) != PAIR)
-    dfsch_error("Not a pair",pair);
+  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE);
 
-  DFSCH_FAST_CAR(pair) = car;
+  DFSCH_FAST_CAR(p) = car;
   
-  return pair;
-
+  return p;
 }
 dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
-  if (DFSCH_TYPE_OF(pair) != PAIR)
-    dfsch_error("Not a pair",pair);
-  
-  DFSCH_FAST_CDR(pair) = cdr;
-  
-  return pair;
+  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE);
 
+  DFSCH_FAST_CDR(p) = cdr;
+  
+  return p;
 }
 long dfsch_list_length_fast(object_t* list){
   dfsch_object_t *i;
@@ -844,7 +834,7 @@ long dfsch_list_length_check(object_t* list){
   long len;
   len = dfsch_list_length(list);
   if (len < 0)
-    dfsch_error("Not a list", list);
+    dfsch_type_error(list, DFSCH_LIST_TYPE, 1);
   return len;
 }
 
@@ -855,7 +845,7 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
     if (DFSCH_TYPE_OF(it) == PAIR){
       it = DFSCH_FAST_CDR(it);
     }else{
-      dfsch_error("No such item of list",dfsch_make_number_from_long(index));
+      dfsch_error("No such item of list", dfsch_make_number_from_long(index));
     }
   }
   return dfsch_car(it);
@@ -931,7 +921,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 	goto out;
       }
       if (DFSCH_TYPE_OF(args[i]) != PAIR){
-	dfsch_error("Not a pair", args[i]);
+	dfsch_type_error(args[i], DFSCH_PAIR_TYPE, 0);
       }
 
       tmp = dfsch_cons(DFSCH_FAST_CAR(args[i]), NULL);
@@ -991,14 +981,16 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
       }
       j = DFSCH_FAST_CDR(j);
     }
-    if (j && DFSCH_TYPE_OF(j) != PAIR)
-      dfsch_error("Not a pair", (object_t*)j);
+    if (j && DFSCH_TYPE_OF(j) != PAIR) {
+      dfsch_type_error(j, PAIR, 0);
+    }
 
     i = DFSCH_FAST_CDR(i);
   }
 
-  if (DFSCH_TYPE_OF(i) != PAIR)
-    dfsch_error("Not a pair", (object_t*)i);
+  if (DFSCH_TYPE_OF(i) != PAIR){
+    dfsch_type_error(i, PAIR, 0);
+  }
 
   if (tail){
     DFSCH_FAST_CDR(tail) = DFSCH_FAST_CAR(i);
@@ -1049,9 +1041,9 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
     }
     i = DFSCH_FAST_CDR(i);
   }
-  if (i && DFSCH_TYPE_OF(i) != PAIR)
-    dfsch_error("Not a list", (object_t*)i);
-
+  if (i && DFSCH_TYPE_OF(i) != PAIR){
+    dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
+  }
 
   return (object_t*)head;
 
@@ -1067,12 +1059,11 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
     head = dfsch_cons(DFSCH_FAST_CAR(i), head);
     i = DFSCH_FAST_CDR(i);
   }
-  if (i)
-    dfsch_error("Not a list", (object_t*)i);
-
+  if (i){
+    dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
+  }
 
   return (object_t*)head;
-
 }
 
 dfsch_object_t* dfsch_member(dfsch_object_t *key,
@@ -1088,8 +1079,9 @@ dfsch_object_t* dfsch_member(dfsch_object_t *key,
     i = DFSCH_FAST_CDR(i);
   }
 
-  if (i)
-    dfsch_error("Not a list", (object_t*)i);
+  if (i){
+    dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
+  }
 
   return NULL;
 }
@@ -1107,8 +1099,9 @@ dfsch_object_t* dfsch_memv(dfsch_object_t *key,
     i = DFSCH_FAST_CDR(i);
   }
 
-  if (i)
-    dfsch_error("Not a list", (object_t*)i);
+  if (i){
+    dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
+  }
 
   return NULL;
 }
@@ -1126,8 +1119,9 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
     i = DFSCH_FAST_CDR(i);
   }
 
-  if (i)
-    dfsch_error("Not a list", (object_t*)i);
+  if (i){
+    dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
+  }
 
   return NULL;
 }
@@ -1212,7 +1206,7 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
   i=alist;
   
   while (DFSCH_TYPE_OF(i) == PAIR){
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(i)) !=PAIR){
+    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(i)) != PAIR){
       dfsch_error("Not a alist",(object_t*)alist);
     }
 
@@ -1416,10 +1410,7 @@ static symbol_t* make_symbol(char *symbol){
 
 
 void dfsch_unintern(dfsch_object_t* symbol){
-  if (DFSCH_TYPE_OF(symbol) != SYMBOL)
-    dfsch_error("Not a symbol", symbol);
-
-  free_symbol((symbol_t*)symbol);
+  free_symbol((symbol_t*)DFSCH_ASSERT_TYPE(symbol, SYMBOL));
 }
 
 dfsch_object_t* dfsch_gensym(){
@@ -1454,10 +1445,7 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
-  if (DFSCH_TYPE_OF(symbol) != SYMBOL)
-    dfsch_error("Not a symbol", symbol);
-
-  return ((symbol_t*)symbol)->data;
+  return ((symbol_t*)DFSCH_ASSERT_TYPE(symbol, SYMBOL))->data;
 }
 
 char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
@@ -1617,7 +1605,6 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   return (object_t*)c;
   
 }
-
 
 // native code
 object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
@@ -1784,21 +1771,17 @@ dfsch_object_t* dfsch_vector(size_t count, ...){
 }
 
 size_t dfsch_vector_length(dfsch_object_t *vector){
-  if (DFSCH_TYPE_OF(vector) != VECTOR)
-    return 0;
-
-  return ((vector_t*)vector)->length;  
+  return ((vector_t*)DFSCH_ASSERT_TYPE(vector, VECTOR))->length;  
 }
 
 dfsch_object_t** dfsch_vector_as_array(dfsch_object_t *vector, size_t *length){
-  if (DFSCH_TYPE_OF(vector) != VECTOR)
-    dfsch_error("Not a vector",vector);
+  vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
   if (length){
-    *length = ((vector_t*)vector)->length;
+    *length = v->length;
   }
 
-  return ((vector_t*)vector)->data;
+  return v->data;
 }
 
 dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array, 
@@ -1814,35 +1797,30 @@ dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array,
 }
 
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
-  if (DFSCH_TYPE_OF(vector) != VECTOR)
-    dfsch_error("Not a vector",vector);
+  vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (((vector_t*)vector)->length <= k)
+  if (v->length <= k)
     dfsch_error("Invalid index",dfsch_make_number_from_long(k));
   
-  return ((vector_t*)vector)->data[k];
+  return v->data[k];
 }
 
 dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k, 
                                  dfsch_object_t* obj){
-  if (DFSCH_TYPE_OF(vector) != VECTOR)
-    dfsch_error("Not a vector",vector);
+  vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (((vector_t*)vector)->length <= k)
+  if (v->length <= k)
     dfsch_error("Invalid index",dfsch_make_number_from_long(k));
   
-  ((vector_t*)vector)->data[k] = obj;
+  v->data[k] = obj;
 
   return vector;
 }
 
 dfsch_object_t* dfsch_vector_2_list(dfsch_object_t* vector){
+  vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (DFSCH_TYPE_OF(vector) != VECTOR)
-    dfsch_error("Not a vector",vector);
-
-  return dfsch_list_from_array(((vector_t*)vector)->data, 
-                               ((vector_t*)vector)->length);
+  return dfsch_list_from_array(v->data, v->length);
 }
 
 dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
@@ -2111,8 +2089,8 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
   e->proc = NULL;
   e->args = NULL;
   
-  if (parent && DFSCH_TYPE_OF(parent) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", parent);
+  if (parent){
+    parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
   }
 
   e->parent = (environment_t*)parent;
@@ -2121,23 +2099,17 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
 }
 void dfsch_set_frame_context(dfsch_object_t* env, 
                              dfsch_object_t* proc, dfsch_object_t* args){
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   
-  ((environment_t*)env)->proc = proc;
-  ((environment_t*)env)->args = args;
+  e->proc = proc;
+  e->args = args;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
 
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
-
-  i = (environment_t*)env;
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
     if (dfsch_hash_ref_fast(i->values, name, &ret)){
       return ret;
@@ -2151,12 +2123,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
-
-  i = (environment_t*)env;
-
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
     object_t* ret = dfsch_hash_ref(i->values, name);
     if (ret){
@@ -2173,11 +2140,7 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
-
-  i = (environment_t*)env;
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
 
   while (i){
     if(dfsch_hash_set_if_exists(i->values, name, value))
@@ -2191,11 +2154,7 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
 void dfsch_unset(object_t* name, object_t* env){
   environment_t *i;
 
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
-
-  i = (environment_t*)env;
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
     if (i->decls){
       dfsch_hash_unset(i->decls, name);
@@ -2215,7 +2174,10 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
     dfsch_error("Not an environment", env);
   }
 
-  dfsch_hash_set(((environment_t*)env)->values, name, value);  
+  dfsch_hash_set(((environment_t*)
+                  DFSCH_ASSERT_TYPE(env, 
+                                    DFSCH_ENVIRONMENT_TYPE))->values, 
+                 name, value);  
 
   return value;
 
@@ -2224,28 +2186,22 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
 void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
                    dfsch_object_t* env){
   dfsch_object_t* old = NULL;
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
 
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
-  }
-
-  if (!((environment_t*)env)->decls){
-    ((environment_t*)env)->decls = dfsch_hash_make(DFSCH_HASH_EQ);
+  if (!e->decls){
+    e->decls = dfsch_hash_make(DFSCH_HASH_EQ);
   } else {
-    dfsch_hash_ref_fast(((environment_t*)env)->decls, variable, &old);
+    dfsch_hash_ref_fast(e->decls, variable, &old);
   }
   
-  dfsch_hash_set(((environment_t*)env)->decls, variable, 
+  dfsch_hash_set(e->decls, variable, 
                  dfsch_cons(declaration, old));  
 }
 
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
-  if (!DFSCH_INSTANCE_P(macro, MACRO)){
-    dfsch_error("Not a macro", macro);
-  }
 
-  return dfsch_apply(((macro_t*)macro)->proc, args);
+  return dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, MACRO))->proc, args);
 }
 
 // Evaluator

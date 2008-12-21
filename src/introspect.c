@@ -162,7 +162,6 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   return NULL;
 }
 
-
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
 
