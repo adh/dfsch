@@ -5,7 +5,7 @@ Non-version-specific:
 
 For 0.2.3:
 * Missing format directives (c and f)
-* Better writer (callback based)
+* Circular printer
 * Pretty-printer
 
 When needed by other code:
