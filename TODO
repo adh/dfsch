@@ -3,7 +3,7 @@ Non-version-specific:
 * Documentation
 * Packages (reasonable implementation is probably simpler than it looks)
 
-For 0.2.3:
+For 0.3.0:
 * Missing format directives (c and f)
 * Circular printer
 * Pretty-printer
