@@ -9,3 +9,10 @@ doxygen tags in source and source itself.
 An useful example how to use this library is binary `dfsch-repl'
 produced by compilation, it's source is `src/repl.c'. It's simple
 interactive interpreter with some additional convenience features.
+
+Interpreter depends on Boehm-Demers-Weiser conservative garbage
+collector, in theory it is possible to replace all calls to GC_MALLOC
+with malloc(3) for testing on platforms without working libgc (for
+example Interix), but running any non-toy code without working GC is
+not good idea. Console I/O library (used by REPL and debugger) is able
+to use readline, but can reasonably work without it.
