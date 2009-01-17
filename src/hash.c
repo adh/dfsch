@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #define FH_DEPTH 4
+#undef FH_DO_BLOOM
 #define INITIAL_MASK 0x07
 
 typedef struct hash_entry_t hash_entry_t;
@@ -40,7 +41,7 @@ typedef struct hash_t{
   int equal;
   dfsch_rwlock_t* lock;
 #ifdef FH_DEPTH
-  int fh_valid;
+  uint32_t fh_valid;
   dfsch_object_t* fh_keys[FH_DEPTH];
   dfsch_object_t* fh_values[FH_DEPTH];
 #endif
@@ -139,7 +140,7 @@ int dfsch_hash_p(dfsch_object_t* obj){
   }
 
 #define BIT_SET_P(word, bit) (((word) >> (bit)) & 0x01)
-#define BIT(bit) (1 << (bit))
+#define BIT(bit) (((uint32_t)1) << (bit))
 
 #ifdef FH_DEPTH
 #define FH_CACHE_SLOT(hash, h)                                          \
@@ -154,6 +155,10 @@ static void fh_flush_cache(hash_t* hash){
     hash->fh_values[j] = NULL;
   }
 }
+
+#ifdef FH_DO_BLOOM
+#define FH_BLOOM(h) (h)
+#endif
 
 #endif
 
@@ -188,6 +193,13 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     DFSCH_RWLOCK_UNLOCK(hash->lock);
     return 0;
   } else {
+#ifdef FH_BLOOM
+    if ((hash->fh_valid & FH_BLOOM(h)) != FH_BLOOM(h)){
+        DFSCH_RWLOCK_UNLOCK(hash->lock);
+        //       printf("bloom miss %x %x\n", hash->fh_valid, FH_BLOOM(h));
+        return 0;      
+    }
+#endif
     i = FH_CACHE_SLOT(hash, h);
     if (i){
       if (h == i->hash && 
@@ -276,6 +288,9 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   hash_entry_t *entry;
   hash_entry_t *i;
   int j;
+#ifdef FH_BLOOM
+  uint32_t tmp_valid;
+#endif
 
   GET_HASH(hash_obj, hash){
     IMPLEMENTS(hash_obj, set);
@@ -311,18 +326,30 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     
     hash->mask = INITIAL_MASK;
     hash->vector = alloc_vector(INITIAL_MASK);
-
+#ifdef FH_BLOOM
+    tmp_valid = 0;
+#endif
     for (j = 0; j < FH_DEPTH; j++){
       if (BIT_SET_P(hash->fh_valid, j)){
         ht = HASH(hash, hash->fh_keys[j]);
+#ifdef FH_BLOOM
+        tmp_valid |= FH_BLOOM(ht);
+#endif
         hash->count++;
         hash->vector[ht & hash->mask] = 
           alloc_entry(ht, hash->fh_keys[j], hash->fh_values[j],
                       hash->vector[ht & hash->mask]);
       }
     }
-
+    
     fh_flush_cache(hash);
+#ifdef FH_BLOOM
+    hash->fh_valid = tmp_valid;
+  } else {
+    hash->fh_valid |= FH_BLOOM(h);
+#else
+    hash->fh_valid = 0;
+#endif
   }
 #endif
 
