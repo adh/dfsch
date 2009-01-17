@@ -27,3 +27,4 @@
                              ,start-bytes)))))
 
 (measure-time "tak" (tak 24 16 8))
+(measure-time "takfp" (tak 24.0 16.0 8.0))
