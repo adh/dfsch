@@ -144,7 +144,7 @@ int dfsch_hash_p(dfsch_object_t* obj){
 
 #ifdef FH_DEPTH
 #define FH_CACHE_SLOT(hash, h)                                          \
-  (((hash_entry_t**)(((h) & 0x80) ?                                      \
+  (((hash_entry_t**)(((h) & 0x80) ?                                     \
                      (hash)->fh_values :                                \
                      (hash)->fh_keys))[(h) % FH_DEPTH])
 
