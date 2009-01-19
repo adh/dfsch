@@ -27,7 +27,10 @@
 #include <stdio.h>
 
 #define FH_DEPTH 4
-#undef FH_DO_BLOOM
+#ifdef __i386__
+/* Causes speedup on 32b Core, slowdown on 64b Core 2 */
+#define FH_DO_BLOOM
+#endif
 #define INITIAL_MASK 0x07
 
 typedef struct hash_entry_t hash_entry_t;
@@ -218,7 +221,9 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     if (h == i->hash && 
         (hash->equal ? dfsch_equal_p(i->key, key) : i->key == key)){
       *res = i->value;
+#ifdef FH_DEPTH
       FH_CACHE_SLOT(hash, h) = i;
+#endif
       DFSCH_RWLOCK_UNLOCK(hash->lock);
       return 1;
     }
@@ -256,9 +261,9 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
   int j;
   hash_entry_t *i;
   hash_entry_t **vector = alloc_vector(new_mask);
-
+#ifdef FH_DEPTH
   fh_flush_cache(hash);
-  
+#endif  
   for (j = 0; j <= hash->mask; j++){
     i = hash->vector[j];
     while (i){
@@ -511,7 +516,8 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
 
   DFSCH_RWLOCK_RDLOCK(hash->lock);
 
-  if (!hash->equal){
+#ifdef FH_DEPTH
+  if (!hash->vector){
     for (j = 0; j < FH_DEPTH; j++){
       if (BIT_SET_P(hash->fh_valid, j)){
         alist = dfsch_cons(dfsch_list(2,
@@ -520,9 +526,11 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
                            alist);
       }
     }
+    DFSCH_RWLOCK_UNLOCK(hash->lock);
+
+    return alist; 
   }
-  
-  if (hash->vector){
+#endif  
     for (j=0; j<(hash->mask+1); j++){
       i = hash->vector[j];
       while (i){
@@ -532,7 +540,6 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
                            alist);
         i = i->next;
       }
-    }
   }
   DFSCH_RWLOCK_UNLOCK(hash->lock);
 
