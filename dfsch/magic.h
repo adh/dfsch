@@ -61,6 +61,8 @@ extern "C" {
   };
 
   struct dfsch__thread_info_t {
+    char* break_type;
+
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
@@ -70,7 +72,7 @@ extern "C" {
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
 
-    char* break_type;
+    dfsch_object_t* env_cache;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();
