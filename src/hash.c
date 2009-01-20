@@ -26,11 +26,25 @@
 
 #include <stdio.h>
 
+/* 
+ * seems to be optimal value for both Core 1 and Core 2, not tested yet on 
+ * other CPUs or architectures
+ */
 #define FH_DEPTH 4
+
 #ifdef __i386__
-/* Causes speedup on 32b Core, slowdown on 64b Core 2 */
+/* 
+ * Causes speedup on 32b Core 1, slowdown on 64b Core 2
+ * This is definitely worth futher investigation (and better benchmark)
+ */
 #define FH_DO_BLOOM
 #endif
+
+/*
+ * This probably has no significant performance relevance other that it should
+ * be larger than FH_DEPTH (if defined), values lower than 0x03 probably do 
+ * not make sense anywhere.
+ */
 #define INITIAL_MASK 0x07
 
 typedef struct hash_entry_t hash_entry_t;
