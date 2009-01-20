@@ -1687,7 +1687,6 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->throw_ret = NULL;
     ei->stack_frame = GC_NEW(dfsch__stack_frame_t);
-    ei->stack_frame->arguments = NULL;
     ei->stack_frame->procedure = dfsch_make_symbol("toplevel");
     ei->stack_frame->next = NULL;
     ei->break_type = NULL;
@@ -2478,7 +2477,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
 
   f.procedure = proc;
-  f.arguments = args;
   ti->stack_frame = &f;
 
   /*

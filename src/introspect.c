@@ -6,7 +6,6 @@
 typedef struct stack_frame_t {
   dfsch_type_t* type;
   dfsch_object_t* procedure;
-  dfsch_object_t* arguments;
   int tail_recursive;
 
   dfsch_object_t* code;
@@ -20,8 +19,6 @@ static void stack_frame_write(stack_frame_t* sf, dfsch_writer_state_t* state){
 
   dfsch_write_unreadable_start(state, sf);
   dfsch_write_object(state, sf->procedure);
-  dfsch_write_string(state, " ");
-  dfsch_write_object(state, sf->arguments);
   if (sf->tail_recursive){
     dfsch_write_string(state, " tail-recursive");
   } 
@@ -37,9 +34,6 @@ static dfsch_object_t* stack_frame_apply(stack_frame_t* sf,
   
   if (dfsch_compare_symbol(selector, "procedure")){
     return sf->procedure;
-  }
-  if (dfsch_compare_symbol(selector, "arguments")){
-    return sf->arguments;
   }
   if (dfsch_compare_symbol(selector, "tail-recursive")){
     return dfsch_bool(sf->tail_recursive);
@@ -72,7 +66,6 @@ static dfsch_object_t* make_user_stack_frame(dfsch__stack_frame_t* nsf){
   stack_frame_t* sf = dfsch_make_object(DFSCH_USER_STACK_FRAME_TYPE);
 
   sf->procedure = nsf->procedure;
-  sf->arguments = nsf->arguments;
   sf->tail_recursive = nsf->tail_recursive;
 
   sf->code = nsf->code;
