@@ -8,7 +8,6 @@ For 0.3.0:
 * Circular printer
 * Pretty-printer
 * apply-related optimalizations (reduce consing)
-* reduce memory footprint of eq? hash
 
 When needed by other code:
 * Type predicates for all types
