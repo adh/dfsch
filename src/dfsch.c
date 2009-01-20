@@ -2085,9 +2085,6 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
 
   e->values = hash;
   e->decls = NULL;
-
-  e->proc = NULL;
-  e->args = NULL;
   
   if (parent){
     parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
@@ -2096,13 +2093,6 @@ dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent,
   e->parent = (environment_t*)parent;
     
   return (dfsch_object_t*)e;
-}
-void dfsch_set_frame_context(dfsch_object_t* env, 
-                             dfsch_object_t* proc, dfsch_object_t* args){
-  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
-  
-  e->proc = proc;
-  e->args = args;
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
@@ -2507,7 +2497,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     dfsch_object_t* env = dfsch_destructuring_bind(((closure_t*)proc)->args,
                                                    args,
                                                    ((closure_t*)proc)->env);
-    dfsch_set_frame_context(env, proc, args);
     r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
                            env,

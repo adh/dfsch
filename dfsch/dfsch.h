@@ -399,9 +399,6 @@ extern "C" {
   /** Create new environment frame from given hash table */
   extern dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
                                                    dfsch_object_t* hash);
-  extern void dfsch_set_frame_context(dfsch_object_t* env, 
-                                      dfsch_object_t* proc, 
-                                      dfsch_object_t* args);
 
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 

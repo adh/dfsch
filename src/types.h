@@ -46,8 +46,6 @@ struct environment_t {
   dfsch_type_t* type;
   dfsch_object_t* values;
   environment_t* parent;
-  dfsch_object_t* proc;
-  dfsch_object_t* args;
   dfsch_object_t* decls;
 };
 
