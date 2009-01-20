@@ -26,21 +26,29 @@
 
 #include <stdio.h>
 
-/* 
- * seems to be optimal value for both Core 1 and Core 2, not tested yet on 
+/* Number of directly stored key, value pairs. 
+ * Also used as size/2 of lookup cache (which reuses same slots in hash object
+ * when hash contains more values than FH_DEPTH)
+ * 4 seems to be optimal value for both Core 1 and Core 2, not tested yet on 
  * other CPUs or architectures
  */
 #define FH_DEPTH 4
 
 #ifdef __i386__
 /* 
- * Causes speedup on 32b Core 1, slowdown on 64b Core 2
+ * Use bloom filter to speed up searching for nonexisting keys
+ * Causes speedup of TAK on 32b Core 1 (why? it should not matter), 
+ *        slowdown on 64b Core 2 (understandable)
  * This is definitely worth futher investigation (and better benchmark)
+ * Better benchmark is something with comaparatively large (> FH_DEPTH 
+ * variables) non-top-level lexical environments.
  */
 #define FH_DO_BLOOM
 #endif
 
 /*
+ * Initial size of hash - 1. Must be 2^n-1 for some integer n 
+ *
  * This probably has no significant performance relevance other that it should
  * be larger than FH_DEPTH (if defined), values lower than 0x03 probably do 
  * not make sense anywhere.
