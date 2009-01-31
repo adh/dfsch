@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 VERSION=
 
 if [ "x$1" != "x" ]; then
