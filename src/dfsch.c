@@ -754,15 +754,15 @@ dfsch_object_t* dfsch_multicons(size_t n){
 }
 
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
-  return DFSCH_FAST_CAR(DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE));
+  return DFSCH_FAST_CAR(DFSCH_ASSERT_PAIR(pair));
 }
 dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
-  return DFSCH_FAST_CDR(DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE));
+  return DFSCH_FAST_CDR(DFSCH_ASSERT_PAIR(pair));
 }
 
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 			      dfsch_object_t* car){
-  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE);
+  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
 
   DFSCH_FAST_CAR(p) = car;
   
@@ -770,7 +770,7 @@ dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 }
 dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
-  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_PAIR_TYPE);
+  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
 
   DFSCH_FAST_CDR(p) = cdr;
   
@@ -783,13 +783,13 @@ long dfsch_list_length_fast(object_t* list){
   if (!list)
     return 0;
 
-  if (DFSCH_TYPE_OF(list) != PAIR)
+  if (!DFSCH_PAIR_P(list))
     return -1;
 
   i = list;
   count = 0;
 
-  while (DFSCH_TYPE_OF(i) == PAIR ){
+  while (DFSCH_PAIR_P(i)){
     i = DFSCH_FAST_CDR(i);
     ++count;
   }
@@ -804,24 +804,27 @@ long dfsch_list_length(object_t* list){
   if (!list)
     return 0;
 
-  if (DFSCH_TYPE_OF(list) != PAIR)
+  if (!DFSCH_PAIR_P(list))
     return -1;
 
   i = j = list;
   count = 0;
 
-  while (DFSCH_TYPE_OF(i) == PAIR){
+  while (DFSCH_PAIR_P(i)){
     i = DFSCH_FAST_CDR(i);
     ++count;
-    if (i == j)
+    if (i == j) {
       return -1;
+    }
     j = DFSCH_FAST_CDR(j);
-    if (!(DFSCH_TYPE_OF(i) == PAIR))
+    if (!DFSCH_PAIR_P(i)){
       break;
+    }
     i = DFSCH_FAST_CDR(i);
     ++count;
-    if (i == j)
+    if (i == j) {
       return -1;
+    }
   }
 
   if (i)
@@ -842,7 +845,7 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   dfsch_object_t* it = list;
   int i;
   for (i=0; i<index; ++i){
-    if (DFSCH_TYPE_OF(it) == PAIR){
+    if (DFSCH_PAIR_P(it)){
       it = DFSCH_FAST_CDR(it);
     }else{
       dfsch_error("No such item of list", dfsch_make_number_from_long(index));
@@ -877,7 +880,7 @@ dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
   len = dfsch_list_length_check(list);
   data = GC_MALLOC(sizeof(object_t*)*len);
   
-  while (DFSCH_TYPE_OF(j) == PAIR){
+  while (DFSCH_PAIR_P(j)){
     if (i >= len){
       break; /* Can happen due to race condition in user code */
     }

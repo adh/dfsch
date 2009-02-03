@@ -257,9 +257,9 @@ struct dfsch_slot_t {
 
 /*
  * Object pointer tag meaning:
- * 00 - Normal object, first word is type
- * 10 - Pair - points to two words (car, cdr)
- * x1 - Fixnum
+ * 000 - Normal object, first word is type
+ * xx0 - Pair - points to two words (car, cdr) (xx != 00)
+ * xx1 - Fixnum
  */
 
 extern dfsch_type_t dfsch_pair_type;
@@ -273,7 +273,7 @@ typedef struct dfsch_pair_t {
 
 
 #define DFSCH_PAIR_REF(obj)                     \
-  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x03L))
+  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x07L))
 #define DFSCH_PAIR_ENCODE(obj)                  \
   ((dfsch_object_t*)(((size_t)(obj)) | 0x02L))
 
@@ -282,7 +282,7 @@ typedef struct dfsch_pair_t {
 #define DFSCH_FAST_CDR(obj)                     \
   (DFSCH_PAIR_REF(obj)->cdr)
 #define DFSCH_PAIR_P(obj)                       \
-  ((((size_t)(obj)) & 0x03) == 2)
+  (((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0))
 
 #define DFSCH_FIXNUM_REF(obj)                   \
   (((long)(((ptrdiff_t)(obj)) & ~0x01L)) >> 1)
@@ -294,9 +294,9 @@ typedef struct dfsch_pair_t {
 
 #define DFSCH_TYPE_OF(obj)                                              \
   ((obj)?(                                                              \
-          (((size_t)(obj)) & 0x03) == 0 ? ((dfsch_object_t*)(obj))->type: \
-          ((((size_t)(obj)) & 0x03) == 2 ? DFSCH_PAIR_TYPE:             \
-           DFSCH_FIXNUM_TYPE)):                                         \
+          (((size_t)(obj)) & 0x07) == 0 ? ((dfsch_object_t*)(obj))->type: \
+          ((((size_t)(obj)) & 0x01) == 1 ? DFSCH_FIXNUM_TYPE:           \
+           DFSCH_PAIR_TYPE)):                                           \
    DFSCH_EMPTY_LIST_TYPE)
 
   
@@ -307,6 +307,9 @@ typedef struct dfsch_pair_t {
   ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+
+#define DFSCH_ASSERT_PAIR(p)                                            \
+  (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
 
 
 #endif
