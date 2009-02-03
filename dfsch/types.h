@@ -22,6 +22,27 @@
 #ifndef H__dfsch__types__
 #define H__dfsch__types__
 
+/*
+ * Ugly hack:
+ *
+ * On non-gcc compilers one can effectively force alignment to be 8 bytes by
+ * inserting dummy value of any type that requires 8-byte alignment into 
+ * struct. double seems like something that requires 8-byte alignment.
+ */
+
+#if __SIZEOF_POINTER__ == 8
+# define DFSCH_ALIGN8_ATTR  
+# define DFSCH_ALIGN8_DUMMY 
+#else
+# ifdef __GNUC__
+#  define DFSCH_ALIGN8_ATTR  __attribute__ ((__aligned__(8)))
+#  define DFSCH_ALIGN8_DUMMY 
+# else
+#  define DFSCH_ALIGN8_ATTR  
+#  define DFSCH_ALIGN8_DUMMY double alignment_dummy_value;
+# endif
+#endif
+
 #include <stddef.h>
 
 extern dfsch_type_t dfsch_abstract_type;
@@ -59,7 +80,8 @@ typedef struct dfsch_primitive_t {
   void *baton;
   int flags;
   char* name;
-} dfsch_primitive_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
 extern dfsch_type_t dfsch_primitive_type;
 
@@ -109,7 +131,8 @@ struct dfsch_form_t {
   dfsch_form_impl_t impl;
   void* baton;
   char* name;
-};
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR;
 
 extern dfsch_type_t dfsch_form_type;
 
@@ -195,7 +218,8 @@ struct dfsch_type_t {
    */
   dfsch_type_hash_t hash;
   dfsch_slot_t* slots;
-};
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR;
 
 typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr);
 typedef void (*dfsch_accessor_set_t)(void* ptr, dfsch_object_t* obj);
@@ -205,7 +229,8 @@ typedef struct dfsch_slot_type_t {
   dfsch_accessor_ref_t ref;
   dfsch_accessor_set_t set;
   size_t size;
-} dfsch_slot_type_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_slot_type_t;
 
 extern dfsch_type_t dfsch_slot_type_type;
 #define DFSCH_SLOT_TYPE_TYPE (&dfsch_slot_type_type)
@@ -230,7 +255,8 @@ struct dfsch_slot_t {
   char* name;
   size_t offset;
   int access;
-};
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR;
 
 #define DFSCH_SLOT_ACCESS_RW          0
 #define DFSCH_SLOT_ACCESS_DEBUG_WRITE 1
@@ -269,7 +295,8 @@ extern dfsch_type_t dfsch_pair_type;
 typedef struct dfsch_pair_t {
   dfsch_object_t* car;
   dfsch_object_t* cdr;
-} dfsch_pair_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_pair_t;
 
 
 #define DFSCH_PAIR_REF(obj)                     \
