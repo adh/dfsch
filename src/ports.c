@@ -221,7 +221,8 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
 
 typedef struct eof_object_t{
   dfsch_type_t* type;
-} eof_object_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR eof_object_t;
 
 dfsch_type_t dfsch_eof_object_type = {
   DFSCH_STANDARD_TYPE,
