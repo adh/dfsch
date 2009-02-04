@@ -291,6 +291,12 @@ struct dfsch_slot_t {
 extern dfsch_type_t dfsch_pair_type;
 #define DFSCH_PAIR_TYPE (&dfsch_pair_type)
 
+extern dfsch_type_t dfsch_pair_types[4];
+#define DFSCH_MUTABLE_PAIR_TYPE (&(dfsch_pair_types[1]))
+#define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_pair_types[2]))
+#define DFSCH_ANNOTATED_PAIR_TYPE (&(dfsch_pair_types[3]))
+
+
 
 typedef struct dfsch_pair_t {
   dfsch_object_t* car;
@@ -323,7 +329,7 @@ typedef struct dfsch_pair_t {
   ((obj)?(                                                              \
           (((size_t)(obj)) & 0x07) == 0 ? ((dfsch_object_t*)(obj))->type: \
           ((((size_t)(obj)) & 0x01) == 1 ? DFSCH_FIXNUM_TYPE:           \
-           DFSCH_PAIR_TYPE)):                                           \
+           &(dfsch_pair_types[(((size_t)(obj)) & 0x06) >> 1]))):        \
    DFSCH_EMPTY_LIST_TYPE)
 
   

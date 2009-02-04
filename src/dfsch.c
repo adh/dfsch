@@ -480,7 +480,7 @@ static void pair_write(dfsch_object_t*p, dfsch_writer_state_t* state){
   int c = 0;
     
   dfsch_write_string(state, "(");
-  while (DFSCH_TYPE_OF(i) == DFSCH_PAIR_TYPE){
+  while (DFSCH_PAIR_P(i)){
     dfsch_write_object(state, DFSCH_FAST_CAR(i));
     i = DFSCH_FAST_CDR(i);
     if (i == j){
@@ -506,7 +506,7 @@ static void pair_write(dfsch_object_t*p, dfsch_writer_state_t* state){
   dfsch_write_string(state, ")");  
 }
 dfsch_type_t dfsch_pair_type = {
-  DFSCH_SPECIAL_TYPE,
+  DFSCH_ABSTRACT_TYPE,
   DFSCH_LIST_TYPE,
   sizeof(dfsch_pair_t), 
   "pair",
@@ -517,6 +517,43 @@ dfsch_type_t dfsch_pair_type = {
   NULL
 };
 #define PAIR (&dfsch_pair_type)
+
+dfsch_type_t dfsch_pair_types[4] = {
+  {},
+  {
+    DFSCH_SPECIAL_TYPE,
+    DFSCH_PAIR_TYPE,
+    sizeof(dfsch_pair_t), 
+    "mutable-pair",
+    (dfsch_type_equal_p_t)pair_equal_p,
+    (dfsch_type_write_t)pair_write,
+    NULL,
+    (dfsch_type_hash_t)pair_hash,
+    NULL
+  },
+  {
+    DFSCH_SPECIAL_TYPE,
+    DFSCH_PAIR_TYPE,
+    sizeof(dfsch_pair_t), 
+    "immutable-pair",
+    (dfsch_type_equal_p_t)pair_equal_p,
+    (dfsch_type_write_t)pair_write,
+    NULL,
+    (dfsch_type_hash_t)pair_hash,
+    NULL
+  },
+  {
+    DFSCH_SPECIAL_TYPE,
+    DFSCH_IMMUTABLE_PAIR_TYPE,
+    sizeof(dfsch_pair_t), 
+    "annotated-pair",
+    (dfsch_type_equal_p_t)pair_equal_p,
+    (dfsch_type_write_t)pair_write,
+    NULL,
+    (dfsch_type_hash_t)pair_hash,
+    NULL
+  },
+};
 
 
 static dfsch_slot_t symbol_slots[] = {
@@ -687,13 +724,13 @@ int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
 }
 int dfsch_pair_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == PAIR;
+  return DFSCH_PAIR_P(obj);
 }
 int dfsch_list_p(dfsch_object_t* obj){
   return DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE);
 }
 int dfsch_atom_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) != PAIR;
+  return !DFSCH_PAIR_P(obj);
 }
 int dfsch_symbol_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == SYMBOL;
@@ -923,7 +960,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 	}
 	goto out;
       }
-      if (DFSCH_TYPE_OF(args[i]) != PAIR){
+      if (!DFSCH_PAIR_P(args[i])){
 	dfsch_type_error(args[i], DFSCH_PAIR_TYPE, 0);
       }
 
@@ -970,11 +1007,10 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   if (!llist)
     return NULL;
 
-  while(DFSCH_TYPE_OF(i) == PAIR &&  
-        DFSCH_TYPE_OF(DFSCH_FAST_CDR(i)) == PAIR){
+  while(DFSCH_PAIR_P(i) && DFSCH_PAIR_P(DFSCH_FAST_CDR(i))){
     
     j = DFSCH_FAST_CAR(i);
-    while(DFSCH_TYPE_OF(j) == PAIR){
+    while(DFSCH_PAIR_P(j)){
       if (head){
         object_t* tmp = dfsch_cons(DFSCH_FAST_CAR(j),NULL);
         DFSCH_FAST_CDR(tail) = tmp;
@@ -984,14 +1020,14 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
       }
       j = DFSCH_FAST_CDR(j);
     }
-    if (j && DFSCH_TYPE_OF(j) != PAIR) {
+    if (j && !DFSCH_PAIR_P(j)) {
       dfsch_type_error(j, PAIR, 0);
     }
 
     i = DFSCH_FAST_CDR(i);
   }
 
-  if (DFSCH_TYPE_OF(i) != PAIR){
+  if (!DFSCH_PAIR_P(i)){
     dfsch_type_error(i, PAIR, 0);
   }
 
@@ -1034,7 +1070,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
 
   head = tail = NULL;
 
-  while(DFSCH_TYPE_OF(i) == PAIR){
+  while(DFSCH_PAIR_P(i)){
     if (head){
       object_t* tmp = dfsch_cons(DFSCH_FAST_CAR(i),NULL);
       DFSCH_FAST_CDR(tail) = tmp;
@@ -1044,7 +1080,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
     }
     i = DFSCH_FAST_CDR(i);
   }
-  if (i && DFSCH_TYPE_OF(i) != PAIR){
+  if (i && !DFSCH_PAIR_P(i)){
     dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
   }
 
@@ -1058,7 +1094,7 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
 
   head = NULL;
 
-  while(DFSCH_TYPE_OF(i) == PAIR){
+  while(DFSCH_PAIR_P(i)){
     head = dfsch_cons(DFSCH_FAST_CAR(i), head);
     i = DFSCH_FAST_CDR(i);
   }
@@ -1074,7 +1110,7 @@ dfsch_object_t* dfsch_member(dfsch_object_t *key,
   dfsch_object_t* i;
   i=list;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
+  while (DFSCH_PAIR_P(i)){
     if (dfsch_equal_p(key, DFSCH_FAST_CAR(i))){
       return (object_t*)i;
     }
@@ -1094,7 +1130,7 @@ dfsch_object_t* dfsch_memv(dfsch_object_t *key,
   dfsch_object_t* i;
   i=list;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
+  while (DFSCH_PAIR_P(i)){
     if (dfsch_eqv_p(key, DFSCH_FAST_CAR(i))){
       return (object_t*)i;
     }
@@ -1114,7 +1150,7 @@ dfsch_object_t* dfsch_memq(dfsch_object_t *key,
   dfsch_object_t* i;
   i=list;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
+  while (DFSCH_PAIR_P(i)){
     if (key == DFSCH_FAST_CAR(i)){
       return (object_t*)i;
     }
@@ -1208,8 +1244,8 @@ dfsch_object_t* dfsch_assoc(dfsch_object_t *key,
 
   i=alist;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(i)) != PAIR){
+  while (DFSCH_PAIR_P(i)){
+    if (!DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
       dfsch_error("Not a alist",(object_t*)alist);
     }
 
@@ -1234,8 +1270,8 @@ dfsch_object_t* dfsch_assq(dfsch_object_t *key,
 
   i=alist;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(i)) !=PAIR){
+  while (DFSCH_PAIR_P(i)){
+    if (!DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
       dfsch_error("Not a alist",(object_t*)alist);
     }
 
@@ -1259,8 +1295,8 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
 
   i=alist;
   
-  while (DFSCH_TYPE_OF(i) == PAIR){
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(i)) !=PAIR){
+  while (DFSCH_PAIR_P(i)){
+    if (!DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
       dfsch_error("Not a alist",(object_t*)alist);
     }
 
@@ -2252,7 +2288,7 @@ static object_t* eval_list(object_t *list, object_t* env,
     return NULL;
 
   i = list;
-  while (DFSCH_TYPE_OF(i) ==PAIR){
+  while (DFSCH_PAIR_P(i)){
     r = dfsch_eval_impl(DFSCH_FAST_CAR(i), env, NULL, ti);
 
     t = dfsch_cons(r,NULL);
@@ -2293,7 +2329,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     return dfsch_lookup(exp,env);
   }
 
-  if(DFSCH_TYPE_OF(exp) == PAIR){
+  if(DFSCH_PAIR_P(exp)){
     
     object_t *f = dfsch_eval_impl(DFSCH_FAST_CAR(exp), env, NULL, ti);
 
@@ -2343,10 +2379,9 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 static void destructure_impl(dfsch_object_t* llist,
                              dfsch_object_t* list,
                              dfsch_object_t* hash){
-  while ((DFSCH_TYPE_OF(llist) == PAIR) &&
-	 (DFSCH_TYPE_OF(list) == PAIR)){
+  while (DFSCH_PAIR_P(llist) && DFSCH_PAIR_P(list)){
 
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(llist)) == PAIR){
+    if (DFSCH_PAIR_P(DFSCH_FAST_CAR(llist))){
       destructure_impl(DFSCH_FAST_CAR(llist), 
                        DFSCH_FAST_CAR(list), 
                        hash);
@@ -2359,7 +2394,7 @@ static void destructure_impl(dfsch_object_t* llist,
     
   }
 
-  if (DFSCH_TYPE_OF(llist) != PAIR){
+  if (!DFSCH_PAIR_P(llist)){
     dfsch_hash_set(hash, (object_t*)llist, (object_t*)list);
     return;
   }
@@ -2417,7 +2452,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
 
   i = code;
 
-  while (DFSCH_TYPE_OF(i) == PAIR ){
+  while (DFSCH_PAIR_P(i)){
     object_t* exp = DFSCH_FAST_CAR(i); 
 
     if (DFSCH_FAST_CDR(i))
@@ -2581,6 +2616,9 @@ dfsch_object_t* dfsch_make_context(){
 
   dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
   dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
+  dfsch_define_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
+  dfsch_define_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
+  dfsch_define_cstr(ctx, "<annotated-pair>", DFSCH_ANNOTATED_PAIR_TYPE);
   dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
   dfsch_define_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
   dfsch_define_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
