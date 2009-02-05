@@ -326,7 +326,7 @@ typedef struct dfsch_pair_t {
 
 
 #define DFSCH__FAST_CDR_CODED_P(pair)           \
-  (((size_t)(pair)) & 0x01 == 0x01)
+  (((size_t)(pair)) & 0x03 == 0x03)
 #define DFSCH__COMPACT_LIST_CDR(ptr)                                    \
   (((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[1] == DFSCH_INVALID_OBJECT ? \
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
@@ -346,7 +346,8 @@ typedef struct dfsch_pair_t {
    DFSCH__COMPACT_LIST_CDR(obj):                                \
    (DFSCH_PAIR_REF(obj)->cdr))
 #define DFSCH_PAIR_P(obj)                                               \
-  (((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0))
+  ((((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0)) \
+   || ((((size_t)(obj)) & 0x03) == 0x03))
 
 #define DFSCH_FIXNUM_REF(obj)                   \
   (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 2)

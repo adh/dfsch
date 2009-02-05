@@ -77,7 +77,7 @@
                   (test 'eqv?-nil
                         (eqv? () ())
                         #t)
-                  (test 'eqv?-nil
+                  (test 'eqv?-t
                         (eqv? () #t)
                         #f)
 
