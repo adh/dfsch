@@ -301,7 +301,9 @@ struct dfsch_slot_t {
  * All ones - invalid object marker (e.g. end of CDR-coded list or invalid 
  *                                   weak reference)
  *
- * Idea is, that structure of loaded code should consists from 
+ * Idea is that structure of loaded code should consist of annotated pairs 
+ * and CDR-coded sections. Immutable pairs are strictly not necessary, but 
+ * still are good idea (for consistency and might be useful in user-code)
  */
 
 extern dfsch_type_t dfsch_pair_type;
@@ -326,7 +328,7 @@ typedef struct dfsch_pair_t {
   (((size_t)(pair)) & 0x01 == 0x01)
 #define DFSCH__COMPACT_LIST_CDR(ptr)                                    \
   (((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[1] == DFSCH_INVALID_OBJECT ? \
-   NULL :                                                               \
+   ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
    (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 
 #define DFSCH_PAIR_REF(obj)                     \
