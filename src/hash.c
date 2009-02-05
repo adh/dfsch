@@ -42,8 +42,11 @@
  * This is definitely worth futher investigation (and better benchmark)
  * Better benchmark is something with comaparatively large (> FH_DEPTH 
  * variables) non-top-level lexical environments.
+ *
+ * There is some slight bug somewhere. Obviously some valid object 
+ * hashes to zero
  */
-#define FH_DO_BLOOM
+//#define FH_DO_BLOOM
 #endif
 
 /*
