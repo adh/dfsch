@@ -30,6 +30,7 @@
 #include <math.h>
 #include <errno.h>
 #include <stdio.h>
+#include <assert.h>
 
 typedef dfsch_object_t object_t;
 
@@ -687,19 +688,19 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
-    long an = DFSCH_FIXNUM_REF(a)<<1;
+    long an = DFSCH_FIXNUM_REF(a)<<2;
     long bn = DFSCH_FIXNUM_REF(b);
     long x = an * bn;
     double xd = (double)an * (double)bn;
     
     if (x == xd){
-      return DFSCH_MAKE_FIXNUM(x>>1);
+      return DFSCH_MAKE_FIXNUM(x>>2);
     }else{
       double d = x > xd ? x - xd : xd - x;
       double p = xd >= 0 ? xd : -xd;
       
       if (32.0 * d <= p){
-	return DFSCH_MAKE_FIXNUM(x>>1);
+	return DFSCH_MAKE_FIXNUM(x>>2);
       }
     }
   }

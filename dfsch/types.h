@@ -326,7 +326,7 @@ typedef struct dfsch_pair_t {
 
 
 #define DFSCH__FAST_CDR_CODED_P(pair)           \
-  (((size_t)(pair)) & 0x03 == 0x03)
+  ((((size_t)(pair)) & 0x03) == 0x03)
 #define DFSCH__COMPACT_LIST_CDR(ptr)                                    \
   (((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[1] == DFSCH_INVALID_OBJECT ? \
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
