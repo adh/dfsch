@@ -282,10 +282,26 @@ struct dfsch_slot_t {
 
 
 /*
+ * Objects should be always 8-byte aligned in memory, even on 32b platforms.
+ * When this is not true this encoding will not work. In fact, there are other
+ * plausible representations, but introducing (backtroducing?) type pointers 
+ * into pair is not good idea, as any overhead on pairs consumes memory, and
+ * more importantly increases amount of cache misses.
+ *
  * Object pointer tag meaning:
  * 000 - Normal object, first word is type
- * xx0 - Pair - points to two words (car, cdr) (xx != 00)
- * xx1 - Fixnum
+ * 010 - Mutable (normal, as returned by cons) pair
+ * 100 - Immutable pair
+ * 110 - Annotated pair - Immutable pair + source location info
+ * x01 - Entry of cdr-coded list (pointer points to WORD(!), not object)
+ * x11 - Fixnum
+ *
+ * And there are two special values of object pointer:
+ * All zeroes - empty list
+ * All ones - invalid object marker (e.g. end of CDR-coded list or invalid 
+ *                                   weak reference)
+ *
+ * Idea is, that structure of loaded code should consists from 
  */
 
 extern dfsch_type_t dfsch_pair_type;
@@ -295,8 +311,9 @@ extern dfsch_type_t dfsch_pair_types[4];
 #define DFSCH_MUTABLE_PAIR_TYPE (&(dfsch_pair_types[1]))
 #define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_pair_types[2]))
 #define DFSCH_ANNOTATED_PAIR_TYPE (&(dfsch_pair_types[3]))
+#define DFSCH_COMPACT_LIST_TYPE (&(dfsch_pair_types[0]))
 
-
+#define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((size_t) -1))
 
 typedef struct dfsch_pair_t {
   dfsch_object_t* car;
@@ -305,6 +322,13 @@ typedef struct dfsch_pair_t {
 } DFSCH_ALIGN8_ATTR dfsch_pair_t;
 
 
+#define DFSCH__FAST_CDR_CODED_P(pair)           \
+  (((size_t)(pair)) & 0x01 == 0x01)
+#define DFSCH__COMPACT_LIST_CDR(ptr)                                    \
+  (((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[1] == DFSCH_INVALID_OBJECT ? \
+   NULL :                                                               \
+   (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
+
 #define DFSCH_PAIR_REF(obj)                     \
   ((dfsch_pair_t*)(((size_t)(obj)) & ~0x07L))
 #define DFSCH_PAIR_ENCODE(obj)                  \
@@ -312,23 +336,29 @@ typedef struct dfsch_pair_t {
 
 #define DFSCH_FAST_CAR(obj)                     \
   (DFSCH_PAIR_REF(obj)->car)
-#define DFSCH_FAST_CDR(obj)                     \
+#define DFSCH_FAST_CDR_MUT(obj)                 \
   (DFSCH_PAIR_REF(obj)->cdr)
-#define DFSCH_PAIR_P(obj)                       \
+#define DFSCH_FAST_CDR(obj)                                     \
+  (DFSCH__FAST_CDR_CODED_P(obj) ?                               \
+   DFSCH__COMPACT_LIST_CDR(obj):                                \
+   (DFSCH_PAIR_REF(obj)->cdr))
+#define DFSCH_PAIR_P(obj)                                               \
   (((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0))
 
 #define DFSCH_FIXNUM_REF(obj)                   \
-  (((long)(((ptrdiff_t)(obj)) & ~0x01L)) >> 1)
+  (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 2)
 #define DFSCH_MAKE_FIXNUM(obj)                                  \
-  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 1) | 0x01L))
-#define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 2)
-#define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 2)
+  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 2) | 0x01L))
+#define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 4)
+#define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 4)
 
 
 #define DFSCH_TYPE_OF(obj)                                              \
   ((obj)?(                                                              \
           (((size_t)(obj)) & 0x07) == 0 ? ((dfsch_object_t*)(obj))->type: \
-          ((((size_t)(obj)) & 0x01) == 1 ? DFSCH_FIXNUM_TYPE:           \
+          ((((size_t)(obj)) & 0x01) == 0x01 ?                           \
+           ((((size_t)(obj)) & 0x02) == 0x00 ?                          \
+            DFSCH_FIXNUM_TYPE : DFSCH_COMPACT_LIST_TYPE):               \
            &(dfsch_pair_types[(((size_t)(obj)) & 0x06) >> 1]))):        \
    DFSCH_EMPTY_LIST_TYPE)
 

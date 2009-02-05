@@ -312,7 +312,7 @@ dfsch_object_t* dfsch_get_slots(dfsch_type_t* type){
         if (!head) {
           head = tail = tmp;
         } else {
-          DFSCH_FAST_CDR(tail) = tmp;
+          DFSCH_FAST_CDR_MUT(tail) = tmp;
           tail = tmp;
         }
         i++;
@@ -809,7 +809,7 @@ dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
   dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
 
-  DFSCH_FAST_CDR(p) = cdr;
+  DFSCH_FAST_CDR_MUT(p) = cdr;
   
   return p;
 }
@@ -966,7 +966,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 
       tmp = dfsch_cons(DFSCH_FAST_CAR(args[i]), NULL);
       if (shead){
-        DFSCH_FAST_CDR(stail) = tmp;
+        DFSCH_FAST_CDR_MUT(stail) = tmp;
       } else {
         shead = tmp;
       }
@@ -978,7 +978,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 
     tmp = dfsch_cons(shead, NULL);
     if (head){
-      DFSCH_FAST_CDR(tail) = tmp;
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
     } else {
       head = tmp;
     }
@@ -998,7 +998,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 }
 
 
-dfsch_object_t* dfsch_append(dfsch_object_t* llist){
+dfsch_object_t* dfsch_append(dfsch_object_t* llist){ // TODO: verify this!
   dfsch_object_t* head=NULL;
   dfsch_object_t* tail=NULL;
   dfsch_object_t* i = llist;
@@ -1013,7 +1013,7 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
     while(DFSCH_PAIR_P(j)){
       if (head){
         object_t* tmp = dfsch_cons(DFSCH_FAST_CAR(j),NULL);
-        DFSCH_FAST_CDR(tail) = tmp;
+        DFSCH_FAST_CDR_MUT(tail) = tmp;
         tail = tmp;
       }else{
         head = tail = dfsch_cons(DFSCH_FAST_CAR(j),NULL);
@@ -1032,7 +1032,7 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   }
 
   if (tail){
-    DFSCH_FAST_CDR(tail) = DFSCH_FAST_CAR(i);
+    DFSCH_FAST_CDR_MUT(tail) = DFSCH_FAST_CAR(i);
   }else{
     head = DFSCH_FAST_CAR(i);
   }
@@ -1073,7 +1073,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   while(DFSCH_PAIR_P(i)){
     if (head){
       object_t* tmp = dfsch_cons(DFSCH_FAST_CAR(i),NULL);
-      DFSCH_FAST_CDR(tail) = tmp;
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
       tail = tmp;
     }else{
       head = tail = dfsch_cons(DFSCH_FAST_CAR(i),NULL);
@@ -1218,9 +1218,9 @@ dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
           e = p;
           p = DFSCH_FAST_CDR(p);
         }
-        DFSCH_FAST_CDR(e) = NULL;
+        DFSCH_FAST_CDR_MUT(e) = NULL;
         if (l) {
-          DFSCH_FAST_CDR(lt) = e;
+          DFSCH_FAST_CDR_MUT(lt) = e;
           lt = e;
         } else {
           l = lt = e;
@@ -2293,7 +2293,7 @@ static object_t* eval_list(object_t *list, object_t* env,
 
     t = dfsch_cons(r,NULL);
     if (f){
-      DFSCH_FAST_CDR(p) = (object_t*)t;
+      DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
       p = t;
     }else{
       f = (object_t*)(p = t);

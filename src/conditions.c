@@ -256,7 +256,7 @@ dfsch_object_t* dfsch_compute_restarts(){
   while (i){
     dfsch_object_t* tmp = dfsch_cons(i->restart, NULL); 
     if (head){
-      DFSCH_FAST_CDR(tail) = tmp;
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
       tail = tmp;
     } else {
       head = tail = tmp;

@@ -354,7 +354,7 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
     object_t *tmp;
     
     tmp = dfsch_cons(DFSCH_MAKE_FIXNUM(s->buf.ptr[i]),NULL);
-    DFSCH_FAST_CDR(tail) = tmp;
+    DFSCH_FAST_CDR_MUT(tail) = tmp;
     tail = tmp;
 
   }
@@ -541,7 +541,7 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
     tmp = dfsch_cons(dfsch_make_number_from_long(get_char(i, e)), 
                      NULL);
     if (head){
-      DFSCH_FAST_CDR(tail) = tmp;
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
       tail = tmp;
     }else{
       head = tail = tmp;

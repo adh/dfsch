@@ -86,7 +86,7 @@ dfsch_object_t* dfsch_get_stack_trace(){
 
   while(i){
     dfsch_object_t* tmp = dfsch_cons(make_user_stack_frame(i), NULL);
-    DFSCH_FAST_CDR(tail) = tmp;
+    DFSCH_FAST_CDR_MUT(tail) = tmp;
     tail = tmp;
     i = i->next;
   }
