@@ -293,13 +293,14 @@ struct dfsch_slot_t {
  * 010 - Mutable (normal, as returned by cons) pair
  * 100 - Immutable pair
  * 110 - Annotated pair - Immutable pair + source location info
- * x01 - Entry of cdr-coded list (pointer points to WORD(!), not object)
- * x11 - Fixnum
+ * x01 - Fixnum (cannot be 11, because of invalid object marker)
+ * x11 - Entry of cdr-coded list (pointer points to WORD(!), not object)
  *
  * And there are two special values of object pointer:
  * All zeroes - empty list
  * All ones - invalid object marker (e.g. end of CDR-coded list or invalid 
- *                                   weak reference)
+ *            weak reference, with important point is that weak-references 
+ *            are set to this value by GC, and this is not simply changed)
  *
  * Idea is that structure of loaded code should consist of annotated pairs 
  * and CDR-coded sections. Immutable pairs are strictly not necessary, but 
