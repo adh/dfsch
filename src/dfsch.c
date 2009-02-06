@@ -799,7 +799,7 @@ dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
 
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 			      dfsch_object_t* car){
-  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
+  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_MUTABLE_PAIR_TYPE);
 
   DFSCH_FAST_CAR(p) = car;
   
@@ -807,7 +807,7 @@ dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
 }
 dfsch_object_t* dfsch_set_cdr(dfsch_object_t* pair,
 			      dfsch_object_t* cdr){
-  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
+  dfsch_object_t* p = DFSCH_ASSERT_TYPE(pair, DFSCH_MUTABLE_PAIR_TYPE);
 
   DFSCH_FAST_CDR_MUT(p) = cdr;
   
