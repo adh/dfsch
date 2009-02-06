@@ -519,7 +519,17 @@ dfsch_type_t dfsch_pair_type = {
 #define PAIR (&dfsch_pair_type)
 
 dfsch_type_t dfsch_pair_types[4] = {
-  {},
+  {
+    DFSCH_SPECIAL_TYPE,
+    DFSCH_IMMUTABLE_PAIR_TYPE,
+    sizeof(dfsch_pair_t), 
+    "compact-list",
+    (dfsch_type_equal_p_t)pair_equal_p,
+    (dfsch_type_write_t)pair_write,
+    NULL,
+    (dfsch_type_hash_t)pair_hash,
+    NULL
+  },
   {
     DFSCH_SPECIAL_TYPE,
     DFSCH_PAIR_TYPE,

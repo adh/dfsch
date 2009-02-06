@@ -130,7 +130,6 @@ void noninteractive_repl(dfsch_object_t* ctx){
   puts("");
 }
 
-
 int main(int argc, char**argv){
   int c;
   dfsch_object_t* ctx;
