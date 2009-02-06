@@ -784,12 +784,11 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
 }
 
 dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
-  dfsch_pair_t* p = GC_NEW_STUBBORN(dfsch_pair_t);
+  dfsch_pair_t* p = GC_NEW(dfsch_pair_t);
 
   p->car = car;
   p->cdr = cdr;
 
-  GC_end_stubborn_change(p);
   return DFSCH_PAIR_ENCODE(p, 0x04);
 }
 
