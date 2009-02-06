@@ -998,7 +998,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 }
 
 
-dfsch_object_t* dfsch_append(dfsch_object_t* llist){ // TODO: verify this!
+dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   dfsch_object_t* head=NULL;
   dfsch_object_t* tail=NULL;
   dfsch_object_t* i = llist;

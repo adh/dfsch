@@ -9,6 +9,8 @@ For 0.3.0:
 * Pretty-printer
 * apply-related optimalizations (reduce consing)
 * pair classes (immutable, mutable, annotated)
+* immutable pair and list constructors (copy, append...)
+* function to verify mutability of whole list (e.g. for sort)
 
 When needed by other code:
 * Type predicates for all types
