@@ -220,6 +220,10 @@ extern "C" {
   extern long dfsch_list_length_fast(dfsch_object_t* list);
   /** Returns number of items in given finite list, fail otherwise */
   extern long dfsch_list_length_check(dfsch_object_t* list);
+  /** Check whenever list is mutable */
+  extern int dfsch_list_mutable_p(dfsch_object_t* list);
+  /** Return mutable list - argument if it is mutable, fresh copy if not */
+  extern dfsch_object_t* dfsch_ensure_mutable_list(dfsch_object_t* list);
   /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
   /** Construct list from C array. */

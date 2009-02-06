@@ -870,6 +870,52 @@ long dfsch_list_length(object_t* list){
   return count;
 }
 
+int dfsch_list_mutable_p(object_t* list){
+  dfsch_object_t *i;
+  dfsch_object_t *j; 
+  long count;
+
+  if (!list)
+    return 1;
+
+  if (!DFSCH_TYPE_OF(list) == DFSCH_MUTABLE_PAIR_TYPE){
+    return 0;
+  }
+
+  i = j = list;
+  count = 0;
+
+  while (DFSCH_TYPE_OF(i) == DFSCH_MUTABLE_PAIR_TYPE){
+    i = DFSCH_FAST_CDR(i);
+    ++count;
+    if (i == j) {
+      return 0;
+    }
+    j = DFSCH_FAST_CDR(j);
+    if (!DFSCH_TYPE_OF(i) == DFSCH_MUTABLE_PAIR_TYPE){
+      break;
+    }
+    i = DFSCH_FAST_CDR(i);
+    ++count;
+    if (i == j) {
+      return 0;
+    }
+  }
+
+  if (i)
+    return 0;
+
+  return 1;
+}
+
+dfsch_object_t* dfsch_ensure_mutable_list(dfsch_object_t* list){
+  if (dfsch_list_mutable_p(list)){
+    return list;
+  }
+  dfsch_list_length_check(list);
+  return dfsch_list_copy(list);
+}
+
 long dfsch_list_length_check(object_t* list){
   long len;
   len = dfsch_list_length(list);
@@ -1182,8 +1228,8 @@ dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
   size_t i;
   dfsch_object_t* e;
 
+  list = dfsch_ensure_mutable_list(list);
   l = list;
-  dfsch_list_length(list);
 
   do {
     nmerges = 0;
