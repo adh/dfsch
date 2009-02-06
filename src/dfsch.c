@@ -780,8 +780,19 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
   p->car = car;
   p->cdr = cdr;
 
-  return DFSCH_PAIR_ENCODE(p);
+  return DFSCH_PAIR_ENCODE(p, 0x02);
 }
+
+dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
+  dfsch_pair_t* p = GC_NEW_STUBBORN(dfsch_pair_t);
+
+  p->car = car;
+  p->cdr = cdr;
+
+  GC_end_stubborn_change(p);
+  return DFSCH_PAIR_ENCODE(p, 0x04);
+}
+
 
 dfsch_object_t* dfsch_multicons(size_t n){
   size_t i;
@@ -794,10 +805,10 @@ dfsch_object_t* dfsch_multicons(size_t n){
   p = GC_MALLOC(sizeof(dfsch_pair_t)*n);
 
   for (i = 0; i < (n-1); i++){
-    p[i].cdr = DFSCH_PAIR_ENCODE(&(p[i+1]));
+    p[i].cdr = DFSCH_PAIR_ENCODE(&(p[i+1]), 0x02);
   }
 
-  return DFSCH_PAIR_ENCODE(&(p[0]));
+  return DFSCH_PAIR_ENCODE(&(p[0]), 0x02);
 }
 
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){

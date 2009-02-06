@@ -201,6 +201,9 @@ extern "C" {
 
   /** Construct pair object */
   extern dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr);
+  /** Construct immutable pair object */
+  extern dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, 
+                                              dfsch_object_t* cdr);
 
   /** Return first (car) item of pair */
   extern dfsch_object_t* dfsch_car(dfsch_object_t* pair);
