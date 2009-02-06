@@ -90,7 +90,7 @@ dfsch_number_type_t dfsch_bignum_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_INTEGER_TYPE,
   sizeof(bignum_t),
-  "transient-bignum",
+  "bignum",
   (dfsch_type_equal_p_t)dfsch_bignum_equal_p,
   (dfsch_type_write_t)bignum_write,
   NULL,
