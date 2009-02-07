@@ -208,8 +208,8 @@ static void rwlock_finalizer(pthread_rwlock_t* lock, void* cd){
 }
 pthread_rwlock_t* dfsch_create_finalized_rwlock(){
   pthread_rwlock_t* lock = GC_MALLOC_ATOMIC(sizeof(pthread_rwlock_t));
-  GC_REGISTER_FINALIZER(lock, (GC_finalization_proc)rwlock_finalizer,
-                        NULL, NULL, NULL);
+  /*  GC_REGISTER_FINALIZER(lock, (GC_finalization_proc)rwlock_finalizer,
+      NULL, NULL, NULL);*/
   pthread_rwlock_init(lock, NULL);
   return lock;
 }

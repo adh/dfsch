@@ -58,14 +58,22 @@ char* dfsch_saprintf(char* format, ...);
 #define DFSCH_RWLOCK_WRLOCK(l) pthread_rwlock_wrlock(l)
 #define DFSCH_RWLOCK_UNLOCK(l) pthread_rwlock_unlock(l)
 #define DFSCH_CREATE_RWLOCK dfsch_create_finalized_rwlock
+#define DFSCH_INIT_RWLOCK(l) pthread_rwlock_init(l, NULL)
+#define DFSCH_DESTROY_RWLOCK(l) pthread_rwlock_destroy(l)
 typedef pthread_rwlock_t dfsch_rwlock_t;
 #else
 #define DFSCH_RWLOCK_RDLOCK(l) pthread_mutex_lock(l)
 #define DFSCH_RWLOCK_WRLOCK(l) pthread_mutex_lock(l)
 #define DFSCH_RWLOCK_UNLOCK(l) pthread_mutex_unlock(l)
 #define DFSCH_CREATE_RWLOCK dfsch_create_finalized_mutex
+#define DFSCH_INIT_RWLOCK(l) pthread_mutex_init(l, NULL)
+#define DFSCH_DESTROY_RWLOCK(l) pthread_mutex_destroy(l)
 typedef pthread_mutex_t dfsch_rwlock_t;
 #endif
 
+#if !defined(__linux__)
+/* pthread_mutex_destroy() is noop on (at least) linux */
+#define DFSCH_THREADS_FINALIZE
+#endif
 
 #endif
