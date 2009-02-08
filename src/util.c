@@ -185,8 +185,10 @@ static void mutex_finalizer(pthread_mutex_t* mutex, void* cd){
 
 pthread_mutex_t* dfsch_create_finalized_mutex(){
   pthread_mutex_t* mutex = GC_MALLOC_ATOMIC(sizeof(pthread_mutex_t));
-  GC_REGISTER_FINALIZER(mutex, (GC_finalization_proc)mutex_finalizer,
-                        NULL, NULL, NULL);
+#ifdef DFSCH_THREADS_FINALIZE
+  GC_REGISTER_FINALIZER_NO_ORDER(mutex, (GC_finalization_proc)mutex_finalizer,
+                                 NULL, NULL, NULL);
+#endif
   pthread_mutex_init(mutex, NULL);
   return mutex;
 }
@@ -196,8 +198,10 @@ static void cvar_finalizer(pthread_cond_t* cvar, void* cd){
 
 pthread_cond_t* dfsch_create_finalized_cvar(){
   pthread_cond_t* cvar = GC_MALLOC_ATOMIC(sizeof(pthread_cond_t));
-  GC_REGISTER_FINALIZER(cvar, (GC_finalization_proc)cvar_finalizer,
-                        NULL, NULL, NULL);
+#ifdef DFSCH_THREADS_FINALIZE
+  GC_REGISTER_FINALIZER_NO_ORDER(cvar, (GC_finalization_proc)cvar_finalizer,
+                                 NULL, NULL, NULL);
+#endif
   pthread_cond_init(cvar, NULL);
   return cvar;
 }
