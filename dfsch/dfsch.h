@@ -218,7 +218,7 @@ extern "C" {
 				       dfsch_object_t* c);
 
   /** Returns number of items in given list or -1 for infinite lists */
-  extern long dfsch_list_length(dfsch_object_t* list);
+  extern long dfsch_list_length(dfsch_object_t* list, int* proper);
   /** Returns number of items in given finite list */
   extern long dfsch_list_length_fast(dfsch_object_t* list);
   /** Returns number of items in given finite list, fail otherwise */

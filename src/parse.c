@@ -485,7 +485,7 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
   if (ctx->parser && (ctx->parser->state == P_PREEND || 
                       ctx->parser->state == P_LIST)){
     dfsch_object_t *list;
-    list = ctx->parser->front;
+    list = dfsch_list_copy_immutable(ctx->parser->front);
     parser_pop(ctx);
     parse_object(ctx, list);
   }else{

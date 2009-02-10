@@ -55,7 +55,7 @@ dfsch_parser_ctx_t *parser;
 
 static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
                                     dfsch_tail_escape_t* esc){
-  switch (dfsch_list_length(args)){
+  switch (dfsch_list_length_check(args)){
   case 0:
     exit(0);
   case 1:

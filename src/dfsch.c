@@ -853,7 +853,7 @@ long dfsch_list_length_fast(object_t* list){
 
   return count;
 }
-long dfsch_list_length(object_t* list){
+long dfsch_list_length(object_t* list, int *proper){
   dfsch_object_t *i;
   dfsch_object_t *j; 
   long count;
@@ -884,8 +884,13 @@ long dfsch_list_length(object_t* list){
     }
   }
 
-  if (i)
-    return -1;
+  if (proper){
+    *proper = (i == NULL);
+  } else { 
+    if (i) {
+      return -1;
+    }
+  } 
 
   return count;
 }
@@ -938,7 +943,7 @@ dfsch_object_t* dfsch_ensure_mutable_list(dfsch_object_t* list){
 
 long dfsch_list_length_check(object_t* list){
   long len;
-  len = dfsch_list_length(list);
+  len = dfsch_list_length(list, NULL);
   if (len < 0)
     dfsch_type_error(list, DFSCH_LIST_TYPE, 1);
   return len;
@@ -998,6 +1003,44 @@ dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
 
   return data;
 }
+
+dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list, 
+                                          size_t* length){
+  dfsch_object_t* j = list;
+  size_t i=0;
+  size_t len;
+  object_t** data;
+  int proper;
+
+  if (list == NULL){
+    return NULL;
+  }
+
+  len = dfsch_list_length(list, &proper);
+
+  if (len == 1){
+    return dfsch_cons_immutable(dfsch_car(list),
+                                dfsch_cdr(list));
+  }
+
+  data = GC_MALLOC(sizeof(object_t*)*(len+2));
+  
+  while (DFSCH_PAIR_P(j)){
+    if (i >= len){
+      break; /* Can happen due to race condition in user code */
+    }
+    data[i] = DFSCH_FAST_CAR(j);
+    j = DFSCH_FAST_CDR(j);
+    i++;
+  }
+
+  data[i] = DFSCH_INVALID_OBJECT;
+  i++;
+  data[i] = j;
+
+  return DFSCH_PAIR_ENCODE(data, 0x03);
+}
+
 
 dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
   size_t len;
@@ -1153,6 +1196,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   return (object_t*)head;
 
 }
+
 
 dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
   object_t *head; 

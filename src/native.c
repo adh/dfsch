@@ -328,11 +328,8 @@ DFSCH_DEFINE_PRIMITIVE(length, DFSCH_PRIMITIVE_CACHED){
   long len;
   NEED_ARGS(args,1);  
 
-  len = dfsch_list_length(dfsch_car(args));
+  len = dfsch_list_length_check(dfsch_car(args));
 
-  if (len < 0)
-    dfsch_error("exception:not-a-list", dfsch_car(args));
-  
   return dfsch_make_number_from_long(len);
 }
 DFSCH_DEFINE_PRIMITIVE(set_car, DFSCH_PRIMITIVE_CACHED){

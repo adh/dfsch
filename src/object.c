@@ -55,7 +55,7 @@ dfsch_type_t dfsch_class_type = {
 
 static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
   dfsch_object_t* i = slot_desc;
-  size_t slot_count = dfsch_list_length(slot_desc);
+  size_t slot_count = dfsch_list_length_check(slot_desc);
   dfsch_slot_t* slots = GC_MALLOC((slot_count + 1) * sizeof(dfsch_slot_t));
   dfsch_slot_t* j = slots;
 

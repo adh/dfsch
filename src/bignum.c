@@ -966,7 +966,7 @@ static bignum_t* make_bignum_from_digits(dfsch_object_t* dl){
   size_t len;
   size_t i;
   bignum_t* b;
-  len = dfsch_list_length(dl);
+  len = dfsch_list_length_check(dl);
   b = make_bignum(len);
   i = len - 1;
   while (DFSCH_PAIR_P(dl)){

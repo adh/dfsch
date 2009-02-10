@@ -433,14 +433,10 @@ DFSCH_DEFINE_FORM_IMPL(provide){
 
 static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc){
-  if (dfsch_list_length(args)!=1)
-    dfsch_error("wrong-number-of-arguments",args);
+  char* filename;
+  DFSCH_STRING_ARG(args, filename);
 
-  dfsch_object_t*arg = dfsch_car(args);
-  if (!dfsch_string_p(arg))
-    dfsch_error("not-a-string",arg);
-
-  return dfsch_read_scm(dfsch_string_to_cstr(arg));
+  return dfsch_read_scm(filename);
 }
 
 
