@@ -332,8 +332,9 @@ typedef struct dfsch_pair_t {
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
    (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 
-#define DFSCH_PAIR_REF(obj)                     \
-  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x07L))
+#define DFSCH_PAIR_REF(obj)						\
+  ((dfsch_pair_t*)(((size_t)(obj)) & (DFSCH__FAST_CDR_CODED_P(obj) ?	\
+				      ~0x03L : ~0x07L)))
 #define DFSCH_PAIR_ENCODE(obj, kind)            \
   ((dfsch_object_t*)(((size_t)(obj)) | (kind)))
 
