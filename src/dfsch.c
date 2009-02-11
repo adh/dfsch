@@ -96,8 +96,14 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   if (!a || !b)
     return 0;
 
-  if (DFSCH_TYPE_OF(a) != DFSCH_TYPE_OF(b))
-    return 0;
+  if (DFSCH_TYPE_OF(a) != DFSCH_TYPE_OF(b)){
+    if (DFSCH_PAIR_P(a) && DFSCH_PAIR_P(b)){
+      return (dfsch_equal_p(DFSCH_FAST_CAR(a), DFSCH_FAST_CAR(b)) &&
+              dfsch_equal_p(DFSCH_FAST_CDR(a), DFSCH_FAST_CDR(b)));
+    } else {
+      return 0;
+    }
+  }
 
   if (!DFSCH_TYPE_OF(a))
     return 0;
