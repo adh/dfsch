@@ -2497,10 +2497,8 @@ static void destructure_impl(dfsch_object_t* llist,
                              dfsch_object_t* hash){
   while (DFSCH_PAIR_P(llist) && DFSCH_PAIR_P(list)){
 
-    if (DFSCH_PAIR_P(DFSCH_FAST_CAR(llist))){
-      destructure_impl(DFSCH_FAST_CAR(llist), 
-                       DFSCH_FAST_CAR(list), 
-                       hash);
+    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(llist)) != DFSCH_SYMBOL_TYPE){
+      dfsch_type_error(DFSCH_FAST_CAR(llist), DFSCH_SYMBOL_TYPE, 0);
     } else {
       dfsch_hash_set(hash, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
     }
