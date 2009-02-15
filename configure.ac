@@ -62,7 +62,7 @@ AC_ARG_ENABLE([profile],
   AC_HELP_STRING([--enable-profile], [Enable profiling]))
 
 if test x"$enable_profile" = x"yes"; then 
-   CFLAGS="$CFLAGS -pg"
+   CFLAGS="$CFLAGS -pg -fno-omit-frame-pointer -fno-inline-functions -fno-optimize-sibling-calls"
 fi 
 
 AC_ARG_WITH([readline],
