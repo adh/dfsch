@@ -62,17 +62,16 @@ typedef struct hash_entry_t hash_entry_t;
 
 typedef struct hash_t{
   dfsch_type_t* type;
-  dfsch_object_t* proc;
-  size_t count;
-  size_t mask;
-  hash_entry_t** vector;
   int equal;
-  dfsch_rwlock_t lock;
+  hash_entry_t** vector;
 #ifdef FH_DEPTH
   uint32_t fh_valid;
   dfsch_object_t* fh_keys[FH_DEPTH];
   dfsch_object_t* fh_values[FH_DEPTH];
 #endif
+  size_t count;
+  size_t mask;
+  dfsch_rwlock_t lock;
 }hash_t;
 
 struct hash_entry_t {
