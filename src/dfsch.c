@@ -2553,7 +2553,6 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
                                             tail_escape_t* esc,
                                             dfsch__thread_info_t* ti){
   dfsch_object_t *i;
-  object_t *r=NULL;
   dfsch_object_t *old_frame;
   dfsch_object_t *my_frame;
 
