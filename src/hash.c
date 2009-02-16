@@ -434,8 +434,7 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
   if (hash->vector == NULL){
     for (j = 0; j < FH_DEPTH; j++){
       if (BIT_SET_P(hash->fh_valid, j)){
-        if (hash->equal ? dfsch_equal_p(hash->fh_keys[j], key) 
-            : hash->fh_keys[j] == key){
+        if (hash->fh_keys[j] == key){
           hash->fh_values[j] = value;
           DFSCH_RWLOCK_UNLOCK(&hash->lock);
           return;
