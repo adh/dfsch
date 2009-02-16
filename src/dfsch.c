@@ -2506,7 +2506,7 @@ static void destructure_impl(dfsch_object_t* llist,
     if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(llist)) != DFSCH_SYMBOL_TYPE){
       dfsch_type_error(DFSCH_FAST_CAR(llist), DFSCH_SYMBOL_TYPE, 0);
     } else {
-      dfsch_hash_set(hash, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
+      dfsch_hash_put(hash, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
     }
 
     llist = DFSCH_FAST_CDR(llist);
@@ -2515,7 +2515,7 @@ static void destructure_impl(dfsch_object_t* llist,
   }
 
   if (!DFSCH_PAIR_P(llist)){
-    dfsch_hash_set(hash, (object_t*)llist, (object_t*)list);
+    dfsch_hash_put(hash, (object_t*)llist, (object_t*)list);
     return;
   }
 

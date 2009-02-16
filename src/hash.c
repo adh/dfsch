@@ -366,10 +366,59 @@ static void fh_promote(hash_t* hash){
 }
 #endif
 
+void dfsch_hash_put(dfsch_object_t* hash_obj,
+                    dfsch_object_t* key,
+                    dfsch_object_t* value){
+  hash_t *hash;
+  size_t h;
+  int j;
+
+  GET_HASH(hash_obj, hash){
+    IMPLEMENTS(hash_obj, set);
+    HASH_TYPE(hash_obj)->set(hash_obj, key, value);
+    return;
+  };
+
+  h = HASH(hash, key);  /* should be done unlocked to avoid deadlock */
+
+  DFSCH_RWLOCK_WRLOCK(&hash->lock);
+
+#ifdef FH_DEPTH
+  if (hash->vector == NULL){
+    for (j = 0; j < FH_DEPTH; j++){
+      if (!BIT_SET_P(hash->fh_valid, j)){
+        hash->fh_valid |= BIT(j);
+        hash->fh_keys[j] = key;
+        hash->fh_values[j] = value;
+        DFSCH_RWLOCK_UNLOCK(&hash->lock);
+        return;
+      }
+    }
+    /* Fast lookup slots are full - promote to normal hash */
+    fh_promote(hash);   
+  }
+#ifdef FH_BLOOM
+  hash->fh_valid |= FH_BLOOM(h);
+#endif
+#endif
+
+  hash->count++;
+  if (hash->count > (hash->mask+1)){ // Should table grow?
+    hash_change_size(hash, ((hash->mask+1) * 2) - 1);
+  }
+
+  hash->vector[h & hash->mask] = alloc_entry(h,
+                                             key,
+                                             value,
+                                             hash->vector[h & hash->mask]);
+  
+  DFSCH_RWLOCK_UNLOCK(&hash->lock);  
+}
+
 void dfsch_hash_set(dfsch_object_t* hash_obj,
                     dfsch_object_t* key,
                     dfsch_object_t* value){
-  size_t h, len, count, ht;
+  size_t h;
   hash_t *hash;
   hash_entry_t *entry;
   hash_entry_t *i;
