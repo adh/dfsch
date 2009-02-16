@@ -331,9 +331,9 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
   hash->vector = vector;
 }
 
-dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
-                               dfsch_object_t* key,
-                               dfsch_object_t* value){
+void dfsch_hash_set(dfsch_object_t* hash_obj,
+                    dfsch_object_t* key,
+                    dfsch_object_t* value){
   size_t h, len, count, ht;
   hash_t *hash;
   hash_entry_t *entry;
@@ -346,7 +346,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
   GET_HASH(hash_obj, hash){
     IMPLEMENTS(hash_obj, set);
     HASH_TYPE(hash_obj)->set(hash_obj, key, value);
-    return hash_obj;
+    return;
   };
 
 
@@ -361,7 +361,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
             : hash->fh_keys[j] == key){
           hash->fh_values[j] = value;
           DFSCH_RWLOCK_UNLOCK(&hash->lock);
-          return hash_obj;
+          return;
         }
       }
     }
@@ -371,7 +371,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
         hash->fh_keys[j] = key;
         hash->fh_values[j] = value;
         DFSCH_RWLOCK_UNLOCK(&hash->lock);
-        return hash_obj;
+        return;
       }
     }
     
@@ -394,12 +394,12 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
     }
     
     fh_flush_cache(hash);
-#ifdef FH_BLOOM
+#ifndef FH_BLOOM
+    hash->fh_valid = 0;
+#else
     hash->fh_valid = tmp_valid;
   } else {
     hash->fh_valid |= FH_BLOOM(h);
-#else
-    hash->fh_valid = 0;
 #endif
   }
 #endif
@@ -411,7 +411,7 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
         (hash->equal ? dfsch_equal_p(i->key, key) : i->key == key)){
       i->value = value;
       DFSCH_RWLOCK_UNLOCK(&hash->lock);
-      return hash_obj;
+      return;
     } 
     i = i->next;
   }
@@ -429,7 +429,6 @@ dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash_obj,
                                              hash->vector[h & hash->mask]);
   
   DFSCH_RWLOCK_UNLOCK(&hash->lock);
-  return hash_obj;
 }
 
 int dfsch_hash_unset(dfsch_object_t* hash_obj,
@@ -672,7 +671,8 @@ static dfsch_object_t* native_hash_set(void* baton, dfsch_object_t* args,
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
-  return dfsch_hash_set(hash, key, value);
+  dfsch_hash_set(hash, key, value);
+  return hash;
 }
 static dfsch_object_t* native_hash_set_if_exists(void* baton, 
                                                  dfsch_object_t* args,

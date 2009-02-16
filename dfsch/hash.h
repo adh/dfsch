@@ -64,9 +64,9 @@ extern "C" {
   /**
    * Associate value with key
    */
-  extern dfsch_object_t* dfsch_hash_set(dfsch_object_t* hash,
-                                        dfsch_object_t* key,
-                                        dfsch_object_t* value);
+  extern void dfsch_hash_set(dfsch_object_t* hash,
+                             dfsch_object_t* key,
+                             dfsch_object_t* value);
 
   /**
    * Delete given key.
