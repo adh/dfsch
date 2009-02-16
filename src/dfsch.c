@@ -2575,15 +2575,16 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
   while (DFSCH_PAIR_P(i)){
     object_t* exp = DFSCH_FAST_CAR(i); 
 
-    if (DFSCH_FAST_CDR(i))
-      r = dfsch_eval_impl(exp, env, NULL, ti);
-    else
-      r = dfsch_eval_impl(exp, env, esc, ti);
+    if (DFSCH_FAST_CDR(i)) {
+      dfsch_eval_impl(exp, env, NULL, ti);
+    } else {
+      return dfsch_eval_impl(exp, env, esc, ti);
+    }
    
     i = DFSCH_FAST_CDR(i);
   }
 
-  return r;
+  dfsch_error("eval-proc called on improper list", code);
 }
 
 dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
