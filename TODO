@@ -8,7 +8,6 @@ For 0.3.0:
 * Circular printer
 * Pretty-printer
 * apply-related optimalizations (reduce consing)
-* pair classes (immutable, mutable, annotated)
 * immutable pair and list constructors (copy, append...)
 
 When needed by other code:
