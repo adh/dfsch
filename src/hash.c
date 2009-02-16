@@ -46,7 +46,7 @@
  * There is some slight bug somewhere. Obviously some valid object 
  * hashes to zero
  */
-//#define FH_DO_BLOOM
+#define FH_DO_BLOOM
 #endif
 
 /*

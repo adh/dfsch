@@ -2407,7 +2407,7 @@ static object_t* eval_list(object_t *list, object_t* env,
   while (DFSCH_PAIR_P(i)){
     r = dfsch_eval_impl(DFSCH_FAST_CAR(i), env, NULL, ti);
 
-    t = dfsch_cons(r,NULL);
+    t = dfsch_cons(r, NULL);
     if (f){
       DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
       p = t;
@@ -2442,12 +2442,18 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if(DFSCH_TYPE_OF(exp) == SYMBOL){
     ti->stack_frame->env = env;
     ti->stack_frame->expr = exp;
-    return dfsch_lookup(exp,env);
+    return dfsch_lookup(exp, env);
   }
 
   if(DFSCH_PAIR_P(exp)){
     
-    object_t *f = dfsch_eval_impl(DFSCH_FAST_CAR(exp), env, NULL, ti);
+    object_t *f = DFSCH_FAST_CAR(exp);
+
+    if (DFSCH_TYPE_OF(f) == DFSCH_SYMBOL_TYPE){
+      f = dfsch_lookup(f, env);
+    } else {
+      f = dfsch_eval_impl(f , env, NULL, ti);
+    }
 
     
     if (DFSCH_TYPE_OF(f) == FORM){
