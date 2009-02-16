@@ -211,24 +211,20 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     return HASH_TYPE(hash_obj)->ref(hash_obj, key, res);
   };
 
-
-
-  DFSCH_RWLOCK_RDLOCK(&hash->lock);
 #ifdef FH_DEPTH
   if (hash->vector == NULL){
     for (j = 0; j < FH_DEPTH; j++){
       if (BIT_SET_P(hash->fh_valid, j)){
         if (hash->fh_keys[j] == key){
           *res = hash->fh_values[j];
-          DFSCH_RWLOCK_UNLOCK(&hash->lock);
           return 1;
         }
       }
     }
-    DFSCH_RWLOCK_UNLOCK(&hash->lock);
     return 0;
   }
 #endif
+  DFSCH_RWLOCK_RDLOCK(&hash->lock);
   h = HASH(hash, key);
 #ifdef FH_DEPTH
 #ifdef FH_BLOOM
