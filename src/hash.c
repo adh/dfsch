@@ -193,7 +193,7 @@ static void fh_flush_cache(hash_t* hash){
 }
 
 #ifdef FH_DO_BLOOM
-#define FH_BLOOM(h) (h)
+#define FH_BLOOM(h) (BIT((h) & 0x1f))
 #endif
 
 #endif
@@ -331,6 +331,41 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
   hash->vector = vector;
 }
 
+#ifdef FH_DEPTH
+static void fh_promote(hash_t* hash){
+  size_t ht;
+#ifdef FH_BLOOM
+  uint32_t tmp_valid;
+#endif
+  int j;
+
+  hash->mask = INITIAL_MASK;
+  hash->vector = alloc_vector(INITIAL_MASK);
+#ifdef FH_BLOOM
+  tmp_valid = 0;
+#endif
+  for (j = 0; j < FH_DEPTH; j++){
+    if (BIT_SET_P(hash->fh_valid, j)){
+      ht = HASH(hash, hash->fh_keys[j]);
+#ifdef FH_BLOOM
+      tmp_valid |= FH_BLOOM(ht);
+#endif
+      hash->count++;
+      hash->vector[ht & hash->mask] = 
+        alloc_entry(ht, hash->fh_keys[j], hash->fh_values[j],
+                    hash->vector[ht & hash->mask]);
+    }
+  }
+  
+  fh_flush_cache(hash);
+#ifndef FH_BLOOM
+  hash->fh_valid = 0;
+#else
+  hash->fh_valid = tmp_valid;
+#endif  
+}
+#endif
+
 void dfsch_hash_set(dfsch_object_t* hash_obj,
                     dfsch_object_t* key,
                     dfsch_object_t* value){
@@ -339,9 +374,6 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
   hash_entry_t *entry;
   hash_entry_t *i;
   int j;
-#ifdef FH_BLOOM
-  uint32_t tmp_valid;
-#endif
 
   GET_HASH(hash_obj, hash){
     IMPLEMENTS(hash_obj, set);
@@ -374,34 +406,12 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
         return;
       }
     }
-    
-    hash->mask = INITIAL_MASK;
-    hash->vector = alloc_vector(INITIAL_MASK);
-#ifdef FH_BLOOM
-    tmp_valid = 0;
-#endif
-    for (j = 0; j < FH_DEPTH; j++){
-      if (BIT_SET_P(hash->fh_valid, j)){
-        ht = HASH(hash, hash->fh_keys[j]);
-#ifdef FH_BLOOM
-        tmp_valid |= FH_BLOOM(ht);
-#endif
-        hash->count++;
-        hash->vector[ht & hash->mask] = 
-          alloc_entry(ht, hash->fh_keys[j], hash->fh_values[j],
-                      hash->vector[ht & hash->mask]);
-      }
-    }
-    
-    fh_flush_cache(hash);
-#ifndef FH_BLOOM
-    hash->fh_valid = 0;
-#else
-    hash->fh_valid = tmp_valid;
-  } else {
-    hash->fh_valid |= FH_BLOOM(h);
-#endif
+    /* Fast lookup slots are full - promote to normal hash */
+    fh_promote(hash);   
   }
+#ifdef FH_BLOOM
+  hash->fh_valid |= FH_BLOOM(h);
+#endif
 #endif
 
   i = entry = hash->vector[h & hash->mask];
