@@ -321,6 +321,15 @@ DFSCH_DEFINE_PRIMITIVE(cons, DFSCH_PRIMITIVE_CACHED){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
+DFSCH_DEFINE_PRIMITIVE(cons_immutable, DFSCH_PRIMITIVE_CACHED){
+  dfsch_object_t* car;
+  dfsch_object_t* cdr;
+  DFSCH_OBJECT_ARG(args, car);
+  DFSCH_OBJECT_ARG(args, cdr);
+  DFSCH_ARG_END(args);
+  return dfsch_cons_immutable(car, cdr);
+}
+
 DFSCH_DEFINE_PRIMITIVE(list, DFSCH_PRIMITIVE_CACHED){
   return dfsch_list_copy(args);
 }
@@ -905,6 +914,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
   dfsch_define_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
   dfsch_define_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
+  dfsch_define_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
   dfsch_define_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
   dfsch_define_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
   dfsch_define_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
