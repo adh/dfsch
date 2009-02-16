@@ -250,17 +250,30 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
 
   i = hash->vector[h & hash->mask];
 
-  while (i){
-    if (h == i->hash && 
-        (hash->equal ? dfsch_equal_p(i->key, key) : i->key == key)){
-      *res = i->value;
+  if (hash->equal){
+    while (i){
+      if (h == i->hash && dfsch_equal_p(i->key, key)){
+        *res = i->value;
 #ifdef FH_DEPTH
-      FH_CACHE_SLOT(hash, h) = i;
+        FH_CACHE_SLOT(hash, h) = i;
 #endif
-      DFSCH_RWLOCK_UNLOCK(&hash->lock);
-      return 1;
+        DFSCH_RWLOCK_UNLOCK(&hash->lock);
+        return 1;
+      }
+      i = i->next;
     }
-    i = i->next;
+  } else { 
+    while (i){
+      if (h == i->hash && i->key == key){
+        *res = i->value;
+#ifdef FH_DEPTH
+        FH_CACHE_SLOT(hash, h) = i;
+#endif
+        DFSCH_RWLOCK_UNLOCK(&hash->lock);
+        return 1;
+      }
+      i = i->next;
+    }
   }
 
   DFSCH_RWLOCK_UNLOCK(&hash->lock);
