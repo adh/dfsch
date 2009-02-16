@@ -212,7 +212,6 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
   };
 
 
-  h = HASH(hash, key);  /* should be unlocked to avoid deadlock */
 
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
 #ifdef FH_DEPTH
@@ -228,7 +227,10 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     }
     DFSCH_RWLOCK_UNLOCK(&hash->lock);
     return 0;
-  } else {
+  }
+#endif
+  h = HASH(hash, key);
+#ifdef FH_DEPTH
 #ifdef FH_BLOOM
     if ((hash->fh_valid & FH_BLOOM(h)) != FH_BLOOM(h)){
         DFSCH_RWLOCK_UNLOCK(&hash->lock);
@@ -245,7 +247,6 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
         return 1;
       }
     }
-  }
 #endif
 
   i = hash->vector[h & hash->mask];
@@ -379,7 +380,7 @@ void dfsch_hash_put(dfsch_object_t* hash_obj,
     return;
   };
 
-  h = HASH(hash, key);  /* should be done unlocked to avoid deadlock */
+  h = HASH(hash, key); 
 
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
 
@@ -431,7 +432,7 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
   };
 
 
-  h = HASH(hash, key);  /* should be done unlocked to avoid deadlock */
+  h = HASH(hash, key);
 
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
 #ifdef FH_DEPTH
