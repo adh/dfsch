@@ -613,6 +613,31 @@ dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   return (object_t*)string;
 }
 
+char* dfsch_char_encode(uint32_t c){
+  char* ptr = GC_MALLOC_ATOMIC(5);
+  if (c <= 0x7f){
+    ptr[0] = c;
+    ptr[1] = '\0';
+  } else if (c <= 0x7ff) {
+    ptr[0] = 0xc0 | ((c >> 6) & 0x1f); 
+    ptr[1] = 0x80 | (c & 0x3f);
+    ptr[2] = '\0';
+  } else if (c <= 0xffff) {
+    ptr[0] = 0xe0 | ((c >> 12) & 0x0f); 
+    ptr[1] = 0x80 | ((c >> 6) & 0x3f);
+    ptr[2] = 0x80 | (c & 0x3f);
+    ptr[3] = '\0';
+  } else {
+    ptr[0] = 0xf0 | ((c >> 18) & 0x07); 
+    ptr[1] = 0x80 | ((c >> 12) & 0x3f);
+    ptr[2] = 0x80 | ((c >> 6) & 0x3f);
+    ptr[3] = 0x80 | (c & 0x3f);
+    ptr[4] = '\0';
+  }   
+  return ptr;
+}
+
+
 uint32_t dfsch_char_downcase(uint32_t c){
   return UDATA_ENTRY(c).lower_offset + c;
 }

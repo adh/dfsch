@@ -314,7 +314,8 @@ char* dfsch_format(char* string,
         break;
       case 'c':
       case 'C':
-        dfsch_error("Unimplemented", NULL);
+        sl_append(out, 
+                  dfsch_char_encode(dfsch_number_to_long(list_get(state->args))));
         break;
       case 'f':
       case 'F':

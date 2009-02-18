@@ -316,7 +316,8 @@
        (test 'escaping (format "~~") "~")
        (test 'radix 
              (format "~2r ~:* ~8r ~:* ~10r ~:* ~16r" 123)
-             "1111011  173  123  7b"))
+             "1111011  173  123  7b")
+       (test 'write-char (format "~c" 0x3042) "あ"))
 
 (when () group "object subsystem"
        (sub-group simple-class
