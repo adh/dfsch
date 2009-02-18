@@ -9,6 +9,7 @@ For 0.3.0:
 * Pretty-printer
 * apply-related optimalizations (reduce consing)
 * immutable pair and list constructors (copy, append...)
+* list anotation (load position)
 
 When needed by other code:
 * Type predicates for all types
