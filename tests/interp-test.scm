@@ -317,7 +317,9 @@
        (test 'radix 
              (format "~2r ~:* ~8r ~:* ~10r ~:* ~16r" 123)
              "1111011  173  123  7b")
-       (test 'write-char (format "~c" 0x3042) "あ"))
+       (test 'write-char (format "~c" 0x3042) "あ")
+       (test 'field-width (format "~15f" '(1 2 3 4)) "      (1 2 3 4)")
+       (test 'floats (format "~10,5f" pi) "   3.14159"))
 
 (when () group "object subsystem"
        (sub-group simple-class

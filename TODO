@@ -4,7 +4,6 @@ Non-version-specific:
 * Packages (reasonable implementation is probably simpler than it looks)
 
 For 0.3.0:
-* ~f format directive
 * Circular printer
 * Pretty-printer
 * apply-related optimalizations (reduce consing)

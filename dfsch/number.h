@@ -74,6 +74,7 @@ extern "C" {
   /** Returns value of given number as int64_t. */
   extern int64_t dfsch_number_to_int64(dfsch_object_t *n);
   extern char* dfsch_number_to_string(dfsch_object_t *n, int base);
+  extern char* dfsch_number_format(dfsch_object_t* n, int width, int digits);
   extern dfsch_object_t* dfsch_number_to_inexact(dfsch_object_t* n);
 
 

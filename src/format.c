@@ -319,7 +319,21 @@ char* dfsch_format(char* string,
         break;
       case 'f':
       case 'F':
-        dfsch_error("Unimplemented", NULL);
+        switch (argc){
+        case 1:
+          sl_append(out,
+                    dfsch_saprintf("%*s", argv[0],
+                                   dfsch_obj_write(list_get(state->args), 
+                                                   1000, 1)));
+          break;
+        case 2:
+          sl_append(out, dfsch_number_format(list_get(state->args), 
+                                             argv[0], argv[1]));
+          break;
+        default:
+          dfsch_error("Wrong number of arguments to ~f", 
+                      DFSCH_MAKE_FIXNUM(argc));          
+        }
         break;
       case '?':
         {

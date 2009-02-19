@@ -437,6 +437,10 @@ char* dfsch_number_to_string(dfsch_object_t *n, int base){
 
   return dfsch_obj_write(n, 1, 1); /* fallback */
 }
+char* dfsch_number_format(dfsch_object_t* n, int width, int digits){
+  double num = dfsch_number_to_double(n);
+  return dfsch_saprintf("%*.*f", width, digits, num);
+}
 
 int dfsch_number_p(dfsch_object_t* obj){
   return DFSCH_INSTANCE_P(obj, DFSCH_NUMBER_TYPE);
