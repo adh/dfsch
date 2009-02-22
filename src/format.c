@@ -73,26 +73,26 @@ static int read_num_arg(char**string){
 
 static char* format_a(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
-    return dfsch_obj_write(obj, 1000, 0);
+    return dfsch_object_2_string(obj, 1000, 0);
   } else {
-    return dfsch_obj_write(obj, argv[0], 0);
+    return dfsch_object_2_string(obj, argv[0], 0);
   }
 }
 static char* format_s(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
-    return dfsch_obj_write(obj, 1000, 1);
+    return dfsch_object_2_string(obj, 1000, 1);
   } else {
-    return dfsch_obj_write(obj, argv[0], 1);
+    return dfsch_object_2_string(obj, argv[0], 1);
   } 
 }
 static char* format_w(int flags, int argc, int*argv, dfsch_object_t* obj){
-  return dfsch_obj_write(obj, 1000, 1);
+  return dfsch_object_2_string(obj, 1000, 1);
 }
 static char* format_y(int flags, int argc, int*argv, dfsch_object_t* obj){
   if (argc == 0){
-    return dfsch_obj_write(obj, 1000, 1);
+    return dfsch_object_2_string(obj, 1000, 1);
   } else {
-    return dfsch_obj_write(obj, argv[0], 1);
+    return dfsch_object_2_string(obj, argv[0], 1);
   }
 }
 static char* format_r(int flags, int argc, int*argv, dfsch_object_t* obj){
@@ -323,7 +323,7 @@ char* dfsch_format(char* string,
         case 1:
           sl_append(out,
                     dfsch_saprintf("%*s", argv[0],
-                                   dfsch_obj_write(list_get(state->args), 
+                                   dfsch_object_2_string(list_get(state->args), 
                                                    1000, 1)));
           break;
         case 2:

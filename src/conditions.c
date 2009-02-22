@@ -137,7 +137,7 @@ void dfsch_signal(dfsch_object_t* condition){
   if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
     dfsch_enter_debugger(condition);
     fputs("Unhandled error condition!\n\n", stderr);
-    fprintf(stderr, "%s\n", dfsch_obj_write(condition, 10, 1));
+    fprintf(stderr, "%s\n", dfsch_object_2_string(condition, 10, 1));
     abort();
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
@@ -321,12 +321,12 @@ void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type,
                                  dfsch_bool(instance_suffices));
   if (instance_suffices){
     m = dfsch_saprintf("%s is not an instance of %s",
-                       dfsch_obj_write(datum, 10, 1),
-                       dfsch_obj_write((dfsch_object_t*)type, 10, 1));
+                       dfsch_object_2_string(datum, 10, 1),
+                       dfsch_object_2_string((dfsch_object_t*)type, 10, 1));
   } else {
     m = dfsch_saprintf("%s is not of type %s",
-                       dfsch_obj_write(datum, 10, 1),
-                       dfsch_obj_write((dfsch_object_t*)type, 10, 1));
+                       dfsch_object_2_string(datum, 10, 1),
+                       dfsch_object_2_string((dfsch_object_t*)type, 10, 1));
   }
   dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
   dfsch_signal(c);

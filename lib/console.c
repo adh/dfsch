@@ -202,7 +202,7 @@ int dfsch_console_read_objects_list(char* prompt,
 static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   ret = dfsch_eval(obj, baton);
-  puts(dfsch_obj_write(ret,100,1));
+  puts(dfsch_object_2_string(ret,100,1));
 }
 
 int dfsch_console_run_repl(char* prompt, 

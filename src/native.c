@@ -752,8 +752,8 @@ DFSCH_DEFINE_PRIMITIVE(object_2_string, 0){
   DFSCH_OBJECT_ARG_OPT(args, readable, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_string_cstr(dfsch_obj_write(object, depth, 
-                                                readable != NULL));
+  return dfsch_make_string_cstr(dfsch_object_2_string(object, depth, 
+                                                      readable != NULL));
 }
 DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
   char* string;

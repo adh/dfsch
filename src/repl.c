@@ -63,7 +63,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
       exit((int)dfsch_number_to_long(dfsch_car(args)));
     }
   default:
-    fputs(dfsch_obj_write(args,100,0),stderr);
+    fputs(dfsch_object_2_string(args,100,0),stderr);
     fputs("\n",stderr);
     fflush(stderr);
     exit(1);
@@ -84,7 +84,7 @@ static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
   while (dfsch_pair_p(args)){
-    fputs(dfsch_obj_write(dfsch_car(args), 100, 0), stdout);
+    fputs(dfsch_object_2_string(dfsch_car(args), 100, 0), stdout);
     args = dfsch_cdr(args);
   }
   puts("");
@@ -94,7 +94,7 @@ static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
                                      dfsch_tail_escape_t* esc){
   
   while (dfsch_pair_p(args)){
-    fputs(dfsch_obj_write(dfsch_car(args), 100, 1), stdout);
+    fputs(dfsch_object_2_string(dfsch_car(args), 100, 1), stdout);
     args = dfsch_cdr(args);
   }
   puts("");
@@ -109,7 +109,7 @@ void interactive_repl(dfsch_object_t* ctx){
 static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   ret = dfsch_eval(obj, baton);
-  puts(dfsch_obj_write(ret,100,1));
+  puts(dfsch_object_2_string(ret,100,1));
 }
 
 void noninteractive_repl(dfsch_object_t* ctx){
@@ -175,8 +175,8 @@ int main(int argc, char**argv){
       }
     case 'E':
       {
-        puts(dfsch_obj_write(dfsch_eval_proc(dfsch_list_read(optarg), ctx),
-                             100, 1));
+        puts(dfsch_object_2_string(dfsch_eval_proc(dfsch_list_read(optarg), ctx),
+                                   100, 1));
         interactive = 0;
 
         break;

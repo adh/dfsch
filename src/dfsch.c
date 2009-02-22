@@ -1989,8 +1989,8 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   return (object_t*)vector;
 }
 
-char* dfsch_obj_write(dfsch_object_t* obj, 
-                      int max_depth, int readable){
+char* dfsch_object_2_string(dfsch_object_t* obj, 
+                            int max_depth, int readable){
   str_list_t* sl = sl_create();
   dfsch_writer_state_t* state = dfsch_make_writer_state(max_depth,
                                                         readable?

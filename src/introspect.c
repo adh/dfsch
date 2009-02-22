@@ -103,11 +103,11 @@ static char* trace_line(dfsch_object_t* line){
 
   if (frame->expr){
     return saprintf("  %s\n    %s\n", 
-		    dfsch_obj_write(frame->procedure, 3, 1),
-		    dfsch_obj_write(frame->expr, 4, 1));
+		    dfsch_object_2_string(frame->procedure, 3, 1),
+		    dfsch_object_2_string(frame->expr, 4, 1));
   } else {
     return saprintf("  %s\n", 
-		    dfsch_obj_write(frame->procedure, 3, 1));
+		    dfsch_object_2_string(frame->procedure, 3, 1));
   }
 }
 

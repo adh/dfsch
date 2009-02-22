@@ -435,7 +435,7 @@ char* dfsch_number_to_string(dfsch_object_t *n, int base){
     dfsch_error("Unsupported base for this numeric type", NULL);
   }
 
-  return dfsch_obj_write(n, 1, 1); /* fallback */
+  return dfsch_object_2_string(n, 1, 1); /* fallback */
 }
 char* dfsch_number_format(dfsch_object_t* n, int width, int digits){
   double num = dfsch_number_to_double(n);

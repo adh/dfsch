@@ -168,8 +168,8 @@ extern "C" {
   /** Parse string into list of objects */
   extern dfsch_object_t* dfsch_list_read(char* str);
   
-  extern char* dfsch_obj_write(dfsch_object_t* obj, 
-                               int max_depth, int readable);
+  extern char* dfsch_object_2_string(dfsch_object_t* obj, 
+                                     int max_depth, int readable);
   
 
 #define DFSCH_WRITE_CIRCULAR -1

@@ -53,8 +53,8 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
       continue;
     }
     fprintf(stderr, "    %s: %s\n" ,
-            dfsch_obj_write(DFSCH_FAST_CAR(j), 10, 1),
-            dfsch_obj_write(DFSCH_FAST_CDR(j), 10, 1));
+            dfsch_object_2_string(DFSCH_FAST_CAR(j), 10, 1),
+            dfsch_object_2_string(DFSCH_FAST_CDR(j), 10, 1));
   }
   
 }
@@ -79,13 +79,13 @@ static void debug_main(dfsch_object_t* reason){
     fprintf(stderr, "debugger invoked on %s:\n",
             DFSCH_TYPE_OF(reason)->name);
     fprintf(stderr,"  %s\n", 
-            dfsch_obj_write(dfsch_condition_field_cstr(reason,
+            dfsch_object_2_string(dfsch_condition_field_cstr(reason,
                                                        "message"),
                             10, 0));
     prettyprint_condition_fields(dfsch_condition_fields(reason));
   } else {
     fprintf(stderr,"debugger invoked on:\n  %s\n", 
-            dfsch_obj_write(reason, 10, 0));
+            dfsch_object_2_string(reason, 10, 0));
   }
 
   fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_stack_trace(ustack));
@@ -100,7 +100,7 @@ static void debug_main(dfsch_object_t* reason){
     dfsch_object_t* restart = DFSCH_FAST_CAR(restarts);
     fprintf(stderr, "  (r %d): [%s] %s\n",
             i,
-            dfsch_obj_write(dfsch_restart_name(restart), 1, 1),
+            dfsch_object_2_string(dfsch_restart_name(restart), 1, 1),
             dfsch_restart_description(restart));
     i++;
     restarts = DFSCH_FAST_CDR(restarts);

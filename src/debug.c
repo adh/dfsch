@@ -31,7 +31,7 @@ static void debug_main(dfsch_object_t* condition){
   fprintf(stderr, "debugger invoked on %s:\n",
           DFSCH_TYPE_OF(condition)->name);
   fprintf(stderr,"  %s\n", 
-          dfsch_obj_write(dfsch_condition_field_cstr(condition,
+          dfsch_object_2_string(dfsch_condition_field_cstr(condition,
                                                      "message"),
                           10, 0));
 
@@ -40,7 +40,7 @@ static void debug_main(dfsch_object_t* condition){
   while (DFSCH_PAIR_P(restarts)){
     dfsch_object_t* restart = DFSCH_FAST_CAR(restarts);
     fprintf(stderr, "  [%s]: %s\n", 
-            dfsch_obj_write(dfsch_restart_name(restart), 1, 1),
+            dfsch_object_2_string(dfsch_restart_name(restart), 1, 1),
             dfsch_restart_description(restart));
     restarts = DFSCH_FAST_CDR(restarts);
   }

@@ -30,5 +30,5 @@
 char* dfsch_pprint(dfsch_object_t* object, 
                     int margin_l, int margin_r, 
                     int depth){
-  return stracat(dfsch_obj_write(object, depth, 1), "\n");
+  return stracat(dfsch_object_2_string(object, depth, 1), "\n");
 }
