@@ -763,6 +763,14 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
 
   return dfsch_string_2_object(string);
 }
+DFSCH_DEFINE_PRIMITIVE(string_2_object_list, 0){
+  char* string;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_2_object_list(string);
+}
 DFSCH_DEFINE_PRIMITIVE(write__object, 0){
   dfsch_object_t* state;
   dfsch_object_t* object;
@@ -979,6 +987,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
                    DFSCH_PRIMITIVE_REF(object_2_string));
   dfsch_define_cstr(ctx, "string->object", 
                    DFSCH_PRIMITIVE_REF(string_2_object));
+  dfsch_define_cstr(ctx, "string->object-list", 
+                   DFSCH_PRIMITIVE_REF(string_2_object_list));
   dfsch_define_cstr(ctx, "dfsch%write-object", 
                    DFSCH_PRIMITIVE_REF(write__object));
   dfsch_define_cstr(ctx, "dfsch%write-string", 
