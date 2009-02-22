@@ -18,7 +18,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/magic.h \
 	dfsch/object.h\
 	dfsch/weak.h\
-	dfsch/pprint.h\
 	dfsch/format.h\
 	dfsch/ports.h\
 	dfsch/load.h \
@@ -66,7 +65,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
 	src/weak.c dfsch/weak.h		\
-	src/pprint.c dfsch/pprint.h	\
 	src/format.c dfsch/format.h	\
 	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h		\
