@@ -183,6 +183,8 @@ extern "C" {
                                                        void* baton);
   extern void dfsch_invalidate_writer_state(dfsch_writer_state_t* state);
   extern int dfsch_writer_state_print_p(dfsch_writer_state_t* state);
+  extern int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state);
+  extern int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state);
   extern void dfsch_write_object(dfsch_writer_state_t* state,
                                  dfsch_object_t* object);
   extern void dfsch_write_string(dfsch_writer_state_t* state,
@@ -195,6 +197,10 @@ extern "C" {
   extern void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
                                            dfsch_object_t* obj);
   extern void dfsch_write_unreadable_end(dfsch_writer_state_t* state);
+  extern void dfsch_write_pprint_newline(dfsch_writer_state_t* state);
+  extern void dfsch_write_pprint_indent(dfsch_writer_state_t* state);
+  extern void dfsch_write_pprint_begin(dfsch_writer_state_t* state);
+  extern void dfsch_write_pprint_end(dfsch_writer_state_t* state);
 
   /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();
