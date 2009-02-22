@@ -761,7 +761,7 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
   DFSCH_STRING_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_obj_read(string);
+  return dfsch_string_2_object(string);
 }
 DFSCH_DEFINE_PRIMITIVE(write__object, 0){
   dfsch_object_t* state;

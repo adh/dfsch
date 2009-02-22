@@ -164,9 +164,9 @@ extern "C" {
   extern int dfsch_vector_p(dfsch_object_t* obj);
 
   /** Parse string into object. */
-  extern dfsch_object_t* dfsch_obj_read(char* str);
+  extern dfsch_object_t* dfsch_string_2_object(char* str);
   /** Parse string into list of objects */
-  extern dfsch_object_t* dfsch_list_read(char* str);
+  extern dfsch_object_t* dfsch_string_2_object_list(char* str);
   
   extern char* dfsch_object_2_string(dfsch_object_t* obj, 
                                      int max_depth, int readable);

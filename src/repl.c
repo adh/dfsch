@@ -169,13 +169,13 @@ int main(int argc, char**argv){
       break;
     case 'e':
       {
-        dfsch_eval_proc(dfsch_list_read(optarg), ctx);
+        dfsch_eval_proc(dfsch_string_2_object_list(optarg), ctx);
         interactive = 0;
         break;
       }
     case 'E':
       {
-        puts(dfsch_object_2_string(dfsch_eval_proc(dfsch_list_read(optarg), ctx),
+        puts(dfsch_object_2_string(dfsch_eval_proc(dfsch_string_2_object_list(optarg), ctx),
                                    100, 1));
         interactive = 0;
 

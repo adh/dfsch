@@ -2126,7 +2126,7 @@ static read_callback(dfsch_object_t *obj, void* ctx){
   return 1;
 }
 
-dfsch_object_t* dfsch_list_read(char* str){
+dfsch_object_t* dfsch_string_2_object_list(char* str){
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   read_ctx_t ctx;
   int err;
@@ -2145,10 +2145,11 @@ dfsch_object_t* dfsch_list_read(char* str){
   
   return ctx.head;
 }
-dfsch_object_t* dfsch_obj_read(char* str){
-  object_t* list = dfsch_list_read(str);
-  if (!list)
-    return NULL;
+dfsch_object_t* dfsch_string_2_object(char* str){
+  object_t* list = dfsch_string_2_object_list(str);
+  if (!list) {
+    dfsch_error("Input empty", NULL);
+  }
   return dfsch_car(list);
 }
 
