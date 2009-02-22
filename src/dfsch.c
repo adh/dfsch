@@ -1,6 +1,6 @@
 /*
  * dfsch - Scheme-like Lisp dialect
- * Copyright (C) 2005-2008 Ales Hakl
+ * Copyright (C) 2005-2009 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2001,110 +2001,6 @@ char* dfsch_object_2_string(dfsch_object_t* obj,
   dfsch_write_object(state, obj);
   return sl_value(sl);
 }
-
-
-struct dfsch_writer_state_t {
-  dfsch_object_t object_head;
-  dfsch_output_proc_t output_proc;
-  void* output_baton;
-  int depth;
-  int readability;
-};
-dfsch_type_t dfsch_writer_state_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(dfsch_writer_state_t),
-  "writer-state"
-};
-
-dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
-                                              int readability,
-                                              dfsch_output_proc_t proc,
-                                              void* baton){
-  dfsch_writer_state_t* state = 
-    (dfsch_writer_state_t*)dfsch_make_object(DFSCH_WRITER_STATE_TYPE);
-
-  state->output_proc = proc;
-  state->output_baton = baton;
-  state->depth = max_depth;
-  state->readability = readability;
-
-  return state;
-}
-void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
-  state->output_proc = NULL;
-  state->output_baton = NULL;
-}
-int dfsch_writer_state_print_p(dfsch_writer_state_t* state){
-  return state->readability == DFSCH_PRINT;
-}
-
-void dfsch_write_object(dfsch_writer_state_t* state,
-                        dfsch_object_t* object){
-  dfsch_type_t* type;
-  char* ret;
-
-  if (!object){
-    dfsch_write_string(state, "()");
-    return;
-  }
-
-  if (state->depth==0){
-    dfsch_write_string(state, "...");
-  }
-
-  type = DFSCH_TYPE_OF(object);
-
-  while (type){
-    if (type->write){
-      state->depth--;
-      type->write(object, state);
-      state->depth++;
-      return;
-    }
-    type = type->superclass;
-  }
-
-  dfsch_write_unreadable(state, object, "");
-}
-
-
-void dfsch_write_string(dfsch_writer_state_t* state,
-                        char* str){
-  dfsch_write_strbuf(state, str, strlen(str));
-}
-void dfsch_write_strbuf(dfsch_writer_state_t* state,
-                        char* str, size_t len){
-  if (state->output_proc){
-    state->output_proc(state->output_baton, str, len);
-  } else {
-    dfsch_error("Stale writer-state", state);
-  }
-}
-
-void dfsch_write_unreadable(dfsch_writer_state_t* state,
-                            dfsch_object_t* obj, char* format, ...){
-  str_list_t* sl = sl_create();
-  va_list args;
-  char *ret;
-  va_start(args, format);
-
-  dfsch_write_unreadable_start(state, obj);
-  dfsch_write_string(state, vsaprintf(format, args)); 
-  dfsch_write_unreadable_end(state);
-}
-void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
-                                  dfsch_object_t* obj){
-  if (state->readability == DFSCH_STRICT_WRITE){
-    dfsch_error("Object has no readable representation", obj);
-  }
-  dfsch_write_string(state, 
-                     saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
-}
-void dfsch_write_unreadable_end(dfsch_writer_state_t* state){
-  dfsch_write_string(state, ">");
-}
-
 
 
 typedef struct read_ctx_t {
