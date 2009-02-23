@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <limits.h>
 
-#define INITIAL_MASK 0x07
+#define INITIAL_MASK 0x7
 
 static size_t fast_ptr_hash(dfsch_object_t* ptr){
   size_t p = (size_t) ptr;
@@ -97,7 +97,6 @@ static void convert_to_large(dfsch_eqhash_t* hash){
   hash->is_large = 1;
 }
 
-
 void dfsch_eqhash_put(dfsch_eqhash_t* hash,
                       dfsch_object_t* key, dfsch_object_t* value){
   if (!hash->is_large){
@@ -106,20 +105,31 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
       if (hash->contents.small.keys[i] == DFSCH_INVALID_OBJECT){
         hash->contents.small.keys[i] = key;
         hash->contents.small.values[i] = value;
+        return;
       }
     }
 
     convert_to_large(hash);
   }
   size_t h = fast_ptr_hash(key);
+  hash->contents.large.count++;
   BUCKET(hash, h) = alloc_entry(key, value, 0, BUCKET(hash,h));
 }
 
 static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash, 
                                         dfsch_object_t* key){
-  dfsch_eqhash_entry_t* i = BUCKET(hash, fast_ptr_hash(key));
+  dfsch_eqhash_entry_t* i;
+  size_t h;
+  h = fast_ptr_hash(key);
+  i = hash->contents.large.cache[(h >> 10) % (DFSCH_EQHASH_SMALL_SIZE * 2)];
+  if (i && i->key == key){
+    return i;
+  }
+  
+  i = BUCKET(hash, h);
   while (i){
     if (i->key == key){
+      hash->contents.large.cache[(h >> 10) % (DFSCH_EQHASH_SMALL_SIZE * 2)] = i;
       return i;
     }
     i = i->next;
@@ -184,6 +194,11 @@ int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
   }  
   return 0;
 }
+int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
+  return 1; // TODO
+
+}
+
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                      dfsch_object_t* key, 
                      dfsch_object_t** value, long *flags,

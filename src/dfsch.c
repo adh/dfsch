@@ -2128,13 +2128,9 @@ void dfsch_unset_property(dfsch_object_t* o,
 
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
-  return dfsch_new_frame_from_hash(parent, dfsch_hash_make(DFSCH_HASH_EQ));
-}
-dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
-                                          dfsch_object_t* hash){
   environment_t* e = (environment_t*)dfsch_make_object(DFSCH_ENVIRONMENT_TYPE);
 
-  e->values = hash;
+  dfsch_eqhash_init(&e->values, 0);
   e->decls = NULL;
   
   if (parent){
@@ -2152,7 +2148,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
-    if (dfsch_hash_ref_fast(i->values, name, &ret)){
+    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
       return ret;
     }
     
@@ -2163,12 +2159,12 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
+  object_t* ret;
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
-    object_t* ret = dfsch_hash_ref(i->values, name);
-    if (ret){
-      return ret;
+    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+      return dfsch_cons(ret, NULL);
     }
 
     i = i->parent;
@@ -2184,7 +2180,7 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
 
   while (i){
-    if(dfsch_hash_set_if_exists(i->values, name, value))
+    if(dfsch_eqhash_set_if_exists(&i->values, name, value, NULL))
       return value;
 
     i = i->parent;
@@ -2200,7 +2196,7 @@ void dfsch_unset(object_t* name, object_t* env){
     if (i->decls){
       dfsch_hash_unset(i->decls, name);
     }
-    if(dfsch_hash_unset(i->values, name))
+    if(dfsch_eqhash_unset(&i->values, name))
       return;
 
     i = i->parent;
@@ -2215,10 +2211,10 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
     dfsch_error("Not an environment", env);
   }
 
-  dfsch_hash_set(((environment_t*)
-                  DFSCH_ASSERT_TYPE(env, 
-                                    DFSCH_ENVIRONMENT_TYPE))->values, 
-                 name, value);  
+  dfsch_eqhash_set(&((environment_t*)
+                    DFSCH_ASSERT_TYPE(env, 
+                                      DFSCH_ENVIRONMENT_TYPE))->values, 
+                   name, value);  
 
   return value;
 
@@ -2397,13 +2393,13 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 
 static void destructure_impl(dfsch_object_t* llist,
                              dfsch_object_t* list,
-                             dfsch_object_t* hash){
+                             environment_t* env){
   while (DFSCH_PAIR_P(llist) && DFSCH_PAIR_P(list)){
 
     if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(llist)) != DFSCH_SYMBOL_TYPE){
       dfsch_type_error(DFSCH_FAST_CAR(llist), DFSCH_SYMBOL_TYPE, 0);
     } else {
-      dfsch_hash_put(hash, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
+      dfsch_eqhash_put(&env->values, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
     }
 
     llist = DFSCH_FAST_CDR(llist);
@@ -2412,7 +2408,7 @@ static void destructure_impl(dfsch_object_t* llist,
   }
 
   if (!DFSCH_PAIR_P(llist)){
-    dfsch_hash_put(hash, (object_t*)llist, (object_t*)list);
+    dfsch_eqhash_put(&env->values, (object_t*)llist, (object_t*)list);
     return;
   }
 
@@ -2430,19 +2426,19 @@ static void destructure_impl(dfsch_object_t* llist,
 
 dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
                                   dfsch_object_t* list){
-  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
+  /*  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
 
   destructure_impl(arglist, list, hash);
 
-  return hash;
+  return hash;*/ // TODO
 }
 
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
                                          dfsch_object_t* list, 
                                          dfsch_object_t* env){
-  return dfsch_new_frame_from_hash(env,
-                                   dfsch_destructure(arglist,
-                                                     list));
+  environment_t* e = dfsch_new_frame(env);
+  destructure_impl(arglist, list, e);
+  return e;
 }
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 

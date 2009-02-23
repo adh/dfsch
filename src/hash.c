@@ -727,22 +727,6 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
   dfsch_error("exception:unknown-mode", mode);
 }
 
-DFSCH_DEFINE_FORM_IMPL(with_hash){
-  dfsch_object_t *hash;
-  dfsch_object_t *code;
-
-  DFSCH_OBJECT_ARG(args, hash);
-  DFSCH_ARG_REST(args, code);
-
-  hash = dfsch_eval(hash, env);
-
-  if (!dfsch_hash_p(hash)){
-    dfsch_error("exception:not-a-hash", hash);
-  }
-
-  return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), esc);
-}
-
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
@@ -765,6 +749,5 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(&native_hash_2_alist,NULL));
   dfsch_define_cstr(ctx, "alist->hash", 
                     dfsch_make_primitive(&native_alist_2_hash,NULL));
-  dfsch_define_cstr(ctx, "with-hash", DFSCH_FORM_REF(with_hash));
 
 }
