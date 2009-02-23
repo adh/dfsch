@@ -34,21 +34,6 @@
  */
 #define FH_DEPTH 4
 
-#ifdef __i386__
-/* 
- * Use bloom filter to speed up searching for nonexisting keys
- * Causes speedup of TAK on 32b Core 1 (why? it should not matter), 
- *        slowdown on 64b Core 2 (understandable)
- * This is definitely worth futher investigation (and better benchmark)
- * Better benchmark is something with comaparatively large (> FH_DEPTH 
- * variables) non-top-level lexical environments.
- *
- * There is some slight bug somewhere. Obviously some valid object 
- * hashes to zero
- */
-//#define FH_DO_BLOOM
-#endif
-
 /*
  * Initial size of hash - 1. Must be 2^n-1 for some integer n 
  *
@@ -191,10 +176,6 @@ static void fh_flush_cache(hash_t* hash){
   }
 }
 
-#ifdef FH_DO_BLOOM
-#define FH_BLOOM(h) (BIT((h) & 0x1f))
-#endif
-
 #endif
 
 int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
@@ -226,13 +207,6 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
   h = HASH(hash, key);
 #ifdef FH_DEPTH
-#ifdef FH_BLOOM
-    if ((hash->fh_valid & FH_BLOOM(h)) != FH_BLOOM(h)){
-        DFSCH_RWLOCK_UNLOCK(&hash->lock);
-        //       printf("bloom miss %x %x\n", hash->fh_valid, FH_BLOOM(h));
-        return 0;      
-    }
-#endif
     i = FH_CACHE_SLOT(hash, h);
     if (i){
       if (h == i->hash && 
@@ -330,22 +304,13 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
 #ifdef FH_DEPTH
 static void fh_promote(hash_t* hash){
   size_t ht;
-#ifdef FH_BLOOM
-  uint32_t tmp_valid;
-#endif
   int j;
 
   hash->mask = INITIAL_MASK;
   hash->vector = alloc_vector(INITIAL_MASK);
-#ifdef FH_BLOOM
-  tmp_valid = 0;
-#endif
   for (j = 0; j < FH_DEPTH; j++){
     if (BIT_SET_P(hash->fh_valid, j)){
       ht = HASH(hash, hash->fh_keys[j]);
-#ifdef FH_BLOOM
-      tmp_valid |= FH_BLOOM(ht);
-#endif
       hash->count++;
       hash->vector[ht & hash->mask] = 
         alloc_entry(ht, hash->fh_keys[j], hash->fh_values[j],
@@ -354,11 +319,7 @@ static void fh_promote(hash_t* hash){
   }
   
   fh_flush_cache(hash);
-#ifndef FH_BLOOM
   hash->fh_valid = 0;
-#else
-  hash->fh_valid = tmp_valid;
-#endif  
 }
 #endif
 
@@ -393,9 +354,6 @@ void dfsch_hash_put(dfsch_object_t* hash_obj,
     /* Fast lookup slots are full - promote to normal hash */
     fh_promote(hash);   
   }
-#ifdef FH_BLOOM
-  hash->fh_valid |= FH_BLOOM(h);
-#endif
 #endif
 
   hash->count++;
@@ -453,9 +411,6 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
     /* Fast lookup slots are full - promote to normal hash */
     fh_promote(hash);   
   }
-#ifdef FH_BLOOM
-  hash->fh_valid |= FH_BLOOM(h);
-#endif
 #endif
 
   i = entry = hash->vector[h & hash->mask];
