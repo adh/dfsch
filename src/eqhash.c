@@ -163,6 +163,29 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   return NULL;
 }
 
+static int delete_entry(dfsch_eqhash_t* hash, 
+                        dfsch_object_t* key){
+  dfsch_eqhash_entry_t* i;
+  dfsch_eqhash_entry_t* j;  
+  size_t h;
+  h = fast_ptr_hash(key);
+  
+  i = BUCKET(hash, h);
+  while (i){
+    if (i->key == key){
+      if (j) {
+        j->next = i->next;
+      } else {
+        BUCKET(hash, h) = i->next;
+      }
+      return 1;
+    }
+    j = i;
+    i = i->next;
+  }
+  return 0;
+}
+
 void dfsch_eqhash_set(dfsch_eqhash_t* hash,
                       dfsch_object_t* key, dfsch_object_t* value){
   if (hash->is_large){
@@ -221,8 +244,18 @@ int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
   return 0;
 }
 int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
-  return 1; // TODO
-
+  if (hash->is_large){
+    return delete_entry(hash, key);
+  } else {
+    int i;
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] == key){
+        hash->contents.small.keys[i] = DFSCH_INVALID_OBJECT;
+        return 1;
+      }
+    }
+  }  
+  return 0;
 }
 
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
