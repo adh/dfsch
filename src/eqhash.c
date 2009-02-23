@@ -147,7 +147,7 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   dfsch_eqhash_entry_t* i;
   size_t h;
   h = fast_ptr_hash(key);
-  i = hash->contents.large.cache[(h >> 10) % (DFSCH_EQHASH_SMALL_SIZE * 2)];
+  i = hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE];
   if (i && i->key == key){
     return i;
   }
@@ -155,7 +155,7 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   i = BUCKET(hash, h);
   while (i){
     if (i->key == key){
-      hash->contents.large.cache[(h >> 10) % (DFSCH_EQHASH_SMALL_SIZE * 2)] = i;
+      hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] = i;
       return i;
     }
     i = i->next;
@@ -202,7 +202,7 @@ void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
 }
 int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                dfsch_object_t* key, dfsch_object_t* value,
-                               long* flags){
+                               short* flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
@@ -227,7 +227,7 @@ int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
 
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                      dfsch_object_t* key, 
-                     dfsch_object_t** value, long *flags,
+                     dfsch_object_t** value, short *flags,
                      dfsch_eqhash_entry_t** entry){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);

@@ -25,6 +25,9 @@
 #include <dfsch/dfsch.h>
 
 #define DFSCH_EQHASH_SMALL_SIZE 4
+#define DFSCH_EQHASH_CACHE_SIZE 8
+
+#define DFSCH_EQHASH_LARGE 1
 
 typedef struct dfsch_eqhash_entry_t dfsch_eqhash_entry_t;
 
@@ -32,24 +35,25 @@ struct dfsch_eqhash_entry_t {
   dfsch_object_t* key;
   dfsch_eqhash_entry_t* next;
   dfsch_object_t* value;
-  long flags;
+  short flags;
 };
 
 typedef struct dfsch__eqhash_small_t {
   dfsch_object_t* keys[DFSCH_EQHASH_SMALL_SIZE];
   dfsch_object_t* values[DFSCH_EQHASH_SMALL_SIZE];
-  long flags[DFSCH_EQHASH_SMALL_SIZE];
+  short flags[DFSCH_EQHASH_SMALL_SIZE];
 } dfsch__eqhash_small_t;
 
 typedef struct dfsch__eqhash_large_t {
-  dfsch_eqhash_entry_t* cache[DFSCH_EQHASH_SMALL_SIZE * 2];
+  dfsch_eqhash_entry_t* cache[DFSCH_EQHASH_CACHE_SIZE];
   dfsch_eqhash_entry_t** vector;
   size_t mask;
   size_t count;
 } dfsch__eqhash_large_t;
 
 typedef struct dfsch_eqhash_t {
-  int is_large;
+  int is_large; 
+  /*this can be changed to char or bitfield or whatever when necessary*/
   union {
     dfsch__eqhash_small_t small;
     dfsch__eqhash_large_t large;
@@ -66,9 +70,9 @@ void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
                             dfsch_object_t* key, long flags);
 int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                dfsch_object_t* key, dfsch_object_t* value,
-                               long* flags);
+                               short* flags);
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                      dfsch_object_t* key, 
-                     dfsch_object_t** value, long *flags, 
+                     dfsch_object_t** value, short *flags, 
                      dfsch_eqhash_entry_t** entry);
 #endif
