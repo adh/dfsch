@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <limits.h>
 
-#define INITIAL_MASK 0x7
+#define INITIAL_MASK 0xf
 
 static size_t fast_ptr_hash(dfsch_object_t* ptr){
   size_t p = (size_t) ptr;
@@ -97,6 +97,29 @@ static void convert_to_large(dfsch_eqhash_t* hash){
   hash->is_large = 1;
 }
 
+static void grow_hash(dfsch_eqhash_t* hash){
+  size_t new_mask = ((hash->contents.large.mask + 1) * 2) - 1;
+  dfsch_eqhash_entry_t** vector = alloc_vector(new_mask);
+  dfsch_eqhash_entry_t* i;
+  dfsch_eqhash_entry_t* j;
+  int k;
+  size_t h;
+
+  for (k = 0; k <= hash->contents.large.mask; k++){
+    i = hash->contents.large.vector[k];
+    while (i){
+      j = i->next;
+      h = fast_ptr_hash(i->key);
+      i->next = vector[h & new_mask];
+      vector[h & new_mask] = i;
+      i = j;
+    }
+  }
+
+  hash->contents.large.vector = vector;
+  hash->contents.large.mask = new_mask;
+}
+
 void dfsch_eqhash_put(dfsch_eqhash_t* hash,
                       dfsch_object_t* key, dfsch_object_t* value){
   if (!hash->is_large){
@@ -113,6 +136,9 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
   }
   size_t h = fast_ptr_hash(key);
   hash->contents.large.count++;
+  if (hash->contents.large.count/2 > hash->contents.large.mask){
+    grow_hash(hash);
+  }
   BUCKET(hash, h) = alloc_entry(key, value, 0, BUCKET(hash,h));
 }
 
