@@ -173,6 +173,9 @@ static int delete_entry(dfsch_eqhash_t* hash,
   i = BUCKET(hash, h);
   while (i){
     if (i->key == key){
+      if (hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] == i){
+        hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] = NULL;
+      }
       if (j) {
         j->next = i->next;
       } else {
