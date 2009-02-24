@@ -9,6 +9,14 @@
            (tak (- y 1) z x)
            (tak (- z 1) x y))))
 
+(define (tak-inline x y z)
+  (#.if (#.not (#.< y x))
+      z
+      (tak (tak (#.- x 1) y z)
+           (tak (#.- y 1) z x)
+           (tak (#.- z 1) x y))))
+
+
 (define-macro (measure-time name . body)
   (let ((start-run (gensym)) (start-real (gensym)) (start-bytes (gensym)))
     `(let ((,start-real (get-internal-real-time))
@@ -28,3 +36,4 @@
 
 (measure-time "tak" (tak 24 16 8))
 (measure-time "takfp" (tak 24.0 16.0 8.0))
+(measure-time "tak-inline" (tak-inline 24 16 8))

@@ -89,7 +89,7 @@ static int load_callback(dfsch_object_t *obj, void* ctx){
 
 dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, 
 			       char* fname){
-  return dfsch_eval_proc(dfsch_read_scm(fname), ctx);
+  return dfsch_eval_proc(dfsch_read_scm(fname, ctx), ctx);
 }
 
 static int qs_strcmp(const void* a, const void* b){ /* To suppress warning */
@@ -288,7 +288,7 @@ dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   }
 }
 
-dfsch_object_t* dfsch_read_scm(char* scm_name){
+dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];
   import_ctx_t ictx;
@@ -301,14 +301,14 @@ dfsch_object_t* dfsch_read_scm(char* scm_name){
     dfsch_error("load:unix-error",dfsch_make_string_cstr(strerror(err)));
   }
 
-  obj = dfsch_read_scm_stream(f,scm_name);
+  obj = dfsch_read_scm_stream(f, scm_name, eval_env);
 
   fclose(f);
     
   return obj;
 }
 
-dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
+dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
@@ -318,6 +318,7 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_eval_env(parser, eval_env);
 
   while (!err && (r = read(f, buf, 8192))>0){
     buf[r]=0;
@@ -341,7 +342,7 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name){
   return ictx.head;
   
 }
-dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
+dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name, dfsch_object_t* eval_env){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
@@ -352,6 +353,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name){
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_eval_env(parser, eval_env);
 
   while (!err && (fgets(buf, 8192, f))){
     if (buf[strlen(buf)-1] == '\n') 
@@ -436,7 +438,7 @@ static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
   char* filename;
   DFSCH_STRING_ARG(args, filename);
 
-  return dfsch_read_scm(filename);
+  return dfsch_read_scm(filename, NULL);
 }
 
 

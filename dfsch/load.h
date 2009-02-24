@@ -55,13 +55,16 @@ extern "C" {
   extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
 
   /** Read scheme list from given file. */
-  extern dfsch_object_t* dfsch_read_scm(char* scm_name);
+  extern dfsch_object_t* dfsch_read_scm(char* scm_name, 
+                                        dfsch_object_t* eval_env);
   /** Read scheme list from given file descriptor. */
   extern dfsch_object_t* dfsch_read_scm_fd(int f, 
-                                           char* name);
+                                           char* name, 
+                                           dfsch_object_t* eval_env);
   /** Read scheme list from given stdio stream. */
   extern dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
-                                               char* name);
+                                               char* name, 
+                                               dfsch_object_t* eval_env);
 
   /** Register shared object related part of this module. */
   extern dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx);
