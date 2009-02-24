@@ -832,15 +832,6 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
 
   return dfsch_macro_expand(macro, arguments);
 }
-DFSCH_DEFINE_PRIMITIVE(destructure, 0){
-  dfsch_object_t* llist;
-  dfsch_object_t* list;
-  DFSCH_OBJECT_ARG(args, llist);
-  DFSCH_OBJECT_ARG(args, list);
-  DFSCH_ARG_END(args);
-
-  return dfsch_destructure(llist, list);
-}
 
 /*
  * Properties
@@ -1001,8 +992,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "macro-expand", 
                    DFSCH_PRIMITIVE_REF(macro_expand));
-  dfsch_define_cstr(ctx, "destructure", 
-                   DFSCH_PRIMITIVE_REF(destructure));
 
   dfsch_define_cstr(ctx, "get-properties", DFSCH_PRIMITIVE_REF(get_properties));
   dfsch_define_cstr(ctx, "get-property", DFSCH_PRIMITIVE_REF(get_property));
