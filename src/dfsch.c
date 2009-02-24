@@ -2125,6 +2125,7 @@ void dfsch_unset_property(dfsch_object_t* o,
   dfsch_unset_object_property(o, dfsch_make_symbol(name));
 }
 
+static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
@@ -2135,6 +2136,8 @@ dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
   
   if (parent){
     parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
+    ((environment_t*)parent)->is_shared = 1;
+    /* This could probably be placed somewhere else */
   }
 
   e->parent = (environment_t*)parent;
@@ -2148,6 +2151,9 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
+    if (i->is_shared){
+      goto lock;
+    }
     if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
       return ret;
     }
@@ -2156,20 +2162,34 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
   }
 
   dfsch_error("Unbound variable", dfsch_cons(name, env));
+ lock:
+   DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+        DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+    
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  dfsch_error("Unbound variable", dfsch_cons(name, env));
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
     if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return dfsch_cons(ret, NULL);
     }
 
     i = i->parent;
   }
-  
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   return NULL;
 }
 
@@ -2180,6 +2200,9 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
 
   while (i){
+    if (i->is_shared){
+      goto lock;
+    }
     if(dfsch_eqhash_set_if_exists(&i->values, name, value, NULL))
       return value;
 
@@ -2187,35 +2210,53 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   }
 
   dfsch_error("Unbound variable",name);
+ lock:
+  
+  DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
+  while (i){
+    if(dfsch_eqhash_set_if_exists(&i->values, name, value, NULL)){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return value;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  dfsch_error("Unbound variable",name);
+
 }
 void dfsch_unset(object_t* name, object_t* env){
   environment_t *i;
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   while (i){
     if (i->decls){
       dfsch_hash_unset(i->decls, name);
     }
-    if(dfsch_eqhash_unset(&i->values, name))
+    if(dfsch_eqhash_unset(&i->values, name)){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return;
-
+    }
     i = i->parent;
   }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   
   dfsch_error("Unbound variable",name);
 }
 
 
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
-  if (env && DFSCH_TYPE_OF(env) != DFSCH_ENVIRONMENT_TYPE){
-    dfsch_error("Not an environment", env);
+  environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
+                                                       DFSCH_ENVIRONMENT_TYPE);
+  if (e->is_shared){
+    DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   }
-
-  dfsch_eqhash_set(&((environment_t*)
-                    DFSCH_ASSERT_TYPE(env, 
-                                      DFSCH_ENVIRONMENT_TYPE))->values, 
+  dfsch_eqhash_set(&e->values, 
                    name, value);  
-
+  if (e->is_shared){
+    DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  }
   return value;
 
 }
