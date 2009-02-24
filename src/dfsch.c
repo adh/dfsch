@@ -2133,11 +2133,10 @@ dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
 
   dfsch_eqhash_init(&e->values, 0);
   e->decls = NULL;
+  e->owner = dfsch__get_thread_info();
   
   if (parent){
     parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
-    ((environment_t*)parent)->is_shared = 1;
-    /* This could probably be placed somewhere else */
   }
 
   e->parent = (environment_t*)parent;
@@ -2148,10 +2147,12 @@ dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
 object_t* dfsch_lookup(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   while (i){
-    if (i->is_shared){
+    if (i->owner != ti){
+      i->owner = NULL;
       goto lock;
     }
     if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
@@ -2170,6 +2171,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
       return ret;
     }
     
+    i->owner = NULL;
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -2196,11 +2198,13 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
 
   while (i){
-    if (i->is_shared){
+    if (i->owner != ti){
+      i->owner = NULL;
       goto lock;
     }
     if(dfsch_eqhash_set_if_exists(&i->values, name, value, NULL))
@@ -2218,7 +2222,7 @@ object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return value;
     }
-
+    i->owner = NULL;
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -2249,12 +2253,13 @@ void dfsch_unset(object_t* name, object_t* env){
 object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
-  if (e->is_shared){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  if (e->owner = ti){
     DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   }
   dfsch_eqhash_set(&e->values, 
                    name, value);  
-  if (e->is_shared){
+  if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   }
   return value;

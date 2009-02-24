@@ -46,7 +46,7 @@ typedef struct environment_t environment_t;
 struct environment_t {
   dfsch_type_t* type;
   environment_t* parent; 
-  int is_shared;
+  dfsch__thread_info_t* owner;
   dfsch_eqhash_t values;
   dfsch_object_t* decls;
 };
