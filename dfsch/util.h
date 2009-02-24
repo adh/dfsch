@@ -54,6 +54,7 @@ char* dfsch_vsaprintf(char* format, va_list ap);
 char* dfsch_saprintf(char* format, ...);
 
 #ifdef PTHREAD_RWLOCK_INITIALIZER
+#define DFSCH_RWLOCK_INITIALIZER PTHREAD_RWLOCK_INITIALIZER
 #define DFSCH_RWLOCK_RDLOCK(l) pthread_rwlock_rdlock(l)
 #define DFSCH_RWLOCK_WRLOCK(l) pthread_rwlock_wrlock(l)
 #define DFSCH_RWLOCK_UNLOCK(l) pthread_rwlock_unlock(l)
@@ -62,6 +63,7 @@ char* dfsch_saprintf(char* format, ...);
 #define DFSCH_DESTROY_RWLOCK(l) pthread_rwlock_destroy(l)
 typedef pthread_rwlock_t dfsch_rwlock_t;
 #else
+#define DFSCH_RWLOCK_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 #define DFSCH_RWLOCK_RDLOCK(l) pthread_mutex_lock(l)
 #define DFSCH_RWLOCK_WRLOCK(l) pthread_mutex_lock(l)
 #define DFSCH_RWLOCK_UNLOCK(l) pthread_mutex_unlock(l)

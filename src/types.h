@@ -2,6 +2,7 @@
 #define H__dfsch__object__
 
 #include <dfsch/magic.h>
+#include <dfsch/eqhash.h>
 
 typedef dfsch_object_t object_t;
 
@@ -44,8 +45,9 @@ typedef struct environment_t environment_t;
 
 struct environment_t {
   dfsch_type_t* type;
-  dfsch_object_t* values;
-  environment_t* parent;
+  environment_t* parent; 
+  int is_shared;
+  dfsch_eqhash_t values;
   dfsch_object_t* decls;
 };
 

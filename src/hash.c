@@ -26,14 +26,6 @@
 
 #include <stdio.h>
 
-/* Number of directly stored key, value pairs. 
- * Also used as size/2 of lookup cache (which reuses same slots in hash object
- * when hash contains more values than FH_DEPTH)
- * 4 seems to be optimal value for both Core 1 and Core 2, not tested yet on 
- * other CPUs or architectures
- */
-#define FH_DEPTH 4
-
 /*
  * Initial size of hash - 1. Must be 2^n-1 for some integer n 
  *
@@ -49,11 +41,6 @@ typedef struct hash_t{
   dfsch_type_t* type;
   int equal;
   hash_entry_t** vector;
-#ifdef FH_DEPTH
-  uint32_t fh_valid;
-  dfsch_object_t* fh_keys[FH_DEPTH];
-  dfsch_object_t* fh_values[FH_DEPTH];
-#endif
   size_t count;
   size_t mask;
   dfsch_rwlock_t lock;
@@ -112,19 +99,8 @@ dfsch_object_t* dfsch_hash_make(int mode){
   hash_t *h = (hash_t*)dfsch_make_object(DFSCH_STANDARD_HASH_TYPE); 
 
   h->count = 0;
-#ifdef FH_DEPTH
-  h->fh_valid = 0;
-  if (mode == DFSCH_HASH_EQ){
-    h->mask = 0;
-    h->vector = NULL;
-  } else {
-    h->mask = INITIAL_MASK;
-    h->vector = alloc_vector(h->mask);
-  }
-#else
   h->mask = INITIAL_MASK;
   h->vector = alloc_vector(h->mask);
-#endif
   h->equal = mode != DFSCH_HASH_EQ;
   DFSCH_INIT_RWLOCK(&h->lock);
 #ifdef DFSCH_THREADS_FINALIZE
@@ -159,24 +135,6 @@ int dfsch_hash_p(dfsch_object_t* obj){
                 hash);                                                  \
   }
 
-#define BIT_SET_P(word, bit) (((word) >> (bit)) & 0x01)
-#define BIT(bit) (((uint32_t)1) << (bit))
-
-#ifdef FH_DEPTH
-#define FH_CACHE_SLOT(hash, h)                                          \
-  (((hash_entry_t**)(((h) & 0x80) ?                                     \
-                     (hash)->fh_values :                                \
-                     (hash)->fh_keys))[(h) % FH_DEPTH])
-
-static void fh_flush_cache(hash_t* hash){
-  int j;
-  for (j = 0; j < FH_DEPTH; j++){
-    hash->fh_keys[j] = NULL;
-    hash->fh_values[j] = NULL;
-  }
-}
-
-#endif
 
 int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
                         dfsch_object_t* key,
@@ -191,32 +149,8 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     return HASH_TYPE(hash_obj)->ref(hash_obj, key, res);
   };
 
-#ifdef FH_DEPTH
-  if (hash->vector == NULL){
-    for (j = 0; j < FH_DEPTH; j++){
-      if (BIT_SET_P(hash->fh_valid, j)){
-        if (hash->fh_keys[j] == key){
-          *res = hash->fh_values[j];
-          return 1;
-        }
-      }
-    }
-    return 0;
-  }
-#endif
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
   h = HASH(hash, key);
-#ifdef FH_DEPTH
-    i = FH_CACHE_SLOT(hash, h);
-    if (i){
-      if (h == i->hash && 
-          (hash->equal ? dfsch_equal_p(i->key, key) : i->key == key)){
-        *res = i->value;
-        DFSCH_RWLOCK_UNLOCK(&hash->lock);
-        return 1;
-      }
-    }
-#endif
 
   i = hash->vector[h & hash->mask];
 
@@ -224,9 +158,6 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && dfsch_equal_p(i->key, key)){
         *res = i->value;
-#ifdef FH_DEPTH
-        FH_CACHE_SLOT(hash, h) = i;
-#endif
         DFSCH_RWLOCK_UNLOCK(&hash->lock);
         return 1;
       }
@@ -236,9 +167,6 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
     while (i){
       if (h == i->hash && i->key == key){
         *res = i->value;
-#ifdef FH_DEPTH
-        FH_CACHE_SLOT(hash, h) = i;
-#endif
         DFSCH_RWLOCK_UNLOCK(&hash->lock);
         return 1;
       }
@@ -277,9 +205,6 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
   int j;
   hash_entry_t *i;
   hash_entry_t **vector = alloc_vector(new_mask);
-#ifdef FH_DEPTH
-  fh_flush_cache(hash);
-#endif  
   for (j = 0; j <= hash->mask; j++){
     i = hash->vector[j];
     while (i){
@@ -301,27 +226,6 @@ static void hash_change_size(hash_t* hash, size_t new_mask){
   hash->vector = vector;
 }
 
-#ifdef FH_DEPTH
-static void fh_promote(hash_t* hash){
-  size_t ht;
-  int j;
-
-  hash->mask = INITIAL_MASK;
-  hash->vector = alloc_vector(INITIAL_MASK);
-  for (j = 0; j < FH_DEPTH; j++){
-    if (BIT_SET_P(hash->fh_valid, j)){
-      ht = HASH(hash, hash->fh_keys[j]);
-      hash->count++;
-      hash->vector[ht & hash->mask] = 
-        alloc_entry(ht, hash->fh_keys[j], hash->fh_values[j],
-                    hash->vector[ht & hash->mask]);
-    }
-  }
-  
-  fh_flush_cache(hash);
-  hash->fh_valid = 0;
-}
-#endif
 
 void dfsch_hash_put(dfsch_object_t* hash_obj,
                     dfsch_object_t* key,
@@ -339,22 +243,6 @@ void dfsch_hash_put(dfsch_object_t* hash_obj,
   h = HASH(hash, key); 
 
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
-
-#ifdef FH_DEPTH
-  if (hash->vector == NULL){
-    for (j = 0; j < FH_DEPTH; j++){
-      if (!BIT_SET_P(hash->fh_valid, j)){
-        hash->fh_valid |= BIT(j);
-        hash->fh_keys[j] = key;
-        hash->fh_values[j] = value;
-        DFSCH_RWLOCK_UNLOCK(&hash->lock);
-        return;
-      }
-    }
-    /* Fast lookup slots are full - promote to normal hash */
-    fh_promote(hash);   
-  }
-#endif
 
   hash->count++;
   if (hash->count > (hash->mask+1)){ // Should table grow?
@@ -388,31 +276,6 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
   h = HASH(hash, key);
 
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
-#ifdef FH_DEPTH
-  if (hash->vector == NULL){
-    for (j = 0; j < FH_DEPTH; j++){
-      if (BIT_SET_P(hash->fh_valid, j)){
-        if (hash->fh_keys[j] == key){
-          hash->fh_values[j] = value;
-          DFSCH_RWLOCK_UNLOCK(&hash->lock);
-          return;
-        }
-      }
-    }
-    for (j = 0; j < FH_DEPTH; j++){
-      if (!BIT_SET_P(hash->fh_valid, j)){
-        hash->fh_valid |= BIT(j);
-        hash->fh_keys[j] = key;
-        hash->fh_values[j] = value;
-        DFSCH_RWLOCK_UNLOCK(&hash->lock);
-        return;
-      }
-    }
-    /* Fast lookup slots are full - promote to normal hash */
-    fh_promote(hash);   
-  }
-#endif
-
   i = entry = hash->vector[h & hash->mask];
 
   while (i){
@@ -454,24 +317,6 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
 
   h = HASH(hash, key);  
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
-#ifdef FH_DEPTH
-  if (hash->vector == NULL){
-    for (k = 0; k < FH_DEPTH; k++){
-      if (BIT_SET_P(hash->fh_valid, k)){
-        if (hash->fh_keys[k] == key){
-          hash->fh_valid &= ~BIT(k);
-          hash->fh_keys[k] = NULL;
-          hash->fh_values[k] = NULL;
-          DFSCH_RWLOCK_UNLOCK(&hash->lock);
-          return 1;
-        }
-      }
-      DFSCH_RWLOCK_UNLOCK(&hash->lock);
-      return 0;
-    }
-  }
-#endif
-
   i = hash->vector[h & hash->mask];
   j = NULL;
 
@@ -522,23 +367,6 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
 
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
 
-#ifdef FH_DEPTH
-  if (hash->vector == NULL){
-    for (j = 0; j < FH_DEPTH; j++){
-      if (BIT_SET_P(hash->fh_valid, j)){
-        if (hash->fh_keys[j] == key){
-          hash->fh_values[j] = value;
-          DFSCH_RWLOCK_UNLOCK(&hash->lock);
-          return 1;
-        }
-      }
-    }
-    DFSCH_RWLOCK_UNLOCK(&hash->lock);
-    return 0;
-  }
-#endif
-
-
   i = hash->vector[h & hash->mask];
   
   while (i){
@@ -570,30 +398,15 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
 
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
 
-#ifdef FH_DEPTH
-  if (!hash->vector){
-    for (j = 0; j < FH_DEPTH; j++){
-      if (BIT_SET_P(hash->fh_valid, j)){
-        alist = dfsch_cons(dfsch_list(2,
-                                      hash->fh_keys[j],
-                                      hash->fh_values[j]), 
-                           alist);
-      }
+  for (j=0; j<(hash->mask+1); j++){
+    i = hash->vector[j];
+    while (i){
+      alist = dfsch_cons(dfsch_list(2,
+                                    i->key,
+                                    i->value), 
+                         alist);
+      i = i->next;
     }
-    DFSCH_RWLOCK_UNLOCK(&hash->lock);
-
-    return alist; 
-  }
-#endif  
-    for (j=0; j<(hash->mask+1); j++){
-      i = hash->vector[j];
-      while (i){
-        alist = dfsch_cons(dfsch_list(2,
-                                      i->key,
-                                      i->value), 
-                           alist);
-        i = i->next;
-      }
   }
   DFSCH_RWLOCK_UNLOCK(&hash->lock);
 
@@ -727,22 +540,6 @@ static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
   dfsch_error("exception:unknown-mode", mode);
 }
 
-DFSCH_DEFINE_FORM_IMPL(with_hash){
-  dfsch_object_t *hash;
-  dfsch_object_t *code;
-
-  DFSCH_OBJECT_ARG(args, hash);
-  DFSCH_ARG_REST(args, code);
-
-  hash = dfsch_eval(hash, env);
-
-  if (!dfsch_hash_p(hash)){
-    dfsch_error("exception:not-a-hash", hash);
-  }
-
-  return dfsch_eval_proc_tr(code, dfsch_new_frame_from_hash(env, hash), esc);
-}
-
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
@@ -765,6 +562,5 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                     dfsch_make_primitive(&native_hash_2_alist,NULL));
   dfsch_define_cstr(ctx, "alist->hash", 
                     dfsch_make_primitive(&native_alist_2_hash,NULL));
-  dfsch_define_cstr(ctx, "with-hash", DFSCH_FORM_REF(with_hash));
 
 }
