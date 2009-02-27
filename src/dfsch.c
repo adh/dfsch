@@ -1844,7 +1844,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei->stack_frame = GC_NEW(dfsch__stack_frame_t);
     ei->stack_frame->procedure = dfsch_make_symbol("toplevel");
     ei->stack_frame->next = NULL;
-    ei->break_type = NULL;
+    ei->async_apply = NULL;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -1884,9 +1884,8 @@ dfsch_object_t* dfsch_error(char* name,
                                "object", detail,
                                NULL));
 }
-dfsch_object_t* dfsch_break(char* type){
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  ti->break_type = type;
+void dfsch_async_apply_self(dfsch_object_t* proc){
+  dfsch__get_thread_info()->async_apply = proc;
 }
 
 // Vectors
@@ -2315,6 +2314,19 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * general idea is that frames are construed by apply and then filed in 
  * relevant functions. Tail recursion handling should be part of apply. */
 
+static void async_apply_check(dfsch__thread_info_t* ti){
+  if (ti->async_apply){
+    dfsch_object_t* proc;
+    proc = ti->async_apply;
+    ti->async_apply = NULL;
+    dfsch_apply(proc, NULL);
+  }
+}
+
+void dfsch_async_apply_check(){
+  async_apply_check(dfsch__get_thread_info());
+}
+
 typedef dfsch_tail_escape_t tail_escape_t;
 
 
@@ -2500,12 +2512,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
   if (!code)
     return NULL;
 
-  if (ti->break_type){
-    char* type = ti->break_type;
-    ti->break_type = NULL;
-    dfsch_error("Break", dfsch_make_symbol(type));
-  }
-
+  async_apply_check(ti);
   ti->stack_frame->code = code;
 
   i = code;

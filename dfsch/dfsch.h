@@ -354,8 +354,10 @@ extern "C" {
   extern dfsch_object_t* dfsch_error(char* type, 
                                      dfsch_object_t* data);
 
-  /** Set break flag (call this when throwing exception isn't safe) */
-  extern dfsch_object_t* dfsch_break(char* type);
+  /** Apply procedure later in evaluation (useful for signal handlers) */
+  extern void dfsch_async_apply_self(dfsch_object_t* proc);
+  /** Check for pending asynchronous apply */
+  extern void dfsch_async_apply_check();
 
   /* Object properties */
 

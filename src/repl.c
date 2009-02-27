@@ -47,8 +47,12 @@
 #include <signal.h>
 #include <assert.h>
 
+DFSCH_DEFINE_PRIMITIVE(break, 0){
+  dfsch_error("SIGINT caught", NULL);
+}
+
 static void sigint_handler_break(int sig){
-  dfsch_break("user:sigint"); 
+  dfsch_async_apply_self(DFSCH_PRIMITIVE_REF(break));
 }
 
 dfsch_parser_ctx_t *parser;
