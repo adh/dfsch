@@ -2154,12 +2154,13 @@ dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
   return (dfsch_object_t*)e;
 }
 
-object_t* dfsch_lookup(object_t* name, object_t* env){
+static object_t* lookup_impl(object_t* name, 
+                             environment_t* env,
+                             dfsch__thread_info_t* ti){
   environment_t *i;
   object_t* ret;
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
 
-  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  i = env;
   while (i){
     if (i->owner != ti){
       i->owner = NULL;
@@ -2186,6 +2187,12 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   dfsch_error("Unbound variable", dfsch_cons(name, env));
+}
+
+object_t* dfsch_lookup(object_t* name, object_t* env){
+  return lookup_impl(name, 
+                     DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
+                     dfsch__get_thread_info());
 }
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
@@ -2342,11 +2349,11 @@ typedef dfsch_tail_escape_t tail_escape_t;
 
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
-                                            dfsch_object_t* env,
+                                            environment_t* env,
                                             tail_escape_t* esc,
                                             dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
-                                       dfsch_object_t* env,
+                                       environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
@@ -2392,7 +2399,7 @@ dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
 }
 
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
-                                       dfsch_object_t* env,
+                                       environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
   dfsch_object_t* args;
@@ -2404,7 +2411,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if(DFSCH_TYPE_OF(exp) == SYMBOL){
     ti->stack_frame->env = env;
     ti->stack_frame->expr = exp;
-    return dfsch_lookup(exp, env);
+    return lookup_impl(exp, env, ti);
   }
 
   if(DFSCH_PAIR_P(exp)){
@@ -2412,7 +2419,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     object_t *f = DFSCH_FAST_CAR(exp);
 
     if (DFSCH_TYPE_OF(f) == DFSCH_SYMBOL_TYPE){
-      f = dfsch_lookup(f, env);
+      f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
     }
@@ -2454,10 +2461,14 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 dfsch_object_t* dfsch_eval_tr(dfsch_object_t* exp, 
                               dfsch_object_t* env,
                               dfsch_tail_escape_t* esc){
-  return dfsch_eval_impl(exp, env, esc, dfsch__get_thread_info());
+  return dfsch_eval_impl(exp, 
+                         DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE), 
+                         esc, dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
-  return dfsch_eval_impl(exp, env, NULL, dfsch__get_thread_info());
+  return dfsch_eval_impl(exp, 
+                         DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE), 
+                         NULL, dfsch__get_thread_info());
 }
 
 static void destructure_impl(dfsch_object_t* llist,
@@ -2511,7 +2522,7 @@ dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist,
 }
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
-                                            dfsch_object_t* env,
+                                            environment_t* env,
                                             tail_escape_t* esc,
                                             dfsch__thread_info_t* ti){
   dfsch_object_t *i;
@@ -2546,11 +2557,15 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
 dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                    dfsch_object_t* env,
                                    tail_escape_t* esc){
-  return dfsch_eval_proc_impl(code, env, esc, 
+  return dfsch_eval_proc_impl(code,
+                              DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
+                              esc, 
                               dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
-  return dfsch_eval_proc_impl(code, env, NULL, 
+  return dfsch_eval_proc_impl(code, 
+                              DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
+                              NULL, 
                               dfsch__get_thread_info());
 }
 
