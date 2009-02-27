@@ -1884,6 +1884,17 @@ dfsch_object_t* dfsch_error(char* name,
                                "object", detail,
                                NULL));
 }
+dfsch_object_t* dfsch_cerror(char* name, 
+                             dfsch_object_t* detail){
+  DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("continue"),
+                            "Ignore error condition"){
+    dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
+                                 "message", dfsch_make_string_cstr(name),
+                                 "object", detail,
+                                 NULL));
+  } DFSCH_END_WITH_SIMPLE_RESTART;
+}
+
 void dfsch_async_apply_self(dfsch_object_t* proc){
   dfsch__get_thread_info()->async_apply = proc;
 }

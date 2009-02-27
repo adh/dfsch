@@ -48,7 +48,7 @@
 #include <assert.h>
 
 DFSCH_DEFINE_PRIMITIVE(break, 0){
-  dfsch_error("SIGINT caught", NULL);
+  dfsch_cerror("SIGINT caught", NULL);
 }
 
 static void sigint_handler_break(int sig){
