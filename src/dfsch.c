@@ -2504,15 +2504,6 @@ static void destructure_impl(dfsch_object_t* llist,
   }
 }
 
-dfsch_object_t* dfsch_destructure(dfsch_object_t* arglist,
-                                  dfsch_object_t* list){
-  /*  object_t* hash = dfsch_hash_make(DFSCH_HASH_EQ);
-
-  destructure_impl(arglist, list, hash);
-
-  return hash;*/ // TODO
-}
-
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
                                          dfsch_object_t* list, 
                                          dfsch_object_t* env){
