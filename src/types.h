@@ -52,14 +52,14 @@ struct environment_t {
 };
 
 struct dfsch__stack_frame_t {
-  dfsch__stack_frame_t* next;
-
   dfsch_object_t* procedure;
   int tail_recursive;
 
   dfsch_object_t* code;
   dfsch_object_t* env;
   dfsch_object_t* expr;
+
+  dfsch__stack_frame_t* next;
 };
 
 
