@@ -53,6 +53,7 @@ struct environment_t {
 
 struct dfsch__stack_frame_t {
   dfsch_object_t* procedure;
+  dfsch_object_t* arguments;
   int tail_recursive;
 
   dfsch_object_t* code;

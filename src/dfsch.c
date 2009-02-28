@@ -2600,6 +2600,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
 
   f.procedure = proc;
+  f.arguments = args;
   ti->stack_frame = &f;
 
   /*
