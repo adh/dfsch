@@ -2419,6 +2419,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     object_t *f = DFSCH_FAST_CAR(exp);
 
     if (DFSCH_TYPE_OF(f) == DFSCH_SYMBOL_TYPE){
+      ti->stack_frame->env = env;
+      ti->stack_frame->expr = f;
       f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
