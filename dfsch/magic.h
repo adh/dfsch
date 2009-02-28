@@ -61,16 +61,17 @@ extern "C" {
   };
 
   struct dfsch__thread_info_t {
+    dfsch__stack_frame_t* stack_frame;
+    dfsch_object_t* async_apply;
+
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
-    dfsch__stack_frame_t* stack_frame;
 
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
 
-    dfsch_object_t* async_apply;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();
