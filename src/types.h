@@ -15,14 +15,13 @@ struct symbol_t{
 
 typedef dfsch_primitive_t primitive_t;
 
-typedef struct closure_t{
+typedef struct lambda_list_t {
   dfsch_type_t* type;
-  object_t* args;
-  object_t* code;
-  object_t* env;
-  object_t* name;
-  object_t* orig_code;
-} closure_t;
+  size_t positional_count;
+  dfsch_object_t* rest;
+  dfsch_object_t* positional[];
+} lambda_list_t;
+
 
 typedef struct vector_t {
   dfsch_type_t* type;
@@ -51,6 +50,15 @@ struct environment_t {
   dfsch_object_t* decls;
 };
 
+typedef struct closure_t{
+  dfsch_type_t* type;
+  lambda_list_t* args;
+  object_t* code;
+  environment_t* env;
+  object_t* name;
+  object_t* orig_code;
+} closure_t;
+
 struct dfsch__stack_frame_t {
   dfsch_object_t* procedure;
   dfsch_object_t* arguments;
@@ -62,7 +70,6 @@ struct dfsch__stack_frame_t {
 
   dfsch__stack_frame_t* next;
 };
-
 
 #define TYPE_CHECK(obj, t, name)                                \
   if (DFSCH_TYPE_OF(obj) != t)                                  \

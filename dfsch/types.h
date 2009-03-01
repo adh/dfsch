@@ -71,6 +71,8 @@ extern dfsch_type_t dfsch_vector_type;
 #define DFSCH_VECTOR_TYPE (&dfsch_vector_type)
 extern dfsch_type_t dfsch_environment_type;
 #define DFSCH_ENVIRONMENT_TYPE (&dfsch_environment_type)
+extern dfsch_type_t dfsch_lambda_list_type;
+#define DFSCH_LAMBDA_LIST_TYPE (&dfsch_lambda_list_type)
 extern dfsch_type_t dfsch_writer_state_type;
 #define DFSCH_WRITER_STATE_TYPE (&dfsch_writer_state_type)
 
@@ -379,6 +381,5 @@ typedef struct dfsch_pair_t {
 
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
-
 
 #endif

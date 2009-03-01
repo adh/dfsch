@@ -734,6 +734,20 @@ dfsch_type_t dfsch_environment_type = {
   "environment"
 };
 
+static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
+  dfsch_write_unreadable_start(ws, ll);
+  dfsch_write_string(ws, dfsch_saprintf("%d", ll->positional_count));
+  dfsch_write_unreadable_end(ws);
+}
+dfsch_type_t dfsch_lambda_list_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(lambda_list_t),
+  "lambda-list",
+  NULL,
+  (dfsch_type_write_t)lambda_list_write
+};
+
 
 
 int dfsch_null_p(dfsch_object_t* obj){
@@ -1735,7 +1749,7 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
     return NULL;
   
   c->env = env;
-  c->args = args;
+  c->args = dfsch_compile_lambda_list(args);
   c->code = code;
   c->orig_code = code;
   c->name = NULL;
@@ -1752,7 +1766,7 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
     return NULL;
   
   c->env = env;
-  c->args = args;
+  c->args = dfsch_compile_lambda_list(args);
   c->code = code;
   c->orig_code = code;
   c->name = name;
@@ -2137,21 +2151,23 @@ void dfsch_unset_property(dfsch_object_t* o,
 
 static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 
-
-dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
+static environment_t* new_frame_impl(environment_t* parent){
   environment_t* e = (environment_t*)dfsch_make_object(DFSCH_ENVIRONMENT_TYPE);
 
   dfsch_eqhash_init(&e->values, 0);
   e->decls = NULL;
   e->owner = dfsch__get_thread_info();
-  
-  if (parent){
-    parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
-  }
-
   e->parent = (environment_t*)parent;
     
   return (dfsch_object_t*)e;
+
+}
+
+dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
+  if (parent){
+    parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
+  }
+  return (dfsch_object_t*)new_frame_impl((environment_t*)parent);
 }
 
 static object_t* lookup_impl(object_t* name, 
@@ -2477,36 +2493,45 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
                          NULL, dfsch__get_thread_info());
 }
 
-static void destructure_impl(dfsch_object_t* llist,
+dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
+  lambda_list_t* ll;
+  size_t count = dfsch_list_length_fast(list);
+  dfsch_object_t* i = list;
+  size_t j;
+  ll = dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
+                             sizeof(dfsch_object_t*) * count);
+  ll->positional_count = count;
+  j = 0;
+  while (DFSCH_PAIR_P(i)){
+    if (j >= count){
+      dfsch_error("wtf?", NULL);
+    }
+    ll->positional[j] = DFSCH_FAST_CAR(i);
+    j++;
+    i = DFSCH_FAST_CDR(i);
+  }
+  ll->rest = i;
+  return ll;
+}
+
+static void destructure_impl(lambda_list_t* ll,
                              dfsch_object_t* list,
                              environment_t* env){
-  while (DFSCH_PAIR_P(llist) && DFSCH_PAIR_P(list)){
+  int i;
+  dfsch_object_t* j = list;
 
-    if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(llist)) != DFSCH_SYMBOL_TYPE){
-      dfsch_type_error(DFSCH_FAST_CAR(llist), DFSCH_SYMBOL_TYPE, 0);
-    } else {
-      dfsch_eqhash_put(&env->values, DFSCH_FAST_CAR(llist), DFSCH_FAST_CAR(list));
+  for (i = 0; i < ll->positional_count; i++){
+    if (!DFSCH_PAIR_P(j)){
+      dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
-
-    llist = DFSCH_FAST_CDR(llist);
-    list = DFSCH_FAST_CDR(list);
-    
+    dfsch_eqhash_put(&env->values, ll->positional[i], DFSCH_FAST_CAR(j));
+    j = DFSCH_FAST_CDR(j);
   }
-
-  if (!DFSCH_PAIR_P(llist)){
-    dfsch_eqhash_put(&env->values, (object_t*)llist, (object_t*)list);
-    return;
-  }
-
-  if (!list  && llist){
-    dfsch_error("Too few arguments", dfsch_list(2, 
-						llist, 
-						list));
-  }
-  if (!llist && list) {
-    dfsch_error("Too many arguments", dfsch_list(2,
-						 llist, 
-						 list));
+  
+  if (ll->rest) {
+    dfsch_eqhash_put(&env->values, ll->rest, j);
+  } else if (j) {
+    dfsch_error("Too many arguments", dfsch_list(2,ll, list));
   }
 }
 
@@ -2514,7 +2539,13 @@ dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist,
                                          dfsch_object_t* list, 
                                          dfsch_object_t* env){
   environment_t* e = dfsch_new_frame(env);
-  destructure_impl(arglist, list, e);
+  lambda_list_t* l;
+  if (DFSCH_TYPE_OF(arglist) != DFSCH_LAMBDA_LIST_TYPE){
+    l = dfsch_compile_lambda_list(arglist);
+  } else {
+    l = arglist;
+  }
+  destructure_impl(l, list, e);
   return e;
 }
 
@@ -2620,9 +2651,10 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
-    dfsch_object_t* env = dfsch_destructuring_bind(((closure_t*)proc)->args,
-                                                   args,
-                                                   ((closure_t*)proc)->env);
+    environment_t* env = new_frame_impl(((closure_t*) proc)->env);
+    destructure_impl(((closure_t*)proc)->args,
+                     args,
+                     env);
     r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
                            env,
