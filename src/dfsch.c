@@ -2368,12 +2368,9 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti);
-static dfsch_object_t* apply_standard_function(closure_t* proc,
-                                               dfsch_object_t* unev_args,
-                                               environment_t* arg_env,
-                                               dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
+                                        environment_t* arg_env,
                                         tail_escape_t* esc,
                                         dfsch__thread_info_t* ti);
 
@@ -2466,18 +2463,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 			     ti);
     }
 
-    if (!esc && DFSCH_TYPE_OF(f) == DFSCH_STANDARD_FUNCTION_TYPE){
-      return apply_standard_function(f, DFSCH_FAST_CDR(exp), env, ti);
-    }
-
-    args = eval_list(DFSCH_FAST_CDR(exp), env, ti);
-
-    return dfsch_apply_impl(f, 
-                            args,
-                            esc,
-                            ti);
-    
-    
+    return dfsch_apply_impl(f, DFSCH_FAST_CDR(exp), env, esc, ti);
   }  
   
   return exp;
@@ -2627,37 +2613,16 @@ dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
 struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *proc;
-  object_t *args; 
+  object_t *args;
+  object_t *arg_env;
 };
 
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
 
-static dfsch_object_t* apply_standard_function(closure_t* proc,
-                                               dfsch_object_t* unev_args,
-                                               environment_t* arg_env,
-                                               dfsch__thread_info_t* ti){
-  dfsch__stack_frame_t f;
-  dfsch_object_t* r;
-  environment_t* env;
-  f.next = ti->stack_frame;
-  f.env = NULL;
-  f.expr = NULL;
-  f.code = NULL;
-  f.procedure = proc;
-  f.arguments = unev_args;
-  ti->stack_frame = &f;
-
-  env = new_frame_impl(proc->env, ti);
-  destructuring_eval(proc->args, unev_args, env, arg_env, ti);
-  r = dfsch_eval_proc_impl(proc->code, env, NULL, ti);
-
-  ti->stack_frame = f.next;
-  return r;
-}
-
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
+                                        environment_t* arg_env,
                                         tail_escape_t* esc,
                                         dfsch__thread_info_t* ti){
   dfsch__stack_frame_t f;
@@ -2667,6 +2632,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (esc){
     esc->proc = proc;
     esc->args = args;
+    esc->arg_env = arg_env;
     longjmp(esc->ret,1);
   }
 
@@ -2678,6 +2644,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
     args = myesc.args;
+    arg_env = myesc.arg_env;
     f.tail_recursive = 1;
   } else {
     f.tail_recursive = 0;
@@ -2694,6 +2661,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
    */
 
   if (DFSCH_TYPE_OF(proc) == PRIMITIVE){
+    if (arg_env){
+      args = eval_list(args, arg_env, ti);
+    }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    &myesc);
     goto out;
@@ -2703,9 +2673,11 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
     environment_t* env = new_frame_impl(((closure_t*) proc)->env,
                                         ti);
-    destructure_impl(((closure_t*)proc)->args,
-                     args,
-                     env);
+    if (arg_env){
+      destructuring_eval(((closure_t*)proc)->args, args, env, arg_env, ti);
+    } else {
+      destructure_impl(((closure_t*)proc)->args, args, env);
+    }
     r = 
       dfsch_eval_proc_impl(((closure_t*)proc)->code,
                            env,
@@ -2715,6 +2687,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
+    if (arg_env){
+      args = eval_list(args, arg_env, ti);
+    }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);
     goto out;
   }
@@ -2729,10 +2704,10 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                dfsch_object_t* args,
                                tail_escape_t* esc){
-  return dfsch_apply_impl(proc, args, esc, dfsch__get_thread_info());
+  return dfsch_apply_impl(proc, args, NULL, esc, dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
-  return dfsch_apply_impl(proc, args, NULL, dfsch__get_thread_info());
+  return dfsch_apply_impl(proc, args, NULL, NULL, dfsch__get_thread_info());
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
