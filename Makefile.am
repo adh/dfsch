@@ -72,7 +72,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/types.h src/internal.h\
 	src/load.c dfsch/load.h		\
 	src/conditions.c dfsch/conditions.h \
 	src/introspect.c dfsch/introspect.h \
-	src/random.c dfsch/random.h	\	
+	src/random.c dfsch/random.h	\
 	src/writer.c dfsch/writer.h	\
 	src/eqhash.c dfsch/eqhash.h
 
