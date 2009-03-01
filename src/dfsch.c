@@ -2655,12 +2655,9 @@ static dfsch_object_t* apply_standard_function(closure_t* proc,
   f.arguments = unev_args;
   ti->stack_frame = &f;
 
-  env = new_frame_impl(((closure_t*) proc)->env);
+  env = new_frame_impl(proc->env, ti);
   destructuring_eval(proc->args, unev_args, env, arg_env, ti);
-  r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
-                           env,
-                           NULL,
-                           ti);
+  r = dfsch_eval_proc_impl(proc->code, env, NULL, ti);
 
   ti->stack_frame = f.next;
   return r;
