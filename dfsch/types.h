@@ -61,8 +61,6 @@ extern dfsch_type_t dfsch_standard_function_type;
 extern dfsch_type_t dfsch_empty_list_type;
 #define DFSCH_EMPTY_LIST_TYPE ((dfsch_type_t*)&dfsch_empty_list_type)
 
-extern dfsch_type_t dfsch_symbol_type;
-#define DFSCH_SYMBOL_TYPE (&dfsch_symbol_type)
 extern dfsch_type_t dfsch_function_type;
 #define DFSCH_FUNCTION_TYPE (&dfsch_function_type)
 extern dfsch_type_t dfsch_macro_type;
@@ -292,9 +290,9 @@ struct dfsch_slot_t {
  *
  * Object pointer tag meaning:
  * 000 - Normal object, first word is type
- * 010 - Mutable (normal, as returned by cons) pair
- * 100 - Immutable pair
- * 110 - Annotated pair - Immutable pair + source location info
+ * 010 - Mutable pair
+ * 100 - Symbol
+ * 110 - Immutable pair
  * x01 - Fixnum (cannot be 11, because of invalid object marker)
  * x11 - Entry of cdr-coded list (pointer points to WORD(!), not object)
  *
@@ -312,11 +310,11 @@ struct dfsch_slot_t {
 extern dfsch_type_t dfsch_pair_type;
 #define DFSCH_PAIR_TYPE (&dfsch_pair_type)
 
-extern dfsch_type_t dfsch_pair_types[4];
-#define DFSCH_MUTABLE_PAIR_TYPE (&(dfsch_pair_types[1]))
-#define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_pair_types[2]))
-#define DFSCH_ANNOTATED_PAIR_TYPE (&(dfsch_pair_types[3]))
-#define DFSCH_COMPACT_LIST_TYPE (&(dfsch_pair_types[0]))
+extern dfsch_type_t dfsch_tagged_types[4];
+#define DFSCH_MUTABLE_PAIR_TYPE (&(dfsch_tagged_types[1]))
+#define DFSCH_SYMBOL_TYPE (&(dfsch_tagged_types[2]))
+#define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_tagged_types[3]))
+#define DFSCH_COMPACT_LIST_TYPE (&(dfsch_tagged_types[0]))
 
 #define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((size_t) -1))
 
@@ -337,8 +335,12 @@ typedef struct dfsch_pair_t {
 #define DFSCH_PAIR_REF(obj)						\
   ((dfsch_pair_t*)(((size_t)(obj)) & (DFSCH__FAST_CDR_CODED_P(obj) ?	\
 				      ~0x03L : ~0x07L)))
-#define DFSCH_PAIR_ENCODE(obj, kind)            \
-  ((dfsch_object_t*)(((size_t)(obj)) | (kind)))
+#define DFSCH_MAKE_CLIST(ptr)\
+  ((dfsch_object_t*)(((size_t)(ptr)) | 0x03))  
+#define DFSCH_TAG_ENCODE(obj, kind)             \
+  ((dfsch_object_t*)(((size_t)(obj)) | (kind << 1)))
+#define DFSCH_TAG_REF(obj)                      \
+  ((dfsch_pair_t*)(((size_t)(obj)) & ~0x07L))
 
 #define DFSCH_FAST_CAR(obj)                     \
   (DFSCH_PAIR_REF(obj)->car)
@@ -348,9 +350,7 @@ typedef struct dfsch_pair_t {
   (DFSCH__FAST_CDR_CODED_P(obj) ?                               \
    DFSCH__COMPACT_LIST_CDR(obj):                                \
    (DFSCH_PAIR_REF(obj)->cdr))
-#define DFSCH_PAIR_P(obj)                                               \
-  ((((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0)) \
-   || ((((size_t)(obj)) & 0x03) == 0x03))
+#define DFSCH_PAIR_P(obj) (((((size_t)(obj)) & 0x02) == 0x02))
 #define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x03) == 0x01)
 
 #define DFSCH_FIXNUM_REF(obj)                   \
@@ -367,7 +367,7 @@ typedef struct dfsch_pair_t {
           ((((size_t)(obj)) & 0x01) == 0x01 ?                           \
            ((((size_t)(obj)) & 0x02) == 0x00 ?                          \
             DFSCH_FIXNUM_TYPE : DFSCH_COMPACT_LIST_TYPE):               \
-           &(dfsch_pair_types[(((size_t)(obj)) & 0x06) >> 1]))):        \
+           &(dfsch_tagged_types[(((size_t)(obj)) & 0x06) >> 1]))):        \
    DFSCH_EMPTY_LIST_TYPE)
 
   

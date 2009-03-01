@@ -524,7 +524,25 @@ dfsch_type_t dfsch_pair_type = {
 };
 #define PAIR (&dfsch_pair_type)
 
-dfsch_type_t dfsch_pair_types[4] = {
+static dfsch_slot_t symbol_slots[] = {
+  DFSCH_STRING_SLOT(symbol_t, data, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static void symbol_write(symbol_t* s, dfsch_writer_state_t* state){
+  s = DFSCH_TAG_REF(s);
+  if (s->data){
+    dfsch_write_string(state, s->data);
+  } else {
+    dfsch_write_unreadable(state, s, ""); 
+  }
+}
+dfsch_type_t dfsch_symbol_type = {
+};
+#define SYMBOL DFSCH_SYMBOL_TYPE 
+
+
+dfsch_type_t dfsch_tagged_types[4] = {
   {
     DFSCH_SPECIAL_TYPE,
     DFSCH_IMMUTABLE_PAIR_TYPE,
@@ -548,6 +566,17 @@ dfsch_type_t dfsch_pair_types[4] = {
     NULL
   },
   {
+    DFSCH_STANDARD_TYPE,
+    NULL,
+    sizeof(symbol_t), 
+    "symbol",
+    NULL,
+    (dfsch_type_write_t)symbol_write,
+    NULL,
+    NULL,
+    &symbol_slots
+  },
+  {
     DFSCH_SPECIAL_TYPE,
     DFSCH_PAIR_TYPE,
     sizeof(dfsch_pair_t), 
@@ -558,44 +587,9 @@ dfsch_type_t dfsch_pair_types[4] = {
     (dfsch_type_hash_t)pair_hash,
     NULL
   },
-  {
-    DFSCH_SPECIAL_TYPE,
-    DFSCH_IMMUTABLE_PAIR_TYPE,
-    sizeof(dfsch_pair_t), 
-    "annotated-pair",
-    (dfsch_type_equal_p_t)pair_equal_p,
-    (dfsch_type_write_t)pair_write,
-    NULL,
-    (dfsch_type_hash_t)pair_hash,
-    NULL
-  },
 };
 
 
-static dfsch_slot_t symbol_slots[] = {
-  DFSCH_STRING_SLOT(symbol_t, data, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_SLOT_TERMINATOR
-};
-
-static void symbol_write(symbol_t* s, dfsch_writer_state_t* state){
-  if (s->data){
-    dfsch_write_string(state, s->data);
-  } else {
-    dfsch_write_unreadable(state, s, ""); 
-  }
-}
-dfsch_type_t dfsch_symbol_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(symbol_t), 
-  "symbol",
-  NULL,
-  (dfsch_type_write_t)symbol_write,
-  NULL,
-  NULL,
-  &symbol_slots
-};
-#define SYMBOL DFSCH_SYMBOL_TYPE 
 
 static void primitive_write(dfsch_primitive_t* p, 
                             dfsch_writer_state_t* state){
@@ -800,7 +794,7 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
   p->car = car;
   p->cdr = cdr;
 
-  return DFSCH_PAIR_ENCODE(p, 0x02);
+  return DFSCH_TAG_ENCODE(p, 1);
 }
 
 dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
@@ -809,7 +803,7 @@ dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
   p->car = car;
   p->cdr = cdr;
 
-  return DFSCH_PAIR_ENCODE(p, 0x04);
+  return DFSCH_TAG_ENCODE(p, 3);
 }
 
 
@@ -824,10 +818,10 @@ dfsch_object_t* dfsch_multicons(size_t n){
   p = GC_MALLOC(sizeof(dfsch_pair_t)*n);
 
   for (i = 0; i < (n-1); i++){
-    p[i].cdr = DFSCH_PAIR_ENCODE(&(p[i+1]), 0x02);
+    p[i].cdr = DFSCH_TAG_ENCODE(&(p[i+1]), 1);
   }
 
-  return DFSCH_PAIR_ENCODE(&(p[0]), 0x02);
+  return DFSCH_TAG_ENCODE(&(p[0]), 1);
 }
 
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
@@ -1043,7 +1037,7 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list,
                                 dfsch_cdr(list));
   }
 
-  data = GC_MALLOC(sizeof(object_t*)*(len+2));
+  data = GC_MALLOC(sizeof(object_t*)*(len+4));
   
   while (DFSCH_PAIR_P(j)){
     if (i >= len){
@@ -1058,7 +1052,7 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list,
   i++;
   data[i] = j;
 
-  return DFSCH_PAIR_ENCODE(data, 0x03);
+  return DFSCH_MAKE_CLIST(data);
 }
 
 
@@ -1546,7 +1540,7 @@ static symbol_t* make_symbol(char *symbol){
   symbol_t *s;
   symbol_t *f;
 
-  s = (symbol_t*)dfsch_make_object(SYMBOL); /* !!! free_symbol could be called by this */
+  s = GC_NEW(symbol_t); /* !!! free_symbol could be called by this */
   s->data = stracpy(symbol);
 
   pthread_mutex_lock(&symbol_lock);
@@ -1583,11 +1577,11 @@ void dfsch_unintern(dfsch_object_t* symbol){
 }
 
 dfsch_object_t* dfsch_gensym(){
-  symbol_t *s = (symbol_t*)dfsch_make_object(SYMBOL);
+  symbol_t *s = GC_NEW(symbol_t);
 
   s->data = NULL;
 
-  return (object_t*)s;
+  return DFSCH_TAG_ENCODE(s, 2);
 }
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
@@ -1610,11 +1604,11 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   if (!s)
     s = make_symbol(symbol);
 
-  return (object_t*)s;
+  return DFSCH_TAG_ENCODE(s, 2);
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
-  return ((symbol_t*)DFSCH_ASSERT_TYPE(symbol, SYMBOL))->data;
+  return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, SYMBOL)))->data;
 }
 
 char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
@@ -2797,7 +2791,6 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
   dfsch_define_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
   dfsch_define_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<annotated-pair>", DFSCH_ANNOTATED_PAIR_TYPE);
   dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
   dfsch_define_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
   dfsch_define_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
