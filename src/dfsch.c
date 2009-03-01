@@ -2398,7 +2398,12 @@ static object_t* eval_list(object_t *list, object_t* env,
 
   i = DFSCH_FAST_CDR(list);
   while (DFSCH_PAIR_P(i)){
-    r = dfsch_eval_impl(DFSCH_FAST_CAR(i), env, NULL, ti);
+    r = DFSCH_FAST_CAR(i);
+    if (DFSCH_SYMBOL_P(r)){
+      r = lookup_impl(r, env, ti);
+    } else {
+      r = dfsch_eval_impl(r, env, NULL, ti);
+    }
 
     t = dfsch_cons(r, NULL);
     DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
@@ -2428,28 +2433,26 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   if (!exp) 
     return NULL;
 
-  if(DFSCH_TYPE_OF(exp) == SYMBOL){
-    ti->stack_frame->env = env;
-    ti->stack_frame->expr = exp;
+  if(DFSCH_SYMBOL_P(exp)){
     return lookup_impl(exp, env, ti);
   }
 
   if(DFSCH_PAIR_P(exp)){
-    
     object_t *f = DFSCH_FAST_CAR(exp);
+    ti->stack_frame->expr = exp;
+    ti->stack_frame->env = env;
 
-    if (DFSCH_TYPE_OF(f) == DFSCH_SYMBOL_TYPE){
-      ti->stack_frame->env = env;
-      ti->stack_frame->expr = f;
+    if (DFSCH_SYMBOL_P(f)){
       f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
     }
 
+    ti->stack_frame->expr = exp;
+    ti->stack_frame->env = env;
+
     
     if (DFSCH_TYPE_OF(f) == FORM){
-      ti->stack_frame->env = env;
-      ti->stack_frame->expr = exp;
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
                                       env, 
                                       DFSCH_FAST_CDR(exp), 
@@ -2457,8 +2460,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     }
 
     if (DFSCH_TYPE_OF(f) == MACRO){
-      ti->stack_frame->env = env;
-      ti->stack_frame->expr = exp;
       return dfsch_eval_impl(dfsch_macro_expand(f, DFSCH_FAST_CDR(exp)),
 			     env,
  			     esc,
@@ -2470,8 +2471,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     }
 
     args = eval_list(DFSCH_FAST_CDR(exp), env, ti);
-    ti->stack_frame->env = env;
-    ti->stack_frame->expr = exp;
 
     return dfsch_apply_impl(f, 
                             args,
@@ -2592,12 +2591,12 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
 
   async_apply_check(ti);
   ti->stack_frame->code = code;
-
+  ti->stack_frame->env = env;
+    
   i = code;
 
   while (DFSCH_PAIR_P(i)){
     object_t* exp = DFSCH_FAST_CAR(i); 
-
     if (DFSCH_FAST_CDR(i)) {
       dfsch_eval_impl(exp, env, NULL, ti);
     } else {
