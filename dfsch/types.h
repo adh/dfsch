@@ -349,6 +349,7 @@ typedef struct dfsch_pair_t {
 #define DFSCH_PAIR_P(obj)                                               \
   ((((((size_t)(obj)) & 0x01) == 0) && ((((size_t)(obj)) & 0x06) != 0)) \
    || ((((size_t)(obj)) & 0x03) == 0x03))
+#define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x03) == 0x01)
 
 #define DFSCH_FIXNUM_REF(obj)                   \
   (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 2)

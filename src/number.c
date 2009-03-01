@@ -597,12 +597,12 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
-      long an = DFSCH_FIXNUM_REF(a)<<1;
-      long bn = DFSCH_FIXNUM_REF(b)<<1;
+      long an = DFSCH_FIXNUM_REF(a)<<2;
+      long bn = DFSCH_FIXNUM_REF(b)<<2;
       long x = an + bn;
       
       if ((an^x) >= 0 || (bn^x) >= 0) {
-        return DFSCH_MAKE_FIXNUM(x>>1);
+        return DFSCH_MAKE_FIXNUM(x>>2);
     }
   }
 
@@ -635,12 +635,12 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
-    long an = DFSCH_FIXNUM_REF(a)<<1;
-    long bn = DFSCH_FIXNUM_REF(b)<<1;
+    long an = DFSCH_FIXNUM_REF(a)<<2;
+    long bn = DFSCH_FIXNUM_REF(b)<<2;
     long x = an - bn;
 
     if ((an^x) >= 0 || (~bn^x) >= 0)
-      return DFSCH_MAKE_FIXNUM(x>>1);
+      return DFSCH_MAKE_FIXNUM(x>>2);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||

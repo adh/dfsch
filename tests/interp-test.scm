@@ -125,51 +125,54 @@
 (group "arithmetics"
 
        (sub-group basic
-                 (test 'arith0 (+ 3 4) 7)
-                 (test 'arith1 (+ 3) 3)
-                 (test 'arith2 (* 4) 4)
-                 (test 'arith3 (*) 1)
-                 
-                 (test 'arith4 (- 3 4) -1)
-                 (test 'arith5 (- 3 4 5) -6)
-                 (test 'arith6 (- 3) -3)
-                 (test 'arith7 (/ 3 4 5) (/ 3 20))
-                 (test 'arith-int-div (/i 8 3) 2)
-                 (test 'arith-mod-inv (mod-inv 3 11) 4))
+                  (test 'arith0 (+ 3 4) 7)
+                  (test 'arith1 (+ 3) 3)
+                  (test 'arith2 (* 4) 4)
+                  (test 'arith3 (*) 1)
+                  
+                  (test 'arith4 (- 3 4) -1)
+                  (test 'arith5 (- 3 4 5) -6)
+                  (test 'arith6 (- 3) -3)
+                  (test 'arith7 (/ 3 4 5) (/ 3 20))
+                  (test 'arith-int-div (/i 8 3) 2)
+                  (test 'arith-mod-inv (mod-inv 3 11) 4))
+       (sub-group overflow
+                  (test 'int-add (< 0 (+ most-positive-fixnum 1)) #t)
+                  (test 'int-sub (> 0 (- most-negative-fixnum 1)) #t))
        (sub-group bignum-related
-                 (test 'integer-expt 
-                       (integer-expt 1234567890123456789 
-                                     789456123 
-                                     102030405060708090)
-                       67367859943785579)
-                 (test 'big-sub 
-                       (- 1234567890123456789012345678901234567890
-                          1234567890123456789012345678901234567891)
-                       -1)
-                 (test 'big-mul
-                       (* 65536 65536 65536 65536 65536 65536 65536 65536)
-                       (* 256 256 256 256 256 256 256 256
-                          256 256 256 256 256 256 256 256)))
+                  (test 'integer-expt 
+                        (integer-expt 1234567890123456789 
+                                      789456123 
+                                      102030405060708090)
+                        67367859943785579)
+                  (test 'big-sub 
+                        (- 1234567890123456789012345678901234567890
+                           1234567890123456789012345678901234567891)
+                        -1)
+                  (test 'big-mul
+                        (* 65536 65536 65536 65536 65536 65536 65536 65536)
+                        (* 256 256 256 256 256 256 256 256
+                           256 256 256 256 256 256 256 256)))
        (sub-group bitwise-logic
-                 (test 'logior (logior 123456789123456789 112233445566778899) 
-                       125744530602155799)
-                 (test 'logxor (logxor 112233445566778899 123456789123456789)
-                       15798826514075910)
-                 (test 'logand (logand 112233445566778899 123456789123456789)
-                       109945704088079889)))
+                  (test 'logior (logior 123456789123456789 112233445566778899) 
+                        125744530602155799)
+                  (test 'logxor (logxor 112233445566778899 123456789123456789)
+                        15798826514075910)
+                  (test 'logand (logand 112233445566778899 123456789123456789)
+                        109945704088079889)))
 
 
 (group "control flow"
        
        (sub-group if
                  
-                 (test 'if-true (if (> 3 2) 'yes 'no) 'yes)
-                 (test 'if-false (if (< 3 2) 'yes 'no) 'no)
-                 (test 'if-eval 
-                       (if (> 3 2)
-                           (- 3 2)
-                           (+ 3 2))
-                       1))
+                  (test 'if-true (if (> 3 2) 'yes 'no) 'yes)
+                  (test 'if-false (if (< 3 2) 'yes 'no) 'no)
+                  (test 'if-eval 
+                        (if (> 3 2)
+                            (- 3 2)
+                            (+ 3 2))
+                        1))
 
        (sub-group cond
 
