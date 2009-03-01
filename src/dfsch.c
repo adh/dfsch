@@ -2372,6 +2372,10 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti);
+static dfsch_object_t* apply_standard_function(closure_t* proc,
+                                               dfsch_object_t* unev_args,
+                                               environment_t* arg_env,
+                                               dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
                                         tail_escape_t* esc,
@@ -2465,6 +2469,10 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 			     ti);
     }
 
+    if (!esc && DFSCH_TYPE_OF(f) == DFSCH_STANDARD_FUNCTION_TYPE){
+      return apply_standard_function(f, DFSCH_FAST_CDR(exp), env, ti);
+    }
+
     args = eval_list(DFSCH_FAST_CDR(exp), env, ti);
     ti->stack_frame->env = env;
     ti->stack_frame->expr = exp;
@@ -2530,6 +2538,30 @@ static void destructure_impl(lambda_list_t* ll,
   
   if (ll->rest) {
     dfsch_eqhash_put(&env->values, ll->rest, j);
+  } else if (j) {
+    dfsch_error("Too many arguments", dfsch_list(2,ll, list));
+  }
+}
+
+static void destructuring_eval(lambda_list_t* ll,
+                               dfsch_object_t* list,
+                               environment_t* env,
+                               environment_t* outer,
+                               dfsch__thread_info_t* ti){
+  int i;
+  dfsch_object_t* j = list;
+
+  for (i = 0; i < ll->positional_count; i++){
+    if (!DFSCH_PAIR_P(j)){
+      dfsch_error("Too few arguments", dfsch_list(2, ll, list));
+    }
+    dfsch_eqhash_put(&env->values, ll->positional[i], 
+                     dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti));
+    j = DFSCH_FAST_CDR(j);
+  }
+  
+  if (ll->rest) {
+    dfsch_eqhash_put(&env->values, ll->rest, eval_list(j, outer, ti));
   } else if (j) {
     dfsch_error("Too many arguments", dfsch_list(2,ll, list));
   }
@@ -2606,6 +2638,32 @@ struct dfsch_tail_escape_t {
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
 
+static dfsch_object_t* apply_standard_function(closure_t* proc,
+                                               dfsch_object_t* unev_args,
+                                               environment_t* arg_env,
+                                               dfsch__thread_info_t* ti){
+  dfsch__stack_frame_t f;
+  dfsch_object_t* r;
+  environment_t* env;
+  f.next = ti->stack_frame;
+  f.env = NULL;
+  f.expr = NULL;
+  f.code = NULL;
+  f.procedure = proc;
+  f.arguments = unev_args;
+  ti->stack_frame = &f;
+
+  env = new_frame_impl(((closure_t*) proc)->env);
+  destructuring_eval(proc->args, unev_args, env, arg_env, ti);
+  r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
+                           env,
+                           NULL,
+                           ti);
+
+  ti->stack_frame = f.next;
+  return r;
+}
+
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
                                         tail_escape_t* esc,
@@ -2672,8 +2730,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
  out:
   ti->stack_frame = f.next;
-  return r;
-   
+  return r;   
 }
 
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
