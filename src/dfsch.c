@@ -2371,18 +2371,22 @@ static object_t* eval_list(object_t *list, object_t* env,
 
   if (!list)
     return NULL;
+  
+  if (!DFSCH_PAIR_P(list)){
+    dfsch_error("Not a proper list", list);    
+  }
 
-  i = list;
+  r = dfsch_eval_impl(DFSCH_FAST_CAR(list), env, NULL, ti);
+  t = dfsch_cons(r, NULL);
+  f = p = t;
+
+  i = DFSCH_FAST_CDR(list);
   while (DFSCH_PAIR_P(i)){
     r = dfsch_eval_impl(DFSCH_FAST_CAR(i), env, NULL, ti);
 
     t = dfsch_cons(r, NULL);
-    if (f){
-      DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
-      p = t;
-    }else{
-      f = (object_t*)(p = t);
-    }
+    DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
+    p = t;
 
     i = DFSCH_FAST_CDR(i);
   }
