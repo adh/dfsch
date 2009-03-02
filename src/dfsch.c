@@ -2190,7 +2190,7 @@ static object_t* lookup_impl(object_t* name,
    DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
     if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
-        DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return ret;
     }
     
@@ -2424,9 +2424,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
-  dfsch_object_t* args;
- start:
-  
   if (!exp) 
     return NULL;
 
