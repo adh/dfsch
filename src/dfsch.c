@@ -32,6 +32,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/conditions.h>
 #include <dfsch/introspect.h>
+#include <dfsch/weak.h>
 #include "util.h"
 #include "internal.h"
 
@@ -159,7 +160,7 @@ dfsch_type_t* dfsch_type_of(dfsch_object_t* obj){
 }
 
 dfsch_type_t* dfsch_object_as_type(dfsch_object_t* obj){
-  return DFSCH_ASSERT_INSTANCE(obj, DFSCH_STANDARD_TYPE);
+  return (dfsch_type_t*)DFSCH_ASSERT_INSTANCE(obj, DFSCH_STANDARD_TYPE);
 }
 
 dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){  
@@ -214,7 +215,7 @@ static dfsch_slot_t slot_slots[] = {
 };
 
 static void slot_write(dfsch_slot_t* slot, dfsch_writer_state_t* state){
-  dfsch_write_unreadable(state, slot, "%s", slot->name);
+  dfsch_write_unreadable(state, (dfsch_object_t*)slot, "%s", slot->name);
 }
 
 dfsch_type_t dfsch_slot_type = {
@@ -265,7 +266,7 @@ static dfsch_object_t* boolean_accessor_ref(void* ptr){
   return dfsch_bool(*((int*)ptr));
 }
 static void boolean_accessor_set(void* ptr, dfsch_object_t* obj){
-  *((int**)ptr) = obj != NULL;
+  *((int**)ptr) = (obj != NULL);
 }
 dfsch_slot_type_t dfsch_boolean_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("boolean-slot"),
@@ -314,7 +315,7 @@ dfsch_object_t* dfsch_get_slots(dfsch_type_t* type){
     if (type->slots){
       i = type->slots;
       while (i->type){
-        tmp = dfsch_cons(i, NULL);
+        tmp = dfsch_cons((dfsch_object_t*)i, NULL);
         if (!head) {
           head = tail = tmp;
         } else {
@@ -351,7 +352,7 @@ dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj,
                                dfsch_slot_t* slot,
                                int debug){
   if (!debug && slot->access == DFSCH_SLOT_ACCESS_DEBUG_READ) {
-    dfsch_error("Slot not accesible", slot);
+    dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }
 
   return slot->type->ref(((char*) obj)+slot->offset);
@@ -361,7 +362,7 @@ void dfsch_slot_set(dfsch_object_t* obj,
                     dfsch_object_t* value, 
                     int debug){
   if (!debug && slot->access != DFSCH_SLOT_ACCESS_RW) {
-    dfsch_error("Slot not accesible", slot);
+    dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }  
   
   slot->type->set(((char*) obj)+slot->offset, value);
@@ -405,7 +406,7 @@ dfsch_type_t dfsch_meta_type = {
 
 
 static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
-  dfsch_write_unreadable(state, t, 
+  dfsch_write_unreadable(state, (dfsch_object_t*)t, 
                          "%s instance-size: %d", t->name, t->size);
 }
 
@@ -534,7 +535,7 @@ static void symbol_write(symbol_t* s, dfsch_writer_state_t* state){
   if (s->data){
     dfsch_write_string(state, s->data);
   } else {
-    dfsch_write_unreadable(state, s, ""); 
+    dfsch_write_unreadable(state, (dfsch_object_t*)s, ""); 
   }
 }
 dfsch_type_t dfsch_symbol_type = {
@@ -594,7 +595,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 static void primitive_write(dfsch_primitive_t* p, 
                             dfsch_writer_state_t* state){
   char* name = p->name ? p->name : "()";
-  dfsch_write_unreadable(state, p, "%s", name);
+  dfsch_write_unreadable(state, (dfsch_object_t*)p, "%s", name);
 }
 
 static dfsch_slot_t primitive_slots[] = {
@@ -616,11 +617,11 @@ dfsch_type_t dfsch_primitive_type = {
 #define PRIMITIVE (&dfsch_primitive_type)
 
 static void function_write(closure_t* c, dfsch_writer_state_t* state){
-  dfsch_write_unreadable_start(state, c);
+  dfsch_write_unreadable_start(state, (dfsch_object_t*)c);
 
   dfsch_write_object(state, c->name);
   dfsch_write_string(state, " ");
-  dfsch_write_object(state, c->args);
+  dfsch_write_object(state, (dfsch_object_t*)c->args); // TODO
 
   dfsch_write_unreadable_end(state);
 }
@@ -729,7 +730,7 @@ dfsch_type_t dfsch_environment_type = {
 };
 
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
-  dfsch_write_unreadable_start(ws, ll);
+  dfsch_write_unreadable_start(ws, (dfsch_object_t*)ll);
   dfsch_write_string(ws, dfsch_saprintf("%d", ll->positional_count));
   dfsch_write_unreadable_end(ws);
 }
@@ -917,7 +918,7 @@ int dfsch_list_mutable_p(object_t* list){
   if (!list)
     return 1;
 
-  if (!DFSCH_TYPE_OF(list) == DFSCH_MUTABLE_PAIR_TYPE){
+  if (DFSCH_TYPE_OF(list) != DFSCH_MUTABLE_PAIR_TYPE){
     return 0;
   }
 
@@ -931,7 +932,7 @@ int dfsch_list_mutable_p(object_t* list){
       return 0;
     }
     j = DFSCH_FAST_CDR(j);
-    if (!DFSCH_TYPE_OF(i) == DFSCH_MUTABLE_PAIR_TYPE){
+    if (DFSCH_TYPE_OF(i) != DFSCH_MUTABLE_PAIR_TYPE){
       break;
     }
     i = DFSCH_FAST_CDR(i);
@@ -1742,8 +1743,8 @@ extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
   if (!c)
     return NULL;
   
-  c->env = env;
-  c->args = dfsch_compile_lambda_list(args);
+  c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
   c->code = code;
   c->orig_code = code;
   c->name = NULL;
@@ -1759,8 +1760,8 @@ extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   if (!c)
     return NULL;
   
-  c->env = env;
-  c->args = dfsch_compile_lambda_list(args);
+  c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
   c->code = code;
   c->orig_code = code;
   c->name = name;
@@ -2154,8 +2155,7 @@ static environment_t* new_frame_impl(environment_t* parent,
   e->owner = ti;
   e->parent = (environment_t*)parent;
     
-  return (dfsch_object_t*)e;
-
+  return e;
 }
 
 dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
@@ -2185,7 +2185,7 @@ static object_t* lookup_impl(object_t* name,
     i = i->parent;
   }
 
-  dfsch_error("Unbound variable", dfsch_cons(name, env));
+  dfsch_error("Unbound variable", dfsch_cons(name, (dfsch_object_t*)env));
  lock:
    DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
@@ -2198,7 +2198,7 @@ static object_t* lookup_impl(object_t* name,
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  dfsch_error("Unbound variable", dfsch_cons(name, env));
+  dfsch_error("Unbound variable", dfsch_cons(name, (dfsch_object_t*)env));
 }
 
 object_t* dfsch_lookup(object_t* name, object_t* env){
@@ -2375,7 +2375,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                         dfsch__thread_info_t* ti);
 
 
-static object_t* eval_list(object_t *list, object_t* env, 
+static object_t* eval_list(object_t *list, environment_t* env, 
                            dfsch__thread_info_t* ti){
   dfsch_object_t *i;
   object_t *f=NULL;
