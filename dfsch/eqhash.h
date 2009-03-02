@@ -73,6 +73,9 @@ int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                short* flags);
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                      dfsch_object_t* key, 
-                     dfsch_object_t** value, short *flags, 
-                     dfsch_eqhash_entry_t** entry);
+                     dfsch_object_t** value);
+int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
+                        dfsch_object_t* key, 
+                        dfsch_object_t** value, short *flags, 
+                        dfsch_eqhash_entry_t** entry);
 #endif

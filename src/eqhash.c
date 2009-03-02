@@ -263,8 +263,28 @@ int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
 
 int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                      dfsch_object_t* key, 
-                     dfsch_object_t** value, short *flags,
-                     dfsch_eqhash_entry_t** entry){
+                     dfsch_object_t** value){
+  if (hash->is_large){
+    dfsch_eqhash_entry_t* e = find_entry(hash, key);
+    if (e) {
+      *value = e->value;
+      return 1;
+    }
+  } else {
+    int i;
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] == key){
+        *value = hash->contents.small.values[i];
+        return 1;
+      }
+    }
+  }  
+  return 0;  
+}
+int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
+                        dfsch_object_t* key, 
+                        dfsch_object_t** value, short *flags,
+                        dfsch_eqhash_entry_t** entry){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {

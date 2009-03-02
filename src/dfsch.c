@@ -2178,7 +2178,7 @@ static object_t* lookup_impl(object_t* name,
       i->owner = NULL;
       goto lock;
     }
-    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+    if (dfsch_eqhash_ref(&i->values, name, &ret)){
       return ret;
     }
     
@@ -2189,7 +2189,7 @@ static object_t* lookup_impl(object_t* name,
  lock:
    DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+    if (dfsch_eqhash_ref(&i->values, name, &ret)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return ret;
     }
@@ -2213,7 +2213,7 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref(&i->values, name, &ret, NULL, NULL)){
+    if (dfsch_eqhash_ref(&i->values, name, &ret)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return dfsch_cons(ret, NULL);
     }
