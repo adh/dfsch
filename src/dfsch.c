@@ -1473,6 +1473,9 @@ static size_t string_hash(char* string){
 static hash_entry_t*  global_symbol_hash[HASH_SIZE];
 static unsigned int gsh_init = 0;
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
+dfsch__symbol_t dfsch__static_symbols[] = {
+  
+};
 
 /*
  * It's possible to use rwlock here (althought such solution is not so 
@@ -1481,12 +1484,25 @@ static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
  * one thread doing such things.
  */
 
+static void register_static_symbol(symbol_t* s){
+  hash_entry_t *e = malloc(sizeof(hash_entry_t));
+
+  e->entry = s;
+  e->hash = string_hash(s->data);
+
+  e->next = global_symbol_hash[e->hash];
+  global_symbol_hash[e->hash] = e;
+}
 
 static void gsh_check_init(){
+  int i;
   if (gsh_init)
     return;
 
   memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
+  for (i = 0; i < sizeof(dfsch__static_symbols)/sizeof(symbol_t); i++){
+    register_static_symbol(dfsch__static_symbols + i);
+  }
   gsh_init = 1;
 }
 
@@ -1571,7 +1587,6 @@ static symbol_t* make_symbol(char *symbol){
   
   return s;
 }
-
 
 void dfsch_unintern(dfsch_object_t* symbol){
   free_symbol((symbol_t*)DFSCH_ASSERT_TYPE(symbol, SYMBOL));

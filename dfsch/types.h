@@ -383,4 +383,14 @@ typedef struct dfsch_pair_t {
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
 
+typedef struct dfsch__symbol_t{
+  char *data;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch__symbol_t;
+
+extern dfsch__symbol_t dfsch__static_symbols[];
+#define DFSCH__STATIC_SYMBOL(index)			\
+  DFSCH_TAG_ENCODE(dfsch__static_symbols + (index), 2)
+
+
 #endif

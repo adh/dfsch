@@ -6,12 +6,7 @@
 
 typedef dfsch_object_t object_t;
 
-typedef struct symbol_t symbol_t;
-
-struct symbol_t{
-  dfsch_type_t* type;
-  char *data;
-};
+typedef dfsch__symbol_t symbol_t;
 
 typedef dfsch_primitive_t primitive_t;
 
