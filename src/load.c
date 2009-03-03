@@ -64,7 +64,7 @@ dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx,
   
   entry(ctx); // TODO: what if this routine fails?
 
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 
 typedef struct import_ctx_t {

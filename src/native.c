@@ -643,7 +643,7 @@ DFSCH_DEFINE_FORM_IMPL(or){
 }
 DFSCH_DEFINE_FORM_IMPL(and){
   object_t* i;
-  object_t* r = dfsch_sym_true();
+  object_t* r = DFSCH_SYM_TRUE;
   i = args;
  
   while(i){
@@ -953,10 +953,10 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
 
 
-  dfsch_define_cstr(ctx, "true", dfsch_sym_true());
+  dfsch_define_cstr(ctx, "true", DFSCH_SYM_TRUE);
   dfsch_define_cstr(ctx, "nil", NULL);
-  dfsch_define_cstr(ctx, "else", dfsch_sym_true());
-  dfsch_define_cstr(ctx, "T", dfsch_sym_true());
+  dfsch_define_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_define_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
 
   dfsch_define_cstr(ctx, "make-vector", 

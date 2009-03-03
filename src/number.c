@@ -1074,7 +1074,7 @@ DFSCH_DEFINE_PRIMITIVE(lt, DFSCH_PRIMITIVE_CACHED){
       return NULL;
     a = b;
   }
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 DFSCH_DEFINE_PRIMITIVE(gt, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
@@ -1087,7 +1087,7 @@ DFSCH_DEFINE_PRIMITIVE(gt, DFSCH_PRIMITIVE_CACHED){
       return NULL;
     a = b;
   }
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 DFSCH_DEFINE_PRIMITIVE(lte, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
@@ -1100,7 +1100,7 @@ DFSCH_DEFINE_PRIMITIVE(lte, DFSCH_PRIMITIVE_CACHED){
       return NULL;
     a = b;
   }
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 DFSCH_DEFINE_PRIMITIVE(gte, DFSCH_PRIMITIVE_CACHED){
   object_t *a;
@@ -1113,7 +1113,7 @@ DFSCH_DEFINE_PRIMITIVE(gte, DFSCH_PRIMITIVE_CACHED){
       return NULL;
     a = b;
   }
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 
 // Bitwise

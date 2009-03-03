@@ -328,7 +328,7 @@ static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
     }
   }
 
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 
 
@@ -674,7 +674,7 @@ static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
     }
   }
 
-  return dfsch_sym_true();
+  return DFSCH_SYM_TRUE;
 }
 static dfsch_object_t* native_kill(void* baton, dfsch_object_t* args,
                                    dfsch_tail_escape_t* esc){

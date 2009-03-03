@@ -764,7 +764,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	++data;
         ctx->column++;
 	
-	parse_quote(ctx, dfsch_sym_quote());
+	parse_quote(ctx, DFSCH_SYM_QUOTE);
 	if (ctx->error) return;
 
 	break;
@@ -773,7 +773,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->column++;
 
 	
-	parse_quote(ctx, dfsch_sym_quasiquote());
+	parse_quote(ctx, DFSCH_SYM_QUASIQUOTE);
 	if (ctx->error) return;
 
 	break;
@@ -785,9 +785,9 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           ++data;
           ctx->column++;
         
-          parse_quote(ctx, dfsch_sym_unquote_splicing()); 
+          parse_quote(ctx, DFSCH_SYM_UNQUOTE_SPLICING); 
         }else{
-          parse_quote(ctx, dfsch_sym_unquote());
+          parse_quote(ctx, DFSCH_SYM_UNQUOTE);
         }
 	if (ctx->error) return;
 
@@ -906,7 +906,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ++data;
         ctx->column++;
 
-        parse_object(ctx,dfsch_sym_true());
+        parse_object(ctx,DFSCH_SYM_TRUE);
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;

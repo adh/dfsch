@@ -1474,7 +1474,13 @@ static hash_entry_t*  global_symbol_hash[HASH_SIZE];
 static unsigned int gsh_init = 0;
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 dfsch__symbol_t dfsch__static_symbols[] = {
-  
+  {"true"},
+  {"quote"},
+  {"quasiquote"},
+  {"unquote"},
+  {"unquote-splicing"},
+  {"else"},
+  {"=>"},
 };
 
 /*
@@ -1656,72 +1662,29 @@ int dfsch_compare_symbol(dfsch_object_t* symbol,
 
 
 dfsch_object_t* dfsch_sym_true(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("true"); 
-  // TODO: shouldn't this be something other? #t ? T ?
-  return cache;
+  return DFSCH_SYM_TRUE;
 }
 dfsch_object_t* dfsch_sym_quote(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("quote");
-  return cache;
+  return DFSCH_SYM_QUOTE;
 }
-dfsch_object_t* dfsch_sym_quasiquote(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("quasiquote");
-  return cache;
+dfsch_object_t* dfsch_sym_quasiqoute(){
+  return DFSCH_SYM_QUASIQUOTE;
 }
 dfsch_object_t* dfsch_sym_unquote(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("unquote");
-  return cache;
+  return DFSCH_SYM_UNQUOTE;
 }
 dfsch_object_t* dfsch_sym_unquote_splicing(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("unquote-splicing");
-  return cache;
+  return DFSCH_SYM_UNQUOTE_SPLICING;
 }
 dfsch_object_t* dfsch_sym_else(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("else");
-  return cache;
+  return DFSCH_SYM_ELSE;
 }
-dfsch_object_t* dfsch_sym_bold_right_arrow(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
-
-  cache = dfsch_make_symbol("=>");
-  return cache;
+dfsch_object_t* dfch_sym_bold_right_arrow(){
+  return DFSCH_SYM_BOLD_RIGHT_ARROW;
 }
-dfsch_object_t* dfsch_sym_tail_recursive(){
-  static object_t *cache = NULL;
-  if (cache)
-    return cache;
 
-  cache = dfsch_make_symbol("tail-recursive");
-  return cache;
-}
 dfsch_object_t* dfsch_bool(int bool){
-  return bool?dfsch_sym_true():NULL;
+  return bool ? DFSCH_SYM_TRUE : NULL;
 }
 
 struct dfsch_symbol_iter_t{
@@ -2727,10 +2690,10 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
     object_t* car = dfsch_car(arg);
     object_t* cdr = dfsch_cdr(arg);
 
-    if (car == dfsch_sym_unquote() && dfsch_pair_p(cdr)){
+    if (car == DFSCH_SYM_UNQUOTE && dfsch_pair_p(cdr)){
       return dfsch_eval(dfsch_car(cdr), env);
     }else if (dfsch_pair_p(car)){
-      if (dfsch_car(car) == dfsch_sym_unquote_splicing()){
+      if (dfsch_car(car) == DFSCH_SYM_UNQUOTE_SPLICING){
         return dfsch_append(dfsch_list(2,
                                        dfsch_eval(dfsch_car(dfsch_cdr(car)), 
                                                   env),

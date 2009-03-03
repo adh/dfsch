@@ -86,7 +86,7 @@ DFSCH_DEFINE_FORM_IMPL(cond){
     object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
     if (o){
       object_t* exp = dfsch_cdr(dfsch_car(i));
-      if (dfsch_car(exp) == dfsch_sym_bold_right_arrow()){
+      if (dfsch_car(exp) == DFSCH_SYM_BOLD_RIGHT_ARROW){
         object_t* proc = dfsch_eval(dfsch_list_item(exp, 1), env);
 
         return dfsch_apply(proc, dfsch_list(1, o));
@@ -109,7 +109,7 @@ DFSCH_DEFINE_FORM_IMPL(case){
   while (dfsch_pair_p(args)){
     object_t* c = dfsch_car(args);
     object_t* i = dfsch_car(c);
-    if (i == dfsch_sym_else())
+    if (i == DFSCH_SYM_ELSE)
       return dfsch_eval_proc_tr(dfsch_cdr(c), env, esc);
       
     while (dfsch_pair_p(i)){
