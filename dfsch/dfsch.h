@@ -264,24 +264,8 @@ extern "C" {
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
                                   char* string);
 
-  /** Returns symbol "true" */
-  extern dfsch_object_t* dfsch_sym_true();
-
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
-
-  /** Returns symbol "'" */
-  extern dfsch_object_t* dfsch_sym_quote();
-  /** Returns symbol "`" */
-  extern dfsch_object_t* dfsch_sym_quasiquote();
-  /** Returns symbol ","*/
-  extern dfsch_object_t* dfsch_sym_unquote();
-  /** Returns symbol ",@"*/
-  extern dfsch_object_t* dfsch_sym_unquote_splicing();
-  /** Returns symbol "else"*/
-  extern dfsch_object_t* dfsch_sym_else();
-  /** Returns symbol "=>"*/
-  extern dfsch_object_t* dfsch_sym_bold_right_arrow();
 
 
   /** Create new lambda closure. */

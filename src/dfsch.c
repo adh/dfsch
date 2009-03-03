@@ -1660,29 +1660,6 @@ int dfsch_compare_symbol(dfsch_object_t* symbol,
   return (ascii_strcasecmp(string, dfsch_symbol(symbol)) == 0);
 }
 
-
-dfsch_object_t* dfsch_sym_true(){
-  return DFSCH_SYM_TRUE;
-}
-dfsch_object_t* dfsch_sym_quote(){
-  return DFSCH_SYM_QUOTE;
-}
-dfsch_object_t* dfsch_sym_quasiqoute(){
-  return DFSCH_SYM_QUASIQUOTE;
-}
-dfsch_object_t* dfsch_sym_unquote(){
-  return DFSCH_SYM_UNQUOTE;
-}
-dfsch_object_t* dfsch_sym_unquote_splicing(){
-  return DFSCH_SYM_UNQUOTE_SPLICING;
-}
-dfsch_object_t* dfsch_sym_else(){
-  return DFSCH_SYM_ELSE;
-}
-dfsch_object_t* dfch_sym_bold_right_arrow(){
-  return DFSCH_SYM_BOLD_RIGHT_ARROW;
-}
-
 dfsch_object_t* dfsch_bool(int bool){
   return bool ? DFSCH_SYM_TRUE : NULL;
 }
