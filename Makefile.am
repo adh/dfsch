@@ -149,3 +149,4 @@ dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la libdfsch-console.la
 
 TESTS = tests/scm-test.sh
 
+version.c:

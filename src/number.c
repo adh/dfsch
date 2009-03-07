@@ -1070,7 +1070,7 @@ DFSCH_DEFINE_PRIMITIVE(lt, DFSCH_PRIMITIVE_CACHED){
   DFSCH_OBJECT_ARG(args, a);
   while (args){
     DFSCH_OBJECT_ARG(args, b);
-    if (!dfsch_number_lt(a, b))
+    if (dfsch_number_cmp(a, b) >= 0)
       return NULL;
     a = b;
   }
@@ -1083,7 +1083,7 @@ DFSCH_DEFINE_PRIMITIVE(gt, DFSCH_PRIMITIVE_CACHED){
   DFSCH_OBJECT_ARG(args, a);
   while (args){
     DFSCH_OBJECT_ARG(args, b);
-    if (!dfsch_number_gt(a, b))
+    if (dfsch_number_cmp(a, b) <= 0)
       return NULL;
     a = b;
   }
@@ -1096,7 +1096,7 @@ DFSCH_DEFINE_PRIMITIVE(lte, DFSCH_PRIMITIVE_CACHED){
   DFSCH_OBJECT_ARG(args, a);
   while (args){
     DFSCH_OBJECT_ARG(args, b);
-    if (!dfsch_number_lte(a, b))
+    if (dfsch_number_cmp(a, b) > 0)
       return NULL;
     a = b;
   }
@@ -1109,7 +1109,7 @@ DFSCH_DEFINE_PRIMITIVE(gte, DFSCH_PRIMITIVE_CACHED){
   DFSCH_OBJECT_ARG(args, a);
   while (args){
     DFSCH_OBJECT_ARG(args, b);
-    if (!dfsch_number_gte(a, b))
+    if (dfsch_number_cmp(a, b) < 0)
       return NULL;
     a = b;
   }
