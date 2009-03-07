@@ -973,14 +973,14 @@ DFSCH_DEFINE_PRIMITIVE(minus, DFSCH_PRIMITIVE_CACHED){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
-    dfsch_error("exception:too-few-arguments",i);
+    dfsch_error("Too few arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
     return dfsch_number_sub(dfsch_make_number_from_long(0), DFSCH_FAST_CAR(i));
   s = DFSCH_FAST_CAR(i);
   i = DFSCH_FAST_CDR(i);
   while(DFSCH_PAIR_P(i)){
-    s= dfsch_number_sub(s, DFSCH_FAST_CAR(i));
+    s = dfsch_number_sub(s, DFSCH_FAST_CAR(i));
     i = DFSCH_FAST_CDR(i);
   }
 
