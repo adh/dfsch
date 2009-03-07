@@ -657,9 +657,10 @@ DFSCH_DEFINE_FORM_IMPL(and){
   return r;
 }
 DFSCH_DEFINE_PRIMITIVE(not, DFSCH_PRIMITIVE_CACHED){
-  NEED_ARGS(args,1);  
-  object_t *a = dfsch_car(args);
-  return dfsch_bool(!a);
+  dfsch_object_t* val;
+  DFSCH_OBJECT_ARG(args, val);
+  DFSCH_ARG_END(args);
+  return dfsch_bool(val == NULL);
 }
 
 /////////////////////////////////////////////////////////////////////////////
