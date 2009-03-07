@@ -56,15 +56,6 @@ DFSCH_DEFINE_PRIMITIVE(gensym, 0){
   return dfsch_gensym();
 }
 
-DFSCH_DEFINE_PRIMITIVE(unintern, 0){
-  object_t* symbol;
-  DFSCH_OBJECT_ARG(args, symbol);
-  DFSCH_ARG_END(args);
-
-  dfsch_unintern(symbol);
-  return symbol;
-}
-
 DFSCH_DEFINE_PRIMITIVE(id, 0){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
@@ -885,7 +876,6 @@ DFSCH_DEFINE_PRIMITIVE(unset_property, 0){
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
   dfsch_define_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
-  dfsch_define_cstr(ctx, "unintern", DFSCH_PRIMITIVE_REF(unintern));
   dfsch_define_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
   dfsch_define_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
   dfsch_define_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));

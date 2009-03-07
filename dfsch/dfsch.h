@@ -249,9 +249,6 @@ extern "C" {
   /** Makes symbol object from string. */
   extern dfsch_object_t* dfsch_make_symbol(char* symbol);
 
-  /** Dissociates symbol object from its name. */
-  extern void dfsch_unintern(dfsch_object_t* symbol);
-
   /** Returns unique generated symbol. */
   extern dfsch_object_t* dfsch_gensym();
 

@@ -1594,10 +1594,6 @@ static symbol_t* make_symbol(char *symbol){
   return s;
 }
 
-void dfsch_unintern(dfsch_object_t* symbol){
-  free_symbol((symbol_t*)DFSCH_ASSERT_TYPE(symbol, SYMBOL));
-}
-
 dfsch_object_t* dfsch_gensym(){
   symbol_t *s = GC_NEW(symbol_t);
 
