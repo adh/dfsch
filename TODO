@@ -8,8 +8,7 @@ For 0.3.0:
 * Pretty-printer
 * immutable pair and list constructors (copy, append...)
 * list anotation (load position)
-* CL-like destructuring (&key, &optional...) + efective lambda-list 
-  representation
+* CL-like destructuring (&key, &optional...)
 
 When needed by other code:
 * Type predicates for all types
