@@ -616,12 +616,27 @@ dfsch_type_t dfsch_primitive_type = {
 };
 #define PRIMITIVE (&dfsch_primitive_type)
 
+static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
+  int i;
+  for (i = 0; i < ll->positional_count; i++){
+    dfsch_write_object(ws, ll->positional[i]);
+    dfsch_write_string(ws, " ");
+  }
+  if (ll->rest){
+    dfsch_write_string(ws, "&rest ");
+    dfsch_write_object(ws, ll->rest);    
+  }
+}
+
 static void function_write(closure_t* c, dfsch_writer_state_t* state){
   dfsch_write_unreadable_start(state, (dfsch_object_t*)c);
 
-  dfsch_write_object(state, c->name);
-  dfsch_write_string(state, " ");
-  dfsch_write_object(state, (dfsch_object_t*)c->args); // TODO
+  if (c->name){
+    dfsch_write_object(state, c->name);
+  }
+  dfsch_write_string(state, " (");
+  print_lambda_list(c->args, state);
+  dfsch_write_string(state, ")");
 
   dfsch_write_unreadable_end(state);
 }
@@ -729,9 +744,10 @@ dfsch_type_t dfsch_environment_type = {
   "environment"
 };
 
+
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
   dfsch_write_unreadable_start(ws, (dfsch_object_t*)ll);
-  dfsch_write_string(ws, dfsch_saprintf("%d", ll->positional_count));
+  print_lambda_list(ll, ws);
   dfsch_write_unreadable_end(ws);
 }
 dfsch_type_t dfsch_lambda_list_type = {
@@ -1786,7 +1802,7 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 
-#if defined(__GNUC__) && !defined(__arm__) && !defined(__CYGWIN__)
+#if defined(__GNUC__) && defined(__linux__) && !defined(__arm__)
 #define USE_TLS
 #endif
 
@@ -2432,9 +2448,12 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 
 dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   lambda_list_t* ll;
-  size_t count = dfsch_list_length_fast(list);
+  long count = dfsch_list_length_fast(list);
   dfsch_object_t* i = list;
   size_t j;
+  if (count == -1){
+    count = 0;
+  }
   ll = dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
                              sizeof(dfsch_object_t*) * count);
   ll->positional_count = count;
