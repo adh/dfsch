@@ -251,6 +251,7 @@ static void file_get_bytes(file_state_t* state, uint8_t* buf, size_t len){
         dfsch_error("Error reading random source", state);
       }
     }
+    len -= r;
   }
 }
 
