@@ -1068,9 +1068,12 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list,
   data[i] = DFSCH_INVALID_OBJECT;
   i++;
   data[i] = j;
+  data[i+1] = NULL;
+  data[i+2] = NULL;
 
   return DFSCH_MAKE_CLIST(data);
 }
+
 
 
 dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
