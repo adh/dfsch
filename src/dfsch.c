@@ -1074,6 +1074,42 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list,
   return DFSCH_MAKE_CLIST(data);
 }
 
+dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list, 
+                                    size_t* length,
+                                    dfsch_object_t* source,
+                                    dfsch_object_t* location){
+  dfsch_object_t* j = list;
+  size_t i=0;
+  size_t len;
+  object_t** data;
+  int proper;
+
+  if (list == NULL){
+    return NULL;
+  }
+
+  len = dfsch_list_length(list, &proper);
+
+  data = GC_MALLOC(sizeof(object_t*)*(len+4));
+  
+  while (DFSCH_PAIR_P(j)){
+    if (i >= len){
+      break; /* Can happen due to race condition in user code */
+    }
+    data[i] = DFSCH_FAST_CAR(j);
+    j = DFSCH_FAST_CDR(j);
+    i++;
+  }
+
+  data[i] = DFSCH_INVALID_OBJECT;
+  i++;
+  data[i] = j;
+  data[i+1] = source;
+  data[i+2] = location;
+
+  return DFSCH_MAKE_CLIST(data);
+}
+
 
 
 dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
