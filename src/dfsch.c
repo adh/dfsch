@@ -1110,6 +1110,24 @@ dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list,
   return DFSCH_MAKE_CLIST(data);
 }
 
+dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list){
+  dfsch_object_t** i;
+  if (!DFSCH_PAIR_P(list) || !DFSCH__FAST_CDR_CODED_P(list)){
+    return NULL;
+  }
+
+  i = (dfsch_object_t**) DFSCH_PAIR_REF(list);
+
+  while (*i != DFSCH_INVALID_OBJECT){
+    i++;
+  }
+
+  if (i[1] || i[2]){
+    return dfsch_cons(i[1], i[2]);
+  } else {
+    return NULL;
+  }
+}
 
 
 dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
