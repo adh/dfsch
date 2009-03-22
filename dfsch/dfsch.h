@@ -218,6 +218,14 @@ extern "C" {
   extern dfsch_object_t* dfsch_list(size_t count, ...);
   /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list, 
+                                             dfsch_object_t* source,
+                                             dfsch_object_t* location);
+  extern dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list);
+
+  
+
   /** Reverses list */
   extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
 

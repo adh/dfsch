@@ -1035,8 +1035,7 @@ dfsch_object_t** dfsch_list_as_array(dfsch_object_t* list, size_t* length){
   return data;
 }
 
-dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list, 
-                                          size_t* length){
+dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   dfsch_object_t* j = list;
   size_t i=0;
   size_t len;
@@ -1075,7 +1074,6 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list,
 }
 
 dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list, 
-                                    size_t* length,
                                     dfsch_object_t* source,
                                     dfsch_object_t* location){
   dfsch_object_t* j = list;
