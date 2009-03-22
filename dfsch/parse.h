@@ -115,6 +115,9 @@ extern "C" {
   extern void dfsch_parser_clear_directives(dfsch_parser_ctx_t* ctx);
   extern void dfsch_parser_clear_symbols(dfsch_parser_ctx_t* ctx);
   extern void dfsch_parser_define_default_directives(dfsch_parser_ctx_t* ctx);
+
+  extern void dfsch_parser_set_source(dfsch_parser_ctx_t* ctx,
+                                      dfsch_object_t* source);
 #ifdef __cplusplus
 }
 #endif

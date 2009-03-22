@@ -170,6 +170,7 @@ struct dfsch_parser_ctx_t {
   symbol_map_t* symbol_map;
   parser_directive_t* directives;
   dfsch_object_t* env;
+  dfsch_object_t* source;
 };
 
 static void parser_reset(dfsch_parser_ctx_t *ctx){
@@ -485,7 +486,9 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
   if (ctx->parser && (ctx->parser->state == P_PREEND || 
                       ctx->parser->state == P_LIST)){
     dfsch_object_t *list;
-    list = dfsch_list_copy_immutable(ctx->parser->front);
+    list = dfsch_list_annotate(ctx->parser->front, 
+                               ctx->source,
+                               DFSCH_MAKE_FIXNUM(ctx->line));
     parser_pop(ctx);
     parse_object(ctx, list);
   }else{
@@ -1095,6 +1098,10 @@ void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->parser = NULL;
   ctx->level = 0 ;
   ctx->error = 0;
+}
+
+void dfsch_parser_set_source(dfsch_parser_ctx_t* ctx, dfsch_object_t* source){
+  ctx->source = source;
 }
 
 int dfsch_parser_top_level(dfsch_parser_ctx_t *ctx){
