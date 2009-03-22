@@ -342,7 +342,9 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
   return ictx.head;
   
 }
-dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name, dfsch_object_t* eval_env){
+dfsch_object_t* dfsch_read_scm_stream(FILE* f, 
+                                      char* name, 
+                                      dfsch_object_t* eval_env){
   char buf[8193];
   import_ctx_t ictx;
   ssize_t r;
@@ -353,6 +355,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f, char* name, dfsch_object_t* eval_
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_set_source(parser, dfsch_make_string_cstr(name));
   dfsch_parser_eval_env(parser, eval_env);
 
   while (!err && (fgets(buf, 8192, f))){
