@@ -167,6 +167,13 @@ DFSCH_DEFINE_PRIMITIVE(get_slots, 0){
   return dfsch_get_slots(type);  
 }
 
+DFSCH_DEFINE_PRIMITIVE(get_list_annotation, 0){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_get_list_annotation(list);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -883,6 +890,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
   dfsch_define_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
   dfsch_define_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
+  dfsch_define_cstr(ctx, "get-list-annotation", 
+                    DFSCH_PRIMITIVE_REF(get_list_annotation));
 
   dfsch_define_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
   dfsch_define_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
