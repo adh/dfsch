@@ -191,6 +191,7 @@ int dfsch_console_read_objects(char* prompt,
                                dfsch_console_object_cb_t cb,
                                void* baton){
   dfsch_parser_ctx_t* parser = dfsch_parser_create();
+  dfsch_parser_set_source(parser, dfsch_make_symbol("*console-io*"));
   dfsch_parser_callback(parser, cb, baton);
   return dfsch_console_read_objects_parser(prompt, parser);
 }

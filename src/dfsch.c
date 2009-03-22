@@ -1100,10 +1100,9 @@ dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list,
   }
 
   data[i] = DFSCH_INVALID_OBJECT;
-  i++;
-  data[i] = j;
-  data[i+1] = source;
-  data[i+2] = location;
+  data[i+1] = j;
+  data[i+2] = source;
+  data[i+3] = location;
 
   return DFSCH_MAKE_CLIST(data);
 }
@@ -1120,8 +1119,10 @@ dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list){
     i++;
   }
 
-  if (i[1] || i[2]){
-    return dfsch_cons(i[1], i[2]);
+  /* i[1] is last CDR */
+
+  if (i[2] || i[3]){
+    return dfsch_cons(i[2], i[3]);
   } else {
     return NULL;
   }
