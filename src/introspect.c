@@ -102,9 +102,18 @@ static char* trace_line(dfsch_object_t* line){
   frame = line;
 
   if (frame->expr){
-    return saprintf("  %s\n    %s\n", 
-		    dfsch_object_2_string(frame->procedure, 3, 1),
-		    dfsch_object_2_string(frame->expr, 4, 1));
+    dfsch_object_t* annot = dfsch_get_list_annotation(frame->expr);
+    if (annot){
+      return saprintf("  %s\n    %s\n      %s line %s\n", 
+                      dfsch_object_2_string(frame->procedure, 3, 1),
+                      dfsch_object_2_string(frame->expr, 4, 1),
+                      dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 1),
+                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 1));
+    } else {
+      return saprintf("  %s\n    %s\n", 
+                      dfsch_object_2_string(frame->procedure, 3, 1),
+                      dfsch_object_2_string(frame->expr, 4, 1));
+    }
   } else {
     return saprintf("  %s\n", 
 		    dfsch_object_2_string(frame->procedure, 3, 1));
