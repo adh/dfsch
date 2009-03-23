@@ -22,7 +22,6 @@
 
 
 (define (test id exp val)
-;;  (print (object->string val))
   (if (equal? exp val)
       (begin 
         (print "   Test passed: \033[0;32m" id "\033[0;39m")
@@ -57,9 +56,6 @@
 
 (define-macro (ignore . code)
   ())
-
-(define-macro (loop . code)
-  `(do () (()) ,@code))
 
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
