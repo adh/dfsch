@@ -5,6 +5,7 @@ Non-version-specific:
 
 For 0.3.0:
 * Print source locations in debugger
+* Documentation slot for functions and primitives
 
 For 0.3.1
 * Circular printer
