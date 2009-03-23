@@ -307,19 +307,19 @@ DFSCH_DEFINE_FORM_IMPL(define_macro){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(car, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(car, NULL){
   NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
 }
-DFSCH_DEFINE_PRIMITIVE(cdr, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(cdr, NULL){
   NEED_ARGS(args,1);  
   return dfsch_cdr(dfsch_car(args));
 }
-DFSCH_DEFINE_PRIMITIVE(cons, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(cons, NULL){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(cons_immutable, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(cons_immutable, NULL){
   dfsch_object_t* car;
   dfsch_object_t* cdr;
   DFSCH_OBJECT_ARG(args, car);
@@ -328,10 +328,10 @@ DFSCH_DEFINE_PRIMITIVE(cons_immutable, DFSCH_PRIMITIVE_CACHED){
   return dfsch_cons_immutable(car, cdr);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(list, NULL){
   return dfsch_list_copy(args);
 }
-DFSCH_DEFINE_PRIMITIVE(length, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(length, NULL){
   long len;
   NEED_ARGS(args,1);  
 
@@ -339,11 +339,11 @@ DFSCH_DEFINE_PRIMITIVE(length, DFSCH_PRIMITIVE_CACHED){
 
   return dfsch_make_number_from_long(len);
 }
-DFSCH_DEFINE_PRIMITIVE(set_car, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(set_car, NULL){
   NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(set_cdr, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
@@ -550,51 +550,51 @@ DFSCH_DEFINE_PRIMITIVE(reduce, 0){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(null_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(null_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(pair_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(pair_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(list_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(list_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_list_p(dfsch_car(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(atom_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(atom_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(symbol_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(symbol_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(string_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(string_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(primitive_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(primitive_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
 }
-DFSCH_DEFINE_PRIMITIVE(function_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(function_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_function_p(dfsch_car(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(procedure_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(procedure_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_procedure_p(dfsch_car(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(vector_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_vector_p(dfsch_car(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(macro_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(macro_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(form_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(form_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_form_p(dfsch_car(args)));  
 }
@@ -605,15 +605,15 @@ DFSCH_DEFINE_PRIMITIVE(form_p, DFSCH_PRIMITIVE_CACHED){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(eq_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(eq_p, NULL){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-DFSCH_DEFINE_PRIMITIVE(eqv_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(eqv_p, NULL){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-DFSCH_DEFINE_PRIMITIVE(equal_p, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(equal_p, NULL){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
@@ -654,7 +654,7 @@ DFSCH_DEFINE_FORM_IMPL(and){
 
   return r;
 }
-DFSCH_DEFINE_PRIMITIVE(not, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(not, NULL){
   dfsch_object_t* val;
   DFSCH_OBJECT_ARG(args, val);
   DFSCH_ARG_END(args);
@@ -667,7 +667,7 @@ DFSCH_DEFINE_PRIMITIVE(not, DFSCH_PRIMITIVE_CACHED){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(make_vector, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(make_vector, NULL){
   size_t length;
   object_t* fill;
 
@@ -678,10 +678,10 @@ DFSCH_DEFINE_PRIMITIVE(make_vector, DFSCH_PRIMITIVE_CACHED){
   return dfsch_make_vector(length,fill);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector, NULL){
   return dfsch_list_2_vector(args);
 }
-DFSCH_DEFINE_PRIMITIVE(vector_length, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector_length, NULL){
   object_t* vector;
   
   DFSCH_OBJECT_ARG(args,vector);
@@ -693,7 +693,7 @@ DFSCH_DEFINE_PRIMITIVE(vector_length, DFSCH_PRIMITIVE_CACHED){
   return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
 }
-DFSCH_DEFINE_PRIMITIVE(vector_ref, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector_ref, NULL){
   object_t* vector;
   size_t k;
 
@@ -704,7 +704,7 @@ DFSCH_DEFINE_PRIMITIVE(vector_ref, DFSCH_PRIMITIVE_CACHED){
   return dfsch_vector_ref(vector, k);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector_set, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector_set, NULL){
   object_t* vector;
   size_t k;
   object_t* obj;
@@ -717,7 +717,7 @@ DFSCH_DEFINE_PRIMITIVE(vector_set, DFSCH_PRIMITIVE_CACHED){
   return dfsch_vector_set(vector, k, obj);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector_2_list, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(vector_2_list, NULL){
   object_t* vector;
 
   DFSCH_OBJECT_ARG(args, vector);
@@ -726,7 +726,7 @@ DFSCH_DEFINE_PRIMITIVE(vector_2_list, DFSCH_PRIMITIVE_CACHED){
   return dfsch_vector_2_list(vector);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list_2_vector, DFSCH_PRIMITIVE_CACHED){
+DFSCH_DEFINE_PRIMITIVE(list_2_vector, NULL){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);

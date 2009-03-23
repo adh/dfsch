@@ -80,6 +80,7 @@ typedef struct dfsch_primitive_t {
   void *baton;
   int flags;
   char* name;
+  char* documentation;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
@@ -87,25 +88,24 @@ extern dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
 
-#define DFSCH_PRIMITIVE_CACHED 1
-#define DFSCH_PRIMITIVE_PURE   2
-
-#define DFSCH_DECLARE_PRIMITIVE(name, flags)    \
-  static dfsch_primitive_t p_##name = {         \
-    DFSCH_PRIMITIVE_TYPE,                       \
-    p_##name##_impl,                            \
-    NULL,                                       \
-    flags,                                      \
-    #name                                       \
-  }
-  
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags)  \
+#define DFSCH_DECLARE_PRIMITIVE(name, documentation)    \
   static dfsch_primitive_t p_##name = {                 \
     DFSCH_PRIMITIVE_TYPE,                               \
     p_##name##_impl,                                    \
-    baton,                                              \
-    flags,                                              \
-    #name                                               \
+    NULL,                                               \
+    0,                                                  \
+    #name,                                              \
+    documentation                                       \
+  }
+  
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags, documentation)   \
+  static dfsch_primitive_t p_##name = {                                 \
+    DFSCH_PRIMITIVE_TYPE,                                               \
+    p_##name##_impl,                                                    \
+    baton,                                                              \
+    flags,                                                              \
+    #name,                                                              \
+    documentation                                                       \
   }
 
 #define DFSCH_PRIMITIVE_HEAD(name)                                      \
