@@ -7,7 +7,6 @@ For 0.3.0:
 * Circular printer
 * Pretty-printer
 * immutable pair and list constructors (copy, append...)
-* list anotation (load position)
 * CL-like destructuring (&key, &optional...)
 
 When needed by other code:
