@@ -52,6 +52,7 @@ typedef struct closure_t{
   environment_t* env;
   object_t* name;
   object_t* orig_code;
+  object_t* documentation;
 } closure_t;
 
 struct dfsch__stack_frame_t {

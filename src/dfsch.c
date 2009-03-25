@@ -600,6 +600,7 @@ static void primitive_write(dfsch_primitive_t* p,
 
 static dfsch_slot_t primitive_slots[] = {
   DFSCH_STRING_SLOT(dfsch_primitive_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_primitive_t, documentation, DFSCH_SLOT_ACCESS_RO),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -647,6 +648,7 @@ static dfsch_slot_t closure_slots[] = {
   DFSCH_OBJECT_SLOT(closure_t, env, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
   DFSCH_OBJECT_SLOT(closure_t, name, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
   DFSCH_OBJECT_SLOT(closure_t, orig_code, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, documentation, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
   DFSCH_SLOT_TERMINATOR
 };
 
