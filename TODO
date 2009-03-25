@@ -4,7 +4,7 @@ Non-version-specific:
 * Packages (reasonable implementation is probably simpler than it looks)
 
 For 0.3.0:
-* Documentation slot for functions and primitives
+* Document some primitives
 
 For 0.3.1
 * Circular printer
