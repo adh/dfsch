@@ -4,7 +4,6 @@ Non-version-specific:
 * Packages (reasonable implementation is probably simpler than it looks)
 
 For 0.3.0:
-* Print source locations in debugger
 * Documentation slot for functions and primitives
 
 For 0.3.1
