@@ -29,12 +29,6 @@ typedef struct macro_t {
   dfsch_object_t* proc;
 } macro_t;
 
-typedef struct form_t {
-  dfsch_type_t* type;
-  dfsch_object_t* proc;
-  dfsch_object_t* compilation_proc;
-} form_t;
-
 typedef struct environment_t environment_t;
 
 struct environment_t {
