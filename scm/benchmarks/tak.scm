@@ -34,6 +34,22 @@
               " cons'd: " (- (gcollect:total-bytes)
                              ,start-bytes)))))
 
+(define-macro (without-gc . thunk)
+  `(begin
+     (gcollect:disable!)
+     (unwind-protect
+      (begin
+        ,@thunk)
+      (gcollect:enable!)
+      (gcollect:gcollect!))))
+   
+
 (measure-time "tak" (tak 24 16 8))
 (measure-time "takfp" (tak 24.0 16.0 8.0))
 (measure-time "tak-inline" (tak-inline 24 16 8))
+(without-gc 
+ (measure-time "nogc-tak" (tak 24 16 8)))
+(without-gc 
+ (measure-time "nogc-takfp" (tak 24.0 16.0 8.0)))
+(without-gc 
+ (measure-time "nogc-tak-inline" (tak-inline 24 16 8)))

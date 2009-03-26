@@ -63,6 +63,17 @@ DFSCH_DEFINE_PRIMITIVE(count, 0){
   return dfsch_make_number_from_long(GC_gc_no);
 }
 
+DFSCH_DEFINE_PRIMITIVE(enable, 0){
+  DFSCH_ARG_END(args);
+  GC_enable();
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(disable, 0){
+  DFSCH_ARG_END(args);
+  GC_disable();
+  return NULL;
+}
+
 dfsch_object_t* dfsch_module_gcollect_register(dfsch_object_t* env){
   dfsch_provide(env, "gcollect");
 
@@ -78,6 +89,10 @@ dfsch_object_t* dfsch_module_gcollect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(total_bytes));
   dfsch_define_cstr(env, "gcollect:count",
                     DFSCH_PRIMITIVE_REF(count));
+  dfsch_define_cstr(env, "gcollect:enable!",
+                    DFSCH_PRIMITIVE_REF(enable));
+  dfsch_define_cstr(env, "gcollect:disable!",
+                    DFSCH_PRIMITIVE_REF(disable));
 
   return NULL;
 }
