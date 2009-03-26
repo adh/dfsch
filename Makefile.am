@@ -36,7 +36,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-regex.la \
 	libdfsch-threads.la \
 	libdfsch-cdebug.la \
-	libdfsch-collections.la
+	libdfsch-collections.la \
+	libdfsch-process.la
 
 dfschlibexec_LTLIBRARIES = threads.la\
 	regex.la \
@@ -46,7 +47,8 @@ dfschlibexec_LTLIBRARIES = threads.la\
 	extref.la \
 	cdebug.la \
 	console.la \
-	collections.la
+	collections.la \
+	process.la
 
 dfschlibscm_DATA = scm/struct.scm
 
@@ -142,6 +144,14 @@ libdfsch_collections_la_LIBADD =  libdfsch.la
 collections_la_SOURCES = lib/collections_mod.c
 collections_la_LDFLAGS = -avoid-version -module
 collections_la_LIBADD =  libdfsch.la libdfsch-collections.la
+
+libdfsch_process_la_SOURCES = lib/process.c dfsch/lib/process.h
+libdfsch_process_la_LDFLAGS = -version-info 1:0:0
+libdfsch_process_la_LIBADD =  libdfsch.la
+
+process_la_SOURCES = lib/process_mod.c
+process_la_LDFLAGS = -avoid-version -module
+process_la_LIBADD =  libdfsch.la libdfsch-process.la
 
 
 dfsch_repl_SOURCES = src/repl.c

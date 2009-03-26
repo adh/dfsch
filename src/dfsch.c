@@ -2692,7 +2692,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    &myesc);
     goto out;
-
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
