@@ -324,7 +324,7 @@ DFSCH_DEFINE_PRIMITIVE(cons, NULL){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
-DFSCH_DEFINE_PRIMITIVE(cons_immutable, NULL){
+DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
   dfsch_object_t* car;
   dfsch_object_t* cdr;
   DFSCH_OBJECT_ARG(args, car);
@@ -746,7 +746,8 @@ DFSCH_DEFINE_PRIMITIVE(list_2_vector, NULL){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(object_2_string, 0){
+DFSCH_DEFINE_PRIMITIVE(object_2_string, 
+                       "Convert object to it's string representation"){
   object_t* object;
   object_t* readable;
   long depth;
@@ -759,7 +760,8 @@ DFSCH_DEFINE_PRIMITIVE(object_2_string, 0){
   return dfsch_make_string_cstr(dfsch_object_2_string(object, depth, 
                                                       readable != NULL));
 }
-DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
+DFSCH_DEFINE_PRIMITIVE(string_2_object, 
+                       "Read object from string"){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
@@ -767,7 +769,8 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object, 0){
 
   return dfsch_string_2_object(string);
 }
-DFSCH_DEFINE_PRIMITIVE(string_2_object_list, 0){
+DFSCH_DEFINE_PRIMITIVE(string_2_object_list, 
+                       "Read multiple objects from string"){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
@@ -775,7 +778,9 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object_list, 0){
 
   return dfsch_string_2_object_list(string);
 }
-DFSCH_DEFINE_PRIMITIVE(write__object, 0){
+DFSCH_DEFINE_PRIMITIVE(write__object, 
+                       "Recursively print object "
+                       "- used by implementation of write methods"){
   dfsch_object_t* state;
   dfsch_object_t* object;
   DFSCH_OBJECT_ARG(args, state);
@@ -786,7 +791,8 @@ DFSCH_DEFINE_PRIMITIVE(write__object, 0){
                      object);
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(write__string, 0){
+DFSCH_DEFINE_PRIMITIVE(write__string, 
+                       "Print string in write method implementation"){
   dfsch_object_t* state;
   dfsch_strbuf_t* string;
   DFSCH_OBJECT_ARG(args, state);
@@ -804,7 +810,8 @@ DFSCH_DEFINE_PRIMITIVE(write__string, 0){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 0){
+DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 
+                       "Return symbol's name as string"){
   object_t* object;
   char* str;
 
@@ -817,7 +824,8 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 0){
   else
     dfsch_error("exception:not-a-symbol", object);
 }
-DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 0){
+DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 
+                       "Intern string into symbol"){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
