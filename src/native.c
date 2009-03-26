@@ -49,35 +49,35 @@ typedef dfsch_object_t object_t;
 
 // Native procedures:
 
-DFSCH_DEFINE_PRIMITIVE(gensym, 0){
+DFSCH_DEFINE_PRIMITIVE(gensym, "Allocate new unnamed symbol"){
   if (args)
     dfsch_error("exception:too-many-arguments", args);
 
   return dfsch_gensym();
 }
 
-DFSCH_DEFINE_PRIMITIVE(id, 0){
+DFSCH_DEFINE_PRIMITIVE(id, "Return object pointer as fixnum"){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long((long)object);
 }
-DFSCH_DEFINE_PRIMITIVE(hash, 0){
+DFSCH_DEFINE_PRIMITIVE(hash, "Calculate object's hash value"){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long((long)dfsch_hash(object));
 }
-DFSCH_DEFINE_PRIMITIVE(type_of, 0){
+DFSCH_DEFINE_PRIMITIVE(type_of, "Get type of object"){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
   return (object_t*)DFSCH_TYPE_OF(object);
 }
-DFSCH_DEFINE_PRIMITIVE(type_name, 0){
+DFSCH_DEFINE_PRIMITIVE(type_name, "Get name of given type"){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
@@ -89,14 +89,15 @@ DFSCH_DEFINE_PRIMITIVE(type_name, 0){
   return dfsch_make_string_cstr(((dfsch_type_t*)object)->name);
 }
 
-DFSCH_DEFINE_PRIMITIVE(superclass, 0){
+DFSCH_DEFINE_PRIMITIVE(superclass, "Get class's superclass"){
   object_t* type;
   DFSCH_OBJECT_ARG(args, type);
   DFSCH_ARG_END(args);
 
   return dfsch_superclass(type);
 }
-DFSCH_DEFINE_PRIMITIVE(superclass_p, 0){
+DFSCH_DEFINE_PRIMITIVE(superclass_p, 
+		       "Is class in list of superclasses of second class?"){
   dfsch_object_t* sub;
   dfsch_object_t* super;
   DFSCH_OBJECT_ARG(args, sub);
@@ -114,7 +115,7 @@ DFSCH_DEFINE_PRIMITIVE(superclass_p, 0){
   return dfsch_bool(dfsch_superclass_p((dfsch_type_t*)sub, 
                                        (dfsch_type_t*)super));
 }
-DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
+DFSCH_DEFINE_PRIMITIVE(instance_p, "Is object instance of given type?"){
   dfsch_object_t* object;
   dfsch_object_t* type;
   DFSCH_OBJECT_ARG(args, object);
@@ -128,7 +129,7 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, 0){
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
 }
 
-DFSCH_DEFINE_PRIMITIVE(slot_set, 0){
+DFSCH_DEFINE_PRIMITIVE(slot_set, "Store value into object's slot"){
   dfsch_object_t* object;
   dfsch_object_t* value;
   char* name;
@@ -140,7 +141,7 @@ DFSCH_DEFINE_PRIMITIVE(slot_set, 0){
   dfsch_slot_set_by_name(object, name, value, 0);
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(slot_ref, 0){
+DFSCH_DEFINE_PRIMITIVE(slot_ref, "Get value of object's slot"){
   dfsch_object_t* object;
   dfsch_object_t* value;
   char* name;
@@ -150,7 +151,7 @@ DFSCH_DEFINE_PRIMITIVE(slot_ref, 0){
 
   return dfsch_slot_ref_by_name(object, name, 0);  
 }
-DFSCH_DEFINE_PRIMITIVE(find_slot, 0){
+DFSCH_DEFINE_PRIMITIVE(find_slot, "Find slot-descriptor by it's name"){
   dfsch_type_t* type;
   char* name;
   DFSCH_TYPE_ARG(args, type);
@@ -159,7 +160,8 @@ DFSCH_DEFINE_PRIMITIVE(find_slot, 0){
 
   return dfsch_find_slot(type, name);  
 }
-DFSCH_DEFINE_PRIMITIVE(get_slots, 0){
+DFSCH_DEFINE_PRIMITIVE(get_slots, 
+		       "Get all slot-descriptors usable for given type"){
   dfsch_type_t* type;
   DFSCH_TYPE_ARG(args, type);
   DFSCH_ARG_END(args);
@@ -167,7 +169,9 @@ DFSCH_DEFINE_PRIMITIVE(get_slots, 0){
   return dfsch_get_slots(type);  
 }
 
-DFSCH_DEFINE_PRIMITIVE(get_list_annotation, 0){
+DFSCH_DEFINE_PRIMITIVE(get_list_annotation, 
+		       "Return load position of list or NIL if it is "
+		       "not avaiable"){
   dfsch_object_t* list;
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
@@ -281,7 +285,8 @@ DFSCH_DEFINE_FORM_IMPL(defined_p){
   return dfsch_env_get(name, env);
 }
 
-DFSCH_DEFINE_PRIMITIVE(make_macro, 0){
+DFSCH_DEFINE_PRIMITIVE(make_macro, 
+		       "Allocate new macro object implemented by function"){
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
