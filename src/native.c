@@ -845,49 +845,6 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
   return dfsch_macro_expand(macro, arguments);
 }
 
-/*
- * Properties
- */
-
-DFSCH_DEFINE_PRIMITIVE(get_properties, 0){
-  dfsch_object_t* obj;
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_ARG_END(args);
-  
-  return dfsch_get_object_properties(obj);
-}
-DFSCH_DEFINE_PRIMITIVE(get_property, 0){
-  dfsch_object_t* obj;
-  dfsch_object_t* name;
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_END(args);
-  
-  return dfsch_get_object_property(obj, name);
-}
-DFSCH_DEFINE_PRIMITIVE(set_property, 0){
-  dfsch_object_t* obj;
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG(args, value);
-  DFSCH_ARG_END(args);
-  
-  dfsch_set_object_property(obj, name, value);
-  return NULL;
-}
-DFSCH_DEFINE_PRIMITIVE(unset_property, 0){
-  dfsch_object_t* obj;
-  dfsch_object_t* name;
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_END(args);
-  
-  dfsch_unset_object_property(obj, name);
-  return NULL;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -1005,12 +962,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "macro-expand", 
                    DFSCH_PRIMITIVE_REF(macro_expand));
-
-  dfsch_define_cstr(ctx, "get-properties", DFSCH_PRIMITIVE_REF(get_properties));
-  dfsch_define_cstr(ctx, "get-property", DFSCH_PRIMITIVE_REF(get_property));
-  dfsch_define_cstr(ctx, "set-property!", DFSCH_PRIMITIVE_REF(set_property));
-  dfsch_define_cstr(ctx, "unset-property!", 
-                    DFSCH_PRIMITIVE_REF(unset_property));
 
   dfsch_define_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
   dfsch_define_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
