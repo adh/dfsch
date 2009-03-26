@@ -130,6 +130,13 @@ dfsch_port_type_t dfsch_process_input_port_type = {
   NULL
 };
 
+static void port_finalizer(process_port_t* port, void* cd){
+  if (port->open){
+    pclose(port->file);
+    port->open = 0;
+  }
+}
+
 static dfsch_object_t* spawn_port(dfsch_object_t* klass,
                                   char* cmd_line){
   process_port_t* p = dfsch_make_object(klass);
@@ -146,6 +153,9 @@ static dfsch_object_t* spawn_port(dfsch_object_t* klass,
     dfsch_error("Cannot spawn process",
                 dfsch_make_string_cstr(strerror(errno)));
   }
+
+  GC_REGISTER_FINALIZER(p, (GC_finalization_proc)port_finalizer,
+                        NULL, NULL, NULL);
 
   p->open = 1;
 
