@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+  extern dfsch_type_t dfsch_process_port_type;
+#define DFSCH_PROCESS_PORT_TYPE (&dfsch_process_port_type)
   extern dfsch_port_type_t dfsch_process_output_port_type;
 #define DFSCH_PROCESS_OUTPUT_PORT_TYPE (&dfsch_process_output_port_type)
   extern dfsch_port_type_t dfsch_process_input_port_type;
@@ -37,6 +39,7 @@ extern "C" {
   dfsch_object_t* dfsch_process_spawn_with_input_port(char* cmd_line);
   dfsch_object_t* dfsch_process_spawn_with_output_port(char* cmd_line);
 
+  dfsch_object_t* dfsch_process_close_port(dfsch_object_t* port);
 
   dfsch_object_t* dfsch_module_process_register(dfsch_object_t *ctx);
 
