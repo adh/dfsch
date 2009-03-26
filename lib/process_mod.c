@@ -68,12 +68,12 @@ dfsch_object_t* dfsch_module_process_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "process:<output-port>", 
                     DFSCH_PROCESS_OUTPUT_PORT_TYPE);
 
-  dfsch_define_cstr(ctx, "process:spawn",
+  dfsch_define_cstr(ctx, "process:spawn!",
                     DFSCH_PRIMITIVE_REF(spawn));
-  dfsch_define_cstr(ctx, "process:spawn-with-input-port",
+  dfsch_define_cstr(ctx, "process:spawn-with-input-port!",
                     DFSCH_PRIMITIVE_REF(spawn_with_input_port));
-  dfsch_define_cstr(ctx, "process:spawn-with-output-port",
+  dfsch_define_cstr(ctx, "process:spawn-with-output-port!",
                     DFSCH_PRIMITIVE_REF(spawn_with_output_port));
-  dfsch_define_cstr(ctx, "process:close-port",
+  dfsch_define_cstr(ctx, "process:close-port!",
                     DFSCH_PRIMITIVE_REF(close_port));
 }
