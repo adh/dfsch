@@ -332,19 +332,14 @@ extern "C" {
 
   // error handling
 
-  /** Creates exception object */
-  extern dfsch_object_t* dfsch_make_exception(dfsch_object_t* type, 
-					      dfsch_object_t* data,
-                                              dfsch_object_t* stack_trace);
-  
-  extern void dfsch_throw(dfsch_object_t* tqag, dfsch_object_t* value);
+  extern void dfsch_throw(dfsch_object_t* tag, dfsch_object_t* value);
 
   /** Convenience wrapper for signaling error condition from C code */
-  extern dfsch_object_t* dfsch_error(char* type, 
-                                     dfsch_object_t* data);
+  extern void dfsch_error(char* type, 
+                          dfsch_object_t* data);
   /** Convenience wrapper for signaling recoverable error condition */
-  extern dfsch_object_t* dfsch_cerror(char* type, 
-                                      dfsch_object_t* data);
+  extern void dfsch_cerror(char* type, 
+                           dfsch_object_t* data);
 
   /** Apply procedure later in evaluation (useful for signal handlers) */
   extern void dfsch_async_apply_self(dfsch_object_t* proc);

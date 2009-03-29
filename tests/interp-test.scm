@@ -66,6 +66,8 @@
        (sub-group eqv?
                   
                   (test 'eqv? (eqv? 'a 'a) #t)
+                  (test 'eqv?-false (eqv? 'a 'b) #f)
+                  (test 'eqv?-num (eqv? 1 1) #t)
                   (test 'eqv?-proc 
                         (let ((p (lambda (x) x)))
                           (eqv? p p))
@@ -92,7 +94,11 @@
                         #f))
         
        (sub-group eq?
-                  (test 'eq? (eq? 'a 'a) #t))
+                  (test 'eq? (eq? 'a 'a) #t)
+                  (test 'eq?-false (eq? 'a 'b) #f)
+                  (test 'gensyms
+                        (eq? (gensym) (gensym))
+                        #f))
 
        (sub-group equal?
 
@@ -109,10 +115,6 @@
                         (equal? 1 2)
                         #f)
                   
-                  (test 'gensyms
-                        (eq? (gensym) (gensym))
-                        #f)
-
                   (test 'id-equal?
                         (let ((a (gensym)))
                           (equal? (id a) (id a)))
