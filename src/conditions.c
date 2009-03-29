@@ -94,6 +94,24 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
 
   return c;
 }
+void dfsch_signal_condition(dfsch_type_t* type, 
+                                       char* message,
+                                       ...){
+  va_list al;
+  dfsch_object_t* c = dfsch_make_condition(type);
+  char* name;
+
+  va_start(al, type);
+  while (name = va_arg(al, char*)){
+    dfsch_condition_put_field_cstr(c, name, va_arg(al, dfsch_object_t*));
+  }
+  va_end(al);
+  dfsch_condition_put_field_cstr(c, "message", 
+                                 dfsch_make_string_cstr(message));
+
+  dfsch_signal(c);
+}
+
 
 dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
                                             dfsch_object_t* message,
@@ -167,6 +185,8 @@ void dfsch_signal(dfsch_object_t* condition){
 
   ti->handler_list = save;
 }
+
+
 
 static dfsch_object_t* debugger_proc = NULL;
 static int max_debugger_recursion = 10;

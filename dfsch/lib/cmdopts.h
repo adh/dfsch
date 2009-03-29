@@ -30,6 +30,8 @@ typedef void (*dfsch_cmdopts_callback_t)(dfsch_cmdopts_t* parser,
                                          void* baton,
                                          char* value);
 
+extern dfsch_type_t dfsch_cmdopts_error_type;
+#define DFSCH_CMDOPTS_ERROR_TYPE (&dfsch_cmdopts_error_type)
 extern dfsch_type_t dfsch_cmdopts_parser_type;
 #define DFSCH_CMDOPTS_PARSER_TYPE (&dfsch_cmdopts_parser_type)
 

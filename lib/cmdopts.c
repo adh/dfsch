@@ -21,6 +21,7 @@
 
 #include "dfsch/lib/cmdopts.h"
 #include <dfsch/util.h>
+#include <dfsch/conditions.h>
 
 typedef struct option_t option_t;
 
@@ -48,6 +49,9 @@ struct dfsch_cmdopts_t {
   argument_t* arguments;
   int flags;
 };
+
+dfsch_type_t dfsch_cmdopts_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_RUNTIME_ERROR_TYPE, "cmdopts:error");
 
 dfsch_type_t dfsch_cmdopts_parser_type = {
   DFSCH_STANDARD_TYPE,
@@ -87,18 +91,153 @@ void dfsch_cmdopts_add_argument(dfsch_cmdopts_t* parser,
                                 dfsch_cmdopts_callback_t callback,
                                 void* baton){
   argument_t* a = GC_NEW(argument_t);
+  argument_t* i = parser->arguments;
 
   a->flags = flags;
   a->callback = callback;
   a->baton = baton;
-  a->next = parser->arguments;
-  parser->arguments = a;
+  a->next = NULL;
+  
+  if (!i){
+    parser->arguments = a;
+  } else {
+    while (i->next){
+      i = i->next;
+    }
+    i->next = a;
+  }
+}
+
+static option_t* find_long_opt(dfsch_cmdopts_t* parser, char* name){
+  size_t len = strlen(name);
+  option_t* i = parser->options;
+  option_t* f = NULL;
+
+  while (i){
+    if (strncmp(i->long_opt, name, len) == 0){
+      if (f){
+        dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                               "Ambiguous abbreviation",
+                               "abbreviation",
+                               dfsch_make_string_cstr(name),
+                               NULL);
+      }
+      f = i;
+    }
+    i = i->next;
+  }
+
+  if (!f){
+    dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                           "Unknown option",
+                           "option",
+                           dfsch_make_string_cstr(name),
+                           NULL);
+  }
+
+  return f;  
+}
+
+static option_t* find_short_opt(dfsch_cmdopts_t* parser, char opt){
+  option_t* i = parser->options;
+
+  while (i){
+    if (i->short_opt == opt)
+      return i;
+    i = i->next;
+  }
+
+  dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                         "Unknown option",
+                         "option",
+                         DFSCH_MAKE_FIXNUM(opt), // XXX
+                         NULL);
 }
 
 
+static char* get_argument(dfsch_cmdopts_source_t source,
+                          void* baton){
+  char* arg = source(baton);
+  if (!arg){
+    dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                           "Required argument missing",
+                           NULL);
+  }
+  return arg;
+}
+
+
+
+static void parse_short_opts(dfsch_cmdopts_t* parser,
+                             char* string,
+                             dfsch_cmdopts_source_t source,
+                             void* baton){
+  while (*string){
+    option_t* opt = find_short_opt(parser, *string);
+    if (opt->has_arg){
+      opt->callback(parser, opt->baton, get_argument(source, baton));
+    } else {
+      opt->callback(parser, opt->baton, NULL);
+    }
+    string++;
+  }
+}
+
 void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
                          dfsch_cmdopts_source_t source,
-                         void* baton);
+                         void* baton){
+  char* argument;
+  argument_t* next_arg = parser->arguments;
+  option_t* opt;
+
+  while ((argument = source(baton)) != NULL){
+    if (argument[0] == '-'){
+      if (argument[1] == '-'){
+        if (argument[2] == 0){
+          goto arg_only;
+        }
+
+        opt = find_long_opt(parser, argument + 2);
+        if (opt->has_arg){
+          opt->callback(parser, opt->baton, get_argument(source, baton));
+        } else {
+          opt->callback(parser, opt->baton, NULL);
+        }
+      } else {
+        parse_short_opts(parser, argument + 1, source, baton);
+      }
+    } else {
+      if (!next_arg){
+        dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                               "Unexpected argument",
+                               NULL);
+      }
+      next_arg->callback(parser,  next_arg->baton, argument);
+      if (!(next_arg->flags & DFSCH_CMDOPTS_ARGUMENT_MULTIPLE)){
+        next_arg = next_arg->next;
+      }
+    }
+  }
+
+ arg_only:
+  while ((argument = source(baton)) != NULL){
+    if (!next_arg){
+      dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                             "Unexpected argument",
+                             NULL);
+    }
+    next_arg->callback(parser,  next_arg->baton, argument);
+    if (!(next_arg->flags & DFSCH_CMDOPTS_ARGUMENT_MULTIPLE)){
+      next_arg = next_arg->next;
+    }
+  }
+
+  if (next_arg && next_arg->flags & DFSCH_CMDOPTS_ARGUMENT_REQUIRED){
+    dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                           "Required argument missing",
+                           NULL);
+  }
+}
 
 
 void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,

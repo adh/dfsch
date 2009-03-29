@@ -27,6 +27,7 @@ void dfsch_condition_put_field_cstr(dfsch_object_t* condition,
 dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition);
 
 dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...);
+void dfsch_signal_condition(dfsch_type_t* type, char* message, ...);
 dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
                                             dfsch_object_t* message,
                                             dfsch_object_t* fields);
