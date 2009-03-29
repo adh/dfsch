@@ -1761,37 +1761,36 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
 
 // closures
 
-extern dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
-				    dfsch_object_t* args,
-				    dfsch_object_t* code){
+dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
+                                   dfsch_object_t* args,
+                                   dfsch_object_t* code,
+                                   dfsch_object_t* name){
   closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
   if (!c)
     return NULL;
   
   c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
-  c->code = code;
   c->orig_code = code;
-  c->name = NULL;
+
+  if (DFSCH_PAIR_P(code) && dfsch_string_p(DFSCH_FAST_CAR(code))){
+    c->code = DFSCH_FAST_CDR(code);
+    c->documentation = DFSCH_FAST_CAR(code);
+  } else {
+    c->code = code;
+    c->documentation = NULL;
+  }
+
+  c->name = name;
 
   return (object_t*)c;
   
 }
-extern dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
-                                          dfsch_object_t* args,
-                                          dfsch_object_t* code,
-                                          dfsch_object_t* name){
-  closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
-  if (!c)
-    return NULL;
-  
-  c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
-  c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
-  c->code = code;
-  c->orig_code = code;
-  c->name = name;
+dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
+                             dfsch_object_t* args,
+                             dfsch_object_t* code){
 
-  return (object_t*)c;
+  return dfsch_named_lambda(env, args, code, NULL);
   
 }
 
