@@ -676,6 +676,12 @@ dfsch_type_t dfsch_macro_type = {
 };
 #define MACRO DFSCH_MACRO_TYPE
 
+static dfsch_slot_t form_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_form_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_form_t, documentation, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_form_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -683,7 +689,9 @@ dfsch_type_t dfsch_form_type = {
   "form",
   NULL,
   NULL,
-  NULL
+  NULL,
+  NULL,
+  &form_slots
 };
 #define FORM (&dfsch_form_type)
 
@@ -2697,7 +2705,8 @@ static object_t* native_top_level_environment(void *baton, object_t* args,
   return baton;
 }
 
-DFSCH_DEFINE_FORM_IMPL(current_environment){
+DFSCH_DEFINE_FORM_IMPL(current_environment, 
+                       "Return lexically-enclosing environment"){
   return env;
 }
 

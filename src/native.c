@@ -185,14 +185,14 @@ DFSCH_DEFINE_PRIMITIVE(get_list_annotation,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(lambda){
+DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
   MIN_ARGS(args,1);
   return dfsch_lambda(env,
 		      dfsch_car(args),
 		      dfsch_cdr(args));
 }
 
-DFSCH_DEFINE_FORM_IMPL(define){
+DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
 
   MIN_ARGS(args,1);  
 
@@ -210,7 +210,8 @@ DFSCH_DEFINE_FORM_IMPL(define){
   }
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_variable){
+DFSCH_DEFINE_FORM_IMPL(define_variable, 
+                       "Define variable only if it is not already defined"){
   dfsch_object_t* name;
   dfsch_object_t* value;
 
@@ -226,7 +227,9 @@ DFSCH_DEFINE_FORM_IMPL(define_variable){
     return NULL;
   }
 }
-DFSCH_DEFINE_FORM_IMPL(define_constant){
+DFSCH_DEFINE_FORM_IMPL(define_constant,
+                       "Define constant variable "
+                       "- intended as hint to possible future compiler"){
   dfsch_object_t* name;
   dfsch_object_t* value;
 
@@ -244,7 +247,7 @@ DFSCH_DEFINE_FORM_IMPL(define_constant){
   }
 }
 
-DFSCH_DEFINE_FORM_IMPL(declare){
+DFSCH_DEFINE_FORM_IMPL(declare, "Add declaration specifier to given symbol"){
   dfsch_object_t* name;
   dfsch_object_t* decls;
 
@@ -259,7 +262,7 @@ DFSCH_DEFINE_FORM_IMPL(declare){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM_IMPL(set){
+DFSCH_DEFINE_FORM_IMPL(set, "Change value of variable"){
   NEED_ARGS(args,2);  
 
   object_t* name = dfsch_car(args);
@@ -268,7 +271,7 @@ DFSCH_DEFINE_FORM_IMPL(set){
   return dfsch_set(name, value, env);
 
 }
-DFSCH_DEFINE_FORM_IMPL(unset){
+DFSCH_DEFINE_FORM_IMPL(unset, "Delete variable binding"){
   object_t* name;
 
   DFSCH_OBJECT_ARG(args, name);
@@ -278,7 +281,9 @@ DFSCH_DEFINE_FORM_IMPL(unset){
 
   return NULL;
 }
-DFSCH_DEFINE_FORM_IMPL(defined_p){
+DFSCH_DEFINE_FORM_IMPL(defined_p, 
+                       "Check if given variable is defined in "
+                       "lexically-enclosing environment"){
   NEED_ARGS(args,1);
   object_t* name = dfsch_car(args);
 
@@ -290,7 +295,8 @@ DFSCH_DEFINE_PRIMITIVE(make_macro,
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
-DFSCH_DEFINE_FORM_IMPL(define_macro){
+DFSCH_DEFINE_FORM_IMPL(define_macro,
+                       "Define new macro implemented by standard-function"){
   dfsch_object_t* name;
   dfsch_object_t* arglist;
 
@@ -630,7 +636,7 @@ DFSCH_DEFINE_PRIMITIVE(equal_p, NULL){
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_FORM_IMPL(or){
+DFSCH_DEFINE_FORM_IMPL(or, "Short-circuiting logical or"){
   object_t* i;
   object_t* r = NULL;
   i = args;
@@ -644,7 +650,7 @@ DFSCH_DEFINE_FORM_IMPL(or){
 
   return r;
 }
-DFSCH_DEFINE_FORM_IMPL(and){
+DFSCH_DEFINE_FORM_IMPL(and, "Short-circuiting logical and"){
   object_t* i;
   object_t* r = DFSCH_SYM_TRUE;
   i = args;
@@ -659,7 +665,7 @@ DFSCH_DEFINE_FORM_IMPL(and){
 
   return r;
 }
-DFSCH_DEFINE_PRIMITIVE(not, NULL){
+DFSCH_DEFINE_PRIMITIVE(not, "Logical not - equivalent to null?"){
   dfsch_object_t* val;
   DFSCH_OBJECT_ARG(args, val);
   DFSCH_ARG_END(args);

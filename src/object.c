@@ -300,7 +300,7 @@ DFSCH_DEFINE_PRIMITIVE(make_instance, 0){
   return dfsch_make_instance(klass, args);
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_class){
+DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
@@ -318,7 +318,7 @@ DFSCH_DEFINE_FORM_IMPL(define_class){
   dfsch_define(name, klass, env);
   return klass;
 }
-DFSCH_DEFINE_FORM_IMPL(define_method){
+DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
   dfsch_object_t* klass;
   dfsch_object_t* lambda_list;
   dfsch_object_t* selector;

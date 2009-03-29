@@ -131,6 +131,7 @@ struct dfsch_form_t {
   dfsch_form_impl_t impl;
   void* baton;
   char* name;
+  char* documentation;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -144,22 +145,24 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
 
-#define DFSCH_DEFINE_FORM(name)                 \
-  static dfsch_form_t form_##name = {           \
-    DFSCH_FORM_TYPE,                            \
-    form_##name##_impl,                         \
-    NULL,                                       \
-    #name                                       \
+#define DFSCH_DEFINE_FORM(name, documentation)   \
+  static dfsch_form_t form_##name = {            \
+    DFSCH_FORM_TYPE,                             \
+    form_##name##_impl,                          \
+    NULL,                                        \
+    #name,                                       \
+    documentation                                \
   }
 
-#define DFSCH_DEFINE_FORM_IMPL(name)            \
-  DFSCH_FORM_IMPLEMENTATION(name);              \
-  static dfsch_form_t form_##name = {           \
-    DFSCH_FORM_TYPE,                            \
-    form_##name##_impl,                         \
-    NULL,                                       \
-    #name                                       \
-  };                                            \
+#define DFSCH_DEFINE_FORM_IMPL(name, documentation)     \
+  DFSCH_FORM_IMPLEMENTATION(name);                      \
+  static dfsch_form_t form_##name = {                   \
+    DFSCH_FORM_TYPE,                                    \
+    form_##name##_impl,                                 \
+    NULL,                                               \
+    #name,                                              \
+    documentation                                       \
+  };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 
 

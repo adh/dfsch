@@ -88,7 +88,7 @@ dfsch_object_t* dfsch_stream_cdr(dfsch_object_t* stream){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(delay){
+DFSCH_DEFINE_FORM_IMPL(delay, "Create new promise"){
   return dfsch_make_promise(args, env);
 }
 
@@ -101,7 +101,7 @@ static dfsch_object_t* native_force(void* baton, dfsch_object_t* args,
   return dfsch_force_promise(promise);
 }
 
-DFSCH_DEFINE_FORM_IMPL(stream_cons){
+DFSCH_DEFINE_FORM_IMPL(stream_cons, NULL){
   dfsch_object_t* head;
   dfsch_object_t* tail;
 

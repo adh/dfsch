@@ -172,7 +172,7 @@ extern dfsch_object_t* dfsch_unwrap(dfsch_object_t* type,
   return w->object;
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_wrapper_type){
+DFSCH_DEFINE_FORM_IMPL(define_wrapper_type, NULL){
   dfsch_object_t* write = NULL;
   dfsch_object_t* equal_p = NULL;
   dfsch_object_t* apply = NULL;
