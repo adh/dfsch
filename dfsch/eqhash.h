@@ -78,4 +78,6 @@ int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
                         dfsch_object_t* key, 
                         dfsch_object_t** value, short *flags, 
                         dfsch_eqhash_entry_t** entry);
+
+dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash);
 #endif

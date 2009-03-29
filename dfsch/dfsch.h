@@ -381,6 +381,8 @@ extern "C" {
 				      dfsch_object_t* value,
 				      dfsch_object_t* env);
 
+  extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
+
   extern dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                             dfsch_object_t* args);
 

@@ -738,12 +738,23 @@ dfsch_type_t dfsch_vector_type = {
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
+static dfsch_slot_t environment_slots[] = {
+  DFSCH_OBJECT_SLOT(environment_t, parent, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_SLOT_TERMINATOR
+};
 
 dfsch_type_t dfsch_environment_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(environment_t),
-  "environment"
+  "environment",
+
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  
+  &environment_slots
 };
 
 
@@ -1766,8 +1777,6 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
                                    dfsch_object_t* code,
                                    dfsch_object_t* name){
   closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
-  if (!c)
-    return NULL;
   
   c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
@@ -1784,14 +1793,13 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->name = name;
 
   return (object_t*)c;
-  
 }
+
 dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
                              dfsch_object_t* args,
                              dfsch_object_t* code){
 
-  return dfsch_named_lambda(env, args, code, NULL);
-  
+  return dfsch_named_lambda(env, args, code, NULL); 
 }
 
 // native code
@@ -2258,6 +2266,11 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
                  dfsch_cons(declaration, old));  
 }
 
+dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  return dfsch_eqhash_2_alist(&e->values);
+}
+
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
 
@@ -2719,6 +2732,8 @@ dfsch_object_t* dfsch_make_context(){
   dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
   dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
   dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
+
+  dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                     dfsch_make_primitive(&native_top_level_environment, ctx));

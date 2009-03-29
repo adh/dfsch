@@ -164,15 +164,90 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(lookup_in_environment, 0){
+  dfsch_object_t* name;
+  dfsch_object_t* env;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_lookup(name, env);
+}
+DFSCH_DEFINE_PRIMITIVE(set_in_environment, 0){
+  dfsch_object_t* name;
+  dfsch_object_t* env;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set(name, value, env);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(define_in_environment, 0){
+  dfsch_object_t* name;
+  dfsch_object_t* env;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+  
+  dfsch_define(name, value, env);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(get_variables, 0){
+  dfsch_object_t* env;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_get_environment_variables(env);
+}
+
+DFSCH_DEFINE_PRIMITIVE(make_environment, 0){
+  dfsch_object_t* parent;
+  DFSCH_OBJECT_ARG(args, parent);
+  DFSCH_ARG_END(args);
+
+  return dfsch_new_frame(parent);
+}
+DFSCH_DEFINE_PRIMITIVE(make_empty_environment, 0){
+  DFSCH_ARG_END(args);
+
+  return dfsch_new_frame(NULL);
+}
+DFSCH_DEFINE_PRIMITIVE(make_default_environment, 0){
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_context();
+}
+
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
 
   dfsch_define_cstr(env, "<user-stack-frame>", DFSCH_USER_STACK_FRAME_TYPE);
   dfsch_define_cstr(env, "stack-trace", DFSCH_PRIMITIVE_REF(stack_trace));
 
-  dfsch_define_cstr(env, "set-invoke-debugger-on-all-conditions", 
+  dfsch_define_cstr(env, "set-invoke-debugger-on-all-conditions!", 
                     DFSCH_PRIMITIVE_REF(set_invoke_debugger_on_all_conditions));
-  dfsch_define_cstr(env, "set-debugger", DFSCH_PRIMITIVE_REF(set_debugger));
-  dfsch_define_cstr(env, "enter-debugger", DFSCH_PRIMITIVE_REF(enter_debugger));
+  dfsch_define_cstr(env, "set-debugger!", DFSCH_PRIMITIVE_REF(set_debugger));
+  dfsch_define_cstr(env, "enter-debugger", 
+                    DFSCH_PRIMITIVE_REF(enter_debugger));
 
+  dfsch_define_cstr(env, "lookup-in-environment",
+                    DFSCH_PRIMITIVE_REF(lookup_in_environment));
+  dfsch_define_cstr(env, "set-in-environment!",
+                    DFSCH_PRIMITIVE_REF(set_in_environment));
+  dfsch_define_cstr(env, "define-in-environment!",
+                    DFSCH_PRIMITIVE_REF(define_in_environment));
+  dfsch_define_cstr(env, "get-variables",
+                    DFSCH_PRIMITIVE_REF(get_variables));
+
+  dfsch_define_cstr(env, "make-environment",
+                    DFSCH_PRIMITIVE_REF(make_environment));
+  dfsch_define_cstr(env, "make-empty-environment",
+                    DFSCH_PRIMITIVE_REF(make_empty_environment));
+  dfsch_define_cstr(env, "make-default-environment",
+                    DFSCH_PRIMITIVE_REF(make_default_environment));
 }
