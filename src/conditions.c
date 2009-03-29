@@ -95,6 +95,28 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
   return c;
 }
 
+dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
+                                            dfsch_object_t* message,
+                                            dfsch_object_t* fields){
+  dfsch_object_t* c = dfsch_make_condition(type);
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+  
+  dfsch_condition_put_field_cstr(c, "message", message);
+  while (DFSCH_PAIR_P(fields)){
+    name = DFSCH_FAST_CAR(fields);
+    fields = DFSCH_FAST_CDR(fields);
+    if (!DFSCH_PAIR_P(fields)){
+      dfsch_error("Missing value for keyword", name);
+    }
+    value = DFSCH_FAST_CAR(fields);
+    fields = DFSCH_FAST_CDR(fields);
+    dfsch_condition_put_field(c, name, value);
+  }
+
+  return c;
+}
+
 dfsch_type_t dfsch_condition_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -344,6 +366,16 @@ DFSCH_DEFINE_PRIMITIVE(make_condition, 0){
   
   return dfsch_make_condition(type);
 }
+DFSCH_DEFINE_PRIMITIVE(make_condition_with_fields, 0){
+  dfsch_object_t* type;
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+  
+  return dfsch_condition_with_fields(type, message, fields);
+}
 DFSCH_DEFINE_PRIMITIVE(condition_field, 0){
   dfsch_object_t* condition;
   dfsch_object_t* field;
@@ -394,6 +426,37 @@ DFSCH_DEFINE_PRIMITIVE(compute_restarts, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_compute_restarts();
+}
+
+DFSCH_DEFINE_PRIMITIVE(warning, "Signal a warning condition"){
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+
+  dfsch_signal(dfsch_condition_with_fields(DFSCH_WARNING_TYPE, 
+                                           message, fields));
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(error, "Signal an error condition"){
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+
+  dfsch_signal(dfsch_condition_with_fields(DFSCH_ERROR_TYPE, 
+                                           message, fields));
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(runtime_error, "Signal an runtime-error condition"){
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+
+  dfsch_signal(dfsch_condition_with_fields(DFSCH_RUNTIME_ERROR_TYPE, 
+                                           message, fields));
+  return NULL;
 }
 
 
@@ -483,7 +546,9 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
   
   dfsch_define_cstr(ctx, "make-condition", 
-                    DFSCH_PRIMITIVE_REF(make_condition));
+                    DFSCH_PRIMITIVE_REF(make_condition)); 
+  dfsch_define_cstr(ctx, "make-condition-with-fields", 
+                    DFSCH_PRIMITIVE_REF(make_condition_with_fields));
   dfsch_define_cstr(ctx, "condition-field", 
                     DFSCH_PRIMITIVE_REF(condition_field));
   dfsch_define_cstr(ctx, "condition-put-field", 
@@ -498,6 +563,14 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(invoke_restart));
   dfsch_define_cstr(ctx, "compute-restarts",
                     DFSCH_PRIMITIVE_REF(compute_restarts));
+
+  dfsch_define_cstr(ctx, "warning",
+                    DFSCH_PRIMITIVE_REF(warning));
+  dfsch_define_cstr(ctx, "error",
+                    DFSCH_PRIMITIVE_REF(error));
+  dfsch_define_cstr(ctx, "runtime-error",
+                    DFSCH_PRIMITIVE_REF(runtime_error));
+
 
   dfsch_define_cstr(ctx, "restart-name",
                     DFSCH_PRIMITIVE_REF(restart_name));

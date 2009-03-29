@@ -27,6 +27,9 @@ void dfsch_condition_put_field_cstr(dfsch_object_t* condition,
 dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition);
 
 dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...);
+dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
+                                            dfsch_object_t* message,
+                                            dfsch_object_t* fields);
 
 
 #define DFSCH_CONDITION_SIZE (sizeof(dfsch__condition_t))
