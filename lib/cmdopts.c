@@ -46,6 +46,7 @@ struct dfsch_cmdopts_t {
   dfsch_type_t* type;
   option_t* options;
   argument_t* arguments;
+  int flags;
 };
 
 dfsch_type_t dfsch_cmdopts_parser_type = {
@@ -55,11 +56,12 @@ dfsch_type_t dfsch_cmdopts_parser_type = {
   "cmdopts:parser"
 };
 
-dfsch_cmdopts_t* dfsch_cmdopts_make_parser(){
+dfsch_cmdopts_t* dfsch_cmdopts_make_parser(int flags){
   dfsch_cmdopts_t* p = dfsch_make_object(DFSCH_CMDOPTS_PARSER_TYPE);
 
   p->arguments = NULL;
   p->options = NULL;
+  p->flags = flags;
 
   return p;
 }
@@ -92,6 +94,12 @@ void dfsch_cmdopts_add_argument(dfsch_cmdopts_t* parser,
   a->next = parser->arguments;
   parser->arguments = a;
 }
+
+
+void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
+                         dfsch_cmdopts_source_t source,
+                         void* baton);
+
 
 void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,
                               char** argv, int argc);

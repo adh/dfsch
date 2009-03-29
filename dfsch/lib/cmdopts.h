@@ -33,7 +33,9 @@ typedef void (*dfsch_cmdopts_callback_t)(dfsch_cmdopts_t* parser,
 extern dfsch_type_t dfsch_cmdopts_parser_type;
 #define DFSCH_CMDOPTS_PARSER_TYPE (&dfsch_cmdopts_parser_type)
 
-dfsch_cmdopts_t* dfsch_cmdopts_make_parser();
+#define DFSCH_CMDOPTS_STRICT_ORDER 1
+
+dfsch_cmdopts_t* dfsch_cmdopts_make_parser(int flags);
 void dfsch_cmdopts_add_option(dfsch_cmdopts_t* parser, 
                               int has_arg,
                               char short_opt,
@@ -48,6 +50,12 @@ void dfsch_cmdopts_add_argument(dfsch_cmdopts_t* parser,
                                 int flags,
                                 dfsch_cmdopts_callback_t callback,
                                 void* baton);
+
+typedef char* (*dfsch_cmdopts_source_t)(void* baton);
+
+void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
+                         dfsch_cmdopts_source_t source,
+                         void* baton);
 
 void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,
                               char** argv, int argc);
