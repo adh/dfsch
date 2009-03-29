@@ -205,6 +205,19 @@ DFSCH_DEFINE_PRIMITIVE(get_variables, 0){
   return dfsch_get_environment_variables(env);
 }
 
+DFSCH_DEFINE_PRIMITIVE(load_into_environment, 0){
+  dfsch_object_t* env;
+  char* name;
+  dfsch_object_t* path_list;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, path_list, NULL);
+  DFSCH_ARG_END(args);
+  
+  dfsch_load(env, name, path_list);
+  return NULL;
+}
+
 DFSCH_DEFINE_PRIMITIVE(make_environment, 0){
   dfsch_object_t* parent;
   DFSCH_OBJECT_ARG(args, parent);
@@ -243,6 +256,8 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(define_in_environment));
   dfsch_define_cstr(env, "get-variables",
                     DFSCH_PRIMITIVE_REF(get_variables));
+  dfsch_define_cstr(env, "load-into-environment!",
+                    DFSCH_PRIMITIVE_REF(load_into_environment));
 
   dfsch_define_cstr(env, "make-environment",
                     DFSCH_PRIMITIVE_REF(make_environment));
