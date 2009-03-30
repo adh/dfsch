@@ -114,7 +114,7 @@ static option_t* find_long_opt(dfsch_cmdopts_t* parser, char* name){
   option_t* f = NULL;
 
   while (i){
-    if (strncmp(i->long_opt, name, len) == 0){
+    if (i->long_opt && strncmp(i->long_opt, name, len) == 0){
       if (f){
         dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
                                "Ambiguous abbreviation",
@@ -216,8 +216,12 @@ void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
       if (!(next_arg->flags & DFSCH_CMDOPTS_ARGUMENT_MULTIPLE)){
         next_arg = next_arg->next;
       }
+      if (parser->flags & DFSCH_CMDOPTS_STRICT_ORDER){
+        goto arg_only;
+      }
     }
   }
+  return;
 
  arg_only:
   while ((argument = source(baton)) != NULL){
@@ -263,8 +267,12 @@ void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,
 }
 static char* list_source(dfsch_object_t** i){
   char* res;
+  if (!*i){
+    return NULL;
+  }
   res = dfsch_string_to_cstr(dfsch_car(*i));
   *i = dfsch_cdr(*i);
+  return res;
 }
 void dfsch_cmdopts_parse_list(dfsch_cmdopts_t* parser,
                               dfsch_object_t* list){
@@ -290,6 +298,8 @@ dfsch_object_t* dfsch_cmdopts_argv_to_list(int argc, char**argv){
     tmp = dfsch_cons(dfsch_make_string_cstr(*argv), NULL);
     DFSCH_FAST_CDR_MUT(tail) = tmp;
     tail = tmp;
+    argc--;
+    argv++;
   }
 
   return head;

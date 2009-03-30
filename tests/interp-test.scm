@@ -1,11 +1,17 @@
 (require 'regex)
+(require 'cmdopts)
 
 (define tests-passed 0)
 (define tests-failed 0)
 
-(define one-test-fail (and (= (length *posix-argv*) 2)
-                           (equal? (cadr *posix-argv*)
-                                   "--strict")))
+(define one-test-fail ())
+
+(let ((parser (cmdopts:make-parser)))
+  (cmdopts:add-option parser "strict" 
+                      (lambda (p v) 
+                        (set! one-test-fail #t)
+                        (print "Running in strict mode")))
+  (cmdopts:parse-list parser (cdr *posix-argv*)))
 
 (define (exit-func)
   (print)
