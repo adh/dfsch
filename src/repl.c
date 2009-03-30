@@ -32,6 +32,7 @@
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
 #include <dfsch/lib/cdebug.h>
+#include <dfsch/lib/cmdopts.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -216,10 +217,9 @@ int main(int argc, char**argv){
     dfsch_object_t* args = dfsch_make_vector(argc-optind,NULL);
     int i;
 
-    for (i=0; i<argc-optind; i++){
-      dfsch_vector_set(args, i, dfsch_make_string_cstr(argv[optind+i]));
-    }
-    dfsch_define_cstr(ctx, "*posix-argv*", args);
+    dfsch_define_cstr(ctx, "*posix-argv*", 
+                      dfsch_cmdopts_argv_to_list(argc - optind, 
+                                                 argv + optind));
 
     ret = dfsch_load_scm(ctx, argv[optind]);
     return 0;

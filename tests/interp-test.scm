@@ -3,8 +3,8 @@
 (define tests-passed 0)
 (define tests-failed 0)
 
-(define one-test-fail (and (= (vector-length *posix-argv*) 2)
-                           (equal? (vector-ref *posix-argv* 1)
+(define one-test-fail (and (= (length *posix-argv*) 2)
+                           (equal? (cadr *posix-argv*)
                                    "--strict")))
 
 (define (exit-func)

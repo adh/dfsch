@@ -61,9 +61,9 @@ void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
 
 void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,
                               char** argv, int argc);
-void dfsch_cmdopts_parse_vector(dfsch_cmdopts_t* parser,
-                                dfsch_object_t* vector);
 void dfsch_cmdopts_parse_list(dfsch_cmdopts_t* parser,
                               dfsch_object_t* list);
+
+dfsch_object_t* dfsch_cmdopts_argv_to_list(int argc, char**argv);
 
 #endif

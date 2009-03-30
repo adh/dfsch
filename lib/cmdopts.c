@@ -239,12 +239,58 @@ void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
   }
 }
 
+typedef struct argv_source_t {
+  char** argv;
+  int argc;
+} argv_source_t;
 
+static char* argv_source(argv_source_t* s){
+  char* res;
+  if (s->argc == 0){
+    return NULL;
+  }
+  s->argc--;
+  res = *s->argv;
+  s->argv++;
+  return res;
+}
 void dfsch_cmdopts_parse_argv(dfsch_cmdopts_t* parser,
-                              char** argv, int argc);
-void dfsch_cmdopts_parse_vector(dfsch_cmdopts_t* parser,
-                                dfsch_object_t* vector);
+                              char** argv, int argc){
+  argv_source_t as;
+  as.argv = argv;
+  as.argc = argc;
+  dfsch_cmdopts_parse(parser, argv_source, &as);
+}
+static char* list_source(dfsch_object_t** i){
+  char* res;
+  res = dfsch_string_to_cstr(dfsch_car(*i));
+  *i = dfsch_cdr(*i);
+}
 void dfsch_cmdopts_parse_list(dfsch_cmdopts_t* parser,
-                              dfsch_object_t* list);
+                              dfsch_object_t* list){
+  dfsch_object_t* i = list;
+  dfsch_cmdopts_parse(parser, list_source, &i);  
+}
 
 
+dfsch_object_t* dfsch_cmdopts_argv_to_list(int argc, char**argv){
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+  dfsch_object_t* tmp;
+
+  if (argc == 0){
+    return NULL;
+  }
+
+  head = tail = dfsch_cons(dfsch_make_string_cstr(*argv), NULL);
+  argc--;
+  argv++;
+  
+  while (argc){
+    tmp = dfsch_cons(dfsch_make_string_cstr(*argv), NULL);
+    DFSCH_FAST_CDR_MUT(tail) = tmp;
+    tail = tmp;
+  }
+
+  return head;
+}

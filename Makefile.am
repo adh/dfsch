@@ -165,7 +165,8 @@ cmdopts_la_LIBADD =  libdfsch.la libdfsch-cmdopts.la
 
 
 dfsch_repl_SOURCES = src/repl.c
-dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la libdfsch-console.la
+dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
+	libdfsch-console.la libdfsch-cmdopts.la
 
 TESTS = tests/scm-test.sh
 
