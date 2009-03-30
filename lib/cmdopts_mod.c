@@ -36,7 +36,7 @@ static void lisp_callback(dfsch_cmdopts_t* parser,
   dfsch_apply(function, dfsch_list(2, parser, dfsch_make_string_cstr(value)));
 }
 
-DFSCH_DEFINE_PRIMITIVE(add_option, "DEfine new command line option"){
+DFSCH_DEFINE_PRIMITIVE(add_option, "Define new command line option"){
   dfsch_object_t* parser;
   int has_arg;
   char short_opt;
@@ -57,7 +57,7 @@ DFSCH_DEFINE_PRIMITIVE(add_option, "DEfine new command line option"){
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(add_argument, "DEfine new command line argument"){
+DFSCH_DEFINE_PRIMITIVE(add_argument, "Define new command line argument"){
   dfsch_object_t* parser;
   dfsch_object_t* function;
   int flags = 0;
