@@ -27,6 +27,7 @@
 
 #include <dfsch/number.h>
 #include <dfsch/load.h>
+#include <dfsch/conditions.h>
 
 #include "src/util.h"
 
@@ -42,14 +43,6 @@
 #include <dirent.h>
 #include <sys/time.h>
 #include <time.h>
-
-static void throw_errno(int e, char* function){
-  dfsch_error("unix:error", dfsch_list(3, 
-                                       dfsch_make_symbol(function),
-                                       dfsch_make_number_from_long(e),
-                                       dfsch_make_string_cstr(strerror(e))));
-}
-
 
 typedef struct dir_t {
   dfsch_type_t *type;
@@ -80,7 +73,7 @@ dfsch_object_t* dfsch_unix_opendir(char* name){
 
   dir->dir = opendir(name);
   if (!dir->dir){
-    throw_errno(errno, "opendir");
+    dfsch_operating_system_error("opendir");
   }
   dir->open = 1;
   GC_REGISTER_FINALIZER(dir, (GC_finalization_proc)dir_finalizer,
@@ -117,7 +110,7 @@ char* dfsch_unix_readdir(dfsch_object_t* dir_obj){
   dent = readdir(dir->dir);
   if (!dent){
     if (errno != 0){
-      throw_errno(errno, "readdir");    
+      dfsch_operating_system_error("readdir");    
     } else {
       return NULL;
     }
@@ -322,7 +315,7 @@ static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
 
   if (access(path, amode) == -1){
     if (errno != EPERM || errno != ENOENT){
-      throw_errno(errno, "access");
+      dfsch_operating_system_error("access");
     } else {
       return NULL;
     }
@@ -339,7 +332,7 @@ static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (chdir(dir) != 0){
-    throw_errno(errno, "chdir");
+    dfsch_operating_system_error("chdir");
   }
   return NULL;
 }
@@ -351,7 +344,7 @@ static dfsch_object_t* native_fchdir(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (fchdir(dir) != 0){
-    throw_errno(errno, "fchdir");
+    dfsch_operating_system_error("fchdir");
   }
   return NULL;
 }
@@ -367,7 +360,7 @@ static dfsch_object_t* native_chmod(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (chmod(fname, mode) != 0){
-    throw_errno(errno, "chmod");
+    dfsch_operating_system_error("chmod");
   }
   return NULL;
 }
@@ -380,7 +373,7 @@ static dfsch_object_t* native_fchmod(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (fchmod(file, mode) != 0){
-    throw_errno(errno, "fchmod");
+    dfsch_operating_system_error("fchmod");
   }
   return NULL;
 }
@@ -396,7 +389,7 @@ static dfsch_object_t* native_chown(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (chown(fname, user, group) != 0){
-    throw_errno(errno, "chown");
+    dfsch_operating_system_error("chown");
   }
   return NULL;
 }
@@ -411,7 +404,7 @@ static dfsch_object_t* native_fchown(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (fchown(file, user, group) != 0){
-    throw_errno(errno, "fchown");
+    dfsch_operating_system_error("fchown");
   }
   return NULL;
 }
@@ -430,7 +423,7 @@ static dfsch_object_t* native_close(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (close(fd) != 0){
-    throw_errno(errno, "close");
+    dfsch_operating_system_error("close");
   }
   return NULL;
 }
@@ -458,7 +451,7 @@ static dfsch_object_t* native_creat(void* baton, dfsch_object_t* args,
   fd = creat(path, mode);
 
   if (fd == -1){
-    throw_errno(errno, "creat");
+    dfsch_operating_system_error("creat");
   }
 
   return dfsch_make_number_from_long(fd);
@@ -473,7 +466,7 @@ static dfsch_object_t* native_dup(void* baton, dfsch_object_t* args,
   fd = dup(fd);
 
   if (fd < 0){
-    throw_errno(errno, "dup");
+    dfsch_operating_system_error("dup");
   }
   return dfsch_make_number_from_long(fd);
 }
@@ -489,7 +482,7 @@ static dfsch_object_t* native_dup2(void* baton, dfsch_object_t* args,
   newfd = dup2(oldfd, newfd);
 
   if (newfd < 0){
-    throw_errno(errno, "dup2");
+    dfsch_operating_system_error("dup2");
   }
   return dfsch_make_number_from_long(newfd);
 }
@@ -513,7 +506,7 @@ static dfsch_object_t* native_fork(void* baton, dfsch_object_t* args,
   pid = fork();
 
   if (pid == -1){
-    throw_errno(errno, "fork");
+    dfsch_operating_system_error("fork");
   }
 
   return dfsch_make_number_from_long(pid);
@@ -528,7 +521,7 @@ static dfsch_object_t* native_fstat(void* baton, dfsch_object_t* args,
   res = dfsch_unix_make_stat_struct();
 
   if (fstat(fd, dfsch_unix_get_stat(res)) != 0){
-    throw_errno(errno, "fstat");
+    dfsch_operating_system_error("fstat");
   }
   return res;
 }
@@ -551,7 +544,7 @@ static dfsch_object_t* native_getcwd(void* baton, dfsch_object_t* args,
   if (!ret){
     int err = errno;
     GC_FREE(buf);
-    throw_errno(err, "getcwd");
+    dfsch_operating_system_error_saved(err, "getcwd");
   }
 
   obj = dfsch_make_string_cstr(ret);
@@ -592,7 +585,7 @@ static dfsch_object_t* native_getpgid(void* baton, dfsch_object_t* args,
   pid = getpgid(pid);
 
   if (pid == -1){
-    throw_errno(errno, "getpgid");
+    dfsch_operating_system_error("getpgid");
   }
 
   return dfsch_make_number_from_long(pid);
@@ -668,7 +661,7 @@ static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
 
   if (ret == 0){
     if (errno != ENOTTY){
-      throw_errno(errno, "isatty");
+      dfsch_operating_system_error("isatty");
     }else{
       return NULL;
     }
@@ -686,7 +679,7 @@ static dfsch_object_t* native_kill(void* baton, dfsch_object_t* args,
 
 
   if (kill(pid, sig) != 0){
-    throw_errno(errno, "kill");
+    dfsch_operating_system_error("kill");
   }
   return NULL;
 }
@@ -700,7 +693,7 @@ static dfsch_object_t* native_killpg(void* baton, dfsch_object_t* args,
 
 
   if (killpg(pgrp, sig) != 0){
-    throw_errno(errno, "killpg");
+    dfsch_operating_system_error("killpg");
   }
   return NULL;
 }
@@ -714,7 +707,7 @@ static dfsch_object_t* native_link(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (link(old, new) != 0){
-    throw_errno(errno, "link");
+    dfsch_operating_system_error("link");
   }
   return NULL;
 }
@@ -741,7 +734,7 @@ static dfsch_object_t* native_lseek(void* baton, dfsch_object_t* args,
   }
 
   if (lseek(fd, offset, w) != 0){
-    throw_errno(errno, "lseek");
+    dfsch_operating_system_error("lseek");
   }
   return NULL;
 }
@@ -755,7 +748,7 @@ static dfsch_object_t* native_lstat(void* baton, dfsch_object_t* args,
   res = dfsch_unix_make_stat_struct();
 
   if (lstat(path, dfsch_unix_get_stat(res)) != 0){
-    throw_errno(errno, "lstat");
+    dfsch_operating_system_error("lstat");
   }
   return res;
 }
@@ -768,7 +761,7 @@ static dfsch_object_t* native_mkdir(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (mkdir(path, mode) != 0){
-    throw_errno(errno, "mkdir");
+    dfsch_operating_system_error("mkdir");
   }
   return NULL;
 }
@@ -781,7 +774,7 @@ static dfsch_object_t* native_mkfifo(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (mkfifo(path, mode) != 0){
-    throw_errno(errno, "mkfifo");
+    dfsch_operating_system_error("mkfifo");
   }
   return NULL;
 }
@@ -793,7 +786,7 @@ static dfsch_object_t* native_nice(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (nice(incr) != 0){
-    throw_errno(errno, "mkfifo");
+    dfsch_operating_system_error("mkfifo");
   }
   return NULL;
 }
@@ -825,7 +818,7 @@ static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
   fd = open(path, oflag, mode);
   
   if (fd == -1){
-    throw_errno(errno, "open");
+    dfsch_operating_system_error("open");
   }
   
   return dfsch_make_number_from_long(fd);
@@ -844,7 +837,7 @@ static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (pipe(fds) != 0){
-    throw_errno(errno, "pipe");
+    dfsch_operating_system_error("pipe");
   }
 
   return dfsch_list(2,
@@ -860,7 +853,7 @@ static dfsch_object_t* native_raise(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (raise(sig) != 0){
-    throw_errno(errno, "raise");
+    dfsch_operating_system_error("raise");
   }
   return NULL;
 }
@@ -884,7 +877,7 @@ static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
   if (ret == -1){
     int e = errno;
     GC_FREE(buf);
-    throw_errno(e, "read");
+    dfsch_operating_system_error("read");
   } else if (ret == 0) {
     GC_FREE(buf);
     return NULL;
@@ -912,7 +905,7 @@ static dfsch_object_t* native_rename(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (rename(old, new) != 0){
-    throw_errno(errno, "rename");
+    dfsch_operating_system_error("rename");
   }
   return NULL;
 }
@@ -923,7 +916,7 @@ static dfsch_object_t* native_rmdir(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (rmdir(path) != 0){
-    throw_errno(errno, "rmdir");
+    dfsch_operating_system_error("rmdir");
   }
   return NULL;
 }
@@ -934,7 +927,7 @@ static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (setegid(gid) != 0){
-    throw_errno(errno, "setegid");
+    dfsch_operating_system_error("setegid");
   }
   return NULL;
 }
@@ -945,7 +938,7 @@ static dfsch_object_t* native_seteuid(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (seteuid(uid) != 0){
-    throw_errno(errno, "seteuid");
+    dfsch_operating_system_error("seteuid");
   }
   return NULL;
 }
@@ -956,7 +949,7 @@ static dfsch_object_t* native_setgid(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (setgid(gid) != 0){
-    throw_errno(errno, "setgid");
+    dfsch_operating_system_error("setgid");
   }
   return NULL;
 }
@@ -967,7 +960,7 @@ static dfsch_object_t* native_setuid(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (setuid(uid) != 0){
-    throw_errno(errno, "setuid");
+    dfsch_operating_system_error("setuid");
   }
   return NULL;
 }
@@ -980,7 +973,7 @@ static dfsch_object_t* native_setpgid(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (setpgid(pid, pgid) != 0){
-    throw_errno(errno, "setpgid");
+    dfsch_operating_system_error("setpgid");
   }
   return NULL;
 }
@@ -992,7 +985,7 @@ static dfsch_object_t* native_setsid(void* baton, dfsch_object_t* args,
   sid = setsid();
 
   if (sid < 0){
-    throw_errno(errno, "setpgid");
+    dfsch_operating_system_error("setpgid");
   }
   return dfsch_make_number_from_long(sid);
 }
@@ -1004,7 +997,7 @@ static dfsch_object_t* native_setpgrp(void* baton, dfsch_object_t* args,
   pgid = setsid();
 
   if (pgid < 0){
-    throw_errno(errno, "setpgid");
+    dfsch_operating_system_error("setpgid");
   }
   return dfsch_make_number_from_long(pgid);
 }
@@ -1029,7 +1022,7 @@ static dfsch_object_t* native_stat(void* baton, dfsch_object_t* args,
     if (errno == ENOENT){
       return NULL;
     }
-    throw_errno(errno, "stat");
+    dfsch_operating_system_error("stat");
   }
   return res;
 }
@@ -1043,7 +1036,7 @@ static dfsch_object_t* native_symlink(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (symlink(old, new) != 0){
-    throw_errno(errno, "symlink");
+    dfsch_operating_system_error("symlink");
   }
   return NULL;
 }
@@ -1064,7 +1057,7 @@ static dfsch_object_t* native_wait(void* baton, dfsch_object_t* args,
   pid = wait(&stat);
 
   if (pid == -1){
-    throw_errno(errno, "wait");
+    dfsch_operating_system_error("wait");
   }
   
   return dfsch_list(2, 
@@ -1088,7 +1081,7 @@ static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
   pid = waitpid(pid, &stat, options);
 
   if (pid == -1){
-    throw_errno(errno, "waitpid");
+    dfsch_operating_system_error("waitpid");
   } else if (pid == 0) {
     return NULL;
   } else {
@@ -1110,8 +1103,7 @@ static dfsch_object_t* native_write(void* baton, dfsch_object_t* args,
   ret = write(fd, buf->ptr, buf->len);
   
   if (ret == -1){
-    int e = errno;
-    throw_errno(e, "write");
+    dfsch_operating_system_error("write");
   } 
 
   return dfsch_make_number_from_long(ret);
@@ -1123,7 +1115,7 @@ static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
   DFSCH_ARG_END(args);
 
   if (unlink(path) != 0){
-    throw_errno(errno, "unlink");
+    dfsch_operating_system_error("unlink");
   }
   return NULL;
 }

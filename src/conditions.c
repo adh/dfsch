@@ -1,6 +1,8 @@
 #include "dfsch/conditions.h"
 #include "dfsch/magic.h"
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include "util.h"
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
@@ -374,6 +376,23 @@ void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type,
   dfsch_signal(c);
 }
 
+dfsch_type_t dfsch_operating_system_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_RUNTIME_ERROR_TYPE, 
+                            "operating-system-error");
+void dfsch_operating_system_error_saved(int e, char* funname){
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_OPERATING_SYSTEM_ERROR_TYPE);
+  char* m = strerror(e);
+
+  dfsch_condition_put_field_cstr(c, "errno", DFSCH_MAKE_FIXNUM(e));
+  dfsch_condition_put_field_cstr(c, "function", 
+                                 dfsch_make_string_cstr(funname));
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);
+}
+void dfsch_operating_system_error(char* funname){
+  dfsch_operating_system_error_saved(errno, funname);
+}
+
 
 /*
  * Scheme binding
@@ -564,6 +583,9 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
   dfsch_define_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
   dfsch_define_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
+  dfsch_define_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
+  dfsch_define_cstr(ctx, "<operating-system-error>", 
+                    DFSCH_OPERATING_SYSTEM_ERROR_TYPE);
   
   dfsch_define_cstr(ctx, "make-condition", 
                     DFSCH_PRIMITIVE_REF(make_condition)); 

@@ -46,9 +46,6 @@ extern dfsch_type_t dfsch_warning_type;
 extern dfsch_type_t dfsch_error_type;
 #define DFSCH_ERROR_TYPE (&dfsch_error_type)
 
-extern dfsch_type_t dfsch_type_error_type;
-#define DFSCH_TYPE_ERROR_TYPE (&dfsch_type_error_type)
-
 extern dfsch_type_t dfsch_runtime_error_type;
 #define DFSCH_RUNTIME_ERROR_TYPE (&dfsch_runtime_error_type)
 
@@ -80,7 +77,14 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag);
 dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag);
 
+extern dfsch_type_t dfsch_type_error_type;
+#define DFSCH_TYPE_ERROR_TYPE (&dfsch_type_error_type)
 void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type, 
                       int instance_suffices);
+
+extern dfsch_type_t dfsch_operating_system_error_type;
+#define DFSCH_OPERATING_SYSTEM_ERROR_TYPE (&dfsch_operating_system_error_type)
+void dfsch_operating_system_error_saved(int e, char* funname);
+void dfsch_operating_system_error(char* funname);
 
 #endif
