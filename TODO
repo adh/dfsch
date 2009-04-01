@@ -10,6 +10,7 @@ For 0.3.1
 * Circular printer
 * Pretty-printer
 * CL-like destructuring (&key, &optional...)
+* Dynamic variables (ISLisp-style)
 
 When needed by other code:
 * Type predicates for all types
