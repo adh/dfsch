@@ -53,16 +53,18 @@ dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx,
   handle = dlopen(so_name, RTLD_NOW);
 
   err = dlerror();
-  if (err)
-    dfsch_error("load:dlopen-failed",dfsch_make_string_cstr(err));
-    
+  if (err){
+    dfsch_error("dlopen() failed", dfsch_make_string_cstr(err));
+  }
+
   entry = dlsym(handle, sym_name);
 
   err = dlerror();
-  if (err)
-    dfsch_error("load:dlopen-failed",dfsch_make_string_cstr(err));
+  if (err){
+    dfsch_error("dlsym() failed", dfsch_make_string_cstr(err));
+  }
   
-  entry(ctx); // TODO: what if this routine fails?
+  entry(ctx);
 
   return DFSCH_SYM_TRUE;
 }
@@ -227,7 +229,7 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name,
     path = dfsch_cdr(path);
   }
   
-  dfsch_error("load:module-not-found", dfsch_make_string_cstr(name));
+  dfsch_error("Module not found", dfsch_make_string_cstr(name));
 }
 
 static int search_modules(dfsch_object_t* modules, char* name){
@@ -260,7 +262,7 @@ void dfsch_provide(dfsch_object_t* env, char* name){
   }
 
   if (search_modules(modules, name)){
-    dfsch_error("provide:module-already-provided", dfsch_make_string_cstr(name));
+    dfsch_error("Module already provided", dfsch_make_string_cstr(name));
   }
 
 
@@ -297,8 +299,7 @@ dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
   dfsch_object_t *obj;
 
   if (!f){
-    int err = errno;
-    dfsch_error("load:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_operating_system_error("fopen");
   }
 
   obj = dfsch_read_scm_stream(f, scm_name, eval_env);
@@ -326,16 +327,15 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
   }
 
   if (r<0){
-    int err = errno;
-    dfsch_error("load:unix-error",dfsch_make_string_cstr(strerror(err)));
+    dfsch_operating_system_error("read");
   }
  
   if ((err && err != DFSCH_PARSER_STOPPED) 
-      || dfsch_parser_get_level(parser)!=0){
+      || dfsch_parser_get_level(parser) != 0){
     if (name)
-      dfsch_error("load:syntax-error",dfsch_make_string_cstr(name));
+      dfsch_error("Syntax error", dfsch_make_string_cstr(name));
     else
-      dfsch_error("load:syntax-error",NULL);
+      dfsch_error("Syntax error", NULL);
 
   }
 
@@ -369,11 +369,11 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
   if ((err && err != DFSCH_PARSER_STOPPED) 
       || dfsch_parser_get_level(parser)!=0){
     if (name)
-      dfsch_error("load:syntax-error",
+      dfsch_error("Syntax error",
                   dfsch_cons(dfsch_make_string_cstr(name),
                              dfsch_make_number_from_long(l)));
     else
-      dfsch_error("load:syntax-error",
+      dfsch_error("Syntax error",
                   dfsch_cons(NULL,
                              dfsch_make_number_from_long(l)));
   }
