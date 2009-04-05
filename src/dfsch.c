@@ -2142,7 +2142,8 @@ static object_t* lookup_impl(object_t* name,
       i->owner = NULL;
       goto lock;
     }
-    if (dfsch_eqhash_ref(&i->values, name, &ret)){
+    ret = dfsch_eqhash_ref(&i->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
       return ret;
     }
     
@@ -2153,7 +2154,8 @@ static object_t* lookup_impl(object_t* name,
  lock:
    DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref(&i->values, name, &ret)){
+    ret = dfsch_eqhash_ref(&i->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return ret;
     }
@@ -2177,7 +2179,8 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref(&i->values, name, &ret)){
+    ret = dfsch_eqhash_ref(&i->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
       return dfsch_cons(ret, NULL);
     }
@@ -2247,7 +2250,8 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  if (e->owner = ti){
+  if (e->owner != ti){
+    e->owner = NULL;
     DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   }
   dfsch_eqhash_set(&e->values, 
