@@ -76,6 +76,7 @@ void dfsch_write_object(dfsch_writer_state_t* state,
 
   if (state->depth==0){
     dfsch_write_string(state, "...");
+    return;
   }
 
   type = DFSCH_TYPE_OF(object);
