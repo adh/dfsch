@@ -40,7 +40,7 @@ static dfsch_eqhash_entry_t** alloc_vector(size_t mask){
 
 void dfsch_eqhash_init(dfsch_eqhash_t* hash, int start_large){
   int i;
-  if (start_large){
+  if (1 || start_large){
     for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE * 2; i++){
       hash->contents.large.cache[i] = NULL;
     }
@@ -261,25 +261,22 @@ int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
   return 0;
 }
 
-int dfsch_eqhash_ref(dfsch_eqhash_t* hash,
-                     dfsch_object_t* key, 
-                     dfsch_object_t** value){
+dfsch_object_t* dfsch_eqhash_ref(dfsch_eqhash_t* hash,
+                                 dfsch_object_t* key){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
-      *value = e->value;
-      return 1;
+      return e->value;
     }
   } else {
     int i;
     for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
       if (hash->contents.small.keys[i] == key){
-        *value = hash->contents.small.values[i];
-        return 1;
+        return hash->contents.small.values[i];
       }
     }
   }  
-  return 0;  
+  return DFSCH_INVALID_OBJECT;  
 }
 int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
                         dfsch_object_t* key, 
