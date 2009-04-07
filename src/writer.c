@@ -28,6 +28,8 @@ struct dfsch_writer_state_t {
   void* output_baton;
   int depth;
   int readability;
+
+  int c_mark;
 };
 dfsch_type_t dfsch_writer_state_type = {
   DFSCH_STANDARD_TYPE,
@@ -47,6 +49,7 @@ dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
   state->output_baton = baton;
   state->depth = max_depth;
   state->readability = readability;
+  state->c_mark = 0;
 
   return state;
 }
@@ -61,7 +64,7 @@ int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state){
   return 0;
 }
 int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state){
-  return 0;
+  return state->c_mark;
 }
 
 void dfsch_write_object(dfsch_writer_state_t* state,
@@ -101,6 +104,9 @@ void dfsch_write_string(dfsch_writer_state_t* state,
 }
 void dfsch_write_strbuf(dfsch_writer_state_t* state,
                         char* str, size_t len){
+  if (state->c_mark){
+    return;
+  }
   if (state->output_proc){
     state->output_proc(state->output_baton, str, len);
   } else {
