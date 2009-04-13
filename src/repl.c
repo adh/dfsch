@@ -135,6 +135,24 @@ void noninteractive_repl(dfsch_object_t* ctx){
   puts("");
 }
 
+typedef struct reload_ctx_t {
+  char* fname;
+  dfsch_object_t* env;
+} reload_ctx_t;
+DFSCH_PRIMITIVE_HEAD(reload){
+  reload_ctx_t* c = baton;
+  DFSCH_ARG_END(args);
+  dfsch_load_scm(c->env, c->fname);
+  return NULL;
+}
+static void load_scm(dfsch_object_t* env, char* fname){
+  reload_ctx_t* c = GC_NEW(reload_ctx_t);
+  dfsch_load_scm(env, fname);
+  c->fname = fname;
+  c->env = env;
+  dfsch_define_cstr(env, "reload", dfsch_make_primitive(p_reload_impl, c));
+}
+
 int main(int argc, char**argv){
   int c;
   dfsch_object_t* ctx;
@@ -167,7 +185,7 @@ int main(int argc, char**argv){
       dfsch_require(ctx, optarg, NULL);
       break;
     case 'l':
-      dfsch_load_scm(ctx, optarg);
+      load_scm(ctx, optarg);
       break;
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
@@ -191,7 +209,7 @@ int main(int argc, char**argv){
       break;
     case 'v':
       printf("dfsch version %s\n\n", PACKAGE_VERSION);
-      puts("Copyright (C) 2005-2008 Ales Hakl");
+      puts("Copyright (C) 2005-2009 Ales Hakl");
       puts("dfsch comes with ABSOLUTELY NO WARRANTY");
       puts("This is free software, and you are welcome to redistribute it");
       puts("under certain conditions; see file COPYING for details.");
