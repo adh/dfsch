@@ -231,15 +231,10 @@ int main(int argc, char**argv){
   }
 
   if (optind < argc) {
-    dfsch_object_t* ret;
-    dfsch_object_t* args = dfsch_make_vector(argc-optind,NULL);
-    int i;
-
     dfsch_define_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
-
-    ret = dfsch_load_scm(ctx, argv[optind]);
+    dfsch_load_scm(ctx, argv[optind]);
     return 0;
   }
 
