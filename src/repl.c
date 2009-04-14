@@ -164,7 +164,6 @@ int main(int argc, char**argv){
 
   ctx = dfsch_make_context();
 
-  dfsch_cdebug_set_as_debugger();
 
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);
@@ -179,7 +178,7 @@ int main(int argc, char**argv){
                                         NULL));
                                         
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hv")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvd")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
@@ -204,6 +203,9 @@ int main(int argc, char**argv){
 
         break;
       }
+    case 'd':
+      dfsch_cdebug_set_as_debugger();
+      break;
     case 'i':
       force_interactive = 1;
       break;
@@ -223,6 +225,7 @@ int main(int argc, char**argv){
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
       puts("  -i                Force interactive mode");
+      puts("  -d                Enable cdebug debugger early");
 
       puts("First non-option argument is treated as filename of program to run");
       puts("Run without non-option arguments to start in interactive mode");
@@ -240,6 +243,7 @@ int main(int argc, char**argv){
 
   if (interactive || force_interactive){
     if (isatty(0)){
+      dfsch_cdebug_set_as_debugger();
       interactive_repl(ctx);
     }else{
       noninteractive_repl(ctx);
