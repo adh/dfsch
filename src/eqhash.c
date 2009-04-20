@@ -22,6 +22,7 @@
 #include <dfsch/eqhash.h>
 #include <stdint.h>
 #include <limits.h>
+#include <assert.h>
 
 #define INITIAL_MASK 0xf
 
@@ -40,7 +41,7 @@ static dfsch_eqhash_entry_t** alloc_vector(size_t mask){
 
 void dfsch_eqhash_init(dfsch_eqhash_t* hash, int start_large){
   int i;
-  if (1 || start_large){
+  if (start_large){
     for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE * 2; i++){
       hash->contents.large.cache[i] = NULL;
     }

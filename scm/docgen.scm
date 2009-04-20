@@ -3,6 +3,7 @@
 
 (require 'introspect)
 (require 'sxml)
+(require 'cmdopts)
 
 (define *clean-toplevel* (make-default-environment))
 
@@ -25,6 +26,7 @@
      (let ((name (car x))
            (value (cadr x)))
        (list (symbol->string name) 
+             (type-name (type-of value))
              (get-object-documentation value))))
    lyst))
 
@@ -34,10 +36,20 @@
                (string<? (car x)
                          (car y)))))
 
-(define (make-index list)
+(define (make-index-list list link-to)
   `(ul ,(map (lambda (item)
                (let ((name (car item)))
-                 `(li (a (@ href ,(string-append "#" name))
+                 `(li (a (@ href ,(string-append link-to "#" name))
                          ,name))))
              list)))
+
+(define (make-documentation-body lyst)
+  (map (lambda (item)
+         (let ((name (car item))
+               (type (cadr item))
+               (documentation (caddr item)))
+           `(div (@ (id ,name) (title ,name))
+                 (h1 ,(string-append type " " name))
+                 (p ,documentation))))
+       lyst))
 
