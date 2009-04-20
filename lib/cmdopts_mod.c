@@ -91,6 +91,8 @@ DFSCH_DEFINE_PRIMITIVE(parse_list, "Parse command line from list"){
 }
 
 dfsch_object_t* dfsch_module_cmdopts_register(dfsch_object_t* env){
+  dfsch_provide(env, "cmdopts");
+
   dfsch_define_cstr(env, "cmdopts:<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
   dfsch_define_cstr(env, "cmdopts:<error>", DFSCH_CMDOPTS_ERROR_TYPE);
 
