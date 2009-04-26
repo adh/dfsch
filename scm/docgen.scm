@@ -38,34 +38,54 @@
       (set! count (+ 1 count))
       count)))
 
+(define *id-counter* (make-counter))
+
+(define (make-entry name typename documentation object)
+  (vector name 
+          typename 
+          documentation 
+          (format "~y" object)))
+(define (entry-name entry)
+  (vector-ref entry 0))
+(define (entry-type-name entry)
+  (vector-ref entry 1))
+(define (entry-id entry)
+  (format "it~x" (id entry)))
+(define (entry-documentation entry)
+  (vector-ref entry 2))
+(define (entry-documentation-string entry)
+  (or (entry-documentation entry)
+      ""))
+(define (entry-value entry)
+  (vector-ref entry 3))
+
 (define (variables->name+doc lyst)
   (let ((id-counter (make-counter)))
-    (sort-alist
+    (sort-entries
      (map 
       (lambda (x) 
         (let ((name (car x))
               (value (cadr x)))
-          (list (symbol->string name) 
-                (type-name (type-of value))
-                (format "it~x" (id-counter))
-                (get-object-documentation value)
-                value)))
+          (make-entry (symbol->string name) 
+                      (type-name (type-of value))
+                      (get-object-documentation value)
+                      value)))
       lyst))))
-  
-(define (sort-alist alist)
-  (sort-list! alist
+
+(define (sort-entries lyst)
+  (sort-list! lyst
              (lambda (x y)
-               (string<? (car x)
-                         (car y)))))
+               (string<? (entry-name x)
+                         (entry-name y)))))
 
 (define (target-name str) 
   (inet:uri-base64-encode str))
 
 (define (make-index-list list link-to target)
   `((ul ,@(map (lambda (item)
-                 (let ((name (car item))
-                       (type-name (cadr item))
-                       (id (caddr item)))
+                 (let ((name (entry-name item))
+                       (type-name (entry-type-name item))
+                       (id (entry-id item)))
                    `(li (a (@ (href ,(string-append link-to "#" id))
                               ,@(unless (null? target)
                                         `((target ,target))))
@@ -75,14 +95,13 @@
 
 (define (make-documentation-body lyst)
   (map (lambda (item)
-         (let ((name (car item))
-               (type (cadr item))
-               (id (caddr item))
-               (documentation (cadddr item)))
+         (let ((name (entry-name item))
+               (type (entry-type-name item))
+               (id (entry-id item)))
            `(div (@ (id ,id) (title ,name))
                  (h2 ,(string-append type " " name))
-                 (pre ,(format "~w" (list-ref item 4)))
-                 (p ,documentation))))
+                 (pre ,(entry-value item))
+                 (p ,(entry-documentation-string item)))))
        lyst))
 
 (define (html-frameset title)
