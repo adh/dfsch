@@ -30,7 +30,7 @@
     (slot-ref object 'documentation))
    ((instance? object <macro>)
     (get-object-documentation (slot-ref object 'procedure)))
-   (else "No documentation can be attached to objects of this class.")))
+   (else ())))
 
 (define (make-counter)
   (let ((count 0))
@@ -48,9 +48,7 @@
           (list (symbol->string name) 
                 (type-name (type-of value))
                 (format "it~x" (id-counter))
-                (or
-                 (get-object-documentation value)
-                 "Documentation for this object is empty")
+                (get-object-documentation value)
                 value)))
       lyst))))
   
@@ -129,3 +127,4 @@
 
 (when (defined? *posix-argv*)
       (emit-core-documentation (cadr *posix-argv*)))
+
