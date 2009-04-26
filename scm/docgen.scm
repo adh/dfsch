@@ -28,6 +28,8 @@
     (slot-ref object 'documentation))
    ((instance? object <form>)
     (slot-ref object 'documentation))
+   ((instance? object <standard-type>)
+    (slot-ref object 'documentation))
    ((instance? object <macro>)
     (get-object-documentation (slot-ref object 'procedure)))
    (else ())))

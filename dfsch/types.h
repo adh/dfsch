@@ -220,7 +220,10 @@ struct dfsch_type_t {
    * pointer
    */
   dfsch_type_hash_t hash;
+  /** Slot table */
   dfsch_slot_t* slots;
+  /** Documentation string */
+  char* documentation;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 

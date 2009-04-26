@@ -412,6 +412,7 @@ static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
 
 static dfsch_slot_t type_slots[] = {
   DFSCH_STRING_SLOT(dfsch_type_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO),
   DFSCH_SLOT_TERMINATOR
 };
 
