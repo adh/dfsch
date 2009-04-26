@@ -328,6 +328,12 @@
        (test 'field-width (format "~15f" '(1 2 3 4)) "      (1 2 3 4)")
        (test 'floats (format "~10,5f" pi) "   3.14159"))
 
+(group "Regressions"
+       (test 'gensym-write-segfault 
+             (let ((str (object->string (gensym))))
+               #t)
+             #t))
+
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately

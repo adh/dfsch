@@ -530,12 +530,13 @@ static dfsch_slot_t symbol_slots[] = {
   DFSCH_SLOT_TERMINATOR
 };
 
-static void symbol_write(symbol_t* s, dfsch_writer_state_t* state){
-  s = DFSCH_TAG_REF(s);
+static void symbol_write(object_t* o, dfsch_writer_state_t* state){
+  symbol_t* s;
+  s = DFSCH_TAG_REF(o);
   if (s->data){
     dfsch_write_string(state, s->data);
   } else {
-    dfsch_write_unreadable(state, (dfsch_object_t*)s, ""); 
+    dfsch_write_unreadable(state, o, ""); 
   }
 }
 dfsch_type_t dfsch_symbol_type = {
