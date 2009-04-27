@@ -72,18 +72,22 @@ void dfsch_write_object(dfsch_writer_state_t* state,
   dfsch_type_t* type;
   char* ret;
 
-  if (!object){
-    dfsch_write_string(state, "()");
-    return;
+  if (state->c_mark){
+    // TODO
+  } else {
+    if (!object){
+      dfsch_write_string(state, "()");
+      return;
+    }
+    
+    if (state->depth==0){
+      dfsch_write_string(state, "...");
+      return;
+    }
+    
+    type = DFSCH_TYPE_OF(object);
   }
-
-  if (state->depth==0){
-    dfsch_write_string(state, "...");
-    return;
-  }
-
-  type = DFSCH_TYPE_OF(object);
-
+  
   while (type){
     if (type->write){
       state->depth--;
@@ -94,7 +98,9 @@ void dfsch_write_object(dfsch_writer_state_t* state,
     type = type->superclass;
   }
 
-  dfsch_write_unreadable(state, object, "");
+  if (!state->c_mark){
+    dfsch_write_unreadable(state, object, "");
+  }
 }
 
 

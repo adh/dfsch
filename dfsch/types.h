@@ -269,8 +269,9 @@ struct dfsch_slot_t {
 #define DFSCH_SLOT_ACCESS_RO          2
 #define DFSCH_SLOT_ACCESS_DEBUG_READ  3
 
-#define DFSCH_SLOT_TYPE_HEAD(name) \
-  {DFSCH_SLOT_TYPE_TYPE, DFSCH_SLOT_TYPE, sizeof(dfsch_slot_t), name, NULL, NULL, NULL, NULL, NULL}
+#define DFSCH_SLOT_TYPE_HEAD(name, documentation)                     \
+  {DFSCH_SLOT_TYPE_TYPE, DFSCH_SLOT_TYPE, sizeof(dfsch_slot_t), name, \
+      NULL, NULL, NULL, NULL, NULL, documentation}
 
 #define DFSCH_OBJECT_SLOT(struct, name, access)                         \
   {DFSCH_OBJECT_SLOT_TYPE, #name, offsetof(struct, name), access}

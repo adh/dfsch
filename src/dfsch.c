@@ -230,6 +230,7 @@ dfsch_type_t dfsch_slot_type = {
   NULL,
 
   &slot_slots,
+  "Common superclass of all slot types"
 };
 
 static dfsch_slot_t slot_type_slots[] = {
@@ -246,7 +247,8 @@ dfsch_type_t dfsch_slot_type_type = {
   NULL,
   NULL,
   NULL,
-  &slot_type_slots
+  &slot_type_slots,
+  "Slot metaclass - describes methods for reading and writing"
 };
 
 static dfsch_object_t* object_accessor_ref(void* ptr){
@@ -256,7 +258,7 @@ static void object_accessor_set(void* ptr, dfsch_object_t* obj){
   *((dfsch_object_t**)ptr) = obj;
 }
 dfsch_slot_type_t dfsch_object_slot_type = {
-  DFSCH_SLOT_TYPE_HEAD("object-slot"),
+  DFSCH_SLOT_TYPE_HEAD("object-slot", "Generic object-pointer slot"),
   object_accessor_ref,
   object_accessor_set,
   sizeof(dfsch_object_t*)
@@ -269,7 +271,7 @@ static void boolean_accessor_set(void* ptr, dfsch_object_t* obj){
   *((int**)ptr) = (obj != NULL);
 }
 dfsch_slot_type_t dfsch_boolean_slot_type = {
-  DFSCH_SLOT_TYPE_HEAD("boolean-slot"),
+  DFSCH_SLOT_TYPE_HEAD("boolean-slot", "Slot holding boolean value as C int"),
   boolean_accessor_ref,
   boolean_accessor_set,
   sizeof(int)
@@ -282,7 +284,7 @@ static void string_accessor_set(void* ptr, dfsch_object_t* obj){
   *((char**)ptr) = dfsch_string_to_cstr(obj);
 }
 dfsch_slot_type_t dfsch_string_slot_type = {
-  DFSCH_SLOT_TYPE_HEAD("string-slot"),
+  DFSCH_SLOT_TYPE_HEAD("string-slot", "Slot holding string as C char*"),
   string_accessor_ref,
   string_accessor_set,
   sizeof(char*)
@@ -296,7 +298,8 @@ dfsch_slot_type_t dfsch_string_slot_type = {
     *((type*)ptr) = dfsch_number_to_long(obj);                          \
   }                                                                     \
   dfsch_slot_type_t dfsch_ ## name ## _slot_type = {                    \
-    DFSCH_SLOT_TYPE_HEAD(#name "-slot"),                                \
+    DFSCH_SLOT_TYPE_HEAD(#name "-slot",                                 \
+                         "Slot containing C " #name "value"),      \
     name ## _accessor_ref,                                              \
     name ## _accessor_set,                                              \
     sizeof(type)                                                        \
@@ -425,7 +428,8 @@ dfsch_type_t dfsch_standard_type = {
   (dfsch_type_write_t)type_write,
   NULL,
   NULL,
-  &type_slots
+  &type_slots,
+  "Base metaclass representing common methods of all objects"
 };
 
 dfsch_type_t dfsch_special_type = {
@@ -437,7 +441,8 @@ dfsch_type_t dfsch_special_type = {
   NULL,
   NULL,
   NULL,
-  &type_slots
+  &type_slots,
+  "Metaclass of types with special in-memory representation"
 };
 
 dfsch_type_t dfsch_list_type = {
@@ -448,7 +453,9 @@ dfsch_type_t dfsch_list_type = {
   NULL,
   NULL,
   NULL,
-  NULL
+  NULL,
+  NULL,
+  "Abstract superclass of list-like objects"
 };
 
 dfsch_type_t dfsch_function_type = {
@@ -459,7 +466,10 @@ dfsch_type_t dfsch_function_type = {
   NULL,
   NULL,
   NULL,
-  NULL
+  NULL,
+  "Abstract superclass for functions"
+  /* N.B.: anything could work as function, this is only notational 
+   *       convention */
 };
 
 
@@ -471,7 +481,9 @@ dfsch_type_t dfsch_empty_list_type = {
   NULL,
   NULL,
   NULL,
-  NULL
+  NULL,
+  NULL,
+  "Class with only one instance - ()"
 };
 
 static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
@@ -522,7 +534,8 @@ dfsch_type_t dfsch_pair_type = {
   (dfsch_type_write_t)pair_write,
   NULL,
   (dfsch_type_hash_t)pair_hash,
-  NULL
+  NULL,
+  "Abstract superclass for all pair representations"
 };
 #define PAIR (&dfsch_pair_type)
 
@@ -555,7 +568,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     (dfsch_type_write_t)pair_write,
     NULL,
     (dfsch_type_hash_t)pair_hash,
-    NULL
+    NULL,
+    "Immutable list stored as array"
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -566,7 +580,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     (dfsch_type_write_t)pair_write,
     NULL,
     (dfsch_type_hash_t)pair_hash,
-    NULL
+    NULL,
+    "Normal mutable cons cell"
   },
   {
     DFSCH_STANDARD_TYPE,
@@ -577,7 +592,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     (dfsch_type_write_t)symbol_write,
     NULL,
     NULL,
-    &symbol_slots
+    &symbol_slots,
+    "Symbol - equal? instances are always eq?"
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -588,7 +604,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     (dfsch_type_write_t)pair_write,
     NULL,
     (dfsch_type_hash_t)pair_hash,
-    NULL
+    NULL,
+    "Immutable cons cell"
   },
 };
 
@@ -615,7 +632,8 @@ dfsch_type_t dfsch_primitive_type = {
   (dfsch_type_write_t)primitive_write,
   NULL,
   NULL,
-  &primitive_slots
+  &primitive_slots,
+  "Function implemented in C code"
 };
 #define PRIMITIVE (&dfsch_primitive_type)
 
@@ -663,9 +681,14 @@ dfsch_type_t dfsch_standard_function_type = {
   (dfsch_type_write_t)function_write,
   NULL,
   NULL,
-  &closure_slots
+  &closure_slots,
+  "User defined function"
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
+
+static dfsch_slot_t macro_slots[] = {
+  DFSCH_STRING_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO),
+};
 
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
@@ -674,7 +697,10 @@ dfsch_type_t dfsch_macro_type = {
   "macro",
   NULL,
   NULL,
-  NULL
+  NULL,
+  NULL,
+  &macro_slots,
+  "Macro implemented by arbitrary function"
 };
 #define MACRO DFSCH_MACRO_TYPE
 
@@ -693,7 +719,8 @@ dfsch_type_t dfsch_form_type = {
   NULL,
   NULL,
   NULL,
-  &form_slots
+  &form_slots,
+  "C-implemented special form"
 };
 #define FORM (&dfsch_form_type)
 
@@ -764,7 +791,8 @@ dfsch_type_t dfsch_environment_type = {
   NULL,
   NULL,
   
-  &environment_slots
+  &environment_slots,
+  "Lexical environment frame"
 };
 
 
@@ -779,7 +807,11 @@ dfsch_type_t dfsch_lambda_list_type = {
   sizeof(lambda_list_t),
   "lambda-list",
   NULL,
-  (dfsch_type_write_t)lambda_list_write
+  (dfsch_type_write_t)lambda_list_write,
+  NULL,
+  NULL,
+  NULL,
+  "Compiled lambda-list for effective destructuring"
 };
 
 

@@ -226,7 +226,7 @@ int main(int argc, char**argv){
       puts("  -E <expression>   Evaluate given expression");
       puts("  -i                Force interactive mode");
       puts("  -d                Enable cdebug debugger early");
-
+      puts("");
       puts("First non-option argument is treated as filename of program to run");
       puts("Run without non-option arguments to start in interactive mode");
       return 0;
