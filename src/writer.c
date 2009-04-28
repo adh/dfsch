@@ -35,7 +35,13 @@ dfsch_type_t dfsch_writer_state_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(dfsch_writer_state_t),
-  "writer-state"
+  "writer-state",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "Internal class representing state of object writer"
 };
 
 dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
