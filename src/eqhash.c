@@ -150,6 +150,7 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   dfsch_eqhash_entry_t* i;
   size_t h;
   h = fast_ptr_hash(key);
+  dfsch_prefetch(BUCKET(hash, h));
   i = hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE];
   if (dfsch_likely(i) && 
       dfsch_unlikely(i->key == key)){

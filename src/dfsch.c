@@ -2348,7 +2348,7 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * relevant functions. Tail recursion handling should be part of apply. */
 
 static void async_apply_check(dfsch__thread_info_t* ti){
-  if (ti->async_apply){
+  if (dfsch_unlikely(ti->async_apply)){
     dfsch_object_t* proc;
     proc = ti->async_apply;
     ti->async_apply = NULL;
