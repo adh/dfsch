@@ -47,6 +47,7 @@
 #include <pthread.h>
 #include <gc/gc.h>
 
+#include <dfsch/defines.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -461,8 +462,8 @@ extern "C" {
    * @param name Variable or l-value (also used as argument name in exceptions)
    */
 #define DFSCH_OBJECT_ARG(al, name)\
-  if (!DFSCH_PAIR_P((al))) \
-    dfsch_error("exception:required-argument-missing",\
+  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))          \
+    dfsch_error("exception:required-argument-missing",  \
                 dfsch_make_string_cstr(#name));\
   (name) = DFSCH_FAST_CAR((al)); \
   (al) = DFSCH_FAST_CDR((al))
@@ -474,9 +475,9 @@ extern "C" {
    * @param name Argument name (used only in exceptions)
    */
 #define DFSCH_DISCARD_ARG(al, name)\
-  if (!DFSCH_PAIR_P((al))) \
-    dfsch_error("exception:required-argument-missing",\
-                dfsch_make_string_cstr(#name));\
+  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))              \
+    dfsch_error("exception:required-argument-missing",  \
+                dfsch_make_string_cstr(#name));         \
   (al) = DFSCH_FAST_CDR((al))
 
   /**
@@ -504,12 +505,12 @@ extern "C" {
    * @param conv Function for conversion from dfsch_object_t* to given type.
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
-  if (!DFSCH_PAIR_P((al))) \
-    dfsch_error("exception:required-argument-missing",\
-                dfsch_make_string_cstr(#name));\
+  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))          \
+    dfsch_error("exception:required-argument-missing",  \
+                dfsch_make_string_cstr(#name));         \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \
-    (name) = (type)(conv)(dfsch___tmp); \
-    (al) = DFSCH_FAST_CDR((al));\
+    (name) = (type)(conv)(dfsch___tmp);                 \
+    (al) = DFSCH_FAST_CDR((al));                        \
   }
   /**
    * Parses one argument from arguments list and converts it using given 

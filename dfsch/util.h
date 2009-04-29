@@ -23,6 +23,7 @@
 #define H__dfsch__util__
 
 #include <dfsch/strings.h>
+#include <dfsch/defines.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -73,9 +74,6 @@ typedef pthread_rwlock_t dfsch_rwlock_t;
 typedef pthread_mutex_t dfsch_rwlock_t;
 #endif
 
-#if !defined(__linux__)
-/* pthread_mutex_destroy() is noop on (at least) linux */
-#define DFSCH_THREADS_FINALIZE
-#endif
+
 
 #endif
