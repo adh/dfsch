@@ -462,7 +462,7 @@ extern "C" {
    * @param name Variable or l-value (also used as argument name in exceptions)
    */
 #define DFSCH_OBJECT_ARG(al, name)\
-  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))          \
+  if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))          \
     dfsch_error("exception:required-argument-missing",  \
                 dfsch_make_string_cstr(#name));\
   (name) = DFSCH_FAST_CAR((al)); \
@@ -475,7 +475,7 @@ extern "C" {
    * @param name Argument name (used only in exceptions)
    */
 #define DFSCH_DISCARD_ARG(al, name)\
-  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))              \
+  if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
     dfsch_error("exception:required-argument-missing",  \
                 dfsch_make_string_cstr(#name));         \
   (al) = DFSCH_FAST_CDR((al))
@@ -505,7 +505,7 @@ extern "C" {
    * @param conv Function for conversion from dfsch_object_t* to given type.
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)\
-  if (dfsch_unlikely(!DFSCH_PAIR_P((al))))          \
+  if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))          \
     dfsch_error("exception:required-argument-missing",  \
                 dfsch_make_string_cstr(#name));         \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \

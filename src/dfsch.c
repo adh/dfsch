@@ -1917,7 +1917,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   pthread_once(&thread_once, thread_key_alloc);
   ei = pthread_getspecific(thread_key);
 #endif
-  if (dfsch_unlikely(!ei)){
+  if (DFSCH_UNLIKELY(!ei)){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->throw_ret = NULL;
     ei->stack_frame = GC_NEW(dfsch__stack_frame_t);
@@ -2168,7 +2168,7 @@ static object_t* lookup_impl(object_t* name,
 
   i = env;
   while (i){
-    if (dfsch_unlikely(i->owner != ti)){
+    if (DFSCH_UNLIKELY(i->owner != ti)){
       i->owner = NULL;
       goto lock;
     }
@@ -2348,7 +2348,7 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * relevant functions. Tail recursion handling should be part of apply. */
 
 static void async_apply_check(dfsch__thread_info_t* ti){
-  if (dfsch_unlikely(ti->async_apply)){
+  if (DFSCH_UNLIKELY(ti->async_apply)){
     dfsch_object_t* proc;
     proc = ti->async_apply;
     ti->async_apply = NULL;
@@ -2439,7 +2439,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     ti->stack_frame->expr = exp;
     ti->stack_frame->env = env;
 
-    if (dfsch_likely(DFSCH_SYMBOL_P(f))){
+    if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
@@ -2513,17 +2513,17 @@ static void destructure_impl(lambda_list_t* ll,
   dfsch_object_t* j = list;
 
   for (i = 0; i < ll->positional_count; i++){
-    if (dfsch_unlikely(!DFSCH_PAIR_P(j))){
+    if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
       dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
     dfsch_eqhash_put(&env->values, ll->positional[i], DFSCH_FAST_CAR(j));
     j = DFSCH_FAST_CDR(j);
   }
   
-  if (dfsch_unlikely(ll->rest)) {
+  if (DFSCH_UNLIKELY(ll->rest)) {
     dfsch_eqhash_put(&env->values, ll->rest, j);
   } else {
-    if (dfsch_unlikely(j)) {
+    if (DFSCH_UNLIKELY(j)) {
       dfsch_error("Too many arguments", dfsch_list(2,ll, list));
     }
   }
@@ -2538,7 +2538,7 @@ static void destructuring_eval(lambda_list_t* ll,
   dfsch_object_t* j = list;
 
   for (i = 0; i < ll->positional_count; i++){
-    if (dfsch_unlikely(!DFSCH_PAIR_P(j))){
+    if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
       dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
     dfsch_eqhash_put(&env->values, ll->positional[i], 
@@ -2546,10 +2546,10 @@ static void destructuring_eval(lambda_list_t* ll,
     j = DFSCH_FAST_CDR(j);
   }
   
-  if (dfsch_unlikely(ll->rest)) {
+  if (DFSCH_UNLIKELY(ll->rest)) {
     dfsch_eqhash_put(&env->values, ll->rest, eval_list(j, outer, ti));
   } else {
-    if (dfsch_unlikely(j)) {
+    if (DFSCH_UNLIKELY(j)) {
       dfsch_error("Too many arguments", dfsch_list(2,ll, list));
     }
   }
@@ -2590,7 +2590,7 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
 
   while (DFSCH_PAIR_P(i)){
     object_t* exp = DFSCH_FAST_CAR(i); 
-    if (dfsch_likely(DFSCH_FAST_CDR(i))) {
+    if (DFSCH_LIKELY(DFSCH_FAST_CDR(i))) {
       dfsch_eval_impl(exp, env, NULL, ti);
     } else {
       return dfsch_eval_impl(exp, env, esc, ti);
@@ -2636,7 +2636,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   dfsch_object_t* r;
   tail_escape_t myesc;
 
-  if (dfsch_unlikely(esc)){
+  if (DFSCH_UNLIKELY(esc)){
     esc->proc = proc;
     esc->args = args;
     esc->arg_env = arg_env;
@@ -2668,7 +2668,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
    */
 
   if (DFSCH_TYPE_OF(proc) == PRIMITIVE){
-    if (dfsch_likely(arg_env)){
+    if (DFSCH_LIKELY(arg_env)){
       args = eval_list(args, arg_env, ti);
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
@@ -2679,7 +2679,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
     environment_t* env = new_frame_impl(((closure_t*) proc)->env,
                                         ti);
-    if (dfsch_likely(arg_env)){
+    if (DFSCH_LIKELY(arg_env)){
       destructuring_eval(((closure_t*)proc)->args, args, env, arg_env, ti);
     } else {
       destructure_impl(((closure_t*)proc)->args, args, env);
@@ -2693,7 +2693,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
-    if (dfsch_likely(arg_env)){
+    if (DFSCH_LIKELY(arg_env)){
       args = eval_list(args, arg_env, ti);
     }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);

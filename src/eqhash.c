@@ -124,7 +124,7 @@ static void grow_hash(dfsch_eqhash_t* hash){
 
 void dfsch_eqhash_put(dfsch_eqhash_t* hash,
                       dfsch_object_t* key, dfsch_object_t* value){
-  if (dfsch_likely(!hash->is_large)){
+  if (DFSCH_LIKELY(!hash->is_large)){
     int i;
     for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
       if (hash->contents.small.keys[i] == DFSCH_INVALID_OBJECT){
@@ -138,7 +138,7 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
   }
   size_t h = fast_ptr_hash(key);
   hash->contents.large.count++;
-  if (dfsch_unlikely(hash->contents.large.count / 2 
+  if (DFSCH_UNLIKELY(hash->contents.large.count / 2 
                      > hash->contents.large.mask)){
     grow_hash(hash);
   }
@@ -150,16 +150,16 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   dfsch_eqhash_entry_t* i;
   size_t h;
   h = fast_ptr_hash(key);
-  dfsch_prefetch(BUCKET(hash, h));
+  DFSCH_PREFETCH(BUCKET(hash, h));
   i = hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE];
-  if (dfsch_likely(i) && 
-      dfsch_unlikely(i->key == key)){
+  if (DFSCH_LIKELY(i) && 
+      DFSCH_UNLIKELY(i->key == key)){
     return i;
   }
   
   i = BUCKET(hash, h);
   while (i){
-    if (dfsch_likely(i->key == key)){
+    if (DFSCH_LIKELY(i->key == key)){
       hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] = i;
       return i;
     }
@@ -268,7 +268,7 @@ int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key){
 
 dfsch_object_t* dfsch_eqhash_ref(dfsch_eqhash_t* hash,
                                  dfsch_object_t* key){
-  if (dfsch_unlikely(hash->is_large)){
+  if (DFSCH_UNLIKELY(hash->is_large)){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
       return e->value;
