@@ -7,7 +7,10 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/extref.h \
 	dfsch/lib/cdebug.h \
 	dfsch/lib/console.h \
+	dfsch/lib/xml.h \
+	dfsch/lib/sxml.h \
 	dfsch/strings.h \
+	dfsch/defines.h \
 	dfsch/parse.h \
 	dfsch/promise.h \
 	dfsch/hash.h \
@@ -38,7 +41,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cdebug.la \
 	libdfsch-collections.la \
 	libdfsch-process.la \
-	libdfsch-cmdopts.la
+	libdfsch-cmdopts.la \
+	libdfsch-xml.la libdfsch-sxml.la
 
 dfschlibexec_LTLIBRARIES = threads.la\
 	regex.la \
@@ -50,7 +54,8 @@ dfschlibexec_LTLIBRARIES = threads.la\
 	console.la \
 	collections.la \
 	process.la \
-	cmdopts.la
+	cmdopts.la \
+	xml.la sxml.la
 
 dfschlibscm_DATA = scm/struct.scm
 
@@ -162,6 +167,22 @@ libdfsch_cmdopts_la_LIBADD =  libdfsch.la
 cmdopts_la_SOURCES = lib/cmdopts_mod.c
 cmdopts_la_LDFLAGS = -avoid-version -module
 cmdopts_la_LIBADD =  libdfsch.la libdfsch-cmdopts.la
+
+libdfsch_xml_la_SOURCES = lib/xml.c
+libdfsch_xml_la_LIBADD = libdfsch.la -lexpat
+libdfsch_xml_la_LDFLAGS =
+
+libdfsch_sxml_la_SOURCES = lib/sxml.c
+libdfsch_sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-xml.la libdfsch-inet.la
+libdfsch_sxml_la_LDFLAGS =
+
+xml_la_SOURCES = lib/xml_mod.c
+xml_la_LIBADD = libdfsch.la -lexpat libdfsch-xml.la
+xml_la_LDFLAGS = -module -avoid-version
+
+sxml_la_SOURCES = lib/sxml_mod.c
+sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
+sxml_la_LDFLAGS = -module -avoid-version
 
 
 dfsch_repl_SOURCES = src/repl.c

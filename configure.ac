@@ -75,6 +75,23 @@ if test x"$with_readline" != x"no"; then
         fi
 fi
 
+AC_ARG_WITH([expat],
+  AC_HELP_STRING([--with-expat=PATH], [Path to expat installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+AC_CHECK_HEADERS(expat.h, [have_expat="1"], [have_expat="0"])
+AC_CHECK_LIB(expat, XML_ParserCreate,, [have_expat="0"])
+
+if test x$have_expat != x1; then
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT(expat not found!)
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT()
+        AC_MSG_ERROR(expat XML parser is required.)
+fi
+
 
 AC_SYS_LARGEFILE 
 
