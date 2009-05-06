@@ -1,5 +1,7 @@
 (require 'regex)
 (require 'cmdopts)
+(require 'xml)
+(require 'sxml)
 
 (define tests-passed 0)
 (define tests-failed 0)
@@ -328,6 +330,16 @@
        (test 'field-width (format "~15f" '(1 2 3 4)) "      (1 2 3 4)")
        (test 'floats (format "~10,5f" pi) "   3.14159"))
 
+(group "XML support"
+;       (sub-group xml)
+       (sub-group sxml
+                  (test 'parse-string
+                        (sxml:parse-string "<a foo=\"bar &quot;\"><b/></a>")
+                        '(a (@ (foo "bar \"")) (b)))
+                  (test 'emit-string
+                        (sxml:emit-string '(a (@ (foo "bar \"")) (b)))
+                        "<a foo=\"bar &quot;\"><b /></a>")))
+       
 (group "Regressions"
        (test 'gensym-write-segfault 
              (let ((str (object->string (gensym))))
