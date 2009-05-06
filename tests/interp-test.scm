@@ -350,4 +350,4 @@
 ;;
 ;; Print some statistics and exit apropriately
 ;;
-(exit-func)    
+(exit-func)
