@@ -101,10 +101,10 @@ extern "C" {
 
   extern char* dfsch_char_category(uint32_t c);
 
-  extern int dfsch_string_search(dfsch_object_t* needle, 
-                                 dfsch_object_t* haystack);
-  extern int dfsch_string_search_ci(dfsch_object_t* needle, 
-                                    dfsch_object_t* haystack);
+  extern int dfsch_string_search(dfsch_strbuf_t* needle, 
+                                 dfsch_strbuf_t* haystack);
+  extern int dfsch_string_search_ci(dfsch_strbuf_t* needle, 
+                                    dfsch_strbuf_t* haystack);
 
 
 #ifdef __cplusplus
