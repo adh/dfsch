@@ -47,19 +47,19 @@ extern "C" {
   extern dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj);
   extern char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj);
 
-  extern int dfsch_string_cmp(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_lt_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_gt_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_lte_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_gte_p(dfsch_object_t* a, dfsch_object_t* b);
+  extern int dfsch_string_cmp(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_eq_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_lt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_gt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_lte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
 
-  extern int dfsch_string_cmp_ci(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_ci_eq_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_ci_lt_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_ci_gt_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_ci_lte_p(dfsch_object_t* a, dfsch_object_t* b);
-  extern int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b);
+  extern int dfsch_string_cmp_ci(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_ci_eq_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_ci_lt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_ci_gt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_ci_lte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
+  extern int dfsch_string_ci_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
 
   extern dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list);
 
