@@ -213,53 +213,36 @@ dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
   return &(((dfsch_string_t*)obj)->buf);  
 }
 
-int dfsch_string_cmp(dfsch_object_t* a, dfsch_object_t* b){
-  TYPE_CHECK(a, STRING, "string");
-  TYPE_CHECK(b, STRING, "string");
-  
-  if (((dfsch_string_t*)a)->buf.len != ((dfsch_string_t*)b)->buf.len){
-    size_t l = (((dfsch_string_t*)a)->buf.len < ((dfsch_string_t*)b)->buf.len) 
-      ? ((dfsch_string_t*)a)->buf.len : ((dfsch_string_t*)b)->buf.len;
-
-    int r = memcmp(((dfsch_string_t*)a)->buf.ptr, 
-                   ((dfsch_string_t*)b)->buf.ptr, 
-                   l);
-
+int dfsch_string_cmp(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
+  if (a->len != b->len){
+    size_t l = (a->len < b->len) ? a->len : b->len;
+    int r = memcmp(a->ptr, b->ptr, l);
     if (r == 0){
-      return (((dfsch_string_t*)a)->buf.len < ((dfsch_string_t*)b)->buf.len)
-        ? -1 : 1;
+      return (a->len < b->len) ? -1 : 1;
     }else {
       return r;
     }
-
   }
 
-  return memcmp(((dfsch_string_t*)a)->buf.ptr, ((dfsch_string_t*)b)->buf.ptr, 
-		((dfsch_string_t*)a)->buf.len);
-
+  return memcmp(a->ptr, b->ptr, a->len);
 }
 
-int dfsch_string_eq_p(dfsch_object_t* a, dfsch_object_t* b){
-  TYPE_CHECK(a, STRING, "string");
-  TYPE_CHECK(b, STRING, "string");
-  
-  if (((dfsch_string_t*)a)->buf.len != ((dfsch_string_t*)b)->buf.len)
+int dfsch_string_eq_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
+  if (a->len != b->len)
       return 0;
 
-  return memcmp(((dfsch_string_t*)a)->buf.ptr, ((dfsch_string_t*)b)->buf.ptr, 
-		((dfsch_string_t*)a)->buf.len) == 0;
-
+  return memcmp(a->ptr, b->ptr, a->len) == 0;
 }
-int dfsch_string_lt_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_lt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp(a, b) < 0;
 }
-int dfsch_string_gt_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_gt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp(a, b) > 0;
 }
-int dfsch_string_lte_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_lte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp(a, b) <= 0;
 }
-int dfsch_string_gte_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp(a, b) >= 0;
 }
 
@@ -806,13 +789,11 @@ dfsch_object_t* dfsch_string_titlecase(dfsch_object_t* s){
  * I assume that this is rougly the thing that R5RS means by case 
  * insensitive comparison. Which does not necessary mean that this is useful.
  */
-int dfsch_string_cmp_ci(dfsch_object_t* a, dfsch_object_t* b){
-  dfsch_strbuf_t* abuf = dfsch_string_to_buf(a);
-  char* ai = abuf->ptr;
-  char* ae = abuf->ptr + abuf->len;
-  dfsch_strbuf_t* bbuf = dfsch_string_to_buf(b);
-  char* bi = bbuf->ptr;
-  char* be = bbuf->ptr + bbuf->len;
+int dfsch_string_cmp_ci(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
+  char* ai = a->ptr;
+  char* ae = a->ptr + a->len;
+  char* bi = b->ptr;
+  char* be = b->ptr + b->len;
   uint32_t ac;
   uint32_t bc;
   
@@ -843,25 +824,23 @@ int dfsch_string_cmp_ci(dfsch_object_t* a, dfsch_object_t* b){
 
 }
 
-int dfsch_string_ci_eq_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_ci_eq_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) == 0;
 }
-int dfsch_string_ci_lt_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_ci_lt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) < 0;
 }
-int dfsch_string_ci_gt_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_ci_gt_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) > 0;
 }
-int dfsch_string_ci_lte_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_ci_lte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) <= 0;
 }
-int dfsch_string_ci_gte_p(dfsch_object_t* a, dfsch_object_t* b){
+int dfsch_string_ci_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) >= 0;
 }
 
-int dfsch_string_search(dfsch_object_t* needle, dfsch_object_t* haystack){
-  dfsch_strbuf_t* n = dfsch_string_to_buf(needle);
-  dfsch_strbuf_t* h = dfsch_string_to_buf(haystack);
+int dfsch_string_search(dfsch_strbuf_t* n, dfsch_strbuf_t* h){
   int pos = 0;
 
   if (n->len == 0){
@@ -906,10 +885,8 @@ static int ci_prefix_p(char* ai, char* ae, char* bi, char* be){
   }
 }
 
-int dfsch_string_search_ci(dfsch_object_t* needle, 
-                           dfsch_object_t* haystack){
-  dfsch_strbuf_t* n = dfsch_string_to_buf(needle);
-  dfsch_strbuf_t* h = dfsch_string_to_buf(haystack);
+int dfsch_string_search_ci(dfsch_strbuf_t* n, 
+                           dfsch_strbuf_t* h){
   char* hi = h->ptr;
   char* he = h->ptr + h->len;
   int pos = 0;
@@ -1012,14 +989,14 @@ DFSCH_DEFINE_PRIMITIVE(list_2_string_utf8, 0){
   return dfsch_list_2_string_utf8(list);
 }
 DFSCH_PRIMITIVE_HEAD(string_cmp_p){
-  object_t* a;
-  object_t* b;
+  dfsch_strbuf_t* a;
+  dfsch_strbuf_t* b;
 
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_BUFFER_ARG(args, a);
+  DFSCH_BUFFER_ARG(args, b);
   DFSCH_ARG_END(args);
 
-  return dfsch_bool(((int (*)(object_t*,object_t*)) baton)(a, b));
+  return dfsch_bool(((int (*)(dfsch_strbuf_t*,dfsch_strbuf_t*)) baton)(a, b));
 }
 DFSCH_DEFINE_PRIMITIVE(substring, 0){
   size_t start, end;
@@ -1141,21 +1118,21 @@ DFSCH_DEFINE_PRIMITIVE(string_titlecase, 0){
 }
 
 DFSCH_DEFINE_PRIMITIVE(string_search, 0){
-  object_t* needle;
-  object_t* haystack;
+  dfsch_strbuf_t* needle;
+  dfsch_strbuf_t* haystack;
 
-  DFSCH_OBJECT_ARG(args, needle);
-  DFSCH_OBJECT_ARG(args, haystack);
+  DFSCH_BUFFER_ARG(args, needle);
+  DFSCH_BUFFER_ARG(args, haystack);
   DFSCH_ARG_END(args);
 
   return DFSCH_MAKE_FIXNUM(dfsch_string_search(needle, haystack));
 }
 DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
-  object_t* needle;
-  object_t* haystack;
+  dfsch_strbuf_t* needle;
+  dfsch_strbuf_t* haystack;
 
-  DFSCH_OBJECT_ARG(args, needle);
-  DFSCH_OBJECT_ARG(args, haystack);
+  DFSCH_BUFFER_ARG(args, needle);
+  DFSCH_BUFFER_ARG(args, haystack);
   DFSCH_ARG_END(args);
 
   return DFSCH_MAKE_FIXNUM(dfsch_string_search_ci(needle, haystack));
