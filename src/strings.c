@@ -1008,7 +1008,6 @@ DFSCH_DEFINE_PRIMITIVE(substring, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_string_substring(string, start, end);
-
 }
 DFSCH_DEFINE_PRIMITIVE(substring_utf8, 0){
   size_t start, end;
@@ -1020,7 +1019,6 @@ DFSCH_DEFINE_PRIMITIVE(substring_utf8, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_string_substring_utf8(string, start, end);
-
 }
 
 DFSCH_DEFINE_PRIMITIVE(char_downcase, 0){
@@ -1237,6 +1235,4 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_search));
   dfsch_define_cstr(ctx, "string-search-ci", 
 		   DFSCH_PRIMITIVE_REF(string_search_ci));
-
-
 }
