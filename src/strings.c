@@ -885,18 +885,15 @@ static int ci_prefix_p(char* ai, char* ae, char* bi, char* be){
   }
 }
 
-int dfsch_string_search_ci(dfsch_strbuf_t* n, 
-                           dfsch_strbuf_t* h){
-  char* hi = h->ptr;
-  char* he = h->ptr + h->len;
+static int search_ci(char* ni, char* ne,  char* hi, char* he){
   int pos = 0;
 
-  if (n->len == 0){
+  if (ni == ne){
     return 0;
   }
 
   while (hi){
-    if (ci_prefix_p(n->ptr, n->ptr + n->len, hi, he)){
+    if (ci_prefix_p(ni, ne, hi, he)){
       return pos;
     }
     hi = next_char(hi, he);
@@ -904,6 +901,14 @@ int dfsch_string_search_ci(dfsch_strbuf_t* n,
   }
   
   return -1;
+
+}
+
+int dfsch_string_search_ci(dfsch_strbuf_t* n, 
+                           dfsch_strbuf_t* h){
+  char* hi = h->ptr;
+  char* he = h->ptr + h->len;
+  return search_ci(n->ptr, n->ptr + n->len, h->ptr, h->ptr + h->len);
 }
 
 /////////////////////////////////////////////////////////////////////////////

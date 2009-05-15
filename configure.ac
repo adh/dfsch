@@ -81,7 +81,8 @@ AC_ARG_WITH([expat],
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
 AC_CHECK_HEADERS(expat.h, [have_expat="1"], [have_expat="0"])
-AC_CHECK_LIB(expat, XML_ParserCreate,, [have_expat="0"])
+AC_CHECK_LIB(expat, XML_ParserCreate, 
+                    [have_expat=$have_expat], [have_expat="0"])
 
 if test x$have_expat != x1; then
         AC_MSG_RESULT()
