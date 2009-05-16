@@ -1141,7 +1141,6 @@ DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<string>", &string_type);
 
-
   dfsch_define_cstr(ctx, "string-append", 
 		   DFSCH_PRIMITIVE_REF(string_append));
   dfsch_define_cstr(ctx, "substring-bytes", 
@@ -1221,8 +1220,6 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(char_decimal_p));
   dfsch_define_cstr(ctx, "char-mark?", 
 		   DFSCH_PRIMITIVE_REF(char_mark_p));
-
-
 
   dfsch_define_cstr(ctx, "string-upcase", 
 		   DFSCH_PRIMITIVE_REF(string_upcase));

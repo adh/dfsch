@@ -106,6 +106,8 @@ extern "C" {
   extern int dfsch_string_search_ci(dfsch_strbuf_t* needle, 
                                     dfsch_strbuf_t* haystack);
 
+  extern dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
+                                            dfsch_strbuf_t* separator);
 
 #ifdef __cplusplus
 }
