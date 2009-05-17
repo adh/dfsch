@@ -929,8 +929,8 @@ dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
   dfsch_object_t* tmp;
 
   while (i != e){
-    if (memchr(separator->ptr, *i, separator->len) == NULL){
-      if (i != e || preserve_empty) {
+    if (memchr(separator->ptr, *i, separator->len) != NULL){
+      if (i != l || preserve_empty) {
         tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
         if (head){
           DFSCH_FAST_CDR_MUT(tail) = tmp;
@@ -1198,6 +1198,21 @@ DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
   return DFSCH_MAKE_FIXNUM(dfsch_string_search_ci(needle, haystack));
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_split_on_byte, 
+                       "Split string into parts separated by bytes from separator set"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* separator;
+  int max_parts;
+  dfsch_object_t* preserve_empty;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, separator);
+  DFSCH_LONG_ARG_OPT(args, max_parts, -1);
+  DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_split_byte(string, separator, max_parts, preserve_empty);
+}
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -1294,4 +1309,7 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_search));
   dfsch_define_cstr(ctx, "string-search-ci", 
 		   DFSCH_PRIMITIVE_REF(string_search_ci));
+
+  dfsch_define_cstr(ctx, "string-split-on-byte", 
+		   DFSCH_PRIMITIVE_REF(string_split_on_byte));
 }
