@@ -109,13 +109,16 @@ extern "C" {
   extern dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
                                             dfsch_strbuf_t* separator,
                                             int max_parts,
-                                            int case_sensitive);
+                                            int case_sensitive,
+                                            int preserve_empty);
   extern dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
                                                  dfsch_strbuf_t* separator,
-                                                 int max_parts);
+                                                 int max_parts,
+                                                 int preserve_empty);
   extern dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
                                                  dfsch_strbuf_t* separator,
-                                                 int max_parts);
+                                                 int max_parts,
+                                                 int preserve_empty);
 
 #ifdef __cplusplus
 }

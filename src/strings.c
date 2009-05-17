@@ -911,18 +911,58 @@ int dfsch_string_search_ci(dfsch_strbuf_t* n,
 dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
                                    dfsch_strbuf_t* separator,
                                    int max_parts,
-                                   int case_sensitive){
-  
+                                   int case_sensitive,
+                                   int preserve_empty){
 }
 
 dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
                                         dfsch_strbuf_t* separator,
-                                        int max_parts){
-  
+                                        int max_parts,
+                                        int preserve_empty){
+  char* i = str->ptr;
+  char* e = str->ptr + str->len;
+  char* l = i;
+  int c = 1;
+
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+  dfsch_object_t* tmp;
+
+  while (i != e){
+    if (memchr(separator->ptr, *i, separator->len) == NULL){
+      if (i != e || preserve_empty) {
+        tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
+        if (head){
+          DFSCH_FAST_CDR_MUT(tail) = tmp;
+          tail = tmp;
+        } else {
+          head = tail = tmp;
+        }
+      }
+      i++;
+      l = i;
+      c++;
+      if (c == max_parts){
+        break;
+      }
+    } else {
+      i++;
+    }
+  }
+
+  tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
+  if (head){
+    DFSCH_FAST_CDR_MUT(tail) = tmp;
+    tail = tmp;
+  } else {
+    head = tail = tmp;
+  }
+  return head;
 }
 dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
                                         dfsch_strbuf_t* separator,
-                                        int max_parts){
+                                        int max_parts,
+                                        int preserve_empty){
 
 }
 
