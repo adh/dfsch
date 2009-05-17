@@ -107,7 +107,15 @@ extern "C" {
                                     dfsch_strbuf_t* haystack);
 
   extern dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
-                                            dfsch_strbuf_t* separator);
+                                            dfsch_strbuf_t* separator,
+                                            int max_parts,
+                                            int case_sensitive);
+  extern dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
+                                                 dfsch_strbuf_t* separator,
+                                                 int max_parts);
+  extern dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
+                                                 dfsch_strbuf_t* separator,
+                                                 int max_parts);
 
 #ifdef __cplusplus
 }

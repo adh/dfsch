@@ -840,27 +840,26 @@ int dfsch_string_ci_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp_ci(a, b) >= 0;
 }
 
-int dfsch_string_search(dfsch_strbuf_t* n, dfsch_strbuf_t* h){
+static int search_impl(char* ni, char* ne,  char* hi, char* he){
   int pos = 0;
 
-  if (n->len == 0){
+  if (ni == ne){
     return 0;
   }
 
-  while (h->len - pos >= n->len){
-    char* ch;
-    if (memcmp(h->ptr + pos, n->ptr, n->len) == 0){
+  while ((he - hi) >= (ne - ni)){
+    if (memcmp(ni, hi, ne - ni) == 0){
       return pos;
     }
-
-    ch = memchr(h->ptr + pos, n->ptr[0], h->len - pos);
-    if (!ch){
-      break;
-    }
-    pos = ch - h->ptr;
+    hi = next_char(hi, he);
+    pos++;
   }
+  
+  return -1;  
+}
 
-  return -1;
+int dfsch_string_search(dfsch_strbuf_t* n, dfsch_strbuf_t* h){
+  return search_impl(n->ptr, n->ptr + n->len, h->ptr, h->ptr + h->len);
 }
 
 static int ci_prefix_p(char* ai, char* ae, char* bi, char* be){
@@ -885,7 +884,7 @@ static int ci_prefix_p(char* ai, char* ae, char* bi, char* be){
   }
 }
 
-static int search_ci(char* ni, char* ne,  char* hi, char* he){
+static int search_ci_impl(char* ni, char* ne,  char* hi, char* he){
   int pos = 0;
 
   if (ni == ne){
@@ -906,10 +905,28 @@ static int search_ci(char* ni, char* ne,  char* hi, char* he){
 
 int dfsch_string_search_ci(dfsch_strbuf_t* n, 
                            dfsch_strbuf_t* h){
-  char* hi = h->ptr;
-  char* he = h->ptr + h->len;
-  return search_ci(n->ptr, n->ptr + n->len, h->ptr, h->ptr + h->len);
+  return search_ci_impl(n->ptr, n->ptr + n->len, h->ptr, h->ptr + h->len);
 }
+
+dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
+                                   dfsch_strbuf_t* separator,
+                                   int max_parts,
+                                   int case_sensitive){
+  
+}
+
+dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
+                                        dfsch_strbuf_t* separator,
+                                        int max_parts){
+  
+}
+dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
+                                        dfsch_strbuf_t* separator,
+                                        int max_parts){
+
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
