@@ -303,7 +303,9 @@
        (test 'titlecase (string-titlecase "foo bar") "Foo Bar")
        (test 'search (string-search "def" "abcdefgh") 3)
        (test 'search-utf (string-search "def" "abčdefgh") 3)
-       (test 'search-ci (string-search-ci "děf" "abcDĚFgh") 3))
+       (test 'search-ci (string-search-ci "děf" "abcDĚFgh") 3)
+       (test 'string-split-on-byte (string-split-on-byte "a b,,c" ", ")
+             '("a" "b" "c")))
 
 (group "some special cases"
 
