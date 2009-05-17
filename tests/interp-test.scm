@@ -302,6 +302,7 @@
        (test 'char-upcase (char-upcase 97) 65)
        (test 'titlecase (string-titlecase "foo bar") "Foo Bar")
        (test 'search (string-search "def" "abcdefgh") 3)
+       (test 'search-utf (string-search "def" "abčdefgh") 3)
        (test 'search-ci (string-search-ci "děf" "abcDĚFgh") 3))
 
 (group "some special cases"
