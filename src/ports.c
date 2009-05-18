@@ -567,6 +567,13 @@ static int64_t file_port_tell(file_port_t* port){
   return ret;
 }
 
+static dfsch_slot_t file_port_slots[] = {
+  DFSCH_STRING_SLOT(file_port_t, name, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_BOOLEAN_SLOT(file_port_t, open, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_BOOLEAN_SLOT(file_port_t, close, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SLOT_TERMINATOR,
+};
+
 dfsch_port_type_t dfsch_file_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
@@ -575,7 +582,12 @@ dfsch_port_type_t dfsch_file_port_type = {
     "file-port",
     NULL,
     (dfsch_type_write_t)file_port_write,
-    NULL
+    NULL,
+    NULL,
+    
+    &file_port_slots,
+    
+    "port backed by stdio stream"
   },
   (dfsch_port_write_buf_t)file_port_write_buf,
   (dfsch_port_read_buf_t)file_port_read_buf,
