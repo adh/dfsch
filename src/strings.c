@@ -928,6 +928,10 @@ dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
   dfsch_object_t* tail;
   dfsch_object_t* tmp;
 
+  if (max_parts != -1 && max_parts < 2){
+    dfsch_error("Invalid maximal number of string parts", NULL);
+  }
+
   while (i != e){
     if (memchr(separator->ptr, *i, separator->len) != NULL){
       if (i != l || preserve_empty) {
@@ -950,19 +954,80 @@ dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
     }
   }
 
-  tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
-  if (head){
-    DFSCH_FAST_CDR_MUT(tail) = tmp;
-    tail = tmp;
-  } else {
-    head = tail = tmp;
+  if (l != e || preserve_empty){
+    tmp = dfsch_cons(dfsch_make_string_buf(l, e - l), NULL);
+    if (head){
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    } else {
+      head = tail = tmp;
+    }
   }
   return head;
 }
+
+static int contains_char(dfsch_strbuf_t* str, uint32_t ch){
+  char* i = str->ptr;
+  char* e = str->ptr + str->len;
+
+  while (i){
+    if (ch == get_char(i, e)){
+      return 1;
+    }
+    i = next_char(i, e);
+  }
+  return 0;
+}
+
 dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
                                         dfsch_strbuf_t* separator,
                                         int max_parts,
                                         int preserve_empty){
+  char* i = str->ptr;
+  char* e = str->ptr + str->len;
+  char* l = i;
+  int c = 1;
+
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+  dfsch_object_t* tmp;
+
+  if (max_parts != -1 && max_parts < 2){
+    dfsch_error("Invalid maximal number of string parts", NULL);
+  }  
+
+  while (i){
+    if (contains_char(separator, get_char(i, e))){
+      if (i != l || preserve_empty) {
+        tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
+        if (head){
+          DFSCH_FAST_CDR_MUT(tail) = tmp;
+          tail = tmp;
+        } else {
+          head = tail = tmp;
+        }
+      }
+      i = next_char(i, e);
+      l = i;
+      c++;
+      if (c == max_parts){
+        break;
+      }
+    } else {
+      i = next_char(i, e);
+    }
+  }
+  
+  if (l != e || preserve_empty){
+    tmp = dfsch_cons(dfsch_make_string_buf(l, e - l), NULL);
+    if (head){
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    } else {
+      head = tail = tmp;
+    }
+  }
+  return head;
 
 }
 
@@ -1199,7 +1264,8 @@ DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
 }
 
 DFSCH_DEFINE_PRIMITIVE(string_split_on_byte, 
-                       "Split string into parts separated by bytes from separator set"){
+                       "Split string into parts separated by "
+                       "bytes from separator set"){
   dfsch_strbuf_t* string;
   dfsch_strbuf_t* separator;
   int max_parts;
@@ -1213,6 +1279,23 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_byte,
 
   return dfsch_string_split_byte(string, separator, max_parts, preserve_empty);
 }
+DFSCH_DEFINE_PRIMITIVE(string_split_on_character, 
+                       "Split string into parts separated by "
+                       "unicode characters from separator set"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* separator;
+  int max_parts;
+  dfsch_object_t* preserve_empty;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, separator);
+  DFSCH_LONG_ARG_OPT(args, max_parts, -1);
+  DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_split_char(string, separator, max_parts, preserve_empty);
+}
+
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -1312,4 +1395,6 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "string-split-on-byte", 
 		   DFSCH_PRIMITIVE_REF(string_split_on_byte));
+  dfsch_define_cstr(ctx, "string-split-on-character", 
+		   DFSCH_PRIMITIVE_REF(string_split_on_character));
 }

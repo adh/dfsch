@@ -305,7 +305,10 @@
        (test 'search-utf (string-search "def" "abčdefgh") 3)
        (test 'search-ci (string-search-ci "děf" "abcDĚFgh") 3)
        (test 'string-split-on-byte (string-split-on-byte "a b,,c" ", ")
-             '("a" "b" "c")))
+             '("a" "b" "c"))
+       (test 'string-split-on-character 
+             (string-split-on-character "a©cæ©b" "©")
+             '("a" "cæ" "b")))
 
 (group "some special cases"
 
