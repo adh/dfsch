@@ -369,7 +369,11 @@ dfsch_port_type_t dfsch_string_output_port_type = {
     "string-output-port",
     NULL,
     NULL,
-    NULL
+    NULL,
+    NULL,
+    
+    NULL,
+    "Output only port backed by string"
   },
   (dfsch_port_write_buf_t)string_output_port_write_buf,
   NULL,
@@ -445,7 +449,11 @@ dfsch_port_type_t dfsch_string_input_port_type = {
     "string-input-port",
     NULL,
     NULL,
-    NULL
+    NULL,
+    NULL,
+
+    NULL,
+    "Input-only port backed by string"
   },
   NULL,
   (dfsch_port_read_buf_t)string_input_port_read_buf,
