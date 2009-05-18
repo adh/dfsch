@@ -1277,7 +1277,8 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_byte,
   DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_split_byte(string, separator, max_parts, preserve_empty);
+  return dfsch_string_split_byte(string, separator, max_parts, 
+                                 preserve_empty != NULL);
 }
 DFSCH_DEFINE_PRIMITIVE(string_split_on_character, 
                        "Split string into parts separated by "
@@ -1293,7 +1294,8 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_character,
   DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_split_char(string, separator, max_parts, preserve_empty);
+  return dfsch_string_split_char(string, separator, max_parts, 
+                                 preserve_empty != NULL);
 }
 
 
