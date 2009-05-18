@@ -116,7 +116,6 @@ void string_write(dfsch_string_t* o, dfsch_writer_state_t* state){
     }
   }
 
-
   *i='"';
   i[1]=0;
 
@@ -246,7 +245,6 @@ int dfsch_string_gte_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   return dfsch_string_cmp(a, b) >= 0;
 }
 
-
 dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   object_t* i = list;
   size_t len = 0;
@@ -280,7 +278,6 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   *ptr = 0;
 
   return (dfsch_object_t*)r;
-
 }
 
 char dfsch_string_ref(dfsch_object_t* string, size_t index){
@@ -315,7 +312,6 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
                 dfsch_make_number_from_long(start));
 
   return dfsch_make_string_buf(s->buf.ptr+start, end-start);
-
 }
 
 dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
@@ -427,9 +423,6 @@ static uint32_t get_char(char* p, char* e){
   return 0xfffd; /* REPLACEMENT CHARACTER */
 }
 
-
-
-
 size_t dfsch_string_utf8_length(dfsch_object_t* string){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
@@ -504,7 +497,6 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
   }
 
   return dfsch_make_string_buf(sp, ep - sp);
-
 }
 dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
@@ -535,8 +527,6 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   
   return head;           
 }
-
-
 
 dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
   
@@ -620,7 +610,6 @@ char* dfsch_char_encode(uint32_t c){
   return ptr;
 }
 
-
 uint32_t dfsch_char_downcase(uint32_t c){
   return UDATA_ENTRY(c).lower_offset + c;
 }
@@ -630,7 +619,6 @@ uint32_t dfsch_char_upcase(uint32_t c){
 uint32_t dfsch_char_titlecase(uint32_t c){
   return UDATA_ENTRY(c).title_offset + c;
 }
-
 
 char* dfsch_char_category(uint32_t c){
   return UDATA_ENTRY(c).category;
@@ -796,8 +784,6 @@ int dfsch_string_cmp_ci(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   char* be = b->ptr + b->len;
   uint32_t ac;
   uint32_t bc;
-  
-
 
   while (ai && bi){
     ac = dfsch_char_upcase(get_char(ai, ae));
@@ -821,7 +807,6 @@ int dfsch_string_cmp_ci(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
   } else {
     return 0;
   }
-
 }
 
 int dfsch_string_ci_eq_p(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
@@ -900,7 +885,6 @@ static int search_ci_impl(char* ni, char* ne,  char* hi, char* he){
   }
   
   return -1;
-
 }
 
 int dfsch_string_search_ci(dfsch_strbuf_t* n, 
@@ -1028,7 +1012,6 @@ dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
     }
   }
   return head;
-
 }
 
 
