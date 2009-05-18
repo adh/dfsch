@@ -81,10 +81,10 @@ void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf(port, buf, size);
     } else {
-      dfsch_error("exception:not-an-output-port", port);
+      dfsch_error("Not an output port", port);
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 void dfsch_port_write_cstr(dfsch_object_t* port, char*str){
@@ -98,10 +98,10 @@ ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
       return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf(port, 
                                                                    buf, size);
     } else {
-      dfsch_error("exception:not-an-input-port", port);
+      dfsch_error("Not an input port", port);
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 
@@ -121,10 +121,10 @@ void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek(port, offset, whence);
     } else {
-      dfsch_error("exception:port-not-seekable", port);
+      dfsch_error("Port is not seekable", port);
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 int64_t dfsch_port_tell(dfsch_object_t* port){
@@ -135,7 +135,7 @@ int64_t dfsch_port_tell(dfsch_object_t* port){
       return -1;
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 
@@ -145,7 +145,7 @@ void dfsch_port_batch_read_start(dfsch_object_t* port){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start(port);
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 void dfsch_port_batch_read_end(dfsch_object_t* port){
@@ -154,7 +154,7 @@ void dfsch_port_batch_read_end(dfsch_object_t* port){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_end(port);
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 int dfsch_port_batch_read(dfsch_object_t* port){
@@ -170,7 +170,7 @@ int dfsch_port_batch_read(dfsch_object_t* port){
       }
     }
   } else {
-    dfsch_error("exception:not-a-port", port);
+    dfsch_error("Not a port", port);
   }
 }
 
@@ -326,19 +326,19 @@ dfsch_object_t* dfsch_current_error_port(){
 
 void dfsch_set_current_output_port(dfsch_object_t* port){
   if (!dfsch_output_port_p(port)){
-    dfsch_error("exception:not-an-output-port", port);
+    dfsch_error("Not an output port", port);
   }
   current_ports()->output_port = port;
 }
 void dfsch_set_current_input_port(dfsch_object_t* port){
   if (!dfsch_input_port_p(port)){
-    dfsch_error("exception:not-an-input-port", port);
+    dfsch_error("Not an input port", port);
   }
   current_ports()->input_port = port;  
 }
 void dfsch_set_current_error_port(dfsch_object_t* port){
   if (!dfsch_output_port_p(port)){
-    dfsch_error("exception:not-an-output-port", port);
+    dfsch_error("Not an output port", port);
   }
   current_ports()->error_port = port;
 }
@@ -499,15 +499,13 @@ static void file_port_write_buf(file_port_t* port,
   size_t ret;
 
   if (!port->open){
-    dfsch_error("exception:port-closed", port);
+    dfsch_error("Port is closed", port);
   }
 
   if (len != 0){
     ret = fwrite(buf, len, 1, port->file);
     if (ret == 0){
-      errno_error("exception:file-port-write-failed",
-                  (dfsch_object_t*)port,
-                  errno);
+      dfsch_operating_system_error("fwrite");    
     }
   }
 }
@@ -516,7 +514,7 @@ static ssize_t file_port_read_buf(file_port_t* port,
   size_t ret;
 
   if (!port->open){
-    dfsch_error("exception:port-closed", port);
+    dfsch_error("Port is closed", port);
   }
 
   ret = fread(buf, 1, len, port->file);
@@ -524,9 +522,7 @@ static ssize_t file_port_read_buf(file_port_t* port,
     if (feof(port->file)){
       return 0;
     } else {
-      errno_error("exception:file-port-read-failed",
-                  (dfsch_object_t*)port,
-                  errno);
+      dfsch_operating_system_error("fread");    
     }
   }
   return ret;
@@ -552,9 +548,7 @@ static void file_port_seek(file_port_t* port, int64_t offset, int whence){
   }
 
   if (fseek(port->file, offset, whence) != 0){
-    errno_error("exception:file-port-seek-failed",
-                (dfsch_object_t*)port,
-                errno);
+    dfsch_operating_system_error("fseek");    
   }
 }
 
@@ -567,9 +561,7 @@ static int64_t file_port_tell(file_port_t* port){
   ret = ftell(port->file);
 
   if (ret == -1){
-    errno_error("exception:file-port-tell-failed",
-                (dfsch_object_t*)port,
-                errno);
+    dfsch_operating_system_error("ftell");    
   }
 
   return ret;
@@ -630,12 +622,12 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
   FILE* file;
 
   if (mode[0] != 'r' && mode[0] != 'w' && mode[0] != 'a'){ /// XXX
-    dfsch_error("exception:invalid-file-port-mode", 
+    dfsch_error("Invalid file port mode", 
                 dfsch_make_string_cstr(mode));
   }
   if (mode[1] != 0){
     if (mode[1] != '+' && mode[1] != 'b'){
-      dfsch_error("exception:invalid-file-port-mode", 
+      dfsch_error("Invalid file port mode", 
                   dfsch_make_string_cstr(mode));
       
     }
@@ -643,7 +635,7 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
       if ((mode[2] != '+' && mode[2] != 'b') 
           || (mode[2] == mode[1])
           || (mode[3] != 0)){
-        dfsch_error("exception:invalid-file-port-mode", 
+        dfsch_error("Invalid file port mode", 
                     dfsch_make_string_cstr(mode));
       }
     }
@@ -652,20 +644,14 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
   file = fopen(filename, mode);
   
   if (!file){
-      errno_error("exception:file-port-open-failed",
-                  dfsch_make_string_cstr(filename),
-                  errno);
+      dfsch_operating_system_error("fopen");    
   }
 
   return dfsch_make_file_port(file, 1, filename);
 }
 
 void dfsch_close_file_port(dfsch_object_t* port){
-  file_port_t* p;
-
-  if (DFSCH_TYPE_OF(port) != DFSCH_FILE_PORT_TYPE){
-    dfsch_error("exception:not-a-file-port", port);
-  }
+  file_port_t* p = DFSCH_ASSERT_INSTANCE(port, DFSCH_FILE_PORT_TYPE);
 
   p = (file_port_t*) port;
 
