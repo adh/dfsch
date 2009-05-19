@@ -1328,7 +1328,7 @@ DFSCH_DEFINE_PRIMITIVE(string_split,
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_BUFFER_ARG(args, separator);
   DFSCH_LONG_ARG_OPT(args, max_parts, -1);
-  DFSCH_OBJECT_ARG_OPT(args, case_sensitive, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, case_sensitive, DFSCH_INVALID_OBJECT);
   DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
   DFSCH_ARG_END(args);
 
