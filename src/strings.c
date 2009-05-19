@@ -423,15 +423,13 @@ static uint32_t get_char(char* p, char* e){
   return 0xfffd; /* REPLACEMENT CHARACTER */
 }
 
-size_t dfsch_string_utf8_length(dfsch_object_t* string){
-  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
-  char* i = buf->ptr;
-  char* e = buf->ptr + buf->len;
+static size_t string_length(char* i, char* e){
   size_t l = 0;
 
-  if (buf->len == 0){
+  if (i == e){
     return 0;
   }
+
 
   while (i){
     l++;
@@ -439,6 +437,11 @@ size_t dfsch_string_utf8_length(dfsch_object_t* string){
   }
 
   return l;
+}
+
+size_t dfsch_string_utf8_length(dfsch_object_t* string){
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
+  return string_length(buf->ptr, buf->ptr + buf->len);
 }
 
 uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
@@ -892,11 +895,79 @@ int dfsch_string_search_ci(dfsch_strbuf_t* n,
   return search_ci_impl(n->ptr, n->ptr + n->len, h->ptr, h->ptr + h->len);
 }
 
+static char* skip_chars(char* i, char* e, int count){
+  while (count && i){
+    count--;
+    i = next_char(i, e);
+  }
+  return i;
+}
+
 dfsch_object_t* dfsch_string_split(dfsch_strbuf_t* str,
                                    dfsch_strbuf_t* separator,
                                    int max_parts,
                                    int case_sensitive,
                                    int preserve_empty){
+  char* i = str->ptr;
+  char* e = str->ptr + str->len;
+  char* l = i;
+  int c = 1;
+  int pos;
+  int sep_len = string_length(separator->ptr, 
+                              separator->ptr + separator->len);
+
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+  dfsch_object_t* tmp;
+
+  if (max_parts != -1 && max_parts < 2){
+    dfsch_error("Invalid maximal number of string parts", NULL);
+  }
+
+  while (i) {
+    if (case_sensitive){
+      pos = search_impl(separator->ptr, separator->ptr + separator->len, i, e);
+    } else {
+      pos = search_ci_impl(separator->ptr, separator->ptr + separator->len, 
+                           i, e);
+    }
+
+    if (pos == -1){
+      break;
+    }
+
+    i = skip_chars(i, e, pos); // XXX: naive, slow, whatever
+    if (i != l || preserve_empty) {
+      tmp = dfsch_cons(dfsch_make_string_buf(l, i - l), NULL);
+      if (head){
+        DFSCH_FAST_CDR_MUT(tail) = tmp;
+        tail = tmp;
+      } else {
+        head = tail = tmp;
+      }
+    }
+    i = skip_chars(i, e, sep_len);
+    l = i;
+    if (!l){
+      l = e;
+    }
+    c++;
+    if (c == max_parts){
+      break;
+    }
+  }
+ 
+
+  if (l != e || preserve_empty){
+    tmp = dfsch_cons(dfsch_make_string_buf(l, e - l), NULL);
+    if (head){
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    } else {
+      head = tail = tmp;
+    }
+  }
+  return head;
 }
 
 dfsch_object_t* dfsch_string_split_byte(dfsch_strbuf_t* str,
@@ -1246,6 +1317,25 @@ DFSCH_DEFINE_PRIMITIVE(string_search_ci, 0){
   return DFSCH_MAKE_FIXNUM(dfsch_string_search_ci(needle, haystack));
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_split, 
+                       "Split string into parts separated by separator"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* separator;
+  int max_parts;
+  dfsch_object_t* case_sensitive;
+  dfsch_object_t* preserve_empty;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, separator);
+  DFSCH_LONG_ARG_OPT(args, max_parts, -1);
+  DFSCH_OBJECT_ARG_OPT(args, case_sensitive, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_split(string, separator, max_parts, 
+                            case_sensitive != NULL,
+                            preserve_empty != NULL);
+}
 DFSCH_DEFINE_PRIMITIVE(string_split_on_byte, 
                        "Split string into parts separated by "
                        "bytes from separator set"){
@@ -1378,6 +1468,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "string-search-ci", 
 		   DFSCH_PRIMITIVE_REF(string_search_ci));
 
+  dfsch_define_cstr(ctx, "string-split", 
+		   DFSCH_PRIMITIVE_REF(string_split));
   dfsch_define_cstr(ctx, "string-split-on-byte", 
 		   DFSCH_PRIMITIVE_REF(string_split_on_byte));
   dfsch_define_cstr(ctx, "string-split-on-character", 
