@@ -120,6 +120,12 @@ extern "C" {
                                                  int max_parts,
                                                  int preserve_empty);
 
+  extern dfsch_strbuf_t* dfsch_string_replace(dfsch_strbuf_t* str,
+                                              dfsch_strbuf_t* from,
+                                              dfsch_strbuf_t* to,
+                                              int max_matches,
+                                              int case_sensitive);
+
 #ifdef __cplusplus
 }
 #endif

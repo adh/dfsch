@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "udata.h"
+#include "util.h"
 
 typedef struct dfsch_string_t {
   dfsch_type_t* type;
@@ -1085,6 +1086,60 @@ dfsch_object_t* dfsch_string_split_char(dfsch_strbuf_t* str,
   return head;
 }
 
+dfsch_strbuf_t* dfsch_string_replace(dfsch_strbuf_t* str,
+                                     dfsch_strbuf_t* from,
+                                     dfsch_strbuf_t* to,
+                                     int max_matches,
+                                     int case_sensitive){
+  char* i = str->ptr;
+  char* e = str->ptr + str->len;
+  char* l = i;
+  int c = 0;
+  int pos;
+  int sep_len = string_length(from->ptr, 
+                              from->ptr + from->len);
+
+  str_list_t* sl = sl_create();
+
+  if (max_matches != -1 && max_matches < 1){
+    dfsch_error("Invalid maximal number of string parts", NULL);
+  }
+
+  while (i) {
+    if (case_sensitive){
+      pos = search_impl(from->ptr, from->ptr + from->len, i, e);
+    } else {
+      pos = search_ci_impl(from->ptr, from->ptr + from->len, 
+                           i, e);
+    }
+
+    if (pos == -1){
+      break;
+    }
+
+    i = skip_chars(i, e, pos); // XXX: naive, slow, whatever
+    if (i != l) {
+      sl_nappend(sl, l, i - l);
+    }
+    i = skip_chars(i, e, sep_len);
+    sl_nappend(sl, to->ptr, to->len);
+    l = i;
+    if (!l){
+      l = e;
+    }
+    c++;
+    if (c == max_matches){
+      break;
+    }
+  }
+ 
+
+  if (l != e){
+    sl_nappend(sl, l, e - l);
+  }
+
+  return sl_value_strbuf(sl); 
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1370,6 +1425,25 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_character,
   return dfsch_string_split_char(string, separator, max_parts, 
                                  preserve_empty != NULL);
 }
+DFSCH_DEFINE_PRIMITIVE(string_replace, 
+                       "Split string into parts separated by separator"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* from;
+  dfsch_strbuf_t* to;
+  int max_matches;
+  dfsch_object_t* case_sensitive;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, from);
+  DFSCH_BUFFER_ARG(args, to);
+  DFSCH_OBJECT_ARG_OPT(args, case_sensitive, DFSCH_INVALID_OBJECT);
+  DFSCH_LONG_ARG_OPT(args, max_matches, -1);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_nocopy(dfsch_string_replace(string, from, to, 
+                                                       max_matches, 
+                                                       case_sensitive != NULL));
+}
 
 
 
@@ -1474,4 +1548,6 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_split_on_byte));
   dfsch_define_cstr(ctx, "string-split-on-character", 
 		   DFSCH_PRIMITIVE_REF(string_split_on_character));
+  dfsch_define_cstr(ctx, "string-replace", 
+		   DFSCH_PRIMITIVE_REF(string_replace));
 }

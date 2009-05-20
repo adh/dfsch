@@ -87,11 +87,12 @@ char* dfsch_sl_value(str_list_t* list){
   return buf;
 }
 dfsch_strbuf_t* dfsch_sl_value_strbuf(str_list_t* list){
-  dfsch_strbuf_t *buf = GC_NEW(dfsch_strbuf_t);
+  dfsch_strbuf_t *buf = GC_MALLOC_ATOMIC(sizeof(dfsch_strbuf_t) + 
+                                         list->len + 1);
   str_li_t *i = list->head;
   char *ptr;
 
-  buf->ptr = GC_MALLOC_ATOMIC(list->len+1);
+  buf->ptr = buf + sizeof(dfsch_strbuf_t);
   buf->len = list->len;
   ptr = buf->ptr;
 
