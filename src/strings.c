@@ -1426,7 +1426,7 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_character,
                                  preserve_empty != NULL);
 }
 DFSCH_DEFINE_PRIMITIVE(string_replace, 
-                       "Split string into parts separated by separator"){
+                       "Replace occurences of FROM in STRING to TO"){
   dfsch_strbuf_t* string;
   dfsch_strbuf_t* from;
   dfsch_strbuf_t* to;
