@@ -932,6 +932,7 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "true", DFSCH_SYM_TRUE);
   dfsch_define_cstr(ctx, "nil", NULL);
   dfsch_define_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_define_cstr(ctx, "t", DFSCH_SYM_TRUE);  
   dfsch_define_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
 
