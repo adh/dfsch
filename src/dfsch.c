@@ -553,8 +553,6 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
     dfsch_write_unreadable(state, o, ""); 
   }
 }
-dfsch_type_t dfsch_symbol_type = {
-};
 #define SYMBOL DFSCH_SYMBOL_TYPE 
 
 
@@ -593,7 +591,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     NULL,
     &symbol_slots,
-    "Symbol - equal? instances are always eq?"
+    "Symbol - equal? instances are always eq?",
+    DFSCH_TYPEF_NO_WEAK_REFERENCES
   },
   {
     DFSCH_SPECIAL_TYPE,

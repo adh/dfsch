@@ -114,6 +114,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.superclass = superclass;
   klass->standard_type.name = name;
   klass->standard_type.slots = make_slots(slots);
+  klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   if (superclass){
     if (!DFSCH_INSTANCE_P(superclass, DFSCH_CLASS_TYPE)){
       dfsch_error("Not a class", superclass);

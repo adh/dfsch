@@ -189,6 +189,10 @@ typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object,
 /** Hash method prototype */
 typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 
+/** Disable weak references for this type */
+#define DFSCH_TYPEF_NO_WEAK_REFERENCES 1
+/** Allow user code to inherit from this type */
+#define DFSCH_TYPEF_USER_EXTENSIBLE    2
 
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
@@ -224,6 +228,8 @@ struct dfsch_type_t {
   dfsch_slot_t* slots;
   /** Documentation string */
   char* documentation;
+  /** type flags */
+  int flags;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
