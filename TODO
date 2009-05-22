@@ -5,7 +5,6 @@ Non-version-specific:
 
 For 0.3.0:
 * Document some primitives
-* More string primitives (replace, translate...)
 
 For 0.3.1
 * Circular printer
