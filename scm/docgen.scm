@@ -22,10 +22,10 @@
 (define (get-toplevel-variables)
   (get-variables *clean-toplevel*))
 
-(define (get-module-variables)
+(define (get-module-variables module)
   (letrec ((toplevel (make-default-environment))
            (start-state (get-variables toplevel)))
-    (load-into-environment! toplevel module)
+    (load-into-environment! toplevel module load:*path*)
     (for-each (lambda (x) 
                 (let ((name (car x)))
                   (unset-from-environment! name toplevel)))
@@ -116,14 +116,19 @@
                  (p ,(entry-documentation-string item)))))
        lyst))
 
-(define (html-frameset title)
+(define (html-frameset title default-all)
   `(html 
     (@ (xmlns "http://www.w3.org/1999/xhtml"))
     (head ,@(when (not (null? title))
                   `((title ,title))))
     (frameset (@ (cols "250,*"))
-     (frame (@ (name "index") (src "index-doc.html")))
-     (frame (@ (name "body") (src "body-doc.html"))))))
+     (frame (@ (name "index") (src ,(if default-all 
+                                        "index-all.html"
+                                        "index-doc.html"))))
+     (frame (@ (name "body") (src ,(if default-all 
+                                        "body-all.html"
+                                        "body-doc.html")))))))
+
 
 (define (html-boiler-plate title infoset)
   `(html 
@@ -145,10 +150,10 @@
 
 
 
-(define (emit-documentation lyst directory title)
+(define (emit-documentation lyst directory title default-all)
   (let ((doc-only (documented-only lyst)))
     (ensure-directory directory)
-    (sxml:emit-file (html-frameset title) 
+    (sxml:emit-file (html-frameset title default-all) 
                     (string-append directory "/index.html"))
     (sxml:emit-file (html-boiler-plate 
                      ()
@@ -172,12 +177,42 @@
                     (string-append directory "/body-doc.html"))))
   
 
-(define (emit-core-documentation directory)
+(define (emit-core-documentation directory default-all)
   (emit-documentation 
    (variables->name+doc (get-toplevel-variables))
    directory
-   "Default dfsch top-level environment"))
+   "Default dfsch top-level environment"
+   default-all))
 
-(when (defined? *posix-argv*)
-      (emit-core-documentation (cadr *posix-argv*)))
+(define (emit-module-documentation directory module default-all)
+  (emit-documentation 
+   (variables->name+doc (get-module-variables module))
+   directory
+   (string-append (object->string module) " module")
+   default-all))
+
+
+(define output-directory ())
+(define module-name ())
+(define default-all #f)
+
+(let ((parser (cmdopts:make-parser)))
+  (cmdopts:add-option parser "module" 
+                      (lambda (p v)
+                        (set! module-name (string->object v)))
+                      0 #t)
+  (cmdopts:add-option parser "default-all" 
+                      (lambda (p v)
+                        (set! default-all #t))
+                      0 #f)
+  (cmdopts:add-argument parser 
+                        (lambda (p v)
+                          (set! output-directory v))
+                        'required)
+  (cmdopts:parse-list parser (cdr *posix-argv*)))
+
+(if (null? module-name)
+    (emit-core-documentation output-directory default-all)
+    (emit-module-documentation output-directory module-name default-all))
+
 
