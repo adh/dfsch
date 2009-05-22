@@ -22,6 +22,16 @@
 (define (get-toplevel-variables)
   (get-variables *clean-toplevel*))
 
+(define (get-module-variables)
+  (letrec ((toplevel (make-default-environment))
+           (start-state (get-variables toplevel)))
+    (load-into-environment! toplevel module)
+    (for-each (lambda (x) 
+                (let ((name (car x)))
+                  (unset-from-environment! name toplevel)))
+              start-state)
+    (get-variables toplevel)))
+
 (define (get-object-documentation object)
   (cond
    ((instance? object <function>)
