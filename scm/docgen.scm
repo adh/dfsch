@@ -39,7 +39,13 @@
    ((instance? object <form>)
     (slot-ref object 'documentation))
    ((instance? object <standard-type>)
-    (slot-ref object 'documentation))
+    `(p
+      ,(or (slot-ref object 'documentation) "")
+      (h3 "Slots:")
+      (ul ,@(map (lambda (slot) 
+                   `(li ,(slot-ref slot 'name) ": " 
+                        ,(slot-ref slot 'documentation)))
+                 (get-slots object)))))
    ((instance? object <macro>)
     (get-object-documentation (slot-ref object 'procedure)))
    (else ())))
