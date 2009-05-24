@@ -576,9 +576,12 @@ static int64_t file_port_tell(file_port_t* port){
 }
 
 static dfsch_slot_t file_port_slots[] = {
-  DFSCH_STRING_SLOT(file_port_t, name, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_BOOLEAN_SLOT(file_port_t, open, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_BOOLEAN_SLOT(file_port_t, close, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(file_port_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Filename associated to port"),
+  DFSCH_BOOLEAN_SLOT(file_port_t, open, DFSCH_SLOT_ACCESS_RO,
+                     "Is port open for accesses?"),
+  DFSCH_BOOLEAN_SLOT(file_port_t, close, DFSCH_SLOT_ACCESS_RO,
+                     "Will port be automatically closed by GC?"),
   DFSCH_SLOT_TERMINATOR,
 };
 

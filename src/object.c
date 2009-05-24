@@ -33,11 +33,6 @@ typedef struct class_t {
   dfsch_object_t* send_cache;
 } class_t;
 
-static dfsch_slot_t class_slots[] = {
-  DFSCH_OBJECT_SLOT(class_t, methods, DFSCH_SLOT_ACCESS_RW),
-  DFSCH_OBJECT_SLOT(class_t, send_cache, DFSCH_SLOT_ACCESS_RW),
-  DFSCH_SLOT_TERMINATOR
-};
 
 dfsch_type_t dfsch_class_type = {
   DFSCH_STANDARD_TYPE,
@@ -50,7 +45,8 @@ dfsch_type_t dfsch_class_type = {
   NULL,
   NULL,
 
-  &class_slots
+  NULL,
+  "Metaclass of user-defined classes with message-passing single dispatch"
 };
 
 static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
@@ -71,6 +67,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
 
     j->type = DFSCH_OBJECT_SLOT_TYPE;
     j->name = dfsch_symbol(name);
+    j->documentation = NULL;
 
     j++;
     slot_count--;
@@ -80,6 +77,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
   j->type = NULL;
   j->name = NULL;
   j->access = DFSCH_SLOT_ACCESS_RW;
+  j->documentation = NULL;
 
   return slots;
 }

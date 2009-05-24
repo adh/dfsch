@@ -267,6 +267,7 @@ struct dfsch_slot_t {
   char* name;
   size_t offset;
   int access;
+  char* documentation;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -279,19 +280,19 @@ struct dfsch_slot_t {
   {DFSCH_SLOT_TYPE_TYPE, DFSCH_SLOT_TYPE, sizeof(dfsch_slot_t), name, \
       NULL, NULL, NULL, NULL, NULL, documentation}
 
-#define DFSCH_OBJECT_SLOT(struct, name, access)                         \
-  {DFSCH_OBJECT_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_BOOLEAN_SLOT(struct, name, access)                        \
-  {DFSCH_BOOLEAN_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_STRING_SLOT(struct, name, access)                         \
-  {DFSCH_STRING_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_SIZE_T_SLOT(struct, name, access)                         \
-  {DFSCH_SIZE_T_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_INT_SLOT(struct, name, access)                         \
-  {DFSCH_INT_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_LONG_SLOT(struct, name, access)                         \
-  {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access}
-#define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0}
+#define DFSCH_OBJECT_SLOT(struct, name, access, doc)          \
+  {DFSCH_OBJECT_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_BOOLEAN_SLOT(struct, name, access, doc)                   \
+  {DFSCH_BOOLEAN_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_STRING_SLOT(struct, name, access, doc)                    \
+  {DFSCH_STRING_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_SIZE_T_SLOT(struct, name, access, doc)                    \
+  {DFSCH_SIZE_T_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_INT_SLOT(struct, name, access, doc)               \
+  {DFSCH_INT_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_LONG_SLOT(struct, name, access, doc)              \
+  {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, NULL}
 
 
 /*

@@ -22,12 +22,17 @@ typedef struct parser_t {
 } parser_t;
 
 static dfsch_slot_t parser_slots[] = {
-  DFSCH_OBJECT_SLOT(parser_t, start_element_proc, DFSCH_SLOT_ACCESS_RW),
-  DFSCH_OBJECT_SLOT(parser_t, end_element_proc, DFSCH_SLOT_ACCESS_RW),
-  DFSCH_OBJECT_SLOT(parser_t, character_data_proc, DFSCH_SLOT_ACCESS_RW),
+  DFSCH_OBJECT_SLOT(parser_t, start_element_proc, DFSCH_SLOT_ACCESS_RW,
+                    "Procedure called for start-tags"),
+  DFSCH_OBJECT_SLOT(parser_t, end_element_proc, DFSCH_SLOT_ACCESS_RW,
+                    "Handler for end-tags"),
+  DFSCH_OBJECT_SLOT(parser_t, character_data_proc, DFSCH_SLOT_ACCESS_RW,
+                    "Handler of character data"),
   DFSCH_OBJECT_SLOT(parser_t, processing_instruction_proc, 
-                    DFSCH_SLOT_ACCESS_RW),
-  DFSCH_OBJECT_SLOT(parser_t, comment_proc, DFSCH_SLOT_ACCESS_RW),
+                    DFSCH_SLOT_ACCESS_RW,
+                    "Handler for processing instructions (unimplemented)"),
+  DFSCH_OBJECT_SLOT(parser_t, comment_proc, DFSCH_SLOT_ACCESS_RW,
+                    "Handler for comments (unimplemented)"),
   DFSCH_SLOT_TERMINATOR
 };
 

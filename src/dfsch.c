@@ -208,9 +208,14 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
 
 
 static dfsch_slot_t slot_slots[] = {
-  DFSCH_STRING_SLOT(dfsch_slot_t, name, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_SIZE_T_SLOT(dfsch_slot_t, offset, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_INT_SLOT(dfsch_slot_t, access, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_slot_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Slot name"),
+  DFSCH_SIZE_T_SLOT(dfsch_slot_t, offset, DFSCH_SLOT_ACCESS_RO,
+                    "Offset of data item in object"),
+  DFSCH_INT_SLOT(dfsch_slot_t, access, DFSCH_SLOT_ACCESS_RO,
+                 "Access mode of slot"),
+  DFSCH_STRING_SLOT(dfsch_slot_t, documentation, DFSCH_SLOT_ACCESS_RO,
+                    "Slot documentation string"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -234,7 +239,8 @@ dfsch_type_t dfsch_slot_type = {
 };
 
 static dfsch_slot_t slot_type_slots[] = {
-  DFSCH_SIZE_T_SLOT(dfsch_slot_type_t, size, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_SIZE_T_SLOT(dfsch_slot_type_t, size, DFSCH_SLOT_ACCESS_RO,
+                    "Size of slot"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -414,8 +420,10 @@ static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
 }
 
 static dfsch_slot_t type_slots[] = {
-  DFSCH_STRING_SLOT(dfsch_type_t, name, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_type_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Type name"),
+  DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -463,6 +471,7 @@ dfsch_type_t dfsch_function_type = {
   NULL,
   0,
   "function",
+  NULL,
   NULL,
   NULL,
   NULL,
@@ -539,11 +548,6 @@ dfsch_type_t dfsch_pair_type = {
 };
 #define PAIR (&dfsch_pair_type)
 
-static dfsch_slot_t symbol_slots[] = {
-  DFSCH_STRING_SLOT(symbol_t, data, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_SLOT_TERMINATOR
-};
-
 static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
@@ -590,7 +594,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
     (dfsch_type_write_t)symbol_write,
     NULL,
     NULL,
-    &symbol_slots,
+    NULL,
     "Symbol - equal? instances are always eq?",
     DFSCH_TYPEF_NO_WEAK_REFERENCES
   },
@@ -617,8 +621,10 @@ static void primitive_write(dfsch_primitive_t* p,
 }
 
 static dfsch_slot_t primitive_slots[] = {
-  DFSCH_STRING_SLOT(dfsch_primitive_t, name, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_STRING_SLOT(dfsch_primitive_t, documentation, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_primitive_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Primitive's internal name"),
+  DFSCH_STRING_SLOT(dfsch_primitive_t, documentation, DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -662,12 +668,18 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
 }
 
 static dfsch_slot_t closure_slots[] = {
-  DFSCH_OBJECT_SLOT(closure_t, args, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
-  DFSCH_OBJECT_SLOT(closure_t, code, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
-  DFSCH_OBJECT_SLOT(closure_t, env, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
-  DFSCH_OBJECT_SLOT(closure_t, name, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
-  DFSCH_OBJECT_SLOT(closure_t, orig_code, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
-  DFSCH_OBJECT_SLOT(closure_t, documentation, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(closure_t, args, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Arguments of function (compiled lambda-list)"),
+  DFSCH_OBJECT_SLOT(closure_t, code, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Actual implementation code"),
+  DFSCH_OBJECT_SLOT(closure_t, env, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Lexically enclosing environment"),
+  DFSCH_OBJECT_SLOT(closure_t, name, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Primitive name"),
+  DFSCH_OBJECT_SLOT(closure_t, orig_code, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Original expression of closure"),
+  DFSCH_OBJECT_SLOT(closure_t, documentation, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Documentation string"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -686,7 +698,8 @@ dfsch_type_t dfsch_standard_function_type = {
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
 static dfsch_slot_t macro_slots[] = {
-  DFSCH_STRING_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
+                    "Procedure implementing macro"),
 };
 
 dfsch_type_t dfsch_macro_type = {
@@ -704,8 +717,10 @@ dfsch_type_t dfsch_macro_type = {
 #define MACRO DFSCH_MACRO_TYPE
 
 static dfsch_slot_t form_slots[] = {
-  DFSCH_STRING_SLOT(dfsch_form_t, name, DFSCH_SLOT_ACCESS_RO),
-  DFSCH_STRING_SLOT(dfsch_form_t, documentation, DFSCH_SLOT_ACCESS_RO),
+  DFSCH_STRING_SLOT(dfsch_form_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Internal name of special form"),
+  DFSCH_STRING_SLOT(dfsch_form_t, documentation, DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -775,7 +790,8 @@ dfsch_type_t dfsch_vector_type = {
 #define VECTOR DFSCH_VECTOR_TYPE
 
 static dfsch_slot_t environment_slots[] = {
-  DFSCH_OBJECT_SLOT(environment_t, parent, DFSCH_SLOT_ACCESS_DEBUG_WRITE),
+  DFSCH_OBJECT_SLOT(environment_t, parent, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Enclosing environment or NIL for top-level"),
   DFSCH_SLOT_TERMINATOR
 };
 
