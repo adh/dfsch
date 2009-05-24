@@ -9,16 +9,38 @@
 #include <dfsch/magic.h>
 
 #ifdef USE_READLINE
+#include <signal.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
 
+typedef void (*sighandler_t)(int);
 
+static dfsch_parser_ctx_t* volatile running_parser = NULL;
+static char* volatile running_prompt = NULL;
 #ifdef USE_READLINE
+/* this is brain-bamaged and completely unsafe, but in line with readline 
+ * documentation... go figure :) 
+ */
+static int rl_interrupt_function(int sig){
+  if (running_parser){
+    dfsch_parser_reset(running_parser);
+  }
+  rl_set_prompt(running_prompt);
+  rl_replace_line("", 1);
+  rl_redisplay();
+
+  signal(SIGINT, rl_interrupt_function);
+}
+
 char* dfsch_console_read_line(char* prompt){
   char* str;
   char* ret;
+  sighandler_t sh;
+
+  sh = signal(SIGINT, rl_interrupt_function);
   str = readline(prompt);
+  signal(SIGINT, sh);
   if (!str){
     return NULL;
   }
@@ -150,13 +172,19 @@ dfsch_object_t* dfsch_console_read_object(char* prompt){
   dfsch_object_t* obj;
 
   dfsch_parser_callback(parser, read_callback, &obj);
+  running_prompt = prompt;
+  running_parser = parser;
 
   while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
     if (dfsch_parser_feed_line(parser, line)){
+      running_parser = NULL;
+      running_prompt = NULL;
       return obj;
     }
   }
 
+  running_parser = NULL;
+  running_prompt = NULL;
   if (dfsch_parser_top_level(parser)){
     return dfsch_eof_object();
   } else {
@@ -169,17 +197,23 @@ int dfsch_console_read_objects_parser(char* prompt,
   int ret;
   char* line;
 
-  while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
-    DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to reader"){
-      ret = dfsch_parser_feed_line(parser, line);
-    }DFSCH_END_WITH_SIMPLE_RESTART;
-
-    if (ret){
-      return ret;
+  running_prompt = prompt;
+  __asm(";;");
+  running_parser = parser;
+  DFSCH_UNWIND {
+    while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
+      DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to reader"){
+        ret = dfsch_parser_feed_line(parser, line);
+      }DFSCH_END_WITH_SIMPLE_RESTART;
+      if (ret){
+        break;
+      }
     }
-  }
-
-  return 0;
+  } DFSCH_PROTECT {
+    running_parser = NULL;
+    running_prompt = NULL;
+  } DFSCH_PROTECT_END;
+  return ret;
 }
 int dfsch_console_read_objects_list_parser(char* prompt,
                                            dfsch_parser_ctx_t* parser){
