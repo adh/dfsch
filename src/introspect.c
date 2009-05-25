@@ -62,36 +62,9 @@ dfsch_type_t dfsch_user_stack_frame_type = {
   NULL
 };
 
-static dfsch_object_t* make_user_stack_frame(dfsch__stack_frame_t* nsf){
-  stack_frame_t* sf = dfsch_make_object(DFSCH_USER_STACK_FRAME_TYPE);
-
-  sf->procedure = nsf->procedure;
-  sf->tail_recursive = nsf->tail_recursive;
-
-  sf->code = nsf->code;
-  sf->env = nsf->env;
-  sf->expr = nsf->expr;
-
-  return sf;
-}
 
 dfsch_object_t* dfsch_get_stack_trace(){
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
-  dfsch__stack_frame_t* i = ti->stack_frame;
-  
-  head = tail = dfsch_cons(make_user_stack_frame(i), NULL);
-  i = i->next;
-
-  while(i){
-    dfsch_object_t* tmp = dfsch_cons(make_user_stack_frame(i), NULL);
-    DFSCH_FAST_CDR_MUT(tail) = tmp;
-    tail = tmp;
-    i = i->next;
-  }
-
-  return head;
+  return NULL;
 }
 
 static char* trace_line(dfsch_object_t* line){

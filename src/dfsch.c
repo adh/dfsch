@@ -1924,6 +1924,18 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 
+int dfsch_default_trace_depth = 3;
+
+static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
+                                               int depth){
+  size_t size;
+  depth = depth % (8 * sizeof(short));
+  size = 1 << depth;
+  ti->trace_depth = size - 1;
+  ti->trace_ptr = 0;
+  ti->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * size);
+}
+
 dfsch__thread_info_t* dfsch__get_thread_info(){
 #ifdef DFSCH__USE_TLS
   static __thread dfsch__thread_info_t* ei;
@@ -1935,10 +1947,8 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   if (DFSCH_UNLIKELY(!ei)){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->throw_ret = NULL;
-    ei->stack_frame = GC_NEW(dfsch__stack_frame_t);
-    ei->stack_frame->procedure = dfsch_make_symbol("toplevel");
-    ei->stack_frame->next = NULL;
     ei->async_apply = NULL;
+    alloc_trace_buffer(ei, dfsch_default_trace_depth);
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -2442,6 +2452,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
+  DFSCH__TRACEPOINT_EVAL(ti, exp, env);
+
   if (!exp) 
     return NULL;
 
@@ -2451,8 +2463,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 
   if(DFSCH_PAIR_P(exp)){
     object_t *f = DFSCH_FAST_CAR(exp);
-    ti->stack_frame->expr = exp;
-    ti->stack_frame->env = env;
 
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
@@ -2460,8 +2470,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
       f = dfsch_eval_impl(f , env, NULL, ti);
     }
 
-    ti->stack_frame->expr = exp;
-    ti->stack_frame->env = env;
 
     
     if (DFSCH_TYPE_OF(f) == FORM){
@@ -2598,8 +2606,6 @@ static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code,
     return NULL;
 
   async_apply_check(ti);
-  ti->stack_frame->code = code;
-  ti->stack_frame->env = env;
     
   i = code;
 
@@ -2647,7 +2653,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                         environment_t* arg_env,
                                         tail_escape_t* esc,
                                         dfsch__thread_info_t* ti){
-  dfsch__stack_frame_t f;
   dfsch_object_t* r;
   tail_escape_t myesc;
 
@@ -2658,24 +2663,20 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     longjmp(esc->ret,1);
   }
 
-  f.next = ti->stack_frame;
-  f.env = NULL;
-  f.expr = NULL;
-  f.code = NULL;
 
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
     args = myesc.args;
     arg_env = myesc.arg_env;
-    f.tail_recursive = 1;
+    DFSCH__TRACEPOINT_APPLY(ti, proc, args, 
+                           DFSCH_TRACEPOINT_FLAG_APPLY_TAIL | 
+                           (arg_env ? DFSCH_TRACEPOINT_FLAG_APPLY_LAZY : 0));
   } else {
-    f.tail_recursive = 0;
+    DFSCH__TRACEPOINT_APPLY(ti, proc, args, 
+                           (arg_env ? DFSCH_TRACEPOINT_FLAG_APPLY_LAZY : 0));
   }
 
 
-  f.procedure = proc;
-  f.arguments = args;
-  ti->stack_frame = &f;
 
   /*
    * Two most common cases are written here explicitly (for historical
@@ -2686,9 +2687,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     if (DFSCH_LIKELY(arg_env)){
       args = eval_list(args, arg_env, ti);
     }
-    r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                   &myesc);
-    goto out;
+    return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
+                                      &myesc);
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
@@ -2699,27 +2699,21 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     } else {
       destructure_impl(((closure_t*)proc)->args, args, env);
     }
-    r = 
-      dfsch_eval_proc_impl(((closure_t*)proc)->code,
-                           env,
-                           &myesc,
-                           ti);
-    goto out;
+    return dfsch_eval_proc_impl(((closure_t*)proc)->code,
+                                env,
+                                &myesc,
+                                ti);
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
     if (DFSCH_LIKELY(arg_env)){
       args = eval_list(args, arg_env, ti);
     }
-    r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);
-    goto out;
+    return DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);
   }
 
   dfsch_error("Not a procedure", proc);
 
- out:
-  ti->stack_frame = f.next;
-  return r;   
 }
 
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 

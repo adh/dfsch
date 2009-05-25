@@ -60,8 +60,66 @@ extern "C" {
     dfsch__handler_list_t* next;
   };
 
+#define DFSCH_TRACEPOINT_KIND_INVALID          0
+#define DFSCH_TRACEPOINT_KIND_APPLY            1
+#define DFSCH_TRACEPOINT_KIND_EVAL             2
+#define DFSCH_TRACEPOINT_KIND_ANON             3
+
+#define DFSCH_TRACEPOINT_FLAG_APPLY_TAIL       256
+#define DFSCH_TRACEPOINT_FLAG_APPLY_LAZY       512
+
+#define DFSCH_TRACEPOINT_FLAG_ANON_STRING_DATA 256
+
+  typedef struct dfsch__tracepoint_t {
+    int flags;
+    union {
+      struct {
+        dfsch_object_t* expr;
+        dfsch_object_t* env;
+      } eval;
+      struct {
+        dfsch_object_t* proc;
+        dfsch_object_t* args;
+      } apply;
+      struct {
+        char* location;
+        void* data;
+      } anon;
+    } data;
+  } dfsch__tracepoint_t;
+
+#define DFSCH__TRACEPOINT_SHIFT(ti)                              \
+  (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth; 
+#define DFSCH__TRACEPOINT(ti)                   \
+  ((ti)->trace_buffer[(ti)->trace_ptr])
+  
+#define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                       \
+  DFSCH__TRACEPOINT_SHIFT(ti);                                  \
+  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_EVAL;     \
+  DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                  \
+  DFSCH__TRACEPOINT(ti).data.eval.env = (en)                    
+#define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                       \
+  DFSCH__TRACEPOINT_SHIFT(ti);                                      \
+  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_APPLY | (fl); \
+  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                      \
+  DFSCH__TRACEPOINT(ti).data.apply.args = (al)
+#define DFSCH__TRACEPOINT_ANON_HELPER1(x) #x
+#define DFSCH__TRACEPOINT_ANON_HELPER2(x) \
+  DFSCH__TRACEPOINT_ANON_HELPER1(x)
+#define DFSCH__TRACEPOINT_ANON(ti, d, fl)                            \
+  DFSCH__TRACEPOINT_SHIFT(ti);                                      \
+  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_ANON | (fl);  \
+  DFSCH__TRACEPOINT(ti).data.anon.location = __FILE__ ":"           \
+    DFSCH__TRACEPOINT_ANON_HELPER2(__LINE__);                       \
+  DFSCH__TRACEPOINT(ti).data.anon.data = (d)
+
+#define DFSCH_TRACEPOINT(d, fl)                                 \
+  DFSCH__TRACEPOINT_ANON(dfsch__get_thread_info(), (d), (fl))
+
   struct dfsch__thread_info_t {
-    dfsch__stack_frame_t* stack_frame;
+    dfsch__tracepoint_t* trace_buffer;
+    short trace_ptr;
+    short trace_depth;
     dfsch_object_t* async_apply;
 
     jmp_buf* throw_ret;
@@ -93,13 +151,11 @@ extern "C" {
   dfsch__thread_info_t *dfsch___ei = dfsch__get_thread_info();  \
   jmp_buf *dfsch___old_ret;                                     \
   jmp_buf dfsch___tmpbuf;                                       \
-  dfsch__stack_frame_t* dfsch___old_frame;                      \
   dfsch__catch_list_t* dfsch___old_catch;                       \
   dfsch__handler_list_t* dfsch___old_handlers;                  \
   dfsch__restart_list_t* dfsch___old_restarts;                  \
                                                                 \
   dfsch___old_ret = dfsch___ei->throw_ret;                      \
-  dfsch___old_frame = dfsch___ei->stack_frame;                  \
   dfsch___old_catch = dfsch___ei->catch_list;                   \
   dfsch___old_handlers = dfsch___ei->handler_list;              \
   dfsch___old_restarts = dfsch___ei->restart_list;              \
@@ -109,13 +165,11 @@ extern "C" {
 
 #define DFSCH_SCATCH                                            \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
-  dfsch___ei->stack_frame = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
-  dfsch___ei->stack_frame = (dfsch_object_t*)dfsch___old_frame; \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
