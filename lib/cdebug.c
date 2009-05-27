@@ -88,7 +88,7 @@ static void debug_main(dfsch_object_t* reason){
             dfsch_object_2_string(reason, 10, 1));
   }
 
-  //  fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_stack_trace(ustack));
+  fprintf(stderr, "\ntrace buffer:\n%s\n", dfsch_format_trace(ustack));
 
   dfsch_define_cstr(env, "restarts", restarts);
   dfsch_define_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,
