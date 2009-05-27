@@ -71,6 +71,15 @@ void dfsch_sl_nappend(str_list_t* list, char* string, size_t l){
   }
 }
 
+void dfsch_sl_printf(str_list_t* sl, char* format, ...){
+  char* ret;
+  va_list args;
+  va_start(args, format);
+  ret = vsaprintf(format, args);
+  sl_append(sl, ret);
+  va_end(args);
+}
+
 char* dfsch_sl_value(str_list_t* list){
   char *buf = GC_MALLOC_ATOMIC(list->len+1);
   str_li_t *i = list->head;

@@ -42,6 +42,7 @@ struct str_li_t {
 
 #define sl_create dfsch_sl_create
 #define sl_append dfsch_sl_append
+#define sl_printf dfsch_sl_printf
 #define sl_nappend dfsch_sl_nappend
 #define sl_value dfsch_sl_value
 #define sl_value_strbuf dfsch_sl_value_strbuf

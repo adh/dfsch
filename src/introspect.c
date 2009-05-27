@@ -8,7 +8,46 @@
 static void safe_print_object();
 
 char* dfsch_format_trace(dfsch_object_t* trace){
-  return dfsch_object_2_string(trace, 100, 1);
+  str_list_t* sl = sl_create();
+  
+  while (DFSCH_PAIR_P(trace)){
+    if (dfsch_vector_p(DFSCH_FAST_CAR(trace))){
+      dfsch_object_t* tag = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 0);
+      if (dfsch_compare_symbol(tag, "apply")){
+        dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
+        dfsch_object_t* args = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2); 
+        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
+        sl_printf(sl, "  APPLY %s %s\n      %s\n",
+                  dfsch_object_2_string(proc, 10, 1),
+                  dfsch_object_2_string(flags, 10, 1),
+                  dfsch_object_2_string(args, 10, 1));
+
+      } else if (dfsch_compare_symbol(tag, "eval")){
+        dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
+        dfsch_object_t* annot = dfsch_get_list_annotation(expr);
+        sl_printf(sl, "    EVAL %s\n",
+                  dfsch_object_2_string(expr, 10, 1));
+        if (annot){
+          sl_printf(sl, "     @ %s:%s\n", 
+                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 0),
+                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 0));
+          
+        }
+
+      } else {
+        sl_printf(sl, "  UNKNOWN %s\n", 
+                  dfsch_object_2_string(DFSCH_FAST_CAR(trace),
+                                        10, 1));
+      }
+    } else {
+      sl_printf(sl, "  INVALID %s\n", 
+                dfsch_object_2_string(DFSCH_FAST_CAR(trace),
+                                      10, 1));
+    }
+
+    trace = DFSCH_FAST_CDR(trace);
+  }
+  return sl_value(sl);
 }
 
 void dfsch_print_trace_buffer(){
@@ -69,6 +108,7 @@ dfsch_object_t* dfsch_get_trace(){
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
   dfsch_object_t* list = NULL;
   dfsch_object_t* record;
+  dfsch_object_t* flags;
   i = ti->trace_ptr;
 
   do {
@@ -78,16 +118,26 @@ dfsch_object_t* dfsch_get_trace(){
 
     switch (ti->trace_buffer[i].flags & 0xff){
     case DFSCH_TRACEPOINT_KIND_APPLY:
-      record = dfsch_list(3,
-                          dfsch_make_symbol("apply"),
-                          ti->trace_buffer[i].data.apply.proc,
-                          ti->trace_buffer[i].data.apply.args);
+      flags = NULL;
+
+      if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_TAIL) {
+        flags = dfsch_cons_immutable(dfsch_make_symbol("tail"), flags);
+      }
+      if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_LAZY) {
+        flags = dfsch_cons_immutable(dfsch_make_symbol("lazy"), flags);
+      }
+
+      record = dfsch_vector(4,
+                            dfsch_make_symbol("apply"),
+                            ti->trace_buffer[i].data.apply.proc,
+                            ti->trace_buffer[i].data.apply.args,
+                            flags);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
-      record = dfsch_list(3,
-                          dfsch_make_symbol("eval"),
-                          ti->trace_buffer[i].data.eval.expr,
-                          ti->trace_buffer[i].data.eval.env);
+      record = dfsch_vector(3,
+                            dfsch_make_symbol("eval"),
+                            ti->trace_buffer[i].data.eval.expr,
+                            ti->trace_buffer[i].data.eval.env);
       break;
         
     default:
@@ -95,7 +145,7 @@ dfsch_object_t* dfsch_get_trace(){
       break;
     }
 
-    list = dfsch_cons(record, list);
+    list = dfsch_cons_immutable(record, list);
 
     i = (i - 1) & ti->trace_depth;
   } while (i != ti->trace_ptr);

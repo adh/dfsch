@@ -35,6 +35,7 @@ typedef struct dfsch_str_list_t dfsch_str_list_t;
 extern dfsch_str_list_t* dfsch_sl_create();
 extern void dfsch_sl_append(dfsch_str_list_t* list, char* string);
 extern void dfsch_sl_nappend(dfsch_str_list_t* list, char* string, size_t l);
+extern void dfsch_sl_printf(dfsch_str_list_t* sl, char* format, ...);
 extern char* dfsch_sl_value(dfsch_str_list_t* list);
 extern dfsch_strbuf_t* dfsch_sl_value_strbuf(dfsch_str_list_t* list);
 
