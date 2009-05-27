@@ -92,17 +92,23 @@ extern "C" {
   (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth; 
 #define DFSCH__TRACEPOINT(ti)                   \
   ((ti)->trace_buffer[(ti)->trace_ptr])
-  
+#define DFSCH__TRACEPOINT_NOTIFY(ti)                             \
+  if (DFSCH_UNLIKELY((ti)->trace_listener)){                     \
+    (ti)->trace_listener((ti));                                  \
+  }                                                              \
+
 #define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                       \
   DFSCH__TRACEPOINT_SHIFT(ti);                                  \
   DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_EVAL;     \
   DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                  \
-  DFSCH__TRACEPOINT(ti).data.eval.env = (en)                    
+  DFSCH__TRACEPOINT(ti).data.eval.env = (en);                   \
+  DFSCH__TRACEPOINT_NOTIFY(ti)
 #define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                       \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                      \
-  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_APPLY | (fl); \
-  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                      \
-  DFSCH__TRACEPOINT(ti).data.apply.args = (al)
+  DFSCH__TRACEPOINT_SHIFT(ti);                                       \
+  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
+  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                       \
+  DFSCH__TRACEPOINT(ti).data.apply.args = (al);                      \
+  DFSCH__TRACEPOINT_NOTIFY(ti)
 #define DFSCH__TRACEPOINT_ANON_HELPER1(x) #x
 #define DFSCH__TRACEPOINT_ANON_HELPER2(x) \
   DFSCH__TRACEPOINT_ANON_HELPER1(x)
@@ -111,16 +117,21 @@ extern "C" {
   DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_ANON | (fl);  \
   DFSCH__TRACEPOINT(ti).data.anon.location = __FILE__ ":"           \
     DFSCH__TRACEPOINT_ANON_HELPER2(__LINE__);                       \
-  DFSCH__TRACEPOINT(ti).data.anon.data = (d)
+  DFSCH__TRACEPOINT(ti).data.anon.data = (d);                       \
+  DFSCH__TRACEPOINT_NOTIFY(ti)
 
 #define DFSCH_TRACEPOINT(d, fl)                                 \
   DFSCH__TRACEPOINT_ANON(dfsch__get_thread_info(), (d), (fl))
 
+  typedef (*dfsch__tracepoint_listener_t)(dfsch__thread_info_t*);
+
   struct dfsch__thread_info_t {
+    dfsch_object_t* async_apply;
+
     dfsch__tracepoint_t* trace_buffer;
+    dfsch__tracepoint_listener_t trace_listener;    
     short trace_ptr;
     short trace_depth;
-    dfsch_object_t* async_apply;
 
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;

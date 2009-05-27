@@ -3,113 +3,65 @@
 #include "types.h"
 #include "util.h"
 
-typedef struct stack_frame_t {
-  dfsch_type_t* type;
-  dfsch_object_t* procedure;
-  int tail_recursive;
+#include <stdio.h>
 
-  dfsch_object_t* code;
-  dfsch_object_t* env;
-  dfsch_object_t* expr; 
-  /* user stack frame should always contain some guess of relevant expression */
-} stack_frame_t;
+static void safe_print_object();
 
-static void stack_frame_write(stack_frame_t* sf, dfsch_writer_state_t* state){
-  str_list_t* sl = sl_create();
-
-  dfsch_write_unreadable_start(state, sf);
-  dfsch_write_object(state, sf->procedure);
-  if (sf->tail_recursive){
-    dfsch_write_string(state, " tail-recursive");
-  } 
-  dfsch_write_unreadable_end(state);   
+void dfsch_format_trace(dfsch_object_t* buffer){
 }
 
-static dfsch_object_t* stack_frame_apply(stack_frame_t* sf, 
-                                         dfsch_object_t* args, 
-                                         dfsch_tail_escape_t* esc){
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, selector);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_compare_symbol(selector, "procedure")){
-    return sf->procedure;
-  }
-  if (dfsch_compare_symbol(selector, "tail-recursive")){
-    return dfsch_bool(sf->tail_recursive);
-  }
-  if (dfsch_compare_symbol(selector, "code")){
-    return sf->code;
-  }
-  if (dfsch_compare_symbol(selector, "environment")){
-    return sf->env;
-  }
-  if (dfsch_compare_symbol(selector, "expression")){
-    return sf->expr;
-  }
+void dfsch_print_trace_buffer(){
+  int i;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
 
-  return NULL;
-}
-
-dfsch_type_t dfsch_user_stack_frame_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(stack_frame_t),
-  "user-stack-frame",
-  NULL,
-  (dfsch_type_write_t)stack_frame_write,
-  (dfsch_type_apply_t)stack_frame_apply,
-  NULL
-};
-
-
-dfsch_object_t* dfsch_get_stack_trace(){
-  return NULL;
-}
-
-static char* trace_line(dfsch_object_t* line){
-  stack_frame_t* frame;
-  if (DFSCH_TYPE_OF(line) != DFSCH_USER_STACK_FRAME_TYPE) {
-    dfsch_error("Not a user stack frame", line);
-  }
-  frame = line;
-
-  if (frame->expr){
-    dfsch_object_t* annot = dfsch_get_list_annotation(frame->expr);
-    if (annot){
-      return saprintf("  %s\n    %s\n      %s line %s\n", 
-                      dfsch_object_2_string(frame->procedure, 3, 1),
-                      dfsch_object_2_string(frame->expr, 4, 1),
-                      dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 1),
-                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 1));
+  for (i = 0; i <= ti->trace_depth; i++){
+    if (i == ti->trace_ptr){
+      fprintf(stderr, "> ");
     } else {
-      return saprintf("  %s\n    %s\n", 
-                      dfsch_object_2_string(frame->procedure, 3, 1),
-                      dfsch_object_2_string(frame->expr, 4, 1));
+      fprintf(stderr, "  ");
     }
-  } else {
-    return saprintf("  %s\n", 
-		    dfsch_object_2_string(frame->procedure, 3, 1));
+    switch (ti->trace_buffer[i].flags & 0xff){
+    case DFSCH_TRACEPOINT_KIND_INVALID:
+      fprintf(stderr, "0x00000000\n");
+      break;
+    case DFSCH_TRACEPOINT_KIND_APPLY:
+      fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
+              ti->trace_buffer[i].flags,
+              ti->trace_buffer[i].data.apply.proc,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name,
+              ti->trace_buffer[i].data.apply.args,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.args)->name);
+      fprintf(stderr, "       %s\n     %s\n", 
+              dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
+                                    10, 1),
+              dfsch_object_2_string(ti->trace_buffer[i].data.apply.args, 
+                                    10, 1));
+      break;
+    case DFSCH_TRACEPOINT_KIND_EVAL:
+      fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
+              ti->trace_buffer[i].flags,
+              ti->trace_buffer[i].data.eval.expr,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
+              ti->trace_buffer[i].data.eval.env,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
+      fprintf(stderr, "     %s\n", 
+              dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
+                                    10, 1));
+      break;
+    }
   }
 }
 
-char* dfsch_format_stack_trace(dfsch_object_t* trace){
-  dfsch_object_t* i = trace;
-  str_list_t* sl = sl_create();
-  while (DFSCH_PAIR_P(i)){
-    sl_append(sl, trace_line(DFSCH_FAST_CAR(i)));
-    i = DFSCH_FAST_CDR(i);
-  }
-  return sl_value(sl);
+
+dfsch_object_t* dfsch_get_trace(){
+  int i;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch_object_t* list;
+
+  
+  return list;
 }
 
-
-DFSCH_DEFINE_PRIMITIVE(stack_trace, 0){
-  if (args)
-    dfsch_error("exception:too-many-arguments", args);
-
-  return dfsch_get_stack_trace();
-}
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
   dfsch_object_t* proc;
@@ -222,9 +174,6 @@ DFSCH_DEFINE_PRIMITIVE(make_default_environment, 0){
 
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
-
-  dfsch_define_cstr(env, "<user-stack-frame>", DFSCH_USER_STACK_FRAME_TYPE);
-  dfsch_define_cstr(env, "stack-trace", DFSCH_PRIMITIVE_REF(stack_trace));
 
   dfsch_define_cstr(env, "set-invoke-debugger-on-all-conditions!", 
                     DFSCH_PRIMITIVE_REF(set_invoke_debugger_on_all_conditions));

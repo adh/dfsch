@@ -1937,7 +1937,7 @@ static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
 }
 
 dfsch__thread_info_t* dfsch__get_thread_info(){
-#ifdef DFSCH__USE_TLS
+#ifdef DFSCH__USE_TLS____BROKEN
   static __thread dfsch__thread_info_t* ei;
 #else
   dfsch__thread_info_t *ei;

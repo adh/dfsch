@@ -14,7 +14,7 @@ dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
 
   c = (dfsch__condition_t*)dfsch_make_object(type);
   c->fields = NULL;
-  dfsch_condition_put_field_cstr(c, "stack-trace", dfsch_get_stack_trace());
+
   return (dfsch_object_t*)c;
 }
 
@@ -180,6 +180,7 @@ void dfsch_signal(dfsch_object_t* condition){
     dfsch_enter_debugger(condition);
     fputs("Unhandled error condition!\n\n", stderr);
     fprintf(stderr, "%s\n", dfsch_object_2_string(condition, 10, 1));
+    dfsch_print_trace_buffer();
     abort();
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
