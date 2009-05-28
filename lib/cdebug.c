@@ -62,7 +62,7 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
   dfsch_object_t* env;
-  dfsch_object_t* ustack = dfsch_get_stack_trace();
+  dfsch_object_t* ustack = dfsch_get_trace();
   char buf[512];
   int i;
 
@@ -85,10 +85,10 @@ static void debug_main(dfsch_object_t* reason){
     prettyprint_condition_fields(dfsch_condition_fields(reason));
   } else {
     fprintf(stderr,"debugger invoked on:\n  %s\n", 
-            dfsch_object_2_string(reason, 10, 0));
+            dfsch_object_2_string(reason, 10, 1));
   }
 
-  fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_stack_trace(ustack));
+  fprintf(stderr, "\ntrace buffer:\n%s\n", dfsch_format_trace(ustack));
 
   dfsch_define_cstr(env, "restarts", restarts);
   dfsch_define_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,

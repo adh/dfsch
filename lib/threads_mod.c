@@ -32,7 +32,7 @@ static dfsch_object_t* native_thread_create(void*baton, dfsch_object_t* args,
   dfsch_object_t* function;
   dfsch_object_t* arguments;
   DFSCH_OBJECT_ARG(args, function);
-  DFSCH_OBJECT_ARG(args, arguments);
+  DFSCH_OBJECT_ARG_OPT(args, arguments, NULL);
   DFSCH_ARG_END(args);
 
   return dfsch_thread_create(function, arguments);
