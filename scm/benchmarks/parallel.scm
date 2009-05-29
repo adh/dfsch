@@ -87,3 +87,23 @@
 (measure-time tak-inline-4 (join-threads (run-threads 4 tak-inline-thread)))
 (newline)
 
+(display "5 ")
+(measure-time tak-5 (join-threads (run-threads 5 tak-thread)))
+(measure-time tak-inline-5 (join-threads (run-threads 5 tak-inline-thread)))
+(newline)
+
+(display "6 ")
+(measure-time tak-6 (join-threads (run-threads 6 tak-thread)))
+(measure-time tak-inline-6 (join-threads (run-threads 6 tak-inline-thread)))
+(newline)
+
+(display "7 ")
+(measure-time tak-7 (join-threads (run-threads 7 tak-thread)))
+(measure-time tak-inline-7 (join-threads (run-threads 7 tak-inline-thread)))
+(newline)
+
+(display "8 ")
+(measure-time tak-8 (join-threads (run-threads 8 tak-thread)))
+(measure-time tak-inline-8 (join-threads (run-threads 8 tak-inline-thread)))
+(newline)
+
