@@ -10,13 +10,14 @@
            (tak (- y 1) z x)
            (tak (- z 1) x y))))
 
-(define tak-inline 
-  (define (tak-inline x y z) ;; XXX: stupid trick
+(define (tak-inline x y z)
+  (define (tak-impl x y z)
     (#.if (#.not (#.< y x))
           z
-          (tak-inline (tak-inline (#.- x 1) y z)
-                      (tak-inline (#.- y 1) z x)
-                      (tak-inline (#.- z 1) x y)))))
+          (tak-impl (tak-impl (#.- x 1) y z)
+                    (tak-impl (#.- y 1) z x)
+                    (tak-impl (#.- z 1) x y))))
+  (tak-impl x y z))
 
 
 

@@ -2165,9 +2165,26 @@ dfsch_object_t* dfsch_string_2_object(char* str){
 
 static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 
+static environment_t* alloc_environment(dfsch__thread_info_t* ti){
+  environment_t* e;
+
+#ifdef GC_NEXT
+  if (!ti->env_freelist){
+    ti->env_freelist = GC_malloc_many(sizeof(environment_t));
+  }
+  e = ti->env_freelist;
+  ti->env_freelist = GC_NEXT(ti->env_freelist);
+#else
+  e = GC_NEW(environment_t);
+#endif
+
+  ((dfsch_object_t*)e)->type = DFSCH_ENVIRONMENT_TYPE;
+  return e;
+}
+
 static environment_t* new_frame_impl(environment_t* parent,
                                      dfsch__thread_info_t* ti){
-  environment_t* e = (environment_t*)dfsch_make_object(DFSCH_ENVIRONMENT_TYPE);
+  environment_t* e = alloc_environment(ti);
 
   dfsch_eqhash_init(&e->values, 0);
   e->decls = NULL;

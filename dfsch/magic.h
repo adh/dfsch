@@ -133,6 +133,8 @@ extern "C" {
     short trace_ptr;
     short trace_depth;
 
+    void* env_freelist;
+
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
