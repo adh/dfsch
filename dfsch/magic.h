@@ -134,6 +134,7 @@ extern "C" {
     short trace_depth;
 
     void* env_freelist;
+    void* pair_freelist;
 
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
