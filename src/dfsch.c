@@ -1503,7 +1503,7 @@ dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
           e = q;
           q = DFSCH_FAST_CDR(q);          
         } else {
-          p_s --;
+          p_s--;
           e = p;
           p = DFSCH_FAST_CDR(p);
         }
@@ -1666,8 +1666,9 @@ static void register_static_symbol(symbol_t* s){
 
 static void gsh_check_init(){
   int i;
-  if (gsh_init)
+  if (gsh_init){
     return;
+  }
 
   memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
   for (i = 0; i < sizeof(dfsch__static_symbols)/sizeof(symbol_t); i++){
