@@ -934,10 +934,12 @@ dfsch_object_t* dfsch_multicons(size_t n){
 }
 
 dfsch_object_t* dfsch_car(dfsch_object_t* pair){
-  return DFSCH_FAST_CAR(DFSCH_ASSERT_PAIR(pair));
+  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
+  return DFSCH_FAST_CAR(p);
 }
 dfsch_object_t* dfsch_cdr(dfsch_object_t* pair){
-  return DFSCH_FAST_CDR(DFSCH_ASSERT_PAIR(pair));
+  dfsch_object_t* p = DFSCH_ASSERT_PAIR(pair);
+  return DFSCH_FAST_CDR(p);
 }
 
 dfsch_object_t* dfsch_set_car(dfsch_object_t* pair,
