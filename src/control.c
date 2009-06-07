@@ -401,6 +401,34 @@ DFSCH_DEFINE_FORM_IMPL(do, "Iterative loop"){
   return dfsch_eval_proc_tr(exprs, lenv, esc);
 }
 
+DFSCH_DEFINE_FORM_IMPL(dolist, "Iterate over list contents"){
+  dfsch_object_t* farg;
+  dfsch_object_t* variable;
+  dfsch_object_t* list;
+  dfsch_object_t* body;
+  dfsch_object_t* result = NULL;
+
+  DFSCH_OBJECT_ARG(args, farg);
+  DFSCH_OBJECT_ARG(farg, variable);
+  DFSCH_OBJECT_ARG(farg, list);
+  DFSCH_ARG_REST(args, body);
+
+  list = dfsch_eval(list, env);
+  while (DFSCH_PAIR_P(list)){
+    dfsch_object_t* inner_env = dfsch_new_frame(env);
+    dfsch_define(variable, DFSCH_FAST_CAR(list), inner_env);
+    result = dfsch_eval_proc(body, inner_env);
+    list = DFSCH_FAST_CDR(list);
+  }
+
+  if (list){
+    dfsch_cerror("Not a proper list", list);
+  }
+
+  return result;
+}
+
+
 DFSCH_DEFINE_FORM_IMPL(destructuring_bind, NULL){
   dfsch_object_t *arglist;
   dfsch_object_t *list;
@@ -449,6 +477,7 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
 
   dfsch_define_cstr(ctx, "do", DFSCH_FORM_REF(do));
+  dfsch_define_cstr(ctx, "dolist", DFSCH_FORM_REF(dolist));
 
   dfsch_define_cstr(ctx, "destructuring-bind", 
                     DFSCH_FORM_REF(destructuring_bind));
