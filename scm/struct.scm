@@ -1,69 +1,37 @@
+;;; dfsch - Scheme-like Lisp dialect
+;;;   Structure emulation using dfsch's object system
+;;; Copyright (c) 2009 Ales Hakl
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining
+;;; a copy of this software and associated documentation files (the
+;;; "Software"), to deal in the Software without restriction, including
+;;; without limitation the rights to use, copy, modify, merge, publish,
+;;; distribute, sublicense, and/or sell copies of the Software, and to
+;;; permit persons to whom the Software is furnished to do so, subject to
+;;; the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be
+;;; included in all copies or substantial portions of the Software.
+;;; 
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+;;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
 (provide 'struct)
 
+(define-class <struct> () ())
+(define-method <struct> (initialize-instance self . slot-list)
+  (let loop ((i slot-list))
+    (unless (null? i)
+            (let ((name (car list))
+                  (value (cadr list)))
+              (slot-set! self name value))
+            (loop (cddr i)))))
+
 (define-macro (define-struct name slots)
-  (define num-slots (length slots))
-  
-  (define slot-names (map 
-                      (lambda (slot-desc) 
-                        (if (pair? slot-desc)
-                            (car slot-desc)
-                            slot-desc))
-                      slots))
-
-  (define slot-defaults (map 
-                         (lambda (slot-desc)
-                           (if (pair? slot-desc)
-                               (car (cdr slot-desc))
-                               #n))
-                         slots))
-
-  `(begin 
-     (define (,(string->symbol (string-append "make-" (symbol->string name)))
-             . args)
-       (define self (list->vector ',slot-defaults))
-       (let loop ((i args))
-	 (if (pair? i)
-	     (let ((name (car i)) (value (car (cdr i))))
-	       (vector-set! self 
-			    (case name
-			      ,@(let ((offset 0))
-				  (map 
-				   (lambda (field)
-				     (define cls `((,field) ,offset))
-				     (set! offset (+ 1 offset))
-				     cls)
-				   slot-names))
-                             (else (throw 'struct:no-such-slot name)))
-			    value)
-	       (loop (cdr (cdr i))))
-	     ()))
-       self)
-     ,@(let ((offset 0))
-	 (map 
-	  (lambda (field)
-	    (define func
-	      `(define (,(string->symbol (string-append (symbol->string name)
-							"-"
-							(symbol->string field)
-							"-set!"))
-			struct value)
-		 (vector-set! struct ,offset value)))
-	    (set! offset (+ 1 offset))
-	    func)
-	  slot-names)
-	 )
-     ,@(let ((offset 0))
-	 (map 
-	  (lambda (field)
-	    (define func
-	      `(define (,(string->symbol (string-append (symbol->string name)
-							"-"
-							(symbol->string field)
-							"-ref"))
-			struct)
-		 (vector-ref struct ,offset)))
-           (set! offset (+ 1 offset))
-           func)
-	  slot-names)
-	 )))
-
+  `(define-class ,name <struct> ,slots))
