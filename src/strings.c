@@ -1178,16 +1178,41 @@ static dfsch_object_t* pathname_basename(dfsch_object_t* s){
 }
 static dfsch_object_t* pathname_filename(dfsch_object_t* s){
   dfsch_strbuf_t* str = dfsch_string_to_buf(s);
-  char *dot = internal_memrchr(str->ptr, '.', str->len);
-  if (dot){
-    return dfsch_make_string_buf(str->ptr, (dot - str->ptr));
+  char *slash = internal_memrchr(str->ptr, '/', str->len);
+  char *dot;
+  char *start;
+
+  if (!slash) {
+    start = str->ptr;
   } else {
-    return s;
+    start = slash + 1;
+  }
+  
+  dot = internal_memrchr(start, '.', str->len - (start - str->ptr));
+
+  if (dot){
+    return dfsch_make_string_buf(start, (dot - start));
+  } else {
+    if (start == str->ptr){
+      return s;
+    } else {
+      return dfsch_make_string_buf(start, str->len - (start - str->ptr));
+    }
   }
 }
 static dfsch_object_t* pathname_extension(dfsch_object_t* s){
   dfsch_strbuf_t* str = dfsch_string_to_buf(s);
-  char *dot = internal_memrchr(str->ptr, '.', str->len);
+  char *dot ;
+  char *start;
+  char *slash = internal_memrchr(str->ptr, '/', str->len);
+
+  if (!slash) {
+    start = str->ptr;
+  } else {
+    start = slash + 1;
+  }
+
+  dot = internal_memrchr(start, '.', str->len - (start - str->ptr));
   if (dot){
     return dfsch_make_string_buf(dot + 1, str->len - (dot - str->ptr) - 1);
   } else {
