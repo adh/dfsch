@@ -465,11 +465,9 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
   dfsch_define_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
-
   dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
   dfsch_define_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
-  
 
   dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
   dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
@@ -481,5 +479,4 @@ void dfsch__control_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "destructuring-bind", 
                     DFSCH_FORM_REF(destructuring_bind));
-
 }

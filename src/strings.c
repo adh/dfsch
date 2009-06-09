@@ -27,6 +27,23 @@
 #include "udata.h"
 #include "util.h"
 
+static void * internal_memrchr(const void *buf, int c, size_t num){
+  unsigned char *pMem = (unsigned char *) buf + num;
+  
+  for (;;) {
+    if (num-- == 0) {
+      return NULL;
+    }
+    
+    if (*pMem-- == (unsigned char) c) {
+      break;
+    }
+    
+  }
+  
+  return (void *) (pMem + 1);
+}
+
 typedef struct dfsch_string_t {
   dfsch_type_t* type;
   dfsch_strbuf_t buf;
@@ -1141,6 +1158,42 @@ dfsch_strbuf_t* dfsch_string_replace(dfsch_strbuf_t* str,
   return sl_value_strbuf(sl); 
 }
 
+static dfsch_object_t* pathname_dirname(dfsch_object_t* s){
+  dfsch_strbuf_t* str = dfsch_string_to_buf(s);
+  char *slash = internal_memrchr(str->ptr, '/', str->len);
+  if (slash){
+    return dfsch_make_string_buf(str->ptr, (slash - str->ptr));
+  } else {
+    return NULL;
+  }
+}
+static dfsch_object_t* pathname_basename(dfsch_object_t* s){
+  dfsch_strbuf_t* str = dfsch_string_to_buf(s);
+  char *slash = internal_memrchr(str->ptr, '/', str->len);
+  if (slash){
+    return dfsch_make_string_buf(slash + 1, str->len - (slash - str->ptr) - 1);
+  } else {
+    return s;
+  }
+}
+static dfsch_object_t* pathname_filename(dfsch_object_t* s){
+  dfsch_strbuf_t* str = dfsch_string_to_buf(s);
+  char *dot = internal_memrchr(str->ptr, '.', str->len);
+  if (dot){
+    return dfsch_make_string_buf(str->ptr, (dot - str->ptr));
+  } else {
+    return s;
+  }
+}
+static dfsch_object_t* pathname_extension(dfsch_object_t* s){
+  dfsch_strbuf_t* str = dfsch_string_to_buf(s);
+  char *dot = internal_memrchr(str->ptr, '.', str->len);
+  if (dot){
+    return dfsch_make_string_buf(dot + 1, str->len - (dot - str->ptr) - 1);
+  } else {
+    return NULL;
+  }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1408,6 +1461,23 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_byte,
   return dfsch_string_split_byte(string, separator, max_parts, 
                                  preserve_empty != NULL);
 }
+DFSCH_DEFINE_PRIMITIVE(string_split_on_byte_rev, 
+                       "Split string into parts separated by "
+                       "bytes from separator set"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* separator;
+  int max_parts;
+  dfsch_object_t* preserve_empty;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, separator);
+  DFSCH_LONG_ARG_OPT(args, max_parts, -1);
+  DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_split_byte_rev(string, separator, max_parts, 
+                                     preserve_empty != NULL);
+}
 DFSCH_DEFINE_PRIMITIVE(string_split_on_character, 
                        "Split string into parts separated by "
                        "unicode characters from separator set"){
@@ -1446,6 +1516,33 @@ DFSCH_DEFINE_PRIMITIVE(string_replace,
 }
 
 
+DFSCH_DEFINE_PRIMITIVE(pathname_basename, "Return basename of given pathname"){
+  dfsch_object_t* pathname;
+  DFSCH_OBJECT_ARG(args, pathname);
+  DFSCH_ARG_END(args);
+  return pathname_basename(pathname);
+}
+DFSCH_DEFINE_PRIMITIVE(pathname_dirname, 
+                       "Return directory path part of given pathname"){
+  dfsch_object_t* pathname;
+  DFSCH_OBJECT_ARG(args, pathname);
+  DFSCH_ARG_END(args);
+  return pathname_dirname(pathname);
+}
+DFSCH_DEFINE_PRIMITIVE(pathname_filename, 
+                       "Return filename without last extension"){
+  dfsch_object_t* pathname;
+  DFSCH_OBJECT_ARG(args, pathname);
+  DFSCH_ARG_END(args);
+  return pathname_filename(pathname);
+}
+DFSCH_DEFINE_PRIMITIVE(pathname_extension, 
+                       "Return last extension of given pathname"){
+  dfsch_object_t* pathname;
+  DFSCH_OBJECT_ARG(args, pathname);
+  DFSCH_ARG_END(args);
+  return pathname_extension(pathname);
+}
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<string>", &string_type);
@@ -1550,4 +1647,14 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_split_on_character));
   dfsch_define_cstr(ctx, "string-replace", 
 		   DFSCH_PRIMITIVE_REF(string_replace));
+
+  dfsch_define_cstr(ctx, "pathname-basename", 
+		   DFSCH_PRIMITIVE_REF(pathname_basename));
+  dfsch_define_cstr(ctx, "pathname-dirname", 
+		   DFSCH_PRIMITIVE_REF(pathname_dirname));
+  dfsch_define_cstr(ctx, "pathname-filename", 
+		   DFSCH_PRIMITIVE_REF(pathname_filename));
+  dfsch_define_cstr(ctx, "pathname-extension", 
+		   DFSCH_PRIMITIVE_REF(pathname_extension));
+
 }
