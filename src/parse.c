@@ -736,7 +736,8 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
   while (*data){
     switch (ctx->tokenizer_state){
     case T_NONE:
-      while(*data==' ' || *data=='\n' || *data == '\t' || *data == '\r'){
+      while(*data==' ' || *data=='\n' || *data == '\t' || *data == '\r' 
+            || *data == '\f'){
         ctx->column++;
         if (*data == '\n'){
           ctx->column = 1;
@@ -819,8 +820,8 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       case '.':
 	++data;
 
-	if (*data==' ' || *data=='\n' || *data=='\t' || *data=='\r' ||
-	    *data==0   || *data=='('  || *data==')'){
+	if (*data == ' ' || *data=='\n' || *data=='\t' || *data=='\r' ||
+	    *data == '\f' || *data==0   || *data=='('  || *data==')'){
           ctx->column++;
 	  parse_dot(ctx);
 	  if (ctx->error) return;
@@ -836,7 +837,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       break;
     case T_ATOM:
       {
-	char *e = strpbrk(data, "() \t\n\r;");
+	char *e = strpbrk(data, "() \t\n\r\f;");
 	if (!e){
           consume_queue(ctx->q, data);
 	  return;
@@ -953,7 +954,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       {
         unsigned char c = *data;
         if ((c>='a' && c<= 'z') || (c>='A' && c<= 'Z')){
-          char *e = strpbrk(data, "() \t\n\r;");
+          char *e = strpbrk(data, "() \t\n\r\f;");
           if (!e){
             consume_queue(ctx->q, data);
             return;
