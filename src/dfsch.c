@@ -1931,16 +1931,6 @@ dfsch_object_t* dfsch_make_form(dfsch_form_impl_t impl,
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
-
-/*
- * It seems so volatile really isn't needed around this magic, only automatic
- * variables that have been _CHANGED_ since call to setjmp(3) are indeterminate
- * and there are none such. Actually only thing that happen in these functions
- * between setjmp(3) and opportunity to call longjmp(3) (from corresponding 
- * wrapper function) is function call. This is only case of undefined behavior
- * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
- */
-
 static void thread_info_destroy(void* ptr){
   if (ptr)
     GC_FREE(ptr);
@@ -1978,6 +1968,15 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   }
   return ei;
 }
+
+/*
+ * It seems so volatile really isn't needed around this magic, only automatic
+ * variables that have been _CHANGED_ since call to setjmp(3) are indeterminate
+ * and there are none such. Actually only thing that happen in these functions
+ * between setjmp(3) and opportunity to call longjmp(3) (from corresponding 
+ * wrapper function) is function call. This is only case of undefined behavior
+ * related to "proper" use of setjmp(3)/longjmp(3) in IEEE 1003.1.
+ */
 
 void dfsch__continue_unwind(dfsch__thread_info_t* ti){
   if (!ti->throw_ret){
