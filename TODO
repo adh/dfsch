@@ -3,9 +3,6 @@ Non-version-specific:
 * Documentation
 * Packages (reasonable implementation is probably simpler than it looks)
 
-For 0.3.0:
-* Document some primitives
-
 For 0.3.1
 * Circular printer
 * Pretty-printer
