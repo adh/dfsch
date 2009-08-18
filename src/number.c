@@ -114,7 +114,11 @@ dfsch_number_type_t dfsch_fixnum_type = {
 };
 
 static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
-  dfsch_write_string(state, saprintf("%.32g", n->flonum));
+  char* res = saprintf("%.32g", n->flonum);
+  dfsch_write_string(state, res);
+  if (strchr(res, '.') == NULL){
+    dfsch_write_string(state, ".");
+  }
 }
 static uint32_t flonum_hash(flonum_t* n){
   return diffusion(((size_t)n->flonum) ^ 
@@ -669,7 +673,7 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
 
 dfsch_object_t* dfsch_number_neg(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
-    return dfsch_make_number_from_long(DFSCH_FIXNUM_REF(n));
+    return dfsch_make_number_from_long(-DFSCH_FIXNUM_REF(n));
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_to_number(dfsch_bignum_neg(n));
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
@@ -976,7 +980,7 @@ DFSCH_DEFINE_PRIMITIVE(minus, NULL){
     dfsch_error("Too few arguments",i);
 
   if (!DFSCH_FAST_CDR(i))
-    return dfsch_number_sub(dfsch_make_number_from_long(0), DFSCH_FAST_CAR(i));
+    return dfsch_number_neg(DFSCH_FAST_CAR(i));
   s = DFSCH_FAST_CAR(i);
   i = DFSCH_FAST_CDR(i);
   while(DFSCH_PAIR_P(i)){
@@ -1166,19 +1170,7 @@ DFSCH_DEFINE_PRIMITIVE(abs, NULL){
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   
-  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
-    if (DFSCH_FIXNUM_REF(n) >= 0){
-      return n;
-    } else {
-      return DFSCH_MAKE_FIXNUM(-DFSCH_FIXNUM_REF(n));
-    }
-  }
-
-  if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-    return dfsch_bignum_to_number(dfsch_bignum_abs((dfsch_bignum_t*)n));
-  }
-
-  return dfsch_make_number_from_double(fabs(dfsch_number_to_double(n)));
+  return dfsch_number_abs(n);
 }
 
 DFSCH_DEFINE_PRIMITIVE(exp, NULL){
