@@ -1,2 +1,0 @@
-- string->byte-list returns negative values
-- / chokes on negative numbers
