@@ -9,6 +9,9 @@ For 0.3.1
 * CL-like destructuring (&key, &optional...)
 * Dynamic variables (ISLisp-style)
 
+- Call context as argument to apply (and related things, like
+  primitives) and slot in environment frame
+
 When needed by other code:
 * Type predicates for all types
 * Structures (in C code)
