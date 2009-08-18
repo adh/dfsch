@@ -344,13 +344,13 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
   if (s->buf.len == 0)
     return NULL;
 
-  head = tail = dfsch_cons(DFSCH_MAKE_FIXNUM(s->buf.ptr[0]), 
+  head = tail = dfsch_cons(DFSCH_MAKE_FIXNUM(((unsigned char)s->buf.ptr[0])), 
                            NULL);
 
   for(i = 1; i < s->buf.len; ++i){
     object_t *tmp;
     
-    tmp = dfsch_cons(DFSCH_MAKE_FIXNUM(s->buf.ptr[i]),NULL);
+    tmp = dfsch_cons(DFSCH_MAKE_FIXNUM(((unsigned char)s->buf.ptr[i])),NULL);
     DFSCH_FAST_CDR_MUT(tail) = tmp;
     tail = tmp;
 
