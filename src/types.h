@@ -37,6 +37,7 @@ struct environment_t {
   dfsch__thread_info_t* owner;
   dfsch_eqhash_t values;
   dfsch_object_t* decls;
+  dfsch_object_t* context;
 };
 
 typedef struct closure_t{

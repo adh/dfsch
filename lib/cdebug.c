@@ -67,7 +67,7 @@ static void debug_main(dfsch_object_t* reason){
   int i;
 
   if (!debugger_env){
-    debugger_env = dfsch_make_context();
+    debugger_env = dfsch_make_top_level_environment();
   }
 
   env = dfsch_new_frame(debugger_env);

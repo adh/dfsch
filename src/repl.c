@@ -163,7 +163,7 @@ int main(int argc, char**argv){
   GC_INIT();
   signal(SIGINT, sigint_handler_break);
 
-  ctx = dfsch_make_context();
+  ctx = dfsch_make_top_level_environment();
 
 
   dfsch_load_register(ctx);

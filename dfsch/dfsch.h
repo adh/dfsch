@@ -82,7 +82,8 @@ extern "C" {
    */
   typedef dfsch_object_t* (*dfsch_primitive_impl_t)(void* baton,
                                                     dfsch_object_t* args,
-                                                    dfsch_tail_escape_t* esc);
+                                                    dfsch_tail_escape_t* esc,
+                                                    dfsch_object_t* context);
 
 
 #include <dfsch/number.h>
@@ -351,9 +352,9 @@ extern "C" {
   // Lexical binding:
   /** Create new environment frame. */
   extern dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent);
-  /** Create new environment frame from given hash table */
-  extern dfsch_object_t* dfsch_new_frame_from_hash(dfsch_object_t* parent, 
-                                                   dfsch_object_t* hash);
+  /** Create new environment frame. */
+  extern dfsch_object_t* dfsch_new_frame_with_context(dfsch_object_t* parent,
+                                                      dfsch_object_t* context);
 
   /** Get value of variable name in environment env. */
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
@@ -384,6 +385,9 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
+  extern dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
+                                                    dfsch_type_t* klass);
+
   extern dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                             dfsch_object_t* args);
 
@@ -400,6 +404,11 @@ extern "C" {
 					 dfsch_object_t* env);
   /** Apply procedure to given arguments*/
   extern dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args);
+  /** */
+  extern dfsch_object_t* dfsch_apply_with_context(dfsch_object_t* proc, 
+                                                  dfsch_object_t* args,
+                                                  dfsch_object_t* context);
+  
   /** Extended variant of dfsch_eval_proc with support for tail recursion */
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
@@ -416,8 +425,8 @@ extern "C" {
 
   // context
 
-  /** Allocates new top-level context (environment). */
-  extern dfsch_object_t* dfsch_make_context();
+  /** Allocates new top-level environment. */
+  extern dfsch_object_t* dfsch_make_top_level_environment();
   /** Define new variable in given context */
   extern dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
                                           char *name, 

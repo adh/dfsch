@@ -2207,23 +2207,30 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
 }
 
 static environment_t* new_frame_impl(environment_t* parent,
+                                     dfsch_object_t* context,
                                      dfsch__thread_info_t* ti){
   environment_t* e = alloc_environment(ti);
 
   dfsch_eqhash_init(&e->values, 0);
   e->decls = NULL;
+  e->context = context;
   e->owner = ti;
   e->parent = (environment_t*)parent;
     
   return e;
 }
 
-dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
+dfsch_object_t* dfsch_new_frame_with_context(dfsch_object_t* parent,
+                                             dfsch_object_t* context){
   if (parent){
     parent = DFSCH_ASSERT_TYPE(parent, DFSCH_ENVIRONMENT_TYPE);
   }
   return (dfsch_object_t*)new_frame_impl((environment_t*)parent,
+                                         context,
                                          dfsch__get_thread_info());
+}
+dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
+  return dfsch_new_frame_with_context(parent, NULL);
 }
 
 static object_t* lookup_impl(object_t* name, 
@@ -2378,6 +2385,18 @@ dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   return dfsch_eqhash_2_alist(&e->values);
 }
+dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
+                                           dfsch_type_t* klass){
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  while (e){
+    if (DFSCH_INSTANCE_P(e->context, klass)){
+      return e->context;
+    }
+    e = e->parent;
+  }
+
+  return NULL;
+}
 
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
@@ -2439,6 +2458,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        dfsch__thread_info_t* ti);
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
+                                        dfsch_object_t* context,
                                         environment_t* arg_env,
                                         tail_escape_t* esc,
                                         dfsch__thread_info_t* ti);
@@ -2527,8 +2547,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 			     ti);
     }
 
-    return dfsch_apply_impl(f, DFSCH_FAST_CDR(exp), env, esc, ti);
-  }  
+    return dfsch_apply_impl(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
+  }
   
   return exp;
 }
@@ -2691,6 +2711,7 @@ struct dfsch_tail_escape_t {
 
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
+                                        dfsch_object_t* context,
                                         environment_t* arg_env,
                                         tail_escape_t* esc,
                                         dfsch__thread_info_t* ti){
@@ -2729,11 +2750,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       args = eval_list(args, arg_env, ti);
     }
     return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                      &myesc);
+                                      &myesc, context);
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
     environment_t* env = new_frame_impl(((closure_t*) proc)->env,
+                                        context,
                                         ti);
     if (DFSCH_LIKELY(arg_env)){
       destructuring_eval(((closure_t*)proc)->args, args, env, arg_env, ti);
@@ -2760,10 +2782,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                dfsch_object_t* args,
                                tail_escape_t* esc){
-  return dfsch_apply_impl(proc, args, NULL, esc, dfsch__get_thread_info());
+  return dfsch_apply_impl(proc, args, NULL, NULL, 
+                          esc, dfsch__get_thread_info());
 }
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
-  return dfsch_apply_impl(proc, args, NULL, NULL, dfsch__get_thread_info());
+  return dfsch_apply_impl(proc, args, NULL, NULL, 
+                          NULL, dfsch__get_thread_info());
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
@@ -2798,7 +2822,7 @@ DFSCH_DEFINE_FORM_IMPL(current_environment,
   return env;
 }
 
-dfsch_object_t* dfsch_make_context(){
+dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
 
   ctx = dfsch_new_frame(NULL);

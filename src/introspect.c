@@ -257,10 +257,10 @@ DFSCH_DEFINE_PRIMITIVE(make_empty_environment, 0){
 
   return dfsch_new_frame(NULL);
 }
-DFSCH_DEFINE_PRIMITIVE(make_default_environment, 0){
+DFSCH_DEFINE_PRIMITIVE(make_top_level_environment, 0){
   DFSCH_ARG_END(args);
 
-  return dfsch_make_context();
+  return dfsch_make_top_level_environment();
 }
 
 void dfsch_introspect_register(dfsch_object_t* env){
@@ -289,6 +289,6 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(make_environment));
   dfsch_define_cstr(env, "make-empty-environment",
                     DFSCH_PRIMITIVE_REF(make_empty_environment));
-  dfsch_define_cstr(env, "make-default-environment",
-                    DFSCH_PRIMITIVE_REF(make_default_environment));
+  dfsch_define_cstr(env, "make-top-level-environment",
+                    DFSCH_PRIMITIVE_REF(make_top_level_environment));
 }

@@ -3,7 +3,7 @@ Non-version-specific:
 * Documentation
 * Packages (reasonable implementation is probably simpler than it looks)
 
-For 0.3.1
+For 0.4.0 (ABI broken from 0.3.0)
 * Circular printer
 * Pretty-printer
 * CL-like destructuring (&key, &optional...)

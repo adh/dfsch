@@ -111,7 +111,8 @@ extern dfsch_type_t dfsch_primitive_type;
 #define DFSCH_PRIMITIVE_HEAD(name)                                      \
   static dfsch_object_t* p_##name##_impl(void* baton,                   \
                                          dfsch_object_t* args,          \
-                                         dfsch_tail_escape_t* esc)
+                                         dfsch_tail_escape_t* esc,      \
+                                         dfsch_object_t* context)
   
 #define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
   DFSCH_PRIMITIVE_HEAD(name);                   \
