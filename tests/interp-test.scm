@@ -308,7 +308,8 @@
              '("a" "b" "c"))
        (test 'string-split-on-character 
              (string-split-on-character "a©cæ©b" "©")
-             '("a" "cæ" "b")))
+             '("a" "cæ" "b"))
+       (test 'byte-list (string->byte-list "æ©") '(195 166 194 169)))
 
 (group "some special cases"
 
@@ -337,7 +338,6 @@
        (test 'floats (format "~10,5f" pi) "   3.14159"))
 
 (group "XML support"
-;       (sub-group xml)
        (sub-group sxml
                   (test 'parse-string
                         (sxml:parse-string "<a foo=\"bar &quot;\"><b/></a>")
@@ -350,7 +350,9 @@
        (test 'gensym-write-segfault 
              (let ((str (object->string (gensym))))
                #t)
-             #t))
+             #t)
+       (test 'negative-divide (/ -1 2) -1/2)
+       (test 'fracnum-absolute-value (abs -1/2) 1/2))
 
 ;;; End of tests
 ;;
