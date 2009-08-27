@@ -429,8 +429,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_top_level_environment();
   /** Define new variable in given context */
   extern dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
-                                          char *name, 
-                                          dfsch_object_t *obj);
+                                           char *name, 
+                                           void *obj); /* to suppress warnings*/
 
   /** Change value of variable. */
   extern dfsch_object_t* dfsch_set_cstr(dfsch_object_t *env, 

@@ -2871,10 +2871,10 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
 dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
                                   char *name, 
-                                  dfsch_object_t *obj){
+                                  void *obj){
   
   return dfsch_define(dfsch_make_symbol(name),
-                      obj,
+                      (dfsch_object_t*)obj,
                       ctx);
   
 }
