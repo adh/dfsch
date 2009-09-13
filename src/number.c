@@ -19,6 +19,7 @@
  *
  */
 
+#define _XOPEN_SOURCE 600 /* for math.h */
 #include <dfsch/number.h>
 #include <dfsch/bignum.h>
 #include <dfsch/strings.h>
@@ -27,10 +28,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <math.h>
 #include <errno.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+#include <math.h>
 
 typedef dfsch_object_t object_t;
 
@@ -121,9 +123,17 @@ static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
   }
 }
 static uint32_t flonum_hash(flonum_t* n){
-  return diffusion(((size_t)n->flonum) ^ 
-    ((size_t) (exp(round(32-log(n->flonum))) * 
-               (n->flonum - trunc(n->flonum)))));
+  char* ptr = ((char*)&(n->flonum));
+  size_t i = sizeof(double);
+  uint32_t hash = 0xc32e64c9;
+
+  while (i){
+    hash ^= (*ptr) + (hash << 3);
+    i--;
+    ptr++;
+  }
+
+  return hash;
 }
 static int flonum_equal_p(flonum_t* a, flonum_t* b){
   return a->flonum == b->flonum;
@@ -228,14 +238,14 @@ dfsch_object_t* dfsch_make_number_from_double(double num){
 }
 dfsch_object_t* dfsch_make_number_from_long(long num){
   if (num > DFSCH_FIXNUM_MAX || num < DFSCH_FIXNUM_MIN){
-    return dfsch_make_bignum_int64((int64_t)num);
+    return (dfsch_object_t*)dfsch_make_bignum_int64((int64_t)num);
   }
 
   return DFSCH_MAKE_FIXNUM(num);
 }
 dfsch_object_t* dfsch_make_number_from_int64(int64_t num){
   if (num > DFSCH_FIXNUM_MAX || num < DFSCH_FIXNUM_MIN){
-    return dfsch_make_bignum_int64(num);
+    return (dfsch_object_t*)dfsch_make_bignum_int64(num);
   }
 
   return DFSCH_MAKE_FIXNUM(num);
@@ -542,7 +552,7 @@ int dfsch_number_sign(dfsch_object_t* n){
       return (DFSCH_FIXNUM_REF(n) < 0) ? - 1 : 1;
     }
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-    return dfsch_bignum_sign(n);
+    return dfsch_bignum_sign((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
     return dfsch_number_sign(((fracnum_t*)n)->num);
   } else {
@@ -569,28 +579,27 @@ int dfsch_number_even_p(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return (DFSCH_FIXNUM_REF(n) & 0x01 == 0);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-      return dfsch_bignum_even_p(n);
+    return dfsch_bignum_even_p((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
     return 0; /* proper fracnum cannot be integer */
   } else {
     double nn = dfsch_number_to_double(n);
     nn /= 2.0;
-    return dfsch_bool(nn == round(nn));
+    return nn == round(nn);
   }   
 }
 int dfsch_number_odd_p(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return (DFSCH_FIXNUM_REF(n) & 0x01 == 1);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-      return !dfsch_bignum_even_p(n);
+      return !dfsch_bignum_even_p((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
     return 0; /* proper fracnum cannot be integer */
   } else {
     double nn = dfsch_number_to_double(n);
     nn = (nn + 1.0) /2.0;
-    return dfsch_bool(nn == round(nn));
-  } 
-  
+    return nn == round(nn);
+  }
 }
 
 
@@ -675,7 +684,7 @@ dfsch_object_t* dfsch_number_neg(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return dfsch_make_number_from_long(-DFSCH_FIXNUM_REF(n));
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-    return dfsch_bignum_to_number(dfsch_bignum_neg(n));
+    return dfsch_bignum_to_number(dfsch_bignum_neg((dfsch_bignum_t*)n));
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
     return frac_cons(dfsch_number_neg(((fracnum_t*)n)->num),
                      ((fracnum_t*)n)->denom);
@@ -1285,35 +1294,35 @@ DFSCH_DEFINE_PRIMITIVE(zero_p, NULL){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  return dfsch_number_sign(n) == 0;
+  return dfsch_bool(dfsch_number_sign(n) == 0);
 }
 
 DFSCH_DEFINE_PRIMITIVE(positive_p, NULL){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  return dfsch_number_sign(n) > 0;
+  return dfsch_bool(dfsch_number_sign(n) > 0);
 }
 
 DFSCH_DEFINE_PRIMITIVE(negative_p, NULL){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  return dfsch_number_sign(n) < 0;
+  return dfsch_bool(dfsch_number_sign(n) < 0);
 }
 
 DFSCH_DEFINE_PRIMITIVE(even_p, NULL){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  return dfsch_number_even_p(n);
+  return dfsch_bool(dfsch_number_even_p(n));
 }
 
 DFSCH_DEFINE_PRIMITIVE(odd_p, NULL){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
-  return dfsch_number_odd_p(n);
+  return dfsch_bool(dfsch_number_odd_p(n));
 }
 
 DFSCH_DEFINE_PRIMITIVE(max, NULL){

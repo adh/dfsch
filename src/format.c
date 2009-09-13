@@ -387,9 +387,7 @@ char* dfsch_format(char* string,
   return sl_value(out);
 }
 
-static dfsch_object_t* native_format(void *baton, 
-                                     dfsch_object_t* args, 
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(format, NULL){
   char* format;
   DFSCH_STRING_ARG(args, format);
 
@@ -397,6 +395,5 @@ static dfsch_object_t* native_format(void *baton,
 }
 
 void dfsch__format_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "format", 
-                    dfsch_make_primitive(&native_format,NULL));  
+  dfsch_define_cstr(ctx, "format", DFSCH_PRIMITIVE_REF(format));  
 }

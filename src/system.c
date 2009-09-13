@@ -49,7 +49,8 @@ static int decoded_time_equal_p(decoded_time_t* a, decoded_time_t* b){
 
 static void decoded_time_write(decoded_time_t* time, 
                                dfsch_writer_state_t* state){
-  dfsch_write_unreadable(state, time, "%04d-%02d-%02dT%02d:%02d:%02d",
+  dfsch_write_unreadable(state, (dfsch_object_t*)time, 
+                         "%04d-%02d-%02dT%02d:%02d:%02d",
                          time->tm.tm_year+1900, time->tm.tm_mon+1, 
                          time->tm.tm_mday,
                          time->tm.tm_hour, time->tm.tm_min, time->tm.tm_sec);
@@ -114,9 +115,7 @@ struct tm* dfsch_decoded_time_get_tm(dfsch_object_t* time){
   return &(((decoded_time_t*)time)->tm);
 }
 
-static dfsch_object_t* native_decode_universal_time(void* baton,
-                                                    dfsch_object_t* args,
-                                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(decode_universal_time, NULL){
   time_t time;
   dfsch_object_t* utc;
   dfsch_object_t* ret;
@@ -136,9 +135,7 @@ static dfsch_object_t* native_decode_universal_time(void* baton,
   return ret;
 }
 
-static dfsch_object_t* native_encode_universal_time(void* baton,
-                                                    dfsch_object_t* args,
-                                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(encode_universal_time, NULL){
   struct tm tm;
   DFSCH_LONG_ARG(args, tm.tm_sec);
   DFSCH_LONG_ARG(args, tm.tm_min);
@@ -155,9 +152,7 @@ static dfsch_object_t* native_encode_universal_time(void* baton,
   return dfsch_make_number_from_long(mktime(&tm));
 }
 
-static dfsch_object_t* native_get_decoded_time(void* baton,
-                                               dfsch_object_t* args,
-                                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(get_decoded_time, NULL){
   time_t t;
   dfsch_object_t* utc;
   dfsch_object_t* ret;
@@ -178,17 +173,13 @@ static dfsch_object_t* native_get_decoded_time(void* baton,
   return ret;  
 }
 
-static dfsch_object_t* native_get_universal_time(void* baton,
-                                                 dfsch_object_t* args,
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(get_universal_time, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(time(NULL));
 }
 
-static dfsch_object_t* native_iso_format_time(void* baton,
-                                              dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(iso_format_time, NULL){
   char t = ' ';
   dfsch_object_t* use_t;
   dfsch_object_t* time;
@@ -223,7 +214,16 @@ DFSCH_DEFINE_PRIMITIVE(get_internal_run_time, NULL){
 
   return dfsch_make_number_from_long((t.tms_utime + t.tms_stime) & LONG_MAX);
 }
+DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
+  long time;
 
+  DFSCH_LONG_ARG(args, time);
+  DFSCH_ARG_END(args);
+
+  sleep(time);
+
+  return NULL;
+}
 
 
 void dfsch__system_register(dfsch_object_t *ctx){
@@ -231,15 +231,15 @@ void dfsch__system_register(dfsch_object_t *ctx){
 
 
   dfsch_define_cstr(ctx, "decode-universal-time", 
-                    dfsch_make_primitive(native_decode_universal_time, NULL));
+                    DFSCH_PRIMITIVE_REF(decode_universal_time));
   dfsch_define_cstr(ctx, "encode-universal-time", 
-                    dfsch_make_primitive(native_encode_universal_time, NULL));
+                    DFSCH_PRIMITIVE_REF(encode_universal_time));
   dfsch_define_cstr(ctx, "get-decoded-time", 
-                    dfsch_make_primitive(native_get_decoded_time, NULL));
+                    DFSCH_PRIMITIVE_REF(get_decoded_time));
   dfsch_define_cstr(ctx, "get-universal-time", 
-                    dfsch_make_primitive(native_get_universal_time, NULL));
+                    DFSCH_PRIMITIVE_REF(get_universal_time));
   dfsch_define_cstr(ctx, "iso-format-time", 
-                    dfsch_make_primitive(native_iso_format_time, NULL));
+                    DFSCH_PRIMITIVE_REF(iso_format_time));
   dfsch_define_cstr(ctx, "get-internal-real-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_real_time));
   dfsch_define_cstr(ctx, "get-internal-run-time", 

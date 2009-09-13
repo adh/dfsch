@@ -189,4 +189,12 @@ dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la
 
-TESTS = tests/scm-test.sh
+check_PROGRAMS = platform-test c-api-test
+
+platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
+platform_test_LDADD =  -lgc -lpthread -ldl -lm libdfsch-cmdopts.la
+c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
+c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
+
+
+TESTS = tests/scm-test.sh platform-test c-api-test

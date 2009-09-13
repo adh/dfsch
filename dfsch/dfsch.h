@@ -92,6 +92,8 @@ extern "C" {
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
+  extern dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, 
+                                               size_t size);
 
 
   /** Same object? (i.e. equal addresses) */
@@ -250,6 +252,9 @@ extern "C" {
   /** Return first cell of list with car eq? to key*/
   extern dfsch_object_t* dfsch_memq(dfsch_object_t *key,
                                     dfsch_object_t *alist);
+  /** Sort list according to passed comparison function */
+  dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
+                                  dfsch_object_t* comp);
 
 
   /** Expand quasi-quoted expression */

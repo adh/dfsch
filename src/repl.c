@@ -74,37 +74,6 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
     exit(1);
   }
 }
-static dfsch_object_t* command_sleep(void*baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
-  long time;
-
-  DFSCH_LONG_ARG(args, time);
-  DFSCH_ARG_END(args);
-
-  sleep(time);
-
-  return NULL;
-}
-static dfsch_object_t* command_print(void* arg, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
-  
-  while (dfsch_pair_p(args)){
-    fputs(dfsch_object_2_string(dfsch_car(args), 100, 0), stdout);
-    args = dfsch_cdr(args);
-  }
-  puts("");
-  return NULL;
-}
-static dfsch_object_t* command_write(void* arg, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
-  
-  while (dfsch_pair_p(args)){
-    fputs(dfsch_object_2_string(dfsch_car(args), 100, 1), stdout);
-    args = dfsch_cdr(args);
-  }
-  puts("");
-  return NULL;
-}
 
 
 void interactive_repl(dfsch_object_t* ctx){
@@ -168,10 +137,8 @@ int main(int argc, char**argv){
 
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);
+  dfsch_set_standard_io_ports();
 
-  dfsch_define_cstr(ctx,"exit",dfsch_make_primitive(command_exit,NULL));
-  dfsch_define_cstr(ctx,"print",dfsch_make_primitive(command_print,NULL));
-  dfsch_define_cstr(ctx,"sleep",dfsch_make_primitive(command_sleep,NULL));
   dfsch_restart_bind(dfsch_make_restart(dfsch_make_symbol("quit"),
                                         dfsch_make_primitive(command_exit,
                                                              NULL),

@@ -125,7 +125,8 @@ typedef struct stat_t {
 } stat_t;
 
 static void stat_write(stat_t* st, dfsch_writer_state_t* state){
-  dfsch_write_unreadable(state, st,
+  dfsch_write_unreadable(state, 
+                         (dfsch_object_t*)st,
                          "dev 0x%lx ino %ld mode 0%lo nlink %ld uid %ld gid %d "
                          "rdev 0x%x size %lld atime %ld mtime %ld ctime %ld "
                          "blksize %ld blocks %ld", 
@@ -216,8 +217,7 @@ struct stat* dfsch_unix_get_stat(dfsch_object_t* stat){
   return &(((stat_t*)stat)->st);
 }
 
-static dfsch_object_t* native_mode(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(mode, NULL){
   mode_t mode = 0;
   
   DFSCH_FLAG_PARSER_BEGIN(args);
@@ -284,8 +284,7 @@ static signal_name_t signals[] = {
   {"xfsz", SIGXFSZ}
 };
 
-static dfsch_object_t* native_sig(void* baton, dfsch_object_t* args,
-                                  dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sig, NULL){
   dfsch_object_t* sym;
   int i;
 
@@ -301,8 +300,7 @@ static dfsch_object_t* native_sig(void* baton, dfsch_object_t* args,
   dfsch_error("unix:unknown-signal", sym);
 }
 
-static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(access, NULL){
   char* path;
   int amode;
   DFSCH_STRING_ARG(args, path);
@@ -325,8 +323,7 @@ static dfsch_object_t* native_access(void* baton, dfsch_object_t* args,
 }
 
 
-static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(chdir, NULL){
   char* dir;
   DFSCH_STRING_ARG(args, dir);
   DFSCH_ARG_END(args);
@@ -337,8 +334,7 @@ static dfsch_object_t* native_chdir(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_fchdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
   int dir;
   DFSCH_LONG_ARG(args, dir);
   DFSCH_ARG_END(args);
@@ -351,8 +347,7 @@ static dfsch_object_t* native_fchdir(void* baton, dfsch_object_t* args,
 
 
 
-static dfsch_object_t* native_chmod(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(chmod, NULL){
   char* fname;
   mode_t mode;
   DFSCH_STRING_ARG(args, fname);
@@ -364,8 +359,7 @@ static dfsch_object_t* native_chmod(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_fchmod(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(fchmod, NULL){
   int file;
   mode_t mode;
   DFSCH_LONG_ARG(args, file);
@@ -378,8 +372,7 @@ static dfsch_object_t* native_fchmod(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_chown(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(chown, NULL){
   char* fname;
   uid_t user;
   gid_t group;
@@ -393,8 +386,7 @@ static dfsch_object_t* native_chown(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_fchown(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(fchown, NULL){
   int file;
   uid_t user;
   gid_t group;
@@ -409,15 +401,13 @@ static dfsch_object_t* native_fchown(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_clock(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(clock, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(clock());
 }
 
-static dfsch_object_t* native_close(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(close, NULL){
   int fd;
   DFSCH_LONG_ARG(args, fd);
   DFSCH_ARG_END(args);
@@ -427,8 +417,7 @@ static dfsch_object_t* native_close(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_closedir(void* baton, dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(closedir, NULL){
   dfsch_object_t* dir;
   DFSCH_OBJECT_ARG(args, dir);
   DFSCH_ARG_END(args);
@@ -438,8 +427,7 @@ static dfsch_object_t* native_closedir(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_creat(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(creat, NULL){
   int fd;
   char* path;
   mode_t mode;
@@ -457,8 +445,7 @@ static dfsch_object_t* native_creat(void* baton, dfsch_object_t* args,
   return dfsch_make_number_from_long(fd);
 }
 
-static dfsch_object_t* native_dup(void* baton, dfsch_object_t* args,
-                                  dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(dup, NULL){
   int fd;
   DFSCH_LONG_ARG(args, fd);
   DFSCH_ARG_END(args);
@@ -471,8 +458,7 @@ static dfsch_object_t* native_dup(void* baton, dfsch_object_t* args,
   return dfsch_make_number_from_long(fd);
 }
 
-static dfsch_object_t* native_dup2(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(dup2, NULL){
   int oldfd;
   int newfd;
   DFSCH_LONG_ARG(args, oldfd);
@@ -489,8 +475,7 @@ static dfsch_object_t* native_dup2(void* baton, dfsch_object_t* args,
 
 // TODO: exec
 
-static dfsch_object_t* native_exit(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(exit, NULL){
   int status;
   DFSCH_LONG_ARG(args, status);
   DFSCH_ARG_END(args);
@@ -498,8 +483,7 @@ static dfsch_object_t* native_exit(void* baton, dfsch_object_t* args,
   exit(status);
 }
 
-static dfsch_object_t* native_fork(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(fork, NULL){
   pid_t pid;
   DFSCH_ARG_END(args);
 
@@ -511,8 +495,7 @@ static dfsch_object_t* native_fork(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(pid);
 }
-static dfsch_object_t* native_fstat(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(fstat, NULL){
   int fd;
   dfsch_object_t* res;
   DFSCH_LONG_ARG(args, fd);
@@ -525,8 +508,7 @@ static dfsch_object_t* native_fstat(void* baton, dfsch_object_t* args,
   }
   return res;
 }
-static dfsch_object_t* native_getcwd(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getcwd, NULL){
   char* buf;
   char* ret;
   dfsch_object_t* obj;
@@ -551,33 +533,28 @@ static dfsch_object_t* native_getcwd(void* baton, dfsch_object_t* args,
   GC_FREE(buf);
   return obj;
 }
-static dfsch_object_t* native_getegid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getegid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getegid());
 }
-static dfsch_object_t* native_geteuid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(geteuid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(geteuid());
 }
-static dfsch_object_t* native_getgid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getgid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getgid());
 }
-static dfsch_object_t* native_getuid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getuid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getuid());
 }
 
-static dfsch_object_t* native_getpgid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getpgid, NULL){
   pid_t pid;
   DFSCH_LONG_ARG(args, pid);
   DFSCH_ARG_END(args);
@@ -590,36 +567,31 @@ static dfsch_object_t* native_getpgid(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(pid);
 }
-static dfsch_object_t* native_getpgrp(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getpgrp, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getpgrp());
 }
-static dfsch_object_t* native_getsid(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getsid, NULL){
   pid_t pid;
   DFSCH_LONG_ARG_OPT(args, pid, 0)
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getsid(pid));
 }
-static dfsch_object_t* native_getpid(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getpid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getpid());
 }
-static dfsch_object_t* native_getppid(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getppid, NULL){
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(getppid());
 }
 
 
-static dfsch_object_t* native_getenv(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(getenv, NULL){
   char* name;
   char* value;
   DFSCH_STRING_ARG(args, name);
@@ -633,8 +605,7 @@ static dfsch_object_t* native_getenv(void* baton, dfsch_object_t* args,
     return NULL;
   }
 }
-static dfsch_object_t* native_gettimeofday(void* baton, dfsch_object_t* args,
-                                           dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(gettimeofday, NULL){
   struct timeval tv;
   DFSCH_ARG_END(args);
 
@@ -650,8 +621,7 @@ static dfsch_object_t* native_gettimeofday(void* baton, dfsch_object_t* args,
                       dfsch_make_number_from_long(tv.tv_sec),
                       dfsch_make_number_from_long(tv.tv_usec));
 }
-static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(isatty, NULL){
   int fd;
   int ret;
   DFSCH_LONG_ARG(args, fd);
@@ -669,8 +639,7 @@ static dfsch_object_t* native_isatty(void* baton, dfsch_object_t* args,
 
   return DFSCH_SYM_TRUE;
 }
-static dfsch_object_t* native_kill(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(kill, NULL){
   pid_t pid;
   int sig;
   DFSCH_LONG_ARG(args, pid);
@@ -683,8 +652,7 @@ static dfsch_object_t* native_kill(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_killpg(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(killpg, NULL){
   pid_t pgrp;
   int sig;
   DFSCH_LONG_ARG(args, pgrp);
@@ -698,8 +666,7 @@ static dfsch_object_t* native_killpg(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_link(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(link, NULL){
   char* old;
   char* new;
   DFSCH_STRING_ARG(args, old);
@@ -711,8 +678,7 @@ static dfsch_object_t* native_link(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_lseek(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(lseek, NULL){
   int fd;
   dfsch_object_t* whence;
   off_t offset;
@@ -738,8 +704,7 @@ static dfsch_object_t* native_lseek(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_lstat(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(lstat, NULL){
   char* path;
   dfsch_object_t* res;
   DFSCH_STRING_ARG(args, path);
@@ -752,8 +717,7 @@ static dfsch_object_t* native_lstat(void* baton, dfsch_object_t* args,
   }
   return res;
 }
-static dfsch_object_t* native_mkdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(mkdir, NULL){
   char* path;
   mode_t mode;
   DFSCH_STRING_ARG(args, path);
@@ -765,8 +729,7 @@ static dfsch_object_t* native_mkdir(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_mkfifo(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(mkfifo, NULL){
   char* path;
   mode_t mode;
   DFSCH_STRING_ARG(args, path);
@@ -779,8 +742,7 @@ static dfsch_object_t* native_mkfifo(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_nice(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(nice, NULL){
   int incr;
   DFSCH_LONG_ARG(args, incr);
   DFSCH_ARG_END(args);
@@ -791,8 +753,7 @@ static dfsch_object_t* native_nice(void* baton, dfsch_object_t* args,
   return NULL;
 }
 
-static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(open, NULL){
   char* path;
   mode_t mode = 0;
   int oflag = 0;
@@ -823,16 +784,14 @@ static dfsch_object_t* native_open(void* baton, dfsch_object_t* args,
   
   return dfsch_make_number_from_long(fd);
 }
-static dfsch_object_t* native_opendir(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(opendir, NULL){
   char* path;
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
 
   return dfsch_unix_opendir(path);
 }
-static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(pipe, NULL){
   int fds[2];
   DFSCH_ARG_END(args);
 
@@ -846,8 +805,7 @@ static dfsch_object_t* native_pipe(void* baton, dfsch_object_t* args,
 }
 
 
-static dfsch_object_t* native_raise(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(raise, NULL){
   int sig;
   DFSCH_LONG_ARG(args, sig);
   DFSCH_ARG_END(args);
@@ -857,8 +815,7 @@ static dfsch_object_t* native_raise(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(read, NULL){
   int fd;
   size_t len;
   char* buf;
@@ -888,16 +845,14 @@ static dfsch_object_t* native_read(void* baton, dfsch_object_t* args,
   }
 
 }
-static dfsch_object_t* native_readdir(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(readdir, NULL){
   dfsch_object_t* dir;
   DFSCH_OBJECT_ARG(args, dir);
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_unix_readdir(dir));
 }
-static dfsch_object_t* native_rename(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(rename, NULL){
   char* old;
   char* new;
   DFSCH_STRING_ARG(args, old);
@@ -909,8 +864,7 @@ static dfsch_object_t* native_rename(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_rmdir(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(rmdir, NULL){
   char* path;
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
@@ -920,8 +874,7 @@ static dfsch_object_t* native_rmdir(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setegid, NULL){
   gid_t gid;
   DFSCH_LONG_ARG(args, gid);
   DFSCH_ARG_END(args);
@@ -931,8 +884,7 @@ static dfsch_object_t* native_setegid(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_seteuid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(seteuid, NULL){
   uid_t uid;
   DFSCH_LONG_ARG(args, uid);
   DFSCH_ARG_END(args);
@@ -942,8 +894,7 @@ static dfsch_object_t* native_seteuid(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_setgid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setgid, NULL){
   gid_t gid;
   DFSCH_LONG_ARG(args, gid);
   DFSCH_ARG_END(args);
@@ -953,8 +904,7 @@ static dfsch_object_t* native_setgid(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_setuid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setuid, NULL){
   uid_t uid;
   DFSCH_LONG_ARG(args, uid);
   DFSCH_ARG_END(args);
@@ -964,8 +914,7 @@ static dfsch_object_t* native_setuid(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_setpgid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setpgid, NULL){
   pid_t pid;
   pid_t pgid;
   DFSCH_LONG_ARG(args, pid);
@@ -977,8 +926,7 @@ static dfsch_object_t* native_setpgid(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_setsid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setsid, NULL){
   pid_t sid;
   DFSCH_ARG_END(args);
 
@@ -989,8 +937,7 @@ static dfsch_object_t* native_setsid(void* baton, dfsch_object_t* args,
   }
   return dfsch_make_number_from_long(sid);
 }
-static dfsch_object_t* native_setpgrp(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(setpgrp, NULL){
   pid_t pgid;
   DFSCH_ARG_END(args);
 
@@ -1001,16 +948,14 @@ static dfsch_object_t* native_setpgrp(void* baton, dfsch_object_t* args,
   }
   return dfsch_make_number_from_long(pgid);
 }
-static dfsch_object_t* native_sleep(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
   unsigned int seconds;
   DFSCH_LONG_ARG(args, seconds);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(sleep(seconds));
 }
-static dfsch_object_t* native_stat(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(stat, NULL){
   char* path;
   dfsch_object_t* res;
   DFSCH_STRING_ARG(args, path);
@@ -1027,8 +972,7 @@ static dfsch_object_t* native_stat(void* baton, dfsch_object_t* args,
   return res;
 }
 
-static dfsch_object_t* native_symlink(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(symlink, NULL){
   char* old;
   char* new;
   DFSCH_STRING_ARG(args, old);
@@ -1040,16 +984,14 @@ static dfsch_object_t* native_symlink(void* baton, dfsch_object_t* args,
   }
   return NULL;
 }
-static dfsch_object_t* native_sync(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sync, NULL){
   DFSCH_ARG_END(args);
 
   sync();
   
   return NULL;
 }
-static dfsch_object_t* native_wait(void* baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(wait, NULL){
   int stat;
   pid_t pid;
   DFSCH_ARG_END(args);
@@ -1064,8 +1006,7 @@ static dfsch_object_t* native_wait(void* baton, dfsch_object_t* args,
                     dfsch_make_number_from_long(pid),
                     dfsch_make_number_from_long(stat));
 }
-static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(waitpid, NULL){
   int stat;
   pid_t pid;
   int options = 0;
@@ -1090,8 +1031,7 @@ static dfsch_object_t* native_waitpid(void* baton, dfsch_object_t* args,
                       dfsch_make_number_from_long(stat));
   }
 }
-static dfsch_object_t* native_write(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(write, NULL){
   int fd;
   ssize_t ret;
   dfsch_strbuf_t* buf;
@@ -1108,8 +1048,7 @@ static dfsch_object_t* native_write(void* baton, dfsch_object_t* args,
 
   return dfsch_make_number_from_long(ret);
 }
-static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(unlink, NULL){
   char* path;
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
@@ -1121,137 +1060,133 @@ static dfsch_object_t* native_unlink(void* baton, dfsch_object_t* args,
 }
 
 
-
-
-
-
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "unix:mode", 
-                    dfsch_make_primitive(native_mode, NULL));
+                    DFSCH_PRIMITIVE_REF(mode));
   dfsch_define_cstr(ctx, "unix:sig", 
-                    dfsch_make_primitive(native_sig, NULL));
+                    DFSCH_PRIMITIVE_REF(sig));
 
 
   dfsch_define_cstr(ctx, "unix:access", 
-                    dfsch_make_primitive(native_access, NULL));
+                    DFSCH_PRIMITIVE_REF(access));
   dfsch_define_cstr(ctx, "unix:chdir", 
-                    dfsch_make_primitive(native_chdir, NULL));
+                    DFSCH_PRIMITIVE_REF(chdir));
   dfsch_define_cstr(ctx, "unix:fchdir", 
-                    dfsch_make_primitive(native_fchdir, NULL));
+                    DFSCH_PRIMITIVE_REF(fchdir));
   dfsch_define_cstr(ctx, "unix:chmod", 
-                    dfsch_make_primitive(native_chmod, NULL));
+                    DFSCH_PRIMITIVE_REF(chmod));
   dfsch_define_cstr(ctx, "unix:fchmod", 
-                    dfsch_make_primitive(native_fchmod, NULL));
+                    DFSCH_PRIMITIVE_REF(fchmod));
   dfsch_define_cstr(ctx, "unix:chown", 
-                    dfsch_make_primitive(native_chown, NULL));
+                    DFSCH_PRIMITIVE_REF(chown));
   dfsch_define_cstr(ctx, "unix:fchown", 
-                    dfsch_make_primitive(native_fchown, NULL));
+                    DFSCH_PRIMITIVE_REF(fchown));
   dfsch_define_cstr(ctx, "unix:clock", 
-                    dfsch_make_primitive(native_clock, NULL));
+                    DFSCH_PRIMITIVE_REF(clock));
   dfsch_define_cstr(ctx, "unix:close", 
-                    dfsch_make_primitive(native_close, NULL));
+                    DFSCH_PRIMITIVE_REF(close));
   dfsch_define_cstr(ctx, "unix:closedir", 
-                    dfsch_make_primitive(native_closedir, NULL));
+                    DFSCH_PRIMITIVE_REF(closedir));
   dfsch_define_cstr(ctx, "unix:creat", 
-                    dfsch_make_primitive(native_creat, NULL));
+                    DFSCH_PRIMITIVE_REF(creat));
   dfsch_define_cstr(ctx, "unix:dup", 
-                    dfsch_make_primitive(native_dup, NULL));
+                    DFSCH_PRIMITIVE_REF(dup));
   dfsch_define_cstr(ctx, "unix:dup2", 
-                    dfsch_make_primitive(native_dup2, NULL));
+                    DFSCH_PRIMITIVE_REF(dup2));
   dfsch_define_cstr(ctx, "unix:exit", 
-                    dfsch_make_primitive(native_exit, NULL));
+                    DFSCH_PRIMITIVE_REF(exit));
   dfsch_define_cstr(ctx, "unix:fork", 
-                    dfsch_make_primitive(native_fork, NULL));
+                    DFSCH_PRIMITIVE_REF(fork));
   dfsch_define_cstr(ctx, "unix:fstat", 
-                    dfsch_make_primitive(native_fstat, NULL));
+                    DFSCH_PRIMITIVE_REF(fstat));
   dfsch_define_cstr(ctx, "unix:getcwd", 
-                    dfsch_make_primitive(native_getcwd, NULL));
+                    DFSCH_PRIMITIVE_REF(getcwd));
   dfsch_define_cstr(ctx, "unix:getegid", 
-                    dfsch_make_primitive(native_getegid, NULL));
+                    DFSCH_PRIMITIVE_REF(getegid));
   dfsch_define_cstr(ctx, "unix:geteuid", 
-                    dfsch_make_primitive(native_geteuid, NULL));
+                    DFSCH_PRIMITIVE_REF(geteuid));
   dfsch_define_cstr(ctx, "unix:getgid", 
-                    dfsch_make_primitive(native_getgid, NULL));
+                    DFSCH_PRIMITIVE_REF(getgid));
   dfsch_define_cstr(ctx, "unix:getuid", 
-                    dfsch_make_primitive(native_getuid, NULL));
+                    DFSCH_PRIMITIVE_REF(getuid));
   dfsch_define_cstr(ctx, "unix:getenv", 
-                    dfsch_make_primitive(native_getenv, NULL));
+                    DFSCH_PRIMITIVE_REF(getenv));
   dfsch_define_cstr(ctx, "unix:getpgid", 
-                    dfsch_make_primitive(native_getpgid, NULL));
+                    DFSCH_PRIMITIVE_REF(getpgid));
   dfsch_define_cstr(ctx, "unix:getpgrp", 
-                    dfsch_make_primitive(native_getpgrp, NULL));
+                    DFSCH_PRIMITIVE_REF(getpgrp));
   dfsch_define_cstr(ctx, "unix:getsid", 
-                    dfsch_make_primitive(native_getsid, NULL));
+                    DFSCH_PRIMITIVE_REF(getsid));
   dfsch_define_cstr(ctx, "unix:getpid", 
-                    dfsch_make_primitive(native_getpid, NULL));
+                    DFSCH_PRIMITIVE_REF(getpid));
   dfsch_define_cstr(ctx, "unix:getppid", 
-                    dfsch_make_primitive(native_getppid, NULL));
+                    DFSCH_PRIMITIVE_REF(getppid));
   dfsch_define_cstr(ctx, "unix:gettimeofday", 
-                    dfsch_make_primitive(native_gettimeofday, NULL));
+                    DFSCH_PRIMITIVE_REF(gettimeofday));
   dfsch_define_cstr(ctx, "unix:isatty", 
-                    dfsch_make_primitive(native_isatty, NULL));
+                    DFSCH_PRIMITIVE_REF(isatty));
   dfsch_define_cstr(ctx, "unix:kill", 
-                    dfsch_make_primitive(native_kill, NULL));
+                    DFSCH_PRIMITIVE_REF(kill));
   dfsch_define_cstr(ctx, "unix:killpg", 
-                    dfsch_make_primitive(native_killpg, NULL));
+                    DFSCH_PRIMITIVE_REF(killpg));
   dfsch_define_cstr(ctx, "unix:link", 
-                    dfsch_make_primitive(native_link, NULL));
+                    DFSCH_PRIMITIVE_REF(link));
   dfsch_define_cstr(ctx, "unix:lseek", 
-                    dfsch_make_primitive(native_lseek, NULL));
+                    DFSCH_PRIMITIVE_REF(lseek));
   dfsch_define_cstr(ctx, "unix:lstat", 
-                    dfsch_make_primitive(native_lstat, NULL));
+                    DFSCH_PRIMITIVE_REF(lstat));
   dfsch_define_cstr(ctx, "unix:mkdir", 
-                    dfsch_make_primitive(native_mkdir, NULL));
+                    DFSCH_PRIMITIVE_REF(mkdir));
   dfsch_define_cstr(ctx, "unix:mkfifo", 
-                    dfsch_make_primitive(native_mkfifo, NULL));
+                    DFSCH_PRIMITIVE_REF(mkfifo));
   dfsch_define_cstr(ctx, "unix:nice", 
-                    dfsch_make_primitive(native_nice, NULL));
+                    DFSCH_PRIMITIVE_REF(nice));
   dfsch_define_cstr(ctx, "unix:open", 
-                    dfsch_make_primitive(native_open, NULL));
+                    DFSCH_PRIMITIVE_REF(open));
   dfsch_define_cstr(ctx, "unix:opendir", 
-                    dfsch_make_primitive(native_opendir, NULL));
+                    DFSCH_PRIMITIVE_REF(opendir));
   dfsch_define_cstr(ctx, "unix:pipe", 
-                    dfsch_make_primitive(native_pipe, NULL));
+                    DFSCH_PRIMITIVE_REF(pipe));
   dfsch_define_cstr(ctx, "unix:raise", 
-                    dfsch_make_primitive(native_raise, NULL));
+                    DFSCH_PRIMITIVE_REF(raise));
   dfsch_define_cstr(ctx, "unix:read", 
-                    dfsch_make_primitive(native_read, NULL));
+                    DFSCH_PRIMITIVE_REF(read));
   dfsch_define_cstr(ctx, "unix:readdir", 
-                    dfsch_make_primitive(native_readdir, NULL));
+                    DFSCH_PRIMITIVE_REF(readdir));
   dfsch_define_cstr(ctx, "unix:rename", 
-                    dfsch_make_primitive(native_rename, NULL));
+                    DFSCH_PRIMITIVE_REF(rename));
   dfsch_define_cstr(ctx, "unix:rmdir", 
-                    dfsch_make_primitive(native_rmdir, NULL));
+                    DFSCH_PRIMITIVE_REF(rmdir));
   dfsch_define_cstr(ctx, "unix:setegid", 
-                    dfsch_make_primitive(native_setegid, NULL));
+                    DFSCH_PRIMITIVE_REF(setegid));
   dfsch_define_cstr(ctx, "unix:seteuid", 
-                    dfsch_make_primitive(native_seteuid, NULL));
+                    DFSCH_PRIMITIVE_REF(seteuid));
   dfsch_define_cstr(ctx, "unix:setgid", 
-                    dfsch_make_primitive(native_setgid, NULL));
+                    DFSCH_PRIMITIVE_REF(setgid));
   dfsch_define_cstr(ctx, "unix:setuid", 
-                    dfsch_make_primitive(native_setuid, NULL));
+                    DFSCH_PRIMITIVE_REF(setuid));
   dfsch_define_cstr(ctx, "unix:setpgid", 
-                    dfsch_make_primitive(native_setpgid, NULL));
+                    DFSCH_PRIMITIVE_REF(setpgid));
   dfsch_define_cstr(ctx, "unix:setpgrp", 
-                    dfsch_make_primitive(native_setpgrp, NULL));
+                    DFSCH_PRIMITIVE_REF(setpgrp));
   dfsch_define_cstr(ctx, "unix:setsid", 
-                    dfsch_make_primitive(native_setsid, NULL));
+                    DFSCH_PRIMITIVE_REF(setsid));
   dfsch_define_cstr(ctx, "unix:sleep", 
-                    dfsch_make_primitive(native_sleep, NULL));
+                    DFSCH_PRIMITIVE_REF(sleep));
   dfsch_define_cstr(ctx, "unix:stat", 
-                    dfsch_make_primitive(native_stat, NULL));
+                    DFSCH_PRIMITIVE_REF(stat));
   dfsch_define_cstr(ctx, "unix:symlink", 
-                    dfsch_make_primitive(native_symlink, NULL));
+                    DFSCH_PRIMITIVE_REF(symlink));
   dfsch_define_cstr(ctx, "unix:sync", 
-                    dfsch_make_primitive(native_sync, NULL));
+                    DFSCH_PRIMITIVE_REF(sync));
   dfsch_define_cstr(ctx, "unix:wait", 
-                    dfsch_make_primitive(native_wait, NULL));
+                    DFSCH_PRIMITIVE_REF(wait));
   dfsch_define_cstr(ctx, "unix:waitpid", 
-                    dfsch_make_primitive(native_waitpid, NULL));
+                    DFSCH_PRIMITIVE_REF(waitpid));
   dfsch_define_cstr(ctx, "unix:write", 
-                    dfsch_make_primitive(native_write, NULL));
+                    DFSCH_PRIMITIVE_REF(write));
   dfsch_define_cstr(ctx, "unix:unlink", 
-                    dfsch_make_primitive(native_unlink, NULL));
+                    DFSCH_PRIMITIVE_REF(unlink));
   
   dfsch_provide(ctx, "unix");
 

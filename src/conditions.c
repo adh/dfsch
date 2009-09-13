@@ -1,3 +1,23 @@
+/*
+ * dfsch - Scheme-like Lisp dialect
+ * Copyright (C) 2005-2009 Ales Hakl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include "dfsch/conditions.h"
 #include "dfsch/magic.h"
 #include <stdio.h>
@@ -7,7 +27,7 @@
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
   dfsch__condition_t* c;
-  if (!DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) ||
+  if (!DFSCH_INSTANCE_P((dfsch_object_t*)type, DFSCH_STANDARD_TYPE) ||
       !dfsch_superclass_p(type, DFSCH_CONDITION_TYPE)){
     dfsch_error("Not a condition type", (dfsch_object_t*)type);
   }
@@ -23,7 +43,7 @@ static void condition_write(dfsch__condition_t* c,
   dfsch_object_t* i = c->fields;
   dfsch_object_t* j;
   
-  dfsch_write_unreadable_start(state, c);
+  dfsch_write_unreadable_start(state, (dfsch_object_t*)c);
   
   while (DFSCH_PAIR_P(i)){
     j = DFSCH_FAST_CAR(i);
@@ -51,8 +71,9 @@ static void condition_write(dfsch__condition_t* c,
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
                                       dfsch_object_t* name){
   dfsch_object_t* al;
-  dfsch__condition_t* c = dfsch_assert_instance(condition, 
-                                                DFSCH_CONDITION_TYPE);
+  dfsch__condition_t* c = 
+    (dfsch__condition_t*)dfsch_assert_instance(condition, 
+                                               DFSCH_CONDITION_TYPE);
   al = dfsch_assq(name, c->fields);
   if (!al){
     return NULL;
@@ -63,8 +84,9 @@ dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
 void dfsch_condition_put_field(dfsch_object_t* condition,
                                dfsch_object_t* name,
                                dfsch_object_t* value){
-  dfsch__condition_t* c = dfsch_assert_instance(condition, 
-                                                DFSCH_CONDITION_TYPE);
+  dfsch__condition_t* c = 
+    (dfsch__condition_t*)dfsch_assert_instance(condition, 
+                                               DFSCH_CONDITION_TYPE);
 
   c->fields = dfsch_cons(dfsch_cons(name, value), c->fields);
 }
@@ -97,13 +119,13 @@ dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...){
   return c;
 }
 void dfsch_signal_condition(dfsch_type_t* type, 
-                                       char* message,
-                                       ...){
+                            char* message,
+                            ...){
   va_list al;
   dfsch_object_t* c = dfsch_make_condition(type);
   char* name;
 
-  va_start(al, type);
+  va_start(al, message);
   while (name = va_arg(al, char*)){
     dfsch_condition_put_field_cstr(c, name, va_arg(al, dfsch_object_t*));
   }

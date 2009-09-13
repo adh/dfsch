@@ -174,12 +174,18 @@ static void parse_short_opts(dfsch_cmdopts_t* parser,
                              void* baton){
   while (*string){
     option_t* opt = find_short_opt(parser, *string);
+    string++;
+
     if (opt->has_arg){
-      opt->callback(parser, opt->baton, get_argument(source, baton));
+      if (*string){
+        opt->callback(parser, opt->baton, string);
+        return;
+      } else {
+        opt->callback(parser, opt->baton, get_argument(source, baton));
+      }
     } else {
       opt->callback(parser, opt->baton, NULL);
     }
-    string++;
   }
 }
 
@@ -303,4 +309,122 @@ dfsch_object_t* dfsch_cmdopts_argv_to_list(int argc, char**argv){
   }
 
   return head;
+}
+
+static void string_callback(dfsch_cmdopts_t* parser,
+                            char** res,
+                            char* value){
+  *res = dfsch_stracpy(value);
+}
+
+void dfsch_cmdopts_add_string_argument(dfsch_cmdopts_t* parser,
+                                       int required,
+                                       char** value){
+  dfsch_cmdopts_add_argument(parser, 
+                             required ? DFSCH_CMDOPTS_ARGUMENT_REQUIRED : 0, 
+                             (dfsch_cmdopts_callback_t)string_callback, value);
+}
+void dfsch_cmdopts_add_string_option(dfsch_cmdopts_t* parser,
+                                     char short_opt,
+                                     char* long_opt,
+                                     char** value){
+  dfsch_cmdopts_add_option(parser, 1, short_opt, long_opt, 
+                           (dfsch_cmdopts_callback_t)string_callback, value);
+}
+
+static void long_callback(dfsch_cmdopts_t* parser,
+                          long* res,
+                          char* value){
+  char* eptr;
+  *res = strtol(value, &eptr, 0);
+  if (*eptr != '\0' || eptr == value){
+    dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                           "Invalid numeric value",
+                           "value", dfsch_make_string_cstr(value),
+                           NULL);
+  }
+}
+
+void dfsch_cmdopts_add_long_argument(dfsch_cmdopts_t* parser,
+                                     int required,
+                                     long* value){
+  dfsch_cmdopts_add_argument(parser, 
+                             required ? DFSCH_CMDOPTS_ARGUMENT_REQUIRED : 0, 
+                             (dfsch_cmdopts_callback_t)long_callback, value);
+}
+void dfsch_cmdopts_add_long_option(dfsch_cmdopts_t* parser,
+                                   char short_opt,
+                                   char* long_opt,
+                                   long* value){
+  dfsch_cmdopts_add_option(parser, 1, short_opt, long_opt, 
+                           (dfsch_cmdopts_callback_t)long_callback, value);
+}
+
+static void double_callback(dfsch_cmdopts_t* parser,
+                            double* res,
+                            char* value){
+  char* eptr;
+  *res = strtod(value, &eptr);
+  if (*eptr != '\0' || eptr == value){
+    dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
+                           "Invalid numeric value",
+                           "value", dfsch_make_string_cstr(value),
+                           NULL);
+  }
+}
+
+void dfsch_cmdopts_add_double_argument(dfsch_cmdopts_t* parser,
+                                     int required,
+                                     double* value){
+  dfsch_cmdopts_add_argument(parser, 
+                             required ? DFSCH_CMDOPTS_ARGUMENT_REQUIRED : 0, 
+                             (dfsch_cmdopts_callback_t)double_callback, value);
+}
+void dfsch_cmdopts_add_double_option(dfsch_cmdopts_t* parser,
+                                     char short_opt,
+                                     char* long_opt,
+                                     double* value){
+  dfsch_cmdopts_add_option(parser, 1, short_opt, long_opt, 
+                           (dfsch_cmdopts_callback_t)double_callback, value);
+}
+
+typedef struct flag_lambda_t {
+  int value;
+  int* place;
+} flag_lambda_t;
+static flag_lambda_t* cons_flag_lambda(int value, int* place){
+  flag_lambda_t* fl = GC_NEW(flag_lambda_t);
+  fl->value = value;
+  fl->place = place;
+  return fl;
+}
+
+static void flag_callback_set(dfsch_cmdopts_t* parser,
+                              flag_lambda_t* lambda,
+                              char* discard){
+  *(lambda->place) = lambda->value;
+}
+static void flag_callback_increment(dfsch_cmdopts_t* parser,
+                                    flag_lambda_t* lambda,
+                                    char* discard){
+  *(lambda->place) += lambda->value;
+}
+
+void dfsch_cmdopts_add_flag_set(dfsch_cmdopts_t* parser,
+                                char short_opt,
+                                char* long_opt,
+                                int value,
+                                int* place){
+  dfsch_cmdopts_add_option(parser, 0, short_opt, long_opt, 
+                           (dfsch_cmdopts_callback_t)flag_callback_set,
+                           cons_flag_lambda(value, place));
+}
+void dfsch_cmdopts_add_flag_increment(dfsch_cmdopts_t* parser,
+                                      char short_opt,
+                                      char* long_opt,
+                                      int value,
+                                      int* place){
+  dfsch_cmdopts_add_option(parser, 0, short_opt, long_opt, 
+                           (dfsch_cmdopts_callback_t)flag_callback_increment,
+                           cons_flag_lambda(value, place));
 }

@@ -66,4 +66,38 @@ void dfsch_cmdopts_parse_list(dfsch_cmdopts_t* parser,
 
 dfsch_object_t* dfsch_cmdopts_argv_to_list(int argc, char**argv);
 
+
+void dfsch_cmdopts_add_string_argument(dfsch_cmdopts_t* parser,
+                                       int required,
+                                       char** value);
+void dfsch_cmdopts_add_string_option(dfsch_cmdopts_t* parser,
+                                     char short_opt,
+                                     char* long_opt,
+                                     char** value);
+void dfsch_cmdopts_add_long_argument(dfsch_cmdopts_t* parser,
+                                     int required,
+                                     long* value);
+void dfsch_cmdopts_add_long_option(dfsch_cmdopts_t* parser,
+                                   char short_opt,
+                                   char* long_opt,
+                                   long* value);
+void dfsch_cmdopts_add_double_argument(dfsch_cmdopts_t* parser,
+                                     int required,
+                                     double* value);
+void dfsch_cmdopts_add_double_option(dfsch_cmdopts_t* parser,
+                                   char short_opt,
+                                   char* long_opt,
+                                   double* value);
+void dfsch_cmdopts_add_flag_set(dfsch_cmdopts_t* parser,
+                                char short_opt,
+                                char* long_opt,
+                                int value,
+                                int* place);
+void dfsch_cmdopts_add_flag_increment(dfsch_cmdopts_t* parser,
+                                      char short_opt,
+                                      char* long_opt,
+                                      int value,
+                                      int* place);
+
+
 #endif

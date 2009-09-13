@@ -107,21 +107,21 @@ static dfsch_object_t* class_apply;
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  char* name,
                                  dfsch_object_t* slots){
-  class_t* klass = dfsch_make_object(DFSCH_CLASS_TYPE);
+  class_t* klass = (class_t*)dfsch_make_object(DFSCH_CLASS_TYPE);
 
-  klass->standard_type.superclass = superclass;
   klass->standard_type.name = name;
   klass->standard_type.slots = make_slots(slots);
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   if (superclass){
-    if (!DFSCH_INSTANCE_P(superclass, DFSCH_CLASS_TYPE)){
-      dfsch_error("Not a class", superclass);
-    }
+    klass->standard_type.superclass = 
+      (dfsch_type_t*)DFSCH_ASSERT_INSTANCE(superclass,
+                                           DFSCH_CLASS_TYPE);
 
-    klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
-                                             ((dfsch_type_t*)
-                                              superclass)->size);
+    klass->standard_type.size = 
+      adjust_sizes(klass->standard_type.slots,
+                   klass->standard_type.superclass->size);
   } else {
+    klass->standard_type.superclass = NULL;
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
                                              sizeof(dfsch_object_t));
   }
@@ -133,17 +133,16 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->methods = dfsch_hash_make(DFSCH_HASH_EQ);
   klass->send_cache = dfsch_hash_make(DFSCH_HASH_EQ);
 
-  return (dfsch_type_t*)klass;
+  return (dfsch_object_t*)klass;
 }
 
 dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                     dfsch_object_t* args){
   dfsch_object_t* obj;
 
-  if (!DFSCH_INSTANCE_P(klass, DFSCH_CLASS_TYPE)){
-    dfsch_error("Not a class", klass);
-  }
-  obj = dfsch_make_object(klass);
+  obj = 
+    dfsch_make_object((dfsch_type_t*)DFSCH_ASSERT_INSTANCE(klass, 
+                                                           DFSCH_CLASS_TYPE));
   dfsch_send(obj, dfsch_s_initialize_instance(), args);
   return obj;
 }
@@ -151,17 +150,13 @@ dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
 dfsch_object_t* dfsch_find_method(dfsch_object_t* klass, 
                                   dfsch_object_t* selector){
   dfsch_object_t* method;
-  class_t* c;
-  if (!DFSCH_INSTANCE_P(klass, DFSCH_CLASS_TYPE)){
-    dfsch_error("Not a class", klass);
-  }
-  c = (class_t*)klass;
+  class_t* c = (class_t*)DFSCH_ASSERT_INSTANCE(klass,  DFSCH_CLASS_TYPE);
 
   if (dfsch_hash_ref_fast(c->send_cache, selector, &method)){
     return method;
   }
   
-  while(DFSCH_INSTANCE_P(c, DFSCH_CLASS_TYPE)){
+  while(DFSCH_INSTANCE_P((dfsch_object_t*)c, DFSCH_CLASS_TYPE)){
     if (dfsch_hash_ref_fast(c->methods, selector, &method)){
       dfsch_hash_set(((class_t*)klass)->send_cache, selector, method);
       return method;
@@ -222,7 +217,7 @@ dfsch_object_t* dfsch_send_tr(dfsch_object_t* obj,
                               dfsch_object_t* selector,
                               dfsch_object_t* args,
                               dfsch_tail_escape_t* esc){
-  return dfsch_perform_tr(DFSCH_TYPE_OF(obj), 
+  return dfsch_perform_tr((dfsch_object_t*)DFSCH_TYPE_OF(obj), 
                           selector, 
                           dfsch_cons(obj, args), 
                           esc);
@@ -230,7 +225,7 @@ dfsch_object_t* dfsch_send_tr(dfsch_object_t* obj,
 dfsch_object_t* dfsch_send(dfsch_object_t* obj, 
                            dfsch_object_t* selector,
                            dfsch_object_t* args){
-  return dfsch_perform_tr(DFSCH_TYPE_OF(obj), 
+  return dfsch_perform_tr((dfsch_object_t*)DFSCH_TYPE_OF(obj), 
                           selector, 
                           dfsch_cons(obj, args), 
                           NULL);

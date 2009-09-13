@@ -9,7 +9,7 @@
 #endif
 
 #if defined(__GNUC__)
-#define DFSCH_UNLIKELY(cond) __builtin_expect((cond), 0)
+#define DFSCH_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 #define DFSCH_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #define DFSCH_PREFETCH(addr) __builtin_prefetch(addr)
 #else

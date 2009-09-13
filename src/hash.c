@@ -111,7 +111,8 @@ dfsch_object_t* dfsch_hash_make(int mode){
 }
 int dfsch_hash_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE ||
-    DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE);
+    DFSCH_INSTANCE_P(((dfsch_object_t*)DFSCH_TYPE_OF(obj)), 
+                     DFSCH_CUSTOM_HASH_TYPE_TYPE);
 }
 
 
@@ -123,7 +124,8 @@ int dfsch_hash_p(dfsch_object_t* obj){
   if (DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE){                  \
     hash = (hash_t*)obj;                                                \
   } else if (!obj ||                                                    \
-             !DFSCH_INSTANCE_P(DFSCH_TYPE_OF(obj), DFSCH_CUSTOM_HASH_TYPE_TYPE)){ \
+             !DFSCH_INSTANCE_P(((dfsch_object_t*)DFSCH_TYPE_OF(obj)),   \
+                               DFSCH_CUSTOM_HASH_TYPE_TYPE)){           \
     dfsch_error("exception:not-a-hash", obj);                           \
   }else
 
@@ -438,8 +440,7 @@ dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_hash, NULL){
   dfsch_object_t *mode;
   DFSCH_OBJECT_ARG_OPT(args, mode, NULL);
   DFSCH_ARG_END(args);
@@ -455,16 +456,14 @@ static dfsch_object_t* native_make_hash(void* baton, dfsch_object_t* args,
 
   dfsch_error("exception:unknown-mode", mode);
 }
-static dfsch_object_t* native_hash_p(void* baton, dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_p, NULL){
   dfsch_object_t* obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_hash_p(obj));
 }
-static dfsch_object_t* native_hash_ref(void* baton, dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_ref, NULL){
   dfsch_object_t* hash;
   dfsch_object_t* key;
   DFSCH_OBJECT_ARG(args, hash);
@@ -473,8 +472,7 @@ static dfsch_object_t* native_hash_ref(void* baton, dfsch_object_t* args,
 
   return dfsch_hash_ref(hash, key);
 }
-static dfsch_object_t* native_hash_unset(void* baton, dfsch_object_t* args,
-                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_unset, NULL){
   dfsch_object_t* hash;
   dfsch_object_t* key;
   DFSCH_OBJECT_ARG(args, hash);
@@ -483,8 +481,7 @@ static dfsch_object_t* native_hash_unset(void* baton, dfsch_object_t* args,
 
   return dfsch_bool(dfsch_hash_unset(hash, key));
 }
-static dfsch_object_t* native_hash_set(void* baton, dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_set, NULL){
   dfsch_object_t* hash;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -496,9 +493,7 @@ static dfsch_object_t* native_hash_set(void* baton, dfsch_object_t* args,
   dfsch_hash_set(hash, key, value);
   return hash;
 }
-static dfsch_object_t* native_hash_set_if_exists(void* baton, 
-                                                 dfsch_object_t* args,
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_set_if_exists, NULL){
   dfsch_object_t* hash;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -509,8 +504,7 @@ static dfsch_object_t* native_hash_set_if_exists(void* baton,
 
   return dfsch_bool(dfsch_hash_set_if_exists(hash, key, value));
 }
-static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args,
-                                           dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(hash_2_alist, NULL){
   dfsch_object_t* hash;
 
   DFSCH_OBJECT_ARG(args, hash);
@@ -519,8 +513,7 @@ static dfsch_object_t* native_hash_2_alist(void *baton, dfsch_object_t* args,
   return dfsch_hash_2_alist(hash);
 }
 
-static dfsch_object_t* native_alist_2_hash(void *baton, dfsch_object_t* args,
-                                           dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
   dfsch_object_t* alist;
   dfsch_object_t *mode;
 
@@ -547,20 +540,20 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
   dfsch_define_cstr(ctx, "make-hash", 
-                    dfsch_make_primitive(&native_make_hash,NULL));
+                    DFSCH_PRIMITIVE_REF(make_hash));
   dfsch_define_cstr(ctx, "hash?", 
-                    dfsch_make_primitive(&native_hash_p,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_p));
   dfsch_define_cstr(ctx, "hash-ref", 
-                    dfsch_make_primitive(&native_hash_ref,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_ref));
   dfsch_define_cstr(ctx, "hash-unset!", 
-                    dfsch_make_primitive(&native_hash_unset,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_unset));
   dfsch_define_cstr(ctx, "hash-set!", 
-                    dfsch_make_primitive(&native_hash_set,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_set));
   dfsch_define_cstr(ctx, "hash-set-if-exists!", 
-                    dfsch_make_primitive(&native_hash_set_if_exists,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_set_if_exists));
   dfsch_define_cstr(ctx, "hash->alist", 
-                    dfsch_make_primitive(&native_hash_2_alist,NULL));
+                    DFSCH_PRIMITIVE_REF(hash_2_alist));
   dfsch_define_cstr(ctx, "alist->hash", 
-                    dfsch_make_primitive(&native_alist_2_hash,NULL));
+                    DFSCH_PRIMITIVE_REF(alist_2_hash));
 
 }

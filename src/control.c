@@ -255,7 +255,7 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-static object_t* native_eval(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(eval, "Evaluate expression in lexical environment"){
   object_t* expr;
   object_t* env;
 
@@ -265,7 +265,8 @@ static object_t* native_eval(void *baton, object_t* args, dfsch_tail_escape_t* e
 
   return dfsch_eval_tr(expr, env, esc);
 }
-static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(eval_proc, 
+                       "Evaluate function body in lexical environment"){
   object_t* proc;
   object_t* env;
 
@@ -275,9 +276,7 @@ static object_t* native_eval_proc(void *baton, object_t* args, dfsch_tail_escape
 
   return dfsch_eval_proc_tr(proc, env, esc);
 }
-static object_t* native_apply(void *baton, object_t* args, 
-                              dfsch_tail_escape_t* esc){
-
+DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   /* TODO: free arguments */
   
   object_t* func;
@@ -469,10 +468,9 @@ void dfsch__control_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
   dfsch_define_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
 
-  dfsch_define_cstr(ctx, "eval", dfsch_make_primitive(&native_eval,NULL));
-  dfsch_define_cstr(ctx, "eval-proc", dfsch_make_primitive(&native_eval_proc,
-                                                          NULL));
-  dfsch_define_cstr(ctx, "apply", dfsch_make_primitive(&native_apply,NULL));
+  dfsch_define_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
+  dfsch_define_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_define_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_define_cstr(ctx, "do", DFSCH_FORM_REF(do));
   dfsch_define_cstr(ctx, "dolist", DFSCH_FORM_REF(dolist));

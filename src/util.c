@@ -101,7 +101,7 @@ dfsch_strbuf_t* dfsch_sl_value_strbuf(str_list_t* list){
   str_li_t *i = list->head;
   char *ptr;
 
-  buf->ptr = buf + sizeof(dfsch_strbuf_t);
+  buf->ptr = ((char*)buf) + sizeof(dfsch_strbuf_t);
   buf->len = list->len;
   ptr = buf->ptr;
 

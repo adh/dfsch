@@ -2,20 +2,26 @@
 (require 'cmdopts)
 (require 'xml)
 (require 'sxml)
+(require 'unix)
 
 (define tests-passed 0)
 (define tests-failed 0)
 
 (define one-test-fail ())
 
-(let ((parser (cmdopts:make-parser)))
-  (cmdopts:add-option parser "strict" 
-                      (lambda (p v) 
-                        (set! one-test-fail #t)
-                        (print "Running in strict mode")))
-  (cmdopts:parse-list parser (cdr *posix-argv*)))
+(when (defined? *posix-argv*)
+      (let ((parser (cmdopts:make-parser)))
+        (cmdopts:add-option parser "one-test-fail" 
+                            (lambda (p v) 
+                              (set! one-test-fail #t)
+                              (print "Running in strict mode")))
+        (cmdopts:parse-list parser (cdr *posix-argv*))))
 
-(define (exit-func)
+(define (print . args)
+  (for-each (lambda (i) (display i)) args)
+  (newline))
+
+(define (exit-func fail-status)
   (print)
   (print "***** RESULTS: *****")
   (print "  Tests passed: " tests-passed)
@@ -25,8 +31,8 @@
   (print "  ===========================")
   (print "  Tests total:  " (+ tests-passed tests-failed))
   (if (= tests-failed 0)
-      (exit 0)
-      (exit 'some-tests-failed)))
+      (unix:exit 0)
+      (unix:exit fail-status)))
 
 
 (define (test id exp val)
@@ -358,4 +364,4 @@
 ;;
 ;; Print some statistics and exit apropriately
 ;;
-(exit-func)
+(exit-func 1)

@@ -1486,23 +1486,6 @@ DFSCH_DEFINE_PRIMITIVE(string_split_on_byte,
   return dfsch_string_split_byte(string, separator, max_parts, 
                                  preserve_empty != NULL);
 }
-DFSCH_DEFINE_PRIMITIVE(string_split_on_byte_rev, 
-                       "Split string into parts separated by "
-                       "bytes from separator set"){
-  dfsch_strbuf_t* string;
-  dfsch_strbuf_t* separator;
-  int max_parts;
-  dfsch_object_t* preserve_empty;
-
-  DFSCH_BUFFER_ARG(args, string);
-  DFSCH_BUFFER_ARG(args, separator);
-  DFSCH_LONG_ARG_OPT(args, max_parts, -1);
-  DFSCH_OBJECT_ARG_OPT(args, preserve_empty, NULL);
-  DFSCH_ARG_END(args);
-
-  return dfsch_string_split_byte_rev(string, separator, max_parts, 
-                                     preserve_empty != NULL);
-}
 DFSCH_DEFINE_PRIMITIVE(string_split_on_character, 
                        "Split string into parts separated by "
                        "unicode characters from separator set"){

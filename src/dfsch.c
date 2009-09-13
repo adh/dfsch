@@ -234,7 +234,7 @@ dfsch_type_t dfsch_slot_type = {
   NULL,
   NULL,
 
-  &slot_slots,
+  slot_slots,
   "Common superclass of all slot types"
 };
 
@@ -253,7 +253,7 @@ dfsch_type_t dfsch_slot_type_type = {
   NULL,
   NULL,
   NULL,
-  &slot_type_slots,
+  slot_type_slots,
   "Slot metaclass - describes methods for reading and writing"
 };
 
@@ -274,7 +274,7 @@ static dfsch_object_t* boolean_accessor_ref(void* ptr){
   return dfsch_bool(*((int*)ptr));
 }
 static void boolean_accessor_set(void* ptr, dfsch_object_t* obj){
-  *((int**)ptr) = (obj != NULL);
+  *((int*)ptr) = (obj != NULL);
 }
 dfsch_slot_type_t dfsch_boolean_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("boolean-slot", "Slot holding boolean value as C int"),
@@ -436,7 +436,7 @@ dfsch_type_t dfsch_standard_type = {
   (dfsch_type_write_t)type_write,
   NULL,
   NULL,
-  &type_slots,
+  type_slots,
   "Base metaclass representing common methods of all objects"
 };
 
@@ -449,7 +449,7 @@ dfsch_type_t dfsch_special_type = {
   NULL,
   NULL,
   NULL,
-  &type_slots,
+  NULL,
   "Metaclass of types with special in-memory representation"
 };
 
@@ -637,7 +637,7 @@ dfsch_type_t dfsch_primitive_type = {
   (dfsch_type_write_t)primitive_write,
   NULL,
   NULL,
-  &primitive_slots,
+  primitive_slots,
   "Function implemented in C code"
 };
 #define PRIMITIVE (&dfsch_primitive_type)
@@ -692,7 +692,7 @@ dfsch_type_t dfsch_standard_function_type = {
   (dfsch_type_write_t)function_write,
   NULL,
   NULL,
-  &closure_slots,
+  closure_slots,
   "User defined function"
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
@@ -711,7 +711,7 @@ dfsch_type_t dfsch_macro_type = {
   NULL,
   NULL,
   NULL,
-  &macro_slots,
+  macro_slots,
   "Macro implemented by arbitrary function"
 };
 #define MACRO DFSCH_MACRO_TYPE
@@ -733,7 +733,7 @@ dfsch_type_t dfsch_form_type = {
   NULL,
   NULL,
   NULL,
-  &form_slots,
+  form_slots,
   "C-implemented special form"
 };
 #define FORM (&dfsch_form_type)
@@ -806,7 +806,7 @@ dfsch_type_t dfsch_environment_type = {
   NULL,
   NULL,
   
-  &environment_slots,
+  environment_slots,
   "Lexical environment frame"
 };
 
@@ -1473,7 +1473,7 @@ dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
   size_t i;
   dfsch_object_t* e;
 
-  list = dfsch_ensure_mutable_list(list);
+  list = dfsch_list_copy(list);
   l = list;
 
   do {
@@ -1932,8 +1932,9 @@ static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
 static void thread_info_destroy(void* ptr){
-  if (ptr)
+  if (ptr){
     GC_FREE(ptr);
+  }
 }
 static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
@@ -2130,12 +2131,13 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 char* dfsch_object_2_string(dfsch_object_t* obj, 
                             int max_depth, int readable){
   str_list_t* sl = sl_create();
-  dfsch_writer_state_t* state = dfsch_make_writer_state(max_depth,
-                                                        readable?
-                                                        DFSCH_WRITE:
-                                                        DFSCH_PRINT,
-                                                        sl_append,
-                                                        sl);
+  dfsch_writer_state_t* state = 
+    dfsch_make_writer_state(max_depth,
+                            readable?
+                            DFSCH_WRITE:
+                            DFSCH_PRINT,
+                            (dfsch_output_proc_t)sl_append,
+                            sl);
   dfsch_write_object(state, obj);
   return sl_value(sl);
 }
@@ -2506,14 +2508,16 @@ static object_t* eval_list(object_t *list, environment_t* env,
 }
 
 dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
-  return eval_list(list, env, dfsch__get_thread_info());
+  return eval_list(list, 
+                   DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
+                   dfsch__get_thread_info());
 }
 
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
-  DFSCH__TRACEPOINT_EVAL(ti, exp, env);
+  DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
 
   if (!exp) 
     return NULL;
@@ -2535,7 +2539,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     
     if (DFSCH_TYPE_OF(f) == FORM){
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
-                                      env, 
+                                      (dfsch_object_t*)env, 
                                       DFSCH_FAST_CDR(exp), 
                                       esc);
     }
@@ -2574,8 +2578,8 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   if (count == -1){
     count = 0;
   }
-  ll = dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
-                             sizeof(dfsch_object_t*) * count);
+  ll = (lambda_list_t*)dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
+                                             sizeof(dfsch_object_t*) * count);
   ll->positional_count = count;
   j = 0;
   while (DFSCH_PAIR_P(i)){
@@ -2587,7 +2591,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
     i = DFSCH_FAST_CDR(i);
   }
   ll->rest = i;
-  return ll;
+  return (dfsch_object_t*)ll;
 }
 
 static void destructure_impl(lambda_list_t* ll,
@@ -2642,15 +2646,15 @@ static void destructuring_eval(lambda_list_t* ll,
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
                                          dfsch_object_t* list, 
                                          dfsch_object_t* env){
-  environment_t* e = dfsch_new_frame(env);
+  environment_t* e = (environment_t*)dfsch_new_frame(env);
   lambda_list_t* l;
   if (DFSCH_TYPE_OF(arglist) != DFSCH_LAMBDA_LIST_TYPE){
-    l = dfsch_compile_lambda_list(arglist);
+    l = (lambda_list_t*)dfsch_compile_lambda_list(arglist);
   } else {
-    l = arglist;
+    l = (lambda_list_t*)arglist;
   }
   destructure_impl(l, list, e);
-  return e;
+  return (dfsch_object_t*)e;
 }
 
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
@@ -2703,7 +2707,7 @@ struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *proc;
   object_t *args;
-  object_t *arg_env;
+  environment_t *arg_env;
 };
 
 /* it might be interesting to optionally disable tail-calls for slight 
@@ -2812,8 +2816,7 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   }
 }
 
-static object_t* native_top_level_environment(void *baton, object_t* args,
-                                              dfsch_tail_escape_t* esc){
+DFSCH_PRIMITIVE_HEAD(top_level_environment){
   return baton;
 }
 
@@ -2857,7 +2860,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
 
   dfsch_define_cstr(ctx, "top-level-environment", 
-                    dfsch_make_primitive(&native_top_level_environment, ctx));
+                    DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
   dfsch_define_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
   dfsch_define_cstr(ctx,"*dfsch-version*",dfsch_make_string_cstr(PACKAGE_VERSION));

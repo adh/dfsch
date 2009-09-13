@@ -158,7 +158,7 @@ DFSCH_DEFINE_PRIMITIVE(find_slot, "Find slot-descriptor by it's name"){
   DFSCH_SYMBOL_ARG(args, name);
   DFSCH_ARG_END(args);
 
-  return dfsch_find_slot(type, name);  
+  return (dfsch_object_t*)dfsch_find_slot(type, name);  
 }
 DFSCH_DEFINE_PRIMITIVE(get_slots, 
 		       "Get all slot-descriptors usable for given type"){

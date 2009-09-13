@@ -242,7 +242,7 @@ dfsch_object_t* dfsch_eof_object(){
   return (dfsch_object_t*)&eof_object;
 }
 int dfsch_eof_object_p(dfsch_object_t* obj){
-  return obj == &eof_object;
+  return obj == (dfsch_object_t*)&eof_object;
 }
 
 
@@ -297,21 +297,35 @@ dfsch_object_t* dfsch_null_port(){
  * current-foo-port implementation
  */
 
-/*
- * TODO: It's actually not bad idea to have this structure thread-specific
- * (it's more or less required for reliable operation) but this suffices
- * as current implementation.
- */
-
 typedef struct current_ports_t{
   dfsch_object_t* output_port;
   dfsch_object_t* input_port;
   dfsch_object_t* error_port;
 } current_ports_t;
 
-current_ports_t* current_ports(){
-  static current_ports_t p = {&null_port, &null_port, &null_port};
-  return &p;
+static pthread_key_t current_ports_key;
+static pthread_once_t current_ports_key_init = PTHREAD_ONCE_INIT;
+
+static void current_ports_destroy(void* ptr){
+  if (ptr){
+    GC_FREE(ptr);
+  }
+}
+static void current_ports_key_alloc(){
+  pthread_key_create(&current_ports_key, current_ports_destroy);
+}
+static current_ports_t* current_ports(){
+  current_ports_t* cp;
+  pthread_once(&current_ports_key_init, current_ports_key_alloc);
+  cp = pthread_getspecific(current_ports_key);
+  if (DFSCH_UNLIKELY(!cp)){
+    cp = GC_NEW_UNCOLLECTABLE(current_ports_t);
+    cp->output_port = (dfsch_object_t*)&null_port;
+    cp->input_port = (dfsch_object_t*)&null_port;
+    cp->error_port = (dfsch_object_t*)&null_port;
+    pthread_setspecific(current_ports_key, cp);
+  }
+  return cp;
 }
 
 dfsch_object_t* dfsch_current_output_port(){
@@ -388,7 +402,8 @@ dfsch_port_type_t dfsch_string_output_port_type = {
 
 dfsch_object_t* dfsch_string_output_port(){
   string_output_port_t* port = 
-    (string_output_port_t*)dfsch_make_object(DFSCH_STRING_OUTPUT_PORT_TYPE);
+    (string_output_port_t*)dfsch_make_object((dfsch_type_t*)
+                                             DFSCH_STRING_OUTPUT_PORT_TYPE);
 
   port->mutex = create_finalized_mutex();
   port->list = sl_create();
@@ -399,10 +414,9 @@ dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
   string_output_port_t* p;
   dfsch_strbuf_t* buf;
 
-  if (DFSCH_TYPE_OF(port) != DFSCH_STRING_OUTPUT_PORT_TYPE){
-    dfsch_error("exceptiion:not-a-string-output-port", port);
-  }
-  p = (string_output_port_t*) port;
+  p = (string_output_port_t*)DFSCH_ASSERT_TYPE(port, 
+                                               (dfsch_type_t*)
+                                               DFSCH_STRING_OUTPUT_PORT_TYPE);
 
   pthread_mutex_lock(p->mutex);
   buf = sl_value_strbuf(p->list);
@@ -468,7 +482,8 @@ dfsch_port_type_t dfsch_string_input_port_type = {
 
 dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
   string_input_port_t* port = 
-    (string_input_port_t*)dfsch_make_object(DFSCH_STRING_INPUT_PORT_TYPE);
+    (string_input_port_t*)dfsch_make_object((dfsch_type_t*)
+                                            DFSCH_STRING_INPUT_PORT_TYPE);
 
   port->buf = buf;
   port->len = len;
@@ -507,7 +522,7 @@ static void file_port_write_buf(file_port_t* port,
   size_t ret;
 
   if (!port->open){
-    dfsch_error("Port is closed", port);
+    dfsch_error("Port is closed", (dfsch_object_t*)port);
   }
 
   if (len != 0){
@@ -522,7 +537,7 @@ static ssize_t file_port_read_buf(file_port_t* port,
   size_t ret;
 
   if (!port->open){
-    dfsch_error("Port is closed", port);
+    dfsch_error("Port is closed", (dfsch_object_t*)port);
   }
 
   ret = fread(buf, 1, len, port->file);
@@ -538,21 +553,23 @@ static ssize_t file_port_read_buf(file_port_t* port,
 static void file_port_write(file_port_t* port, dfsch_writer_state_t* state){
   if (port->open){
     if (port->name){
-      dfsch_write_unreadable(state, port, 
+      dfsch_write_unreadable(state, (dfsch_object_t*)port, 
                              "name %s fd %d", 
                              port->name,
                              fileno(port->file));
     } else {
-      dfsch_write_unreadable(state, port, "fd %d", fileno(port->file));
+      dfsch_write_unreadable(state, (dfsch_object_t*)port, 
+                             "fd %d", fileno(port->file));
     }
   } else {
-    dfsch_write_unreadable(state, port, "*closed*");
+    dfsch_write_unreadable(state, (dfsch_object_t*)port, 
+                           "*closed*");
   }
 }
 
 static void file_port_seek(file_port_t* port, int64_t offset, int whence){
   if (!port->open){
-    dfsch_error("exception:port-closed", port);
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
   }
 
   if (fseek(port->file, offset, whence) != 0){
@@ -563,7 +580,7 @@ static void file_port_seek(file_port_t* port, int64_t offset, int whence){
 static int64_t file_port_tell(file_port_t* port){
   off_t ret;
   if (!port->open){
-    dfsch_error("exception:port-closed", port);
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
   }
 
   ret = ftell(port->file);
@@ -596,7 +613,7 @@ dfsch_port_type_t dfsch_file_port_type = {
     NULL,
     NULL,
     
-    &file_port_slots,
+    file_port_slots,
     
     "port backed by stdio stream"
   },
@@ -619,7 +636,8 @@ static void file_port_finalizer(file_port_t* port, void* cd){
 }
 
 dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
-  file_port_t* port = (file_port_t*)dfsch_make_object(DFSCH_FILE_PORT_TYPE);
+  file_port_t* port = (file_port_t*)dfsch_make_object((dfsch_type_t*)
+                                                      DFSCH_FILE_PORT_TYPE);
 
   port->file = file;
   port->close = close;
@@ -640,6 +658,12 @@ DFSCH_OBJECT_CACHE(dfsch_make_file_port(stdout, 0, "(standard output)"),
                    dfsch_standard_output_port);
 DFSCH_OBJECT_CACHE(dfsch_make_file_port(stderr, 0, "(standard error)"), 
                    dfsch_standard_error_port);
+
+void dfsch_set_standard_io_ports(){
+  dfsch_set_current_input_port(dfsch_standard_input_port());
+  dfsch_set_current_output_port(dfsch_standard_output_port());
+  dfsch_set_current_error_port(dfsch_standard_error_port());
+}
 
 dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
   FILE* file;
@@ -674,7 +698,9 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
 }
 
 void dfsch_close_file_port(dfsch_object_t* port){
-  file_port_t* p = DFSCH_ASSERT_INSTANCE(port, DFSCH_FILE_PORT_TYPE);
+  file_port_t* p = 
+    (file_port_t*)DFSCH_ASSERT_INSTANCE(port, 
+                                        (dfsch_type_t*)DFSCH_FILE_PORT_TYPE);
 
   p = (file_port_t*) port;
 
@@ -688,60 +714,44 @@ void dfsch_close_file_port(dfsch_object_t* port){
  * Scheme interface
  */
 
-static dfsch_object_t* native_current_output_port(void* baton,
-                                                  dfsch_object_t* args,
-                                                  dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(current_output_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_current_output_port();
 }
-static dfsch_object_t* native_current_input_port(void* baton,
-                                                 dfsch_object_t* args,
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(current_input_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_current_input_port();
 }
-static dfsch_object_t* native_current_error_port(void* baton,
-                                                 dfsch_object_t* args,
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(current_error_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_current_error_port();
 }
-static dfsch_object_t* native_set_current_output_port(void* baton,
-                                                      dfsch_object_t* args,
-                                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(set_current_output_port, NULL){
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_output_port(port);
   return NULL;
 }
-static dfsch_object_t* native_set_current_input_port(void* baton,
-                                                     dfsch_object_t* args,
-                                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(set_current_input_port, NULL){
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_input_port(port);
   return NULL;
 }
-static dfsch_object_t* native_set_current_error_port(void* baton,
-                                                     dfsch_object_t* args,
-                                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(set_current_error_port, NULL){
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_error_port(port);
   return NULL;
 }
-static dfsch_object_t* native_null_port(void* baton,
-                                        dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(null_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_null_port();
 }
-static dfsch_object_t* native_write(void* baton,
-                                    dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(write, NULL){
   dfsch_object_t* port;
   dfsch_object_t* object;
   char *buf;
@@ -754,9 +764,7 @@ static dfsch_object_t* native_write(void* baton,
   
   return NULL;
 }
-static dfsch_object_t* native_display(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(display, NULL){
   dfsch_object_t* port;
   dfsch_object_t* object;
   char *buf;
@@ -769,9 +777,7 @@ static dfsch_object_t* native_display(void* baton,
   
   return NULL;
 }
-static dfsch_object_t* native_newline(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(newline, NULL){
   dfsch_object_t* port;
   char *buf;
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
@@ -782,9 +788,7 @@ static dfsch_object_t* native_newline(void* baton,
   return NULL;
 }
 
-static dfsch_object_t* native_read(void* baton,
-                                   dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(read, NULL){
   dfsch_object_t* port;
   char *buf;
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
@@ -793,9 +797,7 @@ static dfsch_object_t* native_read(void* baton,
   return dfsch_parser_read_from_port(port);
 }
 
-static dfsch_object_t* native_port_read_buf(void* baton,
-                                            dfsch_object_t* args,
-                                            dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
   dfsch_object_t* port;
   size_t len;
   char* buf;
@@ -820,9 +822,7 @@ DFSCH_DEFINE_PRIMITIVE(port_read_whole, 0){
   return dfsch_make_string_strbuf(dfsch_port_read_whole(port));
 }
 
-static dfsch_object_t* native_port_read_line(void* baton,
-                                             dfsch_object_t* args,
-                                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
   dfsch_object_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
@@ -836,9 +836,7 @@ static dfsch_object_t* native_port_read_line(void* baton,
   return dfsch_make_string_strbuf(buf);
 }
 
-static dfsch_object_t* native_port_write_buf(void* baton,
-                                             dfsch_object_t* args,
-                                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(port_write_buf, NULL){
   dfsch_object_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
@@ -849,9 +847,7 @@ static dfsch_object_t* native_port_write_buf(void* baton,
 
   return NULL;
 }
-static dfsch_object_t* native_port_seek(void* baton,
-                                        dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(port_seek, NULL){
   dfsch_object_t* port;
   int64_t offset;
   int whence = SEEK_SET;
@@ -868,9 +864,7 @@ static dfsch_object_t* native_port_seek(void* baton,
 
   return NULL;
 }
-static dfsch_object_t* native_port_tell(void* baton,
-                                        dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(port_tell, NULL){
   dfsch_object_t* port;
   char *buf;
   DFSCH_OBJECT_ARG(args, port);  
@@ -879,33 +873,25 @@ static dfsch_object_t* native_port_tell(void* baton,
   return dfsch_make_number_from_long(dfsch_port_tell(port));
 }
 
-static dfsch_object_t* native_string_output_port(void* baton,
-                                                 dfsch_object_t* args,
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_output_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_string_output_port();
 }
-static dfsch_object_t* native_string_output_port_value(void* baton,
-                                                       dfsch_object_t* args,
-                                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_output_port_value, NULL){
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);  
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_strbuf(dfsch_string_output_port_value(port));
 }
-static dfsch_object_t* native_string_input_port(void* baton,
-                                                dfsch_object_t* args,
-                                                dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(string_input_port, NULL){
   dfsch_strbuf_t* string;
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
 
   return dfsch_string_input_port(string->ptr, string->len);
 }
-static dfsch_object_t* native_eof_object_p(void* baton,
-                                           dfsch_object_t* args,
-                                           dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(eof_object_p, NULL){
   dfsch_object_t* object;
   DFSCH_OBJECT_ARG(args, object);  
   DFSCH_ARG_END(args);
@@ -913,9 +899,7 @@ static dfsch_object_t* native_eof_object_p(void* baton,
   return dfsch_bool(dfsch_eof_object_p(object));
 }
 
-static dfsch_object_t* native_open_file_port(void* baton,
-                                             dfsch_object_t* args,
-                                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(open_file_port, NULL){
   char* fname;
   char* mode;
   DFSCH_STRING_ARG(args, fname);
@@ -924,9 +908,7 @@ static dfsch_object_t* native_open_file_port(void* baton,
 
   return dfsch_open_file_port(fname, mode);
 }
-static dfsch_object_t* native_close_file_port(void* baton,
-                                              dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(close_file_port, NULL){
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);  
   DFSCH_ARG_END(args);
@@ -944,59 +926,58 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<eof-object>", DFSCH_EOF_OBJECT_TYPE);
 
   dfsch_define_cstr(ctx, "current-output-port", 
-                    dfsch_make_primitive(native_current_output_port, NULL));
+                    DFSCH_PRIMITIVE_REF(current_output_port));
   dfsch_define_cstr(ctx, "current-input-port", 
-                    dfsch_make_primitive(native_current_input_port, NULL));
+                    DFSCH_PRIMITIVE_REF(current_input_port));
   dfsch_define_cstr(ctx, "current-error-port", 
-                    dfsch_make_primitive(native_current_error_port, NULL));
+                    DFSCH_PRIMITIVE_REF(current_error_port));
   dfsch_define_cstr(ctx, "null-port", 
-                    dfsch_make_primitive(native_null_port, NULL));
+                    DFSCH_PRIMITIVE_REF(null_port));
   dfsch_define_cstr(ctx, "write", 
-                    dfsch_make_primitive(native_write, NULL));
+                    DFSCH_PRIMITIVE_REF(write));
   dfsch_define_cstr(ctx, "display", 
-                    dfsch_make_primitive(native_display, NULL));
+                    DFSCH_PRIMITIVE_REF(display));
   dfsch_define_cstr(ctx, "newline", 
-                    dfsch_make_primitive(native_newline, NULL));
+                    DFSCH_PRIMITIVE_REF(newline));
   dfsch_define_cstr(ctx, "read", 
-                    dfsch_make_primitive(native_read, NULL));
+                    DFSCH_PRIMITIVE_REF(read));
 
   dfsch_define_cstr(ctx, "eof-object?", 
-                    dfsch_make_primitive(native_eof_object_p, NULL));
+                    DFSCH_PRIMITIVE_REF(eof_object_p));
 
   dfsch_define_cstr(ctx, "port-write-buf", 
-                    dfsch_make_primitive(native_port_write_buf, NULL));
+                    DFSCH_PRIMITIVE_REF(port_write_buf));
   dfsch_define_cstr(ctx, "port-read-buf", 
-                    dfsch_make_primitive(native_port_read_buf, NULL));
+                    DFSCH_PRIMITIVE_REF(port_read_buf));
   dfsch_define_cstr(ctx, "port-read-whole", 
                     DFSCH_PRIMITIVE_REF(port_read_whole));
   dfsch_define_cstr(ctx, "port-read-line", 
-                    dfsch_make_primitive(native_port_read_line, NULL));
+                    DFSCH_PRIMITIVE_REF(port_read_line));
   dfsch_define_cstr(ctx, "port-seek!", 
-                    dfsch_make_primitive(native_port_seek, NULL));
+                    DFSCH_PRIMITIVE_REF(port_seek));
   dfsch_define_cstr(ctx, "port-tell", 
-                    dfsch_make_primitive(native_port_tell, NULL));
+                    DFSCH_PRIMITIVE_REF(port_tell));
 
   dfsch_define_cstr(ctx, "string-output-port", 
-                    dfsch_make_primitive(native_string_output_port, NULL));
+                    DFSCH_PRIMITIVE_REF(string_output_port));
   dfsch_define_cstr(ctx, "string-output-port-value", 
-                    dfsch_make_primitive(native_string_output_port_value,
-                                         NULL));
+                    DFSCH_PRIMITIVE_REF(string_output_port_value));
   dfsch_define_cstr(ctx, "string-input-port", 
-                    dfsch_make_primitive(native_string_input_port, NULL));
+                    DFSCH_PRIMITIVE_REF(string_input_port));
 
 }
 void dfsch_port_unsafe_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "set-current-output-port!", 
-                    dfsch_make_primitive(native_set_current_output_port, NULL));
+                    DFSCH_PRIMITIVE_REF(set_current_output_port));
   dfsch_define_cstr(ctx, "set-current-input-port!", 
-                    dfsch_make_primitive(native_set_current_input_port, NULL));
+                    DFSCH_PRIMITIVE_REF(set_current_input_port));
   dfsch_define_cstr(ctx, "set-current-error-port!", 
-                    dfsch_make_primitive(native_set_current_error_port, NULL));
+                    DFSCH_PRIMITIVE_REF(set_current_error_port));
   
   dfsch_define_cstr(ctx, "open-file-port", 
-                    dfsch_make_primitive(native_open_file_port, NULL));
+                    DFSCH_PRIMITIVE_REF(open_file_port));
   dfsch_define_cstr(ctx, "close-file-port!", 
-                    dfsch_make_primitive(native_close_file_port, NULL));
+                    DFSCH_PRIMITIVE_REF(close_file_port));
 
   dfsch_define_cstr(ctx, "*standard-input-port*",
                     dfsch_standard_input_port());

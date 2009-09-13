@@ -41,11 +41,10 @@ typedef struct wrapper_t {
 static void wrapper_write(dfsch_object_t* obj, dfsch_writer_state_t* state){
   wrapper_type_t* type = (wrapper_type_t*) obj->type;
 
-  return 
-    dfsch_string_to_cstr(dfsch_apply(type->write,
-                                     dfsch_list(2,
-                                                obj,
-                                                state)));
+  dfsch_string_to_cstr(dfsch_apply(type->write,
+                                   dfsch_list(2,
+                                              obj,
+                                              state)));
 }
 
 static int wrapper_equal_p(dfsch_object_t* a, dfsch_object_t* b){
@@ -65,16 +64,16 @@ static dfsch_object_t* wrapper_apply(dfsch_object_t* obj,
                         dfsch_list(2, obj, args),
                         esc);
 }
-static size_t wrapper_hash(dfsch_object_t* obj){
+static uint32_t wrapper_hash(dfsch_object_t* obj){
   wrapper_type_t* type = (wrapper_type_t*) obj->type;
 
   return 
-    dfsch_make_number_from_long(dfsch_apply(type->hash,
-                                            dfsch_list(1,
-                                                       obj)));
+    dfsch_number_to_long(dfsch_apply(type->hash,
+                                     dfsch_list(1,
+                                                obj)));
 }
 
-static const dfsch_type_t wrapper_basetype = {
+static dfsch_type_t wrapper_basetype = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
   0,
@@ -86,7 +85,7 @@ static const dfsch_type_t wrapper_basetype = {
 };
 
 
-static const dfsch_type_t wrapper_type = {
+static dfsch_type_t wrapper_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_STANDARD_TYPE,
   sizeof(wrapper_type_t),
@@ -198,9 +197,7 @@ DFSCH_DEFINE_FORM_IMPL(define_wrapper_type, NULL){
   return type;
 }
 
-static dfsch_object_t* native_make_wrapper_type(void *baton, 
-                                                dfsch_object_t* args, 
-                                                dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_wrapper_type, NULL){
   dfsch_object_t* write = NULL;
   dfsch_object_t* equal_p = NULL;
   dfsch_object_t* apply = NULL;
@@ -218,9 +215,7 @@ static dfsch_object_t* native_make_wrapper_type(void *baton,
   return dfsch_make_wrapper_type(name, write, equal_p, apply, hash);
 }
 
-static dfsch_object_t* native_wrap(void *baton, 
-                                   dfsch_object_t* args, 
-                                   dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(wrap, NULL){
   dfsch_object_t* type;
   dfsch_object_t* object;
   DFSCH_OBJECT_ARG_OPT(args, type, NULL);
@@ -229,9 +224,7 @@ static dfsch_object_t* native_wrap(void *baton,
 
   return dfsch_wrap(type, object);
 }
-static dfsch_object_t* native_unwrap(void *baton, 
-                                     dfsch_object_t* args, 
-                                     dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(unwrap, NULL){
   dfsch_object_t* type;
   dfsch_object_t* wrapper;
   DFSCH_OBJECT_ARG_OPT(args, type, NULL);
@@ -247,9 +240,9 @@ void dfsch__wrapper_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "define-wrapper-type", 
                     DFSCH_FORM_REF(define_wrapper_type));
   dfsch_define_cstr(ctx, "make-wrapper-type", 
-		   dfsch_make_primitive(&native_make_wrapper_type, NULL));
+		   DFSCH_PRIMITIVE_REF(make_wrapper_type));
   dfsch_define_cstr(ctx, "wrap", 
-		   dfsch_make_primitive(&native_wrap, NULL));
+		   DFSCH_PRIMITIVE_REF(wrap));
   dfsch_define_cstr(ctx, "unwrap", 
-		   dfsch_make_primitive(&native_unwrap, NULL));
+		   DFSCH_PRIMITIVE_REF(unwrap));
 }

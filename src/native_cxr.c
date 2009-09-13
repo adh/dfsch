@@ -35,8 +35,7 @@ static char *cxr_table[][2] = {
 
 };
 
-static dfsch_object_t* native_cxr(void *baton, dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc){
+DFSCH_PRIMITIVE_HEAD(cxr){
   dfsch_object_t* pair;
   char* action = (char*) baton;
 
@@ -60,7 +59,7 @@ void dfsch__native_cxr_register(dfsch_object_t *ctx){
 
   for (i=0; i < (sizeof(cxr_table)/sizeof(cxr_table[0])); i++){
     dfsch_define_cstr(ctx, cxr_table[i][0],
-                     dfsch_make_primitive(&native_cxr,cxr_table[i][1]));
+                     DFSCH_PRIMITIVE_REF_MAKE(cxr,cxr_table[i][1]));
 
   }
 

@@ -1129,7 +1129,7 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   int ok = 0;
 
   dfsch_port_batch_read_start(port);
-  dfsch_parser_callback(parser, read_callback, &res);
+  dfsch_parser_callback(parser, (dfsch_parser_callback_t)read_callback, &res);
   DFSCH_UNWIND {
     while ((ch = dfsch_port_batch_read(port)) != -1){
       buf[0] = ch;

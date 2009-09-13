@@ -25,6 +25,7 @@
 #include <dfsch/dfsch.h>
 #include "util.h"
 #include "internal.h"
+#include <string.h>
 
 #ifdef DFSCH_32BIT_BIGNUM
 #define WORD_BITS 31

@@ -14,9 +14,9 @@ extern "C" {
 #define DFSCH_PRINT        2
 
   dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
-                                                       int readability,
-                                                       dfsch_output_proc_t proc,
-                                                       void* baton);
+                                                int readability,
+                                                dfsch_output_proc_t proc,
+                                                void* baton);
   void dfsch_invalidate_writer_state(dfsch_writer_state_t* state);
   int dfsch_writer_state_print_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state);

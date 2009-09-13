@@ -115,11 +115,13 @@ extern dfsch_type_t dfsch_primitive_type;
                                          dfsch_object_t* context)
   
 #define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
-  DFSCH_PRIMITIVE_HEAD(name);                   \
+  DFSCH_PRIMITIVE_HEAD(name);        \
   DFSCH_DECLARE_PRIMITIVE(name, flags);         \
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
+#define DFSCH_PRIMITIVE_REF_MAKE(name, baton)\
+  dfsch_make_primitive(p_##name##_impl, (baton))
 
 typedef struct dfsch_form_t dfsch_form_t;
 
@@ -293,7 +295,7 @@ struct dfsch_slot_t {
   {DFSCH_INT_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_LONG_SLOT(struct, name, access, doc)              \
   {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
-#define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, NULL}
+#define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, 0, NULL}
 
 
 /*

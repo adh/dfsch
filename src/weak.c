@@ -298,7 +298,8 @@ typedef struct weak_key_hash_t {
 #define DEFAULT_WEAK_KEY_HASH_SIZE 128
 
 dfsch_object_t* dfsch_make_weak_key_hash(){
-  weak_key_hash_t* h = dfsch_make_object(DFSCH_WEAK_KEY_HASH_TYPE);
+  weak_key_hash_t* h = 
+    (weak_key_hash_t*)dfsch_make_object(DFSCH_WEAK_KEY_HASH_TYPE);
 
   h->mask = DEFAULT_WEAK_KEY_HASH_SIZE - 1;
   h->buckets = GC_MALLOC(DEFAULT_WEAK_KEY_HASH_SIZE*sizeof(weak_hash_entry_t*));
@@ -312,7 +313,7 @@ static weak_hash_entry_t* weak_key_entry_create(dfsch_object_t* key,
                                                 dfsch_object_t* value,
                                                 weak_hash_entry_t* next){
   weak_hash_entry_t* e = weak_hash_entry_create(HIDE_OBJECT(key), value, next);
-  register_weak_pointer(&e->live, key);
+  register_weak_pointer(((void**)&e->live), key);
   return e;
 }
 static size_t ptr_hash(dfsch_object_t* ptr){
@@ -403,9 +404,7 @@ dfsch_custom_hash_type_t dfsch_weak_key_hash_type = {
  * Scheme binding
  */
 
-static dfsch_object_t* native_make_weak_reference(void *baton, 
-                                                  dfsch_object_t* args, 
-                                                  dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_weak_reference, NULL){
   dfsch_object_t* object;
 
   DFSCH_OBJECT_ARG(args, object);
@@ -413,9 +412,7 @@ static dfsch_object_t* native_make_weak_reference(void *baton,
 
   return dfsch_make_weak_reference(object);
 }
-static dfsch_object_t* native_weak_reference_live_p(void *baton, 
-                                                    dfsch_object_t* args, 
-                                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_reference_live_p, NULL){
   dfsch_object_t* reference;
 
   DFSCH_OBJECT_ARG(args, reference);
@@ -423,9 +420,7 @@ static dfsch_object_t* native_weak_reference_live_p(void *baton,
 
   return dfsch_bool(dfsch_weak_reference_live_p(reference));
 }
-static dfsch_object_t* native_weak_reference_dereference(void *baton, 
-                                                         dfsch_object_t* args,
-                                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_reference_dereference, NULL){
   dfsch_object_t* reference;
 
   DFSCH_OBJECT_ARG(args, reference);
@@ -438,9 +433,7 @@ static dfsch_object_t* native_weak_reference_dereference(void *baton,
 /***************************************************************/
 
 
-static dfsch_object_t* native_make_weak_vector(void* baton, 
-                                               dfsch_object_t* args, 
-                                               dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(make_weak_vector, NULL){
   size_t length;
   dfsch_object_t* fill;
 
@@ -451,14 +444,10 @@ static dfsch_object_t* native_make_weak_vector(void* baton,
   return dfsch_make_weak_vector(length,fill);
 }
 
-static dfsch_object_t* native_weak_vector(void* baton, 
-                                          dfsch_object_t* args, 
-                                          dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_vector, NULL){
   return dfsch_list_2_weak_vector(args);
 }
-static dfsch_object_t* native_weak_vector_length(void* baton, 
-                                                 dfsch_object_t* args, 
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_vector_length, NULL){
   dfsch_object_t* vector;
   
   DFSCH_OBJECT_ARG(args,vector);
@@ -467,9 +456,7 @@ static dfsch_object_t* native_weak_vector_length(void* baton,
   return dfsch_make_number_from_long(dfsch_weak_vector_length(vector));
 
 }
-static dfsch_object_t* native_weak_vector_ref(void* baton, 
-                                              dfsch_object_t* args, 
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_vector_ref, NULL){
   dfsch_object_t* vector;
   size_t k;
 
@@ -480,9 +467,7 @@ static dfsch_object_t* native_weak_vector_ref(void* baton,
   return dfsch_weak_vector_ref(vector, k);
 }
 
-static dfsch_object_t* native_weak_vector_set(void* baton, 
-                                              dfsch_object_t* args, 
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_vector_set, NULL){
   dfsch_object_t* vector;
   size_t k;
   dfsch_object_t* obj;
@@ -495,9 +480,7 @@ static dfsch_object_t* native_weak_vector_set(void* baton,
   return dfsch_weak_vector_set(vector, k, obj);
 }
 
-static dfsch_object_t* native_weak_vector_2_list(void *baton, 
-                                                 dfsch_object_t* args, 
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(weak_vector_2_list, NULL){
   dfsch_object_t* vector;
 
   DFSCH_OBJECT_ARG(args, vector);
@@ -506,9 +489,7 @@ static dfsch_object_t* native_weak_vector_2_list(void *baton,
   return dfsch_weak_vector_2_list(vector);
 }
 
-static dfsch_object_t* native_list_2_weak_vector(void *baton, 
-                                                 dfsch_object_t* args, 
-                                                 dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(list_2_weak_vector, NULL){
   dfsch_object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -532,29 +513,27 @@ void dfsch__weak_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
   dfsch_define_cstr(ctx, "<weak-key-hash>", DFSCH_WEAK_KEY_HASH_TYPE);
 
-
   dfsch_define_cstr(ctx, "make-weak-reference", 
-                    dfsch_make_primitive(&native_make_weak_reference,NULL));
+                    DFSCH_PRIMITIVE_REF(make_weak_reference));
   dfsch_define_cstr(ctx, "weak-reference-live?", 
-                    dfsch_make_primitive(&native_weak_reference_live_p,NULL));
+                    DFSCH_PRIMITIVE_REF(weak_reference_live_p));
   dfsch_define_cstr(ctx, "weak-reference-dereference", 
-                    dfsch_make_primitive(&native_weak_reference_dereference,
-                                         NULL));
+                    DFSCH_PRIMITIVE_REF(weak_reference_dereference));
   
   dfsch_define_cstr(ctx, "make-weak-vector", 
-                   dfsch_make_primitive(&native_make_weak_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(make_weak_vector));
   dfsch_define_cstr(ctx, "weak-vector", 
-                   dfsch_make_primitive(&native_weak_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(weak_vector));
   dfsch_define_cstr(ctx, "weak-vector-length", 
-                   dfsch_make_primitive(&native_weak_vector_length,NULL));
+                   DFSCH_PRIMITIVE_REF(weak_vector_length));
   dfsch_define_cstr(ctx, "weak-vector-set!", 
-                   dfsch_make_primitive(&native_weak_vector_set,NULL));
+                   DFSCH_PRIMITIVE_REF(weak_vector_set));
   dfsch_define_cstr(ctx, "weak-vector-ref", 
-                   dfsch_make_primitive(&native_weak_vector_ref,NULL));
+                   DFSCH_PRIMITIVE_REF(weak_vector_ref));
   dfsch_define_cstr(ctx, "weak-vector->list", 
-                   dfsch_make_primitive(&native_weak_vector_2_list,NULL));
+                   DFSCH_PRIMITIVE_REF(weak_vector_2_list));
   dfsch_define_cstr(ctx, "list->weak-vector", 
-                   dfsch_make_primitive(&native_list_2_weak_vector,NULL));
+                   DFSCH_PRIMITIVE_REF(list_2_weak_vector));
 
   dfsch_define_cstr(ctx, "make-weak-key-hash", 
                     DFSCH_PRIMITIVE_REF(make_weak_key_hash));

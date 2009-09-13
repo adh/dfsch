@@ -436,8 +436,7 @@ DFSCH_DEFINE_FORM_IMPL(provide, NULL){
   return NULL;
 }
 
-static dfsch_object_t* native_read_scm(void *baton, dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(read_scm, NULL){
   char* filename;
   DFSCH_STRING_ARG(args, filename);
 
@@ -453,8 +452,7 @@ dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
                                dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
   dfsch_define_cstr(ctx, "load:*modules*", NULL);
   dfsch_define_cstr(ctx, "load:scm!",  DFSCH_FORM_REF(load_scm));
-  dfsch_define_cstr(ctx, "load:read-scm",
-		    dfsch_make_primitive(native_read_scm,ctx));
+  dfsch_define_cstr(ctx, "load:read-scm", DFSCH_PRIMITIVE_REF(read_scm));
   dfsch_define_cstr(ctx, "load:so!", DFSCH_FORM_REF(load_so));
   dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
   dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));

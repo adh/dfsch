@@ -31,7 +31,7 @@ typedef struct promise_t {
   int set;
 } promise_t;
 
-static const dfsch_type_t promise_type = {
+static dfsch_type_t promise_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(promise_t),
@@ -92,8 +92,7 @@ DFSCH_DEFINE_FORM_IMPL(delay, "Create new promise"){
   return dfsch_make_promise(args, env);
 }
 
-static dfsch_object_t* native_force(void* baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(force, NULL){
   dfsch_object_t* promise;
   DFSCH_OBJECT_ARG(args, promise);
   DFSCH_ARG_END(args);  
@@ -115,16 +114,14 @@ DFSCH_DEFINE_FORM_IMPL(stream_cons, NULL){
                                        env));
 }
 
-static dfsch_object_t* native_stream_car(void* baton, dfsch_object_t* args,
-                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(stream_car, NULL){
   dfsch_object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
 
   return dfsch_car(stream);
 }
-static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
-                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(stream_cdr, NULL){
   dfsch_object_t* stream;
   DFSCH_OBJECT_ARG(args, stream);
   DFSCH_ARG_END(args);  
@@ -135,13 +132,9 @@ static dfsch_object_t* native_stream_cdr(void* baton, dfsch_object_t* args,
 dfsch_object_t* dfsch__promise_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<promise>", &promise_type);
   dfsch_define_cstr(ctx, "delay", DFSCH_FORM_REF(delay));
-  dfsch_define_cstr(ctx, "force", 
-                   dfsch_make_primitive(&native_force,NULL));
+  dfsch_define_cstr(ctx, "force", DFSCH_PRIMITIVE_REF(force));
 
   dfsch_define_cstr(ctx, "stream-cons", DFSCH_FORM_REF(stream_cons));
-  dfsch_define_cstr(ctx, "stream-car", 
-                   dfsch_make_primitive(&native_stream_car,NULL));
-  dfsch_define_cstr(ctx, "stream-cdr", 
-                   dfsch_make_primitive(&native_stream_cdr,NULL));
-
+  dfsch_define_cstr(ctx, "stream-car", DFSCH_PRIMITIVE_REF(stream_car));
+  dfsch_define_cstr(ctx, "stream-cdr", DFSCH_PRIMITIVE_REF(stream_cdr));
 }
