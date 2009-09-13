@@ -36,32 +36,6 @@ extern "C" {
                                    dfsch_object_t* slots);
   dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                       dfsch_object_t* args);
-  dfsch_object_t* dfsch_find_method(dfsch_object_t* klass, 
-                                    dfsch_object_t* selector);
-  int dfsch_responds_to_p(dfsch_object_t* klass, 
-                          dfsch_object_t* selector);
-  dfsch_object_t* dfsch_perform_tr(dfsch_object_t* klass,
-                                   dfsch_object_t* selector,
-                                   dfsch_object_t* args,
-                                   dfsch_tail_escape_t* esc);
-  dfsch_object_t* dfsch_perform(dfsch_object_t* klass,
-                                dfsch_object_t* selector,
-                                dfsch_object_t* args);
-  dfsch_object_t* dfsch_send_tr(dfsch_object_t* obj, 
-                                dfsch_object_t* selector,
-                                dfsch_object_t* args,
-                                dfsch_tail_escape_t* esc);
-  dfsch_object_t* dfsch_send(dfsch_object_t* obj, 
-                             dfsch_object_t* selector,
-                             dfsch_object_t* args);
-
-
-
-  dfsch_object_t* dfsch_s_equal_instance_p();
-  dfsch_object_t* dfsch_s_write_instance();
-  dfsch_object_t* dfsch_s_apply_instance();
-  dfsch_object_t* dfsch_s_instance_hash();
-  dfsch_object_t* dfsch_s_initialize_instance();
 
 #ifdef __cplusplus
 }

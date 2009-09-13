@@ -168,6 +168,17 @@ DFSCH_DEFINE_PRIMITIVE(get_slots,
 
   return dfsch_get_slots(type);  
 }
+DFSCH_DEFINE_PRIMITIVE(make_slot_accessor,
+                       "Create specialized slot accessor function"){
+  dfsch_type_t* type;
+  char* name;
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_slot_accessor(type, name);    
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(get_list_annotation, 
 		       "Return load position of list or NIL if it is "
@@ -974,6 +985,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
   dfsch_define_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
   dfsch_define_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
+  dfsch_define_cstr(ctx, "make-slot-accessor", 
+                    DFSCH_PRIMITIVE_REF(make_slot_accessor));
 
 
   dfsch__native_cxr_register(ctx);

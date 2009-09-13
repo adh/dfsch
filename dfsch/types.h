@@ -74,6 +74,10 @@ extern dfsch_type_t dfsch_lambda_list_type;
 extern dfsch_type_t dfsch_writer_state_type;
 #define DFSCH_WRITER_STATE_TYPE (&dfsch_writer_state_type)
 
+extern dfsch_type_t dfsch_slot_accessor_type;
+#define DFSCH_SLOT_ACCESSOR_TYPE (&dfsch_slot_accessor_type)
+
+
 typedef struct dfsch_primitive_t {
   dfsch_type_t* type;
   dfsch_primitive_impl_t proc;
@@ -188,7 +192,8 @@ typedef void (*dfsch_type_write_t)(dfsch_object_t* obj,
 /** Apply metod prototype */
 typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object, 
                                               dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc);
+                                              dfsch_tail_escape_t* esc,
+                                              dfsch_object_t* context);
 /** Hash method prototype */
 typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 

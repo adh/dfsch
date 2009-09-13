@@ -25,13 +25,7 @@
 (provide 'struct)
 
 (define-class <struct> () ())
-(define-method <struct> (initialize-instance self . slot-list)
-  (let loop ((i slot-list))
-    (unless (null? i)
-            (let ((name (car list))
-                  (value (cadr list)))
-              (slot-set! self name value))
-            (loop (cddr i)))))
 
 (define-macro (define-struct name slots)
-  `(define-class ,name <struct> ,slots))
+  `(begin
+     (define-class ,name <struct> ,slots)))

@@ -137,7 +137,8 @@ extern "C" {
                                      dfsch_object_t* value,
                                      int debug);
 
-  
+  extern dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
+                                                  char* slot);
 
 
   /** Is OBJ null? */

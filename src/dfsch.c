@@ -370,9 +370,10 @@ void dfsch_slot_set(dfsch_object_t* obj,
                     dfsch_slot_t* slot, 
                     dfsch_object_t* value, 
                     int debug){
-  if (!debug && slot->access != DFSCH_SLOT_ACCESS_RW) {
+  if (!(slot->access == DFSCH_SLOT_ACCESS_RW || 
+        (debug && slot->access == DFSCH_SLOT_ACCESS_DEBUG_WRITE))) {
     dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
-  }  
+  }
   
   slot->type->set(((char*) obj)+slot->offset, value);
 }
@@ -392,6 +393,67 @@ void dfsch_slot_set_by_name(dfsch_object_t* obj,
                  value,
                  debug);
 }
+
+typedef struct slot_accessor_t {
+  dfsch_type_t* type;
+  dfsch_type_t* instance_class;
+  dfsch_slot_t* slot;
+} slot_accessor_t;
+
+static dfsch_slot_t slot_accessor_slots[]={
+  DFSCH_OBJECT_SLOT(slot_accessor_t, instance_class, DFSCH_SLOT_ACCESS_RO,
+                    "Class containing applicable slot"),
+  DFSCH_OBJECT_SLOT(slot_accessor_t, slot, DFSCH_SLOT_ACCESS_RO,
+                    "Accessed slot"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static dfsch_object_t* slot_accessor_apply(slot_accessor_t* sa,
+                                           dfsch_object_t* args,
+                                           dfsch_tail_escape_t* esc,
+                                           dfsch_object_t* context){
+  dfsch_object_t* instance;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, instance);
+  DFSCH_OBJECT_ARG_OPT(args, value, DFSCH_INVALID_OBJECT);
+
+  instance = DFSCH_ASSERT_INSTANCE(instance, sa->instance_class);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    return dfsch_slot_ref(instance, sa->slot, 0);
+  } else {
+    dfsch_slot_set(instance, sa->slot, value, 0);
+    return value;
+  }
+}
+
+static void slot_accessor_write(slot_accessor_t* sa, 
+                                dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)sa, 
+                         "%s @ %s", sa->slot->name, sa->instance_class->name);
+}
+
+dfsch_type_t dfsch_slot_accessor_type = {
+  .type          = DFSCH_STANDARD_TYPE,
+  .superclass    = DFSCH_FUNCTION_TYPE,
+  .size          = sizeof(slot_accessor_t),
+  .name          = "slot-accessor",
+  .apply         = (dfsch_type_apply_t)slot_accessor_apply,
+  .write         = (dfsch_type_write_t)slot_accessor_write,
+  .slots         = slot_accessor_slots,
+  .documentation = "Slot accessor allows direct access to slots (runtime-only)"
+};
+
+dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
+                                         char* slot){
+  slot_accessor_t* sa = 
+    (slot_accessor_t*) dfsch_make_object(DFSCH_SLOT_ACCESSOR_TYPE);
+
+  sa->instance_class = type;
+  sa->slot = dfsch_find_slot(type, slot);
+  return (dfsch_object_t*) sa;
+}
+
 
 dfsch_type_t dfsch_abstract_type = {
   DFSCH_META_TYPE,
@@ -2776,7 +2838,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     if (DFSCH_LIKELY(arg_env)){
       args = eval_list(args, arg_env, ti);
     }
-    return DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc);
+    return DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
   }
 
   dfsch_error("Not a procedure", proc);
@@ -2838,6 +2900,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
   dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
   dfsch_define_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
+  dfsch_define_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
   dfsch_define_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
   dfsch_define_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
   dfsch_define_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);

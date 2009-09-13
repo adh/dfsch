@@ -29,8 +29,6 @@
 
 typedef struct class_t {
   dfsch_type_t standard_type;
-  dfsch_object_t* methods;
-  dfsch_object_t* send_cache;
 } class_t;
 
 
@@ -46,7 +44,7 @@ dfsch_type_t dfsch_class_type = {
   NULL,
 
   NULL,
-  "Metaclass of user-defined classes with message-passing single dispatch"
+  "Metaclass for user-defined classes"
 };
 
 static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
@@ -130,9 +128,6 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.apply = class_apply;
   klass->standard_type.hash = class_hash;*/
 
-  klass->methods = dfsch_hash_make(DFSCH_HASH_EQ);
-  klass->send_cache = dfsch_hash_make(DFSCH_HASH_EQ);
-
   return (dfsch_object_t*)klass;
 }
 
@@ -143,150 +138,9 @@ dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
   obj = 
     dfsch_make_object((dfsch_type_t*)DFSCH_ASSERT_INSTANCE(klass, 
                                                            DFSCH_CLASS_TYPE));
-  dfsch_send(obj, dfsch_s_initialize_instance(), args);
   return obj;
 }
 
-dfsch_object_t* dfsch_find_method(dfsch_object_t* klass, 
-                                  dfsch_object_t* selector){
-  dfsch_object_t* method;
-  class_t* c = (class_t*)DFSCH_ASSERT_INSTANCE(klass,  DFSCH_CLASS_TYPE);
-
-  if (dfsch_hash_ref_fast(c->send_cache, selector, &method)){
-    return method;
-  }
-  
-  while(DFSCH_INSTANCE_P((dfsch_object_t*)c, DFSCH_CLASS_TYPE)){
-    if (dfsch_hash_ref_fast(c->methods, selector, &method)){
-      dfsch_hash_set(((class_t*)klass)->send_cache, selector, method);
-      return method;
-    }
-    
-    c = (class_t*) c->standard_type.superclass;
-  }
-
-  return NULL;
-}
-
-void dfsch_class_add_method(dfsch_object_t* klass, 
-                            dfsch_object_t* selector,
-                            dfsch_object_t* method){
-  class_t* c;
-  if (!DFSCH_INSTANCE_P(klass, DFSCH_CLASS_TYPE)){
-    dfsch_error("Not a class", klass);
-  }
-  c = (class_t*)klass;
-
-  dfsch_hash_set(c->methods, selector, method);
-  dfsch_hash_set(c->send_cache, selector, method);
-}
-void dfsch_class_remove_method(dfsch_object_t* klass, 
-                               dfsch_object_t* selector){
-  class_t* c;
-  if (!DFSCH_INSTANCE_P(klass, DFSCH_CLASS_TYPE)){
-    dfsch_error("Not a class", klass);
-  }
-  c = (class_t*)klass;
-
-  dfsch_hash_unset(c->methods, selector);
-  dfsch_hash_unset(c->send_cache, selector);
-}
-
-int dfsch_responds_to_p(dfsch_object_t* klass, 
-                        dfsch_object_t* selector){
-  return dfsch_find_method(klass, selector) != NULL;
-}
-
-dfsch_object_t* dfsch_perform_tr(dfsch_object_t* klass,
-                                 dfsch_object_t* selector,
-                                 dfsch_object_t* args,
-                                 dfsch_tail_escape_t* esc){
-  dfsch_object_t* method = dfsch_find_method(klass, selector);
-  if (!method){
-    dfsch_error("Message not understood", dfsch_list(2, klass, selector));
-  }
-  return dfsch_apply_tr(method, args, esc);
-}
-dfsch_object_t* dfsch_perform(dfsch_object_t* klass,
-                              dfsch_object_t* selector,
-                              dfsch_object_t* args){
-  return dfsch_perform_tr(klass, selector, args, NULL);
-}
-
-dfsch_object_t* dfsch_send_tr(dfsch_object_t* obj, 
-                              dfsch_object_t* selector,
-                              dfsch_object_t* args,
-                              dfsch_tail_escape_t* esc){
-  return dfsch_perform_tr((dfsch_object_t*)DFSCH_TYPE_OF(obj), 
-                          selector, 
-                          dfsch_cons(obj, args), 
-                          esc);
-}
-dfsch_object_t* dfsch_send(dfsch_object_t* obj, 
-                           dfsch_object_t* selector,
-                           dfsch_object_t* args){
-  return dfsch_perform_tr((dfsch_object_t*)DFSCH_TYPE_OF(obj), 
-                          selector, 
-                          dfsch_cons(obj, args), 
-                          NULL);
-}
-
-DFSCH_SYMBOL_CACHE("initialize-instance", dfsch_s_initialize_instance);
-DFSCH_SYMBOL_CACHE("write-instance", dfsch_s_write_instance);
-DFSCH_SYMBOL_CACHE("equal-instance?", dfsch_s_equal_instance_p);
-DFSCH_SYMBOL_CACHE("apply-instance", dfsch_s_apply_instance);
-DFSCH_SYMBOL_CACHE("instance-hash", dfsch_s_instance_hash);
-
-DFSCH_DEFINE_PRIMITIVE(send, 0){
-  dfsch_object_t* object;
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, object);
-  DFSCH_OBJECT_ARG(args, selector);
-  return dfsch_send_tr(object, selector, args, esc);
-}
-DFSCH_DEFINE_PRIMITIVE(perform, 0){
-  dfsch_object_t* klass;
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, selector);
-  return dfsch_perform_tr(klass, selector, args, esc);
-}
-DFSCH_DEFINE_PRIMITIVE(find_method, 0){
-  dfsch_object_t* klass;
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, selector);
-  DFSCH_ARG_END(args);
-  return dfsch_find_method(klass, selector);  
-}
-DFSCH_DEFINE_PRIMITIVE(responds_to_p, 0){
-  dfsch_object_t* klass;
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, selector);
-  DFSCH_ARG_END(args);
-  return dfsch_bool(dfsch_responds_to_p(klass, selector));  
-}
-DFSCH_DEFINE_PRIMITIVE(class_add_method, 0){
-  dfsch_object_t* klass;
-  dfsch_object_t* selector;
-  dfsch_object_t* method;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, selector);
-  DFSCH_OBJECT_ARG(args, method);
-  DFSCH_ARG_END(args);
-  dfsch_class_add_method(klass, selector, method);  
-  return NULL;
-}
-DFSCH_DEFINE_PRIMITIVE(class_remove_method, 0){
-  dfsch_object_t* klass;
-  dfsch_object_t* selector;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, selector);
-  DFSCH_ARG_END(args);
-  dfsch_class_remove_method(klass, selector);  
-  return NULL;
-}
 DFSCH_DEFINE_PRIMITIVE(make_instance, 0){
   dfsch_object_t* klass;
   DFSCH_OBJECT_ARG(args, klass);
@@ -312,37 +166,11 @@ DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
   dfsch_define(name, klass, env);
   return klass;
 }
-DFSCH_DEFINE_FORM_IMPL(define_method, NULL){
-  dfsch_object_t* klass;
-  dfsch_object_t* lambda_list;
-  dfsch_object_t* selector;
-  dfsch_object_t* code;
-  dfsch_object_t* method;
-  DFSCH_OBJECT_ARG(args, klass);
-  DFSCH_OBJECT_ARG(args, lambda_list);
-  DFSCH_ARG_REST(args, code);
-  DFSCH_OBJECT_ARG(lambda_list, selector);
-
-  klass = dfsch_eval(klass, env);
-  method = dfsch_named_lambda(env, lambda_list, code,
-                              dfsch_list(2, klass, selector));
-  dfsch_class_add_method(klass, selector, method);
-  return method;
-}
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
-  dfsch_define_cstr(ctx, "send", DFSCH_PRIMITIVE_REF(send));
-  dfsch_define_cstr(ctx, "perform", DFSCH_PRIMITIVE_REF(perform));
-  dfsch_define_cstr(ctx, "responds-to?", DFSCH_PRIMITIVE_REF(responds_to_p));
-  dfsch_define_cstr(ctx, "find-method", DFSCH_PRIMITIVE_REF(find_method));
-  dfsch_define_cstr(ctx, "class-add-method!", 
-                    DFSCH_PRIMITIVE_REF(class_add_method));
-  dfsch_define_cstr(ctx, "class-remove-method!", 
-                    DFSCH_PRIMITIVE_REF(class_remove_method));
   dfsch_define_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
 
   dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
-  dfsch_define_cstr(ctx, "define-method", DFSCH_FORM_REF(define_method));
 }
