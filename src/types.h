@@ -12,8 +12,16 @@ typedef dfsch_primitive_t primitive_t;
 
 typedef struct lambda_list_t {
   dfsch_type_t* type;
-  size_t positional_count;
+  uint16_t flags;
+  uint16_t positional_count;
+  uint16_t keyword_count;
+  uint16_t optional_count;
   dfsch_object_t* rest;
+  dfsch_object_t** defaults;
+  dfsch_object_t** supplied_p;
+  dfsch_object_t* aux_list;
+  dfsch_object_t* environment;
+  dfsch_object_t* whole;
   dfsch_object_t* arg_list[];
 } lambda_list_t;
 
