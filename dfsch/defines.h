@@ -18,8 +18,5 @@
 #define DFSCH_PREFETCH(addr) 
 #endif
 
-#if defined(__GNUC__) && defined(__linux__) && !defined(__arm__)
-#define DFSCH__USE_TLS
-#endif
 
 #endif
