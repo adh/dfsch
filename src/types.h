@@ -14,7 +14,7 @@ typedef struct lambda_list_t {
   dfsch_type_t* type;
   size_t positional_count;
   dfsch_object_t* rest;
-  dfsch_object_t* positional[];
+  dfsch_object_t* arg_list[];
 } lambda_list_t;
 
 

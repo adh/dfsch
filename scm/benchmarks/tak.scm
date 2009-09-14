@@ -2,6 +2,10 @@
 
 (require 'gcollect)
 
+(define (print . args)
+  (for-each (lambda (i) (display i)) args)
+  (newline))
+
 (define (tak x y z)
   (if (not (< y x))
       z

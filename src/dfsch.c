@@ -707,7 +707,7 @@ dfsch_type_t dfsch_primitive_type = {
 static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
   int i;
   for (i = 0; i < ll->positional_count; i++){
-    dfsch_write_object(ws, ll->positional[i]);
+    dfsch_write_object(ws, ll->arg_list[i]);
     dfsch_write_string(ws, " ");
   }
   if (ll->rest){
@@ -1709,6 +1709,15 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {"unquote-splicing"},
   {"else"},
   {"=>"},
+  {"&optional"},
+  {"&key"},
+  {"&rest"},
+  {"&body"},
+  {"&allow-other-keys"},
+  {"&environment"},
+  {"&context"},
+  {"&whole"},
+  {"&aux"}
 };
 
 /*
@@ -2648,7 +2657,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
     if (j >= count){
       dfsch_error("wtf?", NULL);
     }
-    ll->positional[j] = DFSCH_FAST_CAR(i);
+    ll->arg_list[j] = DFSCH_FAST_CAR(i);
     j++;
     i = DFSCH_FAST_CDR(i);
   }
@@ -2656,9 +2665,12 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   return (dfsch_object_t*)ll;
 }
 
+
 static void destructure_impl(lambda_list_t* ll,
                              dfsch_object_t* list,
-                             environment_t* env){
+                             environment_t* env,
+                             environment_t* outer,
+                             dfsch__thread_info_t* ti){
   int i;
   dfsch_object_t* j = list;
 
@@ -2666,38 +2678,18 @@ static void destructure_impl(lambda_list_t* ll,
     if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
       dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
-    dfsch_eqhash_put(&env->values, ll->positional[i], DFSCH_FAST_CAR(j));
+    dfsch_eqhash_put(&env->values, ll->arg_list[i], 
+                     DFSCH_LIKELY(outer) ? 
+                     dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti):
+                     DFSCH_FAST_CAR(j));
     j = DFSCH_FAST_CDR(j);
   }
   
   if (DFSCH_UNLIKELY(ll->rest)) {
-    dfsch_eqhash_put(&env->values, ll->rest, j);
-  } else {
-    if (DFSCH_UNLIKELY(j)) {
-      dfsch_error("Too many arguments", dfsch_list(2,ll, list));
-    }
-  }
-}
-
-static void destructuring_eval(lambda_list_t* ll,
-                               dfsch_object_t* list,
-                               environment_t* env,
-                               environment_t* outer,
-                               dfsch__thread_info_t* ti){
-  int i;
-  dfsch_object_t* j = list;
-
-  for (i = 0; i < ll->positional_count; i++){
-    if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
-      dfsch_error("Too few arguments", dfsch_list(2, ll, list));
-    }
-    dfsch_eqhash_put(&env->values, ll->positional[i], 
-                     dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti));
-    j = DFSCH_FAST_CDR(j);
-  }
-  
-  if (DFSCH_UNLIKELY(ll->rest)) {
-    dfsch_eqhash_put(&env->values, ll->rest, eval_list(j, outer, ti));
+    dfsch_eqhash_put(&env->values, ll->rest, 
+                     DFSCH_LIKELY(outer) ? 
+                     eval_list(j, outer, ti):
+                     j);
   } else {
     if (DFSCH_UNLIKELY(j)) {
       dfsch_error("Too many arguments", dfsch_list(2,ll, list));
@@ -2715,7 +2707,7 @@ dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist,
   } else {
     l = (lambda_list_t*)arglist;
   }
-  destructure_impl(l, list, e);
+  destructure_impl(l, list, e, NULL, NULL);
   return (dfsch_object_t*)e;
 }
 
@@ -2823,11 +2815,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     environment_t* env = new_frame_impl(((closure_t*) proc)->env,
                                         context,
                                         ti);
-    if (DFSCH_LIKELY(arg_env)){
-      destructuring_eval(((closure_t*)proc)->args, args, env, arg_env, ti);
-    } else {
-      destructure_impl(((closure_t*)proc)->args, args, env);
-    }
+    destructure_impl(((closure_t*)proc)->args, args, env, arg_env, ti);
     return dfsch_eval_proc_impl(((closure_t*)proc)->code,
                                 env,
                                 &myesc,
