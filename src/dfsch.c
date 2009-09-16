@@ -2650,6 +2650,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   size_t keyword_count = 0;
   size_t optional_count = 0;
   size_t arg_count;
+  size_t opt_arg_count;
   dfsch_object_t* rest = NULL;
   dfsch_object_t* aux_list = NULL;
 
@@ -2724,12 +2725,30 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   ll->positional_count = positional_count;
   ll->optional_count = optional_count;
   ll->keyword_count = keyword_count;
-  while(arg_count && DFSCH_PAIR_P(arg_list)){
-    arg_count--;
-    ll->arg_list[arg_count] = DFSCH_FAST_CAR(arg_list);
+  for(j = arg_count; j && DFSCH_PAIR_P(arg_list);){
+    j--;
+    ll->arg_list[j] = DFSCH_FAST_CAR(arg_list);
     arg_list = DFSCH_FAST_CDR(arg_list);
   }
-  
+
+  opt_arg_count = ll->optional_count + ll->keyword_count;
+  if (opt_arg_count > 0){
+    ll->defaults = GC_MALLOC(sizeof(dfsch_object_t*) * opt_arg_count);
+    ll->supplied_p = GC_MALLOC(sizeof(dfsch_object_t*) * opt_arg_count);
+
+    for(j = opt_arg_count; j && DFSCH_PAIR_P(defaults_list);){
+      j--;
+      ll->defaults[j] = DFSCH_FAST_CAR(defaults_list);
+      defaults_list = DFSCH_FAST_CDR(defaults_list);
+    }
+
+    for(j = opt_arg_count; j && DFSCH_PAIR_P(supplied_p_list);){
+      j--;
+      ll->supplied_p[j] = DFSCH_FAST_CAR(supplied_p_list);
+      supplied_p_list = DFSCH_FAST_CDR(supplied_p_list);
+    }
+
+  }
 
 
   return ll;
@@ -2754,6 +2773,29 @@ static void destructure_impl(lambda_list_t* ll,
                      DFSCH_FAST_CAR(j));
     j = DFSCH_FAST_CDR(j);
   }
+
+  for (i = 0; i < ll->optional_count; i++){
+    if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
+      for (; i < ll->optional_count; i++){
+        dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
+                         dfsch_eval_impl(ll->defaults[i], env, NULL, ti));
+        if (DFSCH_UNLIKELY(ll->supplied_p[i])){
+          dfsch_eqhash_put(&env->values, ll->supplied_p[i], NULL);
+        }
+      }
+      break;
+    }
+    dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
+                     DFSCH_LIKELY(outer) ? 
+                     dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti):
+                     DFSCH_FAST_CAR(j));
+    if (DFSCH_UNLIKELY(ll->supplied_p[i])){
+      dfsch_eqhash_put(&env->values, ll->supplied_p[i], DFSCH_SYM_TRUE);
+      
+    }
+    j = DFSCH_FAST_CDR(j);
+  }
+
   
   if (DFSCH_UNLIKELY(ll->rest)) {
     dfsch_eqhash_put(&env->values, ll->rest, 
