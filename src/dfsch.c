@@ -1715,7 +1715,6 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {"&body"},
   {"&allow-other-keys"},
   {"&environment"},
-  {"&context"},
   {"&whole"},
   {"&aux"}
 };
@@ -2637,28 +2636,103 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
                          NULL, dfsch__get_thread_info());
 }
 
+typedef enum cll_mode {
+  CLL_POSITIONAL,
+  CLL_OPTIONAL,
+  CLL_KEYWORD
+} cll_mode_t;
+
 dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   lambda_list_t* ll;
-  long count = dfsch_list_length_fast(list);
   dfsch_object_t* i = list;
   size_t j;
-  if (count == -1){
-    count = 0;
-  }
-  ll = (lambda_list_t*)dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
-                                             sizeof(dfsch_object_t*) * count);
-  ll->positional_count = count;
-  j = 0;
+  size_t positional_count = 0;
+  size_t keyword_count = 0;
+  size_t optional_count = 0;
+  size_t arg_count;
+  dfsch_object_t* rest = NULL;
+  dfsch_object_t* aux_list = NULL;
+
+  dfsch_object_t* arg_list = NULL; 
+  dfsch_object_t* defaults_list = NULL;
+  dfsch_object_t* supplied_p_list = NULL;
+
+  cll_mode_t mode = CLL_POSITIONAL;
+
   while (DFSCH_PAIR_P(i)){
-    if (j >= count){
-      dfsch_error("wtf?", NULL);
+    dfsch_object_t* arg = DFSCH_FAST_CAR(i);
+    
+    if (arg == DFSCH_LK_OPTIONAL){
+      if (mode == CLL_KEYWORD){
+        dfsch_error("Optional arguments must follow positional arguments",
+                    list);
+      }
+      mode = CLL_OPTIONAL;
+    } else if (arg == DFSCH_LK_KEY){
+      if (mode == CLL_OPTIONAL){
+        dfsch_signal_condition(DFSCH_STYLE_WARNING_TYPE, 
+                               "Combination of optional and keyword arguments "
+                               "leads to surprising behavior", NULL);
+      }
+      mode = CLL_KEYWORD;
+    } else {
+
+      if (mode == CLL_POSITIONAL) {
+        arg_list = dfsch_cons(arg, arg_list);
+        positional_count++;
+      } else {
+        dfsch_object_t* name;
+        dfsch_object_t* init_form;
+        dfsch_object_t* supplied_p;
+        if (!DFSCH_PAIR_P(arg)){
+          name = arg;
+          init_form = NULL;
+          supplied_p = NULL;
+        } else {
+          DFSCH_OBJECT_ARG(arg, name);
+          DFSCH_OBJECT_ARG_OPT(arg, init_form, NULL);
+          DFSCH_OBJECT_ARG_OPT(arg, supplied_p, NULL);
+          DFSCH_ARG_END(arg);  
+        }
+        arg_list = dfsch_cons(name, arg_list);
+        defaults_list = dfsch_cons(init_form, defaults_list);
+        supplied_p_list = dfsch_cons(supplied_p, supplied_p_list);
+        if (mode == CLL_OPTIONAL){
+          optional_count++;
+        } else {
+          keyword_count++;
+        }
+      }
     }
-    ll->arg_list[j] = DFSCH_FAST_CAR(i);
-    j++;
+      
+
     i = DFSCH_FAST_CDR(i);
   }
-  ll->rest = i;
-  return (dfsch_object_t*)ll;
+
+  if (i) {
+    if (rest){
+      dfsch_error("Duplicated &rest argument", list);
+    }
+    rest = i;
+  }
+
+  arg_count = positional_count + keyword_count + optional_count;
+  ll = (lambda_list_t*)dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE, 
+                                             arg_count
+                                             * sizeof(dfsch_object_t*));
+  ll->rest = rest;
+  ll->positional_count = positional_count;
+  ll->optional_count = optional_count;
+  ll->keyword_count = keyword_count;
+  while(arg_count && DFSCH_PAIR_P(arg_list)){
+    arg_count--;
+    ll->arg_list[arg_count] = DFSCH_FAST_CAR(arg_list);
+    arg_list = DFSCH_FAST_CDR(arg_list);
+  }
+  
+
+
+  return ll;
 }
 
 

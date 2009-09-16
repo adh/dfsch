@@ -43,6 +43,9 @@ extern dfsch_type_t dfsch_condition_type;
 extern dfsch_type_t dfsch_warning_type;
 #define DFSCH_WARNING_TYPE (&dfsch_warning_type)
 
+extern dfsch_type_t dfsch_style_warning_type;
+#define DFSCH_STYLE_WARNING_TYPE (&dfsch_style_warning_type)
+
 extern dfsch_type_t dfsch_error_type;
 #define DFSCH_ERROR_TYPE (&dfsch_error_type)
 

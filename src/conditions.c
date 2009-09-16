@@ -171,6 +171,9 @@ dfsch_type_t dfsch_condition_type = {
 dfsch_type_t dfsch_warning_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "warning");
 
+dfsch_type_t dfsch_style_warning_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "style-warning");
+
 dfsch_type_t dfsch_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "error");
 
@@ -604,6 +607,7 @@ DFSCH_DEFINE_FORM_IMPL(restart_bind, NULL){
 void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
   dfsch_define_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
+  dfsch_define_cstr(ctx, "<style-warning>", DFSCH_STYLE_WARNING_TYPE);
   dfsch_define_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
   dfsch_define_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
   dfsch_define_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
