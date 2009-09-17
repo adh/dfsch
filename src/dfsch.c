@@ -710,6 +710,13 @@ static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
     dfsch_write_object(ws, ll->arg_list[i]);
     dfsch_write_string(ws, " ");
   }
+  if (ll->optional_count > 0){
+    dfsch_write_string(ws, "&optional ");
+    for (i = 0; i < ll->optional_count; i++){
+      dfsch_write_object(ws, ll->arg_list[i + ll->positional_count]);
+      dfsch_write_string(ws, " ");
+    }
+  }
   if (ll->rest){
     dfsch_write_string(ws, "&rest ");
     dfsch_write_object(ws, ll->rest);    
@@ -2747,7 +2754,6 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
       ll->supplied_p[j] = DFSCH_FAST_CAR(supplied_p_list);
       supplied_p_list = DFSCH_FAST_CDR(supplied_p_list);
     }
-
   }
 
 
