@@ -2670,6 +2670,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   size_t opt_arg_count;
   dfsch_object_t* rest = NULL;
   dfsch_object_t* aux_list = NULL;
+  int flags = 0;
 
   dfsch_object_t* arg_list = NULL; 
   dfsch_object_t* defaults_list = NULL;
@@ -2704,6 +2705,8 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
       aux_list = DFSCH_FAST_CDR(i);
       i = NULL;
       break;
+    } else if (arg == DFSCH_LK_ALLOW_OTHER_KEYS){
+      flags |= LL_FLAG_ALLOW_OTHER_KEYS;
     } else {
       if (mode == CLL_NO_ARGUMENTS){
         dfsch_error("Junk positional argument in keyword position", list);
@@ -2753,6 +2756,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                              * sizeof(dfsch_object_t*));
   ll->rest = rest;
   ll->aux_list = aux_list;
+  ll->flags = flags;
 
   ll->positional_count = positional_count;
   ll->optional_count = optional_count;
