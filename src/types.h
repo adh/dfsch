@@ -10,6 +10,8 @@ typedef dfsch__symbol_t symbol_t;
 
 typedef dfsch_primitive_t primitive_t;
 
+#define LL_FLAG_ALLOW_OTHER_KEYS 1
+
 typedef struct lambda_list_t {
   dfsch_type_t* type;
   uint16_t flags;
@@ -20,8 +22,6 @@ typedef struct lambda_list_t {
   dfsch_object_t** defaults;
   dfsch_object_t** supplied_p;
   dfsch_object_t* aux_list;
-  dfsch_object_t* environment;
-  dfsch_object_t* whole;
   dfsch_object_t* arg_list[];
 } lambda_list_t;
 

@@ -720,6 +720,15 @@ static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
   if (ll->rest){
     dfsch_write_string(ws, "&rest ");
     dfsch_write_object(ws, ll->rest);    
+    dfsch_write_string(ws, " ");
+  }
+  if (ll->keyword_count > 0){
+    dfsch_write_string(ws, "&key ");
+    for (i = 0; i < ll->keyword_count; i++){
+      dfsch_write_object(ws, ll->arg_list[i + ll->positional_count 
+                                          + ll->optional_count]);
+      dfsch_write_string(ws, " ");
+    }
   }
 }
 
@@ -2691,6 +2700,10 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
       }
       rest = DFSCH_FAST_CAR(i);
       mode = CLL_NO_ARGUMENTS;
+    } else if (arg == DFSCH_LK_AUX){
+      aux_list = DFSCH_FAST_CDR(i);
+      i = NULL;
+      break;
     } else {
       if (mode == CLL_NO_ARGUMENTS){
         dfsch_error("Junk positional argument in keyword position", list);
@@ -2739,6 +2752,8 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                              arg_count
                                              * sizeof(dfsch_object_t*));
   ll->rest = rest;
+  ll->aux_list = aux_list;
+
   ll->positional_count = positional_count;
   ll->optional_count = optional_count;
   ll->keyword_count = keyword_count;
@@ -2770,6 +2785,70 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   return ll;
 }
 
+
+static void destructure_keywords(lambda_list_t* ll,
+                                 dfsch_object_t* list,
+                                 environment_t* env,
+                                 environment_t* outer,
+                                 dfsch__thread_info_t* ti){
+  int i;
+  size_t kw_offset = ll->positional_count + ll->optional_count;
+  dfsch_object_t* j;
+  char supplied[ll->keyword_count]; /* ISO 9899 6.7.5.2.5 */
+  memset(supplied, 0, ll->keyword_count);
+  
+  j = list;
+
+  while (DFSCH_PAIR_P(j)){
+    dfsch_object_t* keyword;
+    dfsch_object_t* value;
+    DFSCH_OBJECT_ARG(j, keyword);
+    DFSCH_OBJECT_ARG(j, value);
+    
+    if (DFSCH_LIKELY(outer)){
+      keyword = dfsch_eval_impl(keyword, outer, NULL, ti);
+    }
+
+    i = 0;
+    for (;;){
+      if (i >= ll->keyword_count){
+        if (!(ll->flags & LL_FLAG_ALLOW_OTHER_KEYS)){
+          dfsch_error("Unknown keyword", keyword);
+        }
+        break;
+      }
+      if (keyword == ll->arg_list[i + kw_offset]){
+        dfsch_eqhash_put(&env->values, ll->arg_list[i + kw_offset], 
+                         DFSCH_LIKELY(outer) ? 
+                         dfsch_eval_impl(value, outer, NULL, ti):
+                         value);
+
+        supplied[i] = 1;
+        break;
+      }
+      i++;
+    }
+  }
+
+  if (DFSCH_UNLIKELY(j)){
+    dfsch_error("Improper list passed to function with &key arguments",
+                j);
+  }
+
+  for (i = 0; i < ll->keyword_count; i++){
+    if (!supplied[i]){
+      dfsch_eqhash_put(&env->values, ll->arg_list[i + kw_offset], 
+                       dfsch_eval_impl(ll->defaults[i + ll->optional_count], 
+                                       env, NULL, ti));
+    }
+    
+    if (DFSCH_UNLIKELY(ll->supplied_p[i + ll->optional_count])){
+      dfsch_eqhash_put(&env->values, 
+                       ll->supplied_p[i + ll->optional_count], 
+                       dfsch_bool(supplied[i]));
+    }
+  }
+}
 
 static void destructure_impl(lambda_list_t* ll,
                              dfsch_object_t* list,
@@ -2816,10 +2895,13 @@ static void destructure_impl(lambda_list_t* ll,
   
   
   if (DFSCH_UNLIKELY(ll->rest)) {
-    dfsch_eqhash_put(&env->values, ll->rest, 
-                     DFSCH_LIKELY(outer) ? 
-                     eval_list(j, outer, ti):
-                     j);
+    dfsch_object_t* rest = DFSCH_LIKELY(outer) ? eval_list(j, outer, ti): j;
+    dfsch_eqhash_put(&env->values, ll->rest, rest);
+    if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
+      destructure_keywords(ll, j, env, NULL, ti);
+    }
+  } else if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
+    destructure_keywords(ll, j, env, outer, ti);
   } else {
     if (DFSCH_UNLIKELY(j)) {
       dfsch_error("Too many arguments", dfsch_list(2,ll, list));

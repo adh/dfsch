@@ -93,7 +93,6 @@ if test x$have_expat != x1; then
         AC_MSG_ERROR(expat XML parser is required.)
 fi
 
-
 AC_SYS_LARGEFILE 
 
 dfschlibexecdir="${libdir}/dfsch/"
