@@ -2646,7 +2646,8 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
 typedef enum cll_mode {
   CLL_POSITIONAL,
   CLL_OPTIONAL,
-  CLL_KEYWORD
+  CLL_KEYWORD,
+  CLL_NO_ARGUMENTS, /* no outstanding arguments allowed until next LK */
 } cll_mode_t;
 
 dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
@@ -2671,7 +2672,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
     dfsch_object_t* arg = DFSCH_FAST_CAR(i);
     
     if (arg == DFSCH_LK_OPTIONAL){
-      if (mode == CLL_KEYWORD){
+      if (mode != CLL_POSITIONAL){
         dfsch_error("Optional arguments must follow positional arguments",
                     list);
       }
@@ -2683,8 +2684,17 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                "leads to surprising behavior", NULL);
       }
       mode = CLL_KEYWORD;
+    } else if (arg == DFSCH_LK_REST){
+      i = DFSCH_FAST_CDR(i);
+      if (!DFSCH_PAIR_P(i)){
+        dfsch_error("Missing argument for &rest", list);
+      }
+      rest = DFSCH_FAST_CAR(i);
+      mode = CLL_NO_ARGUMENTS;
     } else {
-
+      if (mode == CLL_NO_ARGUMENTS){
+        dfsch_error("Junk positional argument in keyword position", list);
+      }
       if (mode == CLL_POSITIONAL) {
         arg_list = dfsch_cons(arg, arg_list);
         positional_count++;
@@ -2780,28 +2790,30 @@ static void destructure_impl(lambda_list_t* ll,
     j = DFSCH_FAST_CDR(j);
   }
 
-  for (i = 0; i < ll->optional_count; i++){
-    if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
-      for (; i < ll->optional_count; i++){
-        dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
-                         dfsch_eval_impl(ll->defaults[i], env, NULL, ti));
-        if (DFSCH_UNLIKELY(ll->supplied_p[i])){
-          dfsch_eqhash_put(&env->values, ll->supplied_p[i], NULL);
+  if (DFSCH_UNLIKELY(ll->optional_count)){
+    for (i = 0; i < ll->optional_count; i++){
+      if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
+        for (; i < ll->optional_count; i++){
+          dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
+                           dfsch_eval_impl(ll->defaults[i], env, NULL, ti));
+          if (DFSCH_UNLIKELY(ll->supplied_p[i])){
+            dfsch_eqhash_put(&env->values, ll->supplied_p[i], NULL);
+          }
         }
+        break;
       }
-      break;
+      dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
+                       DFSCH_LIKELY(outer) ? 
+                       dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti):
+                       DFSCH_FAST_CAR(j));
+      if (DFSCH_UNLIKELY(ll->supplied_p[i])){
+        dfsch_eqhash_put(&env->values, ll->supplied_p[i], DFSCH_SYM_TRUE);
+        
+      }
+      j = DFSCH_FAST_CDR(j);
     }
-    dfsch_eqhash_put(&env->values, ll->arg_list[ll->positional_count + i], 
-                     DFSCH_LIKELY(outer) ? 
-                     dfsch_eval_impl(DFSCH_FAST_CAR(j), outer, NULL, ti):
-                     DFSCH_FAST_CAR(j));
-    if (DFSCH_UNLIKELY(ll->supplied_p[i])){
-      dfsch_eqhash_put(&env->values, ll->supplied_p[i], DFSCH_SYM_TRUE);
-      
-    }
-    j = DFSCH_FAST_CDR(j);
   }
-
+  
   
   if (DFSCH_UNLIKELY(ll->rest)) {
     dfsch_eqhash_put(&env->values, ll->rest, 
