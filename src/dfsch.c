@@ -2906,10 +2906,8 @@ static void destructure_impl(lambda_list_t* ll,
     }
   } else if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
     destructure_keywords(ll, j, env, outer, ti);
-  } else {
-    if (DFSCH_UNLIKELY(j)) {
+  } else if (DFSCH_UNLIKELY(j)) {
       dfsch_error("Too many arguments", dfsch_list(2,ll, list));
-    }
   }
 }
 
