@@ -2902,7 +2902,7 @@ static void destructure_impl(lambda_list_t* ll,
     dfsch_object_t* rest = DFSCH_LIKELY(outer) ? eval_list(j, outer, ti): j;
     dfsch_eqhash_put(&env->values, ll->rest, rest);
     if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
-      destructure_keywords(ll, j, env, NULL, ti);
+      destructure_keywords(ll, rest, env, NULL, ti);
     }
   } else if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
     destructure_keywords(ll, j, env, outer, ti);

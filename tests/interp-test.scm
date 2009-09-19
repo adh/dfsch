@@ -286,7 +286,24 @@
              1
              (* x (fact (- x 1)))))
        
-       (test 'fact (fact 5) 120))
+       (test 'fact (fact 5) 120)
+
+       (define (opt-arg-fun &optional a (b 2) (c 3 c-supplied))
+         (list a b c c-supplied))
+       (test 'optional-1 (opt-arg-fun ) '(() 2 3 ()))
+       (test 'optional-2 (opt-arg-fun 'a) '(a 2 3 ()))
+       (test 'optional-3 (opt-arg-fun 'a 'b) '(a b 3 ()))
+       (test 'optional-4 (opt-arg-fun 'a 'b 'c) '(a b c true))
+       
+       (define (key-arg-fun &key a (b 2) (c 3 c-supplied))
+         (list a b c c-supplied))
+       (test 'keyword-1 (key-arg-fun ) '(() 2 3 ()))
+       (test 'keyword-2 (key-arg-fun 'c 9) '(() 2 9 true))
+
+       (define (key-rest-arg-fun &rest r &key a (b 2) (c 3 c-supplied))
+         (list r a b c c-supplied))
+       (test 'keyword-and-rest (key-rest-arg-fun 'c 9) '((c 9) () 2 9 true)))
+
 
 (group "vectors"
 
