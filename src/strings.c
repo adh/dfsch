@@ -211,23 +211,24 @@ dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
   return (dfsch_object_t*)s;
 }
 char* dfsch_string_to_cstr(dfsch_object_t* obj){
-  TYPE_CHECK(obj, STRING, "string");
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(obj, STRING);
 
-  return ((dfsch_string_t*)obj)->buf.ptr;
+  return s->buf.ptr;
 }
 char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
+  dfsch_string_t* s;;
   if (dfsch_symbol_p(obj)){
     return dfsch_symbol(obj);
   }
 
-  TYPE_CHECK(obj, STRING, "string");
+  s = DFSCH_ASSERT_TYPE(obj, STRING);
 
-  return ((dfsch_string_t*)obj)->buf.ptr;
+  return s->buf.ptr;
 }
 dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
-  TYPE_CHECK(obj, STRING, "string");
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(obj, STRING);
 
-  return &(((dfsch_string_t*)obj)->buf);  
+  return &(s->buf);  
 }
 
 int dfsch_string_cmp(dfsch_strbuf_t* a, dfsch_strbuf_t* b){
@@ -269,14 +270,14 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   dfsch_string_t *r = (dfsch_string_t*)dfsch_make_object(STRING);
   char* ptr;
 
-  while (i){
-    dfsch_string_t *s = (dfsch_string_t*)dfsch_car(i);
+  while (DFSCH_PAIR_P(i)){
+    dfsch_string_t *s = DFSCH_ASSERT_TYPE(DFSCH_FAST_CAR(i),
+                                          STRING);
 
-    TYPE_CHECK(s, STRING, "string");
     
     len += s->buf.len;
 
-    i = dfsch_cdr(i);
+    i = DFSCH_FAST_CDR(i);
   }
 
   r->buf.len = len;
@@ -284,13 +285,14 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 
   i = list;
 
-  while (i){
-    dfsch_string_t *s = (dfsch_string_t*)dfsch_car(i);
+  while (DFSCH_PAIR_P(i)){
+    dfsch_string_t *s = DFSCH_ASSERT_TYPE(DFSCH_FAST_CAR(i),
+                                          STRING);
 
     memcpy(ptr, s->buf.ptr, s->buf.len);
     ptr += s->buf.len;
 
-    i = dfsch_cdr(i);
+    i = DFSCH_FAST_CDR(i);
   }
   
   *ptr = 0;
@@ -299,8 +301,7 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 }
 
 char dfsch_string_ref(dfsch_object_t* string, size_t index){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  TYPE_CHECK(s, STRING, "string");
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   if (index >= s->buf.len)
     dfsch_error("Index out of bounds",
@@ -310,16 +311,14 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
 }
 
 size_t dfsch_string_length(dfsch_object_t* string){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  TYPE_CHECK(s, STRING, "string");
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   return s->buf.len;
 }
 
 dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
                                        size_t end){
-  dfsch_string_t* s = (dfsch_string_t*) string;
-  TYPE_CHECK(s, STRING, "string");
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   if (end > s->buf.len)
     dfsch_error("Index out of bounds",
@@ -334,12 +333,11 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
 
 dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
 
-  dfsch_string_t* s = (dfsch_string_t*) string;
+  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
   dfsch_object_t *head; 
   dfsch_object_t *tail;
   size_t i;
 
-  TYPE_CHECK(s, STRING, "string");
 
   if (s->buf.len == 0)
     return NULL;

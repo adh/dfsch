@@ -70,8 +70,5 @@ struct dfsch__stack_frame_t {
   dfsch__stack_frame_t* next;
 };
 
-#define TYPE_CHECK(obj, t, name)                                \
-  if (DFSCH_TYPE_OF(obj) != t)                                  \
-    dfsch_error("exception:not-a-" name, (dfsch_object_t*)obj);
 
 #endif
