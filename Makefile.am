@@ -1,4 +1,6 @@
 
+ACLOCAL_AMFLAGS=-I m4
+
 bin_PROGRAMS = dfsch-repl
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
@@ -44,7 +46,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la
 
-dfschlibexec_LTLIBRARIES = threads.la\
+dfschlibexec_LTLIBRARIES = threads.la \
 	regex.la \
 	unix.la \
 	inet.la \
@@ -55,7 +57,8 @@ dfschlibexec_LTLIBRARIES = threads.la\
 	collections.la \
 	process.la \
 	cmdopts.la \
-	xml.la sxml.la
+	xml.la \
+	sxml.la
 
 dfschlibscm_DATA = scm/struct.scm
 
@@ -109,7 +112,7 @@ libdfsch_threads_la_LDFLAGS = -version-info 1:0:0
 libdfsch_threads_la_LIBADD =  libdfsch.la -lpthread
 
 threads_la_SOURCES = lib/threads_mod.c
-threads_la_LDFLAGS = -avoid-version  -module
+threads_la_LDFLAGS = -avoid-version -module
 threads_la_LIBADD =  libdfsch.la -lpthread libdfsch-threads.la
 
 libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h

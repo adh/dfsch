@@ -6,20 +6,22 @@ dnl package name and version number
 AC_INIT(dfsch, 0.3.0)
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
 dnl AC_CONFIG_AUX_DIR(config)
 dnl checks for programs
 
 dnl AC_PROG_INTLTOOL - We dont want i18n
 
+LT_INIT
+
 AC_PROG_CC
-AC_PROG_LIBTOOL
 AC_PROG_CPP
 AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
