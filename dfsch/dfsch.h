@@ -377,6 +377,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
 
+  extern int dfsch_variable_constant_p(dfsch_object_t* name, 
+                                       dfsch_object_t* env);
+
   /** Set value of variable name in environment env to value. */
   extern dfsch_object_t* dfsch_set(dfsch_object_t* name,
 				   dfsch_object_t* value,

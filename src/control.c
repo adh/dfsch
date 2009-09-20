@@ -289,6 +289,20 @@ DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   return dfsch_apply_tr(func, arglist, esc);
 }
 
+DFSCH_DEFINE_PRIMITIVE(constant_p, 
+                       "Is expression constant in specified "
+                       "lexical environment?"){
+  object_t* expr;
+  object_t* env;
+
+  DFSCH_OBJECT_ARG(args, expr);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_constant_p(expr, env));
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Stack unwinding
@@ -451,30 +465,31 @@ DFSCH_DEFINE_FORM_IMPL(destructuring_bind, NULL){
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__control_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
-  dfsch_define_cstr(ctx, "let", DFSCH_FORM_REF(let));
-  dfsch_define_cstr(ctx, "let*", DFSCH_FORM_REF(let_seq));
-  dfsch_define_cstr(ctx, "letrec", DFSCH_FORM_REF(letrec));
+  dfsch_defconst_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
+  dfsch_defconst_cstr(ctx, "let", DFSCH_FORM_REF(let));
+  dfsch_defconst_cstr(ctx, "let*", DFSCH_FORM_REF(let_seq));
+  dfsch_defconst_cstr(ctx, "letrec", DFSCH_FORM_REF(letrec));
 
-  dfsch_define_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
-  dfsch_define_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
-  dfsch_define_cstr(ctx, "if", DFSCH_FORM_REF(if));
-  dfsch_define_cstr(ctx, "when", DFSCH_FORM_REF(when));
-  dfsch_define_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
-  dfsch_define_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
-  dfsch_define_cstr(ctx, "case", DFSCH_FORM_REF(case));
+  dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
+  dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
+  dfsch_defconst_cstr(ctx, "if", DFSCH_FORM_REF(if));
+  dfsch_defconst_cstr(ctx, "when", DFSCH_FORM_REF(when));
+  dfsch_defconst_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
+  dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
+  dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
-  dfsch_define_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
-  dfsch_define_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
-  dfsch_define_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
+  dfsch_defconst_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
+  dfsch_defconst_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
+  dfsch_defconst_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
 
-  dfsch_define_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
-  dfsch_define_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
-  dfsch_define_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+  dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
+  dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+  dfsch_defconst_cstr(ctx, "constant?", DFSCH_PRIMITIVE_REF(constant_p));
 
-  dfsch_define_cstr(ctx, "do", DFSCH_FORM_REF(do));
-  dfsch_define_cstr(ctx, "dolist", DFSCH_FORM_REF(dolist));
+  dfsch_defconst_cstr(ctx, "do", DFSCH_FORM_REF(do));
+  dfsch_defconst_cstr(ctx, "dolist", DFSCH_FORM_REF(dolist));
 
-  dfsch_define_cstr(ctx, "destructuring-bind", 
-                    DFSCH_FORM_REF(destructuring_bind));
+  dfsch_defconst_cstr(ctx, "destructuring-bind", 
+                      DFSCH_FORM_REF(destructuring_bind));
 }
