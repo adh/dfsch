@@ -210,7 +210,7 @@ DFSCH_DEFINE_PRIMITIVE(define_in_environment, 0){
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_ARG_END(args);
   
-  dfsch_define(name, value, env);
+  dfsch_define(name, value, env, 0);
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(unset_from_environment, 0){

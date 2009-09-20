@@ -193,7 +193,7 @@ DFSCH_DEFINE_FORM_IMPL(define_wrapper_type, NULL){
   type = dfsch_make_wrapper_type(dfsch_symbol_2_typename(name), 
                                  write, equal_p, apply, hash);
 
-  dfsch_define(name, type, env);
+  dfsch_define(name, type, env, 0);
   return type;
 }
 

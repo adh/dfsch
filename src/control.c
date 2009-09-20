@@ -189,7 +189,7 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
     }
 
     lambda = dfsch_named_lambda(ext_env, ll_head, code, name);
-    dfsch_define(name, lambda, ext_env);
+    dfsch_define(name, lambda, ext_env, 0);
 
     return dfsch_apply_tr(lambda, vl_head, esc);
   }
@@ -198,7 +198,7 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
 
-    dfsch_define(var, val, ext_env);
+    dfsch_define(var, val, ext_env, 0);
     
     vars = dfsch_cdr(vars);
   }
@@ -219,7 +219,7 @@ DFSCH_DEFINE_FORM_IMPL(letrec, NULL){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
 
-    dfsch_define(var, val, ext_env);
+    dfsch_define(var, val, ext_env, 0);
     
     vars = dfsch_cdr(vars);
   }
@@ -240,7 +240,7 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
     object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
 
     ext_env = dfsch_new_frame(ext_env);
-    dfsch_define(var, val, ext_env);
+    dfsch_define(var, val, ext_env, 0);
     
     vars = dfsch_cdr(vars);
   }
@@ -369,7 +369,7 @@ DFSCH_DEFINE_FORM_IMPL(do, "Iterative loop"){
     DFSCH_OBJECT_ARG(j, name);
     DFSCH_OBJECT_ARG(j, init);
 
-    dfsch_define(name, dfsch_eval(init, env), lenv);
+    dfsch_define(name, dfsch_eval(init, env), lenv, 0);
 
     i = dfsch_cdr(i);
   }
@@ -390,7 +390,7 @@ DFSCH_DEFINE_FORM_IMPL(do, "Iterative loop"){
       DFSCH_OBJECT_ARG(j, init);
       DFSCH_OBJECT_ARG_OPT(j, step, name);
 
-      dfsch_define(name, dfsch_eval(step, lenv), nenv);
+      dfsch_define(name, dfsch_eval(step, lenv), nenv, 0);
       
       i = dfsch_cdr(i);
     }
@@ -415,7 +415,7 @@ DFSCH_DEFINE_FORM_IMPL(dolist, "Iterate over list contents"){
   list = dfsch_eval(list, env);
   while (DFSCH_PAIR_P(list)){
     dfsch_object_t* inner_env = dfsch_new_frame(env);
-    dfsch_define(variable, DFSCH_FAST_CAR(list), inner_env);
+    dfsch_define(variable, DFSCH_FAST_CAR(list), inner_env, 0);
     result = dfsch_eval_proc(body, inner_env);
     list = DFSCH_FAST_CDR(list);
   }

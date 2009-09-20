@@ -214,7 +214,7 @@ void dfsch_eqhash_set(dfsch_eqhash_t* hash,
   dfsch_eqhash_put(hash, key, value);  
 }
 void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
-                            dfsch_object_t* key, long flags){
+                            dfsch_object_t* key, short flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {

@@ -38,11 +38,11 @@
 
 typedef dfsch_object_t object_t;
 
-#define NEED_ARGS(args,count) \
-  if (dfsch_list_length_check(args)!=(count)) \
+#define NEED_ARGS(args,count)                                   \
+  if (dfsch_list_length_check(args)!=(count))                   \
     dfsch_error("exception:wrong-number-of-arguments",(args));
-#define MIN_ARGS(args,count) \
-  if (dfsch_list_length_check(args)<(count)) \
+#define MIN_ARGS(args,count)                            \
+  if (dfsch_list_length_check(args)<(count))            \
     dfsch_error("exception:too-few-arguments", (args));
 
 // TODO: document all native functions somewhere
@@ -214,10 +214,12 @@ DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
                                           dfsch_cdr(args),
                                           dfsch_car(name));
     name = DFSCH_FAST_CAR(name);
-    return dfsch_define(name, lambda ,env);
+    dfsch_define(name, lambda, env, DFSCH_VAR_CONSTANT);
+    return lambda;
   }else{
     object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
-    return dfsch_define(name,value,env);
+    dfsch_define(name, value, env, 0);
+    return value;
   }
 }
 
@@ -232,7 +234,7 @@ DFSCH_DEFINE_FORM_IMPL(define_variable,
   
   if (!dfsch_env_get(name, env)){
     value = dfsch_eval(value, env);
-    dfsch_define(name, value, env);
+    dfsch_define(name, value, env, 0);
     return value;
   } else {
     return NULL;
@@ -250,7 +252,7 @@ DFSCH_DEFINE_FORM_IMPL(define_constant,
   
   if (!dfsch_env_get(name, env)){
     value = dfsch_eval(value, env);
-    dfsch_define(name, value, env);
+    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
     dfsch_declare(name, dfsch_make_symbol("constant"), env);
     return value;
   } else {
@@ -279,7 +281,8 @@ DFSCH_DEFINE_FORM_IMPL(set, "Change value of variable"){
   object_t* name = dfsch_car(args);
   object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
 
-  return dfsch_set(name, value, env);
+  dfsch_set(name, value, env);
+  return value;
 
 }
 DFSCH_DEFINE_FORM_IMPL(unset, "Delete variable binding"){
@@ -319,7 +322,7 @@ DFSCH_DEFINE_FORM_IMPL(define_macro,
                                                    arglist,
                                                    args,
                                                    name)), 
-               env);
+               env, DFSCH_VAR_CONSTANT);
 }
 
 
@@ -869,124 +872,124 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__native_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
-  dfsch_define_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
-  dfsch_define_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
-  dfsch_define_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
-  dfsch_define_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
-  dfsch_define_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
-  dfsch_define_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
-  dfsch_define_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
-  dfsch_define_cstr(ctx, "get-list-annotation", 
-                    DFSCH_PRIMITIVE_REF(get_list_annotation));
+  dfsch_defconst_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
+  dfsch_defconst_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
+  dfsch_defconst_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
+  dfsch_defconst_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
+  dfsch_defconst_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
+  dfsch_defconst_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
+  dfsch_defconst_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
+  dfsch_defconst_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
+  dfsch_defconst_cstr(ctx, "get-list-annotation", 
+                      DFSCH_PRIMITIVE_REF(get_list_annotation));
 
-  dfsch_define_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
-  dfsch_define_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
-  dfsch_define_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
+  dfsch_defconst_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
+  dfsch_defconst_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
+  dfsch_defconst_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
 
-  dfsch_define_cstr(ctx, "and", DFSCH_FORM_REF(and));
-  dfsch_define_cstr(ctx, "or",DFSCH_FORM_REF(or));
-  dfsch_define_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
+  dfsch_defconst_cstr(ctx, "and", DFSCH_FORM_REF(and));
+  dfsch_defconst_cstr(ctx, "or",DFSCH_FORM_REF(or));
+  dfsch_defconst_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
 
-  dfsch_define_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
-  dfsch_define_cstr(ctx, "define", DFSCH_FORM_REF(define));
-  dfsch_define_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
-  dfsch_define_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
-  dfsch_define_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
-  dfsch_define_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
-  dfsch_define_cstr(ctx, "set!", DFSCH_FORM_REF(set));
-  dfsch_define_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
+  dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
+  dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
+  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
+  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
+  dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
+  dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
+  dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
+  dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
-  dfsch_define_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
-  dfsch_define_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
-  dfsch_define_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
-  dfsch_define_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
-  dfsch_define_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
-  dfsch_define_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
-  dfsch_define_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
-  dfsch_define_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
-  dfsch_define_cstr(ctx, "set-cdr!", DFSCH_PRIMITIVE_REF(set_cdr));
+  dfsch_defconst_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
+  dfsch_defconst_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
+  dfsch_defconst_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
+  dfsch_defconst_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
+  dfsch_defconst_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
+  dfsch_defconst_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
+  dfsch_defconst_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
+  dfsch_defconst_cstr(ctx, "set-cdr!", DFSCH_PRIMITIVE_REF(set_cdr));
 
-  dfsch_define_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
-  dfsch_define_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
-  dfsch_define_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
-  dfsch_define_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
-  dfsch_define_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
-  dfsch_define_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
-  dfsch_define_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
-  dfsch_define_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
-  dfsch_define_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
-  dfsch_define_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
-  dfsch_define_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
-  dfsch_define_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
-  dfsch_define_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
-  dfsch_define_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
-  dfsch_define_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
-  dfsch_define_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
+  dfsch_defconst_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
+  dfsch_defconst_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
+  dfsch_defconst_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
+  dfsch_defconst_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
+  dfsch_defconst_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
+  dfsch_defconst_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
+  dfsch_defconst_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
+  dfsch_defconst_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
+  dfsch_defconst_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
+  dfsch_defconst_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
+  dfsch_defconst_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
+  dfsch_defconst_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
+  dfsch_defconst_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
+  dfsch_defconst_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
+  dfsch_defconst_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
+  dfsch_defconst_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
 
-  dfsch_define_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
-  dfsch_define_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
-  dfsch_define_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
-  dfsch_define_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
-  dfsch_define_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
-  dfsch_define_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
-  dfsch_define_cstr(ctx, "primitive?", 
-		   DFSCH_PRIMITIVE_REF(primitive_p));
-  dfsch_define_cstr(ctx, "function?", DFSCH_PRIMITIVE_REF(function_p));
-  dfsch_define_cstr(ctx, "procedure?", 
-		   DFSCH_PRIMITIVE_REF(procedure_p));
-  dfsch_define_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));
-  dfsch_define_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
-  dfsch_define_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
-
-
-  dfsch_define_cstr(ctx, "true", DFSCH_SYM_TRUE);
-  dfsch_define_cstr(ctx, "nil", NULL);
-  dfsch_define_cstr(ctx, "else", DFSCH_SYM_TRUE);
-  dfsch_define_cstr(ctx, "t", DFSCH_SYM_TRUE);  
-  dfsch_define_cstr(ctx, "T", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
+  dfsch_defconst_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
+  dfsch_defconst_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
+  dfsch_defconst_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
+  dfsch_defconst_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
+  dfsch_defconst_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
+  dfsch_defconst_cstr(ctx, "primitive?", 
+                      DFSCH_PRIMITIVE_REF(primitive_p));
+  dfsch_defconst_cstr(ctx, "function?", DFSCH_PRIMITIVE_REF(function_p));
+  dfsch_defconst_cstr(ctx, "procedure?", 
+                      DFSCH_PRIMITIVE_REF(procedure_p));
+  dfsch_defconst_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));
+  dfsch_defconst_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
+  dfsch_defconst_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
 
 
-  dfsch_define_cstr(ctx, "make-vector", 
-                   DFSCH_PRIMITIVE_REF(make_vector));
-  dfsch_define_cstr(ctx, "vector", 
-                   DFSCH_PRIMITIVE_REF(vector));
-  dfsch_define_cstr(ctx, "vector-length", 
-                   DFSCH_PRIMITIVE_REF(vector_length));
-  dfsch_define_cstr(ctx, "vector-set!", 
-                   DFSCH_PRIMITIVE_REF(vector_set));
-  dfsch_define_cstr(ctx, "vector-ref", 
-                   DFSCH_PRIMITIVE_REF(vector_ref));
-  dfsch_define_cstr(ctx, "vector->list", 
-                   DFSCH_PRIMITIVE_REF(vector_2_list));
-  dfsch_define_cstr(ctx, "list->vector", 
-                   DFSCH_PRIMITIVE_REF(list_2_vector));
+  dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "nil", NULL);
+  dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "t", DFSCH_SYM_TRUE);  
+  dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
-  dfsch_define_cstr(ctx, "object->string", 
-                   DFSCH_PRIMITIVE_REF(object_2_string));
-  dfsch_define_cstr(ctx, "string->object", 
-                   DFSCH_PRIMITIVE_REF(string_2_object));
-  dfsch_define_cstr(ctx, "string->object-list", 
-                   DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_define_cstr(ctx, "dfsch%write-object", 
-                   DFSCH_PRIMITIVE_REF(write__object));
-  dfsch_define_cstr(ctx, "dfsch%write-string", 
-                   DFSCH_PRIMITIVE_REF(write__string));
 
-  dfsch_define_cstr(ctx, "symbol->string", 
-                   DFSCH_PRIMITIVE_REF(symbol_2_string));
-  dfsch_define_cstr(ctx, "string->symbol", 
-                   DFSCH_PRIMITIVE_REF(string_2_symbol));
+  dfsch_defconst_cstr(ctx, "make-vector", 
+                      DFSCH_PRIMITIVE_REF(make_vector));
+  dfsch_defconst_cstr(ctx, "vector", 
+                      DFSCH_PRIMITIVE_REF(vector));
+  dfsch_defconst_cstr(ctx, "vector-length", 
+                      DFSCH_PRIMITIVE_REF(vector_length));
+  dfsch_defconst_cstr(ctx, "vector-set!", 
+                      DFSCH_PRIMITIVE_REF(vector_set));
+  dfsch_defconst_cstr(ctx, "vector-ref", 
+                      DFSCH_PRIMITIVE_REF(vector_ref));
+  dfsch_defconst_cstr(ctx, "vector->list", 
+                      DFSCH_PRIMITIVE_REF(vector_2_list));
+  dfsch_defconst_cstr(ctx, "list->vector", 
+                      DFSCH_PRIMITIVE_REF(list_2_vector));
 
-  dfsch_define_cstr(ctx, "macro-expand", 
-                   DFSCH_PRIMITIVE_REF(macro_expand));
+  dfsch_defconst_cstr(ctx, "object->string", 
+                      DFSCH_PRIMITIVE_REF(object_2_string));
+  dfsch_defconst_cstr(ctx, "string->object", 
+                      DFSCH_PRIMITIVE_REF(string_2_object));
+  dfsch_defconst_cstr(ctx, "string->object-list", 
+                      DFSCH_PRIMITIVE_REF(string_2_object_list));
+  dfsch_defconst_cstr(ctx, "dfsch%write-object", 
+                      DFSCH_PRIMITIVE_REF(write__object));
+  dfsch_defconst_cstr(ctx, "dfsch%write-string", 
+                      DFSCH_PRIMITIVE_REF(write__string));
 
-  dfsch_define_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
-  dfsch_define_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
-  dfsch_define_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
-  dfsch_define_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
-  dfsch_define_cstr(ctx, "make-slot-accessor", 
-                    DFSCH_PRIMITIVE_REF(make_slot_accessor));
+  dfsch_defconst_cstr(ctx, "symbol->string", 
+                      DFSCH_PRIMITIVE_REF(symbol_2_string));
+  dfsch_defconst_cstr(ctx, "string->symbol", 
+                      DFSCH_PRIMITIVE_REF(string_2_symbol));
+
+  dfsch_defconst_cstr(ctx, "macro-expand", 
+                      DFSCH_PRIMITIVE_REF(macro_expand));
+
+  dfsch_defconst_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
+  dfsch_defconst_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
+  dfsch_defconst_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
+  dfsch_defconst_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
+  dfsch_defconst_cstr(ctx, "make-slot-accessor", 
+                      DFSCH_PRIMITIVE_REF(make_slot_accessor));
 
 
   dfsch__native_cxr_register(ctx);

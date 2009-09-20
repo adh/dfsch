@@ -2379,6 +2379,24 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 }
 
 
+int dfsch_variable_constant_p(object_t* name, object_t* env){
+  environment_t *i;
+  short flags;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    if (dfsch_eqhash_ref_ex(&i->values, name, NULL, &flags, NULL)){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return flags & DFSCH_VAR_CONSTANT;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return 0;
+}
+
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -2433,7 +2451,8 @@ void dfsch_unset(object_t* name, object_t* env){
 }
 
 
-object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
+void dfsch_define(object_t* name, object_t* value, object_t* env,
+                  short flags){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -2441,14 +2460,16 @@ object_t* dfsch_define(object_t* name, object_t* value, object_t* env){
     e->owner = NULL;
     DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   }
-  dfsch_eqhash_set(&e->values, 
-                   name, value);  
+  dfsch_eqhash_set(&e->values, name, value);  
+  if (flags){
+    dfsch_eqhash_set_flags(&e->values, name, flags);  
+  }
   if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   }
-  return value;
-
 }
+
+
 
 void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
                    dfsch_object_t* env){
@@ -3137,23 +3158,24 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 }
 
 
-dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
-                                  char *name, 
-                                  void *obj){
+void dfsch_define_cstr(dfsch_object_t *ctx, 
+                       char *name, 
+                       void *obj){
   
-  return dfsch_define(dfsch_make_symbol(name),
-                      (dfsch_object_t*)obj,
-                      ctx);
-  
+  dfsch_define(dfsch_make_symbol(name), (dfsch_object_t*)obj, ctx, 0);
 }
-dfsch_object_t* dfsch_set_cstr(dfsch_object_t *ctx, 
-			       char *name, 
-			       dfsch_object_t *obj){
+void dfsch_defconst_cstr(dfsch_object_t *ctx, 
+                         char *name, 
+                         void *obj){
   
-  return dfsch_set(dfsch_make_symbol(name),
-                   obj,
-                   ctx);
+  dfsch_define(dfsch_make_symbol(name), (dfsch_object_t*)obj, ctx, 
+               DFSCH_VAR_CONSTANT);
+}
+void dfsch_set_cstr(dfsch_object_t *ctx, 
+                    char *name, 
+                    dfsch_object_t *obj){
   
+  dfsch_set(dfsch_make_symbol(name), obj, ctx);
 }
 dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
   return dfsch_lookup(dfsch_make_symbol(name), ctx);

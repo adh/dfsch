@@ -163,7 +163,7 @@ DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
                            dfsch_symbol_2_typename(name),
                            slots);
 
-  dfsch_define(name, klass, env);
+  dfsch_define(name, klass, env, 0);
   return klass;
 }
 

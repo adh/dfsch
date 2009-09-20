@@ -384,10 +384,14 @@ extern "C" {
   /** Unset variable name in environment env */
   extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
+  #define DFSCH_VAR_CONSTANT 1
+  
+
   /** Define variable name in environment env */
-  extern dfsch_object_t* dfsch_define(dfsch_object_t* name,
-				      dfsch_object_t* value,
-				      dfsch_object_t* env);
+  extern void dfsch_define(dfsch_object_t* name,
+                           dfsch_object_t* value,
+                           dfsch_object_t* env,
+                           short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
@@ -434,14 +438,17 @@ extern "C" {
   /** Allocates new top-level environment. */
   extern dfsch_object_t* dfsch_make_top_level_environment();
   /** Define new variable in given context */
-  extern dfsch_object_t* dfsch_define_cstr(dfsch_object_t *ctx, 
-                                           char *name, 
-                                           void *obj); /* to suppress warnings*/
+  extern void dfsch_define_cstr(dfsch_object_t *ctx, 
+                                char *name, 
+                                void *obj); /* to suppress warnings*/
+  extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
+                                  char *name, 
+                                  void *obj); /* to suppress warnings*/
 
   /** Change value of variable. */
-  extern dfsch_object_t* dfsch_set_cstr(dfsch_object_t *env, 
-					char *name, 
-					dfsch_object_t *obj);
+  extern void dfsch_set_cstr(dfsch_object_t *env, 
+                             char *name, 
+                             dfsch_object_t *obj);
 
   /** Looks up value of variable given by NAME. Throws 
       exception:unbound-variable if such variable doesn't exist */
