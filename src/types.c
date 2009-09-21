@@ -818,27 +818,6 @@ dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
   return DFSCH_TAG_ENCODE(p, 3);
 }
 
-static dfsch_object_t* tl_cons(dfsch__thread_info_t* ti,
-                               dfsch_object_t* car, dfsch_object_t* cdr){
-  dfsch_pair_t* p;
-  
-#ifdef GC_NEXT
-  if (!ti->pair_freelist){
-    ti->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
-  }
-  
-  p = ti->pair_freelist;
-  ti->pair_freelist = GC_NEXT(ti->pair_freelist);
-#else
-  p = GC_NEW(dfsch_pair_t);
-#endif
-
-  p->car = car;
-  p->cdr = cdr;
-
-  return DFSCH_TAG_ENCODE(p, 1);
-}
-
 
 
 dfsch_object_t* dfsch_multicons(size_t n){

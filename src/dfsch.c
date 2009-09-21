@@ -114,9 +114,9 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   return DFSCH_TYPE_OF(a)->equal_p(a,b);
 }
 
-static size_t ptr_hash(dfsch_object_t* ptr){
-  size_t a = (size_t)ptr;        
-  size_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
+static uint32_t ptr_hash(dfsch_object_t* ptr){
+  uint32_t a = (size_t)ptr;        
+  uint32_t b = (size_t)ptr >> 16 | (size_t)ptr << 16;
 
   a ^= b >> 2;
   b ^= a >> 3;
@@ -1274,8 +1274,10 @@ dfsch_object_t* dfsch_make_top_level_environment(){
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
   dfsch_define_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
-  dfsch_define_cstr(ctx,"*dfsch-version*",dfsch_make_string_cstr(PACKAGE_VERSION));
-  dfsch_define_cstr(ctx,"*dfsch-platform*",dfsch_make_string_cstr(HOST_TRIPLET));
+  dfsch_define_cstr(ctx,"*dfsch-version*",
+                    dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_define_cstr(ctx,"*dfsch-platform*",
+                    dfsch_make_string_cstr(HOST_TRIPLET));
 
   dfsch__native_register(ctx);
 
