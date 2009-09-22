@@ -38,6 +38,15 @@ typedef struct dfsch_generic_function_type_t {
   dfsch_generic_function_methods_t methods;
 } dfsch_generic_function_type_t;
 
+typedef struct dfsch_singleton_generic_function_t {
+  dfsch_type_t* type;
+  dfsch_type_apply_t apply;
+  dfsch_generic_function_add_method_t add_method;
+  dfsch_generic_function_remove_method_t remove_method;
+  dfsch_generic_function_methods_t methods;
+} dfsch_singleton_generic_function_t;
+
+
 extern dfsch_type_t dfsch_generic_function_type_type;
 #define DFSCH_GENERIC_FUNCTION_TYPE_TYPE (&dfsch_generic_function_type_type)
 

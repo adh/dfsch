@@ -87,33 +87,28 @@ dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
  * ports, or even generic-function-type) to user as generic functions that can 
  * be extended by means of define-method.
  */
-typedef struct singleton_generic_function_t {
-  dfsch_type_t* type;
-  dfsch_type_apply_t apply;
-  dfsch_generic_function_add_method_t add_method;
-  dfsch_generic_function_remove_method_t remove_method;
-  dfsch_generic_function_methods_t methods;
-} singleton_generic_function_t;
+
+typedef dfsch_singleton_generic_function_t singleton_gf_t;
 
 static dfsch_object_t* 
-apply_singleton_generic_function(singleton_generic_function_t* function,
+apply_singleton_generic_function(singleton_gf_t* function,
                                 dfsch_object_t* arguments,
                                 dfsch_tail_escape_t* esc,
                                 dfsch_object_t* context){
   return function->apply(function, arguments, esc, context);
 }
 static void 
-singleton_generic_function_add_method(singleton_generic_function_t* function,
+singleton_generic_function_add_method(singleton_gf_t* function,
                                       dfsch_object_t* method){
   function->add_method(function, method);
 }
 static void 
-singleton_generic_function_remove_method(singleton_generic_function_t* function,
+singleton_generic_function_remove_method(singleton_gf_t* function,
                                          dfsch_object_t* method){
   function->remove_method(function, method);
 }
 static dfsch_object_t* 
-singleton_generic_function_methods(singleton_generic_function_t* function){
+singleton_generic_function_methods(singleton_gf_t* function){
   return function->methods(function);
 }
 
