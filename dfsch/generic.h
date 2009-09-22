@@ -22,11 +22,14 @@
 #ifndef H__dfsch__generic__
 #define H__dfsch__generic__
 
+#include <dfsch/dfsch.h>
+
 typedef void (*dfsch_generic_function_add_method_t)(dfsch_object_t* function,
                                                     dfsch_object_t* method);
 typedef void (*dfsch_generic_function_remove_method_t)(dfsch_object_t* function,
                                                        dfsch_object_t* method);
-typedef void (*dfsch_generic_function_methods_t)(dfsch_object_t* function);
+typedef dfsch_object_t* 
+(*dfsch_generic_function_methods_t)(dfsch_object_t* function);
 
 typedef struct dfsch_generic_function_type_t {
   dfsch_type_t super;
@@ -60,7 +63,12 @@ void dfsch_generic_function_remove_method(dfsch_object_t* function,
 void dfsch_generic_function_methods(dfsch_object_t* function);
 
 dfsch_object_t* dfsch_make_method(dfsch_object_t* name,
+                                  dfsch_object_t* qualifiers,
                                   dfsch_object_t* specializers,
                                   dfsch_object_t* function);
+
+dfsch_object_t* dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
+                                                    dfsch_object_t** l_l,
+                                                    dfsch_object_t** spec);
 
 #endif
