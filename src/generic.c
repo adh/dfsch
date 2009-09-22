@@ -24,23 +24,6 @@
 typedef struct standard_generic_function_t {
 } standard_generic_function_t;
 
-typedef struct singleton_generic_function_t {
-  dfsch_type_t* type;
-  dfsch_type_apply_t apply;
-  dfsch_generic_function_add_method_t add_method;
-  dfsch_generic_function_remove_method_t remove_method;
-  dfsch_generic_function_methods_t methods;
-} singleton_generic_function_t;
-
-typedef struct method_t {
-  dfsch_type_t* type;
-  dfsch_object_t* name;
-  dfsch_object_t* qualifiers;
-  dfsch_object_t* specializers;
-  dfsch_object_t* function;
-} method_t;
-
-
 dfsch_type_t dfsch_generic_function_type_type = {
   .type = DFSCH_META_TYPE,
   .superclass = DFSCH_STANDARD_TYPE,
@@ -54,6 +37,10 @@ dfsch_type_t dfsch_generic_function_type = {
   .name = "generic-function",
   .documentation = ""
 };
+
+/*
+ * Normal generic functions
+ */
 
 static dfsch_object_t* 
 apply_standard_generic_function(standard_generic_function_t* function,
@@ -92,7 +79,21 @@ dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
   .methods = standard_generic_function_methods
 };
 
-
+/*
+ * Singleton generic functions
+ *
+ * This is intended as thin glue layer that presents various hardcoded methods
+ * of internal supporting object structures (C methods of standard-type, 
+ * ports, or even generic-function-type) to user as generic functions that can 
+ * be extended by means of define-method.
+ */
+typedef struct singleton_generic_function_t {
+  dfsch_type_t* type;
+  dfsch_type_apply_t apply;
+  dfsch_generic_function_add_method_t add_method;
+  dfsch_generic_function_remove_method_t remove_method;
+  dfsch_generic_function_methods_t methods;
+} singleton_generic_function_t;
 
 static dfsch_object_t* 
 apply_singleton_generic_function(singleton_generic_function_t* function,
@@ -133,8 +134,20 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
 };
 
 
-
-
+/*
+ * Methods
+ * 
+ * Method objects are only simple containers without any complex associated 
+ * logic. Most reasons why one would want to extend method metaobjects in CLOS
+ * are handled in other means or simply does not make sense in dfsch.
+ */
+typedef struct method_t {
+  dfsch_type_t* type;
+  dfsch_object_t* name;
+  dfsch_object_t* qualifiers;
+  dfsch_object_t* specializers;
+  dfsch_object_t* function;
+} method_t;
 
 dfsch_type_t dfsch_method_type = {
   .type = DFSCH_STANDARD_TYPE,
@@ -154,6 +167,14 @@ dfsch_object_t* dfsch_make_method(dfsch_object_t* name,
   m->function = m->function;
   return (dfsch_object_t*)m;
 }
+
+/*
+ * Specialized arguments must be mandatory and consecutive from first argument.
+ * This simplifies parsing of specialized lambda-lists significantly, because
+ * anything that is not list (because it is symbol) marks end of interesting
+ * part of lambda list and is simply passed through (probably to 
+ * dfsch_compile_lambda_list())
+ */
 
 dfsch_object_t* dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
                                                     dfsch_object_t** l_l,
