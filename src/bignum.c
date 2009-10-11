@@ -749,7 +749,7 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   bignum_t* r;
   size_t i;
 
-  if (m && b->negative){
+  if (b && b->negative){
     dfsch_error("Negative base for modular exponentation", NULL);
   }
   if (m && m->length == 0){
