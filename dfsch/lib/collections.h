@@ -17,6 +17,8 @@ extern dfsch_type_t dfsch_collections_bitvector_type;
 #define DFSCH_COLLECTIONS_BITVECTOR_TYPE (&dfsch_collections_bitvector_type)
 
 dfsch_object_t* dfsch_collections_make_bitvector(size_t length);
+dfsch_object_t* dfsch_collections_list_2_bitvector(dfsch_object_t* values);
+dfsch_object_t* dfsch_collections_bitvector_2_list(dfsch_object_t* bv);
 int dfsch_collections_bitvector_ref(dfsch_object_t* bv, size_t n);
 void dfsch_collections_bitvector_set(dfsch_object_t* bv, size_t n, int v);
 size_t dfsch_collections_bitvector_length(dfsch_object_t* bv);
@@ -29,5 +31,9 @@ dfsch_object_t* dfsch_collections_bitvector_xor(dfsch_object_t* bva,
                                                 dfsch_object_t* bvb);
 dfsch_object_t* dfsch_collections_bitvector_2_integer(dfsch_object_t* bv);
 dfsch_object_t* dfsch_collections_integer_2_bitvector(dfsch_object_t* bv);
+dfsch_object_t* dfsch_collections_bitvector_increment(dfsch_object_t* bv);
+
+int dfsch_collections_bitvector_all_zeros_p(dfsch_object_t* bv);
+int dfsch_collections_bitvector_all_ones_p(dfsch_object_t* bv);
 
 #endif
