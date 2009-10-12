@@ -267,11 +267,23 @@ typedef struct restart_t {
   dfsch__handler_list_t* handlers;
 } restart_t;
 
+static void restart_write(restart_t* r, 
+                            dfsch_writer_state_t* state){
+  dfsch_write_unreadable_start(state, (dfsch_object_t*)r);
+  
+  dfsch_write_object(state, r->name); 
+  dfsch_write_string(state, ": "); 
+  dfsch_write_string(state, r->description);
+  dfsch_write_unreadable_end(state);  
+}
+
 dfsch_type_t dfsch_restart_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(restart_t),
-  "restart"
+  "restart",
+
+  .write = (dfsch_type_write_t) restart_write,
 };
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
