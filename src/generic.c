@@ -49,7 +49,26 @@ dfsch_type_t dfsch_generic_function_type = {
 
 static int more_specific_method_p(dfsch_method_t* a,
                                   dfsch_method_t* b){
-  return a < b;
+  dfsch_object_t* ai = a->specializers;
+  dfsch_object_t* bi = b->specializers;
+
+  while (DFSCH_PAIR_P(ai) && DFSCH_PAIR_P(bi)){
+    dfsch_object_t* as = DFSCH_FAST_CAR(ai);
+    dfsch_object_t* bs = DFSCH_FAST_CAR(bi);
+    
+    if (as != bs){
+      if (dfsch_superclass_p(as, bs)){
+        return 0;
+      } else {
+        return 1;
+      }
+    }
+    
+    ai = DFSCH_FAST_CDR(ai);
+    bi = DFSCH_FAST_CDR(bi);
+  }
+
+  return 0;
 }
 
 /*
