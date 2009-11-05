@@ -20,8 +20,11 @@
  */
 
 #include <dfsch/generic.h>
+#include <dfsch/magic.h>
 
 typedef struct standard_generic_function_t {
+  dfsch_type_t* type;
+  dfsch_object_t* methods;
 } standard_generic_function_t;
 
 dfsch_type_t dfsch_generic_function_type_type = {
@@ -51,17 +54,43 @@ apply_standard_generic_function(standard_generic_function_t* function,
 }
 static void 
 standard_generic_function_add_method(standard_generic_function_t* function,
-                                     dfsch_object_t* method){
-  
+                                     dfsch_method_t* method){
+  function->methods = dfsch_cons(method, function->methods);
 }
+
 static void 
 standard_generic_function_remove_method(standard_generic_function_t* function,
-                                        dfsch_object_t* method){
+                                        dfsch_method_t* method){
+  dfsch_object_t* i;
+  dfsch_object_t* j;
+
+  if (!function->methods){
+    dfsch_error("No such method for generic function", 
+                dfsch_list(2, function, method));
+  }
   
+  if (DFSCH_FAST_CAR(function->methods) == method){
+    function->methods = DFSCH_FAST_CDR(function->methods);
+  }
+
+  j = function->methods;
+  i = DFSCH_FAST_CDR(j);
+  while (i){
+    if (DFSCH_FAST_CAR(i) == method){
+      DFSCH_FAST_CDR_MUT(j) = DFSCH_FAST_CDR(i);
+      return;
+    }
+    j = i;
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  dfsch_error("No such method for generic function", 
+              dfsch_list(2, function, method));
 }
+
 static dfsch_object_t* 
 standard_generic_function_methods(standard_generic_function_t* function){
-  
+  return dfsch_list_copy(function->methods);
 }
 
 dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
@@ -92,9 +121,9 @@ typedef dfsch_singleton_generic_function_t singleton_gf_t;
 
 static dfsch_object_t* 
 apply_singleton_generic_function(singleton_gf_t* function,
-                                dfsch_object_t* arguments,
-                                dfsch_tail_escape_t* esc,
-                                dfsch_object_t* context){
+                                 dfsch_object_t* arguments,
+                                 dfsch_tail_escape_t* esc,
+                                 dfsch_object_t* context){
   return function->apply(function, arguments, esc, context);
 }
 static void 
@@ -128,6 +157,37 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
   .methods = singleton_generic_function_methods
 };
 
+dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (DFSCH_INSTANCE_P(DFSCH_TYPE_OF(o), DFSCH_GENERIC_FUNCTION_TYPE_TYPE)){
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("use-value"), 
+                                  "Retry with alternate value") {
+      dfsch_error("Not a generic funtion object", obj);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return (dfsch_generic_function_t*)o;
+}
+
+
+dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name){
+  
+}
+
+void dfsch_generic_function_add_method(dfsch_object_t* function,
+                                       dfsch_object_t* method){
+  dfsch_generic_function_t* f = dfsch_assert_generic_function(function);
+  f->type->add_method(f, method);
+}
+void dfsch_generic_function_remove_method(dfsch_object_t* function,
+                                          dfsch_object_t* method){
+  dfsch_generic_function_t* f = dfsch_assert_generic_function(function);
+  f->type->remove_method(f, method);
+}
+dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function){
+  dfsch_generic_function_t* f = dfsch_assert_generic_function(function);
+  return f->type->methods(f);
+}
+
 
 /*
  * Methods
@@ -136,26 +196,20 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
  * logic. Most reasons why one would want to extend method metaobjects in CLOS
  * are handled in other means or simply does not make sense in dfsch.
  */
-typedef struct method_t {
-  dfsch_type_t* type;
-  dfsch_object_t* name;
-  dfsch_object_t* qualifiers;
-  dfsch_object_t* specializers;
-  dfsch_object_t* function;
-} method_t;
 
 dfsch_type_t dfsch_method_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "method",
-  .size = sizeof(method_t)
+  .size = sizeof(dfsch_method_t)
 };
 
-dfsch_object_t* dfsch_make_method(dfsch_object_t* name,
+
+dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
                                   dfsch_object_t* qualifiers,
                                   dfsch_object_t* specializers,
                                   dfsch_object_t* function){
-  method_t* m = (method_t*)dfsch_make_object(DFSCH_METHOD_TYPE);
+  dfsch_method_t* m = (dfsch_method_t*)dfsch_make_object(DFSCH_METHOD_TYPE);
   m->name = name;
   m->qualifiers = qualifiers;
   m->specializers = specializers;
@@ -171,9 +225,9 @@ dfsch_object_t* dfsch_make_method(dfsch_object_t* name,
  * dfsch_compile_lambda_list())
  */
 
-dfsch_object_t* dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                                    dfsch_object_t** l_l,
-                                                    dfsch_object_t** spec){
+void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
+                                         dfsch_object_t** l_l,
+                                         dfsch_object_t** spec){
   dfsch_object_t* specializers_head;
   dfsch_object_t* specializers_tail;
   dfsch_object_t* lambda_list_head;
@@ -217,3 +271,4 @@ dfsch_object_t* dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
   *l_l = lambda_list_head;
   *spec = specializers_head;
 }
+

@@ -24,10 +24,20 @@
 
 #include <dfsch/dfsch.h>
 
+typedef struct dfsch_method_t {
+  dfsch_type_t* type;
+  dfsch_object_t* name;
+  dfsch_object_t* qualifiers;
+  dfsch_object_t* specializers;
+  dfsch_object_t* function;
+} dfsch_method_t;
+
+typedef struct dfsch_generic_function_t dfsch_generic_function_t;
+
 typedef void (*dfsch_generic_function_add_method_t)(dfsch_object_t* function,
-                                                    dfsch_object_t* method);
+                                                    dfsch_method_t* method);
 typedef void (*dfsch_generic_function_remove_method_t)(dfsch_object_t* function,
-                                                       dfsch_object_t* method);
+                                                       dfsch_method_t* method);
 typedef dfsch_object_t* 
 (*dfsch_generic_function_methods_t)(dfsch_object_t* function);
 
@@ -38,8 +48,12 @@ typedef struct dfsch_generic_function_type_t {
   dfsch_generic_function_methods_t methods;
 } dfsch_generic_function_type_t;
 
+struct dfsch_generic_function_t {
+  dfsch_generic_function_type_t* type;
+};
+
 typedef struct dfsch_singleton_generic_function_t {
-  dfsch_type_t* type;
+  dfsch_generic_function_type_t* type;
   dfsch_type_apply_t apply;
   dfsch_generic_function_add_method_t add_method;
   dfsch_generic_function_remove_method_t remove_method;
@@ -69,15 +83,19 @@ void dfsch_generic_function_add_method(dfsch_object_t* function,
                                        dfsch_object_t* method);
 void dfsch_generic_function_remove_method(dfsch_object_t* function,
                                           dfsch_object_t* method);
-void dfsch_generic_function_methods(dfsch_object_t* function);
+dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function);
 
-dfsch_object_t* dfsch_make_method(dfsch_object_t* name,
+
+dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
                                   dfsch_object_t* qualifiers,
                                   dfsch_object_t* specializers,
                                   dfsch_object_t* function);
 
-dfsch_object_t* dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                                    dfsch_object_t** l_l,
-                                                    dfsch_object_t** spec);
+
+void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
+                                         dfsch_object_t** l_l,
+                                         dfsch_object_t** spec);
+
+dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj);
 
 #endif
