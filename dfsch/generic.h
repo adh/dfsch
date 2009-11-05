@@ -58,7 +58,8 @@ typedef struct dfsch_singleton_generic_function_t {
   dfsch_generic_function_add_method_t add_method;
   dfsch_generic_function_remove_method_t remove_method;
   dfsch_generic_function_methods_t methods;
-} dfsch_singleton_generic_function_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_singleton_generic_function_t;
 
 
 extern dfsch_type_t dfsch_generic_function_type_type;

@@ -25,6 +25,8 @@
 typedef struct standard_generic_function_t {
   dfsch_type_t* type;
   dfsch_object_t* methods;
+  dfsch_object_t* name;
+  size_t longest_spec_list;
 } standard_generic_function_t;
 
 dfsch_type_t dfsch_generic_function_type_type = {
@@ -52,6 +54,13 @@ apply_standard_generic_function(standard_generic_function_t* function,
                                 dfsch_object_t* context){
   
 }
+static void write_standard_generic_function(standard_generic_function_t* gf,
+                                            dfsch_writer_state_t* ws){
+  dfsch_write_unreadable_start(ws, (dfsch_object_t*) gf);
+  dfsch_write_object(ws, gf->name);    
+  dfsch_write_unreadable_end(ws);
+}
+
 static void 
 standard_generic_function_add_method(standard_generic_function_t* function,
                                      dfsch_method_t* method){
@@ -71,10 +80,11 @@ standard_generic_function_remove_method(standard_generic_function_t* function,
   
   if (DFSCH_FAST_CAR(function->methods) == method){
     function->methods = DFSCH_FAST_CDR(function->methods);
+    return;
   }
 
   j = function->methods;
-  i = DFSCH_FAST_CDR(j);
+  i = DFSCH_FAST_CDR(function->methods);
   while (i){
     if (DFSCH_FAST_CAR(i) == method){
       DFSCH_FAST_CDR_MUT(j) = DFSCH_FAST_CDR(i);
@@ -101,6 +111,7 @@ dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
     .size = sizeof(standard_generic_function_t),
     .documentation = "Normal class of generic functions",
     .apply = apply_standard_generic_function,
+    .write = write_standard_generic_function
   },
 
   .add_method = standard_generic_function_add_method,
@@ -129,15 +140,26 @@ apply_singleton_generic_function(singleton_gf_t* function,
 static void 
 singleton_generic_function_add_method(singleton_gf_t* function,
                                       dfsch_object_t* method){
+  if (function->add_method){
+    dfsch_error("Methods cannot be added to this generic function", 
+                function);
+  }
   function->add_method(function, method);
 }
 static void 
 singleton_generic_function_remove_method(singleton_gf_t* function,
                                          dfsch_object_t* method){
+  if (function->remove_method){
+    dfsch_error("Methods cannot be removed from this generic function", 
+                function);
+  }
   function->remove_method(function, method);
 }
 static dfsch_object_t* 
 singleton_generic_function_methods(singleton_gf_t* function){
+  if (!function->methods){
+    return NULL;
+  }
   return function->methods(function);
 }
 
@@ -147,7 +169,7 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
     .superclass = DFSCH_GENERIC_FUNCTION_TYPE,
     .name = "singleton-generic-function",
     .size = 0,
-    .documentation = "Class of generic functions whose behavior is unique."
+    .documentation = "Class of generic functions whose behavior is unique. "
     "Used to implement internal special cases in interpreter.",
     .apply = apply_singleton_generic_function
   },
@@ -159,7 +181,7 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
 
 dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj){
   dfsch_object_t* o = obj;
-  while (DFSCH_INSTANCE_P(DFSCH_TYPE_OF(o), DFSCH_GENERIC_FUNCTION_TYPE_TYPE)){
+  while (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(o), DFSCH_GENERIC_FUNCTION_TYPE_TYPE)){
     DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("use-value"), 
                                   "Retry with alternate value") {
       dfsch_error("Not a generic funtion object", obj);
@@ -170,7 +192,13 @@ dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj){
 
 
 dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name){
-  
+  standard_generic_function_t* gf = (standard_generic_function_t*)
+    dfsch_make_object(DFSCH_STANDARD_GENERIC_FUNCTION_TYPE);
+
+  gf->name = name;
+  gf->methods = NULL;
+
+  return (dfsch_object_t*)gf;
 }
 
 void dfsch_generic_function_add_method(dfsch_object_t* function,
@@ -194,7 +222,7 @@ dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function){
  * 
  * Method objects are only simple containers without any complex associated 
  * logic. Most reasons why one would want to extend method metaobjects in CLOS
- * are handled in other means or simply does not make sense in dfsch.
+ * are handled by other means or simply do not make sense in dfsch.
  */
 
 dfsch_type_t dfsch_method_type = {
@@ -272,3 +300,91 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
   *spec = specializers_head;
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
+  return dfsch_make_generic_function(NULL);
+}
+DFSCH_DEFINE_PRIMITIVE(make_method, ""){
+  dfsch_object_t* name;
+  dfsch_object_t* qualifiers;
+  dfsch_object_t* specializers;
+  dfsch_object_t* function;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, qualifiers);
+  DFSCH_OBJECT_ARG(args, specializers);
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_method(name, qualifiers, specializers, function);
+}
+
+static dfsch_object_t* add_method_apply(dfsch_object_t* f,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc,
+                                        dfsch_object_t* context){
+  dfsch_object_t* function;
+  dfsch_object_t* method;
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_OBJECT_ARG(args, method);
+  DFSCH_ARG_END(args);
+
+  dfsch_generic_function_add_method(function, 
+                                    DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
+  return NULL;
+}
+
+static dfsch_singleton_generic_function_t add_method = {
+  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
+  .apply = add_method_apply,
+  
+};
+static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
+                                           dfsch_object_t* args,
+                                           dfsch_tail_escape_t* esc,
+                                           dfsch_object_t* context){
+  dfsch_object_t* function;
+  dfsch_object_t* method;
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_OBJECT_ARG(args, method);
+  DFSCH_ARG_END(args);
+
+  dfsch_generic_function_remove_method(function, 
+                                       DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
+  return NULL;
+}
+
+static dfsch_singleton_generic_function_t remove_method = {
+  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
+  .apply = remove_method_apply,
+  
+};
+static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
+                                                      dfsch_object_t* args,
+                                                      dfsch_tail_escape_t* esc,
+                                                      dfsch_object_t* context){
+  dfsch_object_t* function;
+  dfsch_object_t* method;
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_ARG_END(args);
+
+  return dfsch_generic_function_methods(function);
+}
+
+static dfsch_singleton_generic_function_t generic_function_methods = {
+  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
+  .apply = generic_function_methods_apply,
+  
+};
+
+void dfsch__generic_register(dfsch_object_t* env){
+  dfsch_define_cstr(env, "make-generic-function",
+                    DFSCH_PRIMITIVE_REF(make_generic_function));
+  dfsch_define_cstr(env, "make-method",
+                    DFSCH_PRIMITIVE_REF(make_method));
+
+  dfsch_define_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
+  dfsch_define_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
+  dfsch_define_cstr(env, "generic-function-methods", 
+                    (dfsch_object_t*)&generic_function_methods);
+
+}
