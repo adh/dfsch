@@ -60,12 +60,12 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	xml.la \
 	sxml.la
 
-dfschlibscm_DATA = scm/struct.scm
+dfschlibscm_DATA = scm/struct.scm scm/simple-tests.scm scm/unix-utils.scm
 
 man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
-	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc
+	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/types.c src/types.h dfsch/types.h	\
