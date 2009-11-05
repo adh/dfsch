@@ -47,12 +47,123 @@ dfsch_type_t dfsch_generic_function_type = {
  * Normal generic functions
  */
 
+static int more_specific_method_p(dfsch_method_t* a,
+                                  dfsch_method_t* b){
+  return a < b;
+}
+
+/*
+ * Linked list mergesort as described by Simon Tatham at
+ * http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+ */
+static dfsch_object_t* sort_methods(dfsch_object_t* list){
+  size_t k = 1;
+  dfsch_object_t* p = list;
+  size_t p_s;
+  dfsch_object_t* q;
+  size_t q_s;
+  dfsch_object_t* l;
+  dfsch_object_t* lt;
+  int nmerges;
+  size_t i;
+  dfsch_object_t* e;
+
+  l = list;
+
+  do {
+    nmerges = 0;
+    p = l;
+    l = NULL;
+    lt = NULL;
+    while (DFSCH_PAIR_P(p)){
+      nmerges++;
+      q = p;
+      p_s = 0;
+      for (i = 0; DFSCH_PAIR_P(q) && i < k; i++){
+        q = DFSCH_FAST_CDR(q);
+        p_s++;
+      }
+      q_s = k;
+      while (p_s > 0 || (q_s >0 && DFSCH_PAIR_P(q))){
+        if (p_s == 0){
+          q_s--;
+          e = q;
+          q = DFSCH_FAST_CDR(q);
+        } else if (q_s == 0 || !DFSCH_PAIR_P(q)){
+          p_s--;
+          e = p;
+          p = DFSCH_FAST_CDR(p);
+        } else if (!more_specific_method_p(DFSCH_FAST_CAR(q), 
+                                           DFSCH_FAST_CAR(p))){
+          q_s--;
+          e = q;
+          q = DFSCH_FAST_CDR(q);          
+        } else {
+          p_s--;
+          e = p;
+          p = DFSCH_FAST_CDR(p);
+        }
+        DFSCH_FAST_CDR_MUT(e) = NULL;
+        if (l) {
+          DFSCH_FAST_CDR_MUT(lt) = e;
+          lt = e;
+        } else {
+          l = lt = e;
+        }
+      }
+      p = q;
+    }
+    k *= 2;
+  } while(nmerges > 1);
+
+  return l;
+}
+
+
+static int method_applicable_p(dfsch_method_t* method,
+                               dfsch_object_t* arguments){
+  dfsch_object_t* ai = arguments;
+  dfsch_object_t* si = method->specializers;
+
+  while (DFSCH_PAIR_P(ai) && DFSCH_PAIR_P(si)){
+    if (!DFSCH_INSTANCE_P(DFSCH_FAST_CAR(ai),
+                          DFSCH_FAST_CAR(si))){
+      return 0;
+    }
+
+    ai = DFSCH_FAST_CDR(ai);
+    si = DFSCH_FAST_CDR(si);
+  }
+
+  if (si){
+    return 0;
+  }
+
+  return 1;
+}
+
+static dfsch_object_t* compute_applicable_methods(standard_generic_function_t* gf,
+                                                  dfsch_object_t* arguments){
+  dfsch_object_t* i = gf->methods;
+  dfsch_object_t* applicable = NULL;
+
+  while (DFSCH_PAIR_P(i)){
+    if (method_applicable_p(DFSCH_FAST_CAR(i), arguments)){
+      applicable = dfsch_cons(DFSCH_FAST_CAR(i), applicable);
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+  
+  return sort_methods(applicable);
+}
+
+
 static dfsch_object_t* 
 apply_standard_generic_function(standard_generic_function_t* function,
                                 dfsch_object_t* arguments,
                                 dfsch_tail_escape_t* esc,
                                 dfsch_object_t* context){
-  
+  return compute_applicable_methods(function, arguments);
 }
 static void write_standard_generic_function(standard_generic_function_t* gf,
                                             dfsch_writer_state_t* ws){
@@ -280,6 +391,9 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
       lambda_list_tail = lambda_list_head = tmp;
     }
 
+    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
+                                        DFSCH_STANDARD_TYPE);
+
     tmp = dfsch_cons(specializer, NULL);
     if (specializers_tail){
       DFSCH_FAST_CDR_MUT(specializers_tail) = tmp;
@@ -299,6 +413,7 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
   *l_l = lambda_list_head;
   *spec = specializers_head;
 }
+
 
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   return dfsch_make_generic_function(NULL);
