@@ -154,12 +154,16 @@ dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){
 }
 
 int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super){
+  if (!super){
+    return 1;
+  }
+
   if (sub == super)
     return 1;
 
   while (sub){
     sub = sub->superclass;
-    if (sub==super){
+    if (sub == super){
       return 1;
     }
   }

@@ -68,7 +68,11 @@ static int more_specific_method_p(dfsch_method_t* a,
     bi = DFSCH_FAST_CDR(bi);
   }
 
-  return 0;
+  if (bi) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 /*
@@ -355,11 +359,19 @@ dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function){
  * are handled by other means or simply do not make sense in dfsch.
  */
 
+static void method_write(dfsch_method_t* m,
+                         dfsch_writer_state_t* ws){
+  dfsch_write_unreadable_start(ws, (dfsch_object_t*) m);
+  dfsch_write_object(ws, m->name);    
+  dfsch_write_unreadable_end(ws);
+}
+
 dfsch_type_t dfsch_method_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "method",
-  .size = sizeof(dfsch_method_t)
+  .size = sizeof(dfsch_method_t),
+  .write = method_write
 };
 
 
