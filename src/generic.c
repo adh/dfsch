@@ -22,6 +22,7 @@
 #include <dfsch/generic.h>
 #include <dfsch/magic.h>
 
+
 typedef struct standard_generic_function_t {
   dfsch_type_t* type;
   dfsch_object_t* methods;
@@ -198,6 +199,12 @@ static void write_standard_generic_function(standard_generic_function_t* gf,
 static void 
 standard_generic_function_add_method(standard_generic_function_t* function,
                                      dfsch_method_t* method){
+  size_t spec_length = dfsch_list_length_check(method->specializers);
+
+  if (spec_length > function->longest_spec_list){
+    function->longest_spec_list = spec_length;
+  }
+
   function->methods = dfsch_cons(method, function->methods);
 }
 

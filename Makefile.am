@@ -32,7 +32,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/introspect.h \
 	dfsch/random.h \
 	dfsch/writer.h \
-	dfsch/eqhash.h
+	dfsch/eqhash.h \
+	dfsch/mkhash.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-console.la \
@@ -88,7 +89,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/random.c dfsch/random.h	\
 	src/writer.c dfsch/writer.h	\
 	src/eqhash.c dfsch/eqhash.h	\
-	src/generic.c dfsch/generic.h	
+	src/generic.c dfsch/generic.h	\
+	src/mkhash.c dfsch/mkhash.h
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm

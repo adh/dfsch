@@ -1008,4 +1008,5 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__conditions_register(ctx);
   dfsch__random_register(ctx);
   dfsch__generic_register(ctx);
+  dfsch__mkhash_register(ctx);
 }

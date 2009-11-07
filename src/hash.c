@@ -126,7 +126,7 @@ int dfsch_hash_p(dfsch_object_t* obj){
   } else if (!obj ||                                                    \
              !DFSCH_INSTANCE_P(((dfsch_object_t*)DFSCH_TYPE_OF(obj)),   \
                                DFSCH_CUSTOM_HASH_TYPE_TYPE)){           \
-    dfsch_error("exception:not-a-hash", obj);                           \
+    dfsch_error("Not a hash object", obj);                              \
   }else
 
 #define HASH_TYPE(hash) ((dfsch_custom_hash_type_t*)DFSCH_TYPE_OF(hash))             
