@@ -420,7 +420,8 @@ extern "C" {
   /** */
   extern dfsch_object_t* dfsch_apply_with_context(dfsch_object_t* proc, 
                                                   dfsch_object_t* args,
-                                                  dfsch_object_t* context);
+                                                  dfsch_object_t* context,
+                                                  dfsch_tail_escape_t* esc);
   
   /** Extended variant of dfsch_eval_proc with support for tail recursion */
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 

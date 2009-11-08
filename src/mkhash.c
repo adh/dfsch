@@ -48,9 +48,7 @@ static uint32_t hash_keys_equal(dfsch_object_t** keys,
   return res;
 }
 
-dfsch_mkhash_t* dfsch_make_mkhash(size_t num_keys,
-                                  int equalp){
-  dfsch_mkhash_t* h = dfsch_make_object(DFSCH_MKHASH_TYPE);
+void dfsch_mkhash_reset(dfsch_mkhash_t* h, size_t num_keys, int equalp){
   int i;
 
   h->count = 0;
@@ -65,6 +63,13 @@ dfsch_mkhash_t* dfsch_make_mkhash(size_t num_keys,
     h->entries[i].keys = NULL;
     h->entries[i].value = DFSCH_INVALID_OBJECT;
   }
+}
+
+dfsch_mkhash_t* dfsch_make_mkhash(size_t num_keys,
+                                  int equalp){
+  dfsch_mkhash_t* h = dfsch_make_object(DFSCH_MKHASH_TYPE);
+
+  dfsch_mkhash_reset(h, num_keys, equalp);
 
   return h;
 }
@@ -91,13 +96,10 @@ static mk_entry_t* find_entry(dfsch_mkhash_t* h,
     }
     if (cum_hash == h->entries[i].cum_hash){
       for (j = 0; j < num_keys; j++){
-        if (keys[i] == h->entries[i].keys[i]){
+        if (keys[j] == h->entries[i].keys[j]){
           continue;
         }
-        if (!equal){
-          continue;
-        }
-        if (dfsch_equal_p(keys[i], h->entries[i].keys[i])){
+        if (equal && dfsch_equal_p(keys[j], h->entries[i].keys[j])){
           continue;
         }
         goto no_match;
@@ -197,7 +199,7 @@ void dfsch_mkhash_set(dfsch_mkhash_t* h,
 
   if ((h->count * 3) > (h->mask * 2)){
     resize_hash(h, ((h->mask + 1) * 2) - 1);
-  } else if ((h->count * 3) < (h->mask)){
+  } else if ((h->count * 3) < (h->mask) && h->mask != 7){
     resize_hash(h, ((h->mask + 1) / 2) - 1);
   }
 
@@ -207,8 +209,20 @@ void dfsch_mkhash_unset(dfsch_mkhash_t* hash,
                         dfsch_object_t** keys){
   dfsch_mkhash_set(hash, keys, DFSCH_INVALID_OBJECT);
 }
-dfsch_object_t* dfsch_mkhash_2_alist(dfsch_mkhash_t* hash){
-  
+dfsch_object_t* dfsch_mkhash_2_alist(dfsch_mkhash_t* h){
+  int i;
+  dfsch_object_t* result = NULL;
+
+  for (i = 0; i <= h->mask; i++){
+    if (h->entries[i].value != DFSCH_INVALID_OBJECT){
+      result = dfsch_cons(dfsch_list(2, 
+                                     dfsch_list_from_array(h->entries[i].keys,
+                                                           h->num_keys),
+                                     h->entries[i].value), result);
+    }
+  }
+
+  return result;
 }
 
 static dfsch_object_t** destructure_keylist(dfsch_mkhash_t* h,
@@ -249,6 +263,7 @@ dfsch_custom_hash_type_t dfsch_mkhash_type = {
   .ref = mkhash_ref,
   .set = mkhash_set,
   .unset = mkhash_unset,
+  .hash_2_alist = dfsch_mkhash_2_alist,
 };
 
 

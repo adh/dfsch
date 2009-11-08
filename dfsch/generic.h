@@ -40,6 +40,9 @@ typedef void (*dfsch_generic_function_remove_method_t)(dfsch_object_t* function,
                                                        dfsch_method_t* method);
 typedef dfsch_object_t* 
 (*dfsch_generic_function_methods_t)(dfsch_object_t* function);
+typedef dfsch_object_t* (*dfsch_call_next_method_t)(dfsch_object_t* context,
+                                                    dfsch_object_t* args,
+                                                    dfsch_tail_escape_t* esc);
 
 typedef struct dfsch_generic_function_type_t {
   dfsch_type_t super;
@@ -47,6 +50,11 @@ typedef struct dfsch_generic_function_type_t {
   dfsch_generic_function_remove_method_t remove_method;
   dfsch_generic_function_methods_t methods;
 } dfsch_generic_function_type_t;
+
+typedef struct dfsch_method_context_type_t {
+  dfsch_type_t super;
+  dfsch_call_next_method_t call_next_method;
+} dfsch_method_context_type_t;
 
 struct dfsch_generic_function_t {
   dfsch_generic_function_type_t* type;
@@ -74,6 +82,20 @@ extern dfsch_generic_function_type_t dfsch_singleton_generic_function_type;
 #define DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE \
   ((dfsch_type_t*)&dfsch_singleton_generic_function_type)
 
+extern dfsch_type_t dfsch_method_context_type_type;
+#define DFSCH_METHOD_CONTEXT_TYPE_TYPE \
+  (&dfsch_method_context_type_type)
+extern dfsch_type_t dfsch_method_context_type;
+#define DFSCH_METHOD_CONTEXT_TYPE \
+  ((dfsch_type_t*)&dfsch_method_context_type)
+extern dfsch_method_context_type_t dfsch_standard_method_context_type;
+#define DFSCH_STANDARD_METHOD_CONTEXT_TYPE \
+  ((dfsch_type_t*)&dfsch_standard_method_context_type)
+
+extern dfsch_type_t dfsch_standard_effective_method_type;
+#define DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE \
+  (&dfsch_standard_effective_method_type)
+
 extern dfsch_type_t dfsch_method_type;
 #define DFSCH_METHOD_TYPE (&dfsch_method_type)
 
@@ -98,5 +120,9 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
                                          dfsch_object_t** spec);
 
 dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj);
+
+dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
+                                       dfsch_object_t* args,
+                                       dfsch_tail_escape_t* esc);
 
 #endif

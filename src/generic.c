@@ -21,10 +21,11 @@
 
 #include <dfsch/generic.h>
 #include <dfsch/magic.h>
-
+#include <dfsch/mkhash.h>
 
 typedef struct standard_generic_function_t {
   dfsch_type_t* type;
+  dfsch_mkhash_t* dispatch_cache;
   dfsch_object_t* methods;
   dfsch_object_t* name;
   size_t longest_spec_list;
@@ -181,13 +182,109 @@ static dfsch_object_t* compute_applicable_methods(standard_generic_function_t* g
   return sort_methods(applicable);
 }
 
+typedef struct effective_method_t {
+  dfsch_type_t* type;
+
+  dfsch_object_t* methods;
+  dfsch_object_t* genfun;
+} effective_method_t;
+
+typedef struct method_context_t {
+  dfsch_type_t* type;
+
+  dfsch_object_t* next_methods;
+  dfsch_object_t* args;
+  effective_method_t* efmethod;
+} method_context_t;
+
+static dfsch_object_t* cons_method_context(dfsch_object_t* next_methods,
+                                           dfsch_object_t* args,
+                                           effective_method_t* efmethod){
+  method_context_t* mc = dfsch_make_object(DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
+  
+  mc->next_methods = next_methods;
+  mc->args = args;
+  mc->efmethod = efmethod;
+
+  return mc;
+}
+
+static dfsch_object_t* apply_one_method(effective_method_t* em,
+                                        dfsch_object_t* next_methods,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  dfsch_object_t* context;
+  dfsch_object_t* proc;
+
+  context = cons_method_context(DFSCH_FAST_CDR(next_methods),
+                                args, em);
+  proc = ((dfsch_method_t*)DFSCH_FAST_CAR(next_methods))->function;
+
+  return dfsch_apply_with_context(proc, args, context, esc);  
+}
+
+static dfsch_object_t* call_next_method(method_context_t* ctx,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  if (!args){
+    args = ctx->args;
+  }
+
+  if (!ctx->next_methods){
+    dfsch_error("No next method", ctx->efmethod);
+  }
+
+  return apply_one_method(ctx->efmethod, ctx->next_methods, args, esc);
+}
+
+dfsch_method_context_type_t dfsch_standard_method_context_type = {
+  .super = {
+    .type = DFSCH_METHOD_CONTEXT_TYPE_TYPE,
+    .superclass = DFSCH_METHOD_CONTEXT_TYPE,
+    .name = "standard-method-context",
+    .size = sizeof(method_context_t)
+  },
+  .call_next_method = call_next_method,
+};
+
+static dfsch_object_t* apply_effective_method(effective_method_t* em,
+                                              dfsch_object_t* args,
+                                              dfsch_tail_escape_t* esc,
+                                              dfsch_object_t* ctx){
+  return apply_one_method(em, em->methods, args, esc);
+}
+
+dfsch_type_t dfsch_standard_effective_method_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = DFSCH_FUNCTION_TYPE,
+  .size = sizeof(effective_method_t),
+  .name = "standard-effective-method",
+  
+  .apply = apply_effective_method
+};
+
+static effective_method_t* make_effective_method(dfsch_object_t* methods,
+                                             dfsch_object_t* genfun){
+  effective_method_t* em = 
+    dfsch_make_object(DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE);
+
+  em->methods = methods;
+  em->genfun = genfun;
+
+  return em;
+}
+
+
 
 static dfsch_object_t* 
 apply_standard_generic_function(standard_generic_function_t* function,
                                 dfsch_object_t* arguments,
                                 dfsch_tail_escape_t* esc,
                                 dfsch_object_t* context){
-  return compute_applicable_methods(function, arguments);
+  dfsch_object_t* meths = compute_applicable_methods(function, arguments);
+  effective_method_t* em = make_effective_method(meths, function);
+  return apply_effective_method(em, arguments, esc, context);
+  
 }
 static void write_standard_generic_function(standard_generic_function_t* gf,
                                             dfsch_writer_state_t* ws){
@@ -390,7 +487,7 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
   m->name = name;
   m->qualifiers = qualifiers;
   m->specializers = specializers;
-  m->function = m->function;
+  m->function = function;
   return (dfsch_object_t*)m;
 }
 
@@ -450,6 +547,28 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
 
   *l_l = lambda_list_head;
   *spec = specializers_head;
+}
+
+dfsch_type_t dfsch_method_context_type_type = {
+  .type = DFSCH_META_TYPE,
+  .superclass = DFSCH_STANDARD_TYPE,
+  .size = 0,
+  .name = "method-context-type"
+};
+dfsch_type_t dfsch_method_context_type = {
+  .type = DFSCH_ABSTRACT_TYPE,
+  .superclass = NULL,
+  .size = 0,
+  .name = "method-context"  
+};
+
+
+
+dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
+                                       dfsch_object_t* args,
+                                       dfsch_tail_escape_t* esc){
+  dfsch_method_context_type_t* t = DFSCH_TYPE_OF(context);
+  return t->call_next_method(context, args, esc);
 }
 
 
@@ -529,6 +648,19 @@ static dfsch_singleton_generic_function_t generic_function_methods = {
   
 };
 
+DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
+  dfsch_object_t* ctx;
+  args = dfsch_eval_list(args, env);
+
+  ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
+
+  if (!ctx){
+    dfsch_error("call-next-method called outside allowed scope", NULL);
+  }
+
+  return dfsch_call_next_method(ctx, args, esc);
+}
+
 void dfsch__generic_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "make-generic-function",
                     DFSCH_PRIMITIVE_REF(make_generic_function));
@@ -539,5 +671,8 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
   dfsch_define_cstr(env, "generic-function-methods", 
                     (dfsch_object_t*)&generic_function_methods);
+
+  dfsch_define_cstr(env, "call-next-method",
+                    DFSCH_FORM_REF(call_next_method));
 
 }
