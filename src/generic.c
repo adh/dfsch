@@ -23,6 +23,8 @@
 #include <dfsch/magic.h>
 #include <dfsch/mkhash.h>
 
+#include <stdio.h>
+
 typedef struct standard_generic_function_t {
   dfsch_type_t* type;
   dfsch_mkhash_t* dispatch_cache;
@@ -390,7 +392,7 @@ static effective_method_t* make_effective_method(dfsch_object_t* methods,
   return em;
 }
 
-
+//#define GENERIC_PRINT_STATS
 
 static dfsch_object_t* 
 apply_standard_generic_function(standard_generic_function_t* function,
@@ -402,6 +404,10 @@ apply_standard_generic_function(standard_generic_function_t* function,
   dfsch_object_t* cache_keys[function->longest_spec_list];
   size_t i = 0;
   dfsch_object_t* j = arguments;
+
+#ifdef GENERIC_PRINT_STATS
+    size_t gc_start = GC_get_total_bytes();
+#endif
 
   while (i < function->longest_spec_list && DFSCH_PAIR_P(j)){
     cache_keys[i] = DFSCH_TYPE_OF(DFSCH_FAST_CAR(j));
@@ -415,7 +421,10 @@ apply_standard_generic_function(standard_generic_function_t* function,
   }
 
   if (!dfsch_mkhash_ref(function->dispatch_cache, cache_keys, &em)){
-    printf(";; cache miss\n");
+#ifdef GENERIC_PRINT_STATS
+    fprintf(stderr, ";; Cache miss\n");
+#endif
+
     meths = compute_applicable_methods(function, arguments);
       
     if (!meths){
@@ -425,6 +434,9 @@ apply_standard_generic_function(standard_generic_function_t* function,
     em = make_effective_method(meths, function);
     dfsch_mkhash_set(function->dispatch_cache, cache_keys, em);
   }
+#ifdef GENERIC_PRINT_STATS
+  fprintf(stderr, ";; dispatch finish heap_delta=%d\n", GC_get_total_bytes() - gc_start);
+#endif
   return apply_effective_method(em, arguments, esc, context);
   
 }
