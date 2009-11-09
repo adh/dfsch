@@ -473,13 +473,13 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
     ret = dfsch_eqhash_ref(&i->values, name);
     if (ret != DFSCH_INVALID_OBJECT){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-      return dfsch_cons(ret, NULL);
+      return ret;
     }
 
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  return NULL;
+  return DFSCH_INVALID_OBJECT;
 }
 
 

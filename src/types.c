@@ -1524,9 +1524,6 @@ struct hash_entry_t {
 };
 
 
-/*
- * ugly case-insensitive string hash used for symbols
- */
 static size_t string_hash(char* string){
   size_t tmp=0;
 
@@ -1558,7 +1555,10 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {"&allow-other-keys"},
   {"&environment"},
   {"&whole"},
-  {"&aux"}
+  {"&aux"},
+  {"before"},
+  {"after"},
+  {"around"},
 };
 
 /*

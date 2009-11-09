@@ -179,8 +179,9 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name,
     path = path_list;
   } else {
     path = dfsch_env_get_cstr(env, "load:*path*");
-    if (path)
-      path = dfsch_car(path);
+    if (path == DFSCH_INVALID_OBJECT){
+      path = NULL;
+    }
   }
 
   while (dfsch_pair_p(path)){
@@ -244,8 +245,8 @@ static int search_modules(dfsch_object_t* modules, char* name){
 
 dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
   dfsch_object_t* modules = dfsch_env_get_cstr(env, "load:*modules*");
-  if (modules){
-    modules = dfsch_car(modules);
+  if (modules == DFSCH_INVALID_OBJECT){
+    modules = NULL;
   }
 
   if (search_modules(modules, name)){
@@ -257,8 +258,8 @@ dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* p
 
 void dfsch_provide(dfsch_object_t* env, char* name){
   dfsch_object_t* modules = dfsch_env_get_cstr(env, "load:*modules*");
-  if (modules){
-    modules = dfsch_car(modules);
+  if (modules == DFSCH_INVALID_OBJECT){
+    modules = NULL;
   }
 
   if (search_modules(modules, name)){
@@ -278,10 +279,10 @@ void dfsch_provide(dfsch_object_t* env, char* name){
 
 dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "load:*path*");
-  if (path){
+  if (path != DFSCH_INVALID_OBJECT){
     dfsch_set_cstr(ctx, "load:*path*", 
 		   dfsch_append(dfsch_list(2,
-					   dfsch_car(path),
+					   path,
 					   dfsch_list(1,
 						      dfsch_make_string_cstr(dir)))));
   }else{

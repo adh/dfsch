@@ -27,8 +27,9 @@ typedef struct standard_generic_function_t {
   dfsch_type_t* type;
   dfsch_mkhash_t* dispatch_cache;
   dfsch_object_t* methods;
-  dfsch_object_t* name;
   size_t longest_spec_list;
+  dfsch_object_t* name;
+  dfsch_object_t* method_combination;
 } standard_generic_function_t;
 
 dfsch_type_t dfsch_generic_function_type_type = {
@@ -182,46 +183,46 @@ static dfsch_object_t* compute_applicable_methods(standard_generic_function_t* g
   return sort_methods(applicable);
 }
 
-typedef struct effective_method_t {
-  dfsch_type_t* type;
-
-  dfsch_object_t* methods;
-  dfsch_object_t* genfun;
-} effective_method_t;
 
 typedef struct method_context_t {
   dfsch_type_t* type;
 
   dfsch_object_t* next_methods;
   dfsch_object_t* args;
-  effective_method_t* efmethod;
 } method_context_t;
 
 static dfsch_object_t* cons_method_context(dfsch_object_t* next_methods,
-                                           dfsch_object_t* args,
-                                           effective_method_t* efmethod){
+                                           dfsch_object_t* args){
   method_context_t* mc = dfsch_make_object(DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
   
   mc->next_methods = next_methods;
   mc->args = args;
-  mc->efmethod = efmethod;
 
   return mc;
 }
 
-static dfsch_object_t* apply_one_method(effective_method_t* em,
-                                        dfsch_object_t* next_methods,
-                                        dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
-  dfsch_object_t* context;
-  dfsch_object_t* proc;
-
-  context = cons_method_context(DFSCH_FAST_CDR(next_methods),
-                                args, em);
-  proc = ((dfsch_method_t*)DFSCH_FAST_CAR(next_methods))->function;
-
-  return dfsch_apply_with_context(proc, args, context, esc);  
+dfsch_object_t* dfsch_call_method(dfsch_method_t* method,
+                                  dfsch_object_t* next_methods,
+                                  dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc){
+  return dfsch_apply_with_context(method->function, args,
+                                  cons_method_context(next_methods, args), 
+                                  esc);
 }
+dfsch_object_t* dfsch_call_one_method(dfsch_method_t* method,
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
+  return dfsch_apply_tr(method->function, args, esc);
+}
+
+static void call_methods_sequentially(dfsch_object_t* methods,
+                                      dfsch_object_t* args){
+  while (DFSCH_PAIR_P(methods)){
+    dfsch_call_one_method(DFSCH_FAST_CAR(methods), args, NULL);
+    methods = DFSCH_FAST_CDR(methods);
+  }
+}
+
 
 static dfsch_object_t* call_next_method(method_context_t* ctx,
                                         dfsch_object_t* args,
@@ -231,10 +232,12 @@ static dfsch_object_t* call_next_method(method_context_t* ctx,
   }
 
   if (!ctx->next_methods){
-    dfsch_error("No next method", ctx->efmethod);
+    dfsch_error("No next method", NULL);
   }
 
-  return apply_one_method(ctx->efmethod, ctx->next_methods, args, esc);
+  return dfsch_call_method(DFSCH_FAST_CAR(ctx->next_methods), 
+                           DFSCH_FAST_CDR(ctx->next_methods), 
+                           args, esc);
 }
 
 dfsch_method_context_type_t dfsch_standard_method_context_type = {
@@ -247,11 +250,58 @@ dfsch_method_context_type_t dfsch_standard_method_context_type = {
   .call_next_method = call_next_method,
 };
 
+typedef struct effective_method_t {
+  dfsch_type_t* type;
+
+  dfsch_object_t* primary_methods;
+  dfsch_object_t* before_methods;
+  dfsch_object_t* after_methods;
+  dfsch_object_t* around_methods;
+
+  dfsch_object_t* genfun;
+} effective_method_t;
+
+static dfsch_object_t* standard_mc_core(effective_method_t* em,
+                                        dfsch_object_t* args,
+                                        dfsch_tail_escape_t* esc){
+  if (em->before_methods){
+    call_methods_sequentially(em->before_methods, args);
+  }
+  
+  if (!em->after_methods) {
+    if (em->primary_methods){
+      return dfsch_call_method(DFSCH_FAST_CAR(em->primary_methods), 
+                               DFSCH_FAST_CDR(em->primary_methods), 
+                               args, esc);
+    }
+  } else {
+    dfsch_object_t* r; 
+    if (em->primary_methods) {
+      r = dfsch_call_method(DFSCH_FAST_CAR(em->primary_methods), 
+                            DFSCH_FAST_CDR(em->primary_methods), 
+                            args, NULL);
+    }
+    call_methods_sequentially(em->after_methods, args);
+    return r;
+  }
+}
+
+DFSCH_PRIMITIVE_HEAD(around_method_stub_proc){
+  effective_method_t* em = baton;
+  return standard_mc_core(em, args, esc);
+}
+
 static dfsch_object_t* apply_effective_method(effective_method_t* em,
                                               dfsch_object_t* args,
                                               dfsch_tail_escape_t* esc,
                                               dfsch_object_t* ctx){
-  return apply_one_method(em, em->methods, args, esc);
+  if (DFSCH_LIKELY(!em->around_methods)){
+    return standard_mc_core(em, args, esc);
+  } else {
+    return dfsch_call_method(DFSCH_FAST_CAR(em->around_methods), 
+                             DFSCH_FAST_CDR(em->around_methods), 
+                             args, esc);
+  }
 }
 
 dfsch_type_t dfsch_standard_effective_method_type = {
@@ -263,12 +313,78 @@ dfsch_type_t dfsch_standard_effective_method_type = {
   .apply = apply_effective_method
 };
 
+static dfsch_object_t* get_primary_methods(dfsch_object_t* methods){
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+
+  while (DFSCH_PAIR_P(methods)){
+    dfsch_method_t* method = DFSCH_FAST_CAR(methods);
+
+    if (!method->qualifiers){
+      dfsch_object_t* tmp = dfsch_cons(method, NULL);
+      if (head){
+        DFSCH_FAST_CDR_MUT(tail) = tmp;
+        tail = tmp;
+      } else {
+        tail = head = tmp;
+      }
+    }
+    methods = DFSCH_FAST_CDR(methods);
+  }
+
+  return head;
+}
+static dfsch_object_t* get_qualified_methods(dfsch_object_t* methods,
+                                             dfsch_object_t* qualifier){
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail;
+
+  while (DFSCH_PAIR_P(methods)){
+    dfsch_method_t* method = DFSCH_FAST_CAR(methods);
+
+    if (DFSCH_PAIR_P(method->qualifiers) &&
+        DFSCH_FAST_CAR(method->qualifiers) == qualifier &&
+        DFSCH_FAST_CDR(method->qualifiers) == NULL){
+      dfsch_object_t* tmp = dfsch_cons(method, NULL);
+      if (head){
+        DFSCH_FAST_CDR_MUT(tail) = tmp;
+        tail = tmp;
+      } else {
+        tail = head = tmp;
+      }
+    }
+    methods = DFSCH_FAST_CDR(methods);
+  }
+
+  return head;
+}
+
 static effective_method_t* make_effective_method(dfsch_object_t* methods,
-                                             dfsch_object_t* genfun){
+                                                 dfsch_object_t* genfun){
   effective_method_t* em = 
     dfsch_make_object(DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE);
 
-  em->methods = methods;
+  em->primary_methods = get_primary_methods(methods);
+  em->after_methods = dfsch_reverse(get_qualified_methods(methods, 
+                                                          DFSCH_QUAL_AFTER));
+  em->before_methods = get_qualified_methods(methods, DFSCH_QUAL_BEFORE);
+  em->around_methods = get_qualified_methods(methods, DFSCH_QUAL_AROUND);
+
+  if (em->around_methods){
+    dfsch_object_t* i;
+    dfsch_method_t* stub_method = 
+      dfsch_make_method(NULL,
+                        NULL,
+                        NULL,
+                        DFSCH_PRIMITIVE_REF_MAKE(around_method_stub_proc,
+                                                 em));
+    i = em->around_methods;
+    while (DFSCH_PAIR_P(DFSCH_FAST_CDR(i))){
+      i = DFSCH_FAST_CDR(i);
+    }
+    DFSCH_FAST_CDR_MUT(i) = dfsch_cons(stub_method, NULL);
+  }
+
   em->genfun = genfun;
 
   return em;
@@ -282,7 +398,13 @@ apply_standard_generic_function(standard_generic_function_t* function,
                                 dfsch_tail_escape_t* esc,
                                 dfsch_object_t* context){
   dfsch_object_t* meths = compute_applicable_methods(function, arguments);
-  effective_method_t* em = make_effective_method(meths, function);
+  effective_method_t* em;
+  
+  if (!meths){
+    dfsch_error("No applicable methods", dfsch_list(2, function, arguments));
+  }
+
+  em = make_effective_method(meths, function);
   return apply_effective_method(em, arguments, esc, context);
   
 }
@@ -297,9 +419,21 @@ static void
 standard_generic_function_add_method(standard_generic_function_t* function,
                                      dfsch_method_t* method){
   size_t spec_length = dfsch_list_length_check(method->specializers);
+  dfsch_object_t* i = function->methods;
 
   if (spec_length > function->longest_spec_list){
     function->longest_spec_list = spec_length;
+  }
+  
+  while (i){
+    dfsch_method_t* m = DFSCH_FAST_CAR(i);
+    if (dfsch_equal_p(method->specializers, m->specializers) &&
+        dfsch_equal_p(method->qualifiers, m->qualifiers)){
+      DFSCH_FAST_CAR(i) = method;
+      return;
+    }
+
+    i = DFSCH_FAST_CDR(i);
   }
 
   function->methods = dfsch_cons(method, function->methods);
@@ -470,12 +604,25 @@ static void method_write(dfsch_method_t* m,
   dfsch_write_unreadable_end(ws);
 }
 
+dfsch_slot_t method_slots[] = {
+  DFSCH_OBJECT_SLOT(dfsch_method_t, name, DFSCH_SLOT_ACCESS_RO,
+                    "Method name (i.e. first argument of define-method)"),
+  DFSCH_OBJECT_SLOT(dfsch_method_t, qualifiers, DFSCH_SLOT_ACCESS_RO,
+                    "Method qualifier list"),
+  DFSCH_OBJECT_SLOT(dfsch_method_t, specializers, DFSCH_SLOT_ACCESS_RO,
+                    "Specializers of method"),
+  DFSCH_OBJECT_SLOT(dfsch_method_t, function, DFSCH_SLOT_ACCESS_RO,
+                    "Implementing function"),  
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_method_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "method",
   .size = sizeof(dfsch_method_t),
-  .write = method_write
+  .write = method_write,
+  .slots = method_slots
 };
 
 
@@ -500,12 +647,13 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
  */
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
+                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec){
-  dfsch_object_t* specializers_head;
-  dfsch_object_t* specializers_tail;
-  dfsch_object_t* lambda_list_head;
-  dfsch_object_t* lambda_list_tail;
+  dfsch_object_t* specializers_head = NULL;
+  dfsch_object_t* specializers_tail = NULL;
+  dfsch_object_t* lambda_list_head = NULL;
+  dfsch_object_t* lambda_list_tail = NULL;
   dfsch_object_t* i = s_l_l;
 
   while (DFSCH_PAIR_P(i) && DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
@@ -518,6 +666,12 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
     DFSCH_OBJECT_ARG(j, specializer);
     DFSCH_ARG_END(j);
 
+    specializer = dfsch_eval(specializer, env);
+    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
+                                        DFSCH_STANDARD_TYPE);
+
+
+
     tmp = dfsch_cons(var, NULL);
     if (lambda_list_tail){
       DFSCH_FAST_CDR_MUT(lambda_list_tail) = tmp;
@@ -526,9 +680,6 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
       lambda_list_tail = lambda_list_head = tmp;
     }
 
-    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
-                                        DFSCH_STANDARD_TYPE);
-
     tmp = dfsch_cons(specializer, NULL);
     if (specializers_tail){
       DFSCH_FAST_CDR_MUT(specializers_tail) = tmp;
@@ -536,6 +687,7 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
     } else {
       specializers_tail = specializers_head = tmp;
     }
+
     i = DFSCH_FAST_CDR(i);
   }
   
@@ -573,7 +725,11 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
 
 
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
-  return dfsch_make_generic_function(NULL);
+  dfsch_object_t* name;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_generic_function(name);
 }
 DFSCH_DEFINE_PRIMITIVE(make_method, ""){
   dfsch_object_t* name;
@@ -621,7 +777,8 @@ static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
   DFSCH_ARG_END(args);
 
   dfsch_generic_function_remove_method(function, 
-                                       DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
+                                       DFSCH_ASSERT_INSTANCE(method, 
+                                                             DFSCH_METHOD_TYPE));
   return NULL;
 }
 
@@ -661,6 +818,75 @@ DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
   return dfsch_call_next_method(ctx, args, esc);
 }
 
+static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
+                                               dfsch_object_t* name){
+  dfsch_object_t* fun;
+  fun = dfsch_env_get(name, env);
+  if (fun != DFSCH_INVALID_OBJECT){
+    if (!DFSCH_INSTANCE_P(fun, DFSCH_GENERIC_FUNCTION_TYPE)){
+      dfsch_cerror("Generic function name already defined as different type",
+                   name);
+    } else {
+      return fun;
+    }
+  }
+
+  fun = dfsch_make_generic_function(name);
+  dfsch_define(name, fun, env, DFSCH_VAR_CONSTANT);
+
+  return fun;
+}
+
+DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
+  dfsch_object_t* name;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+
+  return ensure_generic_function(env, name);
+}
+
+DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
+  dfsch_object_t* header; 
+  dfsch_object_t* body;
+  dfsch_object_t* name;
+  dfsch_object_t* qualifiers = NULL;
+  dfsch_object_t* specializers;
+  dfsch_object_t* lambda_list;
+  dfsch_object_t* function;
+  dfsch_object_t* method;
+
+  DFSCH_OBJECT_ARG(args, header);
+  DFSCH_ARG_REST(args, body);
+    
+  if (!DFSCH_PAIR_P(header)){
+    dfsch_error("Invalid method header", header);
+  }     
+
+  name = DFSCH_FAST_CAR(header);
+  lambda_list = DFSCH_FAST_CDR(header);
+  
+  if (DFSCH_PAIR_P(name)){
+    qualifiers = DFSCH_FAST_CDR(name);
+    name = DFSCH_FAST_CAR(name);
+  }
+
+  dfsch_parse_specialized_lambda_list(lambda_list, env, 
+                                      &lambda_list, &specializers);
+ 
+  
+  method = dfsch_make_method(header, qualifiers, specializers, 
+                             dfsch_named_lambda(env, lambda_list, 
+                                                body, header));
+
+  function = ensure_generic_function(env, name);
+
+  dfsch_generic_function_add_method(function, method);
+
+  return method;
+}
+
+
 void dfsch__generic_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "make-generic-function",
                     DFSCH_PRIMITIVE_REF(make_generic_function));
@@ -674,5 +900,10 @@ void dfsch__generic_register(dfsch_object_t* env){
 
   dfsch_define_cstr(env, "call-next-method",
                     DFSCH_FORM_REF(call_next_method));
+
+  dfsch_define_cstr(env, "define-generic-function",
+                    DFSCH_FORM_REF(define_generic_function));
+  dfsch_define_cstr(env, "define-method",
+                    DFSCH_FORM_REF(define_method));
 
 }
