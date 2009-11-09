@@ -397,14 +397,34 @@ apply_standard_generic_function(standard_generic_function_t* function,
                                 dfsch_object_t* arguments,
                                 dfsch_tail_escape_t* esc,
                                 dfsch_object_t* context){
-  dfsch_object_t* meths = compute_applicable_methods(function, arguments);
+  dfsch_object_t* meths;
   effective_method_t* em;
-  
-  if (!meths){
-    dfsch_error("No applicable methods", dfsch_list(2, function, arguments));
+  dfsch_object_t* cache_keys[function->longest_spec_list];
+  size_t i = 0;
+  dfsch_object_t* j = arguments;
+
+  while (i < function->longest_spec_list && DFSCH_PAIR_P(j)){
+    cache_keys[i] = DFSCH_TYPE_OF(DFSCH_FAST_CAR(j));
+    //    printf(";; [%d] = %s\n", i, dfsch_object_2_string(cache_keys[i], 100, 100));
+    i++;
+    j = DFSCH_FAST_CDR(j);
+  }
+  while (i < function->longest_spec_list){
+    cache_keys[i] = DFSCH_INVALID_OBJECT;
+    i++;
   }
 
-  em = make_effective_method(meths, function);
+  if (!dfsch_mkhash_ref(function->dispatch_cache, cache_keys, &em)){
+    printf(";; cache miss\n");
+    meths = compute_applicable_methods(function, arguments);
+      
+    if (!meths){
+      dfsch_error("No applicable methods", dfsch_list(2, function, arguments));
+    }
+    
+    em = make_effective_method(meths, function);
+    dfsch_mkhash_set(function->dispatch_cache, cache_keys, em);
+  }
   return apply_effective_method(em, arguments, esc, context);
   
 }
@@ -437,6 +457,7 @@ standard_generic_function_add_method(standard_generic_function_t* function,
   }
 
   function->methods = dfsch_cons(method, function->methods);
+  dfsch_mkhash_reset(function->dispatch_cache, function->longest_spec_list, 0);
 }
 
 static void 
@@ -452,6 +473,7 @@ standard_generic_function_remove_method(standard_generic_function_t* function,
   
   if (DFSCH_FAST_CAR(function->methods) == method){
     function->methods = DFSCH_FAST_CDR(function->methods);
+    dfsch_mkhash_reset(function->dispatch_cache, function->longest_spec_list, 0);
     return;
   }
 
@@ -460,6 +482,7 @@ standard_generic_function_remove_method(standard_generic_function_t* function,
   while (i){
     if (DFSCH_FAST_CAR(i) == method){
       DFSCH_FAST_CDR_MUT(j) = DFSCH_FAST_CDR(i);
+      dfsch_mkhash_reset(function->dispatch_cache, function->longest_spec_list, 0);
       return;
     }
     j = i;
@@ -569,6 +592,7 @@ dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name){
 
   gf->name = name;
   gf->methods = NULL;
+  gf->dispatch_cache = dfsch_make_mkhash(0, 0);
 
   return (dfsch_object_t*)gf;
 }
