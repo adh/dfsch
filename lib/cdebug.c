@@ -59,10 +59,30 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
   
 }
 
+typedef struct cdebug_ctx_t {
+  dfsch_object_t* env;
+  dfsch_object_t* restarts;
+} cdebug_ctx_t;
+
+static int cdebug_callback(dfsch_object_t *obj,  cdebug_ctx_t* ctx){
+  dfsch_object_t* ret;
+
+  if (dfsch_integer_p(obj)){
+    dfsch_invoke_restart(dfsch_list_item(ctx->restarts, 
+                                         dfsch_number_to_long(obj)), 
+                         NULL);
+  } else {
+    ret = dfsch_eval(obj, ctx->env);
+    puts(dfsch_object_2_string(ret,100,1));
+  }
+}
+
+
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
   dfsch_object_t* env;
   dfsch_object_t* ustack = dfsch_get_trace();
+  cdebug_ctx_t ctx;
   char buf[512];
   int i;
 
@@ -71,6 +91,9 @@ static void debug_main(dfsch_object_t* reason){
   }
 
   env = dfsch_new_frame(debugger_env);
+
+  ctx.restarts = restarts;
+  ctx.env = env;
 
   dfsch_define_cstr(env, "reason", reason);
   dfsch_define_cstr(env, "stack-trace", ustack);
@@ -98,7 +121,7 @@ static void debug_main(dfsch_object_t* reason){
   i = 0;
   while (DFSCH_PAIR_P(restarts)){
     dfsch_object_t* restart = DFSCH_FAST_CAR(restarts);
-    fprintf(stderr, "  (r %d): [%s] %s\n",
+    fprintf(stderr, "  %2d: [%s] %s\n",
             i,
             dfsch_object_2_string(dfsch_restart_name(restart), 1, 1),
             dfsch_restart_description(restart));
@@ -107,9 +130,10 @@ static void debug_main(dfsch_object_t* reason){
   }
 
   dfsch_introspect_register(env);
-  dfsch_console_run_repl(dfsch_saprintf("dbg%d> ", 
-                                        dfsch_get_debugger_depth()), 
-                         env);
+  
+  dfsch_console_read_objects(dfsch_saprintf("dbg%d> ", 
+                                            dfsch_get_debugger_depth()), 
+                             cdebug_callback, &ctx);
 }
 
 void dfsch_cdebug_enter_debugger(dfsch_object_t* reason){
