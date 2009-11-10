@@ -232,7 +232,7 @@ DFSCH_DEFINE_FORM_IMPL(define_variable,
   DFSCH_OBJECT_ARG_OPT(args, value, NULL);
   DFSCH_ARG_END(args);
   
-  if (!dfsch_env_get(name, env)){
+  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
     value = dfsch_eval(value, env);
     dfsch_define(name, value, env, 0);
     return value;
@@ -250,7 +250,7 @@ DFSCH_DEFINE_FORM_IMPL(define_constant,
   DFSCH_OBJECT_ARG_OPT(args, value, NULL);
   DFSCH_ARG_END(args);
   
-  if (!dfsch_env_get(name, env)){
+  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
     value = dfsch_eval(value, env);
     dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
     dfsch_declare(name, dfsch_make_symbol("constant"), env);
@@ -301,7 +301,7 @@ DFSCH_DEFINE_FORM_IMPL(defined_p,
   NEED_ARGS(args,1);
   object_t* name = dfsch_car(args);
 
-  return dfsch_env_get(name, env);
+  return dfsch_bool(dfsch_env_get(name, env) != DFSCH_INVALID_OBJECT);
 }
 
 DFSCH_DEFINE_PRIMITIVE(make_macro, 
@@ -1007,4 +1007,6 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch__bignum_register(ctx);
   dfsch__conditions_register(ctx);
   dfsch__random_register(ctx);
+  dfsch__generic_register(ctx);
+  dfsch__mkhash_register(ctx);
 }

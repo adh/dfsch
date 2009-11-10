@@ -154,12 +154,16 @@ dfsch_object_t* dfsch_superclass(dfsch_object_t* obj){
 }
 
 int dfsch_superclass_p(dfsch_type_t* sub, dfsch_type_t* super){
+  if (!super){
+    return 1;
+  }
+
   if (sub == super)
     return 1;
 
   while (sub){
     sub = sub->superclass;
-    if (sub==super){
+    if (sub == super){
       return 1;
     }
   }
@@ -400,7 +404,7 @@ static environment_t* new_frame_impl(environment_t* parent,
   e->context = context;
   e->owner = ti;
   e->parent = (environment_t*)parent;
-    
+
   return e;
 }
 
@@ -469,13 +473,13 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
     ret = dfsch_eqhash_ref(&i->values, name);
     if (ret != DFSCH_INVALID_OBJECT){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-      return dfsch_cons(ret, NULL);
+      return ret;
     }
 
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  return NULL;
+  return DFSCH_INVALID_OBJECT;
 }
 
 
@@ -1121,6 +1125,7 @@ struct dfsch_tail_escape_t {
   jmp_buf ret;
   object_t *proc;
   object_t *args;
+  object_t* context;
   environment_t *arg_env;
 };
 
@@ -1136,10 +1141,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   dfsch_object_t* r;
   tail_escape_t myesc;
 
+
   if (DFSCH_UNLIKELY(esc)){
     esc->proc = proc;
     esc->args = args;
     esc->arg_env = arg_env;
+    esc->context = context;
     longjmp(esc->ret,1);
   }
 
@@ -1148,6 +1155,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     proc = myesc.proc;
     args = myesc.args;
     arg_env = myesc.arg_env;
+    context = myesc.context;
     DFSCH__TRACEPOINT_APPLY(ti, proc, args, 
                            DFSCH_TRACEPOINT_FLAG_APPLY_TAIL | 
                            (arg_env ? DFSCH_TRACEPOINT_FLAG_APPLY_LAZY : 0));
@@ -1202,6 +1210,13 @@ dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc,
 dfsch_object_t* dfsch_apply(dfsch_object_t* proc, dfsch_object_t* args){
   return dfsch_apply_impl(proc, args, NULL, NULL, 
                           NULL, dfsch__get_thread_info());
+}
+dfsch_object_t* dfsch_apply_with_context(dfsch_object_t* proc, 
+                                         dfsch_object_t* args,
+                                         dfsch_object_t* context,
+                                         tail_escape_t* esc){
+  return dfsch_apply_impl(proc, args, context, NULL, 
+                          esc, dfsch__get_thread_info());
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
