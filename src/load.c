@@ -532,6 +532,16 @@ DFSCH_DEFINE_PRIMITIVE(read_scm, NULL){
   return dfsch_read_scm(filename, NULL);
 }
 
+DFSCH_DEFINE_FORM_IMPL(when_toplevel, NULL){
+  load_thread_info_t* lti = get_load_ti();
+
+  if (!lti->operation || lti->operation->toplevel){
+    return dfsch_eval_proc(args, env);
+  } else {
+    return NULL;
+  }
+}
+
 
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "load:*path*", 
@@ -546,5 +556,8 @@ dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
   dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
   dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
+
+  dfsch_define_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
+
   return NULL;
 }
