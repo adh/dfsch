@@ -69,25 +69,6 @@ dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx,
   return DFSCH_SYM_TRUE;
 }
 
-typedef struct import_ctx_t {
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
-} import_ctx_t;
-
-static int load_callback(dfsch_object_t *obj, void* ctx){
-
-  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
-
-  if (!((import_ctx_t*)ctx)->head){
-    ((import_ctx_t*)ctx)->head = new_tail;
-  }else{
-    dfsch_set_cdr(((import_ctx_t*)ctx)->tail, new_tail);
-  }
-
-  ((import_ctx_t*)ctx)->tail = new_tail;
-
-  return 1;
-}
 
 dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, 
 			       char* fname){
@@ -291,10 +272,30 @@ dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   }
 }
 
+typedef struct read_ctx_t {
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+} read_ctx_t;
+
+static int read_callback(dfsch_object_t *obj, read_ctx_t* ctx){
+
+  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
+
+  if (!ctx->head){
+    ctx->head = new_tail;
+  }else{
+    dfsch_set_cdr(ctx->tail, new_tail);
+  }
+
+  ctx->tail = new_tail;
+
+  return 1;
+}
+
 dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
   dfsch_object_t *obj;
@@ -312,14 +313,14 @@ dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
 
 dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
 
   ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_callback(parser, read_callback, &ictx);
   dfsch_parser_eval_env(parser, eval_env);
 
   while (!err && (r = read(f, buf, 8192))>0){
@@ -347,7 +348,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
                                       char* name, 
                                       dfsch_object_t* eval_env){
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
   int l=0;
@@ -355,7 +356,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
   ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_callback(parser, read_callback, &ictx);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(name));
   dfsch_parser_eval_env(parser, eval_env);
 
