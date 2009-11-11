@@ -41,9 +41,9 @@
 
 //#define DFSCH_DEFAULT_LIBDIR "."
 
-dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
-			      char* so_name, 
-			      char* sym_name){
+void dfsch_load_so(dfsch_object_t* ctx, 
+                   char* so_name, 
+                   char* sym_name){
   void *handle;
   dfsch_object_t* (*entry)(dfsch_object_t*);
   char* err;
@@ -69,29 +69,38 @@ dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx,
   return DFSCH_SYM_TRUE;
 }
 
-typedef struct import_ctx_t {
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
-} import_ctx_t;
-
-static int load_callback(dfsch_object_t *obj, void* ctx){
-
-  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
-
-  if (!((import_ctx_t*)ctx)->head){
-    ((import_ctx_t*)ctx)->head = new_tail;
-  }else{
-    dfsch_set_cdr(((import_ctx_t*)ctx)->tail, new_tail);
-  }
-
-  ((import_ctx_t*)ctx)->tail = new_tail;
-
+static int load_scm_callback(dfsch_object_t* object,
+                             dfsch_object_t* env){
+  dfsch_eval(object, env);
   return 1;
 }
 
-dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, 
-			       char* fname){
-  return dfsch_eval_proc(dfsch_read_scm(fname, ctx), ctx);
+void dfsch_load_scm(dfsch_object_t* env, char* fname){
+  FILE* f;
+  char buf[8193];
+  ssize_t r;
+  int err=0;
+  int l=0;
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+
+  f = fopen(fname, "r");
+  if (!f){
+    dfsch_operating_system_error("fopen");
+  }
+  
+
+  dfsch_parser_callback(parser, load_scm_callback, env);
+  dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
+  dfsch_parser_eval_env(parser, env);
+
+  while (fgets(buf, 8192, f)){
+    dfsch_parser_feed(parser, buf);
+  }
+
+  if (dfsch_parser_get_level(parser)!=0){
+      dfsch_error("Syntax error at end of input",
+                  dfsch_make_string_cstr(fname));
+  }
 }
 
 static int qs_strcmp(const void* a, const void* b){ /* To suppress warning */
@@ -159,8 +168,8 @@ static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
 };
 
-dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
-                           dfsch_object_t* path_list){
+void dfsch_load(dfsch_object_t* env, char* name, 
+                dfsch_object_t* path_list){
   struct stat st;
   dfsch_object_t* path;
   char *pathpart;
@@ -171,7 +180,6 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name,
   for (i = 0; i < sizeof(builtin_modules) / sizeof(builtin_module_t); i++){
     if (strcmp(builtin_modules[i].name, name) == 0){
       builtin_modules[i].register_proc(env);
-      return NULL;
     }
   }
 
@@ -193,9 +201,11 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name,
     if (stat(pathpart, &st) == 0){ 
       if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
 	if (strcmp(".so", pathpart+strlen(pathpart)-3) == 0){
-	  return dfsch_load_so(env, pathpart, get_module_symbol(name));	      
+	  dfsch_load_so(env, pathpart, get_module_symbol(name));
+          return;
 	} else {
-	  return dfsch_load_scm(env, pathpart);
+	  dfsch_load_scm(env, pathpart);
+          return;
 	}
       }
       if (S_ISDIR(st.st_mode)){
@@ -215,16 +225,18 @@ dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name,
 	  
 	  list++;
 	}
-	return NULL;
+        return;
       }
     }
     fname = stracat(pathpart, ".scm");
     if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
-      return dfsch_load_scm(env, fname);	      
+      dfsch_load_scm(env, fname);	      
+      return;
     }
     fname = stracat(pathpart, ".so");
     if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
-      return dfsch_load_so(env, fname, get_module_symbol(name));	      
+      dfsch_load_so(env, fname, get_module_symbol(name));	      
+      return;
     }
     
     path = dfsch_cdr(path);
@@ -243,17 +255,18 @@ static int search_modules(dfsch_object_t* modules, char* name){
   return 0;
 }
 
-dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
+int dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
   dfsch_object_t* modules = dfsch_env_get_cstr(env, "load:*modules*");
   if (modules == DFSCH_INVALID_OBJECT){
     modules = NULL;
   }
 
   if (search_modules(modules, name)){
-    return NULL;
+    return 1;
   }
 
-  return dfsch_load(env, name, path_list);
+  dfsch_load(env, name, path_list);
+  return 0;
 }
 
 void dfsch_provide(dfsch_object_t* env, char* name){
@@ -291,10 +304,30 @@ dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   }
 }
 
+typedef struct read_ctx_t {
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+} read_ctx_t;
+
+static int read_callback(dfsch_object_t *obj, read_ctx_t* ctx){
+
+  dfsch_object_t* new_tail = dfsch_cons(obj, NULL);
+
+  if (!ctx->head){
+    ctx->head = new_tail;
+  }else{
+    dfsch_set_cdr(ctx->tail, new_tail);
+  }
+
+  ctx->tail = new_tail;
+
+  return 1;
+}
+
 dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
   FILE* f = fopen(scm_name,"r");
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
   dfsch_object_t *obj;
@@ -312,14 +345,14 @@ dfsch_object_t* dfsch_read_scm(char* scm_name, dfsch_object_t* eval_env){
 
 dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
 
   ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_callback(parser, read_callback, &ictx);
   dfsch_parser_eval_env(parser, eval_env);
 
   while (!err && (r = read(f, buf, 8192))>0){
@@ -347,7 +380,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
                                       char* name, 
                                       dfsch_object_t* eval_env){
   char buf[8193];
-  import_ctx_t ictx;
+  read_ctx_t ictx;
   ssize_t r;
   int err=0;
   int l=0;
@@ -355,7 +388,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
   ictx.head = NULL;
 
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  dfsch_parser_callback(parser, load_callback, &ictx);
+  dfsch_parser_callback(parser, read_callback, &ictx);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(name));
   dfsch_parser_eval_env(parser, eval_env);
 
@@ -389,7 +422,8 @@ DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
   DFSCH_STRING_ARG(args, file_name);
   DFSCH_ARG_END(args);
 
-  return dfsch_load_scm(env, file_name);
+  dfsch_load_scm(env, file_name);
+  return NULL;
 }
 
 DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
@@ -401,7 +435,8 @@ DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
   DFSCH_STRING_ARG(args, sym_name);
   DFSCH_ARG_END(args);
 
-  return dfsch_load_so(env, so_name, sym_name);
+  dfsch_load_so(env, so_name, sym_name);
+  return NULL;
 }
 
 DFSCH_DEFINE_FORM_IMPL(load, NULL){
@@ -413,7 +448,8 @@ DFSCH_DEFINE_FORM_IMPL(load, NULL){
   DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
   DFSCH_ARG_END(args);
 
-  return dfsch_load(env, name, path_list);  
+  dfsch_load(env, name, path_list);  
+  return NULL;
 }
 DFSCH_DEFINE_FORM_IMPL(require, NULL){
   char* name;
@@ -424,7 +460,7 @@ DFSCH_DEFINE_FORM_IMPL(require, NULL){
   DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
   DFSCH_ARG_END(args);
 
-  return dfsch_require(env, name, path_list);  
+  return dfsch_bool(dfsch_require(env, name, path_list));  
 }
 DFSCH_DEFINE_FORM_IMPL(provide, NULL){
   char* name;

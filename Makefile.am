@@ -77,7 +77,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/hash.c dfsch/hash.h 	\
 	src/promise.c dfsch/promise.h 	\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
-	src/strings.c dfsch/strings.h 	src/udata.h\
+	src/strings.c dfsch/strings.h 	src/udata.h src/udata.c\
 	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
 	src/weak.c dfsch/weak.h		\
