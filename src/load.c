@@ -215,6 +215,17 @@ static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
 };
 
+static char* pathname_directory(char* path){
+  char* res;
+  char* pos = strrchr(path, '/');
+
+  if (!pos){
+    return "./";
+  }
+
+  return strancpy(path, pos - path);
+}
+
 void dfsch_load(dfsch_object_t* env, char* name, 
                 dfsch_object_t* path_list){
   struct stat st;
@@ -245,8 +256,13 @@ void dfsch_load(dfsch_object_t* env, char* name,
       sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
       sl_append(l, "/");
     } else {
-      sl_append(l, "./"); // TODO
-
+      load_thread_info_t* lti = get_load_ti();
+      
+      if (lti->operation && lti->operation->fname){
+        sl_append(l, pathname_directory(lti->operation->fname));
+      } else {
+        sl_append(l, "./");
+      }
     }
     sl_append(l, name);
     pathpart = sl_value(l);
