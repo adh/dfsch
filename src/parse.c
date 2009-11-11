@@ -439,7 +439,7 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
     default:
       parser_abort(ctx, "parser:unexpected-object");
     }
-  }else{
+  } else {
     //    DFSCH_TRY { XXX
       if (!(*ctx->callback)(obj,ctx->baton)){
         ctx->error = 1;

@@ -38,21 +38,21 @@ extern "C" {
   /** Append directory to load:path */
   dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
   /** Load given module (as by require, but unconditionally) */
-  extern dfsch_object_t* dfsch_load(dfsch_object_t* env, char* name, 
-				    dfsch_object_t* path_list);
+  extern void dfsch_load(dfsch_object_t* env, char* name, 
+                         dfsch_object_t* path_list);
   /** Load given module if it is not provided yet */
-  extern dfsch_object_t* dfsch_require(dfsch_object_t* env, char* name, 
-                                       dfsch_object_t* path_list);
+  extern int dfsch_require(dfsch_object_t* env, char* name, 
+                           dfsch_object_t* path_list);
   /** Provide given module (mark as loaded) */
   extern void dfsch_provide(dfsch_object_t* env, char* name);
 
 
   /** Load given shared object module and register it into given context. */
-  extern dfsch_object_t* dfsch_load_so(dfsch_object_t* ctx, 
-                                       char* so_name, 
-                                       char* sym_name);
+  extern void dfsch_load_so(dfsch_object_t* ctx, 
+                            char* so_name, 
+                            char* sym_name);
   /** Load given source file (absolute path) into given environment. */
-  extern dfsch_object_t* dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
+  extern void dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
 
   /** Read scheme list from given file. */
   extern dfsch_object_t* dfsch_read_scm(char* scm_name, 
