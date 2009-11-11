@@ -187,6 +187,48 @@ static void finalize_slots_definition(class_t* klass,
   }
 }
 
+static void default_initialize_instance(dfsch_object_t* obj,
+                                        class_t* klass,
+                                        dfsch_object_t* args){
+  dfsch_object_t* i = klass->initvalues;
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* j = DFSCH_FAST_CAR(i);
+    dfsch_object_t* value;
+    dfsch_object_t* slot;
+
+    DFSCH_OBJECT_ARG(j, value);
+    DFSCH_OBJECT_ARG(j, slot);
+
+    dfsch_slot_set(obj, slot, value, 1);
+
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  while (DFSCH_PAIR_P(args)){                                 
+    dfsch_object_t* keyword;                                
+    dfsch_object_t* value;                                  
+    dfsch_object_t* slot;
+    keyword = DFSCH_FAST_CAR(args);                       
+    args = DFSCH_FAST_CDR(args);                                
+    if (!DFSCH_PAIR_P(args)){                                     
+      dfsch_error("Value expected for keyword", keyword);
+    }                                                               
+    value = DFSCH_FAST_CAR(args);                         
+    args = DFSCH_FAST_CDR(args);
+    
+    slot = dfsch_assq(keyword, klass->initargs);
+
+    if (!slot){
+      dfsch_error("Unknown keyword", keyword);      
+    }
+
+    printf("%s\n", dfsch_object_2_string(slot, 100, 100));
+    
+    dfsch_slot_set(obj, dfsch_list_item(slot, 1), value, 1);
+  }
+}
+
 dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                     dfsch_object_t* args){
   dfsch_object_t* obj;
@@ -197,7 +239,7 @@ dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
   if (c->initialize_instance){
     dfsch_apply(c->initialize_instance, dfsch_cons(obj, args));
   } else {
-    
+    default_initialize_instance(obj, c, args);
   }
 
   return obj;
