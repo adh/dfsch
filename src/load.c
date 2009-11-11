@@ -80,11 +80,13 @@ static void load_thread_key_alloc(){
   pthread_key_create(&load_thread_key, load_thread_info_destroy);
 }
 
+typedef struct load_operation_t load_operation_t;
 
-typedef struct load_operation_t {
+struct load_operation_t {
+  load_operation_t* next;
   char* fname;
   int toplevel;
-} load_operation_t;
+};
 
 typedef struct load_thread_info_t {
   load_operation_t* operation;
@@ -117,7 +119,6 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   int l=0;
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   load_thread_info_t* lti = get_load_ti();
-  load_operation_t* old_op;
   load_operation_t this_op;
 
   f = fopen(fname, "r");
@@ -125,15 +126,14 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
     dfsch_operating_system_error("fopen");
   }
 
-  this_op.fname = fname;
-  this_op.toplevel = toplevel;
-
   dfsch_parser_callback(parser, load_scm_callback, env);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
   dfsch_parser_eval_env(parser, env);
 
   DFSCH_UNWIND {
-    old_op = lti->operation;
+    this_op.fname = fname;
+    this_op.toplevel = toplevel;
+    this_op.next = lti->operation;
     lti->operation = &this_op;
 
     while (fgets(buf, 8192, f)){
@@ -141,7 +141,7 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
     }
   } DFSCH_PROTECT {
     fclose(f);
-    lti->operation = old_op;
+    lti->operation = this_op.next;
   } DFSCH_PROTECT_END;
 
   if (dfsch_parser_get_level(parser)!=0){
@@ -150,7 +150,7 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   }
 }
 
-static int qs_strcmp(const void* a, const void* b){ /* To suppress warning */
+static int qs_strcmp(const void* a, const void* b){
   return strcmp(*((char**)a), *((char**)b));
 }
 
