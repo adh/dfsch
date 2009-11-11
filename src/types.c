@@ -526,7 +526,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 
 static void primitive_write(dfsch_primitive_t* p, 
                             dfsch_writer_state_t* state){
-  char* name = p->name ? p->name : "()";
+  char* name = p->name ? p->name : "";
   dfsch_write_unreadable(state, (dfsch_object_t*)p, "%s", name);
 }
 
