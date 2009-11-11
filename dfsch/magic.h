@@ -143,7 +143,6 @@ extern "C" {
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
-
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

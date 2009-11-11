@@ -34,6 +34,7 @@
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 #include <dfsch/introspect.h>
+#include <dfsch/magic.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -65,8 +66,41 @@ void dfsch_load_so(dfsch_object_t* ctx,
   }
   
   entry(ctx);
+}
 
-  return DFSCH_SYM_TRUE;
+static pthread_key_t load_thread_key;
+static pthread_once_t load_thread_once = PTHREAD_ONCE_INIT;
+
+static void load_thread_info_destroy(void* ptr){
+  if (ptr){
+    GC_FREE(ptr);
+  }
+}
+static void load_thread_key_alloc(){
+  pthread_key_create(&load_thread_key, load_thread_info_destroy);
+}
+
+
+typedef struct load_operation_t {
+  char* fname;
+  int toplevel;
+} load_operation_t;
+
+typedef struct load_thread_info_t {
+  load_operation_t* operation;
+} load_thread_info_t;
+
+static load_thread_info_t* get_load_ti(){
+  load_thread_info_t *lti;
+  pthread_once(&load_thread_once, load_thread_key_alloc);
+  lti = pthread_getspecific(load_thread_key);
+  if (DFSCH_UNLIKELY(!lti)){
+    lti = GC_MALLOC_UNCOLLECTABLE(sizeof(load_thread_info_t)); 
+    lti->operation = NULL;
+    pthread_setspecific(load_thread_key, lti);
+  }
+  return lti;
+  
 }
 
 static int load_scm_callback(dfsch_object_t* object,
@@ -75,27 +109,40 @@ static int load_scm_callback(dfsch_object_t* object,
   return 1;
 }
 
-void dfsch_load_scm(dfsch_object_t* env, char* fname){
+void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   FILE* f;
   char buf[8193];
   ssize_t r;
   int err=0;
   int l=0;
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  load_thread_info_t* lti = get_load_ti();
+  load_operation_t* old_op;
+  load_operation_t this_op;
 
   f = fopen(fname, "r");
   if (!f){
     dfsch_operating_system_error("fopen");
   }
-  
+
+  this_op.fname = fname;
+  this_op.toplevel = toplevel;
 
   dfsch_parser_callback(parser, load_scm_callback, env);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
   dfsch_parser_eval_env(parser, env);
 
-  while (fgets(buf, 8192, f)){
-    dfsch_parser_feed(parser, buf);
-  }
+  DFSCH_UNWIND {
+    old_op = lti->operation;
+    lti->operation = &this_op;
+
+    while (fgets(buf, 8192, f)){
+      dfsch_parser_feed(parser, buf);
+    }
+  } DFSCH_PROTECT {
+    fclose(f);
+    lti->operation = old_op;
+  } DFSCH_PROTECT_END;
 
   if (dfsch_parser_get_level(parser)!=0){
       dfsch_error("Syntax error at end of input",
@@ -192,10 +239,15 @@ void dfsch_load(dfsch_object_t* env, char* name,
     }
   }
 
-  while (dfsch_pair_p(path)){
+  while (DFSCH_PAIR_P(path)){
     l = sl_create();
-    sl_append(l, dfsch_string_to_cstr(dfsch_car(path)));
-    sl_append(l, "/");
+    if (DFSCH_FAST_CAR(path)){
+      sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
+      sl_append(l, "/");
+    } else {
+      sl_append(l, "./"); // TODO
+
+    }
     sl_append(l, name);
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
@@ -204,7 +256,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
 	  dfsch_load_so(env, pathpart, get_module_symbol(name));
           return;
 	} else {
-	  dfsch_load_scm(env, pathpart);
+	  dfsch_load_scm(env, pathpart, 0);
           return;
 	}
       }
@@ -220,7 +272,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
 	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
 	    dfsch_load_so(env, fname, get_module_symbol(name));	      
 	  } else {
-	    dfsch_load_scm(env, fname);
+	    dfsch_load_scm(env, fname, 0);
 	  }
 	  
 	  list++;
@@ -230,7 +282,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
     }
     fname = stracat(pathpart, ".scm");
     if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
-      dfsch_load_scm(env, fname);	      
+      dfsch_load_scm(env, fname, 0);	      
       return;
     }
     fname = stracat(pathpart, ".so");
@@ -422,7 +474,7 @@ DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
   DFSCH_STRING_ARG(args, file_name);
   DFSCH_ARG_END(args);
 
-  dfsch_load_scm(env, file_name);
+  dfsch_load_scm(env, file_name, 0);
   return NULL;
 }
 
@@ -484,7 +536,7 @@ DFSCH_DEFINE_PRIMITIVE(read_scm, NULL){
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "load:*path*", 
 		    dfsch_list(3, 
-			       dfsch_make_string_cstr("."),
+			       NULL,
                                dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
                                dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
   dfsch_define_cstr(ctx, "load:*modules*", NULL);

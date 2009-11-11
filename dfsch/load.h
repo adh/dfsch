@@ -52,7 +52,8 @@ extern "C" {
                             char* so_name, 
                             char* sym_name);
   /** Load given source file (absolute path) into given environment. */
-  extern void dfsch_load_scm(dfsch_object_t* ctx, char* scm_name);
+  extern void dfsch_load_scm(dfsch_object_t* ctx, char* scm_name, 
+                             int toplevel);
 
   /** Read scheme list from given file. */
   extern dfsch_object_t* dfsch_read_scm(char* scm_name, 
