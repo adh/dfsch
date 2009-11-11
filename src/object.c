@@ -29,6 +29,9 @@
 
 typedef struct class_t {
   dfsch_type_t standard_type;
+  dfsch_object_t* initialize_instance;
+  dfsch_object_t* initvalues;
+  dfsch_object_t* initargs;
 } class_t;
 
 
@@ -92,16 +95,6 @@ static size_t adjust_sizes(dfsch_slot_t* slots, size_t parent_size){
   return parent_size;
 }
 
-static char* class_write(){
-
-}
-static int class_equal_p(dfsch_object_t* a, dfsch_object_t* b){
-  return dfsch_send(a, dfsch_s_equal_instance_p(), dfsch_cons(b, NULL)) != NULL;
-}
-
-
-static dfsch_object_t* class_apply;
-
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  char* name,
                                  dfsch_object_t* slots){
@@ -131,13 +124,82 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   return (dfsch_object_t*)klass;
 }
 
+static dfsch_slot_t* find_direct_slot(class_t* type, 
+                                      char* name){
+  dfsch_slot_t* i = type->standard_type.slots;
+  if (i){
+    while (i->type){
+      if (strcmp(i->name, name)==0){
+        return i;
+      }
+      i++;
+    }
+  }
+  
+  dfsch_error("No such slot", dfsch_make_symbol(name));
+}
+
+
+static void finalize_slots_definition(class_t* klass,
+                                      dfsch_object_t* env,
+                                      dfsch_object_t* slot_definitions){
+  dfsch_object_t* i = slot_definitions;
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* slot_def = DFSCH_FAST_CAR(i);
+    if (DFSCH_PAIR_P(slot_def)){
+      dfsch_slot_t* slot = 
+        find_direct_slot(klass, 
+                         dfsch_symbol(DFSCH_FAST_CAR(slot_def)));
+      slot_def = DFSCH_FAST_CDR(slot_def);
+      while (DFSCH_PAIR_P((slot_def))){                                 
+        dfsch_object_t* keyword;                                
+        dfsch_object_t* value;                                  
+        keyword = DFSCH_FAST_CAR(slot_def);                       
+        slot_def = DFSCH_FAST_CDR(slot_def);                                
+        if (!DFSCH_PAIR_P(slot_def)){                                     
+          dfsch_error("Value expected for slot option", keyword);
+        }                                                               
+        value = DFSCH_FAST_CAR(slot_def);                         
+        slot_def = DFSCH_FAST_CDR(slot_def);
+        
+        if(dfsch_compare_symbol(keyword, "accessor")){
+          dfsch_define(value,
+                       dfsch__make_slot_accessor_for_slot(klass, slot),
+                       env, DFSCH_VAR_CONSTANT);
+          
+        } else if(dfsch_compare_symbol(keyword, "initform")){
+          klass->initvalues = dfsch_cons(dfsch_list(2, 
+                                                    dfsch_eval(value, env), 
+                                                    slot),
+                                         klass->initvalues);
+        } else if(dfsch_compare_symbol(keyword, "initarg")){
+          klass->initargs = dfsch_cons(dfsch_list(2, value, slot),
+                                       klass->initargs);
+        } else if(dfsch_compare_symbol(keyword, "documentation")){
+          slot->documentation = dfsch_string_to_cstr(value);
+        }
+ 
+      }
+    }
+
+    i = DFSCH_FAST_CDR(i);
+  }
+}
+
 dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                     dfsch_object_t* args){
   dfsch_object_t* obj;
+  class_t* c = DFSCH_ASSERT_INSTANCE(klass, DFSCH_CLASS_TYPE);
 
-  obj = 
-    dfsch_make_object((dfsch_type_t*)DFSCH_ASSERT_INSTANCE(klass, 
-                                                           DFSCH_CLASS_TYPE));
+  obj = dfsch_make_object((dfsch_type_t*)c);
+
+  if (c->initialize_instance){
+    dfsch_apply(c->initialize_instance, dfsch_cons(obj, args));
+  } else {
+    
+  }
+
   return obj;
 }
 
@@ -164,6 +226,7 @@ DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
                            slots);
 
   dfsch_define(name, klass, env, 0);
+  finalize_slots_definition(klass, env, slots);
   return klass;
 }
 

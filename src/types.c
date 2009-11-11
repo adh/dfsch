@@ -264,6 +264,7 @@ static dfsch_object_t* slot_accessor_apply(slot_accessor_t* sa,
   dfsch_object_t* value;
   DFSCH_OBJECT_ARG(args, instance);
   DFSCH_OBJECT_ARG_OPT(args, value, DFSCH_INVALID_OBJECT);
+  DFSCH_ARG_END(args);
 
   instance = DFSCH_ASSERT_INSTANCE(instance, sa->instance_class);
 
@@ -292,14 +293,19 @@ dfsch_type_t dfsch_slot_accessor_type = {
   .documentation = "Slot accessor allows direct access to slots (runtime-only)"
 };
 
-dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
-                                         char* slot){
+dfsch_object_t* dfsch__make_slot_accessor_for_slot(dfsch_type_t* type,
+                                                   dfsch_slot_t* slot){
   slot_accessor_t* sa = 
     (slot_accessor_t*) dfsch_make_object(DFSCH_SLOT_ACCESSOR_TYPE);
 
   sa->instance_class = type;
-  sa->slot = dfsch_find_slot(type, slot);
+  sa->slot = slot;
   return (dfsch_object_t*) sa;
+}
+dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
+                                         char* slot){
+  return dfsch__make_slot_accessor_for_slot(type,
+                                            dfsch_find_slot(type, slot));
 }
 
 
