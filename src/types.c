@@ -464,7 +464,7 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   if (s->data){
     dfsch_write_string(state, s->data);
   } else {
-    dfsch_write_unreadable(state, o, ""); 
+    dfsch_write_string(state, dfsch_saprintf("#<gensym %p>", o)); 
   }
 }
 #define SYMBOL DFSCH_SYMBOL_TYPE 
