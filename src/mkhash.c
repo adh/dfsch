@@ -182,7 +182,10 @@ void dfsch_mkhash_set(dfsch_mkhash_t* h,
 
   e = find_entry(h, cum_hash, keys);
 
-  assert(e);
+  if (!e){
+    resize_hash(h, h->mask);
+    assert(e);
+  }
 
   if (value != e->value){
     if (e->value == DFSCH_INVALID_OBJECT){
