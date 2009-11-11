@@ -532,7 +532,10 @@ DFSCH_DEFINE_PRIMITIVE(read_scm, NULL){
   return dfsch_read_scm(filename, NULL);
 }
 
-DFSCH_DEFINE_FORM_IMPL(when_toplevel, NULL){
+DFSCH_DEFINE_FORM_IMPL(when_toplevel, 
+                       "Evaluate expressions only in top-level loaded file"
+                       " (intended to support files both usable as scripts "
+                       "and modules)"){
   load_thread_info_t* lti = get_load_ti();
 
   if (!lti->operation || lti->operation->toplevel){
