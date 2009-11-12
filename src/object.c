@@ -24,6 +24,7 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/generic.h>
 #include "util.h"
 
 
@@ -272,10 +273,56 @@ DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
   return klass;
 }
 
+static void initialize_instance_add_method(dfsch_object_t* function,
+                                           dfsch_method_t* method){
+  class_t* klass;
+
+  if (dfsch_list_length_check(method->specializers) != 1){
+    dfsch_error("initialize-instance methods can only specialize on first"
+                " argument", method);
+  }
+  if (method->qualifiers != NULL){
+    dfsch_error("initialize-instance cannot have non-primary methods",
+                method);
+  }
+
+  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
+                                DFSCH_CLASS_TYPE);
+
+  klass->initialize_instance = method->function;
+}
+static void initialize_instance_remove_method(dfsch_object_t* function,
+                                              dfsch_method_t* method){
+  class_t* klass;
+
+  if (dfsch_list_length_check(method->specializers) != 1){
+    dfsch_error("initialize-instance methods can only specialize on first"
+                " argument", method);
+  }
+  if (method->qualifiers != NULL){
+    dfsch_error("initialize-instance cannot have non-primary methods",
+                method);
+  }
+
+  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
+                                DFSCH_CLASS_TYPE);
+
+  klass->initialize_instance = NULL;
+}
+
+
+static dfsch_singleton_generic_function_t initialize_instance = {
+  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
+  .add_method = initialize_instance_add_method,  
+  .remove_method = initialize_instance_remove_method,  
+};
+
+
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
   dfsch_define_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
 
   dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
+  dfsch_define_cstr(ctx, "initialize-instance", &initialize_instance);
 }
