@@ -223,8 +223,6 @@ static void default_initialize_instance(dfsch_object_t* obj,
     if (!slot){
       dfsch_error("Unknown keyword", keyword);      
     }
-
-    printf("%s\n", dfsch_object_2_string(slot, 100, 100));
     
     dfsch_slot_set(obj, dfsch_list_item(slot, 1), value, 1);
   }
