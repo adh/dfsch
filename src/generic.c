@@ -551,7 +551,8 @@ singleton_generic_function_add_method(singleton_gf_t* function,
     dfsch_error("Methods cannot be added to this generic function", 
                 function);
   }
-  function->add_method(function, method);
+  function->add_method(function, DFSCH_ASSERT_TYPE(DFSCH_METHOD_TYPE,
+                                                   method));
 }
 static void 
 singleton_generic_function_remove_method(singleton_gf_t* function,
@@ -560,7 +561,8 @@ singleton_generic_function_remove_method(singleton_gf_t* function,
     dfsch_error("Methods cannot be removed from this generic function", 
                 function);
   }
-  function->remove_method(function, method);
+  function->remove_method(function, DFSCH_ASSERT_TYPE(DFSCH_METHOD_TYPE,
+                                                      method));
 }
 static dfsch_object_t* 
 singleton_generic_function_methods(singleton_gf_t* function){
@@ -820,9 +822,9 @@ static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
 
 static dfsch_singleton_generic_function_t remove_method = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
-  .apply = remove_method_apply,
-  
+  .apply = remove_method_apply,  
 };
+
 static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
                                                       dfsch_object_t* args,
                                                       dfsch_tail_escape_t* esc,
