@@ -206,7 +206,7 @@ typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
   /** When we want to use type_t as first-class object */
   dfsch_type_t* type;
-  /** Superclass (NULL for normal objects) */
+  /** Superclass */
   dfsch_type_t* superclass;
   /** Instance size */
   size_t size;
@@ -238,6 +238,8 @@ struct dfsch_type_t {
   char* documentation;
   /** type flags */
   int flags;
+  /** NULL terminated array of inherited mixins */
+  dfsch_type_t** mixins;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
