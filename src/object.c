@@ -31,6 +31,7 @@
 typedef struct class_t {
   dfsch_type_t standard_type;
   dfsch_object_t* initialize_instance;
+  dfsch_object_t* write_instance;
   dfsch_object_t* initvalues;
   dfsch_object_t* initargs;
 } class_t;
@@ -96,6 +97,20 @@ static size_t adjust_sizes(dfsch_slot_t* slots, size_t parent_size){
   return parent_size;
 }
 
+static void instance_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
+  class_t* i = DFSCH_TYPE_OF(obj);
+
+  while (DFSCH_INSTANCE_P(i, DFSCH_CLASS_TYPE)){
+    if (i->write_instance){
+      dfsch_apply(i->write_instance, dfsch_list(2, obj, state));
+      return;
+    }
+    i = i->standard_type.superclass;
+  }
+
+  dfsch_write_unreadable_with_slots(state, obj);
+}
+
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  char* name,
                                  dfsch_object_t* slots){
@@ -117,8 +132,10 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
                                              sizeof(dfsch_object_t));
   }
+
+  klass->standard_type.write = instance_write;
+
   /* klass->standard_type.equal_p = class_equal_p;
-  klass->standard_type.write = class_write;
   klass->standard_type.apply = class_apply;
   klass->standard_type.hash = class_hash;*/
 
@@ -329,6 +346,66 @@ static dfsch_singleton_generic_function_t initialize_instance = {
   .remove_method = initialize_instance_remove_method,  
 };
 
+static void write_instance_add_method(dfsch_object_t* function,
+                                           dfsch_method_t* method){
+  class_t* klass;
+
+  if (dfsch_list_length_check(method->specializers) != 1){
+    dfsch_error("initialize-instance methods can only specialize on first"
+                " argument", method);
+  }
+  if (method->qualifiers != NULL){
+    dfsch_error("initialize-instance cannot have non-primary methods",
+                method);
+  }
+
+  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
+                                DFSCH_CLASS_TYPE);
+
+  klass->write_instance = method->function;
+}
+static void write_instance_remove_method(dfsch_object_t* function,
+                                              dfsch_method_t* method){
+  class_t* klass;
+
+  if (dfsch_list_length_check(method->specializers) != 1){
+    dfsch_error("initialize-instance methods can only specialize on first"
+                " argument", method);
+  }
+  if (method->qualifiers != NULL){
+    dfsch_error("initialize-instance cannot have non-primary methods",
+                method);
+  }
+
+  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
+                                DFSCH_CLASS_TYPE);
+
+  klass->write_instance = NULL;
+}
+static dfsch_object_t* write_instance_apply(dfsch_object_t* ignore,
+                                          dfsch_object_t* args,
+                                          dfsch_tail_escape_t* esc,
+                                          dfsch_object_t* context){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_object(DFSCH_ASSERT_TYPE(state, DFSCH_WRITER_STATE_TYPE),
+                     object);
+  return NULL;
+}
+
+
+static dfsch_singleton_generic_function_t write_instance = {
+  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
+  .add_method = write_instance_add_method,  
+  .remove_method = write_instance_remove_method,  
+  .apply = write_instance_apply,
+};
+
+
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
@@ -337,4 +414,5 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
   dfsch_define_cstr(ctx, "initialize-instance", &initialize_instance);
+  dfsch_define_cstr(ctx, "dfsch%write-instance", &write_instance);
 }

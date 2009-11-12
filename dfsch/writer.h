@@ -30,6 +30,8 @@ extern "C" {
   void dfsch_write_unreadable(dfsch_writer_state_t* state,
                                      dfsch_object_t* obj, 
                                      char* format, ...);
+  void dfsch_write_unreadable_with_slots(dfsch_writer_state_t* state,
+                                         dfsch_object_t* obj);
   void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
                                            dfsch_object_t* obj);
   void dfsch_write_unreadable_end(dfsch_writer_state_t* state);

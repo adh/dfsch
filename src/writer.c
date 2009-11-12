@@ -137,6 +137,35 @@ void dfsch_write_unreadable(dfsch_writer_state_t* state,
   dfsch_write_string(state, vsaprintf(format, args)); 
   dfsch_write_unreadable_end(state);
 }
+
+void dfsch_write_unreadable_with_slots(dfsch_writer_state_t* state,
+                                       dfsch_object_t* obj){
+  str_list_t* sl = sl_create();
+  va_list args;
+  char *ret;
+  dfsch_type_t* klass = DFSCH_TYPE_OF(obj);
+
+
+  dfsch_write_unreadable_start(state, obj);
+  
+  while (klass){
+    dfsch_slot_t* j = klass->slots;
+    if (j){
+      while (j->type){
+        dfsch_write_string(state, j->name);
+        dfsch_write_string(state, ": ");
+        dfsch_write_object(state, dfsch_slot_ref(obj, j, 1));
+        dfsch_write_string(state, " ");
+        j++;
+      }
+    }
+    klass = klass->superclass;
+  }
+
+  dfsch_write_unreadable_end(state);
+}
+
+
 void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
                                   dfsch_object_t* obj){
   if (state->readability == DFSCH_STRICT_WRITE){
