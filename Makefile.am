@@ -19,7 +19,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/dfsch.h \
 	dfsch/types.h \
 	dfsch/number.h \
-	dfsch/wrapper.h \
 	dfsch/magic.h \
 	dfsch/object.h\
 	dfsch/weak.h\
@@ -78,7 +77,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/promise.c dfsch/promise.h 	\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
 	src/strings.c dfsch/strings.h 	src/udata.h src/udata.c\
-	src/wrapper.c dfsch/wrapper.h 	\
 	src/object.c dfsch/object.h	\
 	src/weak.c dfsch/weak.h		\
 	src/format.c dfsch/format.h	\
