@@ -547,22 +547,20 @@ apply_singleton_generic_function(singleton_gf_t* function,
 static void 
 singleton_generic_function_add_method(singleton_gf_t* function,
                                       dfsch_object_t* method){
-  if (function->add_method){
+  if (!function->add_method){
     dfsch_error("Methods cannot be added to this generic function", 
                 function);
   }
-  function->add_method(function, DFSCH_ASSERT_TYPE(DFSCH_METHOD_TYPE,
-                                                   method));
+  function->add_method(function, method);
 }
 static void 
 singleton_generic_function_remove_method(singleton_gf_t* function,
                                          dfsch_object_t* method){
-  if (function->remove_method){
+  if (!function->remove_method){
     dfsch_error("Methods cannot be removed from this generic function", 
                 function);
   }
-  function->remove_method(function, DFSCH_ASSERT_TYPE(DFSCH_METHOD_TYPE,
-                                                      method));
+  function->remove_method(function, method);
 }
 static dfsch_object_t* 
 singleton_generic_function_methods(singleton_gf_t* function){
@@ -612,12 +610,12 @@ dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name){
 }
 
 void dfsch_generic_function_add_method(dfsch_object_t* function,
-                                       dfsch_object_t* method){
+                                       dfsch_method_t* method){
   dfsch_generic_function_t* f = dfsch_assert_generic_function(function);
   f->type->add_method(f, method);
 }
 void dfsch_generic_function_remove_method(dfsch_object_t* function,
-                                          dfsch_object_t* method){
+                                          dfsch_method_t* method){
   dfsch_generic_function_t* f = dfsch_assert_generic_function(function);
   f->type->remove_method(f, method);
 }
@@ -816,7 +814,7 @@ static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
 
   dfsch_generic_function_remove_method(function, 
                                        DFSCH_ASSERT_INSTANCE(method, 
-                                                             DFSCH_METHOD_TYPE));
+                                       DFSCH_METHOD_TYPE));
   return NULL;
 }
 

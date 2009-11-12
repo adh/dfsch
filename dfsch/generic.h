@@ -103,9 +103,9 @@ extern dfsch_type_t dfsch_method_type;
 dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name);
 
 void dfsch_generic_function_add_method(dfsch_object_t* function,
-                                       dfsch_object_t* method);
+                                       dfsch_method_t* method);
 void dfsch_generic_function_remove_method(dfsch_object_t* function,
-                                          dfsch_object_t* method);
+                                          dfsch_method_t* method);
 dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function);
 
 
