@@ -151,10 +151,12 @@ unsigned char property_type[17*65535];
 udata_entry_t distinct[256];
 int distinct_count = 0;
 
+char* spinner="/-\\|";
+
 void compact_props(){
   uint32_t i;
   int j;
-  fprintf(stderr, "Compacting properties......");
+  fprintf(stderr, "Compacting properties.../");
 
   for (i = 0; i < 17*65536; i++){
     for (j = 0; j <= distinct_count; j++){
@@ -164,13 +166,15 @@ void compact_props(){
       }
     }
     j = distinct_count;
-    fprintf(stderr, "\b\b\b%03d", j);
     memcpy(&distinct[j], &database[i], sizeof(udata_entry_t));
     property_type[i] = j;
     distinct_count++;
-  next:;
+  next:
+    if ((i & 0x1f) == 0){
+      fprintf(stderr, "\b%c", spinner[(i >> 5) & 0x3]);
+    }
   }
-  fprintf(stderr, "...done\n");
+  fprintf(stderr, "\bdone\n");
 }
 
 #define FIRST_SIZE 17*256
@@ -183,7 +187,7 @@ int tables_count = 0;
 void compact_tables(){
   uint32_t i;
   int j;
-  fprintf(stderr, "Compacting tables.......");
+  fprintf(stderr, "Compacting tables...");
 
   for (i = 0; i < FIRST_SIZE; i++){
     for (j = 0; j <= tables_count; j++){
@@ -193,13 +197,13 @@ void compact_tables(){
       }
     }
     j = tables_count;
-    fprintf(stderr, "\b\b\b\b%04d", j);
     memcpy(tables[j], &property_type[i*SECOND_SIZE], SECOND_SIZE);
     table_type[i] = j;
     tables_count++;
   next:;
+    fprintf(stderr, "\b%c", spinner[i & 0x3]);
   }
-  fprintf(stderr, "...done\n");
+  fprintf(stderr, "\bdone\n");
 }
 
 
