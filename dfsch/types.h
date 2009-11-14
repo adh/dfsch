@@ -238,8 +238,6 @@ struct dfsch_type_t {
   char* documentation;
   /** type flags */
   int flags;
-  /** NULL terminated array of inherited mixins */
-  dfsch_type_t** mixins;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
