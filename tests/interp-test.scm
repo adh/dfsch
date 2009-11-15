@@ -329,6 +329,13 @@
                (test-slot (make-instance <subclass>))
                'test-slot-init-value)
 
+         (define-method ((test-fun around) (foo <subclass>))
+           (cons 'subclass (call-next-method)))
+
+         (test 'around-method
+               (test-fun (make-instance <subclass>))
+               '(subclass . test-class))
+
          ))
                
 
