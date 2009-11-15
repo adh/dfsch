@@ -120,13 +120,18 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.slots = make_slots(slots);
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   if (superclass){
-    klass->standard_type.superclass = 
-      (dfsch_type_t*)DFSCH_ASSERT_INSTANCE(superclass,
+    class_t* super = DFSCH_ASSERT_INSTANCE(superclass,
                                            DFSCH_CLASS_TYPE);
+
+    klass->standard_type.superclass = (dfsch_type_t*)super;
 
     klass->standard_type.size = 
       adjust_sizes(klass->standard_type.slots,
                    klass->standard_type.superclass->size);
+
+    klass->initvalues = super->initvalues;
+    klass->initargs = super->initargs;
+
   } else {
     klass->standard_type.superclass = NULL;
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
