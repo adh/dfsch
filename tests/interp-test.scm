@@ -296,6 +296,42 @@
        (test 'field-width (format "~15f" '(1 2 3 4)) "      (1 2 3 4)")
        (test 'floats (format "~10,5f" pi) "   3.14159"))
 
+(group "Object system"
+       (let ()
+         (define-class <test-class> () 
+           ((test-slot accessor test-slot 
+                       initform 'test-slot-init-value
+                       initarg test-slot-initarg)))
+         (test 'make-instance 
+               (type-of (make-instance <test-class>))
+               <test-class>)
+         (test 'init-form
+               (test-slot (make-instance <test-class>))
+               'test-slot-init-value)
+         (test 'init-arg
+               (test-slot (make-instance <test-class> 
+                                         'test-slot-initarg 'foo))
+               'foo)
+
+         (define-method (test-fun foo)
+           'default)
+         (define-method (test-fun (foo <test-class>))
+           'test-class)
+
+         (test 'default-method (test-fun 't) 'default)
+         (test 'simple-specializer 
+               (test-fun (make-instance <test-class>))
+               'test-class)
+
+         (define-class <subclass> <test-class> ())
+
+         (test 'inherited-initform 
+               (test-slot (make-instance <subclass>))
+               'test-slot-init-value)
+
+         ))
+               
+
 (group "XML support"
        (sub-group sxml
                   (test 'parse-string
