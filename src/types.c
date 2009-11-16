@@ -468,6 +468,9 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
   if (s->name){
+    if (!s->package) {
+      dfsch_write_string(state, ":");      
+    }
     dfsch_write_string(state, s->name);
   } else {
     dfsch_write_string(state, dfsch_saprintf("#<gensym %p>", o)); 
@@ -1664,7 +1667,13 @@ static symbol_t* make_symbol(char *symbol){
   symbol_t *f;
 
   s = GC_NEW(symbol_t); /* !!! free_symbol could be called by this */
-  s->name = stracpy(symbol);
+  if (*symbol == ':'){
+    s->name = stracpy(symbol+1);
+    s->package = NULL;
+  } else {
+    s->name = stracpy(symbol);
+    s->package = DFSCH_DFSCH_PACKAGE;
+  }
 
   pthread_mutex_lock(&symbol_lock);
 
