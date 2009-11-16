@@ -458,7 +458,7 @@ static object_t* lookup_impl(object_t* name,
 
  unbound:
   if (DFSCH_SYMBOL_P(name) && 
-      ((dfsch__symbol_t*)DFSCH_TAG_REF(name))->package == NULL){
+      ((dfsch__symbol_t*)DFSCH_TAG_REF(name))->package == DFSCH_KEYWORD_PACKAGE){
     return name; /* keywords are self-evaluating when not redefined */
   }
   dfsch_error("Unbound variable", dfsch_cons(name, (dfsch_object_t*)env));
