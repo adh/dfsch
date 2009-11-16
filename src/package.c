@@ -261,6 +261,25 @@ dfsch_object_t* dfsch_gensym(){
 
   return DFSCH_TAG_ENCODE(s, 2);
 }
+dfsch_object_t* dfsch_make_keyword(char* symbol){
+  symbol_t *s;
+
+  if (!symbol){
+    return dfsch_gensym();
+  }
+
+  pthread_mutex_lock(&symbol_lock);
+
+  gsh_check_init(); 
+  // This code is slow already, so this check does not matter (too much)
+
+  s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, symbol);
+
+
+  pthread_mutex_unlock(&symbol_lock);
+  return DFSCH_TAG_ENCODE(s, 2);
+  
+}
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
 
@@ -317,11 +336,23 @@ char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
   return name;
 }
 
-
-
 int dfsch_compare_symbol(dfsch_object_t* symbol,
-                         char* string){
-  return (strcmp(string, dfsch_symbol(symbol)) == 0);
+                         dfsch_package_t* package,
+                         char* name){
+  dfsch__symbol_t* sym = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
+                                                         DFSCH_SYMBOL_TYPE));
+
+  if (sym->package != package){
+    return 0;
+  }
+
+  return (strcmp(name, sym->name) == 0);
+
+}
+
+int dfsch_compare_keyword(dfsch_object_t* symbol,
+                          char* name){
+  return dfsch_compare_symbol(symbol, DFSCH_KEYWORD_PACKAGE, name);
 }
 
 dfsch_object_t* dfsch_bool(int bool){

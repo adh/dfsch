@@ -152,43 +152,43 @@ static dfsch_object_t* stat_apply(stat_t *st, dfsch_object_t *args,
   DFSCH_OBJECT_ARG(args, selector);
   DFSCH_ARG_END(args);
 
-  if (dfsch_compare_symbol(selector, "dev")){
+  if (dfsch_compare_keyword(selector, "dev")){
     return dfsch_make_number_from_long(st->st.st_dev);
-  } else if (dfsch_compare_symbol(selector, "ino")){
+  } else if (dfsch_compare_keyword(selector, "ino")){
     return dfsch_make_number_from_long(st->st.st_ino);
-  } else if (dfsch_compare_symbol(selector, "mode")){
+  } else if (dfsch_compare_keyword(selector, "mode")){
     return dfsch_make_number_from_long(st->st.st_mode);
-  } else if (dfsch_compare_symbol(selector, "nlink")){
+  } else if (dfsch_compare_keyword(selector, "nlink")){
     return dfsch_make_number_from_long(st->st.st_nlink);
-  } else if (dfsch_compare_symbol(selector, "uid")){
+  } else if (dfsch_compare_keyword(selector, "uid")){
     return dfsch_make_number_from_long(st->st.st_uid);
-  } else if (dfsch_compare_symbol(selector, "gid")){
+  } else if (dfsch_compare_keyword(selector, "gid")){
     return dfsch_make_number_from_long(st->st.st_gid);
-  } else if (dfsch_compare_symbol(selector, "rdev")){
+  } else if (dfsch_compare_keyword(selector, "rdev")){
     return dfsch_make_number_from_long(st->st.st_rdev);
-  } else if (dfsch_compare_symbol(selector, "size")){
+  } else if (dfsch_compare_keyword(selector, "size")){
     return dfsch_make_number_from_long(st->st.st_size);
-  } else if (dfsch_compare_symbol(selector, "blksize")){
+  } else if (dfsch_compare_keyword(selector, "blksize")){
     return dfsch_make_number_from_long(st->st.st_blksize);
-  } else if (dfsch_compare_symbol(selector, "blocks")){
+  } else if (dfsch_compare_keyword(selector, "blocks")){
     return dfsch_make_number_from_long(st->st.st_blocks);
-  } else if (dfsch_compare_symbol(selector, "atime")){
+  } else if (dfsch_compare_keyword(selector, "atime")){
     return dfsch_make_number_from_long(st->st.st_atime);
-  } else if (dfsch_compare_symbol(selector, "mtime")){
+  } else if (dfsch_compare_keyword(selector, "mtime")){
     return dfsch_make_number_from_long(st->st.st_mtime);
-  } else if (dfsch_compare_symbol(selector, "ctime")){
+  } else if (dfsch_compare_keyword(selector, "ctime")){
     return dfsch_make_number_from_long(st->st.st_ctime);
-  } else if (dfsch_compare_symbol(selector, "isreg")){
+  } else if (dfsch_compare_keyword(selector, "isreg")){
     return dfsch_bool(S_ISREG(st->st.st_mode));
-  } else if (dfsch_compare_symbol(selector, "isdir")){
+  } else if (dfsch_compare_keyword(selector, "isdir")){
     return dfsch_bool(S_ISDIR(st->st.st_mode));
-  } else if (dfsch_compare_symbol(selector, "ischr")){
+  } else if (dfsch_compare_keyword(selector, "ischr")){
     return dfsch_bool(S_ISCHR(st->st.st_mode));
-  } else if (dfsch_compare_symbol(selector, "isblk")){
+  } else if (dfsch_compare_keyword(selector, "isblk")){
     return dfsch_bool(S_ISBLK(st->st.st_mode));
-  } else if (dfsch_compare_symbol(selector, "isfifo")){
+  } else if (dfsch_compare_keyword(selector, "isfifo")){
     return dfsch_bool(S_ISFIFO(st->st.st_mode));
-  } else if (dfsch_compare_symbol(selector, "islnk")){
+  } else if (dfsch_compare_keyword(selector, "islnk")){
     return dfsch_bool(S_ISLNK(st->st.st_mode));
   }
 
@@ -292,7 +292,7 @@ DFSCH_DEFINE_PRIMITIVE(sig, NULL){
   DFSCH_ARG_END(args);
   
   for (i = 0; i < sizeof(signals)/sizeof(signal_name_t); i++){
-    if (dfsch_compare_symbol(sym, signals[i].name)){
+    if (dfsch_compare_keyword(sym, signals[i].name)){
       return dfsch_make_number_from_long(signals[i].signal);
     }
   }
@@ -689,11 +689,11 @@ DFSCH_DEFINE_PRIMITIVE(lseek, NULL){
   DFSCH_OBJECT_ARG(args, whence);
   DFSCH_ARG_END(args);
 
-  if (dfsch_compare_symbol(whence, "set")){
+  if (dfsch_compare_keyword(whence, "set")){
     w = SEEK_SET;
-  } else if (dfsch_compare_symbol(whence, "cur")){
+  } else if (dfsch_compare_keyword(whence, "cur")){
     w = SEEK_CUR;
-  } else if (dfsch_compare_symbol(whence, "end")){
+  } else if (dfsch_compare_keyword(whence, "end")){
     w = SEEK_END;
   } else {
     dfsch_error("unix:unknown-whence-value", whence);

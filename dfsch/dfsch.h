@@ -277,9 +277,11 @@ extern "C" {
 
   extern char* dfsch_symbol_2_typename(dfsch_object_t* symbol);
 
-  /** Compares value of given symbol to string. */
+  extern int dfsch_compare_keyword(dfsch_object_t* symbol,
+                                   char* string);
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
-                                  char* string);
+                                  dfsch_package_t* package,
+                                  char* name);
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
@@ -613,16 +615,16 @@ extern "C" {
 
       
 #define DFSCH_FLAG_VALUE(name, value, variable)                         \
-  if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) = (value)    
+  if (dfsch_compare_keyword(dfsch___flag, (name))) (variable) = (value)    
     
 #define DFSCH_FLAG_SET(name, value, variable)                           \
-  if (dfsch_compare_symbol(dfsch___flag, (name))) (variable) |= (value)    
+  if (dfsch_compare_keyword(dfsch___flag, (name))) (variable) |= (value)    
   
 #define DFSCH_FLAG_UNSET(name, value, variable)                         \
-  if (dfsch_compare_symbol(dfsch___flag ,(name))) (variable) &= ~(value)    
+  if (dfsch_compare_keyword(dfsch___flag ,(name))) (variable) &= ~(value)    
   
 #define DFSCH_FLAG_FUNC(name)                           \
-  if (dfsch_compare_symbol(dfsch___flag ,(name))) 
+  if (dfsch_compare_keyword(dfsch___flag ,(name))) 
   
 #define DFSCH_FLAG_PARSER_END(args) \
   (args) = DFSCH_FAST_CDR((args));  \
@@ -641,12 +643,12 @@ extern "C" {
     (args) = DFSCH_FAST_CDR((args));
   
 #define DFSCH_KEYWORD(name, variable)                 \
-  if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
+  if (dfsch_compare_keyword(dfsch___keyword, (name))){ \
     (variable) = (dfsch___value);                     \
     continue;                                         \
   }
 #define DFSCH_KEYWORD_GENERIC(name, variable, conv)        \
-  if (dfsch_compare_symbol(dfsch___keyword, (name))){ \
+  if (dfsch_compare_keyword(dfsch___keyword, (name))){ \
     (variable) = conv(dfsch___value);                     \
     continue;                                         \
   }

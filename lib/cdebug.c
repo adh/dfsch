@@ -48,8 +48,8 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
       return;
     }
     if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(j)) == DFSCH_SYMBOL_TYPE &&
-        (dfsch_compare_symbol(DFSCH_FAST_CAR(j), "stack-trace") ||
-         dfsch_compare_symbol(DFSCH_FAST_CAR(j), "message"))){
+        (dfsch_compare_keyword(DFSCH_FAST_CAR(j), "stack-trace") ||
+         dfsch_compare_keyword(DFSCH_FAST_CAR(j), "message"))){
       continue;
     }
     fprintf(stderr, "    %s: %s\n" ,

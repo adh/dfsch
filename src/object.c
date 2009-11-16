@@ -186,7 +186,7 @@ static void finalize_slots_definition(class_t* klass,
         value = DFSCH_FAST_CAR(slot_def);                         
         slot_def = DFSCH_FAST_CDR(slot_def);
         
-        if(dfsch_compare_symbol(keyword, "accessor")){
+        if(dfsch_compare_keyword(keyword, "accessor")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_accessor_for_slot(klass, slot);
           dfsch_method_t* method = 
@@ -194,7 +194,7 @@ static void finalize_slots_definition(class_t* klass,
                               accessor);
           dfsch_define_method(env, value, method);
           
-        } else if(dfsch_compare_symbol(keyword, "reader")){
+        } else if(dfsch_compare_keyword(keyword, "reader")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_reader_for_slot(klass, slot);
           dfsch_method_t* method = 
@@ -202,7 +202,7 @@ static void finalize_slots_definition(class_t* klass,
                               accessor);
           dfsch_define_method(env, value, method);
           
-        } else if(dfsch_compare_symbol(keyword, "write")){
+        } else if(dfsch_compare_keyword(keyword, "write")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_writer_for_slot(klass, slot);
           dfsch_method_t* method = 
@@ -210,15 +210,15 @@ static void finalize_slots_definition(class_t* klass,
                               accessor);
           dfsch_define_method(env, value, method);
           
-        } else if(dfsch_compare_symbol(keyword, "initform")){
+        } else if(dfsch_compare_keyword(keyword, "initform")){
           klass->initvalues = dfsch_cons(dfsch_list(2, 
                                                     dfsch_eval(value, env), 
                                                     slot),
                                          klass->initvalues);
-        } else if(dfsch_compare_symbol(keyword, "initarg")){
+        } else if(dfsch_compare_keyword(keyword, "initarg")){
           klass->initargs = dfsch_cons(dfsch_list(2, value, slot),
                                        klass->initargs);
-        } else if(dfsch_compare_symbol(keyword, "documentation")){
+        } else if(dfsch_compare_keyword(keyword, "documentation")){
           slot->documentation = dfsch_string_to_cstr(value);
         }
  

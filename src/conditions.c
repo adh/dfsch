@@ -54,7 +54,7 @@ static void condition_write(dfsch__condition_t* c,
       return;
     }
     if (DFSCH_TYPE_OF(DFSCH_FAST_CAR(j)) == DFSCH_SYMBOL_TYPE &&
-        dfsch_compare_symbol(DFSCH_FAST_CAR(j), "stack-trace")){
+        dfsch_compare_keyword(DFSCH_FAST_CAR(j), "stack-trace")){
       continue;
     }
     dfsch_write_object(state, DFSCH_FAST_CAR(j)); 
@@ -92,12 +92,12 @@ void dfsch_condition_put_field(dfsch_object_t* condition,
 }
 dfsch_object_t* dfsch_condition_field_cstr(dfsch_object_t* condition,
                                            char* name){
-  return dfsch_condition_field(condition, dfsch_make_symbol(name));
+  return dfsch_condition_field(condition, dfsch_make_keyword(name));
 }
 void dfsch_condition_put_field_cstr(dfsch_object_t* condition,
                                     char* name,
                                     dfsch_object_t* value){
-  return dfsch_condition_put_field(condition, dfsch_make_symbol(name), value);
+  return dfsch_condition_put_field(condition, dfsch_make_keyword(name), value);
 }
 dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition){
   return ((dfsch__condition_t*)

@@ -64,23 +64,23 @@ static dfsch_object_t* decoded_time_apply(decoded_time_t* time,
   DFSCH_OBJECT_ARG(args, selector);
   DFSCH_ARG_END(args);
 
-  if (dfsch_compare_symbol(selector, "sec")){
+  if (dfsch_compare_keyword(selector, "sec")){
     return dfsch_make_number_from_long(time->tm.tm_sec);
-  } else if (dfsch_compare_symbol(selector, "min")){
+  } else if (dfsch_compare_keyword(selector, "min")){
     return dfsch_make_number_from_long(time->tm.tm_min);
-  } else if (dfsch_compare_symbol(selector, "hour")){
+  } else if (dfsch_compare_keyword(selector, "hour")){
     return dfsch_make_number_from_long(time->tm.tm_hour);
-  } else if (dfsch_compare_symbol(selector, "date")){
+  } else if (dfsch_compare_keyword(selector, "date")){
     return dfsch_make_number_from_long(time->tm.tm_mday);
-  } else if (dfsch_compare_symbol(selector, "month")){
+  } else if (dfsch_compare_keyword(selector, "month")){
     return dfsch_make_number_from_long(time->tm.tm_mon + 1);
-  } else if (dfsch_compare_symbol(selector, "year")){
+  } else if (dfsch_compare_keyword(selector, "year")){
     return dfsch_make_number_from_long(time->tm.tm_year + 1900);
-  } else if (dfsch_compare_symbol(selector, "day")){
+  } else if (dfsch_compare_keyword(selector, "day")){
     return dfsch_make_number_from_long(time->tm.tm_wday);
-  } else if (dfsch_compare_symbol(selector, "year-day")){
+  } else if (dfsch_compare_keyword(selector, "year-day")){
     return dfsch_make_number_from_long(time->tm.tm_yday + 1);
-  } else if (dfsch_compare_symbol(selector, "dst?")){
+  } else if (dfsch_compare_keyword(selector, "dst?")){
     return dfsch_bool(time->tm.tm_isdst == 1);
   }
 
