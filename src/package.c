@@ -338,7 +338,7 @@ char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
 
 int dfsch_compare_symbol(dfsch_object_t* symbol,
                          char* string){
-  return (ascii_strcasecmp(string, dfsch_symbol(symbol)) == 0);
+  return (strcmp(string, dfsch_symbol(symbol)) == 0);
 }
 
 dfsch_object_t* dfsch_bool(int bool){
