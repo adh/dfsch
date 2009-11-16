@@ -87,23 +87,6 @@ char* dfsch_console_read_line(char* prompt){
 
 #ifdef USE_READLINE
 static char * symbol_completion_cb (const char* text, int state){
-  char *name;
-  static dfsch_symbol_iter_t* iter;
-  int len;
-
-
-  if (state==0)
-    iter = NULL;
-
-  len = strlen(text);
-
-  while (name = dfsch_get_next_symbol(&iter)){
-    if (strncmp (name, text, len) == 0){
-      return (char*)strdup(name);
-    }
-  }
-  
-  /* If no names matched, then return NULL. */
   return ((char *)NULL);
 }
 

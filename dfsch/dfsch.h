@@ -469,17 +469,6 @@ extern "C" {
   extern dfsch_object_t* dfsch_get_stack_trace();
 
   
-  /** Iterator for dfsch_get_next_symbol */
-  typedef struct dfsch_symbol_iter_t dfsch_symbol_iter_t;
-
-  /**
-   * Iterates over all symbols known by interpreter. And returns one 
-   * per call, useful for things like completion. ITER is pointer to 
-   * dfsch_symbol_iter_t*, when its value is NULL, new iterator is 
-   * allocated. NULL is returned, when no more symbols are avaiable.
-   */
-  extern char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter);
-
 #include <dfsch/strings.h>
 
 #define DFSCH_TRUE_P(o) ((o) != NULL)
