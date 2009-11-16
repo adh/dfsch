@@ -299,19 +299,19 @@
 (group "Object system"
        (let ()
          (define-class <test-class> () 
-           ((test-slot accessor test-slot 
-                       initform 'test-slot-init-value
-                       initarg test-slot-initarg)))
+           ((test-slot :accessor test-slot 
+                       :initform :test-slot-init-value
+                       :initarg :test-slot-initarg)))
          (test 'make-instance 
                (type-of (make-instance <test-class>))
                <test-class>)
          (test 'init-form
                (test-slot (make-instance <test-class>))
-               'test-slot-init-value)
+               :test-slot-init-value)
          (test 'init-arg
                (test-slot (make-instance <test-class> 
-                                         'test-slot-initarg 'foo))
-               'foo)
+                                         :test-slot-initarg :foo))
+               :foo)
 
          (define-method (test-fun foo)
            'default)
@@ -329,7 +329,7 @@
                (test-slot (make-instance <subclass>))
                'test-slot-init-value)
 
-         (define-method ((test-fun around) (foo <subclass>))
+         (define-method ((test-fun :around) (foo <subclass>))
            (cons 'subclass (call-next-method)))
 
          (test 'around-method
