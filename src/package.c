@@ -80,10 +80,18 @@ struct dfsch_package_t {
 dfsch_package_t dfsch_dfsch_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = NULL,
+  .name = "dfsch"
 };
 dfsch_package_t dfsch_dfsch_user_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = DFSCH_DFSCH_PACKAGE,
+  .name = "dfsch-user"
+};
+
+dfsch_package_t dfsch_gensym_package = {
+  .type = DFSCH_PACKAGE_TYPE,
+  .next = DFSCH_GENSYM_PACKAGE,
+  .name = "*gensym*"
 };
 
 dfsch_type_t dfsch_package_type = {
@@ -235,7 +243,7 @@ static symbol_t* make_symbol(char *symbol){
 dfsch_object_t* dfsch_gensym(){
   symbol_t *s = GC_NEW(symbol_t);
 
-  s->package = DFSCH_DFSCH_USER_PACKAGE;
+  s->package = DFSCH_GENSYM_PACKAGE;
   s->name = NULL;
 
   return DFSCH_TAG_ENCODE(s, 2);
