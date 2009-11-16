@@ -327,7 +327,7 @@
 
          (test 'inherited-initform 
                (test-slot (make-instance <subclass>))
-               'test-slot-init-value)
+               :test-slot-init-value)
 
          (define-method ((test-fun :around) (foo <subclass>))
            (cons 'subclass (call-next-method)))
