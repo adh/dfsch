@@ -187,9 +187,12 @@ static void finalize_slots_definition(class_t* klass,
         slot_def = DFSCH_FAST_CDR(slot_def);
         
         if(dfsch_compare_symbol(keyword, "accessor")){
-          dfsch_define(value,
-                       dfsch__make_slot_accessor_for_slot(klass, slot),
-                       env, DFSCH_VAR_CONSTANT);
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_accessor_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_symbol(keyword, "initform")){
           klass->initvalues = dfsch_cons(dfsch_list(2, 
