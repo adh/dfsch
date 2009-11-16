@@ -44,8 +44,8 @@
 
 // Symbols
 
-#define HASH_BITS 10
-#define HASH_SIZE (1 << HASH_BITS)
+#define INITIAL_PACKAGE_SIZE 128
+#define INITIAL_PACKAGE_MASK (INITIAL_PACKAGE_SIZE - 1)
 
 typedef struct hash_entry_t hash_entry_t;
 struct hash_entry_t {
@@ -58,34 +58,47 @@ int dfsch_symbol_p(dfsch_object_t* obj){
   return DFSCH_SYMBOL_P(obj);
 }
 
-static size_t string_hash(char* string){
-  size_t tmp=0;
-
-  while (*string){
-    char c = *string; 
-    tmp ^= c ^ (tmp << 7); 
-    tmp ^= ((size_t)c << 17) ^ (tmp >> 11); 
-    ++string;
-  }
-
-  return tmp & (HASH_SIZE - 1); 
-}
+typedef struct pkg_hash_entry_t {
+  size_t hash;
+  dfsch__symbol_t* symbol;
+} pkg_hash_entry_t;
 
 struct dfsch_package_t {
   dfsch_type_t* type;
   dfsch_package_t* next;
   char* name;
+  size_t sym_count;
+  size_t mask;
+  pkg_hash_entry_t* entries;
 };
+
+static pkg_hash_entry_t dfsch_entries[INITIAL_PACKAGE_SIZE];
+static pkg_hash_entry_t dfsch_user_entries[INITIAL_PACKAGE_SIZE];
+static pkg_hash_entry_t dfsch_keyword_entries[INITIAL_PACKAGE_SIZE];
 
 dfsch_package_t dfsch_dfsch_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = NULL,
-  .name = "dfsch"
+  .name = "dfsch",
+  .sym_count = 0,
+  .mask = INITIAL_PACKAGE_MASK,
+  .entries = dfsch_entries,
 };
 dfsch_package_t dfsch_dfsch_user_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = DFSCH_DFSCH_PACKAGE,
-  .name = "dfsch-user"
+  .name = "dfsch-user",
+  .sym_count = 0,
+  .mask = INITIAL_PACKAGE_MASK,
+  .entries = dfsch_user_entries,
+};
+dfsch_package_t dfsch_keyword_package = {
+  .type = DFSCH_PACKAGE_TYPE,
+  .next = DFSCH_DFSCH_PACKAGE,
+  .name = "keyword",
+  .sym_count = 0,
+  .mask = INITIAL_PACKAGE_MASK,
+  .entries = dfsch_keyword_entries,
 };
 
 dfsch_package_t dfsch_gensym_package = {
@@ -98,8 +111,92 @@ dfsch_type_t dfsch_package_type = {
   .type = DFSCH_STANDARD_TYPE
 };
 
-static hash_entry_t*  global_symbol_hash[HASH_SIZE];
-static unsigned int gsh_init = 0;
+static size_t symbol_hash(char* string){
+  size_t tmp=0;
+
+  while (*string){
+    char c = *string; 
+    tmp *= c ^ (tmp << 7); 
+    tmp ^= ((size_t)c << 17) ^ (tmp >> 11); 
+    ++string;
+  }
+
+  return tmp; 
+}
+
+static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
+                               size_t mask,
+                               dfsch__symbol_t* symbol,
+                               size_t hash){
+  size_t i;
+  size_t initial_i;
+
+  i = initial_i = hash & mask;
+
+  do {
+    if (!entries[i].symbol){
+      entries[i].symbol = symbol;
+      entries[i].hash = hash;
+      return;
+    }
+    i = (i + 1) & mask;
+  } while (i != initial_i);
+
+  abort();
+}
+
+static void pkg_grow(dfsch_package_t* pkg){
+  size_t new_mask = ((pkg->mask + 1) * 2) - 1;
+  pkg_hash_entry_t* new = GC_MALLOC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
+  size_t i;
+
+  for (i = 0; i <= pkg->mask; i++){
+    if (pkg->entries[i].symbol){
+      pkg_low_put_symbol(new, new_mask, 
+                         pkg->entries[i].symbol, pkg->entries[i].hash);
+    }
+  }
+
+  pkg->mask = new_mask;
+  pkg->entries = new;
+}
+
+static void pkg_put_symbol(dfsch_package_t* pkg,
+                           dfsch__symbol_t* symbol){
+  pkg->sym_count++;
+  
+  if (pkg->sym_count / 2 > pkg->mask / 3){
+    pkg_grow(pkg);
+  }
+
+  pkg_low_put_symbol(pkg->entries, pkg->mask, 
+                     symbol, symbol_hash(symbol->name));
+}
+static dfsch__symbol_t* pkg_find_symbol(dfsch_package_t* pkg,
+                                        char* name){
+  size_t i;
+  size_t initial_i;
+  size_t hash = symbol_hash(name);
+
+  i = initial_i = hash & pkg->mask;
+
+  do {
+    if (!pkg->entries[i].symbol){
+      break;
+    }
+
+    if (pkg->entries[i].hash == hash &&
+        strcmp(pkg->entries[i].symbol->name, name) == 0){
+      return pkg->entries[i].symbol;
+    }
+
+    i = (i + 1) & pkg->mask;
+  } while (i != initial_i);
+
+  return NULL;
+}
+
+
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "true"},
@@ -117,9 +214,9 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "&environment"},
   {DFSCH_DFSCH_PACKAGE, "&whole"},
   {DFSCH_DFSCH_PACKAGE, "&aux"},
-  {NULL, "before"},
-  {NULL, "after"},
-  {NULL, "around"},
+  {DFSCH_KEYWORD_PACKAGE, "before"},
+  {DFSCH_KEYWORD_PACKAGE, "after"},
+  {DFSCH_KEYWORD_PACKAGE, "around"},
 };
 
 /*
@@ -129,15 +226,7 @@ dfsch__symbol_t dfsch__static_symbols[] = {
  * one thread doing such things.
  */
 
-static void register_static_symbol(symbol_t* s){
-  hash_entry_t *e = malloc(sizeof(hash_entry_t));
-
-  e->entry = s;
-  e->hash = string_hash(s->name);
-
-  e->next = global_symbol_hash[e->hash];
-  global_symbol_hash[e->hash] = e;
-}
+static int gsh_init = 0;
 
 static void gsh_check_init(){
   int i;
@@ -145,58 +234,16 @@ static void gsh_check_init(){
     return;
   }
 
-  memset(global_symbol_hash, 0, sizeof(hash_entry_t*)*HASH_SIZE);
   for (i = 0; i < sizeof(dfsch__static_symbols)/sizeof(symbol_t); i++){
-    register_static_symbol(dfsch__static_symbols + i);
+    pkg_put_symbol(dfsch__static_symbols[i].package,
+                   dfsch__static_symbols + i);
   }
   gsh_init = 1;
 }
 
 static symbol_t* lookup_symbol(char *symbol){
 
-  size_t hash = string_hash(symbol);
-  hash_entry_t *i = global_symbol_hash[hash];
-
-  while (i){
-    if (i->hash == hash && strcmp(i->entry->name, symbol)==0){
-      return i->entry;
-    }
-    i = i->next;
-  }
-
-  return NULL;
-}
-
-static void free_symbol(symbol_t* s){
-  hash_entry_t *i;
-  hash_entry_t *j;
-
-  pthread_mutex_lock(&symbol_lock);
-
-  i = global_symbol_hash[string_hash(s->name)];
-  j = NULL;
-  
-  while (i){
-    if (i->entry == s){
-      if (j){
-        j->next = i->next;
-      } else {
-        global_symbol_hash[string_hash(s->name)] = i->next;
-      }
-      free(i);
-      break;
-    }
-    j = i;
-    i = i->next;
-  }
-
-  pthread_mutex_unlock(&symbol_lock);
-
-  s->name = NULL;
-}
-
-static void symbol_finalizer(symbol_t* symbol, void* cd){
-  free_symbol(symbol);
+  return pkg_find_symbol(DFSCH_DFSCH_PACKAGE, symbol);
 }
 
 static symbol_t* make_symbol(char *symbol){
@@ -223,19 +270,9 @@ static symbol_t* make_symbol(char *symbol){
   }
 
 
-  GC_REGISTER_FINALIZER(s, 
-                        (GC_finalization_proc)symbol_finalizer, NULL, 
-                        NULL, NULL);
-    
-  hash_entry_t *e = malloc(sizeof(hash_entry_t));
-
-  e->entry = s;
-  e->hash = string_hash(symbol);
-
-  e->next = global_symbol_hash[e->hash];
-  global_symbol_hash[e->hash] = e;
-
+  pkg_put_symbol(DFSCH_DFSCH_PACKAGE, s);
   pthread_mutex_unlock(&symbol_lock);
+    
   
   return s;
 }
@@ -314,7 +351,7 @@ struct dfsch_symbol_iter_t{
 };
 
 char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
-  if (*iter == NULL){
+  /*  if (*iter == NULL){
     *iter = GC_MALLOC(sizeof(dfsch_symbol_iter_t));
     (*iter)->bucket = 0;
     (*iter)->item = global_symbol_hash[(*iter)->bucket];
@@ -328,7 +365,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
       (*iter)->item = (*iter)->item->next;
       return i->entry->name;
     }
-  }  
+    } */ 
   return NULL;
 }
 
