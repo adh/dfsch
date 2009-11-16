@@ -241,40 +241,16 @@ static void gsh_check_init(){
   gsh_init = 1;
 }
 
-static symbol_t* lookup_symbol(char *symbol){
-
-  return pkg_find_symbol(DFSCH_DFSCH_PACKAGE, symbol);
-}
-
-static symbol_t* make_symbol(char *symbol){
-  symbol_t *s;
-  symbol_t *f;
-
-  s = GC_NEW(symbol_t); /* !!! free_symbol could be called by this */
-  if (*symbol == ':'){
-    s->name = stracpy(symbol+1);
-    s->package = NULL;
-  } else {
-    s->name = stracpy(symbol);
-    s->package = DFSCH_DFSCH_PACKAGE;
+static symbol_t* intern_symbol_in_package(dfsch_package_t* package,
+                                          char* name){
+  dfsch__symbol_t* sym = pkg_find_symbol(package, name);
+  if (!sym){
+    sym = GC_NEW(dfsch__symbol_t);
+    sym->name = dfsch_stracpy(name);
+    sym->package = package;
+    pkg_put_symbol(package, sym);
   }
-
-  pthread_mutex_lock(&symbol_lock);
-
-  f = lookup_symbol(symbol); 
-  if (f){ 
-    GC_FREE(s->name);
-    GC_FREE(s);
-    pthread_mutex_unlock(&symbol_lock);
-    return f;
-  }
-
-
-  pkg_put_symbol(DFSCH_DFSCH_PACKAGE, s);
-  pthread_mutex_unlock(&symbol_lock);
-    
-  
-  return s;
+  return sym;
 }
 
 dfsch_object_t* dfsch_gensym(){
@@ -299,13 +275,14 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   gsh_check_init(); 
   // This code is slow already, so this check does not matter (too much)
 
-  s = lookup_symbol(symbol);
+  if (*symbol == ':'){
+    s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, symbol+1);
+  } else {
+    s = intern_symbol_in_package(DFSCH_DFSCH_PACKAGE, symbol);
+  }
+
 
   pthread_mutex_unlock(&symbol_lock);
-
-  if (!s)
-    s = make_symbol(symbol);
-
   return DFSCH_TAG_ENCODE(s, 2);
 
 }
