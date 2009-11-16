@@ -441,7 +441,7 @@ static object_t* lookup_impl(object_t* name,
     i = i->parent;
   }
 
-  dfsch_error("Unbound variable", dfsch_cons(name, (dfsch_object_t*)env));
+  goto unbound;
  lock:
    DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
@@ -455,6 +455,12 @@ static object_t* lookup_impl(object_t* name,
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+
+ unbound:
+  if (DFSCH_SYMBOL_P(name) && 
+      ((dfsch__symbol_t*)DFSCH_TAG_REF(name))->package == NULL){
+    return name; /* keywords are self-evaluating when not redefined */
+  }
   dfsch_error("Unbound variable", dfsch_cons(name, (dfsch_object_t*)env));
 }
 
