@@ -67,6 +67,8 @@ struct dfsch_package_t {
   dfsch_type_t* type;
   dfsch_package_t* next;
   char* name;
+  dfsch_object_t* use_list;
+
   size_t sym_count;
   size_t mask;
   pkg_hash_entry_t* entries;
@@ -78,7 +80,7 @@ static pkg_hash_entry_t dfsch_keyword_entries[INITIAL_PACKAGE_SIZE];
 
 dfsch_package_t dfsch_dfsch_package = {
   .type = DFSCH_PACKAGE_TYPE,
-  .next = NULL,
+  .next = DFSCH_KEYWORD_PACKAGE,
   .name = "dfsch",
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
@@ -94,7 +96,7 @@ dfsch_package_t dfsch_dfsch_user_package = {
 };
 dfsch_package_t dfsch_keyword_package = {
   .type = DFSCH_PACKAGE_TYPE,
-  .next = DFSCH_DFSCH_PACKAGE,
+  .next = NULL,
   .name = "keyword",
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
@@ -110,6 +112,31 @@ dfsch_package_t dfsch_gensym_package = {
 dfsch_type_t dfsch_package_type = {
   .type = DFSCH_STANDARD_TYPE
 };
+
+static dfsch_package_t* packages = DFSCH_DFSCH_USER_PACKAGE;
+
+dfsch_package_t* dfsch_find_package(char* name){
+  dfsch_package_t* i = packages;
+
+  while (i){
+    if (strcmp(i->name, name) == 0){
+      return i;
+    }
+    i = i->next;
+  }
+
+  dfsch_error("No such package", dfsch_make_string_cstr(name));
+}
+
+static dfsch_package_t* current_package = DFSCH_DFSCH_USER_PACKAGE;
+
+dfsch_package_t* dfsch_get_current_package(){
+  
+}
+
+void dfsch_set_current_package(){
+  
+}
 
 static size_t symbol_hash(char* string){
   size_t tmp=0;
@@ -196,6 +223,25 @@ static dfsch__symbol_t* pkg_find_symbol(dfsch_package_t* pkg,
   return NULL;
 }
 
+static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
+                                    char* name){
+  dfsch__symbol_t* sym = pkg_find_symbol(pkg, name);
+  dfsch_object_t* i = pkg->use_list;
+
+  if (sym){
+    return sym;
+  }
+  
+  while (DFSCH_PAIR_P(i)){
+    sym = find_symbol(pkg, name);
+    if (sym){
+      return sym;
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return NULL;
+}
 
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 dfsch__symbol_t dfsch__static_symbols[] = {
@@ -262,11 +308,17 @@ dfsch_object_t* dfsch_gensym(){
   return DFSCH_TAG_ENCODE(s, 2);
 }
 
-dfsch_object_t* dfsch_make_symbol(char* symbol){
+static void parse_symbol(char* symbol,
+                         char** package_name,
+                         char** symbol_name){
+  char* colon = strrchr(symbol, ':');
+}
 
+dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
+                                    char* name){
   symbol_t *s;
 
-  if (!symbol){
+  if (!name){
     return dfsch_gensym();
   }
 
@@ -275,17 +327,23 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   gsh_check_init(); 
   // This code is slow already, so this check does not matter (too much)
 
-  if (*symbol == ':'){
-    s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, symbol+1);
+  if (*name == ':'){
+    s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, name+1);
   } else {
-    s = intern_symbol_in_package(DFSCH_DFSCH_PACKAGE, symbol);
+    s = intern_symbol_in_package(DFSCH_DFSCH_PACKAGE, name);
   }
 
 
   pthread_mutex_unlock(&symbol_lock);
   return DFSCH_TAG_ENCODE(s, 2);
-
+  
 }
+
+dfsch_object_t* dfsch_make_symbol(char* symbol){
+  return dfsch_intern_symbol(dfsch_get_current_package(), symbol);
+}
+
+
 char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
                                                      DFSCH_SYMBOL_TYPE)))->name;
