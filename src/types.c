@@ -359,7 +359,7 @@ static dfsch_object_t* slot_writer_apply(slot_accessor_t* sa,
   dfsch_object_t* instance;
   dfsch_object_t* value;
   DFSCH_OBJECT_ARG(args, instance);
-  DFSCH_OBJECT_ARG(args, value, DFSCH_INVALID_OBJECT);
+  DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
   instance = DFSCH_ASSERT_INSTANCE(instance, sa->instance_class);

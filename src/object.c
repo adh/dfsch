@@ -194,6 +194,22 @@ static void finalize_slots_definition(class_t* klass,
                               accessor);
           dfsch_define_method(env, value, method);
           
+        } else if(dfsch_compare_symbol(keyword, "reader")){
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_reader_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
+          
+        } else if(dfsch_compare_symbol(keyword, "write")){
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_writer_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
+          
         } else if(dfsch_compare_symbol(keyword, "initform")){
           klass->initvalues = dfsch_cons(dfsch_list(2, 
                                                     dfsch_eval(value, env), 
