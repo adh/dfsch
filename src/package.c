@@ -117,9 +117,9 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "&environment"},
   {DFSCH_DFSCH_PACKAGE, "&whole"},
   {DFSCH_DFSCH_PACKAGE, "&aux"},
-  {DFSCH_DFSCH_PACKAGE, "before"},
-  {DFSCH_DFSCH_PACKAGE, "after"},
-  {DFSCH_DFSCH_PACKAGE, "around"},
+  {NULL, "before"},
+  {NULL, "after"},
+  {NULL, "around"},
 };
 
 /*
