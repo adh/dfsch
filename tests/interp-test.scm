@@ -276,7 +276,7 @@
 
 (group "Regular expressions"
        (define r0 (regex:compile "[ab]+"))
-       (define r0b (regex:compile "[ab]+" 'basic))
+       (define r0b (regex:compile "[ab]+" :basic))
        (define r1 (regex:compile "^([^ ]+) +([^ ]+)$"))
        (test 'extended (regex:match? r0 "baba") #t)
        (test 'basic (regex:match? r0b "baba") #f)
