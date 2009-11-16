@@ -291,6 +291,12 @@ char* dfsch_symbol(dfsch_object_t* symbol){
                                                      DFSCH_SYMBOL_TYPE)))->name;
 }
 
+dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym){
+  return DFSCH_TAG_ENCODE(intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE,
+                                                   dfsch_symbol(sym)),
+                          2);
+}
+
 char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
   char *name;
   char *flt;

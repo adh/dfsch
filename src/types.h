@@ -21,6 +21,7 @@ typedef struct lambda_list_t {
   dfsch_object_t* rest;
   dfsch_object_t** defaults;
   dfsch_object_t** supplied_p;
+  dfsch_object_t** keywords;
   dfsch_object_t* aux_list;
   dfsch_object_t* arg_list[];
 } lambda_list_t;

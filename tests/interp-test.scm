@@ -238,7 +238,7 @@
 
        (define (key-rest-arg-fun &rest r &key a (b 2) (c 3 c-supplied))
          (list r a b c c-supplied))
-       (test 'keyword-and-rest (key-rest-arg-fun :c 9) '((c 9) () 2 9 true)))
+       (test 'keyword-and-rest (key-rest-arg-fun :c 9) '((:c 9) () 2 9 true)))
 
 
 (group "vectors"

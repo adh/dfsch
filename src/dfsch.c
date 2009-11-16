@@ -831,6 +831,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   dfsch_object_t* arg_list = NULL; 
   dfsch_object_t* defaults_list = NULL;
   dfsch_object_t* supplied_p_list = NULL;
+  dfsch_object_t* keyword_list = NULL;
 
   cll_mode_t mode = CLL_POSITIONAL;
 
@@ -891,6 +892,8 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
           optional_count++;
         } else {
           keyword_count++;
+          keyword_list = dfsch_cons(dfsch_symbol_2_keyword(name), 
+                                    keyword_list);
         }
       }
     }
@@ -921,6 +924,15 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
     j--;
     ll->arg_list[j] = DFSCH_FAST_CAR(arg_list);
     arg_list = DFSCH_FAST_CDR(arg_list);
+  }
+
+  if (ll->keyword_count){
+    ll->keywords = GC_MALLOC(sizeof(dfsch_object_t*) * ll->keyword_count);
+    for(j = ll->keyword_count; j && DFSCH_PAIR_P(defaults_list);){
+      j--;
+      ll->keywords[j] = DFSCH_FAST_CAR(keyword_list);
+      keyword_list = DFSCH_FAST_CDR(keyword_list);
+    }
   }
 
   opt_arg_count = ll->optional_count + ll->keyword_count;
@@ -977,7 +989,7 @@ static void destructure_keywords(lambda_list_t* ll,
         }
         break;
       }
-      if (keyword == ll->arg_list[i + kw_offset]){
+      if (keyword == ll->keywords[i]){
         dfsch_eqhash_put(&env->values, ll->arg_list[i + kw_offset], 
                          DFSCH_LIKELY(outer) ? 
                          dfsch_eval_impl(value, outer, NULL, ti):
