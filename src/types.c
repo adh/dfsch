@@ -561,7 +561,7 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
   if (s->name){
-    if (!s->package) {
+    if (s->package == DFSCH_KEYWORD_PACKAGE) {
       dfsch_write_string(state, ":");      
     }
     dfsch_write_string(state, s->name);
