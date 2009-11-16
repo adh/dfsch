@@ -467,8 +467,8 @@ dfsch_type_t dfsch_pair_type = {
 static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
-  if (s->data){
-    dfsch_write_string(state, s->data);
+  if (s->name){
+    dfsch_write_string(state, s->name);
   } else {
     dfsch_write_string(state, dfsch_saprintf("#<gensym %p>", o)); 
   }
@@ -1543,28 +1543,43 @@ static size_t string_hash(char* string){
   return tmp & (HASH_SIZE - 1); 
 }
 
+struct dfsch_package_t {
+  dfsch_type_t* type;
+};
+
+dfsch_package_t dfsch_dfsch_package = {
+  .type = DFSCH_PACKAGE_TYPE
+};
+dfsch_package_t dfsch_dfsch_user_package = {
+  .type = DFSCH_PACKAGE_TYPE
+};
+
+dfsch_type_t dfsch_package_type = {
+  .type = DFSCH_STANDARD_TYPE
+};
+
 static hash_entry_t*  global_symbol_hash[HASH_SIZE];
 static unsigned int gsh_init = 0;
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 dfsch__symbol_t dfsch__static_symbols[] = {
-  {"true"},
-  {"quote"},
-  {"quasiquote"},
-  {"unquote"},
-  {"unquote-splicing"},
-  {"else"},
-  {"=>"},
-  {"&optional"},
-  {"&key"},
-  {"&rest"},
-  {"&body"},
-  {"&allow-other-keys"},
-  {"&environment"},
-  {"&whole"},
-  {"&aux"},
-  {"before"},
-  {"after"},
-  {"around"},
+  {DFSCH_DFSCH_PACKAGE, "true"},
+  {DFSCH_DFSCH_PACKAGE, "quote"},
+  {DFSCH_DFSCH_PACKAGE, "quasiquote"},
+  {DFSCH_DFSCH_PACKAGE, "unquote"},
+  {DFSCH_DFSCH_PACKAGE, "unquote-splicing"},
+  {DFSCH_DFSCH_PACKAGE, "else"},
+  {DFSCH_DFSCH_PACKAGE, "=>"},
+  {DFSCH_DFSCH_PACKAGE, "&optional"},
+  {DFSCH_DFSCH_PACKAGE, "&key"},
+  {DFSCH_DFSCH_PACKAGE, "&rest"},
+  {DFSCH_DFSCH_PACKAGE, "&body"},
+  {DFSCH_DFSCH_PACKAGE, "&allow-other-keys"},
+  {DFSCH_DFSCH_PACKAGE, "&environment"},
+  {DFSCH_DFSCH_PACKAGE, "&whole"},
+  {DFSCH_DFSCH_PACKAGE, "&aux"},
+  {DFSCH_DFSCH_PACKAGE, "before"},
+  {DFSCH_DFSCH_PACKAGE, "after"},
+  {DFSCH_DFSCH_PACKAGE, "around"},
 };
 
 /*
@@ -1578,7 +1593,7 @@ static void register_static_symbol(symbol_t* s){
   hash_entry_t *e = malloc(sizeof(hash_entry_t));
 
   e->entry = s;
-  e->hash = string_hash(s->data);
+  e->hash = string_hash(s->name);
 
   e->next = global_symbol_hash[e->hash];
   global_symbol_hash[e->hash] = e;
@@ -1603,7 +1618,7 @@ static symbol_t* lookup_symbol(char *symbol){
   hash_entry_t *i = global_symbol_hash[hash];
 
   while (i){
-    if (i->hash == hash && strcmp(i->entry->data, symbol)==0){
+    if (i->hash == hash && strcmp(i->entry->name, symbol)==0){
       return i->entry;
     }
     i = i->next;
@@ -1618,7 +1633,7 @@ static void free_symbol(symbol_t* s){
 
   pthread_mutex_lock(&symbol_lock);
 
-  i = global_symbol_hash[string_hash(s->data)];
+  i = global_symbol_hash[string_hash(s->name)];
   j = NULL;
   
   while (i){
@@ -1626,7 +1641,7 @@ static void free_symbol(symbol_t* s){
       if (j){
         j->next = i->next;
       } else {
-        global_symbol_hash[string_hash(s->data)] = i->next;
+        global_symbol_hash[string_hash(s->name)] = i->next;
       }
       free(i);
       break;
@@ -1637,7 +1652,7 @@ static void free_symbol(symbol_t* s){
 
   pthread_mutex_unlock(&symbol_lock);
 
-  s->data = NULL;
+  s->name = NULL;
 }
 
 static void symbol_finalizer(symbol_t* symbol, void* cd){
@@ -1649,13 +1664,13 @@ static symbol_t* make_symbol(char *symbol){
   symbol_t *f;
 
   s = GC_NEW(symbol_t); /* !!! free_symbol could be called by this */
-  s->data = stracpy(symbol);
+  s->name = stracpy(symbol);
 
   pthread_mutex_lock(&symbol_lock);
 
   f = lookup_symbol(symbol); 
   if (f){ 
-    GC_FREE(s->data);
+    GC_FREE(s->name);
     GC_FREE(s);
     pthread_mutex_unlock(&symbol_lock);
     return f;
@@ -1682,7 +1697,8 @@ static symbol_t* make_symbol(char *symbol){
 dfsch_object_t* dfsch_gensym(){
   symbol_t *s = GC_NEW(symbol_t);
 
-  s->data = NULL;
+  s->package = DFSCH_DFSCH_USER_PACKAGE;
+  s->name = NULL;
 
   return DFSCH_TAG_ENCODE(s, 2);
 }
@@ -1711,7 +1727,7 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
 }
 char* dfsch_symbol(dfsch_object_t* symbol){
-  return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, SYMBOL)))->data;
+  return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, SYMBOL)))->name;
 }
 
 char* dfsch_symbol_2_typename(dfsch_object_t* symbol){
@@ -1763,7 +1779,7 @@ char* dfsch_get_next_symbol(dfsch_symbol_iter_t **iter){ // deep magic
     }else{
       hash_entry_t *i = (*iter)->item;
       (*iter)->item = (*iter)->item->next;
-      return i->entry->data;
+      return i->entry->name;
     }
   }  
   return NULL;

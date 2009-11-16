@@ -77,6 +77,8 @@ extern dfsch_type_t dfsch_writer_state_type;
 extern dfsch_type_t dfsch_slot_accessor_type;
 #define DFSCH_SLOT_ACCESSOR_TYPE (&dfsch_slot_accessor_type)
 
+extern dfsch_type_t dfsch_package_type;
+#define DFSCH_PACKAGE_TYPE (&dfsch_package_type)
 
 typedef struct dfsch_primitive_t {
   dfsch_type_t* type;
@@ -405,8 +407,16 @@ typedef struct dfsch_pair_t {
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
 
+typedef struct dfsch_package_t dfsch_package_t;
+
+extern dfsch_package_t dfsch_dfsch_package;
+#define DFSCH_DFSCH_PACKAGE (&dfsch_dfsch_package)
+extern dfsch_package_t dfsch_dfsch_user_package;
+#define DFSCH_DFSCH_USER_PACKAGE (&dfsch_dfsch_user_package)
+
 typedef struct dfsch__symbol_t{
-  char *data;
+  dfsch_package_t* package;
+  char *name;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch__symbol_t;
 
