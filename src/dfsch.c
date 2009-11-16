@@ -1270,6 +1270,8 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
   dfsch_define_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
   dfsch_define_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
+  dfsch_define_cstr(ctx, "<slot-reader>", DFSCH_SLOT_READER_TYPE);
+  dfsch_define_cstr(ctx, "<slot-writer>", DFSCH_SLOT_WRITER_TYPE);
   dfsch_define_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
   dfsch_define_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
   dfsch_define_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);

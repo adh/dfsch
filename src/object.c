@@ -120,13 +120,18 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.slots = make_slots(slots);
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   if (superclass){
-    klass->standard_type.superclass = 
-      (dfsch_type_t*)DFSCH_ASSERT_INSTANCE(superclass,
+    class_t* super = DFSCH_ASSERT_INSTANCE(superclass,
                                            DFSCH_CLASS_TYPE);
+
+    klass->standard_type.superclass = (dfsch_type_t*)super;
 
     klass->standard_type.size = 
       adjust_sizes(klass->standard_type.slots,
                    klass->standard_type.superclass->size);
+
+    klass->initvalues = super->initvalues;
+    klass->initargs = super->initargs;
+
   } else {
     klass->standard_type.superclass = NULL;
     klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
@@ -182,9 +187,28 @@ static void finalize_slots_definition(class_t* klass,
         slot_def = DFSCH_FAST_CDR(slot_def);
         
         if(dfsch_compare_symbol(keyword, "accessor")){
-          dfsch_define(value,
-                       dfsch__make_slot_accessor_for_slot(klass, slot),
-                       env, DFSCH_VAR_CONSTANT);
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_accessor_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
+          
+        } else if(dfsch_compare_symbol(keyword, "reader")){
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_reader_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
+          
+        } else if(dfsch_compare_symbol(keyword, "write")){
+          dfsch_object_t* accessor = 
+            dfsch__make_slot_writer_for_slot(klass, slot);
+          dfsch_method_t* method = 
+            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+                              accessor);
+          dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_symbol(keyword, "initform")){
           klass->initvalues = dfsch_cons(dfsch_list(2, 

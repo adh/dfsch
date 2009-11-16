@@ -139,6 +139,10 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
                                                   char* slot);
+  extern dfsch_object_t* dfsch_make_slot_reader(dfsch_type_t* type,
+                                                char* slot);
+  extern dfsch_object_t* dfsch_make_slot_writer(dfsch_type_t* type,
+                                                char* slot);
 
 
   /** Is OBJ null? */

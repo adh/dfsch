@@ -171,11 +171,16 @@ void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
   if (state->readability == DFSCH_STRICT_WRITE){
     dfsch_error("Object has no readable representation", obj);
   }
-  dfsch_write_string(state, 
-                     saprintf("#<%s %p ", DFSCH_TYPE_OF(obj)->name, obj));
+  dfsch_write_pprint_begin(state);
+  dfsch_write_string(state,
+                     saprintf("#<%s ", DFSCH_TYPE_OF(obj)->name));
+  dfsch_write_pprint_indent(state);
+  dfsch_write_string(state,
+                     saprintf("%p ", obj));
 }
 void dfsch_write_unreadable_end(dfsch_writer_state_t* state){
   dfsch_write_string(state, ">");
+  dfsch_write_pprint_end(state);
 }
 
 void dfsch_write_pprint_newline(dfsch_writer_state_t* state){

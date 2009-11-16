@@ -624,6 +624,33 @@ dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function){
   return f->type->methods(f);
 }
 
+static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
+                                               dfsch_object_t* name){
+  dfsch_object_t* fun;
+  fun = dfsch_env_get(name, env);
+  if (fun != DFSCH_INVALID_OBJECT){
+    if (!DFSCH_INSTANCE_P(fun, DFSCH_GENERIC_FUNCTION_TYPE)){
+      dfsch_cerror("Generic function name already defined as different type",
+                   name);
+    } else {
+      return fun;
+    }
+  }
+
+  fun = dfsch_make_generic_function(name);
+  dfsch_define(name, fun, env, DFSCH_VAR_CONSTANT);
+
+  return fun;
+}
+
+dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
+                                    dfsch_object_t* name,
+                                    dfsch_method_t* method){
+  dfsch_object_t* function = ensure_generic_function(env, name);
+  dfsch_generic_function_add_method(function, method);
+  return method;
+}
+
 
 /*
  * Methods
@@ -854,24 +881,6 @@ DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
   return dfsch_call_next_method(ctx, args, esc);
 }
 
-static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
-                                               dfsch_object_t* name){
-  dfsch_object_t* fun;
-  fun = dfsch_env_get(name, env);
-  if (fun != DFSCH_INVALID_OBJECT){
-    if (!DFSCH_INSTANCE_P(fun, DFSCH_GENERIC_FUNCTION_TYPE)){
-      dfsch_cerror("Generic function name already defined as different type",
-                   name);
-    } else {
-      return fun;
-    }
-  }
-
-  fun = dfsch_make_generic_function(name);
-  dfsch_define(name, fun, env, DFSCH_VAR_CONSTANT);
-
-  return fun;
-}
 
 DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
@@ -915,31 +924,28 @@ DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
                              dfsch_named_lambda(env, lambda_list, 
                                                 body, header));
 
-  function = ensure_generic_function(env, name);
 
-  dfsch_generic_function_add_method(function, method);
-
-  return method;
+  return dfsch_define_method(env, name, method);
 }
 
 
 void dfsch__generic_register(dfsch_object_t* env){
-  dfsch_define_cstr(env, "make-generic-function",
-                    DFSCH_PRIMITIVE_REF(make_generic_function));
-  dfsch_define_cstr(env, "make-method",
+  dfsch_defconst_cstr(env, "make-generic-function",
+                      DFSCH_PRIMITIVE_REF(make_generic_function));
+  dfsch_defconst_cstr(env, "make-method",
                     DFSCH_PRIMITIVE_REF(make_method));
 
-  dfsch_define_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
-  dfsch_define_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
-  dfsch_define_cstr(env, "generic-function-methods", 
+  dfsch_defconst_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
+  dfsch_defconst_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
+  dfsch_defconst_cstr(env, "generic-function-methods", 
                     (dfsch_object_t*)&generic_function_methods);
 
-  dfsch_define_cstr(env, "call-next-method",
+  dfsch_defconst_cstr(env, "call-next-method",
                     DFSCH_FORM_REF(call_next_method));
 
-  dfsch_define_cstr(env, "define-generic-function",
-                    DFSCH_FORM_REF(define_generic_function));
-  dfsch_define_cstr(env, "define-method",
-                    DFSCH_FORM_REF(define_method));
+  dfsch_defconst_cstr(env, "define-generic-function",
+                      DFSCH_FORM_REF(define_generic_function));
+  dfsch_defconst_cstr(env, "define-method",
+                      DFSCH_FORM_REF(define_method));
 
 }

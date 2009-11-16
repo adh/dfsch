@@ -126,4 +126,8 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
                                        dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc);
 
+dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
+                                    dfsch_object_t* name,
+                                    dfsch_method_t* method);
+
 #endif

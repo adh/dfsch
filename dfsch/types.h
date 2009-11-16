@@ -76,6 +76,10 @@ extern dfsch_type_t dfsch_writer_state_type;
 
 extern dfsch_type_t dfsch_slot_accessor_type;
 #define DFSCH_SLOT_ACCESSOR_TYPE (&dfsch_slot_accessor_type)
+extern dfsch_type_t dfsch_slot_reader_type;
+#define DFSCH_SLOT_READER_TYPE (&dfsch_slot_reader_type)
+extern dfsch_type_t dfsch_slot_writer_type;
+#define DFSCH_SLOT_WRITER_TYPE (&dfsch_slot_writer_type)
 
 extern dfsch_type_t dfsch_package_type;
 #define DFSCH_PACKAGE_TYPE (&dfsch_package_type)
@@ -208,7 +212,7 @@ typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
   /** When we want to use type_t as first-class object */
   dfsch_type_t* type;
-  /** Superclass (NULL for normal objects) */
+  /** Superclass */
   dfsch_type_t* superclass;
   /** Instance size */
   size_t size;
