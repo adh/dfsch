@@ -308,6 +308,103 @@ dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
                                             dfsch_find_slot(type, slot));
 }
 
+static dfsch_object_t* slot_reader_apply(slot_accessor_t* sa,
+                                         dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc,
+                                         dfsch_object_t* context){
+  dfsch_object_t* instance;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, instance);
+  DFSCH_ARG_END(args);
+
+  instance = DFSCH_ASSERT_INSTANCE(instance, sa->instance_class);
+
+  return dfsch_slot_ref(instance, sa->slot, 0);
+}
+static void slot_reader_write(slot_accessor_t* sa, 
+                              dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)sa, 
+                         "%s @ %s", sa->slot->name, sa->instance_class->name);
+}
+
+dfsch_type_t dfsch_slot_reader_type = {
+  .type          = DFSCH_STANDARD_TYPE,
+  .superclass    = DFSCH_FUNCTION_TYPE,
+  .size          = sizeof(slot_accessor_t),
+  .name          = "slot-reader",
+  .apply         = (dfsch_type_apply_t)slot_accessor_apply,
+  .write         = (dfsch_type_write_t)slot_accessor_write,
+  .slots         = slot_accessor_slots,
+  .documentation = "Slot reader allows direct reading of slot value"
+};
+
+dfsch_object_t* dfsch__make_slot_reader_for_slot(dfsch_type_t* type,
+                                                 dfsch_slot_t* slot){
+  slot_accessor_t* sa = 
+    (slot_accessor_t*) dfsch_make_object(DFSCH_SLOT_READER_TYPE);
+  
+  sa->instance_class = type;
+  sa->slot = slot;
+  return (dfsch_object_t*) sa;
+}
+dfsch_object_t* dfsch_make_slot_reader(dfsch_type_t* type,
+                                         char* slot){
+  return dfsch__make_slot_reader_for_slot(type,
+                                          dfsch_find_slot(type, slot));
+}
+static dfsch_object_t* slot_writer_apply(slot_accessor_t* sa,
+                                         dfsch_object_t* args,
+                                         dfsch_tail_escape_t* esc,
+                                         dfsch_object_t* context){
+  dfsch_object_t* instance;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, instance);
+  DFSCH_OBJECT_ARG_OPT(args, value, DFSCH_INVALID_OBJECT);
+  DFSCH_ARG_END(args);
+
+  instance = DFSCH_ASSERT_INSTANCE(instance, sa->instance_class);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    return dfsch_slot_ref(instance, sa->slot, 0);
+  } else {
+    dfsch_slot_set(instance, sa->slot, value, 0);
+    return value;
+  }
+}
+
+static void slot_writer_write(slot_accessor_t* sa, 
+                                dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)sa, 
+                         "%s @ %s", sa->slot->name, sa->instance_class->name);
+}
+
+dfsch_type_t dfsch_slot_writer_type = {
+  .type          = DFSCH_STANDARD_TYPE,
+  .superclass    = DFSCH_FUNCTION_TYPE,
+  .size          = sizeof(slot_accessor_t),
+  .name          = "slot-writer",
+  .apply         = (dfsch_type_apply_t)slot_accessor_apply,
+  .write         = (dfsch_type_write_t)slot_accessor_write,
+  .slots         = slot_accessor_slots,
+  .documentation = "Slot writer allows direct modification of slot value"
+};
+
+dfsch_object_t* dfsch__make_slot_writer_for_slot(dfsch_type_t* type,
+                                                 dfsch_slot_t* slot){
+  slot_accessor_t* sa = 
+    (slot_accessor_t*) dfsch_make_object(DFSCH_SLOT_WRITER_TYPE);
+
+  sa->instance_class = type;
+  sa->slot = slot;
+  return (dfsch_object_t*) sa;
+}
+dfsch_object_t* dfsch_make_slot_writer(dfsch_type_t* type,
+                                       char* slot){
+  return dfsch__make_slot_writer_for_slot(type,
+                                          dfsch_find_slot(type, slot));
+}
+
+
 
 dfsch_type_t dfsch_abstract_type = {
   DFSCH_META_TYPE,

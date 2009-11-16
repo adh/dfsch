@@ -76,6 +76,10 @@ extern dfsch_type_t dfsch_writer_state_type;
 
 extern dfsch_type_t dfsch_slot_accessor_type;
 #define DFSCH_SLOT_ACCESSOR_TYPE (&dfsch_slot_accessor_type)
+extern dfsch_type_t dfsch_slot_reader_type;
+#define DFSCH_SLOT_READER_TYPE (&dfsch_slot_reader_type)
+extern dfsch_type_t dfsch_slot_writer_type;
+#define DFSCH_SLOT_WRITER_TYPE (&dfsch_slot_writer_type)
 
 
 typedef struct dfsch_primitive_t {
