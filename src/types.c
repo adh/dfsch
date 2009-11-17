@@ -561,13 +561,19 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
   if (s->name){
-    if (!dfsch_in_current_package(o)) {
-      if (s->package && s->package != DFSCH_KEYWORD_PACKAGE) {
-        dfsch_write_string(state, dfsch_package_name(s->package));
+    if (!s->package){
+      dfsch_write_string(state, dfsch_saprintf("#<uninterned-symbol %p %s>", 
+                                               o, 
+                                               s->name)); 
+    } else {
+      if (!dfsch_in_current_package(o)) {
+        if (s->package != DFSCH_KEYWORD_PACKAGE) {
+          dfsch_write_string(state, dfsch_package_name(s->package));
+        }
+        dfsch_write_string(state, ":");      
       }
-      dfsch_write_string(state, ":");      
+      dfsch_write_string(state, s->name);
     }
-    dfsch_write_string(state, s->name);
   } else {
     dfsch_write_string(state, dfsch_saprintf("#<gensym %p>", o)); 
   }

@@ -104,12 +104,6 @@ dfsch_package_t dfsch_keyword_package = {
   .entries = dfsch_keyword_entries,
 };
 
-dfsch_package_t dfsch_gensym_package = {
-  .type = DFSCH_PACKAGE_TYPE,
-  .next = DFSCH_GENSYM_PACKAGE,
-  .name = "*gensym*"
-};
-
 dfsch_type_t dfsch_package_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
@@ -231,7 +225,7 @@ static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
   i = initial_i = hash & mask;
 
   do {
-    if (!entries[i].symbol){
+    if (!entries[i].symbol || entries[i].symbol->package == NULL){
       entries[i].symbol = symbol;
       entries[i].hash = hash;
       return;
@@ -248,7 +242,7 @@ static void pkg_grow(dfsch_package_t* pkg){
   size_t i;
 
   for (i = 0; i <= pkg->mask; i++){
-    if (pkg->entries[i].symbol){
+    if (pkg->entries[i].symbol && pkg->entries[i].symbol->package){
       pkg_low_put_symbol(new, new_mask, 
                          pkg->entries[i].symbol, pkg->entries[i].hash);
     }
@@ -282,7 +276,7 @@ static dfsch__symbol_t* pkg_find_symbol(dfsch_package_t* pkg,
       break;
     }
 
-    if (pkg->entries[i].hash == hash &&
+    if (pkg->entries[i].hash == hash && pkg->entries[i].symbol->package &&
         strcmp(pkg->entries[i].symbol->name, name) == 0){
       return pkg->entries[i].symbol;
     }
@@ -345,7 +339,7 @@ static symbol_t* intern_symbol_in_package(dfsch_package_t* package,
 dfsch_object_t* dfsch_gensym(){
   symbol_t *s = GC_NEW(symbol_t);
 
-  s->package = DFSCH_GENSYM_PACKAGE;
+  s->package = NULL;
   s->name = NULL;
 
   return DFSCH_TAG_ENCODE(s, 2);
@@ -431,6 +425,10 @@ char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
                                                      DFSCH_SYMBOL_TYPE)))->name;
 }
+dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol){
+  return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
+                                                     DFSCH_SYMBOL_TYPE)))->package;
+}
 char* dfsch_package_name(dfsch_object_t* package){
   dfsch_package_t* pkg = DFSCH_ASSERT_TYPE(package, DFSCH_PACKAGE_TYPE);
   return pkg->name;
@@ -470,7 +468,11 @@ int dfsch_in_current_package(dfsch_object_t* symbol){
   
   return ret;
 }
-
+void dfsch_unintern_symbol(dfsch_object_t* symbol){
+  dfsch__symbol_t* sym = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
+                                                         DFSCH_SYMBOL_TYPE));
+  sym->package = NULL;
+}
 
 dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym){
   return DFSCH_TAG_ENCODE(intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE,
@@ -569,6 +571,16 @@ DFSCH_DEFINE_PRIMITIVE(use_package,
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(unintern, "Remove given symbol from package"){
+  dfsch_object_t* symbol;
+  DFSCH_OBJECT_ARG(args, symbol);
+  DFSCH_ARG_END(args);
+
+  dfsch_unintern_symbol(symbol);
+
+  return symbol;
+}
+
 void dfsch__package_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "define-package",
                     DFSCH_PRIMITIVE_REF(define_package));
@@ -576,4 +588,7 @@ void dfsch__package_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(in_package));
   dfsch_define_cstr(ctx, "use-package",
                     DFSCH_PRIMITIVE_REF(use_package));
+
+  dfsch_define_cstr(ctx, "unintern",
+                    DFSCH_PRIMITIVE_REF(unintern));
 }
