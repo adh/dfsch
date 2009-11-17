@@ -117,9 +117,32 @@ dfsch_type_t dfsch_package_type = {
   .size = sizeof(dfsch_package_t)
 };
 
+static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
 static dfsch_package_t* packages = DFSCH_DFSCH_USER_PACKAGE;
+static dfsch_package_t* current_package = DFSCH_DFSCH_USER_PACKAGE;
+static int gsh_init = 0;
+dfsch__symbol_t dfsch__static_symbols[] = {
+  {DFSCH_DFSCH_PACKAGE, "true"},
+  {DFSCH_DFSCH_PACKAGE, "quote"},
+  {DFSCH_DFSCH_PACKAGE, "quasiquote"},
+  {DFSCH_DFSCH_PACKAGE, "unquote"},
+  {DFSCH_DFSCH_PACKAGE, "unquote-splicing"},
+  {DFSCH_DFSCH_PACKAGE, "else"},
+  {DFSCH_DFSCH_PACKAGE, "=>"},
+  {DFSCH_DFSCH_PACKAGE, "&optional"},
+  {DFSCH_DFSCH_PACKAGE, "&key"},
+  {DFSCH_DFSCH_PACKAGE, "&rest"},
+  {DFSCH_DFSCH_PACKAGE, "&body"},
+  {DFSCH_DFSCH_PACKAGE, "&allow-other-keys"},
+  {DFSCH_DFSCH_PACKAGE, "&environment"},
+  {DFSCH_DFSCH_PACKAGE, "&whole"},
+  {DFSCH_DFSCH_PACKAGE, "&aux"},
+  {DFSCH_KEYWORD_PACKAGE, "before"},
+  {DFSCH_KEYWORD_PACKAGE, "after"},
+  {DFSCH_KEYWORD_PACKAGE, "around"},
+};
 
-dfsch_package_t* dfsch_find_package(char* name){
+static dfsch_package_t* find_package(char* name){
   dfsch_package_t* i = packages;
 
   while (i){
@@ -129,10 +152,46 @@ dfsch_package_t* dfsch_find_package(char* name){
     i = i->next;
   }
 
-  dfsch_error("No such package", dfsch_make_string_cstr(name));
+  return NULL;
 }
 
-static dfsch_package_t* current_package = DFSCH_DFSCH_USER_PACKAGE;
+
+dfsch_package_t* dfsch_find_package(char* name){
+  dfsch_package_t* pkg;
+
+  pthread_mutex_lock(&symbol_lock);
+  pkg = find_package(name);
+  pthread_mutex_unlock(&symbol_lock);
+
+  if (!pkg){
+    dfsch_error("No such package", dfsch_make_string_cstr(name));
+  }
+
+  return pkg;
+}
+
+dfsch_object_t* dfsch_make_package(char* name){
+  dfsch_package_t* pkg;
+
+  pthread_mutex_lock(&symbol_lock);
+  pkg = find_package(name);
+
+  if (!pkg){
+    pkg = dfsch_make_object(DFSCH_PACKAGE_TYPE);
+    pkg->name = dfsch_stracpy(name);
+    pkg->next = packages;
+    pkg->sym_count = 0;
+    pkg->mask = INITIAL_PACKAGE_MASK;
+    pkg->entries = GC_MALLOC(sizeof(pkg_hash_entry_t)*INITIAL_PACKAGE_SIZE);
+    packages = pkg;
+  }
+  pthread_mutex_unlock(&symbol_lock);
+
+  return pkg;
+  
+}
+
+
 
 dfsch_package_t* dfsch_get_current_package(){
   return current_package;
@@ -247,36 +306,6 @@ static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
   return NULL;
 }
 
-static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
-dfsch__symbol_t dfsch__static_symbols[] = {
-  {DFSCH_DFSCH_PACKAGE, "true"},
-  {DFSCH_DFSCH_PACKAGE, "quote"},
-  {DFSCH_DFSCH_PACKAGE, "quasiquote"},
-  {DFSCH_DFSCH_PACKAGE, "unquote"},
-  {DFSCH_DFSCH_PACKAGE, "unquote-splicing"},
-  {DFSCH_DFSCH_PACKAGE, "else"},
-  {DFSCH_DFSCH_PACKAGE, "=>"},
-  {DFSCH_DFSCH_PACKAGE, "&optional"},
-  {DFSCH_DFSCH_PACKAGE, "&key"},
-  {DFSCH_DFSCH_PACKAGE, "&rest"},
-  {DFSCH_DFSCH_PACKAGE, "&body"},
-  {DFSCH_DFSCH_PACKAGE, "&allow-other-keys"},
-  {DFSCH_DFSCH_PACKAGE, "&environment"},
-  {DFSCH_DFSCH_PACKAGE, "&whole"},
-  {DFSCH_DFSCH_PACKAGE, "&aux"},
-  {DFSCH_KEYWORD_PACKAGE, "before"},
-  {DFSCH_KEYWORD_PACKAGE, "after"},
-  {DFSCH_KEYWORD_PACKAGE, "around"},
-};
-
-/*
- * It's possible to use rwlock here (althought such solution is not so 
- * straightforward), but it seem unnecessary - most symbol creations are 
- * done when reading source and in such case there will be probably only
- * one thread doing such things.
- */
-
-static int gsh_init = 0;
 
 static void gsh_check_init(){
   int i;
@@ -448,6 +477,5 @@ int dfsch_compare_keyword(dfsch_object_t* symbol,
 dfsch_object_t* dfsch_bool(int bool){
   return bool ? DFSCH_SYM_TRUE : NULL;
 }
-
 
 
