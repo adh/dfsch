@@ -120,6 +120,7 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   dfsch_parser_ctx_t *parser = dfsch_parser_create();
   load_thread_info_t* lti = get_load_ti();
   load_operation_t this_op;
+  dfsch_package_t* saved_package = dfsch_get_current_package();
 
   f = fopen(fname, "r");
   if (!f){
@@ -142,6 +143,7 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   } DFSCH_PROTECT {
     fclose(f);
     lti->operation = this_op.next;
+    dfsch_set_current_package(saved_package);
   } DFSCH_PROTECT_END;
 
   if (dfsch_parser_get_level(parser)!=0){
