@@ -490,11 +490,21 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
                        "Define new symbol package with given name if it does "
                        "not already exist"){
   char* name;
+  dfsch_object_t* imports;
+  dfsch_package_t* pkg;
 
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
-  DFSCH_ARG_END(args);
+  DFSCH_ARG_REST(args, imports);
 
-  return dfsch_make_package(name);
+  pkg = dfsch_make_package(name);
+
+  while (DFSCH_PAIR_P(imports)){
+    dfsch_use_package(pkg,
+                      dfsch_find_package(dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(imports))));
+    imports = DFSCH_FAST_CDR(imports);
+  }
+
+  return pkg;
 }
 DFSCH_DEFINE_PRIMITIVE(in_package, 
                        "Set current package to package of supplied name"){
