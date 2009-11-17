@@ -275,16 +275,16 @@
        (test 'degenerated-list-qq `(,@'() . foo) 'foo))
 
 (group "Regular expressions"
-       (define r0 (regex:compile "[ab]+"))
-       (define r0b (regex:compile "[ab]+" :basic))
-       (define r1 (regex:compile "^([^ ]+) +([^ ]+)$"))
-       (test 'extended (regex:match? r0 "baba") #t)
-       (test 'basic (regex:match? r0b "baba") #f)
+       (define r0 (regex-compile "[ab]+"))
+       (define r0b (regex-compile "[ab]+" :basic))
+       (define r1 (regex-compile "^([^ ]+) +([^ ]+)$"))
+       (test 'extended (regex-match? r0 "baba") #t)
+       (test 'basic (regex-match? r0b "baba") #f)
        (test 'substring 
-             (regex:substrings r1 "aaa bbb") 
+             (regex-substrings r1 "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb")))
        (test 'substring-once 
-             (regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
+             (regex-substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
 (group "Format"
@@ -342,10 +342,10 @@
 (group "XML support"
        (sub-group sxml
                   (test 'parse-string
-                        (sxml:parse-string "<a foo=\"bar &quot;\"><b/></a>")
-                        '(a (@ (foo "bar \"")) (b)))
+                        (xml:sxml-parse-string "<a foo=\"bar &quot;\"><b/></a>")
+                        '("a" (:@ ("foo" "bar \"")) ("b")))
                   (test 'emit-string
-                        (sxml:emit-string '(a (@ (foo "bar \"")) (b)))
+                        (xml:sxml-emit-string '(a (:@ (foo "bar \"")) (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
        
 (group "Regressions"
