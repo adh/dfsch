@@ -121,10 +121,10 @@ dfsch_object_t* dfsch_get_trace(){
       flags = NULL;
 
       if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_TAIL) {
-        flags = dfsch_cons_immutable(dfsch_make_symbol("tail"), flags);
+        flags = dfsch_cons_immutable(dfsch_make_keyword("tail"), flags);
       }
       if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_LAZY) {
-        flags = dfsch_cons_immutable(dfsch_make_symbol("lazy"), flags);
+        flags = dfsch_cons_immutable(dfsch_make_keyword("lazy"), flags);
       }
 
       record = dfsch_vector(4,
