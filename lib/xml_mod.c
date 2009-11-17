@@ -106,30 +106,31 @@ DFSCH_DEFINE_PRIMITIVE(parse_port, 0){
 
 
 void dfsch_module_xml_register(dfsch_object_t* env){
+  dfsch_package_t* xml_pkg = dfsch_make_package("xml");
   dfsch_provide(env, "xml");
 
-  dfsch_define_cstr(env, "xml:<parser>", DFSCH_XML_PARSER_TYPE);
+  dfsch_define_pkgcstr(env, xml_pkg, "<parser>", DFSCH_XML_PARSER_TYPE);
 
-  dfsch_define_cstr(env, "xml:make-parser", 
-                    DFSCH_PRIMITIVE_REF(make_parser));
-  dfsch_define_cstr(env, "xml:destroy-parser!", 
-                    DFSCH_PRIMITIVE_REF(destroy_parser));
+  dfsch_define_pkgcstr(env, xml_pkg, "make-parser", 
+                       DFSCH_PRIMITIVE_REF(make_parser));
+  dfsch_define_pkgcstr(env, xml_pkg, "destroy-parser!", 
+                       DFSCH_PRIMITIVE_REF(destroy_parser));
   
-  dfsch_define_cstr(env, "xml:set-start-element-proc!", 
-                    DFSCH_PRIMITIVE_REF(set_start_element_proc));
-  dfsch_define_cstr(env, "xml:set-end-element-proc!", 
-                    DFSCH_PRIMITIVE_REF(set_end_element_proc));
-  dfsch_define_cstr(env, "xml:set-character-data-proc!", 
-                    DFSCH_PRIMITIVE_REF(set_character_data_proc));
+  dfsch_define_pkgcstr(env, xml_pkg, "set-start-element-proc!", 
+                       DFSCH_PRIMITIVE_REF(set_start_element_proc));
+  dfsch_define_pkgcstr(env, xml_pkg, "set-end-element-proc!", 
+                       DFSCH_PRIMITIVE_REF(set_end_element_proc));
+  dfsch_define_pkgcstr(env, xml_pkg, "set-character-data-proc!", 
+                       DFSCH_PRIMITIVE_REF(set_character_data_proc));
 
-  dfsch_define_cstr(env, "xml:parse-eof!", 
-                    DFSCH_PRIMITIVE_REF(parse_eof));
-  dfsch_define_cstr(env, "xml:parse-buffer!", 
-                    DFSCH_PRIMITIVE_REF(parse_buffer));
-  dfsch_define_cstr(env, "xml:parse-file!", 
-                    DFSCH_PRIMITIVE_REF(parse_file));
-  dfsch_define_cstr(env, "xml:parse-port!", 
-                    DFSCH_PRIMITIVE_REF(parse_port));
+  dfsch_define_pkgcstr(env, xml_pkg, "parse-eof!", 
+                       DFSCH_PRIMITIVE_REF(parse_eof));
+  dfsch_define_pkgcstr(env, xml_pkg, "parse-buffer!", 
+                       DFSCH_PRIMITIVE_REF(parse_buffer));
+  dfsch_define_pkgcstr(env, xml_pkg, "parse-file!", 
+                       DFSCH_PRIMITIVE_REF(parse_file));
+  dfsch_define_pkgcstr(env, xml_pkg, "parse-port!", 
+                       DFSCH_PRIMITIVE_REF(parse_port));
   
 
 }

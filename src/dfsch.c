@@ -1335,6 +1335,23 @@ void dfsch_defconst_cstr(dfsch_object_t *ctx,
                (dfsch_object_t*)obj, ctx, 
                DFSCH_VAR_CONSTANT);
 }
+void dfsch_define_pkgcstr(dfsch_object_t *ctx,
+                        dfsch_package_t* pkg,
+                        char *name, 
+                        void *obj){
+  
+  dfsch_define(dfsch_intern_symbol(pkg, name), 
+               (dfsch_object_t*)obj, ctx, 0);
+}
+void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+                          dfsch_package_t* pkg,
+                          char *name, 
+                          void *obj){
+  
+  dfsch_define(dfsch_intern_symbol(pkg, name), 
+               (dfsch_object_t*)obj, ctx, 
+               DFSCH_VAR_CONSTANT);
+}
 void dfsch_set_cstr(dfsch_object_t *ctx, 
                     char *name, 
                     dfsch_object_t *obj){
