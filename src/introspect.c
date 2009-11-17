@@ -128,14 +128,14 @@ dfsch_object_t* dfsch_get_trace(){
       }
 
       record = dfsch_vector(4,
-                            dfsch_make_symbol("apply"),
+                            dfsch_make_keyword("apply"),
                             ti->trace_buffer[i].data.apply.proc,
                             ti->trace_buffer[i].data.apply.args,
                             flags);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
       record = dfsch_vector(3,
-                            dfsch_make_symbol("eval"),
+                            dfsch_make_keyword("eval"),
                             ti->trace_buffer[i].data.eval.expr,
                             ti->trace_buffer[i].data.eval.env);
       break;
