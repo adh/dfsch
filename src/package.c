@@ -436,6 +436,42 @@ char* dfsch_package_name(dfsch_object_t* package){
   return pkg->name;
 }
 
+static int package_inherited(dfsch_package_t* to,
+                             dfsch_package_t* from){
+  dfsch_object_t* i = to->use_list;
+  if (from == to){
+    return 1;
+  }
+
+  while (DFSCH_PAIR_P(i)){
+    if (package_inherited(DFSCH_FAST_CAR(i), from)){
+      return 1;
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+  
+  return 0;
+}
+
+int dfsch_in_current_package(dfsch_object_t* symbol){
+  int ret;
+  symbol_t *s = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
+                                                DFSCH_SYMBOL_TYPE));
+  
+  if (s->package == dfsch_get_current_package()){
+    return 1;
+  }
+
+  pthread_mutex_lock(&symbol_lock);
+
+  ret = package_inherited(dfsch_get_current_package(), s->package);
+
+  pthread_mutex_unlock(&symbol_lock);
+  
+  return ret;
+}
+
+
 dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym){
   return DFSCH_TAG_ENCODE(intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE,
                                                    dfsch_symbol(sym)),
