@@ -4,6 +4,9 @@
 (require 'unix)
 (require 'simple-tests)
 
+(define-package :interp-test :dfsch :simple-tests)
+(in-package :interp-test)
+
 ;;; Write tests here
 ;; in form like (test 'whetever1equals2 (= 1 2) true)
 ;;
