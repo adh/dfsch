@@ -44,7 +44,7 @@
 
 // Symbols
 
-#define INITIAL_PACKAGE_SIZE 128
+#define INITIAL_PACKAGE_SIZE 32
 #define INITIAL_PACKAGE_MASK (INITIAL_PACKAGE_SIZE - 1)
 
 typedef struct hash_entry_t hash_entry_t;
