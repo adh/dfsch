@@ -1324,13 +1324,15 @@ void dfsch_define_cstr(dfsch_object_t *ctx,
                        char *name, 
                        void *obj){
   
-  dfsch_define(dfsch_make_symbol(name), (dfsch_object_t*)obj, ctx, 0);
+  dfsch_define(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, name), 
+               (dfsch_object_t*)obj, ctx, 0);
 }
 void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                          char *name, 
                          void *obj){
   
-  dfsch_define(dfsch_make_symbol(name), (dfsch_object_t*)obj, ctx, 
+  dfsch_define(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, name), 
+               (dfsch_object_t*)obj, ctx, 
                DFSCH_VAR_CONSTANT);
 }
 void dfsch_set_cstr(dfsch_object_t *ctx, 
@@ -1340,8 +1342,10 @@ void dfsch_set_cstr(dfsch_object_t *ctx,
   dfsch_set(dfsch_make_symbol(name), obj, ctx);
 }
 dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
-  return dfsch_lookup(dfsch_make_symbol(name), ctx);
+  return dfsch_lookup(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                          name), ctx);
 }
 dfsch_object_t* dfsch_env_get_cstr(dfsch_object_t *ctx, char *name){
-  return dfsch_env_get(dfsch_make_symbol(name), ctx);
+  return dfsch_env_get(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                           name), ctx);
 }

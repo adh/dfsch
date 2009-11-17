@@ -72,7 +72,8 @@ struct dfsch_package_t {
   size_t sym_count;
   size_t mask;
   pkg_hash_entry_t* entries;
-};
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR;
 
 static pkg_hash_entry_t dfsch_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_user_entries[INITIAL_PACKAGE_SIZE];
@@ -110,7 +111,10 @@ dfsch_package_t dfsch_gensym_package = {
 };
 
 dfsch_type_t dfsch_package_type = {
-  .type = DFSCH_STANDARD_TYPE
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "package",
+  .size = sizeof(dfsch_package_t)
 };
 
 static dfsch_package_t* packages = DFSCH_DFSCH_USER_PACKAGE;
@@ -233,7 +237,7 @@ static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
   }
   
   while (DFSCH_PAIR_P(i)){
-    sym = find_symbol(pkg, name);
+    sym = find_symbol(DFSCH_FAST_CAR(i), name);
     if (sym){
       return sym;
     }
@@ -284,12 +288,15 @@ static void gsh_check_init(){
     pkg_put_symbol(dfsch__static_symbols[i].package,
                    dfsch__static_symbols + i);
   }
+  
+  dfsch_dfsch_user_package.use_list = dfsch_list(1, DFSCH_DFSCH_PACKAGE);
+
   gsh_init = 1;
 }
 
 static symbol_t* intern_symbol_in_package(dfsch_package_t* package,
                                           char* name){
-  dfsch__symbol_t* sym = pkg_find_symbol(package, name);
+  dfsch__symbol_t* sym = find_symbol(package, name);
   if (!sym){
     sym = GC_NEW(dfsch__symbol_t);
     sym->name = dfsch_stracpy(name);
@@ -348,9 +355,21 @@ static void parse_symbol(char* symbol,
 dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
                                     char* name){
   symbol_t *s;
+  char* package_name;
+  char* symbol_name;
 
   if (!name){
     return dfsch_gensym();
+  }
+
+  parse_symbol(name, &package_name, &symbol_name);
+
+  if (package_name){
+    if (*package_name){
+      package = dfsch_find_package(package_name);
+    } else {
+      package = DFSCH_KEYWORD_PACKAGE;
+    }
   }
 
   pthread_mutex_lock(&symbol_lock);
@@ -358,11 +377,8 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
   gsh_check_init(); 
   // This code is slow already, so this check does not matter (too much)
 
-  if (*name == ':'){
-    s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, name+1);
-  } else {
-    s = intern_symbol_in_package(DFSCH_DFSCH_PACKAGE, name);
-  }
+
+  s = intern_symbol_in_package(package, symbol_name);
 
 
   pthread_mutex_unlock(&symbol_lock);
@@ -378,6 +394,10 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
                                                      DFSCH_SYMBOL_TYPE)))->name;
+}
+char* dfsch_package_name(dfsch_object_t* package){
+  dfsch_package_t* pkg = DFSCH_ASSERT_TYPE(package, DFSCH_PACKAGE_TYPE);
+  return pkg->name;
 }
 
 dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym){

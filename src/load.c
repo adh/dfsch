@@ -244,7 +244,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
   if (path_list){
     path = path_list;
   } else {
-    path = dfsch_env_get_cstr(env, "load:*path*");
+    path = dfsch_env_get_cstr(env, "*load-path*");
     if (path == DFSCH_INVALID_OBJECT){
       path = NULL;
     }
@@ -324,7 +324,7 @@ static int search_modules(dfsch_object_t* modules, char* name){
 }
 
 int dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
-  dfsch_object_t* modules = dfsch_env_get_cstr(env, "load:*modules*");
+  dfsch_object_t* modules = dfsch_env_get_cstr(env, "*load-modules*");
   if (modules == DFSCH_INVALID_OBJECT){
     modules = NULL;
   }
@@ -338,7 +338,7 @@ int dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
 }
 
 void dfsch_provide(dfsch_object_t* env, char* name){
-  dfsch_object_t* modules = dfsch_env_get_cstr(env, "load:*modules*");
+  dfsch_object_t* modules = dfsch_env_get_cstr(env, "*load-modules*");
   if (modules == DFSCH_INVALID_OBJECT){
     modules = NULL;
   }
@@ -353,21 +353,21 @@ void dfsch_provide(dfsch_object_t* env, char* name){
    * this distinction is in most cases totally irrelevant, because modules
    * are mostly loaded into toplevel environment.
    */
-  dfsch_define_cstr(env, "load:*modules*", 
+  dfsch_define_cstr(env, "*load-modules*", 
                     dfsch_cons(dfsch_make_string_cstr(name),
                                modules));
 }
 
 dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
-  dfsch_object_t* path = dfsch_env_get_cstr(ctx, "load:*path*");
+  dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
-    dfsch_set_cstr(ctx, "load:*path*", 
+    dfsch_set_cstr(ctx, "*load-path*", 
 		   dfsch_append(dfsch_list(2,
 					   path,
 					   dfsch_list(1,
 						      dfsch_make_string_cstr(dir)))));
   }else{
-    dfsch_define_cstr(ctx, "load:*path*", 
+    dfsch_define_cstr(ctx, "*load-path*", 
                      dfsch_list(1, dfsch_make_string_cstr(dir)));
   }
 }
@@ -563,15 +563,15 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
 
 
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "load:*path*", 
+  dfsch_define_cstr(ctx, "*load-path*", 
 		    dfsch_list(3, 
 			       NULL,
                                dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
                                dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
-  dfsch_define_cstr(ctx, "load:*modules*", NULL);
-  dfsch_define_cstr(ctx, "load:scm!",  DFSCH_FORM_REF(load_scm));
-  dfsch_define_cstr(ctx, "load:read-scm", DFSCH_PRIMITIVE_REF(read_scm));
-  dfsch_define_cstr(ctx, "load:so!", DFSCH_FORM_REF(load_so));
+  dfsch_define_cstr(ctx, "*load-modules*", NULL);
+  dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
+  dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
+  dfsch_define_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
   dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
   dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
   dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));

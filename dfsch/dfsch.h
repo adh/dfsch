@@ -282,6 +282,16 @@ extern "C" {
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
                                   dfsch_package_t* package,
                                   char* name);
+  dfsch_package_t* dfsch_find_package(char* name);
+  dfsch_package_t* dfsch_get_current_package();
+  void dfsch_set_current_package(dfsch_package_t* package);
+  dfsch_object_t* dfsch_make_keyword(char* symbol);
+  dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
+                                      char* name);
+  char* dfsch_package_name(dfsch_object_t* package);
+  dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym);
+  int dfsch_compare_keyword(dfsch_object_t* symbol,
+                            char* name);
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
