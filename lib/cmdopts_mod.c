@@ -91,17 +91,19 @@ DFSCH_DEFINE_PRIMITIVE(parse_list, "Parse command line from list"){
 }
 
 dfsch_object_t* dfsch_module_cmdopts_register(dfsch_object_t* env){
+  dfsch_package_t* cmdopts_pkg = dfsch_make_package("cmdopts");
+
   dfsch_provide(env, "cmdopts");
 
-  dfsch_define_cstr(env, "cmdopts:<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
-  dfsch_define_cstr(env, "cmdopts:<error>", DFSCH_CMDOPTS_ERROR_TYPE);
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "<error>", DFSCH_CMDOPTS_ERROR_TYPE);
 
-  dfsch_define_cstr(env, "cmdopts:make-parser", 
-                    DFSCH_PRIMITIVE_REF(make_parser));
-  dfsch_define_cstr(env, "cmdopts:add-option", 
-                    DFSCH_PRIMITIVE_REF(add_option));
-  dfsch_define_cstr(env, "cmdopts:add-argument", 
-                    DFSCH_PRIMITIVE_REF(add_argument));
-  dfsch_define_cstr(env, "cmdopts:parse-list", 
-                    DFSCH_PRIMITIVE_REF(parse_list));
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "make-parser", 
+                       DFSCH_PRIMITIVE_REF(make_parser));
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-option", 
+                       DFSCH_PRIMITIVE_REF(add_option));
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-argument", 
+                       DFSCH_PRIMITIVE_REF(add_argument));
+  dfsch_define_pkgcstr(env, cmdopts_pkg, "parse-list", 
+                       DFSCH_PRIMITIVE_REF(parse_list));
 }
