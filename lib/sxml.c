@@ -29,7 +29,7 @@ static XML_Memory_Handling_Suite gc_suite = {
   GC_free
 };
 
-DFSCH_LOCAL_SYMBOL_CACHE("@", at_symbol);
+DFSCH_LOCAL_SYMBOL_CACHE(":@", at_symbol);
 
 static void sxml_push(parser_ctx_t* c, dfsch_object_t* tag){
   sxml_stack_t* s = GC_NEW(stack_t);
@@ -55,12 +55,12 @@ static void sxml_pop(parser_ctx_t* c){
 static XMLCALL void start_element_handler(parser_ctx_t* c, 
                                           char *name,
                                           char **attrs){
-  sxml_push(c, dfsch_make_symbol(name));
+  sxml_push(c, dfsch_make_string_cstr(name));
   if (*attrs){
     dfsch_object_t* a_list = NULL;
     while (*attrs){
       a_list = dfsch_cons(dfsch_list(2,
-                                     dfsch_make_symbol(*attrs),
+                                     dfsch_make_string_cstr(*attrs),
                                      dfsch_make_string_cstr(*(attrs+1))),
                           a_list);
       attrs+=2;
@@ -300,7 +300,9 @@ static void emit_object(emitter_t* e, dfsch_object_t* o){
   if (dfsch_string_p(o)){
     e->write(e->target, dfsch_inet_xml_escape(dfsch_string_to_cstr(o)));
   } else if (DFSCH_PAIR_P(o)){
-    emit_element(e, dfsch_symbol(DFSCH_FAST_CAR(o)), DFSCH_FAST_CDR(o));
+    emit_element(e, 
+                 dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(o)), 
+                 DFSCH_FAST_CDR(o));
   } else {
     dfsch_error("Invalid object in SXML infoset", o);
   }
