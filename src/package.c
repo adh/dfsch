@@ -131,11 +131,11 @@ dfsch_package_t* dfsch_find_package(char* name){
 static dfsch_package_t* current_package = DFSCH_DFSCH_USER_PACKAGE;
 
 dfsch_package_t* dfsch_get_current_package(){
-  
+  return current_package;
 }
 
-void dfsch_set_current_package(){
-  
+void dfsch_set_current_package(dfsch_package_t* package){
+  current_package = package;
 }
 
 static size_t symbol_hash(char* string){
@@ -331,6 +331,18 @@ static void parse_symbol(char* symbol,
                          char** package_name,
                          char** symbol_name){
   char* colon = strrchr(symbol, ':');
+
+  if (!colon){
+    *symbol_name = dfsch_stracpy(symbol);
+    *package_name = NULL;
+  } else if (colon == symbol){
+    *symbol_name = dfsch_stracpy(symbol+1);
+    *package_name = "";
+  } else {
+    *symbol_name = dfsch_stracpy(colon+1);
+    *package_name = dfsch_strancpy(symbol, colon - symbol);
+  }
+  
 }
 
 dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
