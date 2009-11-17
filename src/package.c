@@ -479,3 +479,33 @@ dfsch_object_t* dfsch_bool(int bool){
 }
 
 
+DFSCH_DEFINE_PRIMITIVE(define_package, 
+                       "Define new symbol package with given name if it does "
+                       "not already exist"){
+  char* name;
+
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_package(name);
+}
+DFSCH_DEFINE_PRIMITIVE(in_package, 
+                       "Set current package to package of supplied name"){
+  char* name;
+  dfsch_package_t* pkg;
+
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  pkg = dfsch_find_package(name);
+
+  dfsch_set_current_package(pkg);
+
+  return pkg;
+}
+void dfsch__package_register(dfsch_object_t *ctx){
+  dfsch_define_cstr(ctx, "define-package",
+                    DFSCH_PRIMITIVE_REF(define_package));
+  dfsch_define_cstr(ctx, "in-package",
+                    DFSCH_PRIMITIVE_REF(in_package));
+}
