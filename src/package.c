@@ -190,7 +190,14 @@ dfsch_object_t* dfsch_make_package(char* name){
   return pkg;
   
 }
-
+void dfsch_use_package(dfsch_package_t* in,
+                       dfsch_package_t* pkg){
+  pthread_mutex_lock(&symbol_lock);
+  if (!dfsch_member(pkg, in->use_list)){
+    in->use_list = dfsch_cons(pkg, in->use_list);
+  }
+  pthread_mutex_unlock(&symbol_lock);
+}
 
 
 dfsch_package_t* dfsch_get_current_package(){
@@ -503,9 +510,24 @@ DFSCH_DEFINE_PRIMITIVE(in_package,
 
   return pkg;
 }
+DFSCH_DEFINE_PRIMITIVE(use_package, 
+                       "Set current package to package of supplied name"){
+  char* name;
+
+  DFSCH_STRING_OR_SYMBOL_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_use_package(dfsch_get_current_package(),
+                    dfsch_find_package(name));
+
+  return NULL;
+}
+
 void dfsch__package_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "define-package",
                     DFSCH_PRIMITIVE_REF(define_package));
   dfsch_define_cstr(ctx, "in-package",
                     DFSCH_PRIMITIVE_REF(in_package));
+  dfsch_define_cstr(ctx, "use-package",
+                    DFSCH_PRIMITIVE_REF(use_package));
 }
