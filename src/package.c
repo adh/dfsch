@@ -326,13 +326,22 @@ static void gsh_check_init(){
 
 static symbol_t* intern_symbol_in_package(dfsch_package_t* package,
                                           char* name){
-  dfsch__symbol_t* sym = find_symbol(package, name);
+  dfsch__symbol_t* sym;
+
+  pthread_mutex_lock(&symbol_lock);
+  gsh_check_init(); 
+  // This code is slow already, so this check does not matter (too much)
+
+  sym = find_symbol(package, name);
   if (!sym){
     sym = GC_NEW(dfsch__symbol_t);
     sym->name = dfsch_stracpy(name);
     sym->package = package;
     pkg_put_symbol(package, sym);
   }
+
+
+  pthread_mutex_unlock(&symbol_lock);
   return sym;
 }
 
@@ -351,17 +360,8 @@ dfsch_object_t* dfsch_make_keyword(char* symbol){
     return dfsch_gensym();
   }
 
-  pthread_mutex_lock(&symbol_lock);
-
-  gsh_check_init(); 
-  // This code is slow already, so this check does not matter (too much)
-
   s = intern_symbol_in_package(DFSCH_KEYWORD_PACKAGE, symbol);
-
-
-  pthread_mutex_unlock(&symbol_lock);
-  return DFSCH_TAG_ENCODE(s, 2);
-  
+  return DFSCH_TAG_ENCODE(s, 2);  
 }
 
 static void parse_symbol(char* symbol,
@@ -402,18 +402,8 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
     }
   }
 
-  pthread_mutex_lock(&symbol_lock);
-
-  gsh_check_init(); 
-  // This code is slow already, so this check does not matter (too much)
-
-
   s = intern_symbol_in_package(package, symbol_name);
-
-
-  pthread_mutex_unlock(&symbol_lock);
-  return DFSCH_TAG_ENCODE(s, 2);
-  
+  return DFSCH_TAG_ENCODE(s, 2);  
 }
 
 dfsch_object_t* dfsch_make_symbol(char* symbol){
