@@ -1323,17 +1323,12 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 void dfsch_define_cstr(dfsch_object_t *ctx, 
                        char *name, 
                        void *obj){
-  
-  dfsch_define(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, name), 
-               (dfsch_object_t*)obj, ctx, 0);
+  dfsch_define_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);  
 }
 void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                          char *name, 
                          void *obj){
-  
-  dfsch_define(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, name), 
-               (dfsch_object_t*)obj, ctx, 
-               DFSCH_VAR_CONSTANT);
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
 }
 void dfsch_define_pkgcstr(dfsch_object_t *ctx,
                         dfsch_package_t* pkg,
@@ -1356,7 +1351,7 @@ void dfsch_set_cstr(dfsch_object_t *ctx,
                     char *name, 
                     dfsch_object_t *obj){
   
-  dfsch_set(dfsch_make_symbol(name), obj, ctx);
+  dfsch_set(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, name), obj, ctx);
 }
 dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
   return dfsch_lookup(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
