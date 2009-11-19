@@ -275,23 +275,37 @@ extern "C" {
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
 
+  /** Convert symbol into string usable as name of type 
+   * (remove angle brackets) */
   extern char* dfsch_symbol_2_typename(dfsch_object_t* symbol);
 
+  /** 
+   * Return true if symbol name is same as passed string and symbol is 
+   * interned in keyword package */
   extern int dfsch_compare_keyword(dfsch_object_t* symbol,
                                    char* string);
+  /**
+   * Return true if symbol name is same as given string and symbol is 
+   * interned in given package */
   extern int dfsch_compare_symbol(dfsch_object_t* symbol,
                                   dfsch_package_t* package,
                                   char* name);
-  dfsch_package_t* dfsch_find_package(char* name);
-  dfsch_package_t* dfsch_get_current_package();
-  void dfsch_set_current_package(dfsch_package_t* package);
-  dfsch_object_t* dfsch_make_keyword(char* symbol);
-  dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
-                                      char* name);
-  char* dfsch_package_name(dfsch_object_t* package);
-  dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym);
-  int dfsch_compare_keyword(dfsch_object_t* symbol,
-                            char* name);
+  /** Return package object matching given name */
+  extern dfsch_package_t* dfsch_find_package(char* name);
+  /** Retrun current default package (as in CL's *package*) */
+  extern dfsch_package_t* dfsch_get_current_package();
+  /** Set new value of current default package */
+  extern void dfsch_set_current_package(dfsch_package_t* package);
+  /** Intern symbol in keyword package (name does not contain leading colon) */
+  extern dfsch_object_t* dfsch_make_keyword(char* symbol);
+  /** Intern unqualified symbol in given package, qualified symbols are 
+   * interned in package denoted by their package qualifier.*/
+  extern dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
+                                             char* name);
+  /** Return name of given package */
+  extern char* dfsch_package_name(dfsch_object_t* package);
+  /** Intern symbol with same name in keyword package */
+  extern dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym);
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
