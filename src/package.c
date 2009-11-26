@@ -206,8 +206,8 @@ static size_t symbol_hash(char* string){
 
   while (*string){
     char c = *string; 
+    tmp ^= ((size_t)c) ^ (tmp >> 11); 
     tmp *= c ^ (tmp << 7); 
-    tmp ^= ((size_t)c << 17) ^ (tmp >> 11); 
     ++string;
   }
 
@@ -225,15 +225,28 @@ static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
 
   i = initial_i = hash & mask;
 
+#ifdef DEBUG_PUT
+  printf(";; package scan %08x %d ", hash, mask);
+#endif
   do {
-    if (!entries[i].symbol || entries[i].symbol->package == NULL){
+#ifdef DEBUG_PUT
+    printf(" %d", i);
+#endif
+    if (!entries[i].hash || !entries[i].symbol || entries[i].symbol->package == NULL){
       entries[i].symbol = symbol;
       entries[i].hash = hash;
+      if (GC_base(symbol) && GC_base(entries)){
+        GC_general_register_disappearing_link(&(entries[i].symbol), symbol);
+      }
+#ifdef DEBUG_PUT
+      printf(" Put\n");
+#endif
       return;
     }
     i = (i + 1) & mask;
   } while (i != initial_i);
 
+  fprintf(stderr, "Package full? WTF?\n");
   abort();
 }
 
@@ -250,10 +263,20 @@ static void pkg_grow(dfsch_package_t* pkg){
     }
   }
 
-  while (new_mask / 3 < new_count / 2){
+  while (new_mask / 2 < new_count){
     new_mask = ((new_mask + 1) * 2) - 1;
   }
-  new = GC_MALLOC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
+
+#ifdef DEBUG_GROW
+  printf(";; %d/%d -> %d/%d\n", pkg->sym_count, pkg->mask, new_count, new_mask);
+#endif
+
+  new = GC_MALLOC_ATOMIC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
+
+  for (i = 0; i <= new_mask; i++){
+    new[i].symbol = NULL;
+    new[i].hash = 0;
+  }
 
   for (i = 0; i <= pkg->mask; i++){
     if (pkg->entries[i].hash && pkg->entries[i].symbol && 
