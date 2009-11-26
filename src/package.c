@@ -182,7 +182,6 @@ dfsch_object_t* dfsch_make_package(char* name){
   pthread_mutex_unlock(&symbol_lock);
 
   return pkg;
-  
 }
 void dfsch_use_package(dfsch_package_t* in,
                        dfsch_package_t* pkg){
@@ -212,6 +211,8 @@ static size_t symbol_hash(char* string){
     ++string;
   }
 
+  tmp |= 0x80000000;
+
   return tmp; 
 }
 
@@ -237,17 +238,32 @@ static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
 }
 
 static void pkg_grow(dfsch_package_t* pkg){
-  size_t new_mask = ((pkg->mask + 1) * 2) - 1;
-  pkg_hash_entry_t* new = GC_MALLOC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
+  size_t new_count = 0;
+  size_t new_mask = 7;
+  pkg_hash_entry_t* new;
   size_t i;
 
   for (i = 0; i <= pkg->mask; i++){
-    if (pkg->entries[i].symbol && pkg->entries[i].symbol->package){
+    if (pkg->entries[i].hash && pkg->entries[i].symbol && 
+        pkg->entries[i].symbol->package){
+      new_count++;
+    }
+  }
+
+  while (new_mask / 3 < new_count / 2){
+    new_mask = ((new_mask + 1) * 2) - 1;
+  }
+  new = GC_MALLOC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
+
+  for (i = 0; i <= pkg->mask; i++){
+    if (pkg->entries[i].hash && pkg->entries[i].symbol && 
+        pkg->entries[i].symbol->package){
       pkg_low_put_symbol(new, new_mask, 
                          pkg->entries[i].symbol, pkg->entries[i].hash);
     }
   }
 
+  pkg->sym_count = new_count;
   pkg->mask = new_mask;
   pkg->entries = new;
 }
@@ -272,11 +288,12 @@ static dfsch__symbol_t* pkg_find_symbol(dfsch_package_t* pkg,
   i = initial_i = hash & pkg->mask;
 
   do {
-    if (!pkg->entries[i].symbol){
+    if (!pkg->entries[i].hash){
       break;
     }
 
-    if (pkg->entries[i].hash == hash && pkg->entries[i].symbol->package &&
+    if (pkg->entries[i].symbol &&
+        pkg->entries[i].hash == hash && pkg->entries[i].symbol->package &&
         strcmp(pkg->entries[i].symbol->name, name) == 0){
       return pkg->entries[i].symbol;
     }
