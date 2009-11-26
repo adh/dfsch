@@ -297,7 +297,7 @@ static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
   }
   
   while (DFSCH_PAIR_P(i)){
-    sym = find_symbol(DFSCH_FAST_CAR(i), name);
+    sym = pkg_find_symbol(DFSCH_FAST_CAR(i), name);
     if (sym){
       return sym;
     }
@@ -432,7 +432,7 @@ static int package_inherited(dfsch_package_t* to,
   }
 
   while (DFSCH_PAIR_P(i)){
-    if (package_inherited(DFSCH_FAST_CAR(i), from)){
+    if (DFSCH_FAST_CAR(i) == from){
       return 1;
     }
     i = DFSCH_FAST_CDR(i);
