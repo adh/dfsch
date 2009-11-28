@@ -25,7 +25,7 @@
   (let ((start-run (gensym)) (start-real (gensym)) (start-bytes (gensym)))
     `(let ((,start-real (get-internal-real-time))
            (,start-run (get-internal-run-time))
-           (,start-bytes (gcollect:total-bytes)))
+           (,start-bytes (gc-total-bytes)))
        (print ">>> " ',name)
        ,@body
        (print "<<< " ',name 
@@ -35,17 +35,17 @@
               " run: " (* 1.0 (/ (- (get-internal-run-time)
                                 ,start-run)
                           internal-time-units-per-second))
-              " cons'd: " (- (gcollect:total-bytes)
+              " cons'd: " (- (gc-total-bytes)
                              ,start-bytes)))))
 
-(define-macro (without-gc . thunk)
+(define-macro (without-gc &rest thunk)
   `(begin
-     (gcollect:disable!)
+     (gc-disable!)
      (unwind-protect
       (begin
         ,@thunk)
-      (gcollect:enable!)
-      (gcollect:gcollect!))))
+      (gc-enable!)
+      (gc-collect!))))
    
 
 (measure-time "tak" (tak 24 16 8))

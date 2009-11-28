@@ -77,21 +77,21 @@ DFSCH_DEFINE_PRIMITIVE(disable, 0){
 dfsch_object_t* dfsch_module_gcollect_register(dfsch_object_t* env){
   dfsch_provide(env, "gcollect");
 
-  dfsch_define_cstr(env, "gcollect:gcollect!",
+  dfsch_define_cstr(env, "gc-collect!",
                     DFSCH_PRIMITIVE_REF(gcollect));
-  dfsch_define_cstr(env, "gcollect:heap-size",
+  dfsch_define_cstr(env, "gc-heap-size",
                     DFSCH_PRIMITIVE_REF(heap_size));
-  dfsch_define_cstr(env, "gcollect:free-bytes",
+  dfsch_define_cstr(env, "gc-free-bytes",
                     DFSCH_PRIMITIVE_REF(free_bytes));
-  dfsch_define_cstr(env, "gcollect:bytes-since-gc",
+  dfsch_define_cstr(env, "gc-bytes-since-gc",
                     DFSCH_PRIMITIVE_REF(bytes_since_gc));
-  dfsch_define_cstr(env, "gcollect:total-bytes",
+  dfsch_define_cstr(env, "gc-total-bytes",
                     DFSCH_PRIMITIVE_REF(total_bytes));
-  dfsch_define_cstr(env, "gcollect:count",
+  dfsch_define_cstr(env, "gc-count",
                     DFSCH_PRIMITIVE_REF(count));
-  dfsch_define_cstr(env, "gcollect:enable!",
+  dfsch_define_cstr(env, "gc-enable!",
                     DFSCH_PRIMITIVE_REF(enable));
-  dfsch_define_cstr(env, "gcollect:disable!",
+  dfsch_define_cstr(env, "gc-disable!",
                     DFSCH_PRIMITIVE_REF(disable));
 
   return NULL;
