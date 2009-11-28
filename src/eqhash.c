@@ -182,6 +182,9 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
 #endif
     i = i->next;
   }
+#ifdef EQHASH_PRINT_STATS
+  printf(";; large eqhash lookup fail after %d\n", c);
+#endif
   return NULL;
 }
 
