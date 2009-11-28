@@ -46,7 +46,7 @@ typedef struct dfsch__eqhash_small_t {
 
 typedef struct dfsch__eqhash_large_t {
   dfsch_eqhash_entry_t* cache[DFSCH_EQHASH_CACHE_SIZE];
-  dfsch_eqhash_entry_t** vector;
+  dfsch_eqhash_entry_t* vector;
   size_t mask;
   size_t count;
 } dfsch__eqhash_large_t;
