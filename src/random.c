@@ -112,49 +112,50 @@ dfsch_object_t* dfsch_random_get_bignum(dfsch_object_t* state,
 
 typedef struct default_state_t {
   dfsch_type_t* type;
-  int counter;
-  uint32_t sum;
-  uint32_t state[8][2];
-  uint32_t skeys[4];
-  uint32_t okeys[8];
+  int mt_index;
+  uint32_t mt[624];
+  int ob_index;
+  uint32_t obuf;
 } default_state_t;
 
-static void default_get_bytes(default_state_t* state, uint8_t* buf, size_t len){
-  uint32_t v = state->sum;
-  uint32_t u = state->counter;
+static uint8_t mt_get_one_byte(default_state_t* state){
   int i;
-  state->counter++;
-  for (i = 0; i < 8; i++){
-    v += (((u << 4) ^ (u >> 5)) + u) ^ 
-      (state->sum + state->skeys[state->sum & 3]);
-    state->sum += 0x9e3779b9;
-    u += (((u << 4) ^ (u >> 5)) + u) ^ 
-      (state->sum + state->state[i][0]);
-    v += (((u << 4) ^ (u >> 5)) + u) ^ 
-      (state->sum + state->state[i][1]);
-    state->sum += 0x9e3779b9;
-    u += (((u << 4) ^ (u >> 5)) + u) ^ 
-      (state->sum + state->skeys[(state->sum >> 11) & 3]);
-    state->okeys[(state->counter + 1) & 7] ^= v ^ u;
-  }
-  state->state[state->counter & 7][0] = u;
-  state->state[state->counter & 7][1] = v;
+  uint32_t y;
 
-  while (len){
-    for (i = 0; i < 4; i++){
-      v += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + state->okeys[state->sum & 7]);
-      state->sum += 0x9e3779b9;
-      u += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + state->okeys[(state->sum >> 11) & 7]);
+  if (state->ob_index == 0){
+    if (state->mt_index == 0){
+      for (i = 0; i < 624; i++){
+        y = (state->mt[i] &  0x80000000) +
+          (state->mt[(i + 1) % 624] & 0x7fffffff);
+        state->mt[i] = state->mt[(i + 397) % 624] ^ (y >> 1);
+        if (y & 0x00000001){
+          state->mt[i] ^= 0x9908b0df;
+        }
+      }
     }
-    *buf = u;
+    
+    y = state->mt[state->mt_index];
+    y ^= y >> 11;
+    y ^= (y << 7) & 0x9d2c5680;
+    y ^= (y << 15) & 0xefc60000;
+    y ^= y >> 18;
+    state->ob_index = 3;
+    state->obuf = y >> 24;
+    return y & 0xff;
+  } else {
+    state->ob_index--;
+    y = state->obuf;
+    state->obuf = y >> 24;
+    return y & 0xff;
+  }
+
+}
+
+static void default_get_bytes(default_state_t* state, uint8_t* buf, size_t len){
+  while (len){
+    *buf = mt_get_one_byte(state);
     buf++;
     len--;
-    u >>= 8;
-    v >>= 8;
-    u += state->sum;
-    v += state->counter;
   }
 }
 
@@ -174,67 +175,24 @@ dfsch_random_state_type_t dfsch_default_random_state_type = {
 };
 dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len){
   default_state_t* state = dfsch_make_object(DFSCH_DEFAULT_RANDOM_STATE_TYPE);
-  uint32_t u = 0x01234567;
-  uint32_t v = 0x89abcdef;
-  int i, j;
+  int i;
   
-  state->counter = 0;
-  state->sum = 0;
-
-  for (j = 0; j < 8; j++){
-    for (i = 0; i < 8; i++){
-      v += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[state->sum % len] | 
-                       (seed[(state->sum + 1) % len] << 8) |
-                       (seed[(state->sum + 2) % len] << 16) |
-                       (seed[(state->sum + 3) % len] << 24)));
-      state->sum += 0x9e3779b9;
-      u += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[(state->sum >> 11) % len] |
-                       (seed[((state->sum >> 11) + 1) % len] << 8) |
-                       (seed[((state->sum >> 11) + 2) % len] << 16) |
-                       (seed[((state->sum >> 11) + 3) % len] << 24)));
-    }
-    state->state[j][0] = u;
-    state->state[j][1] = v;
-  }
-
-  for (j = 0; j < 2; j++){
-    for (i = 0; i < 8; i++){
-      v += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[state->sum % len] | 
-                       (seed[(state->sum + 1) % len] << 8) |
-                       (seed[(state->sum + 2) % len] << 16) |
-                       (seed[(state->sum + 3) % len] << 24)));
-      state->sum += 0x9e3779b9;
-      u += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[(state->sum >> 11) % len] |
-                       (seed[((state->sum >> 11) + 1) % len] << 8) |
-                       (seed[((state->sum >> 11) + 2) % len] << 16) |
-                       (seed[((state->sum >> 11) + 3) % len] << 24)));
-    }
-    state->skeys[j + 0] = u;
-    state->skeys[j + 1] = v;
-  }
-
-  for (j = 0; j < 2; j++){
-    for (i = 0; i < 8; i++){
-      v += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[state->sum % len] | 
-                       (seed[(state->sum + 1) % len] << 8) |
-                       (seed[(state->sum + 2) % len] << 16) |
-                       (seed[(state->sum + 3) % len] << 24)));
-      state->sum += 0x9e3779b9;
-      u += (((u << 4) ^ (u >> 5)) + u) ^ 
-        (state->sum + (seed[(state->sum >> 11) % len] |
-                       (seed[((state->sum >> 11) + 1) % len] << 8) |
-                       (seed[((state->sum >> 11) + 2) % len] << 16) |
-                       (seed[((state->sum >> 11) + 3) % len] << 24)));
-    }
-    state->okeys[j + 0] = u;
-    state->okeys[j + 1] = v;
-  }
+  state->ob_index = 0;
+  state->mt_index = 0;
   
+  state->mt[0] = seed[0 % len] 
+    | (seed[1 % len] << 8)
+    | (seed[2 % len] << 16)
+    | (seed[3 % len] << 24);
+
+  for (i = 1; i < 624; i++){
+    state->mt[i] = (seed[0 % len] 
+                    | (seed[1 % len] << 8)
+                    | (seed[2 % len] << 16)
+                    | (seed[3 % len] << 24)) ^ 
+      ((0x6c078965 * (state->mt[i - 1] ^ (state->mt[i-1]))) + 1);
+  }
+
   return (dfsch_object_t*) state;
 }
 typedef struct file_state_t {
