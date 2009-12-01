@@ -86,7 +86,107 @@ char* dfsch_console_read_line(char* prompt){
 #endif
 
 #ifdef USE_READLINE
+typedef struct completion_entry_t completion_entry_t;
+
+struct completion_entry_t {
+  completion_entry_t* next;
+  char* str;
+};
+
+typedef struct completion_ctx_t {
+  completion_entry_t* list;
+  char* text_part;
+  char* package_name;
+} completion_ctx_t;
+
+static void compl_cb(completion_ctx_t* ctx, dfsch_object_t* symbol){
+  dfsch__symbol_t* sym = DFSCH_TAG_REF(symbol);
+
+  if (strncmp(sym->name, ctx->text_part, strlen(ctx->text_part)) == 0){
+    completion_entry_t* e = GC_NEW(completion_entry_t);
+    e->next = ctx->list;
+    if (ctx->package_name){
+      e->str = dfsch_saprintf("%s:%s ", ctx->package_name, sym->name);
+    } else {
+      e->str = dfsch_saprintf("%s ", sym->name);
+    }
+    ctx->list = e;
+  }
+}
+
+static void parse_symbol(char* symbol,
+                         char** package_name,
+                         char** symbol_name){
+  char* colon = strrchr(symbol, ':');
+
+  if (!colon){
+    *symbol_name = dfsch_stracpy(symbol);
+    *package_name = NULL;
+  } else if (colon == symbol){
+    *symbol_name = dfsch_stracpy(symbol+1);
+    *package_name = "";
+  } else {
+    *symbol_name = dfsch_stracpy(colon+1);
+    *package_name = dfsch_strancpy(symbol, colon - symbol);
+  }
+  
+}
+
+static completion_entry_t* generate_completions(char* text_part){
+  completion_ctx_t ctx;
+  char* package_name;
+  char* symbol_name;
+  dfsch_package_t* package;
+
+  parse_symbol(text_part, &package_name, &symbol_name);
+
+  ctx.list = NULL;
+  ctx.text_part = symbol_name;
+  ctx.package_name = package_name;
+  
+  if (package_name){
+    if (*package_name){
+      package = dfsch_find_package(package_name);
+    } else {
+      package = DFSCH_KEYWORD_PACKAGE;
+    }
+    dfsch_for_package_symbols(package, compl_cb, &ctx);
+  } else {
+    dfsch_object_t* packages = dfsch_list_all_packages();
+    while (DFSCH_PAIR_P(packages)){
+      char* name = dfsch_package_name(DFSCH_FAST_CAR(packages));
+      if (strncmp(name, text_part, strlen(text_part)) == 0){
+        completion_entry_t* e = GC_NEW(completion_entry_t);
+        e->next = ctx.list;
+        e->str = dfsch_saprintf("%s:", name);
+        ctx.list = e;
+      }
+      packages = DFSCH_FAST_CDR(packages);
+    }
+    
+
+    dfsch_for_all_package_symbols(DFSCH_DFSCH_PACKAGE, 
+                                  compl_cb, &ctx);    
+    
+  }
+
+
+  return ctx.list;
+}
+
 static char * symbol_completion_cb (const char* text, int state){
+  static completion_entry_t* entries;
+
+  if (state == 0){
+    entries = generate_completions(text);
+  }
+
+  if (entries){
+    char* ent = strdup(entries->str);
+    entries = entries->next;
+    return ent;
+  }
+
   return ((char *)NULL);
 }
 
@@ -96,6 +196,7 @@ static char ** symbol_completion (const char* text, int start, int end){
 void dfsch_console_set_object_completion(){
   rl_attempted_completion_function = symbol_completion;
   rl_basic_word_break_characters = " \t\n\"()";
+  rl_completion_append_character = '\0';
 }
 void dfsch_console_set_general_completion(){
   rl_attempted_completion_function = NULL;
@@ -103,6 +204,7 @@ void dfsch_console_set_general_completion(){
   /* that ugly string comes from readline docs, presumably it is default
    * value for this variable and also what bash uses.
    */
+  rl_completion_append_character = ' ';
 }
 #else
 /* Do nothing */
