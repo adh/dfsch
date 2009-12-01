@@ -107,22 +107,6 @@ static void empty_queue(string_queue_t *q){
   }
 }
 
-typedef struct symbol_map_t symbol_map_t;
-
-struct symbol_map_t {
-  char* name;
-  dfsch_object_t* symbol;
-  symbol_map_t* next;
-};
-
-typedef struct parser_directive_t parser_directive_t;
-
-struct parser_directive_t {
-  dfsch_object_t* tag;
-  dfsch_parser_directive_t directive;
-  void* baton;
-  parser_directive_t* next;
-};
 
 typedef struct parser_stack_t parser_stack_t;
 
@@ -167,8 +151,6 @@ struct dfsch_parser_ctx_t {
   int line;
   int column;
 
-  symbol_map_t* symbol_map;
-  parser_directive_t* directives;
   dfsch_object_t* env;
   dfsch_object_t* source;
 };
@@ -214,77 +196,9 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   ctx->level = 0 ;
   ctx->error = 0;
 
-  ctx->symbol_map = NULL;
-  ctx->env = 0;
-  dfsch_parser_define_default_directives(ctx);
+  ctx->env = NULL;
 
   return ctx;
-}
-
-static dfsch_object_t* make_symbol(dfsch_parser_ctx_t* ctx, char* sym){
-  symbol_map_t* i = ctx->symbol_map;
-
-  while (i){
-    if (ascii_strcasecmp(sym, i->name) == 0){
-      return i->symbol;
-    }
-    i = i->next;
-  }
-
-  return dfsch_make_symbol(sym);
-}
-
-void dfsch_parser_define_symbol(dfsch_parser_ctx_t* ctx, 
-                                char* name,
-                                dfsch_object_t* symbol){
-  symbol_map_t* entry;
-
-  entry = ctx->symbol_map;
-  while (entry) {
-    if (ascii_strcasecmp(name, entry->name) == 0){
-      entry->symbol = symbol;
-      return;
-    }
-    entry = entry->next;
-  }
-
-  entry = GC_NEW(symbol_map_t);
-  entry->symbol = symbol;
-  entry->name = name;
-
-  entry->next = ctx->symbol_map;
-  ctx->symbol_map = entry;
-}
-void dfsch_parser_undefine_symbol(dfsch_parser_ctx_t* ctx, 
-                                  char* name){
-  symbol_map_t* i = ctx->symbol_map;
-  symbol_map_t* j;
-
-  if (!i){
-    return;
-  }
-
-  if (ascii_strcasecmp(name, i->name) == 0){
-    ctx->symbol_map = i->next;
-  }
-
-  while (i){
-    if (ascii_strcasecmp(name, i->name) == 0){
-      j->next = i->next;
-      return;
-    }
-    i = i->next;
-  }  
-}
-void dfsch_parser_import_symbol(dfsch_parser_ctx_t* ctx,
-                                dfsch_object_t* symbol){
-  char* name;
-
-  name = rindex(dfsch_symbol(symbol), ':');
-
-  if (name && name[1]!=0){
-    dfsch_parser_define_symbol(ctx, name + 1, symbol);
-  }
 }
 
 void dfsch_parser_callback(dfsch_parser_ctx_t *ctx, 
@@ -298,75 +212,6 @@ void dfsch_parser_callback(dfsch_parser_ctx_t *ctx,
 void dfsch_parser_eval_env(dfsch_parser_ctx_t *ctx, 
 			   dfsch_object_t* env){
   ctx->env = env;
-}
-void dfsch_parser_define_directive(dfsch_parser_ctx_t* ctx, 
-                                   dfsch_object_t* tag,
-                                   dfsch_parser_directive_t directive,
-                                   void* baton){
-  parser_directive_t* entry = GC_NEW(parser_directive_t);
-
-  entry->tag = tag;
-  entry->directive = directive;
-  entry->baton = baton;
-
-  entry->next = ctx->directives;
-  ctx->directives = entry;
-}
-void dfsch_parser_define_directive_cstr(dfsch_parser_ctx_t* ctx, 
-                                        char* tag,
-                                        dfsch_parser_directive_t directive,
-                                        void* baton){
-  dfsch_parser_define_directive(ctx, dfsch_make_symbol(tag), directive, baton);
-}
-void dfsch_parser_clear_directives(dfsch_parser_ctx_t* ctx){
-  ctx->directives = NULL;
-}
-void dfsch_parser_clear_symbols(dfsch_parser_ctx_t* ctx){
-  ctx->symbol_map = NULL;
-}
-
-static int directive_import(dfsch_parser_ctx_t* ctx, 
-                            dfsch_object_t* args, 
-                            void*baton){
-  while (dfsch_pair_p(args)){
-    dfsch_parser_import_symbol(ctx, dfsch_car(args));
-    args = dfsch_cdr(args);
-  }
-
-  return 1;
-}
-
-void dfsch_parser_define_default_directives(dfsch_parser_ctx_t* ctx){
-  ctx->directives = NULL;
-  dfsch_parser_define_directive_cstr(ctx, "import", directive_import, NULL);
-}
-
-static void process_directive(dfsch_parser_ctx_t *ctx,
-                              dfsch_object_t* object){
-  dfsch_object_t* tag;
-  dfsch_object_t* args;
-  dfsch_object_t* obj;
-  parser_directive_t* i = ctx->directives;
-
-  if (!dfsch_pair_p(object)){
-    parser_abort(ctx, "parser-invalid-directive");
-    return;
-  }
-
-  tag = dfsch_car(object);
-  args = dfsch_cdr(object);
-
-  while (i){
-    if (i->tag == tag){
-      if(!i->directive(ctx, args, i->baton)){
-        parser_abort(ctx, "parser-invalid-directive");
-      }
-      return;
-    }
-    i = i->next;
-  }
-
-  parser_abort(ctx, "parser-invalid-directive");
 }
 
 static void parser_pop(dfsch_parser_ctx_t *ctx){
@@ -431,10 +276,6 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       }else{
         parser_abort(ctx, "parser:evaluation-not-permitted");        
       }
-      return;
-    case P_DIRECTIVE:
-      parser_pop(ctx);
-      process_directive(ctx, obj);
       return;
     default:
       parser_abort(ctx, "parser:unexpected-object");
@@ -508,15 +349,6 @@ static void parse_eval(dfsch_parser_ctx_t *ctx){
 #endif
   parser_push(ctx);
   ctx->parser->state = P_EVAL;
-  ctx->parser->last = NULL;
-  ctx->parser->front = NULL;
-}
-static void parse_directive(dfsch_parser_ctx_t *ctx){
-#ifdef P_DEBUG
-  printf(";; parse_directive\n");
-#endif
-  parser_push(ctx);
-  ctx->parser->state = P_DIRECTIVE;
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
@@ -717,7 +549,7 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
     }
   }
 
-  dfsch_object_t *d = make_symbol(ctx, data);
+  dfsch_object_t *d = dfsch_make_symbol(data);
 
   parse_object(ctx,d);
 }
@@ -932,12 +764,6 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ++data;
         ctx->column++;
         ctx->tokenizer_state = T_COMMENT;
-        break;
-      case ',':
-        ++data;
-        ctx->column++;
-        parse_directive(ctx);
-        ctx->tokenizer_state = T_NONE;
         break;
       case '.':
         ++data;

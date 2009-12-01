@@ -49,9 +49,6 @@ extern "C" {
 
   typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
   typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 
-  typedef int (*dfsch_parser_directive_t)(dfsch_parser_ctx_t* ctx,
-                                          dfsch_object_t* args, 
-                                          void* baton); 
   
 
   /**
@@ -94,27 +91,8 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port);
   
-  extern void dfsch_parser_define_symbol(dfsch_parser_ctx_t* ctx, 
-                                         char* name,
-                                         dfsch_object_t* symbol);
-  extern void dfsch_parser_undefine_symbol(dfsch_parser_ctx_t* ctx, 
-                                           char* name);
-
-  extern void dfsch_parser_import_symbol(dfsch_parser_ctx_t* ctx,
-                                         dfsch_object_t* symbol);
   extern void dfsch_parser_eval_env(dfsch_parser_ctx_t *ctx, 
                                     dfsch_object_t* env);
-
-  extern void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, 
-                                        dfsch_object_t* obj);
-
-  extern void dfsch_parser_define_directive_cstr(dfsch_parser_ctx_t* ctx, 
-                                                 char* tag,
-                                                 dfsch_parser_directive_t directive,
-                                                 void* baton);
-  extern void dfsch_parser_clear_directives(dfsch_parser_ctx_t* ctx);
-  extern void dfsch_parser_clear_symbols(dfsch_parser_ctx_t* ctx);
-  extern void dfsch_parser_define_default_directives(dfsch_parser_ctx_t* ctx);
 
   extern void dfsch_parser_set_source(dfsch_parser_ctx_t* ctx,
                                       dfsch_object_t* source);
