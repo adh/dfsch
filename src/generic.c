@@ -589,7 +589,8 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
 dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj){
   dfsch_object_t* o = obj;
   while (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(o), DFSCH_GENERIC_FUNCTION_TYPE_TYPE)){
-    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("use-value"), 
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                      "use-value"), 
                                   "Retry with alternate value") {
       dfsch_error("Not a generic funtion object", obj);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);

@@ -177,7 +177,8 @@ int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
 void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type){
   dfsch_object_t* o = obj;
   while (DFSCH_TYPE_OF(o) != type){
-    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("use-value"), 
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                      "use-value"), 
                                   "Retry with alternate value") {
       dfsch_type_error(o, type, 0);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
@@ -188,7 +189,8 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
                                       dfsch_type_t* type){
   dfsch_object_t* o = obj;
   while (!DFSCH_INSTANCE_P(o, type)){
-    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_make_symbol("use-value"), 
+    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                      "use-value"), 
                                   "Retry with alternate value") {
       dfsch_type_error(o, type, 1);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
@@ -301,7 +303,8 @@ void dfsch_error(char* name,
 }
 void dfsch_cerror(char* name, 
                   dfsch_object_t* detail){
-  DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("continue"),
+  DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                "continue"),
                             "Ignore error condition"){
     dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
                                  "message", dfsch_make_string_cstr(name),

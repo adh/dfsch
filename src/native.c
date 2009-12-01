@@ -273,7 +273,10 @@ DFSCH_DEFINE_FORM_IMPL(define_constant,
   if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
     value = dfsch_eval(value, env);
     dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
-    dfsch_declare(name, dfsch_make_symbol("constant"), env);
+    dfsch_declare(name, 
+                  dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                      "constant"), 
+                  env);
     return value;
   } else {
     return NULL;
@@ -865,13 +868,24 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string,
     dfsch_error("exception:not-a-symbol", object);
 }
 DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 
-                       "Intern string into symbol"){
+                       "Intern symbol in current package"){
   char* string;
 
   DFSCH_STRING_ARG(args, string);
   DFSCH_ARG_END(args);
 
   return dfsch_make_symbol(string);
+}
+DFSCH_DEFINE_PRIMITIVE(intern_symbol, 
+                       "Intern symbol in current package"){
+  char* string;
+  dfsch_package_t* package;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_PACKAGE_ARG_OPT(args, package, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_intern_symbol(package, string);
 }
 
 DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
@@ -1000,6 +1014,8 @@ void dfsch__native_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(symbol_2_string));
   dfsch_defconst_cstr(ctx, "string->symbol", 
                       DFSCH_PRIMITIVE_REF(string_2_symbol));
+  dfsch_defconst_cstr(ctx, "intern-symbol", 
+                      DFSCH_PRIMITIVE_REF(intern_symbol));
 
   dfsch_defconst_cstr(ctx, "macro-expand", 
                       DFSCH_PRIMITIVE_REF(macro_expand));

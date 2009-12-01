@@ -292,6 +292,7 @@ extern "C" {
                                   char* name);
   /** Return package object matching given name */
   extern dfsch_package_t* dfsch_find_package(char* name);
+  extern dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj);
   /** Retrun current default package (as in CL's *package*) */
   extern dfsch_package_t* dfsch_get_current_package();
   /** Set new value of current default package */
@@ -302,6 +303,7 @@ extern "C" {
    * interned in package denoted by their package qualifier.*/
   extern dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
                                              char* name);
+  extern dfsch_object_t* dfsch_list_all_packages();
   /** Return name of given package */
   extern char* dfsch_package_name(dfsch_object_t* package);
   /** Intern symbol with same name in keyword package */
@@ -309,6 +311,9 @@ extern "C" {
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
+
+  typedef void (*dfsch_package_iteration_cb_t)(void* baton,
+                                               dfsch_object_t* symbol);
 
 
   /** Create new lambda closure. */
@@ -684,12 +689,17 @@ extern "C" {
 
 #define DFSCH_SYMBOL_ARG(al, name)                      \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_symbol)
-#define DFSCH_SYMBOL_ARG_OPT(al, default, name)                 \
+#define DFSCH_SYMBOL_ARG_OPT(al, name, default)                 \
   DFSCH_GENERIC_ARG_OPT(al, name, default, char*, dfsch_symbol)
 #define DFSCH_TYPE_ARG(al, name)                                        \
   DFSCH_GENERIC_ARG(al, name, dfsch_type_t*, dfsch_object_as_type)
-#define DFSCH_TYPE_ARG_OPT(al, default, name)                           \
+#define DFSCH_TYPE_ARG_OPT(al, name, default)                           \
   DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_type_t*, dfsch_object_as_type)
+#define DFSCH_PACKAGE_ARG(al, name)                                     \
+  DFSCH_GENERIC_ARG(al, name, dfsch_package_t*, dfsch_package_designator)
+#define DFSCH_PACKAGE_ARG_OPT(al, name, default)                        \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_package_t*,            \
+                        dfsch_package_designator)
 
 #ifdef __cplusplus
 }

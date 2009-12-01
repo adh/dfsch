@@ -185,7 +185,8 @@ int dfsch_console_read_objects_parser(char* prompt,
   running_parser = parser;
   DFSCH_UNWIND {
     while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
-      DFSCH_WITH_SIMPLE_RESTART(dfsch_make_symbol("abort"), "Return to reader"){
+      DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                    "abort"), "Return to reader"){
         ret = dfsch_parser_feed_line(parser, line);
       }DFSCH_END_WITH_SIMPLE_RESTART;
       if (ret){
@@ -208,7 +209,8 @@ int dfsch_console_read_objects(char* prompt,
                                dfsch_console_object_cb_t cb,
                                void* baton){
   dfsch_parser_ctx_t* parser = dfsch_parser_create();
-  dfsch_parser_set_source(parser, dfsch_make_symbol("*console-io*"));
+  dfsch_parser_set_source(parser, dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                      "*console-io*"));
   dfsch_parser_callback(parser, cb, baton);
   return dfsch_console_read_objects_parser(prompt, parser);
 }

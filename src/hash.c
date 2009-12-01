@@ -447,14 +447,14 @@ DFSCH_DEFINE_PRIMITIVE(make_hash, NULL){
 
   if (!mode)
     return dfsch_hash_make(DFSCH_HASH_EQ);
-  if (mode == dfsch_make_symbol("equal?"))
+  if (dfsch_compare_keyword(mode, "equal?"))
     return dfsch_hash_make(DFSCH_HASH_EQUAL);
-  if (mode == dfsch_make_symbol("eqv?"))
+  if (dfsch_compare_keyword(mode, "eqv?"))
     return dfsch_hash_make(DFSCH_HASH_EQV);
-  if (mode == dfsch_make_symbol("eq?"))
+  if (dfsch_compare_keyword(mode, "eq?"))
     return dfsch_hash_make(DFSCH_HASH_EQ);
 
-  dfsch_error("exception:unknown-mode", mode);
+  dfsch_error("Unknown hash comparison mode", mode);
 }
 DFSCH_DEFINE_PRIMITIVE(hash_p, NULL){
   dfsch_object_t* obj;
@@ -523,11 +523,11 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
 
   if (!mode)
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
-  if (mode == dfsch_make_symbol("equal?"))
+  if (dfsch_compare_keyword(mode, "equal?"))
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQUAL);
-  if (mode == dfsch_make_symbol("eqv?"))
+  if (dfsch_compare_keyword(mode, "eqv?"))
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQV);
-  if (mode == dfsch_make_symbol("eq?"))
+  if (dfsch_compare_keyword(mode, "eq?"))
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
 
   dfsch_error("exception:unknown-mode", mode);
