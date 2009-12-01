@@ -375,11 +375,11 @@ static void write_instance_add_method(dfsch_object_t* function,
   class_t* klass;
 
   if (dfsch_list_length_check(method->specializers) != 1){
-    dfsch_error("initialize-instance methods can only specialize on first"
+    dfsch_error("write-instance methods can only specialize on first"
                 " argument", method);
   }
   if (method->qualifiers != NULL){
-    dfsch_error("initialize-instance cannot have non-primary methods",
+    dfsch_error("write-instance cannot have non-primary methods",
                 method);
   }
 
@@ -393,11 +393,11 @@ static void write_instance_remove_method(dfsch_object_t* function,
   class_t* klass;
 
   if (dfsch_list_length_check(method->specializers) != 1){
-    dfsch_error("initialize-instance methods can only specialize on first"
+    dfsch_error("write-instance methods can only specialize on first"
                 " argument", method);
   }
   if (method->qualifiers != NULL){
-    dfsch_error("initialize-instance cannot have non-primary methods",
+    dfsch_error("write-instance cannot have non-primary methods",
                 method);
   }
 
