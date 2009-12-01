@@ -1197,7 +1197,8 @@ DFSCH_DEFINE_PRIMITIVE(log, NULL){
   if (z <= 0.0)
     dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
-                           dfsch_make_symbol("log"),
+                           dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                               "log"),
                            dfsch_make_number_from_double(z)));
 
   return dfsch_make_number_from_double(log(z));
@@ -1230,7 +1231,8 @@ DFSCH_DEFINE_PRIMITIVE(asin, NULL){
   if (z > 1.0 || z < -1.0)
     dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
-                           dfsch_make_symbol("asin"),
+                           dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                               "asin"),
                            dfsch_make_number_from_double(z)));
 
   return dfsch_make_number_from_double(asin(z));
@@ -1244,7 +1246,8 @@ DFSCH_DEFINE_PRIMITIVE(acos, NULL){
   if (z > 1.0 || z < -1.0)
     dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
-                           dfsch_make_symbol("acos"),
+                           dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, 
+                                               "acos"),
                            dfsch_make_number_from_double(z)));
 
   return dfsch_make_number_from_double(acos(z));
@@ -1266,7 +1269,8 @@ DFSCH_DEFINE_PRIMITIVE(sqrt, NULL){
   if (z < 0.0)
     dfsch_error("Argument not in domain", 
                 dfsch_list(2, 
-                           dfsch_make_symbol("sqrt"),
+                           dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                               "sqrt"),
                            dfsch_make_number_from_double(z)));
 
   return dfsch_make_number_from_double(sqrt(z));
@@ -1283,7 +1287,8 @@ DFSCH_DEFINE_PRIMITIVE(expt, NULL){
   if (errno == EDOM) // XXX
     dfsch_error("Argument not in domain", 
                 dfsch_list(3, 
-                           dfsch_make_symbol("expt"),
+                           dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                               "expt"),
                            dfsch_make_number_from_double(z0),
                            dfsch_make_number_from_double(z1)));
 

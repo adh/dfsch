@@ -139,7 +139,8 @@ int main(int argc, char**argv){
   dfsch_port_unsafe_register(ctx);
   dfsch_set_standard_io_ports();
 
-  dfsch_restart_bind(dfsch_make_restart(dfsch_make_symbol("quit"),
+  dfsch_restart_bind(dfsch_make_restart(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                            "quit"),
                                         dfsch_make_primitive(command_exit,
                                                              NULL),
                                         "Exit interpreter",
