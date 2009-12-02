@@ -11,6 +11,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/console.h \
 	dfsch/lib/xml.h \
 	dfsch/lib/sxml.h \
+	dfsch/lib/json.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -44,7 +45,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-collections.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
-	libdfsch-xml.la libdfsch-sxml.la
+	libdfsch-xml.la libdfsch-sxml.la \
+	libdfsch-json.la
 
 dfschlibexec_LTLIBRARIES = threads.la \
 	regex.la \
@@ -58,7 +60,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	process.la \
 	cmdopts.la \
 	xml.la \
-	sxml.la
+	sxml.la \
+	json.la
 
 dfschlibscm_DATA = scm/struct.scm scm/simple-tests.scm scm/unix-utils.scm
 
@@ -200,17 +203,28 @@ sxml_la_SOURCES = lib/sxml_mod.c
 sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
 sxml_la_LDFLAGS = -module -avoid-version
 
+libdfsch_json_la_SOURCES = lib/json.c
+libdfsch_json_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
+libdfsch_json_la_LDFLAGS =
+
+json_la_SOURCES = lib/json_mod.c
+json_la_LIBADD = libdfsch.la -lexpat libdfsch-json.la
+json_la_LDFLAGS = -module -avoid-version
+
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la
 
-check_PROGRAMS = platform-test c-api-test
+check_PROGRAMS = platform-test c-api-test json-parser-test
 
 platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
 platform_test_LDADD =  -lgc -lpthread -ldl -lm libdfsch-cmdopts.la
 c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
 c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
 
+json_parser_test_SOURCES = tests/json-parser-test.c
+json_parser_test_LDADD = libdfsch.la libdfsch-json.la
 
 TESTS = tests/scm-test.sh platform-test c-api-test
+
