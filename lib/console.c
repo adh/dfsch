@@ -165,7 +165,7 @@ static completion_entry_t* generate_completions(char* text_part){
     }
     
 
-    dfsch_for_all_package_symbols(DFSCH_DFSCH_PACKAGE, 
+    dfsch_for_all_package_symbols(dfsch_get_current_package(), 
                                   compl_cb, &ctx);    
     
   }
