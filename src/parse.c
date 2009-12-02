@@ -43,6 +43,12 @@ typedef struct char_table_entry_t {
 char_table_entry_t char_table[]={
   {"newline", '\n'},
   {"space", ' '},
+  {"rubout", '\b'},
+  {"page", '\f'},
+  {"tab", '\t'},
+  {"backspace", '\b'},
+  {"return", '\r'},
+  {"linefeed", '\n'}
 };
 
 typedef struct string_queue_t {
