@@ -25,7 +25,7 @@ DFSCH_DEFINE_PRIMITIVE(parse_file,
   return dfsch_json_parse_file(string, multiple_objects);
 }
 DFSCH_DEFINE_PRIMITIVE(parse_port, 
-                       "Parse JSON object from file"){
+                       "Parse JSON object from port"){
   dfsch_object_t* port;
   dfsch_object_t* multiple_objects;
 
@@ -35,7 +35,6 @@ DFSCH_DEFINE_PRIMITIVE(parse_port,
 
   return dfsch_json_parse_port(port, multiple_objects);
 }
-
 
 
 void dfsch_module_json_register(dfsch_object_t* env){
