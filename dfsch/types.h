@@ -417,6 +417,8 @@ extern dfsch_package_t dfsch_dfsch_package;
 #define DFSCH_DFSCH_PACKAGE (&dfsch_dfsch_package)
 extern dfsch_package_t dfsch_dfsch_user_package;
 #define DFSCH_DFSCH_USER_PACKAGE (&dfsch_dfsch_user_package)
+extern dfsch_package_t dfsch_dfsch_internal_package;
+#define DFSCH_DFSCH_INTERNAL_PACKAGE (&dfsch_dfsch_internal_package)
 extern dfsch_package_t dfsch_keyword_package;
 #define DFSCH_KEYWORD_PACKAGE (&dfsch_keyword_package)
 

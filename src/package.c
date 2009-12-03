@@ -89,8 +89,16 @@ dfsch_package_t dfsch_dfsch_package = {
 };
 dfsch_package_t dfsch_dfsch_user_package = {
   .type = DFSCH_PACKAGE_TYPE,
-  .next = DFSCH_DFSCH_PACKAGE,
+  .next = DFSCH_DFSCH_INTERNAL_PACKAGE,
   .name = "dfsch-user",
+  .sym_count = 0,
+  .mask = INITIAL_PACKAGE_MASK,
+  .entries = dfsch_user_entries,
+};
+dfsch_package_t dfsch_dfsch_internal_package = {
+  .type = DFSCH_PACKAGE_TYPE,
+  .next = DFSCH_DFSCH_PACKAGE,
+  .name = "dfsch%internal",
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_user_entries,
@@ -365,6 +373,7 @@ static void gsh_check_init(){
   }
   
   dfsch_dfsch_user_package.use_list = dfsch_list(1, DFSCH_DFSCH_PACKAGE);
+  dfsch_dfsch_internal_package.use_list = dfsch_list(1, DFSCH_DFSCH_PACKAGE);
 
   gsh_init = 1;
 }
