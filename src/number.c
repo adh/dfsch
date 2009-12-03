@@ -365,7 +365,7 @@ double dfsch_number_to_double(dfsch_object_t *n){
   }
   if (DFSCH_TYPE_OF(n)==DFSCH_FRACNUM_TYPE){
     return dfsch_number_to_double(((fracnum_t*)n)->num) /
-    dfsch_number_to_double(((fracnum_t*)n)->denom);
+      dfsch_number_to_double(((fracnum_t*)n)->denom);
   }
   dfsch_error("exception:not-a-real-number", n);
 }
@@ -592,7 +592,7 @@ int dfsch_number_odd_p(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
     return ((DFSCH_FIXNUM_REF(n) & 0x01) == 1);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-      return !dfsch_bignum_even_p((dfsch_bignum_t*)n);
+    return !dfsch_bignum_even_p((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
     return 0; /* proper fracnum cannot be integer */
   } else {
@@ -610,12 +610,12 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
-      long an = DFSCH_FIXNUM_REF(a)<<2;
-      long bn = DFSCH_FIXNUM_REF(b)<<2;
-      long x = an + bn;
+    long an = DFSCH_FIXNUM_REF(a)<<2;
+    long bn = DFSCH_FIXNUM_REF(b)<<2;
+    long x = an + bn;
       
-      if ((an^x) >= 0 || (bn^x) >= 0) {
-        return DFSCH_MAKE_FIXNUM(x>>2);
+    if ((an^x) >= 0 || (bn^x) >= 0) {
+      return DFSCH_MAKE_FIXNUM(x>>2);
     }
   }
 
@@ -761,7 +761,7 @@ dfsch_object_t* dfsch_number_div (dfsch_object_t* a,
   }
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-      dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("exception:division-by-zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
@@ -783,7 +783,7 @@ dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,
   dfsch_bignum_t* r;
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-      dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("exception:division-by-zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
@@ -914,6 +914,51 @@ dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a){
   }
   return 
     dfsch_bignum_to_number(dfsch_bignum_lognot(dfsch_bignum_from_number(a)));
+}
+
+
+static const int small_primes[] = {
+  3,    5,    7,   11,   13,   17,   19,   23,
+  29,   31,   37,   41,   43,   47,   53,   59,
+  61,   67,   71,   73,   79,   83,   89,   97,
+  101,  103,  107,  109,  113,  127,  131,  137,
+  139,  149,  151,  157,  163,  167,  173,  179,
+  181,  191,  193,  197,  199,  211,  223,  227,
+  229,  233,  239,  241,  251,  257,  263,  269,
+  271,  277,  281,  283,  293,  307,  311,  313,
+  317,  331,  337,  347,  349,  353,  359,  367,
+  373,  379,  383,  389,  397,  401,  409,  419,
+  421,  431,  433,  439,  443,  449,  457,  461,
+  463,  467,  479,  487,  491,  499,  503,  509,
+  521,  523,  541,  547,  557,  563,  569,  571,
+  577,  587,  593,  599,  601,  607,  613,  617,
+  619,  631,  641,  643,  647,  653,  659,  661,
+  673,  677,  683,  691,  701,  709,  719,  727,
+  733,  739,  743,  751,  757,  761,  769,  773,
+  787,  797,  809,  811,  821,  823,  827,  829,
+  839,  853,  857,  859,  863,  877,  881,  883,
+  887,  907,  911,  919,  929,  937,  941,  947,
+  953,  967,  971,  977,  983,  991,  997,
+};
+
+int dfsch_number_prime_p(dfsch_object_t* n){
+  int i;
+  dfsch_object_t* r;
+
+  for (i = 0; i < sizeof(small_primes)/sizeof(int); i++){
+    if (dfsch_number_zero_p(dfsch_number_mod(n, 
+                                             DFSCH_MAKE_FIXNUM(small_primes[i])))){
+      if (dfsch_number_equal_p(n, DFSCH_MAKE_FIXNUM(small_primes[i]))){
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  r = dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
+  
+  
 }
 
 
@@ -1463,10 +1508,10 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
   dfsch_defconst_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
   dfsch_defconst_cstr(ctx, "exact->inexact", 
-                    DFSCH_PRIMITIVE_REF(exact_2_inexact));
+                      DFSCH_PRIMITIVE_REF(exact_2_inexact));
 
   dfsch_defconst_cstr(ctx, "pi", 
-                    dfsch_make_number_from_double(4*atan(1)));
+                      dfsch_make_number_from_double(4*atan(1)));
 
 
   dfsch_defconst_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
@@ -1501,13 +1546,13 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
 
   dfsch_defconst_cstr(ctx, "number->string", 
-		   DFSCH_PRIMITIVE_REF(number_2_string));
+                      DFSCH_PRIMITIVE_REF(number_2_string));
   dfsch_defconst_cstr(ctx, "string->number", 
-		   DFSCH_PRIMITIVE_REF(string_2_number));
+                      DFSCH_PRIMITIVE_REF(string_2_number));
   dfsch_defconst_cstr(ctx, "most-positive-fixnum",
-                    DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
+                      DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
   dfsch_defconst_cstr(ctx, "most-negative-fixnum",
-                    DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
+                      DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
 
   dfsch_defconst_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
   dfsch_defconst_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));

@@ -873,6 +873,43 @@ dfsch_bignum_t* dfsch_bignum_shr(bignum_t* b, size_t count){
   return r;
 }
 
+size_t dfsch_bignum_lsb(bignum_t* b){
+  size_t i;
+  size_t res;
+
+  for (i = 0; i < b->length; i++){
+    if (b->words[i]){
+      break;
+    }
+    res += WORD_BITS;
+  }
+
+  if (i < b->length){
+    word_t w = b->words[i];
+    while (w){
+      res++;
+      w >>= 1;
+    }
+  }
+
+  return res;
+}
+
+size_t dfsch_bignum_msb(bignum_t* b){
+  size_t res = (b->length - 1) * WORD_BITS;
+  word_t w;
+
+  if (b->length){
+    w = b->words[b->length - 1];
+    while (w & (1 << WORD_BITS)){
+      res++;
+      w <<=1;
+    }
+  } else {
+    return 0;
+  }
+}
+
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 static int get_digits(int base){
