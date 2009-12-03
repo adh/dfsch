@@ -577,7 +577,7 @@ int dfsch_number_zero_p(dfsch_object_t* n){
 }
 int dfsch_number_even_p(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
-    return (DFSCH_FIXNUM_REF(n) & 0x01 == 0);
+    return ((DFSCH_FIXNUM_REF(n) & 0x01) == 0);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
     return dfsch_bignum_even_p((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
@@ -590,7 +590,7 @@ int dfsch_number_even_p(dfsch_object_t* n){
 }
 int dfsch_number_odd_p(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
-    return (DFSCH_FIXNUM_REF(n) & 0x01 == 1);
+    return ((DFSCH_FIXNUM_REF(n) & 0x01) == 1);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
       return !dfsch_bignum_even_p((dfsch_bignum_t*)n);
   } else if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
