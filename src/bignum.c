@@ -293,7 +293,7 @@ int dfsch_bignum_even_p(dfsch_bignum_t* a){
   if (a->length == 0){
     return 1;
   }
-  return a->words[0] & 0x01 == 0;
+  return (a->words[0] & 0x01) == 0;
 }
 
 static size_t bignum_num_bits(bignum_t* b){
