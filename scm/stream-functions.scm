@@ -30,7 +30,7 @@
         (if (fn element)
             (stream-cons element
                          (dfsch:stream-filter fn (stream-cdr stream)))
-            (filter-stream fn (stream-cdr stream))))
+            (dfsch:stream-filter fn (stream-cdr stream))))
       ()))
  
 (define (dfsch:stream-while fn stream)
