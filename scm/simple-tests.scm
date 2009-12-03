@@ -1,5 +1,5 @@
-(provide 'simple-tests)
-(require 'cmdopts)
+(provide :simple-tests)
+(require :cmdopts)
 
 (define-package :simple-tests :dfsch :cmdopts)
 (in-package :simple-tests)
@@ -14,12 +14,12 @@
   (newline))
 
 (when (defined? *posix-argv*)
-      (let ((parser (cmdopts:make-parser)))
-        (cmdopts:add-option parser "one-test-fail" 
-                            (lambda (p v) 
-                              (set! one-test-fail #t)
-                              (print "Running in strict mode")))
-        (cmdopts:parse-list parser (cdr *posix-argv*))))
+      (let ((parser (make-parser)))
+        (add-option parser "one-test-fail" 
+                    (lambda (p v) 
+                      (set! one-test-fail #t)
+                      (print "Running in strict mode")))
+        (parse-list parser (cdr *posix-argv*))))
 
 
 (define (exit-func fail-status)

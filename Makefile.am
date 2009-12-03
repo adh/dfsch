@@ -63,7 +63,9 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	sxml.la \
 	json.la
 
-dfschlibscm_DATA = scm/struct.scm scm/simple-tests.scm scm/unix-utils.scm
+dfschlibscm_DATA = scm/stream-functions.scm \
+	scm/simple-tests.scm \
+	scm/unix-utils.scm
 
 man_MANS = doc/dfsch-repl.1
 
