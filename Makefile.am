@@ -95,13 +95,13 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 noinst_PROGRAMS=udata-gen
 BUILT_SOURCES=udata.c udata.h
 strings.o: udata.h
-udata.h: udata-gen src/UnicodeData.txt
+udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen header $(srcdir)/src/UnicodeData.txt udata.h
-udata.c: udata-gen src/UnicodeData.txt
+udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
 
 udata_gen_SOURCES=src/udata-gen.c
-udata_gen_LDADD= -lgc
+udata_gen_LDADD=-lgc
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm

@@ -240,7 +240,7 @@ static dfsch_object_t* tl_cons(dfsch__thread_info_t* ti,
                                dfsch_object_t* car, dfsch_object_t* cdr){
   dfsch_pair_t* p;
   
-#ifdef GC_NEXT
+#if defined(GC_NEXT) && !defined(__CYGWIN__)
   if (!ti->pair_freelist){
     ti->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
   }
@@ -383,7 +383,7 @@ static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   environment_t* e;
 
-#ifdef GC_NEXT
+#if defined(GC_NEXT) && !defined(__CYGWIN__)
   if (!ti->env_freelist){
     ti->env_freelist = GC_malloc_many(sizeof(environment_t));
   }

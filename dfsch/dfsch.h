@@ -483,6 +483,14 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
+				   dfsch_package_t* package,
+				   char *name, 
+				   void *obj); /* to suppress warnings*/
+  extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
 
   /** Change value of variable. */
   extern void dfsch_set_cstr(dfsch_object_t *env, 
