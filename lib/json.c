@@ -667,6 +667,8 @@ static void emit_json_object(dfsch_object_t* obj,
     emit_json_hash(obj, cb, target);
   } else if (DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE)){
     emit_json_list(obj, cb, target);    
+  } else if (DFSCH_INSTANCE_P(obj, DFSCH_VECTOR_TYPE)){
+    emit_json_list(dfsch_vector_2_list(obj), cb, target);    
   } else if (obj == DFSCH_SYM_TRUE){
     cb(target, "true");
   } else if (DFSCH_SYMBOL_P(obj)){
