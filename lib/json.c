@@ -2,6 +2,7 @@
 #include <dfsch/number.h>
 #include <dfsch/hash.h>
 #include <dfsch/magic.h>
+#include "src/util.h"
 #include <stdlib.h>
 
 typedef struct string_queue_t {
@@ -604,6 +605,84 @@ dfsch_object_t* dfsch_json_parse_cstr(char* s, int list){
   return ctx.head;
 }
 
-char* dfsch_json_emit_cstr(dfsch_object_t* infoset);
-void dfsch_json_emit_port(dfsch_object_t* infoset, dfsch_object_t* port);
-void dfsch_json_emit_file(dfsch_object_t* infoset, char* filename);
+typedef void (*write_cb_t)(void* target, char* buf);
+
+static void emit_json_object(dfsch_object_t* obj, 
+                             write_cb_t cb, void* target);
+
+static void emit_json_hash(dfsch_object_t* obj, 
+                           write_cb_t cb, void* target){
+  dfsch_object_t* i = dfsch_hash_2_alist(obj);
+  int comma = 0;
+
+  cb(target, "{");
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* key = dfsch_list_item(DFSCH_FAST_CAR(i), 0);
+    dfsch_object_t* value = dfsch_list_item(DFSCH_FAST_CAR(i), 1);
+    
+    if (comma){
+      cb(target, ", ");
+    }
+    comma = 1;
+
+    emit_json_object(key, cb, target);
+    cb(target, ": ");
+    emit_json_object(value, cb, target);
+
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  cb(target, "}");  
+}
+
+static void emit_json_list(dfsch_object_t* obj, 
+                           write_cb_t cb, void* target){
+  dfsch_object_t* i = obj;
+  int comma = 0;
+
+  cb(target, "[");
+
+  while (DFSCH_PAIR_P(i)){
+    if (comma){
+      cb(target, ", ");
+    }
+    comma = 1;
+
+    emit_json_object(DFSCH_FAST_CAR(i), cb, target);
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  if (i){
+    dfsch_error("Improper list", obj);
+  }
+
+  cb(target, "]");  
+}
+
+
+static void emit_json_object(dfsch_object_t* obj, 
+                             write_cb_t cb, void* target){
+  if (DFSCH_INSTANCE_P(obj, DFSCH_HASH_BASETYPE)){
+    emit_json_hash(obj, cb, target);
+  } else if (DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE)){
+    emit_json_list(obj, cb, target);    
+  } else if (obj == DFSCH_SYM_TRUE){
+    cb(target, "true");
+  } else if (DFSCH_SYMBOL_P(obj)){
+    dfsch_object_t* str = dfsch_make_string_cstr(dfsch_symbol_qualified_name(obj));
+    cb(target, dfsch_object_2_string(str, 100, 1));
+  } else {
+    cb(target, dfsch_object_2_string(obj, 100, 1));
+  }
+}
+
+char* dfsch_json_emit_cstr(dfsch_object_t* obj){
+  str_list_t* sl = sl_create();
+
+  emit_json_object(obj, sl_append, sl);
+
+  return sl_value(sl);
+}
+void dfsch_json_emit_port(dfsch_object_t* obj, dfsch_object_t* port);
+void dfsch_json_emit_file(dfsch_object_t* obj, char* filename);

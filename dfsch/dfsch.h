@@ -274,6 +274,7 @@ extern "C" {
 
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
+  extern char* dfsch_symbol_qualified_name(dfsch_object_t* o);
 
   /** Convert symbol into string usable as name of type 
    * (remove angle brackets) */

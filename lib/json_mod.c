@@ -36,6 +36,16 @@ DFSCH_DEFINE_PRIMITIVE(parse_port,
   return dfsch_json_parse_port(port, multiple_objects);
 }
 
+DFSCH_DEFINE_PRIMITIVE(emit_string, 
+                       "Serialize object into JSON string"){
+  dfsch_object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_json_emit_cstr(object));
+}
+
 
 void dfsch_module_json_register(dfsch_object_t* env){
   dfsch_package_t* json_pkg = dfsch_make_package("json");
@@ -48,4 +58,8 @@ void dfsch_module_json_register(dfsch_object_t* env){
                        DFSCH_PRIMITIVE_REF(parse_file));
   dfsch_define_pkgcstr(env, json_pkg, "parse-port", 
                        DFSCH_PRIMITIVE_REF(parse_port));
+
+  dfsch_define_pkgcstr(env, json_pkg, "emit-string", 
+                       DFSCH_PRIMITIVE_REF(emit_string));
+
 }
