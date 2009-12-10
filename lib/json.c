@@ -2,6 +2,7 @@
 #include <dfsch/number.h>
 #include <dfsch/hash.h>
 #include <dfsch/magic.h>
+#include <dfsch/ports.h>
 #include "src/util.h"
 #include <stdlib.h>
 
@@ -686,5 +687,24 @@ char* dfsch_json_emit_cstr(dfsch_object_t* obj){
 
   return sl_value(sl);
 }
-void dfsch_json_emit_port(dfsch_object_t* obj, dfsch_object_t* port);
-void dfsch_json_emit_file(dfsch_object_t* obj, char* filename);
+void dfsch_json_emit_port(dfsch_object_t* obj, dfsch_object_t* port){
+  emit_json_object(obj, dfsch_port_write_cstr, port);
+}
+
+static void rfputs(FILE* f, char*s){
+  if (fputs(s, f) == EOF){
+    dfsch_error("fputs failed", NULL);
+  }
+}
+void dfsch_json_emit_file(dfsch_object_t* obj, char* filename){
+  FILE* f = fopen(filename, "w");
+  if (!f){
+    dfsch_operating_system_error("Cannot open output file");
+  }
+  
+  DFSCH_UNWIND {
+    emit_json_object(obj, rfputs, f);
+  } DFSCH_PROTECT {
+    fclose(f);
+  } DFSCH_PROTECT_END;
+}

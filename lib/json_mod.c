@@ -15,14 +15,14 @@ DFSCH_DEFINE_PRIMITIVE(parse_string,
 
 DFSCH_DEFINE_PRIMITIVE(parse_file, 
                        "Parse JSON object from file"){
-  char* string;
+  char* file_name;
   dfsch_object_t* multiple_objects;
 
-  DFSCH_STRING_ARG(args, string);
+  DFSCH_STRING_ARG(args, file_name);
   DFSCH_OBJECT_ARG_OPT(args, multiple_objects, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_json_parse_file(string, multiple_objects);
+  return dfsch_json_parse_file(file_name, multiple_objects);
 }
 DFSCH_DEFINE_PRIMITIVE(parse_port, 
                        "Parse JSON object from port"){
@@ -44,6 +44,30 @@ DFSCH_DEFINE_PRIMITIVE(emit_string,
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_json_emit_cstr(object));
+}
+DFSCH_DEFINE_PRIMITIVE(emit_file, 
+                       "Serialize object into new file"){
+  dfsch_object_t* object;
+  char* filename;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_STRING_ARG(args, filename);
+  DFSCH_ARG_END(args);
+
+  dfsch_json_emit_file(object, filename);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(emit_port, 
+                       "Serialize object into port"){
+  dfsch_object_t* object;
+  dfsch_object_t* port;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_ARG_END(args);
+
+  dfsch_json_emit_port(object, port);
+  return NULL;
 }
 
 
