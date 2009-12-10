@@ -601,7 +601,24 @@ int dfsch_number_odd_p(dfsch_object_t* n){
     return nn == round(nn);
   }
 }
+size_t dfsch_number_lsb(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
 
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+
+  } else {
+    dfsch_error("Not an integer", n);
+  }
+}
+size_t dfsch_number_msb(dfsch_object_t* n){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+
+  } else {
+    dfsch_error("Not an integer", n);
+  }
+}
 
 
 // Arithmetics
