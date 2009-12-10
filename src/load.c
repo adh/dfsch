@@ -354,10 +354,8 @@ dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
     dfsch_set_cstr(ctx, "*load-path*", 
-		   dfsch_append(dfsch_list(2,
-					   path,
-					   dfsch_list(1,
-						      dfsch_make_string_cstr(dir)))));
+		   dfsch_cons(dfsch_make_string_cstr(dir),
+                              path));
   }else{
     dfsch_define_cstr(ctx, "*load-path*", 
                      dfsch_list(1, dfsch_make_string_cstr(dir)));
