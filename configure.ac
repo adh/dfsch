@@ -43,7 +43,7 @@ fi
 
 
 AC_CHECK_HEADERS(gc/gc.h, [have_gc="1"], [have_gc="0"])
-AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [-ldl -lpthread])
+AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [])
 
 if test x$have_gc != x1; then
         AC_MSG_RESULT()

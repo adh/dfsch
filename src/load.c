@@ -254,18 +254,8 @@ void dfsch_load(dfsch_object_t* env, char* name,
 
   while (DFSCH_PAIR_P(path)){
     l = sl_create();
-    if (DFSCH_FAST_CAR(path)){
-      sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
-      sl_append(l, "/");
-    } else {
-      load_thread_info_t* lti = get_load_ti();
-      
-      if (lti->operation && lti->operation->fname){
-        sl_append(l, pathname_directory(lti->operation->fname));
-      } else {
-        sl_append(l, "./");
-      }
-    }
+    sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
+    sl_append(l, "/");
     sl_append(l, name);
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
@@ -563,13 +553,33 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
   }
 }
 
+#define PATH_SEP ':'
 
+dfsch_object_t* dfsch_load_construct_default_path(){
+  char* env_path = getenv("DFSCH_PATH");
+  dfsch_object_t* path;
+
+  path = dfsch_list(2, 
+                    dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
+                    dfsch_make_string_cstr(DFSCH_LIB_SO_DIR));
+
+  if (env_path && *env_path){
+    char* part_ptr;
+    env_path = dfsch_stracpy(env_path);
+
+    while (part_ptr = strrchr(env_path, PATH_SEP)){
+      path = dfsch_cons(dfsch_make_string_cstr(part_ptr + 1), path);
+      *part_ptr = '\0';
+    }
+
+    path = dfsch_cons(dfsch_make_string_cstr(env_path), path); 
+  }
+
+  return path;
+}
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
-		    dfsch_list(3, 
-			       NULL,
-                               dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
-                               dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
+		    dfsch_load_construct_default_path());
   dfsch_define_cstr(ctx, "*load-modules*", NULL);
   dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
