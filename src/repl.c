@@ -203,6 +203,10 @@ int main(int argc, char**argv){
   }
 
   if (optind < argc) {
+    char* directory = dfsch_get_path_directory(dfsch_realpath(argv[optind]));
+    
+    dfsch_load_extend_path(ctx, directory);
+
     dfsch_define_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
@@ -211,6 +215,7 @@ int main(int argc, char**argv){
   }
 
   if (interactive || force_interactive){
+    dfsch_load_extend_path(ctx, dfsch_getcwd());
     if (isatty(0)){
       dfsch_cdebug_set_as_debugger();
       interactive_repl(ctx);

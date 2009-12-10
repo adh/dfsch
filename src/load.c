@@ -283,18 +283,8 @@ void dfsch_load(dfsch_object_t* env, char* name,
 
   while (DFSCH_PAIR_P(path)){
     l = sl_create();
-    if (DFSCH_FAST_CAR(path)){
-      sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
-      sl_append(l, "/");
-    } else {
-      load_thread_info_t* lti = get_load_ti();
-      
-      if (lti->operation && lti->operation->fname){
-        sl_append(l, pathname_directory(lti->operation->fname));
-      } else {
-        sl_append(l, "./");
-      }
-    }
+    sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
+    sl_append(l, "/");
     sl_append(l, name);
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
@@ -396,10 +386,8 @@ dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
     dfsch_set_cstr(ctx, "*load-path*", 
-		   dfsch_append(dfsch_list(2,
-					   path,
-					   dfsch_list(1,
-						      dfsch_make_string_cstr(dir)))));
+		   dfsch_cons(dfsch_make_string_cstr(dir),
+                              path));
   }else{
     dfsch_define_cstr(ctx, "*load-path*", 
                      dfsch_list(1, dfsch_make_string_cstr(dir)));
@@ -595,83 +583,19 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
   }
 }
 
+#ifdef __WIN32__
+#define PATH_SEP ';'
+#else
 #define PATH_SEP ':'
+#endif
 
 dfsch_object_t* dfsch_load_construct_default_path(){
   char* env_path = getenv("DFSCH_PATH");
   dfsch_object_t* path;
 
-#ifdef __WIN32__
-  HKEY hKey;
-  DWORD size = 1024;
-  char buf[1025];
-  LONG res;
-  char* dfsch_home = NULL;
-
-  path = NULL;
-
-  dfsch_home = getenv("DFSCH_HOME");
-
-  if (!dfsch_home){
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS){
-      if (RegQueryValueEx(hKey, 
-                          "HomeDirectory", 
-                          NULL,
-                          NULL,
-                          buf, 
-                          &size) == ERROR_SUCCESS){
-        buf[size] = '\0';
-        dfsch_home = dfsch_stracpy(buf);
-      }
-      RegCloseKey(hKey);
-    }
-  }
-
-  if (!dfsch_home){
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS){
-      if (RegQueryValueEx(hKey, 
-                          "HomeDirectory", 
-                          NULL,
-                          NULL,
-                          buf, 
-                          &size) == ERROR_SUCCESS){
-        buf[size] = '\0';
-        dfsch_home = dfsch_stracpy(buf);
-      }
-      RegCloseKey(hKey);
-    }
-  }
-    
-
-  if (dfsch_home){
-    path = dfsch_list(2, 
-                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
-                                                           "\\share\\dfsch\\scm\\")),
-                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
-                                                           "\\lib\\dfsch\\")));
-  } else {
-    path = NULL;
-    fprintf(stderr, "dfsch home directory is not set!\n");
-  }
-
-  
-
-
-
- no_reg_path:
-#else
   path = dfsch_list(2, 
                     dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
                     dfsch_make_string_cstr(DFSCH_LIB_SO_DIR));
-#endif
 
   if (env_path && *env_path){
     char* part_ptr;
@@ -685,9 +609,8 @@ dfsch_object_t* dfsch_load_construct_default_path(){
     path = dfsch_cons(dfsch_make_string_cstr(env_path), path); 
   }
 
-  return path;  
+  return path;
 }
-
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
                     dfsch_load_construct_default_path());
