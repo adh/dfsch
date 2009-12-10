@@ -61,7 +61,7 @@ int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
  * 1 - hexadecimal escape
  * charater - escape with given character
  */
-char escape_table[] = {
+static char escape_table[] = {
   /* 0 */   1, 1, 1, 1, 1, 1, 1, 'a', 'b', 't', 'n', 'v', 'f', 'r', 1, 1, 
   /* 1 */   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
   /* 2 */   0, 0,'\"', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -80,9 +80,9 @@ char escape_table[] = {
   /* f */   0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
 };
 
-char hex_table[] = "0123456789abcdef";
+static char hex_table[] = "0123456789abcdef";
 
-void string_write(dfsch_string_t* o, dfsch_writer_state_t* state){
+static void string_write(dfsch_string_t* o, dfsch_writer_state_t* state){
   char *b;
   char *i;
   int j;
