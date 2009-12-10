@@ -1,6 +1,8 @@
 #include <dfsch/random.h>
+#ifdef unix
 #include <sys/times.h>
 #include <sys/resource.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -23,9 +25,11 @@ static dfsch_object_t* random_state;
 typedef struct random_init_t {
   uint8_t uninitialized[16];
   time_t time;
+#ifdef unix
   struct tms tms;
   clock_t clock;
   struct rusage rusage;
+#endif
   uint8_t sys_random[16];
 } random_init_t;
 
@@ -33,6 +37,7 @@ static dfsch_object_t* make_default_state(){
   random_init_t seed;
   int fd;
   seed.time = time(NULL);
+#ifdef unix
   seed.clock = times(&seed.tms);
   getrusage(RUSAGE_SELF, &seed.rusage);
   
@@ -44,6 +49,7 @@ static dfsch_object_t* make_default_state(){
     read(fd, &seed.sys_random, 16);
     close(fd);
   }
+#endif
 
   return dfsch_make_default_random_state(&seed, sizeof(random_init_t));
 }

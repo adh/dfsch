@@ -33,6 +33,8 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
+#include <inttypes.h>
+#include <stdint.h>
 
 typedef dfsch_object_t object_t;
 
@@ -101,7 +103,9 @@ dfsch_type_t dfsch_integer_type = {
 
 
 static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
-  dfsch_write_string(state, saprintf("%ld", DFSCH_FIXNUM_REF(n)));
+  ptrdiff_t num = DFSCH_FIXNUM_REF(n);
+
+  dfsch_write_string(state, saprintf("%" PRIdPTR, num));
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {

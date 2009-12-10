@@ -30,7 +30,15 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
+
+#ifdef __unix__
 #include <dlfcn.h>
+#endif
+
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 #include <dfsch/introspect.h>
@@ -45,6 +53,7 @@
 void dfsch_load_so(dfsch_object_t* ctx, 
                    char* so_name, 
                    char* sym_name){
+#if defined(__unix__)
   void *handle;
   dfsch_object_t* (*entry)(dfsch_object_t*);
   char* err;
@@ -66,6 +75,26 @@ void dfsch_load_so(dfsch_object_t* ctx,
   }
   
   entry(ctx);
+#elif defined(__WIN32__)
+  HMODULE hModule;
+  dfsch_object_t* (*entry)(dfsch_object_t*);
+
+  hModule = LoadLibraryEx(so_name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+  
+  if (!hModule){
+    dfsch_error("LoadLibraryEx() failed", NULL);
+  }
+
+  entry = GetProcAddress(hModule, sym_name);
+
+  if (!entry){
+    dfsch_error("GetProcAddress() failed", NULL);    
+  }
+
+  entry(ctx);
+#else
+  dfsch_error("Get real operating system!", NULL);
+#endif
 }
 
 static pthread_key_t load_thread_key;
@@ -269,8 +298,9 @@ void dfsch_load(dfsch_object_t* env, char* name,
     sl_append(l, name);
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
-      if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
-	if (strcmp(".so", pathpart+strlen(pathpart)-3) == 0){
+      if (S_ISREG(st.st_mode)){
+	if (strlen(pathpart) >= 4 &&
+            strcmp(".dsl", pathpart+strlen(pathpart)-4) == 0){
 	  dfsch_load_so(env, pathpart, get_module_symbol(name));
           return;
 	} else {
@@ -287,7 +317,8 @@ void dfsch_load(dfsch_object_t* env, char* name,
 	  sl_append(l, "/");
 	  sl_append(l, *list);
 	  
-	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
+	  if (strlen(*list) > 4 && 
+              strcmp(".dsl", (*list)+strlen(*list)-4) == 0){
 	    dfsch_load_so(env, fname, get_module_symbol(name));	      
 	  } else {
 	    dfsch_load_scm(env, fname, 0);
@@ -299,15 +330,16 @@ void dfsch_load(dfsch_object_t* env, char* name,
       }
     }
     fname = stracat(pathpart, ".scm");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode))){
       dfsch_load_scm(env, fname, 0);	      
       return;
     }
-    fname = stracat(pathpart, ".so");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
+    fname = stracat(pathpart, ".dsl");
+    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode))){
       dfsch_load_so(env, fname, get_module_symbol(name));	      
       return;
     }
+
     
     path = dfsch_cdr(path);
   }
@@ -563,13 +595,102 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
   }
 }
 
+#define PATH_SEP ':'
+
+dfsch_object_t* dfsch_load_construct_default_path(){
+  char* env_path = getenv("DFSCH_PATH");
+  dfsch_object_t* path;
+
+#ifdef __WIN32__
+  HKEY hKey;
+  DWORD size = 1024;
+  char buf[1025];
+  LONG res;
+  char* dfsch_home = NULL;
+
+  path = NULL;
+
+  dfsch_home = getenv("DFSCH_HOME");
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+    
+
+  if (dfsch_home){
+    path = dfsch_list(2, 
+                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
+                                                           "\\share\\dfsch\\scm\\")),
+                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
+                                                           "\\lib\\dfsch\\")));
+  } else {
+    path = NULL;
+    fprintf(stderr, "dfsch home directory is not set!\n");
+  }
+
+  
+
+
+
+ no_reg_path:
+#else
+  path = dfsch_list(2, 
+                    dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
+                    dfsch_make_string_cstr(DFSCH_LIB_SO_DIR));
+#endif
+
+  if (env_path && *env_path){
+    char* part_ptr;
+    env_path = dfsch_stracpy(env_path);
+
+    while (part_ptr = strrchr(env_path, PATH_SEP)){
+      path = dfsch_cons(dfsch_make_string_cstr(part_ptr + 1), path);
+      *part_ptr = '\0';
+    }
+
+    path = dfsch_cons(dfsch_make_string_cstr(env_path), path); 
+  }
+
+  return path;  
+}
 
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
-		    dfsch_list(3, 
-			       NULL,
-                               dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
-                               dfsch_make_string_cstr(DFSCH_LIB_SO_DIR)));
+                    dfsch_load_construct_default_path());
   dfsch_define_cstr(ctx, "*load-modules*", NULL);
   dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));

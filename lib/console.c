@@ -285,6 +285,7 @@ int dfsch_console_read_objects_parser(char* prompt,
   running_prompt = prompt;
   __asm(";;");
   running_parser = parser;
+
   DFSCH_UNWIND {
     while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
       DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
@@ -325,6 +326,7 @@ static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   ret = dfsch_eval(obj, baton);
   puts(dfsch_object_2_string(ret,100,1));
+  return 1;
 }
 
 int dfsch_console_run_repl(char* prompt, 
