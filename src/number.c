@@ -103,13 +103,9 @@ dfsch_type_t dfsch_integer_type = {
 
 
 static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
-<<<<<<< HEAD:src/number.c
   ptrdiff_t num = DFSCH_FIXNUM_REF(n);
 
   dfsch_write_string(state, saprintf("%" PRIdPTR, num));
-=======
-  dfsch_write_string(state, saprintf("%ld", (long)DFSCH_FIXNUM_REF(n)));
->>>>>>> f1651e6aa678cec247301f4a7b9216b2238b1533:src/number.c
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {
