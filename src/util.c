@@ -30,6 +30,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 str_list_t* dfsch_sl_create(){
   str_list_t* list = GC_MALLOC(sizeof(str_list_t));
   
@@ -262,6 +266,25 @@ char* dfsch_saprintf(char* format, ...){
   va_end(args);
   return ret;
 }
+
+#ifdef __WIN32__
+char* dfsch_getcwd(){
+  char* buf;
+  DWORD len = GetCurrentDirectory(0, NULL);
+
+  if (!len){
+    dfsch_error("GetCurrentDirectory() returned error", NULL);
+  }
+
+  buf = GC_MALLOC_ATOMIC(len);
+
+  if (!GetCurrentDirectory(len, buf)){
+    dfsch_error("GetCurrentDirectory() returned error", NULL);
+  }
+
+  return buf;
+}
+#else
 char* dfsch_getcwd(){
   char* buf;
   char* ret;
@@ -280,8 +303,17 @@ char* dfsch_getcwd(){
 
   return ret;
 }
+#endif
 char* dfsch_get_path_directory(char* path){
   char* slash = strrchr(path, '/');
+
+#ifdef __WIN32__
+  char* bslash = strrchr(path, '\\');
+  if (bslash > slash){
+    slash = bslash;
+  }
+#endif
+
   if (slash){
     return dfsch_strancpy(path, slash - path);
   } else {
@@ -289,8 +321,18 @@ char* dfsch_get_path_directory(char* path){
   }
 }
 char* dfsch_realpath(char* path){
+#ifdef __WIN32__
+  if (*path == '\\' || 
+      *path == '/' ||
+      (path[0] != '\0' && path[1]==':')){
+    return path;
+  } else {
+    return dfsch_saprintf("%s\\%s", dfsch_getcwd(), path);
+  }
+#else
   char* rp = realpath(path, NULL);
   char* res = dfsch_stracpy(rp);
   free(rp);
   return res;
+#endif
 }
