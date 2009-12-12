@@ -336,3 +336,123 @@ char* dfsch_realpath(char* path){
   return res;
 #endif
 }
+
+#ifdef __WIN32__
+
+#ifdef DLL_EXPORT
+
+HMODULE hDfschInterpreter;
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpReserved){
+  if (dwReason == DLL_PROCESS_ATTACH){
+    hDfschInterpreter = hinstDLL;
+    printf("dfsch attached as %d\n", hinstDLL);
+  }
+  return TRUE;
+}
+
+static char* get_home_from_module_filename(){
+  char* buf;
+  char tmpbuf[1025];
+  DWORD len = GetModuleFileName(hDfschInterpreter, tmpbuf, 1025);
+  size_t i;
+
+  if (!len){
+    return NULL;
+  }
+
+  if (len > 1024){
+    buf = GC_MALLOC_ATOMIC(len+1);
+    
+    if (!GetModuleFileName(hDfschInterpreter, buf, len+1)){
+      return NULL;
+    }
+    
+  } else {
+    buf = dfsch_stracpy(tmpbuf);
+  }
+
+  i = strlen(buf);
+
+  printf("interpreter = %s\n", buf);
+
+  while (i && buf[i] != '\\' && buf[i] != '/'){
+    i--;
+  }
+  
+  buf[i] = '\0';
+  printf("bindir = %s\n", buf);
+  
+  while (i && buf[i] != '\\' && buf[i] != '/'){
+    i--;
+  }
+
+  buf[i] = '\0';
+  printf("home = %s\n", buf);
+
+
+  return buf;
+}
+
+#endif
+
+char* dfsch_get_interpreter_home(){
+  HKEY hKey;
+  DWORD size = 1024;
+  char buf[1025];
+  LONG res;
+  char* dfsch_home = NULL;
+
+  dfsch_home = getenv("DFSCH_HOME");
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+#ifdef DLL_EXPORT
+  if (!dfsch_home){
+    dfsch_home = get_home_from_module_filename();
+  }
+#endif
+
+  return dfsch_home;
+
+
+}
+
+
+#endif

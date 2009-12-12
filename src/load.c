@@ -583,58 +583,6 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
   }
 }
 
-#ifdef __WIN32__
-static char* get_dfsch_home(){
-  HKEY hKey;
-  DWORD size = 1024;
-  char buf[1025];
-  LONG res;
-  char* dfsch_home = NULL;
-
-  dfsch_home = getenv("DFSCH_HOME");
-
-  if (!dfsch_home){
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS){
-      if (RegQueryValueEx(hKey, 
-                          "HomeDirectory", 
-                          NULL,
-                          NULL,
-                          buf, 
-                          &size) == ERROR_SUCCESS){
-        buf[size] = '\0';
-        dfsch_home = dfsch_stracpy(buf);
-      }
-      RegCloseKey(hKey);
-    }
-  }
-
-  if (!dfsch_home){
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
-                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
-                     0,
-                     KEY_READ,
-                     &hKey) == ERROR_SUCCESS){
-      if (RegQueryValueEx(hKey, 
-                          "HomeDirectory", 
-                          NULL,
-                          NULL,
-                          buf, 
-                          &size) == ERROR_SUCCESS){
-        buf[size] = '\0';
-        dfsch_home = dfsch_stracpy(buf);
-      }
-      RegCloseKey(hKey);
-    }
-  }
-
-  return dfsch_home;
-
-}
-#endif
 
 #ifdef __WIN32__
 #define PATH_SEP ';'
@@ -647,7 +595,7 @@ dfsch_object_t* dfsch_load_construct_default_path(){
   dfsch_object_t* path;
 
 #ifdef __WIN32__
-  char* dfsch_home = get_dfsch_home();
+  char* dfsch_home = dfsch_get_interpreter_home();
   if (dfsch_home){
     path = dfsch_list(2, 
                       dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
