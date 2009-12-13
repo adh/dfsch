@@ -77,6 +77,11 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 
 
 void interactive_repl(dfsch_object_t* ctx){
+  printf("  /\\___/\\    dfsch version %s [%s %s]\n", 
+         PACKAGE_VERSION, __DATE__, __TIME__);
+  printf(" ( o   o )\n");
+  printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
+  printf("   )   (     under certain conditions; see file COPYING for details.\n");
   dfsch_console_run_repl("]=> ", ctx);
 }
 
