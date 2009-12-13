@@ -346,7 +346,6 @@ HMODULE hDfschInterpreter;
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpReserved){
   if (dwReason == DLL_PROCESS_ATTACH){
     hDfschInterpreter = hinstDLL;
-    printf("dfsch attached as %d\n", hinstDLL);
   }
   return TRUE;
 }
@@ -374,22 +373,18 @@ static char* get_home_from_module_filename(){
 
   i = strlen(buf);
 
-  printf("interpreter = %s\n", buf);
 
   while (i && buf[i] != '\\' && buf[i] != '/'){
     i--;
   }
   
   buf[i] = '\0';
-  printf("bindir = %s\n", buf);
   
   while (i && buf[i] != '\\' && buf[i] != '/'){
     i--;
   }
 
   buf[i] = '\0';
-  printf("home = %s\n", buf);
-
 
   return buf;
 }
