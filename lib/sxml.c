@@ -32,7 +32,7 @@ static XML_Memory_Handling_Suite gc_suite = {
 DFSCH_LOCAL_SYMBOL_CACHE(":@", at_symbol);
 
 static void sxml_push(parser_ctx_t* c, dfsch_object_t* tag){
-  sxml_stack_t* s = GC_NEW(stack_t);
+  sxml_stack_t* s = GC_NEW(sxml_stack_t);
   s->next = c->stack;
   s->head = s->tail = dfsch_cons(tag, NULL);
   c->stack = s;

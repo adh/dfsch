@@ -77,6 +77,11 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 
 
 void interactive_repl(dfsch_object_t* ctx){
+  printf("  /\\___/\\    dfsch version %s [%s %s]\n", 
+         PACKAGE_VERSION, __DATE__, __TIME__);
+  printf(" ( o   o )\n");
+  printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
+  printf("   )   (     under certain conditions; see file COPYING for details.\n");
   dfsch_console_run_repl("]=> ", ctx);
 }
 
@@ -203,6 +208,10 @@ int main(int argc, char**argv){
   }
 
   if (optind < argc) {
+    char* directory = dfsch_get_path_directory(dfsch_realpath(argv[optind]));
+    
+    dfsch_load_extend_path(ctx, directory);
+
     dfsch_define_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
@@ -211,6 +220,7 @@ int main(int argc, char**argv){
   }
 
   if (interactive || force_interactive){
+    dfsch_load_extend_path(ctx, dfsch_getcwd());
     if (isatty(0)){
       dfsch_cdebug_set_as_debugger();
       interactive_repl(ctx);

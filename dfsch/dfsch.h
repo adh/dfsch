@@ -274,6 +274,7 @@ extern "C" {
 
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
+  extern char* dfsch_symbol_qualified_name(dfsch_object_t* o);
 
   /** Convert symbol into string usable as name of type 
    * (remove angle brackets) */
@@ -483,6 +484,14 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
+				   dfsch_package_t* package,
+				   char *name, 
+				   void *obj); /* to suppress warnings*/
+  extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
 
   /** Change value of variable. */
   extern void dfsch_set_cstr(dfsch_object_t *env, 

@@ -490,6 +490,31 @@ char* dfsch_symbol(dfsch_object_t* symbol){
   return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
                                                      DFSCH_SYMBOL_TYPE)))->name;
 }
+char* dfsch_symbol_qualified_name(dfsch_object_t* o){
+  symbol_t* s;
+  s = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(o, 
+                                      DFSCH_SYMBOL_TYPE));
+  if (s->name){
+    if (!s->package){
+      dfsch_error("Emmiting uninterned symbol into JSON", o);
+    } else {
+      str_list_t* sl = sl_create();
+      if (!dfsch_in_current_package(o)) {
+        if (s->package != DFSCH_KEYWORD_PACKAGE) {
+          sl_append(sl, dfsch_package_name(s->package));
+        }
+        sl_append(sl, ":");      
+        sl_append(sl, s->name);
+        return sl_value(sl);
+      } else {
+        return s->name;
+      }
+    }
+  } else {
+    dfsch_error("Emmiting gensym into JSON", o);
+  }
+}
+
 dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol){
   return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
                                                      DFSCH_SYMBOL_TYPE)))->package;

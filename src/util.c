@@ -27,6 +27,8 @@
 
 #include <dfsch/dfsch.h>
 #include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 str_list_t* dfsch_sl_create(){
   str_list_t* list = GC_MALLOC(sizeof(str_list_t));
@@ -260,4 +262,35 @@ char* dfsch_saprintf(char* format, ...){
   va_end(args);
   return ret;
 }
+char* dfsch_getcwd(){
+  char* buf;
+  char* ret;
+  size_t len = pathconf(".", _PC_PATH_MAX);
+  if (len == -1){
+    len = 65536; // Insane default
+  }
 
+  buf = GC_MALLOC_ATOMIC(len+1);
+  ret = getcwd(buf, len+1);
+  if (!ret){
+    int err = errno;
+    GC_FREE(buf);
+    dfsch_operating_system_error_saved(err, "getcwd");
+  }
+
+  return ret;
+}
+char* dfsch_get_path_directory(char* path){
+  char* slash = strrchr(path, '/');
+  if (slash){
+    return dfsch_strancpy(path, slash - path);
+  } else {
+    return NULL;
+  }
+}
+char* dfsch_realpath(char* path){
+  char* rp = realpath(path, NULL);
+  char* res = dfsch_stracpy(rp);
+  free(rp);
+  return res;
+}

@@ -182,7 +182,6 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
 #endif
 
   h = fast_ptr_hash(key);
-  DFSCH_PREFETCH(BUCKET(hash, h));
   i = hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE];
   if (DFSCH_LIKELY(i) && 
       DFSCH_UNLIKELY(i->key == key)){

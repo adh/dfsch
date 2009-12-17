@@ -1,8 +1,9 @@
-(require 'regex)
-(require 'xml)
-(require 'sxml)
-(require 'unix)
-(require 'simple-tests)
+(require :regex)
+(require :xml)
+(require :sxml)
+(require :unix)
+(require :simple-tests)
+(require :json)
 
 (define-package :interp-test :dfsch :simple-tests)
 (in-package :interp-test)
@@ -351,6 +352,24 @@
                         (xml:sxml-emit-string '(a (:@ (foo "bar \"")) (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
        
+(group "JSON support"
+       (test 'parse-json
+             (json:parse-string "[1, 2, 3]")
+             '(1 2 3))
+       
+       (define (canonical-alist a)
+         (sort-list! a
+                     (lambda (a b)
+                       (string<? (car a) (car b)))))
+       (define (hash->canonical-alist h)
+         (canonical-alist (hash->alist h)))
+
+       (define *json-test-data* (alist->hash '(("foo" (1 2 3))
+                                               ("bar" ("a" "b" (3.14))))))
+       (test 'json-roundtrip
+             (hash->canonical-alist (json:parse-string (json:emit-string *json-test-data*)))
+             (hash->canonical-alist *json-test-data*)))
+
 (group "Regressions"
        (test 'gensym-write-segfault 
              (let ((str (object->string (gensym))))
