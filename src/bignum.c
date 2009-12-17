@@ -875,7 +875,7 @@ dfsch_bignum_t* dfsch_bignum_shr(bignum_t* b, size_t count){
 
 size_t dfsch_bignum_lsb(bignum_t* b){
   size_t i;
-  size_t res;
+  size_t res = 0;
 
   for (i = 0; i < b->length; i++){
     if (b->words[i]){
@@ -886,7 +886,7 @@ size_t dfsch_bignum_lsb(bignum_t* b){
 
   if (i < b->length){
     word_t w = b->words[i];
-    while (w){
+    while ((w & 1) == 0){
       res++;
       w >>= 1;
     }
@@ -901,10 +901,11 @@ size_t dfsch_bignum_msb(bignum_t* b){
 
   if (b->length){
     w = b->words[b->length - 1];
-    while (w & (1 << WORD_BITS)){
+    while (w){
       res++;
-      w <<=1;
+      w >>=1;
     }
+    return res - 1;
   } else {
     return 0;
   }

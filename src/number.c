@@ -621,7 +621,7 @@ size_t dfsch_number_lsb(dfsch_object_t* n){
 
     return res;
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-
+    return dfsch_bignum_lsb(n);
   } else {
     dfsch_error("Not an integer", n);
   }
@@ -642,7 +642,7 @@ size_t dfsch_number_msb(dfsch_object_t* n){
 
     return res - 1;
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
-
+    return dfsch_bignum_msb(n);
   } else {
     dfsch_error("Not an integer", n);
   }
