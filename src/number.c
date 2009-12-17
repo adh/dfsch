@@ -1634,6 +1634,25 @@ DFSCH_DEFINE_PRIMITIVE(msb, NULL){
   return DFSCH_MAKE_FIXNUM(dfsch_number_msb(n));
 }
 
+DFSCH_DEFINE_PRIMITIVE(inc, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_add(n, DFSCH_MAKE_FIXNUM(1));
+}
+DFSCH_DEFINE_PRIMITIVE(dec, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
+}
+
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
@@ -1720,5 +1739,8 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
 
   dfsch_defconst_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
   dfsch_defconst_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
-  
+ 
+  dfsch_defconst_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
+  dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
+ 
 }
