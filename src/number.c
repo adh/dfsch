@@ -101,7 +101,7 @@ dfsch_type_t dfsch_integer_type = {
 
 
 static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
-  dfsch_write_string(state, saprintf("%ld", DFSCH_FIXNUM_REF(n)));
+  dfsch_write_string(state, saprintf("%ld", (long)DFSCH_FIXNUM_REF(n)));
 }
 
 dfsch_number_type_t dfsch_fixnum_type = {

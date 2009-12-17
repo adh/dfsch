@@ -75,6 +75,9 @@ typedef pthread_rwlock_t dfsch_rwlock_t;
 typedef pthread_mutex_t dfsch_rwlock_t;
 #endif
 
+char* dfsch_getcwd();
+char* dfsch_get_path_directory(char* path);
+char* dfsch_realpath(char* path);
 
 
 #endif

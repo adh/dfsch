@@ -659,10 +659,6 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * works even through C-code.
  */
 
-/* TODO: finish new stack traces
- * general idea is that frames are construed by apply and then filed in 
- * relevant functions. Tail recursion handling should be part of apply. */
-
 static void async_apply_check(dfsch__thread_info_t* ti){
   if (DFSCH_UNLIKELY(ti->async_apply)){
     dfsch_object_t* proc;
@@ -716,6 +712,8 @@ static object_t* eval_list(object_t *list, environment_t* env,
   i = DFSCH_FAST_CDR(list);
   while (DFSCH_PAIR_P(i)){
     r = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    DFSCH_PREFETCH(i);
     if (DFSCH_SYMBOL_P(r)){
       r = lookup_impl(r, env, ti);
     } else {
@@ -723,10 +721,9 @@ static object_t* eval_list(object_t *list, environment_t* env,
     }
 
     t = tl_cons(ti, r, NULL);
-    DFSCH_FAST_CDR_MUT(p) = (object_t*)t;
+    DFSCH_FAST_CDR_MUT(p) = t;
     p = t;
 
-    i = DFSCH_FAST_CDR(i);
   }
 
   if (i){
