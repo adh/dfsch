@@ -603,7 +603,23 @@ int dfsch_number_odd_p(dfsch_object_t* n){
 }
 size_t dfsch_number_lsb(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    long num = DFSCH_FIXNUM_REF(n);
+    size_t res = 0;
 
+    if (num < 0){
+      num = -num;
+    }
+
+    if (num == 0){
+      return -1;
+    }
+
+    while ((num & 0x01) == 0){
+      num >>= 1;
+      res++;
+    }
+
+    return res;
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
 
   } else {
@@ -612,7 +628,19 @@ size_t dfsch_number_lsb(dfsch_object_t* n){
 }
 size_t dfsch_number_msb(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    long num = DFSCH_FIXNUM_REF(n);
+    size_t res = 0;
 
+    if (num < 0){
+      num = -num;
+    }
+
+    while (num){
+      num >>= 1;
+      res++;
+    }
+
+    return res - 1;
   } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
 
   } else {
@@ -1497,6 +1525,27 @@ DFSCH_DEFINE_PRIMITIVE(lcm, NULL){
   return dfsch_number_lcm(a, b);
 }
 
+DFSCH_DEFINE_PRIMITIVE(lsb, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return DFSCH_MAKE_FIXNUM(dfsch_number_lsb(n));
+}
+
+DFSCH_DEFINE_PRIMITIVE(msb, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return DFSCH_MAKE_FIXNUM(dfsch_number_msb(n));
+}
+
+
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
   dfsch_define_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
@@ -1579,5 +1628,8 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
   dfsch_defconst_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
   dfsch_defconst_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));
+
+  dfsch_defconst_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
+  dfsch_defconst_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
   
 }
