@@ -1126,6 +1126,10 @@ int dfsch_number_prime_p(dfsch_object_t* n){
     return (n == DFSCH_MAKE_FIXNUM(2));
   }
 
+  if (n == DFSCH_MAKE_FIXNUM(1)){
+    return 0;
+  }
+
   for (i = 0; i < sizeof(small_primes)/sizeof(int); i++){
       if (dfsch_number_equal_p(n, DFSCH_MAKE_FIXNUM(small_primes[i]))){
         return 1;
