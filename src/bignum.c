@@ -862,13 +862,13 @@ dfsch_bignum_t* dfsch_bignum_shr(bignum_t* b, size_t count){
   size_t bs = count % WORD_BITS;
   size_t ws = count / WORD_BITS;
 
-  r = make_bignum(b->length - ws + 1);
+  r = make_bignum(b->length - ws);
   r->negative = b->negative;
   for (i = 0; i < b->length - ws - 1; i++){
     r->words[i] = ((b->words[i + ws] >> bs) | 
                    (b->words[i + ws + 1] << (WORD_BITS - bs))) & WORD_MASK;
   }
-  r->words[b->length - ws] = (b->words[i + ws] >> bs) & WORD_MASK;
+  r->words[b->length - (ws + 1)] = (b->words[i + ws] >> bs) & WORD_MASK;
   normalize_bignum(r);
   return r;
 }

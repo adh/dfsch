@@ -737,6 +737,16 @@ size_t dfsch_number_msb(dfsch_object_t* n){
   }
 }
 
+dfsch_object_t* dfsch_number_shr(dfsch_object_t* n, size_t count){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    return DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_REF(n) >> count);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+    return dfsch_bignum_to_number(dfsch_bignum_shr(n, count));
+  } else {
+    dfsch_error("Not an integer", n);
+  }
+ 
+}
 
 // Arithmetics
 
@@ -1685,6 +1695,19 @@ DFSCH_DEFINE_PRIMITIVE(dec, NULL){
   return dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
 }
 
+DFSCH_DEFINE_PRIMITIVE(shr, NULL){
+  object_t* n;
+  size_t count;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_LONG_ARG_OPT(args, count, 1);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_shr(n, count);
+}
+
+
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
@@ -1774,5 +1797,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
  
   dfsch_defconst_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
   dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
+
+  dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
  
 }
