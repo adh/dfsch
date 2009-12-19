@@ -263,6 +263,95 @@ static int dig_val[128] = {
   25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37
 };
 
+dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
+  dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
+  int64_t sn = 0;
+  int64_t on = 0;
+  int base = obase;
+  int d;
+  int negative = 0;
+
+  if (strchr(string, '.') != NULL || 
+      (base == 10 && strpbrk(string, "eE") != NULL)){
+    if (base != 10 && base != 0){
+      return NULL;
+    }
+    return dfsch_make_number_from_double(atof(string));
+  }
+
+  if (*string == '-'){
+    string++;
+    negative = 1;
+  }
+
+  if (base == 0){
+    if (*string == '0'){
+      string++;
+      base = 8;
+      if (*string == 'x' || *string == 'X'){
+        string++;
+        base = 16;
+      }
+    } else {
+      base = 10;
+    }
+  }
+
+  while (*string && *string != '/' && 
+         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
+    d = dig_val[*string];
+    if (d >= base){
+      return NULL;
+    }
+    on = sn;
+    sn *= base;
+    sn += d;
+    string++;
+  }
+
+  if (!*string){
+    return dfsch_make_number_from_int64(negative ? -sn : sn);
+  }
+  if (*string == '/'){
+    string++;
+    if (strchr(string, '/') != NULL){
+      return NULL;
+    }
+
+    return dfsch_number_div(dfsch_make_number_from_int64(negative ? -sn : sn),
+                            dfsch_make_number_from_string(string, obase));
+  }
+
+  n = DFSCH_MAKE_FIXNUM(on);
+  string--;
+
+  while (*string && *string != '/'){
+    d = dig_val[*string];
+    if (d >= base){
+      return NULL;
+    }
+    n = dfsch_number_mul(n, DFSCH_MAKE_FIXNUM(base));
+    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(d));
+    string++;
+  }
+
+  if (*string == '/'){
+    string++;
+    if (strchr(string, '/') != NULL){
+      return NULL;
+    }
+
+    n = dfsch_number_div(n,
+                         dfsch_make_number_from_string(string+1, obase));
+  }
+
+  if (negative){
+    return dfsch_number_neg(n);
+  } else {
+    return n;
+  }
+}
+
 dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
   int64_t sn = 0;

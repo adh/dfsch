@@ -554,16 +554,11 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '9':
     {
       dfsch_object_t *d;
-      //DFSCH_TRY {   XXX
-        d = dfsch_make_number_from_string(data, 0);
-        /*} DFSCH_CATCH(ex) {
-        parser_abort_ex(ctx, ex);
-        } DFSCH_END_TRY;*/
-      if (!d) {
-        parser_abort(ctx, "Invalid number");
+      d = dfsch_make_number_from_string_noerror(data, 0);
+      if (d) {
+        parse_object(ctx, d);
+        return;
       }
-      parse_object(ctx, d);
-      return;
     }
   }
 
