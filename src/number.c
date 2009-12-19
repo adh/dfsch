@@ -1061,6 +1061,25 @@ dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a){
     dfsch_bignum_to_number(dfsch_bignum_lognot(dfsch_bignum_from_number(a)));
 }
 
+dfsch_object_t* dfsch_number_exp(dfsch_object_t* b, 
+                                 dfsch_object_t* e, 
+                                 dfsch_object_t* m){
+  dfsch_bignum_t* bb;
+  dfsch_bignum_t* eb;
+  dfsch_bignum_t* mb;
+  
+  bb = dfsch_bignum_from_number(b);
+  eb = dfsch_bignum_from_number(e);
+  if (m){
+    mb = dfsch_bignum_from_number(m);
+  } else {
+    mb = NULL;
+  }
+
+
+  return dfsch_bignum_to_number(dfsch_bignum_exp(bb, eb, mb));
+}
+
 
 static const int small_primes[] = {
   3,    5,    7,   11,   13,   17,   19,   23,
@@ -1085,25 +1104,6 @@ static const int small_primes[] = {
   887,  907,  911,  919,  929,  937,  941,  947,
   953,  967,  971,  977,  983,  991,  997,
 };
-
-dfsch_object_t* dfsch_number_exp(dfsch_object_t* b, 
-                                 dfsch_object_t* e, 
-                                 dfsch_object_t* m){
-  dfsch_bignum_t* bb;
-  dfsch_bignum_t* eb;
-  dfsch_bignum_t* mb;
-  
-  bb = dfsch_bignum_from_number(b);
-  eb = dfsch_bignum_from_number(e);
-  if (m){
-    mb = dfsch_bignum_from_number(m);
-  } else {
-    mb = NULL;
-  }
-
-
-  return dfsch_bignum_to_number(dfsch_bignum_exp(bb, eb, mb));
-}
 
 int dfsch_number_prime_p(dfsch_object_t* n){
   int i;
@@ -1174,6 +1174,28 @@ int dfsch_number_prime_p(dfsch_object_t* n){
   return 1;
 }
 
+dfsch_object_t* dfsch_number_next_prime(dfsch_object_t* n){
+  if (dfsch_number_cmp(n, DFSCH_MAKE_FIXNUM(2)) < 0){
+    return DFSCH_MAKE_FIXNUM(2);
+  }
+
+  if (n == DFSCH_MAKE_FIXNUM(2)){
+    return DFSCH_MAKE_FIXNUM(3);
+  }
+
+  if (dfsch_number_even_p(n)){
+    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(1));
+    if (dfsch_number_prime_p(n)){
+      return n;
+    }
+  }
+
+  do {
+    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(2));
+  } while (!dfsch_number_prime_p(n));
+
+  return n;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1753,6 +1775,16 @@ DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
   return dfsch_bool(dfsch_number_prime_p(n));
 }
 
+DFSCH_DEFINE_PRIMITIVE(next_prime, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_next_prime(n);
+}
+
 
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
@@ -1847,5 +1879,6 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
 
   dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
+  dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
  
 }
