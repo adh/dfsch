@@ -1075,9 +1075,32 @@ static const int small_primes[] = {
   953,  967,  971,  977,  983,  991,  997,
 };
 
+dfsch_object_t* dfsch_number_exp(dfsch_object_t* b, 
+                                 dfsch_object_t* e, 
+                                 dfsch_object_t* m){
+  dfsch_bignum_t* bb;
+  dfsch_bignum_t* eb;
+  dfsch_bignum_t* mb;
+  
+  bb = dfsch_bignum_from_number(b);
+  eb = dfsch_bignum_from_number(e);
+  if (m){
+    mb = dfsch_bignum_from_number(m);
+  } else {
+    mb = NULL;
+  }
+
+
+  return dfsch_bignum_to_number(dfsch_bignum_exp(bb, eb, mb));
+}
+
 int dfsch_number_prime_p(dfsch_object_t* n){
   int i;
-  dfsch_object_t* r;
+
+  dfsch_object_t* a;
+  dfsch_object_t* x;
+  dfsch_object_t* max;
+  dfsch_object_t* d;
 
   for (i = 0; i < sizeof(small_primes)/sizeof(int); i++){
     if (dfsch_number_zero_p(dfsch_number_mod(n, 
@@ -1090,9 +1113,18 @@ int dfsch_number_prime_p(dfsch_object_t* n){
     }
   }
 
-  r = dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
+  max = dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(3));
+  d = dfsch_number_shr(max, dfsch_number_lsb(max));
   
+
+  for (i = 0; i < 5; i++){
+    a = dfsch_random_get_number(NULL, max);
+    a = dfsch_number_add(a, DFSCH_MAKE_FIXNUM(2));
+
+    x = dfsch_number_exp(a, d, n);
+  }
   
+  return 1;
 }
 
 
