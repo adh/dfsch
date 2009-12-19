@@ -67,11 +67,11 @@ void dfsch_random_get_bytes(dfsch_object_t* state, uint8_t* buf, size_t len){
   }
   ((dfsch_random_state_type_t*)(DFSCH_TYPE_OF(state)))->get_bytes(state, buf, len);
 }
-int dfsch_random_get_integer(dfsch_object_t* state, int max){
-  int bits;
-  int val;
+int64_t dfsch_random_get_integer(dfsch_object_t* state, int64_t max){
+  int64_t bits;
+  uint64_t val;
   do {
-    dfsch_random_get_bytes(state, &bits, sizeof(unsigned int));
+    dfsch_random_get_bytes(state, &bits, sizeof(int64_t));
     if (bits < 0){
       bits = -bits;
     }
@@ -88,8 +88,9 @@ double dfsch_random_get_double(dfsch_object_t* state){
 dfsch_object_t* dfsch_random_get_number(dfsch_object_t* state, 
                                         dfsch_object_t* max){
   if (DFSCH_TYPE_OF(max) == DFSCH_FIXNUM_TYPE){
-    return DFSCH_MAKE_FIXNUM(dfsch_random_get_integer(state, 
-                                                      DFSCH_FIXNUM_REF(max)));
+    int64_t v = dfsch_random_get_integer(state, 
+                                         DFSCH_FIXNUM_REF(max));
+    return DFSCH_MAKE_FIXNUM(v);
   } else if (DFSCH_TYPE_OF(max) == DFSCH_BIGNUM_TYPE){
     return dfsch_number_mod(dfsch_random_get_bignum(state,
                                                     dfsch_number_msb(max)),

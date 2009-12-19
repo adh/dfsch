@@ -23,6 +23,7 @@
 #include <dfsch/number.h>
 #include <dfsch/bignum.h>
 #include <dfsch/strings.h>
+#include <dfsch/random.h>
 #include "util.h"
 #include "internal.h"
 #include <stdio.h>
@@ -1137,22 +1138,16 @@ int dfsch_number_prime_p(dfsch_object_t* n){
   
 
   for (i = 0; i < 5; i++){
-    printf(";; i = %d\n", i);
     a = dfsch_random_get_number(NULL, max);
     a = dfsch_number_add(a, DFSCH_MAKE_FIXNUM(2));
-    printf(";; a = %s\n", dfsch_object_2_string(a, 1, 1));
 
     x = dfsch_number_exp(a, d, n);
-    printf(";; x = %s\n", dfsch_object_2_string(x, 1, 1));
 
     if (x != DFSCH_MAKE_FIXNUM(1) && !dfsch_number_equal_p(x, n_1)){
 
-      for (r = 0; r < (s - 2); r++){
-        printf(";; r = %d\n", r);
+      for (r = 0; r < (s - 1); r++){
         x = dfsch_number_mod(dfsch_number_mul(x, x), n);
         
-        printf(";; x = %s\n", dfsch_object_2_string(x, 1, 1));
-
         if (x == DFSCH_MAKE_FIXNUM(1)){
           return 0;
         }
