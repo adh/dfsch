@@ -1110,28 +1110,61 @@ int dfsch_number_prime_p(dfsch_object_t* n){
   dfsch_object_t* a;
   dfsch_object_t* x;
   dfsch_object_t* max;
+  dfsch_object_t* n_1;
   dfsch_object_t* d;
 
+  int s;
+  int r;
+
+  if (dfsch_number_even_p(n)){
+    return (n == DFSCH_MAKE_FIXNUM(2));
+  }
+
   for (i = 0; i < sizeof(small_primes)/sizeof(int); i++){
-    if (dfsch_number_zero_p(dfsch_number_mod(n, 
-                                             DFSCH_MAKE_FIXNUM(small_primes[i])))){
       if (dfsch_number_equal_p(n, DFSCH_MAKE_FIXNUM(small_primes[i]))){
         return 1;
-      } else {
-        return 0;
       }
+      if (dfsch_number_zero_p(dfsch_number_mod(n, 
+                                               DFSCH_MAKE_FIXNUM(small_primes[i])))){
+        return 0;
     }
   }
 
   max = dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(3));
-  d = dfsch_number_shr(max, dfsch_number_lsb(max));
+  n_1 = dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
+  s = dfsch_number_lsb(n_1);
+  d = dfsch_number_shr(n_1, s);
   
 
   for (i = 0; i < 5; i++){
+    printf(";; i = %d\n", i);
     a = dfsch_random_get_number(NULL, max);
     a = dfsch_number_add(a, DFSCH_MAKE_FIXNUM(2));
+    printf(";; a = %s\n", dfsch_object_2_string(a, 1, 1));
 
     x = dfsch_number_exp(a, d, n);
+    printf(";; x = %s\n", dfsch_object_2_string(x, 1, 1));
+
+    if (x != DFSCH_MAKE_FIXNUM(1) && !dfsch_number_equal_p(x, n_1)){
+
+      for (r = 0; r < (s - 2); r++){
+        printf(";; r = %d\n", r);
+        x = dfsch_number_mod(dfsch_number_mul(x, x), n);
+        
+        printf(";; x = %s\n", dfsch_object_2_string(x, 1, 1));
+
+        if (x == DFSCH_MAKE_FIXNUM(1)){
+          return 0;
+        }
+        if (dfsch_number_equal_p(x, n_1)){
+          break;
+        }
+      }
+      
+      if (!dfsch_number_equal_p(x, n_1)){
+        return 0;
+      }
+    }
   }
   
   return 1;
@@ -1706,6 +1739,15 @@ DFSCH_DEFINE_PRIMITIVE(shr, NULL){
 
   return dfsch_number_shr(n, count);
 }
+DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_bool(dfsch_number_prime_p(n));
+}
 
 
 
@@ -1799,5 +1841,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
 
   dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
+
+  dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
  
 }
