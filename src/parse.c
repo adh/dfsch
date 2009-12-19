@@ -25,6 +25,7 @@
 #include <dfsch/magic.h>
 
 #include "util.h"
+#include "internal.h"
 
 #include <string.h>
 #include <strings.h>
