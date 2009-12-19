@@ -35,6 +35,9 @@
 //#define T_DEBUG
 //#define P_DEBUG
 
+dfsch_type_t dfsch_parse_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "parse-error");
+
 typedef struct char_table_entry_t {
   char* name;
   uint32_t ch;
@@ -172,11 +175,20 @@ static void parser_reset(dfsch_parser_ctx_t *ctx){
 }
 
 static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
-  dfsch_object_t* pos = dfsch_cons(dfsch_make_number_from_long(ctx->line),
-                                   dfsch_make_number_from_long(ctx->column));
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_PARSE_ERROR_TYPE);
+
+  dfsch_condition_put_field_cstr(c, "message", 
+                                 dfsch_make_string_cstr(symbol));
+  
+  dfsch_condition_put_field_cstr(c, "line",
+                                 dfsch_make_number_from_long(ctx->line));
+  dfsch_condition_put_field_cstr(c, "column",
+                                 dfsch_make_number_from_long(ctx->column));
+  dfsch_condition_put_field_cstr(c, "file",
+                                 ctx->source);
 
   parser_reset(ctx);
-  dfsch_error(symbol, pos);
+  dfsch_signal(c);
 }
 static void parser_abort_ex(dfsch_parser_ctx_t *ctx, dfsch_object_t* ex){
   parser_reset(ctx);

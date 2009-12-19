@@ -47,6 +47,10 @@ extern "C" {
 #define DFSCH_PARSER_NULL 254
 #define DFSCH_PARSER_STOPPED 255
 
+extern dfsch_type_t dfsch_parse_error_type;
+#define DFSCH_PARSE_ERROR_TYPE (&dfsch_parse_error_type)
+
+
   typedef struct dfsch_parser_ctx_t dfsch_parser_ctx_t; 
   typedef int (*dfsch_parser_callback_t)(dfsch_object_t* obj, void* baton); 
   
