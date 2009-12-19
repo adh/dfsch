@@ -76,7 +76,7 @@ int dfsch_random_get_integer(dfsch_object_t* state, int max){
       bits = -bits;
     }
     val = bits % max;
-  } while (bits - val - (max+1) < 0);
+  } while (bits - val + (max+1) < 0);
   return val;
 }
 double dfsch_random_get_double(dfsch_object_t* state){
@@ -90,6 +90,10 @@ dfsch_object_t* dfsch_random_get_number(dfsch_object_t* state,
   if (DFSCH_TYPE_OF(max) == DFSCH_FIXNUM_TYPE){
     return DFSCH_MAKE_FIXNUM(dfsch_random_get_integer(state, 
                                                       DFSCH_FIXNUM_REF(max)));
+  } else if (DFSCH_TYPE_OF(max) == DFSCH_BIGNUM_TYPE){
+    return dfsch_number_mod(dfsch_random_get_bignum(state,
+                                                    dfsch_number_msb(max)),
+                            max); // XXX: this has skewed distribution
   }
   return 
     dfsch_number_mul(dfsch_make_number_from_double(dfsch_random_get_double(state)),
