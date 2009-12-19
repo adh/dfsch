@@ -1117,6 +1117,11 @@ int dfsch_number_prime_p(dfsch_object_t* n){
   int s;
   int r;
 
+  if (dfsch_number_negative_p(n)){
+    return (n == DFSCH_MAKE_FIXNUM(-1));
+  }
+ 
+
   if (dfsch_number_even_p(n)){
     return (n == DFSCH_MAKE_FIXNUM(2));
   }
