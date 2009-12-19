@@ -1197,6 +1197,31 @@ dfsch_object_t* dfsch_number_next_prime(dfsch_object_t* n){
   return n;
 }
 
+dfsch_object_t* dfsch_number_factorize(dfsch_object_t* n){
+  dfsch_object_t* factors = NULL;
+  dfsch_object_t* p = DFSCH_MAKE_FIXNUM(2);
+
+  if (dfsch_number_zero_p(n)){
+    return dfsch_cons(DFSCH_MAKE_FIXNUM(0), NULL);
+  }
+
+  if (dfsch_number_negative_p(n)){
+    factors = dfsch_cons(DFSCH_MAKE_FIXNUM(-1), NULL);
+    n = dfsch_number_neg(n);
+  }
+
+  while (n != DFSCH_MAKE_FIXNUM(1)){
+    while (dfsch_number_zero_p(dfsch_number_mod(n, p))){
+      n = dfsch_number_div(n, p);
+      factors = dfsch_cons(p, factors);
+    }
+    p = dfsch_number_next_prime(p);
+  }
+
+  return factors;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -1784,6 +1809,15 @@ DFSCH_DEFINE_PRIMITIVE(next_prime, NULL){
 
   return dfsch_number_next_prime(n);
 }
+DFSCH_DEFINE_PRIMITIVE(factorize, NULL){
+  object_t* n;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_factorize(n);
+}
 
 
 
@@ -1880,5 +1914,6 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
 
   dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
   dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
+  dfsch_defconst_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
  
 }
