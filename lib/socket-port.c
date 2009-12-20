@@ -104,17 +104,25 @@ static void socket_port_finalizer(socket_port_t* port, void* cd){
   }
 }
 
+static dfsch_object_t* cons_socket_port(char* name,
+                                        int fd){
+  socket_port_t* sp = dfsch_make_object(DFSCH_SOCKET_PORT_TYPE);
+
+  sp->name = name;
+  sp->open = 1;
+  GC_REGISTER_FINALIZER(sp, (GC_finalization_proc)socket_port_finalizer,
+                        NULL, NULL, NULL);
+  sp->fd = fd;
+
+  return sp;
+}
+
 dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
                                               int port){
   struct sockaddr_in inet_addr;
   struct hostent* h;
-  socket_port_t* sp = dfsch_make_object(DFSCH_SOCKET_PORT_TYPE);
+  int fd;
 
-  sp->name = dfsch_saprintf("inet %s:%d", hostname, port);
-  sp->open = 1;
-
-  GC_REGISTER_FINALIZER(sp, (GC_finalization_proc)socket_port_finalizer,
-                        NULL, NULL, NULL);
 
   if ((h = gethostbyname(hostname)) == NULL){
     dfsch_operating_system_error("gethostbyname");
@@ -124,21 +132,21 @@ dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
   inet_addr.sin_port=htons(port);
   memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
 
-  sp->fd = socket(PF_INET, SOCK_STREAM, 0);
-  if (sp->fd == -1){
+  fd = socket(PF_INET, SOCK_STREAM, 0);
+  if (fd == -1){
     dfsch_operating_system_error("socket");
     return NULL;
   }
   
-  if (connect(sp->fd,(struct sockaddr*)&inet_addr,
+  if (connect(fd,(struct sockaddr*)&inet_addr,
 	      sizeof(inet_addr))==-1){
     int sav = errno;
-    close(sp->fd);
-    sp->open = 0;
+    close(fd);
     dfsch_operating_system_error_saved(sav, "connect");
   }
   
-  return sp;
+  return cons_socket_port(dfsch_saprintf("inet %s:%d", hostname, port),
+                          fd);
 }
 dfsch_object_t* dfsch_socket_port_unix_connect(char* path){
   socket_port_t* sp = dfsch_make_object(DFSCH_SOCKET_PORT_TYPE);
@@ -147,7 +155,117 @@ dfsch_object_t* dfsch_socket_port_unix_connect(char* path){
 
   return sp;
 }
-dfsch_object_t* dfsch_socket_port_accept(int fd){
+
+void dfsch_socket_port_close(dfsch_object_t* spo){
+  socket_port_t* sp = DFSCH_ASSERT_TYPE(spo, DFSCH_SOCKET_PORT_TYPE);
+  if (sp->open){
+    sp->open = 0;
+    close(sp->fd);
+  }
+}
+
+typedef struct server_socket_t {
+  dfsch_type_t* type;
+  int fd;
+  int open;
+  char* name;
+} server_socket_t;
+
+static void server_socket_finalizer(server_socket_t* sock, void* cd){
+  if (sock->open){
+    close(sock->fd);
+    sock->open = 0;
+  }
+}
+
+static void server_socket_write(server_socket_t* s, 
+                                dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, s, "%d %s", s->fd, s->name);
+}
+
+dfsch_type_t dfsch_server_socket_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .size = sizeof(socket_port_t),
+  .name = "server-socket",
+  .write = (dfsch_type_write_t)server_socket_write,
+};
+
+
+static dfsch_object_t* cons_server_socket(char* name,
+                                          int fd){
+  server_socket_t* s = dfsch_make_object(DFSCH_SERVER_SOCKET_TYPE);
+
+  s->name = name;
+  s->open = 1;
+  GC_REGISTER_FINALIZER(s, (GC_finalization_proc)server_socket_finalizer,
+                        NULL, NULL, NULL);
+  s->fd = fd;
+
+  return s;
+}
+
+dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
+                                             int port){
+  struct sockaddr_in inet_addr;
+  int fd;
+  struct hostent* h;
+
+  if ((h = gethostbyname(hostname)) == NULL){ 
+    dfsch_operating_system_error("gethostbyname");
+  }
+
+  inet_addr.sin_family=AF_INET;
+  inet_addr.sin_port=htons(port);
+  memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
+
+  fd = socket(PF_INET, SOCK_STREAM, 0);
+  if (fd == -1){
+    dfsch_operating_system_error("socket");
+  }
   
+  if (bind(fd,(struct sockaddr*)&inet_addr,
+           sizeof(inet_addr))==-1){
+    int sav = errno;
+    close(fd);
+    dfsch_operating_system_error_saved(sav, "connect");
+  }
+  
+  if (listen(fd, 5) == -1){
+    int sav = errno;
+    close(fd);
+    dfsch_operating_system_error_saved(sav, "listen");
+  }
+
+  return cons_server_socket(dfsch_saprintf("inet %s:%d", hostname, port),
+                            fd); 
+}
+dfsch_object_t* dfsch_server_socket_unix_bind(char* path){
+
+}
+void dfsch_server_socket_close(dfsch_object_t* sso){
+  server_socket_t* ss = DFSCH_ASSERT_TYPE(sso, DFSCH_SERVER_SOCKET_TYPE);
+  if (ss->open){
+    ss->open = 0;
+    close(ss->fd);
+  }
+}
+
+dfsch_object_t* dfsch_server_socket_accept(dfsch_object_t* server_socket){
+  server_socket_t* ss = DFSCH_ASSERT_TYPE(server_socket, 
+                                        DFSCH_SERVER_SOCKET_TYPE);
+  int fd;
+
+  if (!ss->open){
+    dfsch_error("Socket is closed", (dfsch_object_t*)ss);
+  }
+  
+
+  fd = accept(ss->fd, NULL, NULL);
+  if (fd == -1){
+    dfsch_operating_system_error("accept");
+  }
+  
+  return cons_socket_port(dfsch_saprintf("%s client", ss->name),
+                          fd);
 }
 
