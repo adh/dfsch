@@ -46,7 +46,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
-	libdfsch-json.la
+	libdfsch-json.la \
+	libdfsch-http.la
 
 dfschlibexec_LTLIBRARIES = threads.la \
 	regex.la \
@@ -207,11 +208,15 @@ sxml_la_LDFLAGS = -module -avoid-version
 
 libdfsch_json_la_SOURCES = lib/json.c
 libdfsch_json_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
-libdfsch_json_la_LDFLAGS =
+libdfsch_json_la_LDFLAGS = -version-info 1:0:0
 
 json_la_SOURCES = lib/json_mod.c
 json_la_LIBADD = libdfsch.la -lexpat libdfsch-json.la
 json_la_LDFLAGS = -module -avoid-version
+
+libdfsch_http_la_SOURCES = lib/http.c
+libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
+libdfsch_http_la_LDFLAGS = -version-info 1:0:0
 
 
 dfsch_repl_SOURCES = src/repl.c
