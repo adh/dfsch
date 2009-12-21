@@ -252,7 +252,7 @@ void dfsch_server_socket_close(dfsch_object_t* sso){
 
 dfsch_object_t* dfsch_server_socket_accept(dfsch_object_t* server_socket){
   server_socket_t* ss = DFSCH_ASSERT_TYPE(server_socket, 
-                                        DFSCH_SERVER_SOCKET_TYPE);
+                                          DFSCH_SERVER_SOCKET_TYPE);
   int fd;
 
   if (!ss->open){
@@ -269,3 +269,32 @@ dfsch_object_t* dfsch_server_socket_accept(dfsch_object_t* server_socket){
                           fd);
 }
 
+typedef struct stream_server_context_t {
+  dfsch_object_t* port;
+  dfsch_server_socket_accept_loop_cb_t cb;
+  void* baton;
+} stream_server_context_t;
+
+static void* stream_server_thread(void* arg){
+  stream_server_context_t* ctx = arg;
+  ctx->cb(ctx->baton, ctx->port);
+  dfsch_socket_port_close(ctx->port);
+}
+
+void dfsch_server_socket_run_accept_loop(dfsch_object_t* server_socket,
+                                         dfsch_server_socket_accept_loop_cb_t cb,
+                                         void* baton){
+  dfsch_object_t* ss = DFSCH_ASSERT_TYPE(server_socket, 
+                                         DFSCH_SERVER_SOCKET_TYPE);
+  stream_server_context_t* ctx;
+  pthread_t thread;
+
+  for(;;){
+    ctx = GC_NEW(stream_server_context_t);
+    ctx->cb = cb;
+    ctx->baton = baton;
+    ctx->port = dfsch_server_socket_accept(ss);
+    pthread_create(&thread, NULL, stream_server_thread, ctx);
+    pthread_detach(thread);
+  }
+}
