@@ -270,6 +270,9 @@ static dfsch_object_t* tl_cons(dfsch__thread_info_t* ti,
 
 void dfsch__continue_unwind(dfsch__thread_info_t* ti){
   if (!ti->throw_ret){
+    if (ti->throw_tag == DFSCH_INVALID_OBJECT){
+      pthread_exit(ti->throw_value);
+    }
     fputs("No unwind target!!!\n", stderr);
     abort();
   }
@@ -278,6 +281,13 @@ void dfsch__continue_unwind(dfsch__thread_info_t* ti){
 void dfsch__finalize_unwind(dfsch__thread_info_t* ti){
   ti->throw_tag = NULL;
   ti->throw_value = NULL;
+}
+
+void dfsch_terminate_thread(dfsch_object_t* ret){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  ti->throw_tag = DFSCH_INVALID_OBJECT;
+  ti->throw_value = ret;
+  dfsch__continue_unwind(ti);
 }
 
 void dfsch_throw(dfsch_object_t* tag,

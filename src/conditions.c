@@ -435,7 +435,7 @@ void dfsch_operating_system_error(char* funname){
 DFSCH_DEFINE_PRIMITIVE(terminate_thread, NULL){
   DFSCH_ARG_END(args);
 
-  pthread_exit(DFSCH_SYM_TERMINATE_THREAD);
+  dfsch_terminate_thread(DFSCH_SYM_TERMINATE_THREAD);
 }
 
 static restart_t terminate_thread_restart = {
