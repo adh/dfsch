@@ -23,5 +23,10 @@ void dfsch_server_socket_close(dfsch_object_t* sso);
 
 dfsch_object_t* dfsch_server_socket_accept(dfsch_object_t* server_socket);
 
+typedef void (*dfsch_server_socket_accept_loop_cb_t)(void* baton,
+                                                     dfsch_object_t* port);
+void dfsch_server_socket_run_accept_loop(dfsch_object_t* server_socket,
+                                         dfsch_server_socket_accept_loop_cb_t cb,
+                                         void* baton);
 
 #endif
