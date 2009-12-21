@@ -149,6 +149,9 @@ extern "C" {
   extern void dfsch__continue_unwind();
   extern void dfsch__finalize_unwind();
 
+  dfsch__restart_list_t* dfsch__get_default_restart_list();
+
+
 #define DFSCH__DEBUG_TAG printf(";; %s:%d %s\n", __FILE__, __LINE__, __func__)
 
   /**

@@ -264,7 +264,6 @@ typedef struct restart_t {
   dfsch_object_t* proc;
   char* description;
   char* arg_descriptions;
-  dfsch__handler_list_t* handlers;
 } restart_t;
 
 static void restart_write(restart_t* r, 
@@ -285,6 +284,8 @@ dfsch_type_t dfsch_restart_type = {
 
   .write = (dfsch_type_write_t) restart_write,
 };
+
+
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
                                    char* description,
@@ -429,6 +430,29 @@ void dfsch_operating_system_error_saved(int e, char* funname){
 }
 void dfsch_operating_system_error(char* funname){
   dfsch_operating_system_error_saved(errno, funname);
+}
+
+DFSCH_DEFINE_PRIMITIVE(terminate_thread, NULL){
+  DFSCH_ARG_END(args);
+
+  pthread_exit(DFSCH_SYM_TERMINATE_THREAD);
+}
+
+static restart_t terminate_thread_restart = {
+  .type = DFSCH_RESTART_TYPE,
+  .name = NULL,
+  .proc = DFSCH_PRIMITIVE_REF(terminate_thread),
+  .description = "Terminate current thread",
+};
+static dfsch__restart_list_t default_restart_list = {
+  .restart = &terminate_thread_restart,
+  .next = NULL
+};
+
+dfsch__restart_list_t* dfsch__get_default_restart_list(){
+  terminate_thread_restart.name = DFSCH_SYM_TERMINATE_THREAD;
+  /* DFSCH_SYM_TERMIANTE_THREAD is too complex to be recognized as constant */
+  return &default_restart_list;
 }
 
 

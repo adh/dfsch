@@ -177,8 +177,7 @@ int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
 void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type){
   dfsch_object_t* o = obj;
   while (DFSCH_TYPE_OF(o) != type){
-    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                                      "use-value"), 
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
                                   "Retry with alternate value") {
       dfsch_type_error(o, type, 0);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
@@ -189,8 +188,7 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
                                       dfsch_type_t* type){
   dfsch_object_t* o = obj;
   while (!DFSCH_INSTANCE_P(o, type)){
-    DFSCH_WITH_RETRY_WITH_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                                      "use-value"), 
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
                                   "Retry with alternate value") {
       dfsch_type_error(o, type, 1);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
@@ -222,6 +220,8 @@ static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
   ti->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * size);
 }
 
+
+
 dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei;
   pthread_once(&thread_once, thread_key_alloc);
@@ -230,6 +230,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
     ei->throw_ret = NULL;
     ei->async_apply = NULL;
+    ei->restart_list = dfsch__get_default_restart_list();
     alloc_trace_buffer(ei, dfsch_default_trace_depth);
     pthread_setspecific(thread_key, ei);
   }
