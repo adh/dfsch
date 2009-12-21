@@ -51,6 +51,7 @@ static void socket_port_write_buf(socket_port_t* port,
     buf += ret;
   }
 }
+
 static ssize_t socket_port_read_buf(socket_port_t* port,
                                     char* buf, size_t len){
   ssize_t ret;
@@ -92,7 +93,7 @@ dfsch_port_type_t dfsch_socket_port_type = {
   .write_buf = (dfsch_port_write_buf_t)socket_port_write_buf,
   .read_buf = (dfsch_port_read_buf_t)socket_port_read_buf,
 
-  /*.batch_read_start = (dfsch_port_batch_read_start_t)socket_port_batch_read_start,
+  /* .batch_read_start = (dfsch_port_batch_read_start_t)socket_port_batch_read_start,
   .batch_read_end = (dfsch_port_batch_read_end_t)socket_port_batch_read_end,
   .batch_read = (dfsch_port_batch_read_t)socket_port_batch_read,*/
 };
@@ -259,9 +260,13 @@ dfsch_object_t* dfsch_server_socket_accept(dfsch_object_t* server_socket){
     dfsch_error("Socket is closed", (dfsch_object_t*)ss);
   }
   
-
+ retry:
   fd = accept(ss->fd, NULL, NULL);
   if (fd == -1){
+    if (errno == EINTR){
+      dfsch_async_apply_check();
+      goto retry;
+    }
     dfsch_operating_system_error("accept");
   }
   
