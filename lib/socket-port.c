@@ -9,16 +9,19 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <sys/uio.h>
 #include <signal.h>
 #include <pthread.h>
+
+#define SOCK_BUFFER_SIZE 4096
 
 typedef struct socket_port_t {
   dfsch_type_t type;
   int fd;
   int open;
   char* buf;
+  char* bufhead;
   size_t buflen;
-  size_t bufptr;
   pthread_mutex_t mutex;
   char* name;
 } socket_port_t;
@@ -52,32 +55,100 @@ static void socket_port_write_buf(socket_port_t* port,
   }
 }
 
-static ssize_t socket_port_read_buf(socket_port_t* port,
-                                    char* buf, size_t len){
+static ssize_t socket_port_real_read(socket_port_t* port,
+                                     char* buf, size_t len){
   ssize_t ret;
-  ssize_t my_ret = len;
 
-  if (!port->open){
-    dfsch_error("Port is closed", (dfsch_object_t*)port);
+ retry:
+  ret = read(port->fd, buf, len);
+  if (ret < 0){
+    if (errno == EINTR){
+      dfsch_async_apply_check();
+      goto retry;
+    } else {
+      dfsch_operating_system_error("read");    
+    }
   }
 
-  while (len){
-    ret = read(port->fd, buf, len);
-    if (ret == 0){
-      return 0;
-    }
-    if (ret < 0){
-      if (errno == EINTR){
-        dfsch_async_apply_check();
-      } else {
-        dfsch_operating_system_error("write");    
+  return ret;
+}
+
+static ssize_t socket_port_read_buf(socket_port_t* sp,
+                                    char* buf, size_t len){
+  ssize_t my_ret = 0;
+  ssize_t ret;
+  size_t tmplen;
+  struct iovec iov[2];
+  char* tmpbuf;
+
+  if (!sp->open){
+    dfsch_error("Port is closed", (dfsch_object_t*)sp);
+  }
+
+  pthread_mutex_lock(&(sp->mutex));
+
+  if (sp->buflen >= len){
+    memcpy(buf, sp->bufhead, len);
+    sp->buflen -= len;
+    memmove(sp->buf, sp->bufhead + len, sp->buflen);
+    sp->bufhead = sp->buf;
+    pthread_mutex_unlock(&(sp->mutex));
+    return len;
+  } else {
+    memcpy(buf, sp->bufhead, sp->buflen);
+    my_ret = sp->buflen;
+    buf += sp->buflen;
+    len -= sp->buflen;
+    sp->buflen = 0;
+    
+    if (len < SOCK_BUFFER_SIZE){
+      tmpbuf = sp->buf;
+      tmplen = len;
+      while (tmplen){
+        ret = socket_port_real_read(sp, tmpbuf, SOCK_BUFFER_SIZE - 
+                                    (tmpbuf - sp->buf));
+        
+        tmpbuf += ret;
+        if (ret == 0){
+          memcpy(buf, sp->buf, tmpbuf - sp->buf);
+          sp->bufhead = sp->buf;
+          sp->buflen = 0;
+          pthread_mutex_unlock(&(sp->mutex));
+          return tmpbuf - sp->buf + my_ret;
+        }
+        
+        if (ret > tmplen) {
+          tmplen -= ret;
+          break;
+        }
+        tmplen -= ret;
+
       }
-    }
-    len -= ret;
-    buf += ret;
-  }
 
-  return my_ret;
+      memcpy(buf, sp->buf, len);
+      sp->buflen = tmpbuf - sp->buf;
+      memmove(sp->buf, sp->buf + len, sp->buflen);
+      sp->bufhead = sp->buf;
+      my_ret += len;
+      
+      pthread_mutex_unlock(&(sp->mutex));
+      return my_ret;
+    } else {
+      while (len) {
+        ret = socket_port_real_read(sp, buf, len);
+
+        if (ret == 0){
+          return my_ret;
+        }
+
+        my_ret += ret;
+        len -= ret;
+        buf += ret;
+      }
+      pthread_mutex_unlock(&(sp->mutex));
+      return my_ret;
+    }
+  }  
 }
 
 
@@ -94,8 +165,8 @@ dfsch_port_type_t dfsch_socket_port_type = {
   .read_buf = (dfsch_port_read_buf_t)socket_port_read_buf,
 
   /* .batch_read_start = (dfsch_port_batch_read_start_t)socket_port_batch_read_start,
-  .batch_read_end = (dfsch_port_batch_read_end_t)socket_port_batch_read_end,
-  .batch_read = (dfsch_port_batch_read_t)socket_port_batch_read,*/
+     .batch_read_end = (dfsch_port_batch_read_end_t)socket_port_batch_read_end,
+     .batch_read = (dfsch_port_batch_read_t)socket_port_batch_read,*/
 };
 
 static void socket_port_finalizer(socket_port_t* port, void* cd){
@@ -114,6 +185,10 @@ static dfsch_object_t* cons_socket_port(char* name,
   GC_REGISTER_FINALIZER(sp, (GC_finalization_proc)socket_port_finalizer,
                         NULL, NULL, NULL);
   sp->fd = fd;
+
+  sp->buf = GC_MALLOC_ATOMIC(SOCK_BUFFER_SIZE);
+  sp->buflen = 0;
+  sp->bufhead = sp->buf;
 
   return sp;
 }
