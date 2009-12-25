@@ -185,16 +185,21 @@ dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len){
   state->ob_index = 0;
   state->mt_index = 0;
   
+  if (len == 0){
+    seed = "0000";
+    len = 4;
+  }
+
   state->mt[0] = seed[0 % len] 
     | (seed[1 % len] << 8)
     | (seed[2 % len] << 16)
     | (seed[3 % len] << 24);
 
   for (i = 1; i < 624; i++){
-    state->mt[i] = (seed[i*4 + 0 % len] 
-                    | (seed[i*4 + 1 % len] << 8)
-                    | (seed[i*4 + 2 % len] << 16)
-                    | (seed[i*4 + 3 % len] << 24)) ^ 
+    state->mt[i] = (seed[(i*4 + 0) % len] 
+                    | (seed[(i*4 + 1) % len] << 8)
+                    | (seed[(i*4 + 2) % len] << 16)
+                    | (seed[(i*4 + 3) % len] << 24)) ^ 
       ((0x6c078965 * (state->mt[i - 1] ^ (state->mt[i-1] >> 30))) + 1);
   }
 
