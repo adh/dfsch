@@ -20,12 +20,14 @@ extern dfsch_random_state_type_t dfsch_default_random_state_type;
 #define DFSCH_DEFAULT_RANDOM_STATE_TYPE (&dfsch_default_random_state_type)
 extern dfsch_random_state_type_t dfsch_file_random_state_type;
 #define DFSCH_FILE_RANDOM_STATE_TYPE (&dfsch_file_random_state_type)
+extern dfsch_random_state_type_t dfsch_lcg_random_state_type;
+#define DFSCH_LCG_RANDOM_STATE_TYPE (&dfsch_lcg_random_state_type)
 
 dfsch_object_t* dfsch_get_random_state();
 void dfsch_set_random_state(dfsch_object_t* state);
 
 void dfsch_random_get_bytes(dfsch_object_t* state, uint8_t* buf, size_t len);
-int dfsch_random_get_integer(dfsch_object_t* state, int max);
+int64_t dfsch_random_get_integer(dfsch_object_t* state, int64_t max);
 double dfsch_random_get_double(dfsch_object_t* state);
 dfsch_object_t* dfsch_random_get_number(dfsch_object_t* state, 
                                         dfsch_object_t* max);

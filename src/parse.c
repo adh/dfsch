@@ -25,6 +25,7 @@
 #include <dfsch/magic.h>
 
 #include "util.h"
+#include "internal.h"
 
 #include <string.h>
 #include <strings.h>
@@ -34,6 +35,9 @@
 //#define Q_DEBUG
 //#define T_DEBUG
 //#define P_DEBUG
+
+dfsch_type_t dfsch_parse_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "parse-error");
 
 typedef struct char_table_entry_t {
   char* name;
@@ -172,11 +176,20 @@ static void parser_reset(dfsch_parser_ctx_t *ctx){
 }
 
 static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
-  dfsch_object_t* pos = dfsch_cons(dfsch_make_number_from_long(ctx->line),
-                                   dfsch_make_number_from_long(ctx->column));
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_PARSE_ERROR_TYPE);
+
+  dfsch_condition_put_field_cstr(c, "message", 
+                                 dfsch_make_string_cstr(symbol));
+  
+  dfsch_condition_put_field_cstr(c, "line",
+                                 dfsch_make_number_from_long(ctx->line));
+  dfsch_condition_put_field_cstr(c, "column",
+                                 dfsch_make_number_from_long(ctx->column));
+  dfsch_condition_put_field_cstr(c, "file",
+                                 ctx->source);
 
   parser_reset(ctx);
-  dfsch_error(symbol, pos);
+  dfsch_signal(c);
 }
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
@@ -253,7 +266,7 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
 	ctx->parser->state = P_PREEND;
 	return;
       }else{
-        parser_abort(ctx, "parser:car-expected");
+        parser_abort(ctx, "Unexpected dot");
       }
     case P_QUOTE:
       {
@@ -267,7 +280,7 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       if ((!obj) || dfsch_pair_p(obj)){
         parse_object(ctx, dfsch_list_2_vector(obj));
       }else{
-        parser_abort(ctx, "parser:list-expected");
+        parser_abort(ctx, "List expected");
       }
       return;
     case P_EVAL:
@@ -276,11 +289,11 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
         parse_object(ctx, dfsch_eval(obj, ctx->env));
         /* XXX: What happens when this throws exception is not entirely clear */
       }else{
-        parser_abort(ctx, "parser:evaluation-not-permitted");        
+        parser_abort(ctx, "Evaluation not permitted in this context");        
       }
       return;
     default:
-      parser_abort(ctx, "parser:unexpected-object");
+      parser_abort(ctx, "Unexpected object");
     }
   } else {
     //    DFSCH_TRY { XXX
@@ -335,14 +348,14 @@ static void parse_close(dfsch_parser_ctx_t *ctx){
     parser_pop(ctx);
     parse_object(ctx, list);
   }else{
-    parser_abort(ctx, "parser:unexpected-close");
+    parser_abort(ctx, "Unexpected close paren");
   }
 }
 static void parse_dot(dfsch_parser_ctx_t *ctx){
   if (ctx->parser){
     ctx->parser->state = P_DOT;
   }else{
-    parser_abort(ctx, "parser:unexpected-dot");
+    parser_abort(ctx, "Unexpected dot");
   }
 }
 static void parse_eval(dfsch_parser_ctx_t *ctx){
@@ -439,7 +452,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           for (i=0; i<2; i++){
             *out <<= 4;
             if (!*in){
-              parser_abort(ctx, "parser:invalid-escape");
+              parser_abort(ctx, "Invalid escape");
             }
             if (*in >= 'A' && *in <= 'F'){
               *out |= *in - 'A' + 10;
@@ -448,7 +461,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
             }else if (*in >= '0' && *in <= '9'){
               *out |= *in - '0';
             }else{
-              parser_abort(ctx, "parser:invalid-escape");
+              parser_abort(ctx, "Invalid escape");
             }
             ++in;
           }
@@ -463,7 +476,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           for (i = (*(in++) == 'U') ? 0 : 4; i<8; i++){ // XXX: clever and ugly
             u <<= 4;
             if (!*in){
-              parser_abort(ctx, "parser:invalid-escape");
+              parser_abort(ctx, "Invalid escape");
             }
             if (*in >= 'A' && *in <= 'F'){
               u |= *in - 'A' + 10;
@@ -472,7 +485,7 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
             }else if (*in >= '0' && *in <= '9'){
               u |= *in - '0';
             }else{
-              parser_abort(ctx, "parser:invalid-escape");
+              parser_abort(ctx, "Invalid escape");
             }
             ++in;
           }
@@ -538,16 +551,11 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '9':
     {
       dfsch_object_t *d;
-      //DFSCH_TRY {   XXX
-        d = dfsch_make_number_from_string(data, 0);
-        /*} DFSCH_CATCH(ex) {
-        parser_abort_ex(ctx, ex);
-        } DFSCH_END_TRY;*/
-      if (!d) {
-        parser_abort(ctx, "parser:invalid-number");
+      d = dfsch_make_number_from_string_noerror(data, 0);
+      if (d) {
+        parse_object(ctx, d);
+        return;
       }
-      parse_object(ctx, d);
-      return;
     }
   }
 
@@ -760,7 +768,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->tokenizer_state = T_NONE;
         break;
       case '<':
-        parser_abort(ctx, "parser:unreadable");
+        parser_abort(ctx, "Unreadable object");
         return;        
       case '!': /* for shebang */
         ++data;
@@ -774,7 +782,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->tokenizer_state = T_NONE;
         break;
       default:
-        parser_abort(ctx, "parser:invalid-escape");
+        parser_abort(ctx, "Invalid escape");
         return;
       }
       break;
@@ -806,7 +814,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
             }
           } 
 
-          parser_abort(ctx, "parser:invalid-escape");
+          parser_abort(ctx, "Invalid character");
 
         char_out:
           data = e;
@@ -829,7 +837,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
                 return;
               }
               if ((*data & 0xc0) != 0x80){
-                parser_abort(ctx, "parser:invalid-unicode-character0");
+                parser_abort(ctx, "Invalid unicode character");
               }
               ch = (c & 0x1f);
               ch <<= 6;
@@ -841,7 +849,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
                 return;
               }
               if ((data[1] & 0xc0) != 0x80 || (data[1] & 0xc0) != 0x80){
-                parser_abort(ctx, "parser:invalid-unicode-character1");
+                parser_abort(ctx, "Invalid unicode character");
               }
               ch = (c & 0x0f);
               ch <<= 6;
@@ -858,7 +866,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
               if ((data[0] & 0xc0) != 0x80 ||
                   (data[1] & 0xc0) != 0x80 || 
                   (data[2] & 0xc0) != 0x80){
-                parser_abort(ctx, "parser:invalid-unicode-character2");
+                parser_abort(ctx, "Invalid unicode character");
               }
               ch = (c & 0x07);
               ch <<= 6;
@@ -871,7 +879,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
               ch |= (*data & 0x3f);
               data++;
             } else {
-              parser_abort(ctx, "parser:invalid-unicode-character3");
+              parser_abort(ctx, "Invalid unicode character");
             }
 
             parse_object(ctx, dfsch_make_number_from_long(ch));
@@ -978,6 +986,6 @@ dfsch_object_t* dfsch_parser_read_from_port(dfsch_object_t* port){
   if (dfsch_parser_top_level(parser)){
     return dfsch_eof_object();
   } else {
-    dfsch_error("parser:unexpected-end-of-file", port);
+    dfsch_error("Unexpected end of file", port);
   }
 }
