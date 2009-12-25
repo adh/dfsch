@@ -151,6 +151,44 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
   }  
 }
 
+static void socket_port_batch_read_start(socket_port_t* port){
+  if (!port->open){
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
+  }
+  
+  pthread_mutex_lock(&(port->mutex));
+}
+static void socket_port_batch_read_end(socket_port_t* port){
+  if (!port->open){
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
+  }
+  
+  pthread_mutex_unlock(&(port->mutex));
+}
+static int socket_port_batch_read(socket_port_t* sp){
+  int ch;
+  size_t ret;
+
+  if (sp->buflen){
+    ch = sp->bufhead[0];
+    sp->buflen--;
+    sp->bufhead++;
+    return ch;
+  } else {
+    ret = socket_port_real_read(sp, sp->buf, SOCK_BUFFER_SIZE);
+
+    if (ret == 0){
+      return EOF;
+    }
+
+    ch = sp->buf[0];
+    sp->bufhead = sp->buf + 1;
+    sp->buflen = ret - 1;
+    return ch;
+  }
+}
+
+
 
 dfsch_port_type_t dfsch_socket_port_type = {
   .type = {
@@ -164,9 +202,9 @@ dfsch_port_type_t dfsch_socket_port_type = {
   .write_buf = (dfsch_port_write_buf_t)socket_port_write_buf,
   .read_buf = (dfsch_port_read_buf_t)socket_port_read_buf,
 
-  /* .batch_read_start = (dfsch_port_batch_read_start_t)socket_port_batch_read_start,
-     .batch_read_end = (dfsch_port_batch_read_end_t)socket_port_batch_read_end,
-     .batch_read = (dfsch_port_batch_read_t)socket_port_batch_read,*/
+  .batch_read_start = (dfsch_port_batch_read_start_t)socket_port_batch_read_start,
+  .batch_read_end = (dfsch_port_batch_read_end_t)socket_port_batch_read_end,
+  .batch_read = (dfsch_port_batch_read_t)socket_port_batch_read,
 };
 
 static void socket_port_finalizer(socket_port_t* port, void* cd){
