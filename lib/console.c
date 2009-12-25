@@ -29,18 +29,24 @@ static int rl_interrupt_function(int sig){
   rl_set_prompt(running_prompt);
   rl_replace_line("", 1);
   rl_redisplay();
-
-  signal(SIGINT, rl_interrupt_function);
 }
 
 char* dfsch_console_read_line(char* prompt){
   char* str;
   char* ret;
-  sighandler_t sh;
+  struct sigaction oldact;
+  struct sigaction act;
 
-  sh = signal(SIGINT, rl_interrupt_function);
+  act.sa_handler = rl_interrupt_function;
+  act.sa_flags = 0;
+  sigemptyset(&act.sa_mask);
+
+  sigaction(SIGINT, &act, &oldact);
+
   str = readline(prompt);
-  signal(SIGINT, sh);
+
+  sigaction(SIGINT, &oldact, NULL);
+
   if (!str){
     return NULL;
   }

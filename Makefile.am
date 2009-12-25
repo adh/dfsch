@@ -43,7 +43,9 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
-	libdfsch-json.la
+	libdfsch-json.la \
+	libdfsch-http.la \
+	libdfsch-socket-port.la
 
 dfschlibexec_LTLIBRARIES = threads.la \
 	inet.la \
@@ -55,7 +57,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	cmdopts.la \
 	xml.la \
 	sxml.la \
-	json.la
+	json.la \
+	socket-port.la
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
@@ -199,12 +202,25 @@ sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
 sxml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_json_la_SOURCES = lib/json.c
-libdfsch_json_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
-libdfsch_json_la_LDFLAGS =
+libdfsch_json_la_LIBADD = libdfsch.la libdfsch-inet.la
+libdfsch_json_la_LDFLAGS = -version-info 1:0:0
 
 json_la_SOURCES = lib/json_mod.c
-json_la_LIBADD = libdfsch.la -lexpat libdfsch-json.la
+json_la_LIBADD = libdfsch.la libdfsch-json.la
 json_la_LDFLAGS = -module -avoid-version
+
+libdfsch_socket_port_la_SOURCES = lib/socket-port.c
+libdfsch_socket_port_la_LIBADD = libdfsch.la
+libdfsch_socket_port_la_LDFLAGS = -version-info 1:0:0
+
+socket_port_la_SOURCES = lib/socket-port_mod.c
+socket_port_la_LIBADD = libdfsch.la libdfsch-socket-port.la
+socket_port_la_LDFLAGS = -module -avoid-version
+
+
+libdfsch_http_la_SOURCES = lib/http.c
+libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
+libdfsch_http_la_LDFLAGS = -version-info 1:0:0
 
 
 dfsch_repl_SOURCES = src/repl.c
