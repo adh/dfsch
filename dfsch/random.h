@@ -20,6 +20,8 @@ extern dfsch_random_state_type_t dfsch_default_random_state_type;
 #define DFSCH_DEFAULT_RANDOM_STATE_TYPE (&dfsch_default_random_state_type)
 extern dfsch_random_state_type_t dfsch_file_random_state_type;
 #define DFSCH_FILE_RANDOM_STATE_TYPE (&dfsch_file_random_state_type)
+extern dfsch_random_state_type_t dfsch_lcg_random_state_type;
+#define DFSCH_LCG_RANDOM_STATE_TYPE (&dfsch_lcg_random_state_type)
 
 dfsch_object_t* dfsch_get_random_state();
 void dfsch_set_random_state(dfsch_object_t* state);

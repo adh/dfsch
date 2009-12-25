@@ -1686,6 +1686,32 @@ DFSCH_DEFINE_PRIMITIVE(truncate, NULL){
   return dfsch_make_number_from_double(trunc(z));
 }
 
+DFSCH_DEFINE_PRIMITIVE(round_i, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_int64(round(z));
+}
+DFSCH_DEFINE_PRIMITIVE(floor_i, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_int64(floor(z));
+}
+DFSCH_DEFINE_PRIMITIVE(ceiling_i, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_int64(ceil(z));
+}
+DFSCH_DEFINE_PRIMITIVE(truncate_i, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_int64(trunc(z));
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(number_2_string, NULL){
   object_t *n;
   long base;
@@ -1885,6 +1911,11 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
   dfsch_defconst_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
   dfsch_defconst_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
+
+  dfsch_defconst_cstr(ctx, "round*", DFSCH_PRIMITIVE_REF(round_i));
+  dfsch_defconst_cstr(ctx, "floor*", DFSCH_PRIMITIVE_REF(floor_i));
+  dfsch_defconst_cstr(ctx, "ceiling*", DFSCH_PRIMITIVE_REF(ceiling_i));
+  dfsch_defconst_cstr(ctx, "truncate*", DFSCH_PRIMITIVE_REF(truncate_i));
 
   dfsch_defconst_cstr(ctx, "number->string", 
                       DFSCH_PRIMITIVE_REF(number_2_string));
