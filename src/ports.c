@@ -592,6 +592,41 @@ static int64_t file_port_tell(file_port_t* port){
   return ret;
 }
 
+static void file_port_batch_read_start(file_port_t* port){
+  if (!port->open){
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
+  }
+  
+  flockfile(port->file);
+}
+static void file_port_batch_read_end(file_port_t* port){
+  if (!port->open){
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
+  }
+  
+  funlockfile(port->file);
+}
+static int file_port_batch_read(file_port_t* port){
+  int ch;
+
+  if (!port->open){
+    dfsch_error("Port is already closed", (dfsch_object_t*)port);
+  }
+  
+  ch = getc_unlocked(port->file);
+
+  if (ch == EOF){
+    if (feof(port->file)){
+      return EOF;
+    } else {
+      dfsch_operating_system_error("getc_unlocked");    
+    }
+  }
+
+  return ch;
+}
+
+
 static dfsch_slot_t file_port_slots[] = {
   DFSCH_STRING_SLOT(file_port_t, name, DFSCH_SLOT_ACCESS_RO,
                     "Filename associated to port"),
@@ -623,9 +658,9 @@ dfsch_port_type_t dfsch_file_port_type = {
   (dfsch_port_seek_t)file_port_seek,
   (dfsch_port_tell_t)file_port_tell,
 
-  NULL, // TODO
-  NULL,
-  NULL
+  (dfsch_port_batch_read_start_t)file_port_batch_read_start,
+  (dfsch_port_batch_read_end_t)file_port_batch_read_end,
+  (dfsch_port_batch_read_t)file_port_batch_read,
 };
 
 static void file_port_finalizer(file_port_t* port, void* cd){
