@@ -191,8 +191,23 @@ static char** my_scandir(char* dirname){
 
 static char* get_module_symbol(char* name){
   str_list_t* l = sl_create();
-  char* buf = stracpy(name);
-  char* i = buf;
+  char* buf;
+  char* i;
+
+  i = strrchr(name, '/');
+  
+  if (i) {
+    buf = stracpy(i + 1);
+  } else {
+    buf = stracpy(name);
+  }
+  
+  i = strchr(buf, '.');
+  if (i){
+    *i = '\0';
+  }
+
+  i = buf;
 
   while(*i){
     if (!strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", *i)){
@@ -228,6 +243,24 @@ static char* pathname_directory(char* path){
   return strancpy(path, pos - path);
 }
 
+typedef struct module_loader_t {
+  char* path_ext;
+  void (*load)(char* fname, dfsch_object_t* env);
+} module_loader_t;
+
+static void scm_loader(char* fname, dfsch_object_t* env){
+  dfsch_load_scm(env, fname, 0);
+}
+static void so_loader(char* fname, dfsch_object_t* env){
+  dfsch_load_so(env, fname, get_module_symbol(fname));
+}
+
+static module_loader_t loaders[] = {
+  {".scm", scm_loader},
+  {".so", so_loader},
+  {".dsl", so_loader},
+};
+
 void dfsch_load(dfsch_object_t* env, char* name, 
                 dfsch_object_t* path_list){
   struct stat st;
@@ -260,13 +293,17 @@ void dfsch_load(dfsch_object_t* env, char* name,
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
       if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
-	if (strcmp(".so", pathpart+strlen(pathpart)-3) == 0){
-	  dfsch_load_so(env, pathpart, get_module_symbol(name));
-          return;
-	} else {
-	  dfsch_load_scm(env, pathpart, 0);
-          return;
-	}
+
+        for (i = 0; i < sizeof(loaders) / sizeof(module_loader_t); i++){
+          if (strcmp(pathpart + strlen(pathpart) - strlen(loaders[i].path_ext),
+                     loaders[i].path_ext) == 0){
+            loaders[i].load(pathpart, env);	      
+            return;
+          }
+        }
+
+        dfsch_load_scm(env, pathpart, 0);
+        return;
       }
       if (S_ISDIR(st.st_mode)){
 	char** list = my_scandir(pathpart);
@@ -288,15 +325,14 @@ void dfsch_load(dfsch_object_t* env, char* name,
         return;
       }
     }
-    fname = stracat(pathpart, ".scm");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
-      dfsch_load_scm(env, fname, 0);	      
-      return;
-    }
-    fname = stracat(pathpart, ".so");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode))){
-      dfsch_load_so(env, fname, get_module_symbol(name));	      
-      return;
+
+    for (i = 0; i < sizeof(loaders) / sizeof(module_loader_t); i++){
+      fname = stracat(pathpart, loaders[i].path_ext);
+      if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || 
+                                    S_ISLNK(st.st_mode))){
+        loaders[i].load(fname, env);	      
+        return;
+      }
     }
     
     path = dfsch_cdr(path);
