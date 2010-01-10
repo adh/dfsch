@@ -1,7 +1,8 @@
 
 ACLOCAL_AMFLAGS=-I m4
 
-bin_PROGRAMS = dfsch-repl
+bin_PROGRAMS = dfsch-repl dfsch-source-tool
+
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
 	dfsch/lib/regex.h \
@@ -233,6 +234,9 @@ libdfsch_http_la_LDFLAGS = -version-info 1:0:0
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la
+
+dfsch_source_tool_SOURCES = src/source-tool.c
+dfsch_source_tool_LDADD = -lz
 
 check_PROGRAMS = platform-test c-api-test json-parser-test
 
