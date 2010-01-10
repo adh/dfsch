@@ -91,6 +91,8 @@ typedef struct dfsch_primitive_t {
   int flags;
   char* name;
   char* documentation;
+
+  struct dfsch_eqhash_t* parasites;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
@@ -145,6 +147,8 @@ struct dfsch_form_t {
   void* baton;
   char* name;
   char* documentation;
+
+  struct dfsch_eqhash_t* parasites;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
