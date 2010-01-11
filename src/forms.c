@@ -529,27 +529,49 @@ DFSCH_DEFINE_MACRO(unless, "Execute body only when condition is not true"){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(cond, NULL){
-  object_t* i = args;
+DFSCH_DEFINE_MACRO(cond, NULL){
+  dfsch_object_t* clause;
+  dfsch_object_t* condition;
+  dfsch_object_t* consequent;
 
-  while (dfsch_pair_p(i)){
-    object_t *o = dfsch_eval(dfsch_car(dfsch_car(i)), env);
-    if (o){
-      object_t* exp = dfsch_cdr(dfsch_car(i));
-      if (dfsch_car(exp) == DFSCH_SYM_BOLD_RIGHT_ARROW){
-        object_t* proc = dfsch_eval(dfsch_list_item(exp, 1), env);
-
-        return dfsch_apply(proc, dfsch_list(1, o));
-      }else{
-        return dfsch_eval_proc_tr(exp, env, esc);
-      }
-    }
-    
-    i = dfsch_cdr(i); 
+  if (!args){
+    return NULL;
   }
 
-  return NULL;
+  DFSCH_OBJECT_ARG(args, clause);
+  DFSCH_OBJECT_ARG(clause, condition);
+  DFSCH_ARG_REST(clause, consequent);
+
+  if (condition == DFSCH_SYM_ELSE){
+    return dfsch_cons(DFSCH_FORM_REF(begin), consequent);
+  } else if (!consequent){
+    return dfsch_list(4,
+                      DFSCH_FORM_REF(if),
+                      condition,
+                      NULL,
+                      dfsch_cons(DFSCH_MACRO_REF(cond), args));
+  } else if (dfsch_car(consequent) == DFSCH_SYM_BOLD_RIGHT_ARROW){
+    dfsch_object_t* tmp_name = dfsch_gensym();
+    return dfsch_list(3,
+                      DFSCH_FORM_REF(let),
+                      dfsch_cons(dfsch_list(2, tmp_name, condition), NULL),
+                      dfsch_list(4,
+                                 DFSCH_FORM_REF(if),
+                                 tmp_name,
+                                 dfsch_list(2, 
+                                            dfsch_car(dfsch_cdr(consequent)), 
+                                            tmp_name),
+                                 dfsch_cons(DFSCH_MACRO_REF(cond), args)));
+  } else {
+    return dfsch_list(4,
+                      DFSCH_FORM_REF(if),
+                      condition,
+                      dfsch_cons(DFSCH_FORM_REF(begin), consequent),
+                      dfsch_cons(DFSCH_MACRO_REF(cond), args));
+
+  }
 }
+
 DFSCH_DEFINE_FORM_IMPL(case, NULL){
   object_t* val;
   DFSCH_OBJECT_ARG(args, val);
@@ -611,7 +633,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
   dfsch_defconst_cstr(ctx, "when", DFSCH_MACRO_REF(when));
   dfsch_defconst_cstr(ctx, "unless", DFSCH_MACRO_REF(unless));
-  dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
+  dfsch_defconst_cstr(ctx, "cond", DFSCH_MACRO_REF(cond));
 
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
