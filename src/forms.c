@@ -135,48 +135,6 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
 }
-DFSCH_DEFINE_FORM_IMPL(letrec, NULL){
-
-  object_t *vars;
-  object_t *code;
-
-  DFSCH_OBJECT_ARG(args, vars);
-  DFSCH_ARG_REST(args, code);
-
-  object_t* ext_env = dfsch_new_frame(env);
-
-  while (dfsch_pair_p(vars)){
-    object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-
-    dfsch_define(var, val, ext_env, 0);
-    
-    vars = dfsch_cdr(vars);
-  }
-
-  return dfsch_eval_proc_tr(code,ext_env, esc);
-}
-DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
-  object_t *vars;
-  object_t *code;
-
-  DFSCH_OBJECT_ARG(args, vars);
-  DFSCH_ARG_REST(args, code);
-
-  object_t* ext_env = env;
-
-  while (dfsch_pair_p(vars)){
-    object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-
-    ext_env = dfsch_new_frame(ext_env);
-    dfsch_define(var, val, ext_env, 0);
-    
-    vars = dfsch_cdr(vars);
-  }
-
-  return dfsch_eval_proc_tr(code, ext_env, esc);
-}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -366,8 +324,7 @@ DFSCH_DEFINE_FORM_IMPL(define_variable,
   }
 }
 DFSCH_DEFINE_FORM_IMPL(define_constant,
-                       "Define constant variable "
-                       "- intended as hint to possible future compiler"){
+                       "Define constant variable"){
   dfsch_object_t* name;
   dfsch_object_t* value;
 
@@ -378,10 +335,6 @@ DFSCH_DEFINE_FORM_IMPL(define_constant,
   if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
     value = dfsch_eval(value, env);
     dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
-    dfsch_declare(name, 
-                  dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                      "constant"), 
-                  env);
     return value;
   } else {
     return NULL;
@@ -595,6 +548,53 @@ DFSCH_DEFINE_FORM_IMPL(case, NULL){
   return NULL;
   
 }
+
+
+DFSCH_DEFINE_FORM_IMPL(letrec, NULL){
+
+  object_t *vars;
+  object_t *code;
+
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
+
+  object_t* ext_env = dfsch_new_frame(env);
+
+  while (dfsch_pair_p(vars)){
+    object_t* var = dfsch_list_item(dfsch_car(vars),0);
+    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
+
+    dfsch_define(var, val, ext_env, 0);
+    
+    vars = dfsch_cdr(vars);
+  }
+
+  return dfsch_eval_proc_tr(code,ext_env, esc);
+}
+
+
+DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
+  object_t *vars;
+  object_t *code;
+
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
+
+  object_t* ext_env = env;
+
+  while (dfsch_pair_p(vars)){
+    object_t* var = dfsch_list_item(dfsch_car(vars),0);
+    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
+
+    ext_env = dfsch_new_frame(ext_env);
+    dfsch_define(var, val, ext_env, 0);
+    
+    vars = dfsch_cdr(vars);
+  }
+
+  return dfsch_eval_proc_tr(code, ext_env, esc);
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////
