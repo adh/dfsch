@@ -79,8 +79,8 @@ EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.sc
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
 	src/parse.c dfsch/parse.h 	\
-	src/native.c src/native_cxr.c	\
-	src/control.c src/system.c 	\
+	src/primitives.c src/native_cxr.c	\
+	src/forms.c src/system.c 	\
 	src/util.c src/util.h 		\
 	src/hash.c dfsch/hash.h 	\
 	src/promise.c dfsch/promise.h 	\
