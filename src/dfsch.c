@@ -1274,10 +1274,6 @@ DFSCH_PRIMITIVE_HEAD(top_level_environment){
   return baton;
 }
 
-DFSCH_DEFINE_FORM_IMPL(current_environment, 
-                       "Return lexically-enclosing environment"){
-  return env;
-}
 
 dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
@@ -1318,8 +1314,6 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
-  dfsch_define_cstr(ctx, "current-environment", 
-                    DFSCH_FORM_REF(current_environment));
   dfsch_define_cstr(ctx,"*dfsch-version*",
                     dfsch_make_string_cstr(PACKAGE_VERSION));
   dfsch_define_cstr(ctx,"*dfsch-platform*",

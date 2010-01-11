@@ -487,7 +487,10 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
   return dfsch_eval_proc_tr(code, ext_env, esc);
 }
 
-
+DFSCH_DEFINE_FORM_IMPL(current_environment, 
+                       "Return lexically-enclosing environment"){
+  return env;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -515,6 +518,9 @@ void dfsch__forms_register(dfsch_object_t *ctx){
                       DFSCH_FORM_REF(internal_define_variable));
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
                       DFSCH_FORM_REF(internal_define_constant));
+
+  dfsch_define_cstr(ctx, "current-environment", 
+                    DFSCH_FORM_REF(current_environment));
 
   dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
   dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
