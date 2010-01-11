@@ -554,14 +554,16 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
+DFSCH_DEFINE_MACRO(lambda, "Create new annonymous function"){
   dfsch_object_t* lambda_list;
   dfsch_object_t* body;
 
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_ARG_REST(args, body);
 
-  return dfsch_lambda(env, lambda_list, body);
+  return dfsch_cons(DFSCH_FORM_REF(internal_lambda),
+                    dfsch_cons(NULL, 
+                               dfsch_cons(lambda_list, body)));
 }
 
 DFSCH_DEFINE_FORM_IMPL(define_macro,
@@ -684,7 +686,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
-  dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
+  dfsch_defconst_cstr(ctx, "lambda", DFSCH_MACRO_REF(lambda));
   dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
   dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
   dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));

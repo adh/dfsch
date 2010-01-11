@@ -141,16 +141,16 @@ typedef struct dfsch_macro_t {
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_macro_t;
 
-#define DFSCH_DEFINE_MACRO(name, documentation)     \
-  DFSCH_PRIMITIVE_HEAD(m_##name);                   \
-  DFSCH_DECLARE_PRIMITIVE(m_##name, documentation); \
-  static dfsch_macro_t m_##name = {                 \
-    DFSCH_MACRO_TYPE,                               \
-    DFSCH_PRIMITIVE_REF(m_##name)                   \
-  };                                                \
-  DFSCH_PRIMITIVE_HEAD(m_##name)
+#define DFSCH_DEFINE_MACRO(name, documentation)         \
+  DFSCH_PRIMITIVE_HEAD(macro_##name);                   \
+  DFSCH_DECLARE_PRIMITIVE(macro_##name, documentation); \
+  static dfsch_macro_t macro_##name = {                 \
+    DFSCH_MACRO_TYPE,                                   \
+    DFSCH_PRIMITIVE_REF(macro_##name)                   \
+  };                                                    \
+  DFSCH_PRIMITIVE_HEAD(macro_##name)
    
-#define DFSCH_MACRO_REF(name) ((dfsch_object_t*)&m_##name)
+#define DFSCH_MACRO_REF(name) ((dfsch_object_t*)&macro_##name)
 
 
 
