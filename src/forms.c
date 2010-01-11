@@ -282,6 +282,33 @@ DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
   return dfsch_lambda(env, lambda_list, body);
 }
 
+DFSCH_DEFINE_FORM_IMPL(internal_define_variable, "Define variable"){
+
+  object_t* name;
+  object_t* value;
+    
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  value = dfsch_eval(value, env);
+  dfsch_define(name, value, env, 0);
+  return value;
+}
+DFSCH_DEFINE_FORM_IMPL(internal_define_constant, "Define constant"){
+
+  object_t* name;
+  object_t* value;
+    
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  value = dfsch_eval(value, env);
+  dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
+  return value;
+}
+
 DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
 
   object_t* name;
@@ -622,6 +649,13 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
   dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
   dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
+
+
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "define!variable", 
+                      DFSCH_FORM_REF(internal_define_variable));
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "define!constant", 
+                      DFSCH_FORM_REF(internal_define_constant));
+
   dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
   dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
   dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
