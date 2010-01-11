@@ -167,6 +167,12 @@
                   
                   (test 'or-true (or (= 2 2) (> 2 1)) true)
                   (test 'or-false (or (> 2 2) (< 2 1)) ()))
+
+       (sub-group when-unless
+                  (test 'when-true (when #t 1) 1)
+                  (test 'when-false (when #f 1) ())
+                  (test 'unless-true (unless #t 1) ())
+                  (test 'unless-false (unless #f 1) 1))
                   
        (sub-group do
 

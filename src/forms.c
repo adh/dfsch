@@ -504,28 +504,28 @@ DFSCH_DEFINE_MACRO(and, "Short-circuiting logical and"){
   }
 }
 
-DFSCH_DEFINE_FORM_IMPL(when, "Execute body only when condition is true"){
+DFSCH_DEFINE_MACRO(when, "Execute body only when condition is true"){
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,test);
 
-  if (dfsch_eval(test, env)){
-    return dfsch_eval_proc_tr(args, env, esc);
-  }
-
-  return NULL;
+  return dfsch_list(4,
+                    DFSCH_FORM_REF(if),
+                    test,
+                    dfsch_cons(DFSCH_FORM_REF(begin), args),
+                    NULL);
 }
 
-DFSCH_DEFINE_FORM_IMPL(unless, "Execute body only when condition is not true"){
+DFSCH_DEFINE_MACRO(unless, "Execute body only when condition is not true"){
   object_t* test;
 
   DFSCH_OBJECT_ARG(args,test);
 
-  if (!dfsch_eval(test, env)){
-    return dfsch_eval_proc_tr(args, env, esc);
-  }
-
-  return NULL;
+  return dfsch_list(4,
+                    DFSCH_FORM_REF(if),
+                    test,
+                    NULL,
+                    dfsch_cons(DFSCH_FORM_REF(begin), args));
 }
 
 
@@ -609,8 +609,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
   dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
-  dfsch_defconst_cstr(ctx, "when", DFSCH_FORM_REF(when));
-  dfsch_defconst_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
+  dfsch_defconst_cstr(ctx, "when", DFSCH_MACRO_REF(when));
+  dfsch_defconst_cstr(ctx, "unless", DFSCH_MACRO_REF(unless));
   dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
 
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));

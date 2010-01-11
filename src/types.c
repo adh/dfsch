@@ -1361,7 +1361,6 @@ dfsch_object_t* dfsch_list(size_t count, ...){
 
   va_end(al);
   return head;
-
 }
 
 dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
