@@ -734,7 +734,7 @@ dfsch_type_t dfsch_standard_function_type = {
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
 static dfsch_slot_t macro_slots[] = {
-  DFSCH_STRING_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
+  DFSCH_OBJECT_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
                     "Procedure implementing macro"),
 };
 
