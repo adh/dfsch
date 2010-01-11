@@ -575,10 +575,6 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
   dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
   dfsch_defconst_cstr(ctx, "if", DFSCH_FORM_REF(if));
-  dfsch_defconst_cstr(ctx, "when", DFSCH_FORM_REF(when));
-  dfsch_defconst_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
-  dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
-  dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
   dfsch_defconst_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_defconst_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
@@ -588,8 +584,6 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "destructuring-bind", 
                       DFSCH_FORM_REF(destructuring_bind));
 
-  dfsch_defconst_cstr(ctx, "and", DFSCH_FORM_REF(and));
-  dfsch_defconst_cstr(ctx, "or",DFSCH_FORM_REF(or));
 
   dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
   dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
@@ -600,5 +594,13 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
   dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
   dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
+
+
+  dfsch_defconst_cstr(ctx, "and", DFSCH_FORM_REF(and));
+  dfsch_defconst_cstr(ctx, "or",DFSCH_FORM_REF(or));
+  dfsch_defconst_cstr(ctx, "when", DFSCH_FORM_REF(when));
+  dfsch_defconst_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
+  dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
+  dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
 }

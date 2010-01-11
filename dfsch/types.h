@@ -126,14 +126,32 @@ extern dfsch_type_t dfsch_primitive_type;
                                          dfsch_tail_escape_t* esc,      \
                                          dfsch_object_t* context)
   
-#define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
-  DFSCH_PRIMITIVE_HEAD(name);        \
-  DFSCH_DECLARE_PRIMITIVE(name, flags);         \
+#define DFSCH_DEFINE_PRIMITIVE(name, documentation)     \
+  DFSCH_PRIMITIVE_HEAD(name);                           \
+  DFSCH_DECLARE_PRIMITIVE(name, documentation);         \
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
 #define DFSCH_PRIMITIVE_REF_MAKE(name, baton)\
   dfsch_make_primitive(p_##name##_impl, (baton))
+
+typedef struct dfsch_macro_t {
+  dfsch_type_t* type;
+  dfsch_object_t* proc;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_macro_t;
+
+#define DFSCH_DEFINE_MACRO(name, documentation)     \
+  DFSCH_PRIMITIVE_HEAD(m_##name);                   \
+  DFSCH_DECLARE_PRIMITIVE(m_##name, documentation); \
+  static dfsch_macro_t m_##name = {                 \
+    DFSCH_MACRO_TYPE,                               \
+    DFSCH_PRIMITIVE_REF(m_##name)                   \
+  };                                                \
+  DFSCH_PRIMITIVE_HEAD(m_##name)
+   
+
+
 
 typedef struct dfsch_form_t dfsch_form_t;
 
