@@ -26,6 +26,7 @@
 
 #include "internal.h"
 #include <dfsch/promise.h>
+#include <dfsch/generate.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -787,7 +788,9 @@ DFSCH_DEFINE_PRIMITIVE(make_macro,
   NEED_ARGS(args,1);  
   return dfsch_make_macro(dfsch_car(args));
 }
-
+dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
+  return dfsch_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -1343,6 +1343,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__generic_register(ctx);
   dfsch__mkhash_register(ctx);
   dfsch__package_register(ctx);
+  dfsch__macros_register(ctx);
 
   return ctx;
 }

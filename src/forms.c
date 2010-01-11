@@ -35,6 +35,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <dfsch/number.h>
+#include <dfsch/generate.h>
 
 typedef dfsch_object_t object_t;
 
@@ -53,6 +54,13 @@ DFSCH_DEFINE_FORM_IMPL(if, "Conditional operator"){
 
   return dfsch_eval_tr((test?consequent:alternate), env, esc);
 }
+
+dfsch_object_t* dfsch_generate_if(dfsch_object_t* cond,
+                                  dfsch_object_t* cons,
+                                  dfsch_object_t* alt){
+  return dfsch_list(4, DFSCH_FORM_REF(if), cond, cons, alt);
+}
+
 
 DFSCH_DEFINE_FORM_IMPL(quote, NULL){
   object_t* value;
@@ -75,6 +83,11 @@ DFSCH_DEFINE_FORM_IMPL(quasiquote, NULL){
 DFSCH_DEFINE_FORM_IMPL(begin, NULL){
   return dfsch_eval_proc_tr(args, env, esc);
 }
+dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
+  return dfsch_cons(DFSCH_FORM_REF(begin), 
+                    exps);
+}
+
 DFSCH_DEFINE_FORM_IMPL(let, NULL){
   object_t *vars;
   object_t *code;
@@ -134,6 +147,16 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
   }
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
+}
+
+dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
+                                    dfsch_object_t* exp){
+  return dfsch_list(3, DFSCH_FORM_REF(let), bind, exp);
+}
+dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
+                                    dfsch_object_t* exp){
+  return dfsch_cons(DFSCH_FORM_REF(let), 
+                    dfsch_cons(bind, exp));
 }
 
 
@@ -285,6 +308,14 @@ DFSCH_DEFINE_FORM_IMPL(internal_lambda, "Create new function"){
   return dfsch_named_lambda(env, lambda_list, body, name);
 }
 
+dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
+                                      dfsch_object_t* lambda_list,
+                                      dfsch_object_t* body){
+  return dfsch_cons(DFSCH_FORM_REF(internal_lambda),
+                    dfsch_cons(name, 
+                               dfsch_cons(lambda_list, body)));
+
+}
 
 DFSCH_DEFINE_FORM_IMPL(internal_define_variable, "Define variable"){
 
@@ -299,6 +330,10 @@ DFSCH_DEFINE_FORM_IMPL(internal_define_variable, "Define variable"){
   dfsch_define(name, value, env, 0);
   return value;
 }
+dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
+                                               dfsch_object_t* value){
+  return dfsch_list(3, DFSCH_FORM_REF(internal_define_variable), name, value);
+}
 DFSCH_DEFINE_FORM_IMPL(internal_define_constant, "Define constant"){
 
   object_t* name;
@@ -311,6 +346,10 @@ DFSCH_DEFINE_FORM_IMPL(internal_define_constant, "Define constant"){
   value = dfsch_eval(value, env);
   dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
   return value;
+}
+dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
+                                               dfsch_object_t* value){
+  return dfsch_list(3, DFSCH_FORM_REF(internal_define_constant), name, value);
 }
 
 
@@ -363,6 +402,11 @@ DFSCH_DEFINE_FORM_IMPL(defined_p,
 
   return dfsch_bool(dfsch_env_get(name, env) != DFSCH_INVALID_OBJECT);
 }
+dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name){
+  return dfsch_list(2,
+                    DFSCH_FORM_REF(defined_p), 
+                    name);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -372,116 +416,6 @@ DFSCH_DEFINE_FORM_IMPL(defined_p,
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_MACRO(or, "Short-circuiting logical or"){
-  dfsch_object_t* tmp_name = dfsch_gensym();
-
-  if (!args){
-    return NULL;
-  }
-  return dfsch_list(3,
-                    DFSCH_FORM_REF(let), 
-                    dfsch_cons(dfsch_list(2, tmp_name, dfsch_car(args)), 
-                               NULL),
-                    dfsch_list(4,
-                               DFSCH_FORM_REF(if),
-                               tmp_name,
-                               tmp_name,
-                               dfsch_cons(DFSCH_MACRO_REF(or),
-                                          dfsch_cdr(args))));
-}
-
-
-DFSCH_DEFINE_MACRO(and, "Short-circuiting logical and"){
-  dfsch_object_t* tmp_name = dfsch_gensym();
-  dfsch_object_t* rest;
-
-  if (!args){
-    return DFSCH_SYM_TRUE;
-  }
-
-  rest = dfsch_cdr(args);
-  if (rest) {
-    return dfsch_list(3,
-                      DFSCH_FORM_REF(let), 
-                      dfsch_cons(dfsch_list(2, tmp_name, dfsch_car(args)), 
-                                 NULL),
-                      dfsch_list(4,
-                                 DFSCH_FORM_REF(if),
-                                 tmp_name,
-                                 dfsch_cons(DFSCH_MACRO_REF(and), rest),
-                                 tmp_name));
-  } else {
-    return dfsch_car(args);
-  }
-}
-
-DFSCH_DEFINE_MACRO(when, "Execute body only when condition is true"){
-  object_t* test;
-
-  DFSCH_OBJECT_ARG(args,test);
-
-  return dfsch_list(4,
-                    DFSCH_FORM_REF(if),
-                    test,
-                    dfsch_cons(DFSCH_FORM_REF(begin), args),
-                    NULL);
-}
-
-DFSCH_DEFINE_MACRO(unless, "Execute body only when condition is not true"){
-  object_t* test;
-
-  DFSCH_OBJECT_ARG(args,test);
-
-  return dfsch_list(4,
-                    DFSCH_FORM_REF(if),
-                    test,
-                    NULL,
-                    dfsch_cons(DFSCH_FORM_REF(begin), args));
-}
-
-
-DFSCH_DEFINE_MACRO(cond, NULL){
-  dfsch_object_t* clause;
-  dfsch_object_t* condition;
-  dfsch_object_t* consequent;
-
-  if (!args){
-    return NULL;
-  }
-
-  DFSCH_OBJECT_ARG(args, clause);
-  DFSCH_OBJECT_ARG(clause, condition);
-  DFSCH_ARG_REST(clause, consequent);
-
-  if (condition == DFSCH_SYM_ELSE){
-    return dfsch_cons(DFSCH_FORM_REF(begin), consequent);
-  } else if (!consequent){
-    return dfsch_list(4,
-                      DFSCH_FORM_REF(if),
-                      condition,
-                      NULL,
-                      dfsch_cons(DFSCH_MACRO_REF(cond), args));
-  } else if (dfsch_car(consequent) == DFSCH_SYM_BOLD_RIGHT_ARROW){
-    dfsch_object_t* tmp_name = dfsch_gensym();
-    return dfsch_list(3,
-                      DFSCH_FORM_REF(let),
-                      dfsch_cons(dfsch_list(2, tmp_name, condition), NULL),
-                      dfsch_list(4,
-                                 DFSCH_FORM_REF(if),
-                                 tmp_name,
-                                 dfsch_list(2, 
-                                            dfsch_car(dfsch_cdr(consequent)), 
-                                            tmp_name),
-                                 dfsch_cons(DFSCH_MACRO_REF(cond), args)));
-  } else {
-    return dfsch_list(4,
-                      DFSCH_FORM_REF(if),
-                      condition,
-                      dfsch_cons(DFSCH_FORM_REF(begin), consequent),
-                      dfsch_cons(DFSCH_MACRO_REF(cond), args));
-
-  }
-}
 
 DFSCH_DEFINE_FORM_IMPL(case, NULL){
   object_t* val;
@@ -554,93 +488,6 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
 }
 
 
-DFSCH_DEFINE_MACRO(lambda, "Create new annonymous function"){
-  dfsch_object_t* lambda_list;
-  dfsch_object_t* body;
-
-  DFSCH_OBJECT_ARG(args, lambda_list);
-  DFSCH_ARG_REST(args, body);
-
-  return dfsch_cons(DFSCH_FORM_REF(internal_lambda),
-                    dfsch_cons(NULL, 
-                               dfsch_cons(lambda_list, body)));
-}
-
-DFSCH_DEFINE_FORM_IMPL(define_macro,
-                       "Define new macro implemented by standard-function"){
-  dfsch_object_t* name;
-  dfsch_object_t* arglist;
-
-  DFSCH_OBJECT_ARG(args, arglist);
-  DFSCH_OBJECT_ARG(arglist, name);
-
-  dfsch_define(name, 
-               dfsch_make_macro(dfsch_named_lambda(env,
-                                                   arglist,
-                                                   args,
-                                                   name)), 
-               env, DFSCH_VAR_CONSTANT);
-}
-
-DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
-
-  object_t* name;
-
-  DFSCH_OBJECT_ARG(args, name);
-
-  if (DFSCH_PAIR_P(name)){
-    object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
-                                          args,
-                                          dfsch_car(name));
-    name = DFSCH_FAST_CAR(name);
-    dfsch_define(name, lambda, env, DFSCH_VAR_CONSTANT);
-    return lambda;
-  } else{
-    object_t* value;
-    DFSCH_OBJECT_ARG(args, value);
-    DFSCH_ARG_END(args);
-
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  }
-}
-
-DFSCH_DEFINE_FORM_IMPL(define_variable, 
-                       "Define variable only if it is not already defined"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  } else {
-    return NULL;
-  }
-}
-DFSCH_DEFINE_FORM_IMPL(define_constant,
-                       "Define constant variable"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
-    return value;
-  } else {
-    return NULL;
-  }
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -662,9 +509,6 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "destructuring-bind", 
                       DFSCH_FORM_REF(destructuring_bind));
 
-
-
-
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
                       DFSCH_FORM_REF(internal_lambda));
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
@@ -677,20 +521,5 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
   dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
-
-  dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
-  dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
-  dfsch_defconst_cstr(ctx, "when", DFSCH_MACRO_REF(when));
-  dfsch_defconst_cstr(ctx, "unless", DFSCH_MACRO_REF(unless));
-  dfsch_defconst_cstr(ctx, "cond", DFSCH_MACRO_REF(cond));
-
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
-
-  dfsch_defconst_cstr(ctx, "lambda", DFSCH_MACRO_REF(lambda));
-  dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
-  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
-  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
-  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
-
-
 }
