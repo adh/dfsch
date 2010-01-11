@@ -272,15 +272,19 @@ DFSCH_DEFINE_FORM_IMPL(destructuring_bind, NULL){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
+
+DFSCH_DEFINE_FORM_IMPL(internal_lambda, "Create new function"){
+  dfsch_object_t* name;
   dfsch_object_t* lambda_list;
   dfsch_object_t* body;
 
+  DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_ARG_REST(args, body);
 
-  return dfsch_lambda(env, lambda_list, body);
+  return dfsch_named_lambda(env, lambda_list, body, name);
 }
+
 
 DFSCH_DEFINE_FORM_IMPL(internal_define_variable, "Define variable"){
 
@@ -309,64 +313,6 @@ DFSCH_DEFINE_FORM_IMPL(internal_define_constant, "Define constant"){
   return value;
 }
 
-DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
-
-  object_t* name;
-
-  DFSCH_OBJECT_ARG(args, name);
-
-  if (DFSCH_PAIR_P(name)){
-    object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
-                                          args,
-                                          dfsch_car(name));
-    name = DFSCH_FAST_CAR(name);
-    dfsch_define(name, lambda, env, DFSCH_VAR_CONSTANT);
-    return lambda;
-  } else{
-    object_t* value;
-    DFSCH_OBJECT_ARG(args, value);
-    DFSCH_ARG_END(args);
-
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  }
-}
-
-DFSCH_DEFINE_FORM_IMPL(define_variable, 
-                       "Define variable only if it is not already defined"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  } else {
-    return NULL;
-  }
-}
-DFSCH_DEFINE_FORM_IMPL(define_constant,
-                       "Define constant variable"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
-    return value;
-  } else {
-    return NULL;
-  }
-}
 
 DFSCH_DEFINE_FORM_IMPL(declare, "Add declaration specifier to given symbol"){
   dfsch_object_t* name;
@@ -418,21 +364,6 @@ DFSCH_DEFINE_FORM_IMPL(defined_p,
   return dfsch_bool(dfsch_env_get(name, env) != DFSCH_INVALID_OBJECT);
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_macro,
-                       "Define new macro implemented by standard-function"){
-  dfsch_object_t* name;
-  dfsch_object_t* arglist;
-
-  DFSCH_OBJECT_ARG(args, arglist);
-  DFSCH_OBJECT_ARG(arglist, name);
-
-  dfsch_define(name, 
-               dfsch_make_macro(dfsch_named_lambda(env,
-                                                   arglist,
-                                                   args,
-                                                   name)), 
-               env, DFSCH_VAR_CONSTANT);
-}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -623,6 +554,91 @@ DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
 }
 
 
+DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
+  dfsch_object_t* lambda_list;
+  dfsch_object_t* body;
+
+  DFSCH_OBJECT_ARG(args, lambda_list);
+  DFSCH_ARG_REST(args, body);
+
+  return dfsch_lambda(env, lambda_list, body);
+}
+
+DFSCH_DEFINE_FORM_IMPL(define_macro,
+                       "Define new macro implemented by standard-function"){
+  dfsch_object_t* name;
+  dfsch_object_t* arglist;
+
+  DFSCH_OBJECT_ARG(args, arglist);
+  DFSCH_OBJECT_ARG(arglist, name);
+
+  dfsch_define(name, 
+               dfsch_make_macro(dfsch_named_lambda(env,
+                                                   arglist,
+                                                   args,
+                                                   name)), 
+               env, DFSCH_VAR_CONSTANT);
+}
+
+DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
+
+  object_t* name;
+
+  DFSCH_OBJECT_ARG(args, name);
+
+  if (DFSCH_PAIR_P(name)){
+    object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
+                                          args,
+                                          dfsch_car(name));
+    name = DFSCH_FAST_CAR(name);
+    dfsch_define(name, lambda, env, DFSCH_VAR_CONSTANT);
+    return lambda;
+  } else{
+    object_t* value;
+    DFSCH_OBJECT_ARG(args, value);
+    DFSCH_ARG_END(args);
+
+    value = dfsch_eval(value, env);
+    dfsch_define(name, value, env, 0);
+    return value;
+  }
+}
+
+DFSCH_DEFINE_FORM_IMPL(define_variable, 
+                       "Define variable only if it is not already defined"){
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
+  DFSCH_ARG_END(args);
+  
+  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
+    value = dfsch_eval(value, env);
+    dfsch_define(name, value, env, 0);
+    return value;
+  } else {
+    return NULL;
+  }
+}
+DFSCH_DEFINE_FORM_IMPL(define_constant,
+                       "Define constant variable"){
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
+  DFSCH_ARG_END(args);
+  
+  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
+    value = dfsch_eval(value, env);
+    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
+    return value;
+  } else {
+    return NULL;
+  }
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -645,22 +661,19 @@ void dfsch__forms_register(dfsch_object_t *ctx){
                       DFSCH_FORM_REF(destructuring_bind));
 
 
-  dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
-  dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
-  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
-  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
 
 
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "define!variable", 
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
+                      DFSCH_FORM_REF(internal_lambda));
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
                       DFSCH_FORM_REF(internal_define_variable));
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "define!constant", 
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
                       DFSCH_FORM_REF(internal_define_constant));
 
   dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
   dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
   dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
   dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
-  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
 
 
   dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
@@ -670,5 +683,12 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "cond", DFSCH_MACRO_REF(cond));
 
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
+
+  dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
+  dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
+  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
+  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
+  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
+
 
 }
