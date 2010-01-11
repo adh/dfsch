@@ -3,8 +3,8 @@
 
 #include <dfsch/dfsch.h>
 
-extern void dfsch__native_register(dfsch_object_t *ctx);
-extern void dfsch__control_register(dfsch_object_t *ctx);
+extern void dfsch__primitives_register(dfsch_object_t *ctx);
+extern void dfsch__forms_register(dfsch_object_t *ctx);
 extern void dfsch__hash_native_register(dfsch_object_t *ctx);
 extern void dfsch__promise_native_register(dfsch_object_t *ctx);
 extern void dfsch__number_native_register(dfsch_object_t *ctx);

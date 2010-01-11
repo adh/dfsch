@@ -1325,7 +1325,24 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_define_cstr(ctx,"*dfsch-platform*",
                     dfsch_make_string_cstr(HOST_TRIPLET));
 
-  dfsch__native_register(ctx);
+  dfsch__primitives_register(ctx);
+  dfsch__native_cxr_register(ctx);
+  dfsch__forms_register(ctx);
+  dfsch__system_register(ctx);
+  dfsch__hash_native_register(ctx);
+  dfsch__promise_native_register(ctx);
+  dfsch__number_native_register(ctx);
+  dfsch__string_native_register(ctx);
+  dfsch__object_native_register(ctx);
+  dfsch__weak_native_register(ctx);
+  dfsch__format_native_register(ctx);
+  dfsch__port_native_register(ctx);
+  dfsch__bignum_register(ctx);
+  dfsch__conditions_register(ctx);
+  dfsch__random_register(ctx);
+  dfsch__generic_register(ctx);
+  dfsch__mkhash_register(ctx);
+  dfsch__package_register(ctx);
 
   return ctx;
 }
