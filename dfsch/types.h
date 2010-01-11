@@ -150,6 +150,7 @@ typedef struct dfsch_macro_t {
   };                                                \
   DFSCH_PRIMITIVE_HEAD(m_##name)
    
+#define DFSCH_MACRO_REF(name) ((dfsch_object_t*)&m_##name)
 
 
 

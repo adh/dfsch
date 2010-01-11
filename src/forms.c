@@ -545,6 +545,25 @@ DFSCH_DEFINE_FORM_IMPL(or, "Short-circuiting logical or"){
 
   return r;
 }
+
+DFSCH_DEFINE_MACRO(or, "Short-circuiting logical or"){
+  dfsch_object_t* tmp_name = dfsch_gensym();
+
+  if (!args){
+    return NULL;
+  }
+  return dfsch_list(3,
+                    DFSCH_FORM_REF(let), 
+                    dfsch_cons(dfsch_list(2, tmp_name, dfsch_car(args)), 
+                               NULL),
+                    dfsch_list(4,
+                               DFSCH_FORM_REF(if),
+                               tmp_name,
+                               tmp_name,
+                               dfsch_cons(DFSCH_FORM_REF(or),
+                                          dfsch_cdr(args))));
+}
+
 DFSCH_DEFINE_FORM_IMPL(and, "Short-circuiting logical and"){
   object_t* i;
   object_t* r = DFSCH_SYM_TRUE;
@@ -597,10 +616,11 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
 
   dfsch_defconst_cstr(ctx, "and", DFSCH_FORM_REF(and));
-  dfsch_defconst_cstr(ctx, "or",DFSCH_FORM_REF(or));
+  dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
   dfsch_defconst_cstr(ctx, "when", DFSCH_FORM_REF(when));
   dfsch_defconst_cstr(ctx, "unless", DFSCH_FORM_REF(unless));
   dfsch_defconst_cstr(ctx, "cond", DFSCH_FORM_REF(cond));
+
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
 }
