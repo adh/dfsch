@@ -268,26 +268,31 @@ DFSCH_DEFINE_MACRO(letrec, NULL){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
+DFSCH_DEFINE_MACRO(let_seq, NULL){
   dfsch_object_t *vars;
   dfsch_object_t *code;
+  dfsch_object_t *place;
 
   DFSCH_OBJECT_ARG(args, vars);
   DFSCH_ARG_REST(args, code);
 
-  dfsch_object_t* ext_env = env;
-
-  while (dfsch_pair_p(vars)){
-    dfsch_object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    dfsch_object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-
-    ext_env = dfsch_new_frame(ext_env);
-    dfsch_define(var, val, ext_env, 0);
-    
-    vars = dfsch_cdr(vars);
+  if (!dfsch_pair_p(vars)){
+    return dfsch_generate_let(NULL, code);
   }
 
-  return dfsch_eval_proc_tr(code, ext_env, esc);
+  vars = dfsch_reverse(vars);
+  code = dfsch_generate_let(dfsch_cons(dfsch_car(vars), NULL),
+                            code);
+  vars = dfsch_cdr(vars);
+
+  while (dfsch_pair_p(vars)){
+    code = dfsch_generate_let1(dfsch_cons(dfsch_car(vars), NULL),
+                               code);
+    vars = dfsch_cdr(vars);
+    
+  }
+
+  return code;
 }
 
 void dfsch__macros_register(dfsch_object_t *ctx){ 
@@ -304,7 +309,7 @@ void dfsch__macros_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "define-macro", DFSCH_MACRO_REF(define_macro));
 
   dfsch_defconst_cstr(ctx, "let", DFSCH_MACRO_REF(let));
-  dfsch_defconst_cstr(ctx, "let*", DFSCH_FORM_REF(let_seq));
+  dfsch_defconst_cstr(ctx, "let*", DFSCH_MACRO_REF(let_seq));
   dfsch_defconst_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
 
 }
