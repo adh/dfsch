@@ -43,7 +43,7 @@
                   (test 'proc-ret-1
                         (eqv? (gen-counter) (gen-counter))
                         #f))
-        
+       
        (sub-group eq?
                   (test 'eq? (eq? 'a 'a) #t)
                   (test 'eq?-false (eq? 'a 'b) #f)
@@ -119,7 +119,7 @@
 (group "control flow"
        
        (sub-group if
-                 
+                  
                   (test 'if-true (if (> 3 2) 'yes 'no) 'yes)
                   (test 'if-false (if (< 3 2) 'yes 'no) 'no)
                   (test 'if-eval 
@@ -157,7 +157,7 @@
                           ((w y) 'semivowel)
                           (else 'consonant))
                         'consonant))
-                  
+       
        (sub-group (and or)
 
                   (test 'and-true (and (= 2 2) (> 2 1)) true)
@@ -173,7 +173,7 @@
                   (test 'when-false (when #f 1) ())
                   (test 'unless-true (unless #t 1) ())
                   (test 'unless-false (unless #f 1) 1))
-                  
+       
        (sub-group do
 
                   (test 'do 
@@ -202,25 +202,35 @@
 (group "Binding constructs"
 
        (sub-group let
-                 (test 'let
-                       (let ((x 2) (y 3))
-                         (let ((x 7)
-                               (z (+ x y)))
-                           (* z x)))   
-                       35)
-                 (test 'letrec
-                       (letrec ((even?
-                                 (lambda (n)
-                                   (if (= n 0)
-                                       true
-                                       (odd? (- n 1)))))
-                                (odd?
-                                 (lambda (n)
-                                   (if (= n 0)
-                                       ()
-                                       (even? (- n 1))))))
-                         (even? 88))
-                       true))
+                  (test 'let
+                        (let ((x 2) (y 3))
+                          (* x y))           
+                        6)
+                  (test 'let2
+                        (let ((x 2) (y 3))
+                          (let ((x 7)
+                                (z (+ x y)))
+                            (* z x)))   
+                        35)
+                  (test 'let*
+                        (let ((x 2) (y 3))
+                          (let* ((x 7)
+                                 (z (+ x y)))
+                            (* z x)))                   
+                        70)
+                  (test 'letrec
+                        (letrec ((even?
+                                  (lambda (n)
+                                    (if (= n 0)
+                                        true
+                                        (odd? (- n 1)))))
+                                 (odd?
+                                  (lambda (n)
+                                    (if (= n 0)
+                                        ()
+                                        (even? (- n 1))))))
+                          (even? 88))
+                        true))
        (sub-group destructuring-bind
                   (test 'simple
                         (destructuring-bind (a b c) '(1 2 3)
@@ -349,7 +359,7 @@
                '(subclass . test-class))
 
          ))
-               
+
 
 (group "XML support"
        (sub-group sxml
@@ -359,7 +369,7 @@
                   (test 'emit-string
                         (xml:sxml-emit-string '(a (:@ (foo "bar \"")) (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
-       
+
 (group "JSON support"
        (test 'parse-json
              (json:parse-string "[1, 2, 3]")
