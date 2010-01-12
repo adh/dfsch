@@ -97,13 +97,13 @@ DFSCH_DEFINE_FORM_IMPL(internal_let, NULL){
 
   object_t* ext_env = dfsch_new_frame(env);
 
-  while (dfsch_pair_p(vars)){
-    object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
+  while (DFSCH_PAIR_P(vars)){
+    object_t* var = dfsch_list_item(DFSCH_FAST_CAR(vars),0);
+    object_t* val = dfsch_eval(dfsch_list_item(DFSCH_FAST_CAR(vars),1), env);
 
     dfsch_define(var, val, ext_env, 0);
     
-    vars = dfsch_cdr(vars);
+    vars = DFSCH_FAST_CDR(vars);
   }
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
