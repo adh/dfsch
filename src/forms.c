@@ -88,7 +88,7 @@ dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
                     exps);
 }
 
-DFSCH_DEFINE_FORM_IMPL(let, NULL){
+DFSCH_DEFINE_FORM_IMPL(internal_let, NULL){
   object_t *vars;
   object_t *code;
 
@@ -96,46 +96,6 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
   DFSCH_ARG_REST(args, code);
 
   object_t* ext_env = dfsch_new_frame(env);
-
-  if (dfsch_symbol_p(vars)){ // named-let
-    object_t* name = vars;
-
-    object_t* ll_head = NULL;
-    object_t* ll_tail = NULL;
-    object_t* vl_head = NULL;
-    object_t* vl_tail = NULL;
-
-    object_t* lambda;
-
-    DFSCH_OBJECT_ARG(code, vars);
-
-    while (dfsch_pair_p(vars)){
-      object_t* var = dfsch_list_item(dfsch_car(vars),0);
-      object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), env);
-      
-      if (ll_head && vl_head){
-        object_t* tmp;
-        
-        tmp = dfsch_cons(var, NULL);
-        dfsch_set_cdr(ll_tail, tmp);
-        ll_tail = tmp;
-
-        tmp = dfsch_cons(val, NULL);
-        dfsch_set_cdr(vl_tail, tmp);
-        vl_tail = tmp;
-      }else{
-        ll_head = ll_tail = dfsch_cons(var, NULL);
-        vl_head = vl_tail = dfsch_cons(val, NULL);
-      }
-
-      vars = dfsch_cdr(vars);
-    }
-
-    lambda = dfsch_named_lambda(ext_env, ll_head, code, name);
-    dfsch_define(name, lambda, ext_env, 0);
-
-    return dfsch_apply_tr(lambda, vl_head, esc);
-  }
 
   while (dfsch_pair_p(vars)){
     object_t* var = dfsch_list_item(dfsch_car(vars),0);
@@ -148,16 +108,17 @@ DFSCH_DEFINE_FORM_IMPL(let, NULL){
 
   return dfsch_eval_proc_tr(code,ext_env, esc);
 }
-
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
-  return dfsch_list(3, DFSCH_FORM_REF(let), bind, exp);
+  return dfsch_list(3, DFSCH_FORM_REF(internal_let), bind, exp);
 }
 dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
-  return dfsch_cons(DFSCH_FORM_REF(let), 
+  return dfsch_cons(DFSCH_FORM_REF(internal_let), 
                     dfsch_cons(bind, exp));
 }
+
+
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -442,50 +403,6 @@ DFSCH_DEFINE_FORM_IMPL(case, NULL){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(letrec, NULL){
-
-  object_t *vars;
-  object_t *code;
-
-  DFSCH_OBJECT_ARG(args, vars);
-  DFSCH_ARG_REST(args, code);
-
-  object_t* ext_env = dfsch_new_frame(env);
-
-  while (dfsch_pair_p(vars)){
-    object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-
-    dfsch_define(var, val, ext_env, 0);
-    
-    vars = dfsch_cdr(vars);
-  }
-
-  return dfsch_eval_proc_tr(code,ext_env, esc);
-}
-
-
-DFSCH_DEFINE_FORM_IMPL(let_seq, NULL){
-  object_t *vars;
-  object_t *code;
-
-  DFSCH_OBJECT_ARG(args, vars);
-  DFSCH_ARG_REST(args, code);
-
-  object_t* ext_env = env;
-
-  while (dfsch_pair_p(vars)){
-    object_t* var = dfsch_list_item(dfsch_car(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(dfsch_car(vars),1), ext_env);
-
-    ext_env = dfsch_new_frame(ext_env);
-    dfsch_define(var, val, ext_env, 0);
-    
-    vars = dfsch_cdr(vars);
-  }
-
-  return dfsch_eval_proc_tr(code, ext_env, esc);
-}
 
 DFSCH_DEFINE_FORM_IMPL(current_environment, 
                        "Return lexically-enclosing environment"){
@@ -496,9 +413,6 @@ DFSCH_DEFINE_FORM_IMPL(current_environment,
 
 void dfsch__forms_register(dfsch_object_t *ctx){ 
   dfsch_defconst_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
-  dfsch_defconst_cstr(ctx, "let", DFSCH_FORM_REF(let));
-  dfsch_defconst_cstr(ctx, "let*", DFSCH_FORM_REF(let_seq));
-  dfsch_defconst_cstr(ctx, "letrec", DFSCH_FORM_REF(letrec));
 
   dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
   dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
@@ -514,6 +428,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
                       DFSCH_FORM_REF(internal_lambda));
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
+                      DFSCH_FORM_REF(internal_let));
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
                       DFSCH_FORM_REF(internal_define_variable));
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
