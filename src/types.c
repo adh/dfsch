@@ -738,13 +738,19 @@ static dfsch_slot_t macro_slots[] = {
                     "Procedure implementing macro"),
 };
 
+static void macro_write(macro_t* m, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_start(state, (dfsch_object_t*)m);
+  dfsch_write_object(state, m->proc);
+  dfsch_write_unreadable_end(state);
+}
+
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(macro_t),
   "macro",
   NULL,
-  NULL,
+  (dfsch_type_write_t)macro_write,
   NULL,
   NULL,
   macro_slots,
@@ -752,6 +758,10 @@ dfsch_type_t dfsch_macro_type = {
 };
 #define MACRO DFSCH_MACRO_TYPE
 
+static void form_write(dfsch_form_t* f, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)f,
+                         "%s", f->name);
+}
 static dfsch_slot_t form_slots[] = {
   DFSCH_STRING_SLOT(dfsch_form_t, name, DFSCH_SLOT_ACCESS_RO,
                     "Internal name of special form"),
@@ -766,7 +776,7 @@ dfsch_type_t dfsch_form_type = {
   sizeof(dfsch_form_t),
   "form",
   NULL,
-  NULL,
+  (dfsch_type_write_t)form_write,
   NULL,
   NULL,
   form_slots,
