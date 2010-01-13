@@ -97,8 +97,7 @@ extern "C" {
 
 #define DFSCH__TRACEPOINT_SHIFT(ti)                                     \
   (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth;          \
-  DFSCH__TRACEPOINT(ti).flags =                                         \
-    ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0 
+  DFSCH__TRACEPOINT(ti).flags = (ti)->trace_flags 
 
 #define DFSCH__TRACEPOINT_NOTIFY(ti)                             \
   if (DFSCH_UNLIKELY((ti)->trace_listener)){                     \
@@ -140,6 +139,7 @@ extern "C" {
     dfsch__tracepoint_listener_t trace_listener;    
     short trace_ptr;
     short trace_depth;
+    int trace_flags;
 
     dfsch_object_t* macroexpanded_expr;
 

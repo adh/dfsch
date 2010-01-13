@@ -647,11 +647,15 @@ static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
   DFSCH_UNWIND {
     old_expr = ti->macroexpanded_expr;
     ti->macroexpanded_expr = expr;
+    ti->trace_flags = 
+      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
     new_expr = dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
                                                         DFSCH_MACRO_TYPE))->proc, 
                            DFSCH_FAST_CDR(expr));
   } DFSCH_PROTECT {
     ti->macroexpanded_expr = old_expr;    
+    ti->trace_flags = 
+      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
   } DFSCH_PROTECT_END;
 
   return new_expr;
