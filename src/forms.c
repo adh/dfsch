@@ -173,63 +173,6 @@ DFSCH_DEFINE_FORM_IMPL(catch, NULL){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM_IMPL(do, "Iterative loop"){
-  object_t* vars;
-  object_t* test;
-  object_t* exprs;
-  object_t* commands;
-  object_t* lenv;
-  object_t* i;
-
-  DFSCH_OBJECT_ARG(args, vars);
-  DFSCH_OBJECT_ARG(args, test);
-  
-  commands = args;
-  exprs = dfsch_cdr(test);
-  test = dfsch_car(test);
-
-  lenv = dfsch_new_frame(env);
-
-  i = vars;
-  while (dfsch_pair_p(i)){
-    object_t* j = dfsch_car(i);
-    object_t* name;
-    object_t* init;
-    object_t* step;
-
-    DFSCH_OBJECT_ARG(j, name);
-    DFSCH_OBJECT_ARG(j, init);
-
-    dfsch_define(name, dfsch_eval(init, env), lenv, 0);
-
-    i = dfsch_cdr(i);
-  }
-
-  while (dfsch_eval(test, lenv) == NULL){
-    object_t* nenv;
-    dfsch_eval_proc(commands, lenv);
-
-    nenv = dfsch_new_frame(env);
-    i = vars;
-    while (dfsch_pair_p(i)){
-      object_t* j = dfsch_car(i);
-      object_t* name;
-      object_t* init;
-      object_t* step;
-      
-      DFSCH_OBJECT_ARG(j, name);
-      DFSCH_OBJECT_ARG(j, init);
-      DFSCH_OBJECT_ARG_OPT(j, step, name);
-
-      dfsch_define(name, dfsch_eval(step, lenv), nenv, 0);
-      
-      i = dfsch_cdr(i);
-    }
-    lenv = nenv;
-  }
-
-  return dfsch_eval_proc_tr(exprs, lenv, esc);
-}
 
 
 DFSCH_DEFINE_FORM_IMPL(destructuring_bind, NULL){
@@ -424,7 +367,6 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_defconst_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
 
-  dfsch_defconst_cstr(ctx, "do", DFSCH_FORM_REF(do));
 
   dfsch_defconst_cstr(ctx, "destructuring-bind", 
                       DFSCH_FORM_REF(destructuring_bind));

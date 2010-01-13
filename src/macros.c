@@ -299,6 +299,64 @@ DFSCH_DEFINE_MACRO(let_seq, NULL){
   return code;
 }
 
+DFSCH_DEFINE_MACRO(do, "Iterative loop"){
+  dfsch_object_t* bindings;
+  dfsch_object_t* test;
+  dfsch_object_t* exprs;
+  dfsch_object_t* commands;
+
+  dfsch_object_t* vars = NULL;
+  dfsch_object_t* initforms = NULL;
+  dfsch_object_t* steps = NULL;
+
+  dfsch_object_t* tmpname = dfsch_gensym();
+
+  DFSCH_OBJECT_ARG(args, bindings);
+  DFSCH_OBJECT_ARG(args, test);
+  
+  commands = args;
+  exprs = dfsch_cdr(test);
+  test = dfsch_car(test);
+
+  while(DFSCH_PAIR_P(bindings)){
+    dfsch_object_t* binding = DFSCH_FAST_CAR(bindings);
+    dfsch_object_t* var;
+    dfsch_object_t* initform;
+    dfsch_object_t* step;
+
+    DFSCH_OBJECT_ARG(binding, var);
+    DFSCH_OBJECT_ARG(binding, initform);
+    DFSCH_OBJECT_ARG_OPT(binding, step, var);
+    DFSCH_ARG_END(binding);
+
+    vars = dfsch_cons(var, vars);
+    initforms = dfsch_cons(initform, initforms);
+    steps = dfsch_cons(step, steps);
+
+    bindings = DFSCH_FAST_CDR(bindings);
+  }
+
+  return dfsch_generate_let
+    (NULL,
+     dfsch_immutable_list
+     (2,
+      dfsch_generate_define_constant
+      (tmpname,
+       dfsch_generate_lambda
+       (NULL, vars,
+        dfsch_cons(
+                   dfsch_generate_if
+                   (test,
+                    dfsch_generate_begin(exprs),
+                    dfsch_generate_begin
+                    (dfsch_immutable_list
+                     (2,
+                      dfsch_generate_begin(commands),
+                      dfsch_immutable_list_cdr(steps, 1, tmpname)))),
+                   NULL))),
+       dfsch_immutable_list_cdr(initforms, 1, tmpname)));                
+}
+
 void dfsch__macros_register(dfsch_object_t *ctx){ 
   dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
   dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
@@ -315,5 +373,7 @@ void dfsch__macros_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "let", DFSCH_MACRO_REF(let));
   dfsch_defconst_cstr(ctx, "let*", DFSCH_MACRO_REF(let_seq));
   dfsch_defconst_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
+
+  dfsch_defconst_cstr(ctx, "do", DFSCH_MACRO_REF(do));
 
 }
