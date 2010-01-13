@@ -58,7 +58,7 @@ DFSCH_DEFINE_FORM_IMPL(if, "Conditional operator"){
 dfsch_object_t* dfsch_generate_if(dfsch_object_t* cond,
                                   dfsch_object_t* cons,
                                   dfsch_object_t* alt){
-  return dfsch_list(4, DFSCH_FORM_REF(if), cond, cons, alt);
+  return dfsch_immutable_list(4, DFSCH_FORM_REF(if), cond, cons, alt);
 }
 
 
@@ -110,7 +110,7 @@ DFSCH_DEFINE_FORM_IMPL(internal_let, NULL){
 }
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
-  return dfsch_list(3, DFSCH_FORM_REF(internal_let), bind, exp);
+  return dfsch_immutable_list(3, DFSCH_FORM_REF(internal_let), bind, exp);
 }
 dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
@@ -310,7 +310,9 @@ DFSCH_DEFINE_FORM_IMPL(internal_define_constant, "Define constant"){
 }
 dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
                                                dfsch_object_t* value){
-  return dfsch_list(3, DFSCH_FORM_REF(internal_define_constant), name, value);
+  return dfsch_immutable_list(3, 
+                              DFSCH_FORM_REF(internal_define_constant), 
+                              name, value);
 }
 
 
@@ -364,9 +366,9 @@ DFSCH_DEFINE_FORM_IMPL(defined_p,
   return dfsch_bool(dfsch_env_get(name, env) != DFSCH_INVALID_OBJECT);
 }
 dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name){
-  return dfsch_list(2,
-                    DFSCH_FORM_REF(defined_p), 
-                    name);
+  return dfsch_immutable_list(2,
+                              DFSCH_FORM_REF(defined_p), 
+                              name);
 }
 
 

@@ -479,4 +479,6 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 #define DFSCH_SYM_TERMINATE_THREAD DFSCH__STATIC_SYMBOL(18)
 #define DFSCH_SYM_USE_VALUE DFSCH__STATIC_SYMBOL(19)
 
+#define DFSCH_SYM_MACRO_EXPANDED_FROM DFSCH__STATIC_SYMBOL(20)
+
 #endif

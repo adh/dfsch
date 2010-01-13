@@ -739,9 +739,15 @@ static dfsch_slot_t macro_slots[] = {
 };
 
 static void macro_write(macro_t* m, dfsch_writer_state_t* state){
-  dfsch_write_unreadable_start(state, (dfsch_object_t*)m);
-  dfsch_write_object(state, m->proc);
-  dfsch_write_unreadable_end(state);
+  if (dfsch_primitive_p(m->proc)){
+    dfsch_write_unreadable(state, (dfsch_object_t*)m,
+                           "%%%s", 
+                           ((dfsch_primitive_t*)m->proc)->name);
+  } else {
+    dfsch_write_unreadable_start(state, (dfsch_object_t*)m);
+    dfsch_write_object(state, m->proc);
+    dfsch_write_unreadable_end(state);
+  }
 }
 
 dfsch_type_t dfsch_macro_type = {
@@ -1372,6 +1378,40 @@ dfsch_object_t* dfsch_list(size_t count, ...){
   va_end(al);
   return head;
 }
+
+dfsch_object_t* dfsch_immutable_list(size_t count, ...){
+  size_t i;
+  object_t** data;
+  va_list al;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  va_start(al, count);
+
+  if (count == 0){
+    return NULL;
+  }
+
+  data = GC_MALLOC(sizeof(object_t*)*(count+4));
+  
+  for(i = 0; i < count; i++){
+    data[i] = va_arg(al, dfsch_object_t*);
+  }
+
+  data[i] = DFSCH_INVALID_OBJECT;
+  i++;
+  data[i] = NULL; // CDR
+  if (ti->macroexpanded_expr){
+    data[i+1] = DFSCH_SYM_MACRO_EXPANDED_FROM;
+    data[i+2] = ti->macroexpanded_expr;
+  } else {
+    data[i+1] = NULL;
+    data[i+2] = NULL;
+  }
+
+  va_end(al);
+  return DFSCH_MAKE_CLIST(data);
+}
+
 
 dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   dfsch_object_t *head; 

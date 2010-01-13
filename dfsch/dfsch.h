@@ -225,6 +225,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
   /** Construct list from arguments */
   extern dfsch_object_t* dfsch_list(size_t count, ...);
+  /** Construct list from arguments */
+  extern dfsch_object_t* dfsch_immutable_list(size_t count, ...);
   /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
   extern dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list);
