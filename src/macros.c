@@ -9,9 +9,9 @@ DFSCH_DEFINE_MACRO(or, "Short-circuiting logical or"){
     return NULL;
   }
 
-  return dfsch_generate_let1(dfsch_cons(dfsch_list(2, 
-                                                   tmp_name, 
-                                                   dfsch_car(args)), 
+  return dfsch_generate_let1(dfsch_cons(dfsch_immutable_list(2, 
+                                                             tmp_name, 
+                                                             dfsch_car(args)), 
                                         NULL),
                              dfsch_generate_if(tmp_name,
                                                tmp_name,
@@ -30,14 +30,15 @@ DFSCH_DEFINE_MACRO(and, "Short-circuiting logical and"){
 
   rest = dfsch_cdr(args);
   if (rest) {
-    return dfsch_generate_let1(dfsch_cons(dfsch_list(2, 
-                                                     tmp_name, 
-                                                     dfsch_car(args)), 
-                                          NULL),
-                               dfsch_generate_if(tmp_name,
-                                                 dfsch_cons(DFSCH_MACRO_REF(and),
-                                                            dfsch_cdr(args)),
-                                                 tmp_name));
+    return dfsch_generate_let1
+      (dfsch_cons(dfsch_immutable_list(2, 
+                                       tmp_name, 
+                                       dfsch_car(args)), 
+                  NULL),
+       dfsch_generate_if(tmp_name,
+                         dfsch_cons(DFSCH_MACRO_REF(and),
+                                    dfsch_cdr(args)),
+                         tmp_name));
   } else {
     return dfsch_car(args);
   }
@@ -86,17 +87,19 @@ DFSCH_DEFINE_MACRO(cond, NULL){
   } else if (dfsch_car(consequent) == DFSCH_SYM_BOLD_RIGHT_ARROW){
     dfsch_object_t* tmp_name = dfsch_gensym();
     return dfsch_generate_let1
-      (dfsch_cons(dfsch_list(2, tmp_name, condition), 
+      (dfsch_cons(dfsch_immutable_list(2, tmp_name, condition), 
                   NULL),
        dfsch_generate_if(tmp_name,
-                         dfsch_list(2, 
-                                    dfsch_car(dfsch_cdr(consequent)), 
-                                    tmp_name),
-                         dfsch_cons(DFSCH_MACRO_REF(cond), args)));
+                         dfsch_immutable_list(2, 
+                                              dfsch_car(dfsch_cdr(consequent)), 
+                                              tmp_name),
+                         dfsch_immutable_list_cdr(args, 1,
+                                                  DFSCH_MACRO_REF(cond))));
   } else {
     return dfsch_generate_if(condition,
                              dfsch_generate_begin(consequent),
-                             dfsch_cons(DFSCH_MACRO_REF(cond), args));
+                             dfsch_immutable_list_cdr(args, 1, 
+                                                      DFSCH_MACRO_REF(cond)));
 
   }
 }
@@ -157,10 +160,10 @@ DFSCH_DEFINE_MACRO(define_variable,
   DFSCH_OBJECT_ARG_OPT(args, value, NULL);
   DFSCH_ARG_END(args);
   
-  return dfsch_list(3,
-                    DFSCH_MACRO_REF(unless),
-                    dfsch_generate_defined_p(name),
-                    dfsch_generate_define_variable(name, value));
+  return dfsch_immutable_list(3,
+                              DFSCH_MACRO_REF(unless),
+                              dfsch_generate_defined_p(name),
+                              dfsch_generate_define_variable(name, value));
 }
 DFSCH_DEFINE_MACRO(define_constant,
                    "Define constant variable"){
@@ -171,10 +174,10 @@ DFSCH_DEFINE_MACRO(define_constant,
   DFSCH_OBJECT_ARG_OPT(args, value, NULL);
   DFSCH_ARG_END(args);
   
-  return dfsch_list(3,
-                    DFSCH_MACRO_REF(unless),
-                    dfsch_generate_defined_p(name),
-                    dfsch_generate_define_constant(name, value));
+  return dfsch_immutable_list(3,
+                              DFSCH_MACRO_REF(unless),
+                              dfsch_generate_defined_p(name),
+                              dfsch_generate_define_constant(name, value));
 }
 DFSCH_DEFINE_MACRO(let, NULL){
   dfsch_object_t *vars;
@@ -220,11 +223,12 @@ DFSCH_DEFINE_MACRO(let, NULL){
     lambda = dfsch_generate_lambda(name, ll_head, code);
     //    dfsch_define(name, lambda, ext_env, 0);
 
-    return dfsch_generate_let(NULL,
-                              dfsch_list(2,
-                                         dfsch_generate_define_constant(name,
-                                                                        lambda),
-                                         dfsch_cons(name, vl_head)));
+    return dfsch_generate_let
+      (NULL,
+       dfsch_immutable_list(2,
+                            dfsch_generate_define_constant(name,
+                                                           lambda),
+                            dfsch_cons(name, vl_head)));
   }
 
   return dfsch_generate_let(vars, code);
