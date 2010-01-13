@@ -417,6 +417,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
 
   dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
+  dfsch_defconst_cstr(ctx, "immutable-quasiquote", DFSCH_FORM_REF(quasiquote));
   dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
   dfsch_defconst_cstr(ctx, "if", DFSCH_FORM_REF(if));
 
