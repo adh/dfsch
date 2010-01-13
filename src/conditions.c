@@ -185,6 +185,24 @@ dfsch_type_t dfsch_runtime_error_type =
 
 static int invoke_debugger_on_all_conditions = 0;
 
+static int recursive_lossage = 0;
+
+void dfsch_lose_fatally(char* message, dfsch_object_t* object){
+  if (recursive_lossage){
+    fprintf(stderr, "Recursive lossage!\n  %s\n    %p (%s)\n",
+            message, object, DFSCH_TYPE_OF(object)->name);
+    dfsch_print_trace_buffer();
+  } else {
+    recursive_lossage = 1;
+    fprintf(stderr, "%s\n  %s\n\n%s\n", 
+            message, 
+            dfsch_object_2_string(object, 10, 1),
+            dfsch_format_trace(dfsch_get_trace()));
+  }
+
+  abort();  
+}
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
@@ -203,10 +221,7 @@ void dfsch_signal(dfsch_object_t* condition){
 
   if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
     dfsch_enter_debugger(condition);
-    fputs("Unhandled error condition!\n\n", stderr);
-    fprintf(stderr, "%s\n", dfsch_object_2_string(condition, 10, 1));
-    dfsch_print_trace_buffer();
-    abort();
+    dfsch_lose_fatally("Unhandled error condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
   }

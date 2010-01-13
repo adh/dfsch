@@ -81,11 +81,6 @@ void dfsch_print_trace_buffer(){
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name,
               ti->trace_buffer[i].data.apply.args,
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.args)->name);
-      fprintf(stderr, "       %s\n     %s\n", 
-              dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
-                                    10, 1),
-              dfsch_object_2_string(ti->trace_buffer[i].data.apply.args, 
-                                    10, 1));
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
       {
@@ -97,15 +92,6 @@ void dfsch_print_trace_buffer(){
                 DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
                 ti->trace_buffer[i].data.eval.env,
                 DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
-        fprintf(stderr, "     %s\n", 
-                dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
-                                      10, 1));
-        if (annot){
-          fprintf(stderr, "       @ %s:%s\n", 
-                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 0),
-                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 0));
-          
-        }
       }
       break;
     }
