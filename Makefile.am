@@ -16,7 +16,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
-	dfsch/promise.h \
 	dfsch/hash.h \
 	dfsch/dfsch.h \
 	dfsch/types.h \
@@ -83,7 +82,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/forms.c src/system.c src/macros.c	\
 	src/util.c src/util.h 		\
 	src/hash.c dfsch/hash.h 	\
-	src/promise.c dfsch/promise.h 	\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
 	src/strings.c dfsch/strings.h 	udata.h udata.c\
 	src/object.c dfsch/object.h	\

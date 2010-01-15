@@ -1346,7 +1346,6 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__forms_register(ctx);
   dfsch__system_register(ctx);
   dfsch__hash_native_register(ctx);
-  dfsch__promise_native_register(ctx);
   dfsch__number_native_register(ctx);
   dfsch__string_native_register(ctx);
   dfsch__object_native_register(ctx);
