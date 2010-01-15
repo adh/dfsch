@@ -354,6 +354,70 @@ DFSCH_DEFINE_FORM_IMPL(current_environment,
   return env;
 }
 
+/*
+ * This is generally non-sufficient interface, but rest could be implemented 
+ * as macros.
+ */
+
+DFSCH_DEFINE_FORM_IMPL(handler_bind, NULL){
+  dfsch_object_t* ret;
+  dfsch_object_t* bindings;
+  dfsch_object_t* code;
+  DFSCH_OBJECT_ARG(args, bindings);
+  DFSCH_ARG_REST(args, code);
+
+  DFSCH_SAVE_HANDLERS;
+
+  while (DFSCH_PAIR_P(bindings)){
+    dfsch_object_t* type;
+    dfsch_object_t* handler;
+    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), type);
+    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), handler);
+    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+
+    type = dfsch_eval(type, env);
+    handler = dfsch_eval(handler, env);
+
+    dfsch_handler_bind(type, handler);
+    bindings = DFSCH_FAST_CDR(bindings);
+  }
+
+  ret = dfsch_eval_proc(code, env);
+
+  DFSCH_RESTORE_HANDLERS;
+  return ret;
+}
+
+DFSCH_DEFINE_FORM_IMPL(restart_bind, NULL){
+  dfsch_object_t* ret;
+  dfsch_object_t* bindings;
+  dfsch_object_t* code;
+  DFSCH_OBJECT_ARG(args, bindings);
+  DFSCH_ARG_REST(args, code);
+
+  DFSCH_SAVE_HANDLERS;
+
+  while (DFSCH_PAIR_P(bindings)){
+    dfsch_object_t* name;
+    dfsch_object_t* proc;
+    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), name);
+    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), proc);
+    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+
+    proc = dfsch_eval(proc, env);
+
+    // TODO
+    dfsch_restart_bind(dfsch_make_restart(name, proc, "", NULL));
+    bindings = DFSCH_FAST_CDR(bindings);
+  }
+
+  ret = dfsch_eval_proc(code, env);
+
+  DFSCH_RESTORE_HANDLERS;
+  return ret;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__forms_register(dfsch_object_t *ctx){ 
@@ -389,4 +453,10 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
   dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
+
+  dfsch_define_cstr(ctx, "handler-bind",
+                    DFSCH_FORM_REF(handler_bind));
+  dfsch_define_cstr(ctx, "restart-bind",
+                    DFSCH_FORM_REF(restart_bind));
+
 }
