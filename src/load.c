@@ -509,7 +509,7 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
   return ictx.head;
 }
 
-DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
+DFSCH_DEFINE_FORM(load_scm, NULL, {}){
   char* file_name;
 
   args = dfsch_eval_list(args, env);
@@ -520,7 +520,7 @@ DFSCH_DEFINE_FORM_IMPL(load_scm, NULL){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
+DFSCH_DEFINE_FORM(load_so, NULL, {}){
   char* sym_name;
   char* so_name;
 
@@ -533,7 +533,7 @@ DFSCH_DEFINE_FORM_IMPL(load_so, NULL){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM_IMPL(load, NULL){
+DFSCH_DEFINE_FORM(load, NULL, {}){
   char* name;
   dfsch_object_t* path_list;
 
@@ -545,7 +545,7 @@ DFSCH_DEFINE_FORM_IMPL(load, NULL){
   dfsch_load(env, name, path_list);  
   return NULL;
 }
-DFSCH_DEFINE_FORM_IMPL(require, NULL){
+DFSCH_DEFINE_FORM(require, NULL, {}){
   char* name;
   dfsch_object_t* path_list;
 
@@ -556,7 +556,7 @@ DFSCH_DEFINE_FORM_IMPL(require, NULL){
 
   return dfsch_bool(dfsch_require(env, name, path_list));  
 }
-DFSCH_DEFINE_FORM_IMPL(provide, NULL){
+DFSCH_DEFINE_FORM(provide, NULL, {}){
   char* name;
 
   args = dfsch_eval_list(args, env);
@@ -574,10 +574,11 @@ DFSCH_DEFINE_PRIMITIVE(read_scm, NULL){
   return dfsch_read_scm(filename, NULL);
 }
 
-DFSCH_DEFINE_FORM_IMPL(when_toplevel, 
-                       "Evaluate expressions only in top-level loaded file"
-                       " (intended to support files both usable as scripts "
-                       "and modules)"){
+DFSCH_DEFINE_FORM(when_toplevel, 
+                  "Evaluate expressions only in top-level loaded file"
+                  " (intended to support files both usable as scripts "
+                  "and modules)", 
+                  {}){
   load_thread_info_t* lti = get_load_ti();
 
   if (!lti->operation || lti->operation->toplevel){

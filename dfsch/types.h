@@ -92,7 +92,6 @@ typedef struct dfsch_primitive_t {
   char* name;
   char* documentation;
 
-  struct dfsch_eqhash_t* parasites;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
@@ -154,7 +153,18 @@ typedef struct dfsch_macro_t {
 
 
 
+
 typedef struct dfsch_form_t dfsch_form_t;
+
+typedef dfsch_object_t* (*dfsch_expression_visitor_t)(dfsch_object_t* expr,
+                                                      void* baton);
+
+typedef struct dfsch_form_methods_t {
+  dfsch_object_t* (*visit_form)(dfsch_form_t* form, 
+                                dfsch_object_t* args,
+                                dfsch_expression_visitor_t visitor,
+                                void* baton);
+} dfsch_form_methods_t;
 
 typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
                                              dfsch_object_t* env,
@@ -167,7 +177,8 @@ struct dfsch_form_t {
   char* name;
   char* documentation;
 
-  struct dfsch_eqhash_t* parasites;
+  dfsch_form_methods_t methods;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -181,23 +192,15 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
 
-#define DFSCH_DEFINE_FORM(name, documentation)   \
-  static dfsch_form_t form_##name = {            \
-    DFSCH_FORM_TYPE,                             \
-    form_##name##_impl,                          \
-    NULL,                                        \
-    #name,                                       \
-    documentation                                \
-  }
-
-#define DFSCH_DEFINE_FORM_IMPL(name, documentation)     \
+#define DFSCH_DEFINE_FORM(name, documentation, methods) \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
   static dfsch_form_t form_##name = {                   \
     DFSCH_FORM_TYPE,                                    \
     form_##name##_impl,                                 \
     NULL,                                               \
     #name,                                              \
-    documentation                                       \
+    documentation,                                      \
+    methods                                             \
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 

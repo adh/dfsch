@@ -869,7 +869,7 @@ static dfsch_singleton_generic_function_t generic_function_methods = {
   
 };
 
-DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
+DFSCH_DEFINE_FORM(call_next_method, "Call next less specialized method", {}){
   dfsch_object_t* ctx;
   args = dfsch_eval_list(args, env);
 
@@ -883,7 +883,7 @@ DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
+DFSCH_DEFINE_FORM(define_generic_function, "Define new generic function", {}){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_ARG_END(args);
@@ -892,7 +892,7 @@ DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
   return ensure_generic_function(env, name);
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
+DFSCH_DEFINE_FORM(define_method, "Define new generic function", {}){
   dfsch_object_t* header; 
   dfsch_object_t* body;
   dfsch_object_t* name;
