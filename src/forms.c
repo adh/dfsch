@@ -41,7 +41,12 @@ typedef dfsch_object_t object_t;
 
 // TODO: document all native functions somewhere
 
-DFSCH_DEFINE_FORM(if, "Conditional operator", {}){
+DFSCH_FORM_METHOD_VISIT(if){
+
+}
+
+DFSCH_DEFINE_FORM(if, "Conditional operator", 
+                  {DFSCH_FORM_VISIT(if)}){
   object_t* test;
   object_t* consequent;
   object_t* alternate;

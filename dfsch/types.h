@@ -160,10 +160,10 @@ typedef dfsch_object_t* (*dfsch_expression_visitor_t)(dfsch_object_t* expr,
                                                       void* baton);
 
 typedef struct dfsch_form_methods_t {
-  dfsch_object_t* (*visit_form)(dfsch_form_t* form, 
-                                dfsch_object_t* args,
-                                dfsch_expression_visitor_t visitor,
-                                void* baton);
+  dfsch_object_t* (*visit)(dfsch_form_t* form, 
+                           dfsch_object_t* args,
+                           dfsch_expression_visitor_t visitor,
+                           void* baton);
 } dfsch_form_methods_t;
 
 typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
@@ -191,6 +191,16 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* env,        \
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
+
+#define DFSCH_FORM_METHOD_VISIT(name)                                         \
+  static dfsch_object_t* form_##name##_visit\
+  (dfsch_form_t* form,                                                  \
+   dfsch_object_t* args,                                                \
+   dfsch_expression_visitor_t visitor,                                  \
+   void* baton)
+
+#define DFSCH_FORM_VISIT(name)                  \
+  .visit = form_##name##_visit
 
 #define DFSCH_DEFINE_FORM(name, documentation, methods) \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
