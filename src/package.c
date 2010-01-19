@@ -151,6 +151,7 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "use-value"},
   {DFSCH_DFSCH_PACKAGE, "*macro-expanded-from*"},
   {DFSCH_DFSCH_PACKAGE, "immutable-quasiquote"},
+  {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
 };
 
 static dfsch_package_t* find_package(char* name){

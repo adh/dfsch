@@ -161,7 +161,7 @@ typedef dfsch_object_t* (*dfsch_expression_visitor_t)(dfsch_object_t* expr,
 
 typedef struct dfsch_form_methods_t {
   dfsch_object_t* (*visit)(dfsch_form_t* form, 
-                           dfsch_object_t* args,
+                           dfsch_object_t* expr,
                            dfsch_expression_visitor_t visitor,
                            void* baton);
 } dfsch_form_methods_t;
@@ -494,5 +494,6 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 
 #define DFSCH_SYM_MACRO_EXPANDED_FROM DFSCH__STATIC_SYMBOL(20)
 #define DFSCH_SYM_IMMUTABLE_QUASIQUOTE DFSCH__STATIC_SYMBOL(21)
+#define DFSCH_SYM_COMPILED_FROM DFSCH__STATIC_SYMBOL(22)
 
 #endif

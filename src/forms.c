@@ -42,7 +42,22 @@ typedef dfsch_object_t object_t;
 // TODO: document all native functions somewhere
 
 DFSCH_FORM_METHOD_VISIT(if){
+  dfsch_object_t* orig_args = args;
+  object_t* test;
+  object_t* consequent;
+  object_t* alternate;
 
+  DFSCH_OBJECT_ARG(args,test);
+  DFSCH_OBJECT_ARG(args,consequent);
+  DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
+  
+
+  return dfsch_cons_walked(form,
+                           orig_args,
+                           3,
+                           visitor(test, baton),
+                           visitor(consequent, baton),
+                           visitor(alternate, baton));
 }
 
 DFSCH_DEFINE_FORM(if, "Conditional operator", 
