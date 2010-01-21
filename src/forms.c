@@ -118,8 +118,15 @@ DFSCH_DEFINE_FORM(internal_let, NULL, {}){
   object_t* ext_env = dfsch_new_frame(env);
 
   while (DFSCH_PAIR_P(vars)){
-    object_t* var = dfsch_list_item(DFSCH_FAST_CAR(vars),0);
-    object_t* val = dfsch_eval(dfsch_list_item(DFSCH_FAST_CAR(vars),1), env);
+    dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+    object_t* var;
+    object_t* val;
+
+    DFSCH_OBJECT_ARG(clause, var);
+    DFSCH_OBJECT_ARG(clause, val);
+    DFSCH_ARG_END(clause);
+
+    val = dfsch_eval(val, env);
 
     dfsch_define(var, val, ext_env, 0);
     
