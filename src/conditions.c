@@ -564,6 +564,27 @@ DFSCH_DEFINE_PRIMITIVE(error, "Signal an error condition"){
                                            message, fields));
   return NULL;
 }
+dfsch_object_t* dfsch_generate_error(char* message,
+                                     dfsch_object_t* obj){
+  return dfsch_immutable_list(3, 
+                              DFSCH_PRIMITIVE_REF(error), 
+                              dfsch_make_string_cstr(message),
+                              obj);
+}
+DFSCH_DEFINE_PRIMITIVE(cerror, "Signal an continuable error condition"){
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+
+  DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                "continue"),
+                            "Ignore error condition"){
+    dfsch_signal(dfsch_condition_with_fields(DFSCH_ERROR_TYPE, 
+                                           message, fields));
+  } DFSCH_END_WITH_SIMPLE_RESTART;
+  return NULL;
+}
 DFSCH_DEFINE_PRIMITIVE(runtime_error, "Signal an runtime-error condition"){
   dfsch_object_t* message;
   dfsch_object_t* fields;
@@ -625,6 +646,8 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "warning",
                     DFSCH_PRIMITIVE_REF(warning));
   dfsch_define_cstr(ctx, "error",
+                    DFSCH_PRIMITIVE_REF(error));
+  dfsch_define_cstr(ctx, "cerror",
                     DFSCH_PRIMITIVE_REF(error));
   dfsch_define_cstr(ctx, "runtime-error",
                     DFSCH_PRIMITIVE_REF(runtime_error));

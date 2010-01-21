@@ -787,7 +787,6 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
   return t->call_next_method(context, args, esc);
 }
 
-
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
@@ -883,14 +882,28 @@ DFSCH_DEFINE_FORM(call_next_method, "Call next less specialized method", {}){
 }
 
 
-DFSCH_DEFINE_FORM(define_generic_function, "Define new generic function", {}){
+DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_ARG_END(args);
   
 
-  return ensure_generic_function(env, name);
+  return dfsch_generate_if
+    (dfsch_generate_defined_p(name),
+     dfsch_generate_if(dfsch_generate_instance_p(name, 
+                                                 DFSCH_GENERIC_FUNCTION_TYPE),
+                       name,
+                       dfsch_generate_error("Generic function name already "
+                                             " defined as different type", 
+                                             name)),
+     dfsch_generate_define_constant(name,
+                                    dfsch_immutable_list
+                                    (2,
+                                     DFSCH_PRIMITIVE_REF(make_generic_function),
+                                     name)));
+     
 }
+
 
 DFSCH_DEFINE_FORM(define_method, "Define new generic function", {}){
   dfsch_object_t* header; 
@@ -945,7 +958,7 @@ void dfsch__generic_register(dfsch_object_t* env){
                     DFSCH_FORM_REF(call_next_method));
 
   dfsch_defconst_cstr(env, "define-generic-function",
-                      DFSCH_FORM_REF(define_generic_function));
+                      DFSCH_MACRO_REF(define_generic_function));
   dfsch_defconst_cstr(env, "define-method",
                       DFSCH_FORM_REF(define_method));
 

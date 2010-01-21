@@ -129,7 +129,12 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, "Is object instance of given type?"){
 
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
 }
-
+dfsch_object_t* dfsch_generate_instance_p(dfsch_object_t* obj,
+                                          dfsch_object_t* klass){
+  return dfsch_immutable_list(3, 
+                              DFSCH_PRIMITIVE_REF(instance_p), 
+                              obj, klass);
+}
 DFSCH_DEFINE_PRIMITIVE(slot_set, "Store value into object's slot"){
   dfsch_object_t* object;
   dfsch_object_t* value;
