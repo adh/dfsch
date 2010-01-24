@@ -861,9 +861,11 @@ static dfsch_singleton_generic_function_t generic_function_methods = {
   
 };
 
-DFSCH_DEFINE_FORM(call_next_method, "Call next less specialized method", {}){
+DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
+  dfsch_object_t* env;
   dfsch_object_t* ctx;
-  args = dfsch_eval_list(args, env);
+
+  DFSCH_OBJECT_ARG(args, env);
 
   ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
 
@@ -871,7 +873,13 @@ DFSCH_DEFINE_FORM(call_next_method, "Call next less specialized method", {}){
     dfsch_error("call-next-method called outside allowed scope", NULL);
   }
 
-  return dfsch_call_next_method(ctx, args, esc);
+  return dfsch_call_next_method(ctx, args, esc);  
+}
+
+DFSCH_DEFINE_MACRO(call_next_method, "Call next less specialized method"){
+  return dfsch_immutable_list_cdr(args, 2,
+                                  DFSCH_PRIMITIVE_REF(call_next_method),
+                                  dfsch_generate_current_environment());
 }
 
 
@@ -953,7 +961,7 @@ void dfsch__generic_register(dfsch_object_t* env){
                     (dfsch_object_t*)&generic_function_methods);
 
   dfsch_defconst_cstr(env, "call-next-method",
-                    DFSCH_FORM_REF(call_next_method));
+                    DFSCH_MACRO_REF(call_next_method));
 
   dfsch_defconst_cstr(env, "define-generic-function",
                       DFSCH_MACRO_REF(define_generic_function));

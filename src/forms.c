@@ -374,6 +374,9 @@ DFSCH_DEFINE_FORM(current_environment,
                   "Return lexically-enclosing environment", {}){
   return env;
 }
+dfsch_object_t* dfsch_generate_current_environment(){
+  return dfsch_cons(DFSCH_FORM_REF(current_environment), NULL);
+}
 
 /*
  * This is generally non-sufficient interface, but rest could be implemented 
