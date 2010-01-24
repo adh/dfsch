@@ -814,7 +814,7 @@ static dfsch_object_t* add_method_apply(dfsch_object_t* f,
 
   dfsch_generic_function_add_method(function, 
                                     DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
-  return NULL;
+  return method;
 }
 
 static dfsch_singleton_generic_function_t add_method = {
