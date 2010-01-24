@@ -90,6 +90,11 @@ DFSCH_DEFINE_FORM(quote, NULL, {}){
 
   return value;
 }
+dfsch_object_t* dfsch_generate_quote(dfsch_object_t* value){
+  return dfsch_immutable_list(2, 
+                              DFSCH_FORM_REF(quote), 
+                              value);
+}
 
 DFSCH_DEFINE_FORM(quasiquote, NULL, {}){ 
   /* This is non-trivial to compile right */

@@ -711,7 +711,6 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
  */
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec){
   dfsch_object_t* specializers_head = NULL;
@@ -729,12 +728,6 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
     DFSCH_OBJECT_ARG(j, var);
     DFSCH_OBJECT_ARG(j, specializer);
     DFSCH_ARG_END(j);
-
-    specializer = dfsch_eval(specializer, env);
-    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
-                                        DFSCH_STANDARD_TYPE);
-
-
 
     tmp = dfsch_cons(var, NULL);
     if (lambda_list_tail){
@@ -900,12 +893,12 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
                                     dfsch_immutable_list
                                     (2,
                                      DFSCH_PRIMITIVE_REF(make_generic_function),
-                                     name)));
+                                     dfsch_generate_quote(name))));
      
 }
 
 
-DFSCH_DEFINE_FORM(define_method, "Define new generic function", {}){
+DFSCH_DEFINE_MACRO(define_method, "Define new generic function"){
   dfsch_object_t* header; 
   dfsch_object_t* body;
   dfsch_object_t* name;
@@ -930,16 +923,21 @@ DFSCH_DEFINE_FORM(define_method, "Define new generic function", {}){
     name = DFSCH_FAST_CAR(name);
   }
 
-  dfsch_parse_specialized_lambda_list(lambda_list, env, 
+  dfsch_parse_specialized_lambda_list(lambda_list,
                                       &lambda_list, &specializers);
- 
-  
-  method = dfsch_make_method(header, qualifiers, specializers, 
-                             dfsch_named_lambda(env, lambda_list, 
-                                                body, header));
 
-
-  return dfsch_define_method(env, name, method);
+  return dfsch_immutable_list
+    (3,
+     (dfsch_object_t*)&add_method,
+     dfsch_immutable_list(2,
+                          DFSCH_MACRO_REF(define_generic_function),
+                          name),
+     dfsch_immutable_list(5,
+                          DFSCH_PRIMITIVE_REF(make_method),
+                          dfsch_generate_quote(header),
+                          dfsch_generate_quote(qualifiers),
+                          dfsch_generate_eval_list(specializers),
+                          dfsch_generate_lambda(header, lambda_list, body)));
 }
 
 
@@ -960,6 +958,6 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defconst_cstr(env, "define-generic-function",
                       DFSCH_MACRO_REF(define_generic_function));
   dfsch_defconst_cstr(env, "define-method",
-                      DFSCH_FORM_REF(define_method));
+                      DFSCH_MACRO_REF(define_method));
 
 }

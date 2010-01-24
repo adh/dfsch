@@ -116,7 +116,6 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
 
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec);
 

@@ -247,6 +247,12 @@ DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
 DFSCH_DEFINE_PRIMITIVE(list, NULL){
   return dfsch_list_copy(args);
 }
+dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
+  return dfsch_cons(DFSCH_PRIMITIVE_REF(list), 
+                    exps);
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(length, NULL){
   long len;
   NEED_ARGS(args,1);  
