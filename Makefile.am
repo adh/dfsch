@@ -99,9 +99,9 @@ udata.h: udata-gen src/UnicodeData.txt
 udata.c: udata-gen src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
 
-CLEANFILES=udata.c udata.h
+CLEANFILES=udata.c udata.h udata-gen$(EXEEXT)
 
-udata-gen$(EXEEXT): src/udata-gen.c
+udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
