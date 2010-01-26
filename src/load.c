@@ -273,6 +273,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
   for (i = 0; i < sizeof(builtin_modules) / sizeof(builtin_module_t); i++){
     if (strcmp(builtin_modules[i].name, name) == 0){
       builtin_modules[i].register_proc(env);
+      return;
     }
   }
 
