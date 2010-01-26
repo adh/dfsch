@@ -294,8 +294,10 @@ int dfsch_console_read_objects_parser(char* prompt,
 
   DFSCH_UNWIND {
     while (line = dfsch_console_read_line_object(get_prompt(parser, prompt))){
+      ret = 0;
       DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                                    "abort"), "Return to reader"){
+                                                    "abort"), 
+                                "Return to reader"){
         ret = dfsch_parser_feed_line(parser, line);
       }DFSCH_END_WITH_SIMPLE_RESTART;
       if (ret){
