@@ -94,10 +94,10 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 
 BUILT_SOURCES=udata.c udata.h
 strings.o: udata.h
-udata.h: udata-gen src/UnicodeData.txt
-	./udata-gen header $(srcdir)/src/UnicodeData.txt udata.h
-udata.c: udata-gen src/UnicodeData.txt
-	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
+udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
+	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
+udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
+	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT)
 
