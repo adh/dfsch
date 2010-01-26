@@ -45,9 +45,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
-	libdfsch-json.la \
-	libdfsch-http.la \
-	libdfsch-socket-port.la
+	libdfsch-json.la
 
 dfschlibexec_LTLIBRARIES = threads.la \
 	inet.la \
@@ -59,8 +57,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	cmdopts.la \
 	xml.la \
 	sxml.la \
-	json.la \
-	socket-port.la
+	json.la
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
