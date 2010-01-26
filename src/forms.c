@@ -41,8 +41,8 @@ typedef dfsch_object_t object_t;
 
 // TODO: document all native functions somewhere
 
-DFSCH_FORM_METHOD_VISIT(if){
-  dfsch_object_t* orig_args = args;
+DFSCH_FORM_METHOD_CONSTANT_FOLD(if){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
   object_t* test;
   object_t* consequent;
   object_t* alternate;
@@ -51,17 +51,20 @@ DFSCH_FORM_METHOD_VISIT(if){
   DFSCH_OBJECT_ARG(args,consequent);
   DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
   
+  test = dfsch_constant_fold_expression(test, env);
+  consequent = dfsch_constant_fold_expression(consequent, env);
+  alternate = dfsch_constant_fold_expression(alternate, env);
 
-  return dfsch_cons_walked(form,
-                           orig_args,
-                           3,
-                           visitor(test, baton),
-                           visitor(consequent, baton),
-                           visitor(alternate, baton));
+  return dfsch_cons_ast_node(form,
+                             expr,
+                             3,
+                             test,
+                             consequent,
+                             alternate);
 }
 
 DFSCH_DEFINE_FORM(if, "Conditional operator", 
-                  {DFSCH_FORM_VISIT(if)}){
+                  {DFSCH_FORM_CONSTANT_FOLD(if)}){
   object_t* test;
   object_t* consequent;
   object_t* alternate;

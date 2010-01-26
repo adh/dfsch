@@ -156,14 +156,10 @@ typedef struct dfsch_macro_t {
 
 typedef struct dfsch_form_t dfsch_form_t;
 
-typedef dfsch_object_t* (*dfsch_expression_visitor_t)(dfsch_object_t* expr,
-                                                      void* baton);
-
 typedef struct dfsch_form_methods_t {
-  dfsch_object_t* (*visit)(dfsch_form_t* form, 
-                           dfsch_object_t* expr,
-                           dfsch_expression_visitor_t visitor,
-                           void* baton);
+  dfsch_object_t* (*constant_fold)(dfsch_form_t* form, 
+                                   dfsch_object_t* expr,
+                                   dfsch_object_t* env);
 } dfsch_form_methods_t;
 
 typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
@@ -192,15 +188,14 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
 
-#define DFSCH_FORM_METHOD_VISIT(name)                                         \
-  static dfsch_object_t* form_##name##_visit\
+#define DFSCH_FORM_METHOD_CONSTANT_FOLD(name)   \
+  static dfsch_object_t* form_##name##_constant_fold                    \
   (dfsch_form_t* form,                                                  \
-   dfsch_object_t* args,                                                \
-   dfsch_expression_visitor_t visitor,                                  \
-   void* baton)
+   dfsch_object_t* expr,                                                \
+   dfsch_object_t* env)
 
-#define DFSCH_FORM_VISIT(name)                  \
-  .visit = form_##name##_visit
+#define DFSCH_FORM_CONSTANT_FOLD(name)                  \
+  .constant_fold = form_##name##_constant_fold
 
 #define DFSCH_DEFINE_FORM(name, documentation, methods) \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
