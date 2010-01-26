@@ -654,7 +654,7 @@ int dfsch_number_sign(dfsch_object_t* n){
     if (nn == 0.0){
       return 0;
     } else {
-      return (DFSCH_FIXNUM_REF(n) < 0) ? - 1 : 1;      
+      return (nn < 0) ? - 1 : 1;      
     }
   } 
 }

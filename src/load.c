@@ -220,8 +220,23 @@ static char** my_scandir(char* dirname){
 
 static char* get_module_symbol(char* name){
   str_list_t* l = sl_create();
-  char* buf = stracpy(name);
-  char* i = buf;
+  char* buf;
+  char* i;
+
+  i = strrchr(name, '/');
+  
+  if (i) {
+    buf = stracpy(i + 1);
+  } else {
+    buf = stracpy(name);
+  }
+  
+  i = strchr(buf, '.');
+  if (i){
+    *i = '\0';
+  }
+
+  i = buf;
 
   while(*i){
     if (!strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", *i)){
@@ -257,6 +272,24 @@ static char* pathname_directory(char* path){
   return strancpy(path, pos - path);
 }
 
+typedef struct module_loader_t {
+  char* path_ext;
+  void (*load)(char* fname, dfsch_object_t* env);
+} module_loader_t;
+
+static void scm_loader(char* fname, dfsch_object_t* env){
+  dfsch_load_scm(env, fname, 0);
+}
+static void so_loader(char* fname, dfsch_object_t* env){
+  dfsch_load_so(env, fname, get_module_symbol(fname));
+}
+
+static module_loader_t loaders[] = {
+  {".scm", scm_loader},
+  {".so", so_loader},
+  {".dsl", so_loader},
+};
+
 void dfsch_load(dfsch_object_t* env, char* name, 
                 dfsch_object_t* path_list){
   struct stat st;
@@ -269,6 +302,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
   for (i = 0; i < sizeof(builtin_modules) / sizeof(builtin_module_t); i++){
     if (strcmp(builtin_modules[i].name, name) == 0){
       builtin_modules[i].register_proc(env);
+      return;
     }
   }
 
@@ -288,15 +322,18 @@ void dfsch_load(dfsch_object_t* env, char* name,
     sl_append(l, name);
     pathpart = sl_value(l);
     if (stat(pathpart, &st) == 0){ 
-      if (S_ISREG(st.st_mode)){
-	if (strlen(pathpart) >= 4 &&
-            strcmp(".dsl", pathpart+strlen(pathpart)-4) == 0){
-	  dfsch_load_so(env, pathpart, get_module_symbol(name));
-          return;
-	} else {
-	  dfsch_load_scm(env, pathpart, 0);
-          return;
-	}
+      if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)){
+
+        for (i = 0; i < sizeof(loaders) / sizeof(module_loader_t); i++){
+          if (strcmp(pathpart + strlen(pathpart) - strlen(loaders[i].path_ext),
+                     loaders[i].path_ext) == 0){
+            loaders[i].load(pathpart, env);	      
+            return;
+          }
+        }
+
+        dfsch_load_scm(env, pathpart, 0);
+        return;
       }
       if (S_ISDIR(st.st_mode)){
 	char** list = my_scandir(pathpart);
@@ -307,8 +344,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
 	  sl_append(l, "/");
 	  sl_append(l, *list);
 	  
-	  if (strlen(*list) > 4 && 
-              strcmp(".dsl", (*list)+strlen(*list)-4) == 0){
+	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
 	    dfsch_load_so(env, fname, get_module_symbol(name));	      
 	  } else {
 	    dfsch_load_scm(env, fname, 0);
@@ -319,17 +355,15 @@ void dfsch_load(dfsch_object_t* env, char* name,
         return;
       }
     }
-    fname = stracat(pathpart, ".scm");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode))){
-      dfsch_load_scm(env, fname, 0);	      
-      return;
-    }
-    fname = stracat(pathpart, ".dsl");
-    if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode))){
-      dfsch_load_so(env, fname, get_module_symbol(name));	      
-      return;
-    }
 
+    for (i = 0; i < sizeof(loaders) / sizeof(module_loader_t); i++){
+      fname = stracat(pathpart, loaders[i].path_ext);
+      if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || 
+                                    S_ISLNK(st.st_mode))){
+        loaders[i].load(fname, env);	      
+        return;
+      }
+    }
     
     path = dfsch_cdr(path);
   }

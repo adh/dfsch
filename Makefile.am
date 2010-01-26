@@ -11,6 +11,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/xml.h \
 	dfsch/lib/sxml.h \
 	dfsch/lib/json.h \
+        dfsch/lib/socket-port.h \
+        dfsch/lib/http.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -67,7 +69,8 @@ dfschlibscm_DATA = scm/stream-functions.scm \
 man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
-	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm
+	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
+        scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
@@ -98,9 +101,11 @@ udata.h: udata-gen src/UnicodeData.txt
 	./udata-gen header $(srcdir)/src/UnicodeData.txt udata.h
 udata.c: udata-gen src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
-udata-gen: $(srcdir)/src/udata-gen.c
-	gcc -o udata-gen $(srcdir)/src/udata-gen.c -lgc 
 
+CLEANFILES=udata.c udata.h
+
+udata-gen$(EXEEXT): src/udata-gen.c
+	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 libdfsch_la_LIBADD =  -lgc -lpthreadGC2 -lm
