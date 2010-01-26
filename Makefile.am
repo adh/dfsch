@@ -38,18 +38,25 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-console.la \
+	libdfsch-extref.la \
 	libdfsch-inet.la \
+	libdfsch-regex.la \
 	libdfsch-threads.la \
 	libdfsch-cdebug.la \
 	libdfsch-collections.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
-	libdfsch-json.la
+	libdfsch-json.la \
+	libdfsch-http.la \
+	libdfsch-socket-port.la
 
 dfschlibexec_LTLIBRARIES = threads.la \
+	regex.la \
+	unix.la \
 	inet.la \
 	gcollect.la \
+	extref.la \
 	cdebug.la \
 	console.la \
 	collections.la \
@@ -57,7 +64,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	cmdopts.la \
 	xml.la \
 	sxml.la \
-	json.la
+	json.la \
+	socket-port.la
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
@@ -157,7 +165,7 @@ gcollect_la_LIBADD =  libdfsch.la
 
 libdfsch_extref_la_SOURCES = lib/extref.c dfsch/lib/extref.h
 libdfsch_extref_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libdfsch_extref_la_LIBADD =  libdfsch.la
+libdfsch_extref_la_LIBADD =  libdfsch.la -lpthread
 
 extref_la_SOURCES = lib/extref_mod.c
 extref_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined

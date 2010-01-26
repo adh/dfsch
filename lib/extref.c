@@ -56,11 +56,19 @@ static void* extref_gc_thread(void* ignore){
   time_t cur_time;
 
   while (1){
-    sleep(2);
+#ifdef __WIN32__
+      Sleep(2); /* compatibility and portability ftw! */
+#else
+      sleep(2);
+#endif
     cur_time = time(NULL);
     while (cur_time < extref_next_gc){
       printf(";; GC thread sleeping for %d seconds\n", extref_next_gc - cur_time);
+#ifdef __WIN32__
+      Sleep(extref_next_gc - cur_time); /* compatibility and portability ftw! */
+#else
       sleep(extref_next_gc - cur_time);
+#endif
       cur_time = time(NULL);
     }
 
