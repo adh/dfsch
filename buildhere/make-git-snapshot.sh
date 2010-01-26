@@ -3,7 +3,7 @@
 REV=+`date --iso=date`
 
 if git rev-parse --verify HEAD >/dev/null 2>&1; then
-    REV=+git`git rev-parse --verify HEAD | cut -b1-8`
+    REV=+git-`git describe`
 fi
 
 if make distcheck; then

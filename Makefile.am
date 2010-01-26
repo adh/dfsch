@@ -101,7 +101,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/generic.c dfsch/generic.h	\
 	src/mkhash.c dfsch/mkhash.h
 
-noinst_PROGRAMS=udata-gen
 BUILT_SOURCES=udata.c udata.h
 strings.o: udata.h
 udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
@@ -109,9 +108,9 @@ udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
 udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
 
-CLEANFILES=udata.c udata.h
+CLEANFILES=udata.c udata.h udata-gen$(EXEEXT)
 
-udata-gen$(EXEEXT): src/udata-gen.c
+udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
