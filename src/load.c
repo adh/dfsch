@@ -50,6 +50,11 @@
 
 //#define DFSCH_DEFAULT_LIBDIR "."
 
+#ifdef __WIN32__
+#define S_ISLNK(x) 0
+#endif
+
+
 void dfsch_load_so(dfsch_object_t* ctx, 
                    char* so_name, 
                    char* sym_name){
