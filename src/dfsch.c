@@ -43,6 +43,7 @@
 #include <stdarg.h>
 
 #include "types.h"
+#include "version.h"
 
 //#define ALLOC_DEBUG
 
@@ -1338,6 +1339,8 @@ dfsch_object_t* dfsch_make_top_level_environment(){
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
   dfsch_define_cstr(ctx,"*dfsch-version*",
                     dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_define_cstr(ctx,"*dfsch-build-id*",
+                    dfsch_make_string_cstr(BUILD_ID));
   dfsch_define_cstr(ctx,"*dfsch-platform*",
                     dfsch_make_string_cstr(HOST_TRIPLET));
 
@@ -1404,4 +1407,12 @@ dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
 dfsch_object_t* dfsch_env_get_cstr(dfsch_object_t *ctx, char *name){
   return dfsch_env_get(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
                                            name), ctx);
+}
+
+
+char* dfsch_get_version(){
+  return PACKAGE_VERSION;
+}
+char* dfsch_get_build_id(){
+  return BUILD_ID;
 }

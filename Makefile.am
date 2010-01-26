@@ -78,9 +78,10 @@ man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
 	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
-        scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm
+        scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm \
+	make-version-h.sh git-make-stamp.sh
 
-libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
+libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
 	src/parse.c dfsch/parse.h 	\
 	src/primitives.c src/native_cxr.c	\
@@ -103,14 +104,14 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compile.c dfsch/compile.h
 
-BUILT_SOURCES=udata.c udata.h
+BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h
 udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen header $(srcdir)/src/UnicodeData.txt udata.h
 udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
 
-CLEANFILES=udata.c udata.h udata-gen$(EXEEXT)
+CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
@@ -255,3 +256,8 @@ json_parser_test_LDADD = libdfsch.la libdfsch-json.la
 
 TESTS = tests/scm-test.sh platform-test c-api-test
 
+dist-hook:
+	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp
+
+version.h:
+	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
