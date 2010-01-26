@@ -1,4 +1,4 @@
-#include <gc/gc.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -30,7 +30,7 @@ char* tokenize(char** lp){
     l++;
   }
 
-  r = GC_MALLOC_ATOMIC(l - *lp + 1);
+  r = malloc(l - *lp + 1);
   memcpy(r, *lp, l - *lp);
   r[l - *lp] = 0;
 
@@ -50,7 +50,7 @@ int ends_with(char* s, char* e){
 }
 
 udata_line_t* parse_line(char* line){
-  udata_line_t* l = GC_NEW_ATOMIC(udata_line_t);
+  udata_line_t* l = malloc(sizeof(udata_line_t));
   char* s_codepoint = tokenize(&line);
   char* s_name = tokenize(&line);
   char* s_category = tokenize(&line);
