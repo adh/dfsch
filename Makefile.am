@@ -111,8 +111,8 @@ udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
 
 CLEANFILES=udata.c udata.h
 
-udata_gen_SOURCES=src/udata-gen.c
-udata_gen_LDADD=-lgc
+udata-gen$(EXEEXT): src/udata-gen.c
+	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
