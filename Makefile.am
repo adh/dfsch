@@ -109,6 +109,8 @@ udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
 udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
 	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
 
+CLEANFILES=udata.c udata.h
+
 udata_gen_SOURCES=src/udata-gen.c
 udata_gen_LDADD=-lgc
 
