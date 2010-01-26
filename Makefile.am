@@ -36,7 +36,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/writer.h \
 	dfsch/eqhash.h \
 	dfsch/mkhash.h \
-	dfsch/compile.h
+	dfsch/compile.h \
+	dfsch/generate.h
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-console.la \
