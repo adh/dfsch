@@ -1,11 +1,11 @@
 #!/usr/bin/env dfsch-repl
-; documentation generator for dfsch
+                                        ; documentation generator for dfsch
 
-(require 'introspect)
-(require 'sxml)
-(require 'inet)
-(require 'cmdopts)
-(require 'unix)
+(require :introspect)
+(require :sxml)
+(require :inet)
+(require :cmdopts)
+(require :unix)
 
 (define (directory? path)
   (let ((stat (unix:stat path)))
@@ -17,7 +17,7 @@
   (unless (directory? path)
           (unix:mkdir path 0755)))
 
-(define *clean-toplevel* (make-default-environment))
+(define *clean-toplevel* (make-top-level-environment))
 
 (define (get-toplevel-variables)
   (get-variables *clean-toplevel*))
@@ -25,7 +25,7 @@
 (define (get-module-variables module)
   (letrec ((toplevel (make-default-environment))
            (start-state (get-variables toplevel)))
-    (load-into-environment! toplevel module load:*path*)
+    (load-into-environment! toplevel module *load-path*)
     (for-each (lambda (x) 
                 (let ((name (car x)))
                   (unset-from-environment! name toplevel)))
@@ -92,9 +92,9 @@
 
 (define (sort-entries lyst)
   (sort-list! lyst
-             (lambda (x y)
-               (string<? (entry-name x)
-                         (entry-name y)))))
+              (lambda (x y)
+                (string<? (entry-name x)
+                          (entry-name y)))))
 
 (define (documented-only lyst)
   (filter (lambda (entry) (entry-documentation entry)) lyst))
@@ -128,12 +128,12 @@
     (head ,@(when (not (null? title))
                   `((title ,title))))
     (frameset (@ (cols "250,*"))
-     (frame (@ (name "index") (src ,(if default-all 
-                                        "index-all.html"
-                                        "index-doc.html"))))
-     (frame (@ (name "body") (src ,(if default-all 
-                                        "body-all.html"
-                                        "body-doc.html")))))))
+              (frame (@ (name "index") (src ,(if default-all 
+                                                 "index-all.html"
+                                                 "index-doc.html"))))
+              (frame (@ (name "body") (src ,(if default-all 
+                                                "body-all.html"
+                                                "body-doc.html")))))))
 
 
 (define (html-boiler-plate title infoset)
@@ -159,29 +159,29 @@
 (define (emit-documentation lyst directory title default-all)
   (let ((doc-only (documented-only lyst)))
     (ensure-directory directory)
-    (sxml:emit-file (html-frameset title default-all) 
-                    (string-append directory "/index.html"))
-    (sxml:emit-file (html-boiler-plate 
-                     ()
-                     (cons 
-                      (index-menu #t)
-                      (make-index-list lyst "body-all.html" "body")))
-                    (string-append directory "/index-all.html"))
-    (sxml:emit-file (html-boiler-plate 
-                     ()
-                     (cons 
-                      (index-menu #f)
-                      (make-index-list doc-only "body-doc.html" "body")))
-                    (string-append directory "/index-doc.html"))
-    (sxml:emit-file (html-boiler-plate 
-                     title
-                     (make-documentation-body lyst))
-                    (string-append directory "/body-all.html"))
-    (sxml:emit-file (html-boiler-plate 
-                     title
-                     (make-documentation-body doc-only))
-                    (string-append directory "/body-doc.html"))))
-  
+    (xml:sxml-emit-file (html-frameset title default-all) 
+                        (string-append directory "/index.html"))
+    (xml:sxml-emit-file (html-boiler-plate 
+                         ()
+                         (cons 
+                          (index-menu #t)
+                          (make-index-list lyst "body-all.html" "body")))
+                        (string-append directory "/index-all.html"))
+    (xml:sxml-emit-file (html-boiler-plate 
+                         ()
+                         (cons 
+                          (index-menu #f)
+                          (make-index-list doc-only "body-doc.html" "body")))
+                        (string-append directory "/index-doc.html"))
+    (xml:sxml-emit-file (html-boiler-plate 
+                         title
+                         (make-documentation-body lyst))
+                        (string-append directory "/body-all.html"))
+    (xml:sxml-emit-file (html-boiler-plate 
+                         title
+                         (make-documentation-body doc-only))
+                        (string-append directory "/body-doc.html"))))
+
 
 (define (emit-core-documentation directory default-all)
   (emit-documentation 
