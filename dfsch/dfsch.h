@@ -508,6 +508,9 @@ extern "C" {
   /** Return stack trace for running thread. */
   extern dfsch_object_t* dfsch_get_stack_trace();
 
+  extern char* dfsch_get_version();
+  extern char* dfsch_get_build_id();
+
   
 #include <dfsch/strings.h>
 
