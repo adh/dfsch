@@ -141,7 +141,7 @@ DFSCH_DEFINE_FORM(internal_let, NULL, {}){
     vars = DFSCH_FAST_CDR(vars);
   }
 
-  return dfsch_eval_proc_tr(code,ext_env, esc);
+  return dfsch_eval_proc_tr(code, ext_env, esc);
 }
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
