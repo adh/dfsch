@@ -4,6 +4,7 @@
 (require :unix)
 (require :simple-tests)
 (require :json)
+(require :inet)
 
 (define-package :interp-test :dfsch :simple-tests)
 (in-package :interp-test)
@@ -401,6 +402,14 @@
        (test 'json-roundtrip
              (hash->canonical-alist (json:parse-string (json:emit-string *json-test-data*)))
              (hash->canonical-alist *json-test-data*)))
+
+(group "Internet data handling"
+       (test 'http-query->alist
+             (inet:http-query->alist "q=foo&bla=a%20b")
+             '(("q" "foo") ("bla" "a b")))
+       (test 'base64
+             (inet:base64-decode (inet:base64-encode "abcdef\n\r\"01234567890"))
+             "abcdef\n\r\"01234567890"))
 
 (group "Regressions"
        (test 'gensym-write-segfault 
