@@ -371,7 +371,7 @@ dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash){
   if (hash->is_large){
     for (i = 0; i <= hash->contents.large.mask; i++){
       dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
-      while (e){
+      while (e && e->key != DFSCH_INVALID_OBJECT){
         result = dfsch_cons(dfsch_list(2, e->key, e->value), result);
         e = e->next;
       }
