@@ -149,32 +149,33 @@ static dfsch_object_t* inet_xml_escape(void* baton,
 
 
 dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
+  dfsch_package_t* inet_pkg = dfsch_make_package("inet");  
   dfsch_provide(env, "inet");
 
-  dfsch_define_cstr(env, "http:split-query",
+  dfsch_define_pkgcstr(env, inet_pkg, "http-split-query",
                     dfsch_make_primitive(http_split_query, NULL));
-  dfsch_define_cstr(env, "http:split-path",
+  dfsch_define_pkgcstr(env, inet_pkg, "http-split-path",
                     dfsch_make_primitive(http_split_path, NULL));
-  dfsch_define_cstr(env, "http:query->alist",
+  dfsch_define_pkgcstr(env, inet_pkg, "http-query->alist",
                     dfsch_make_primitive(http_query_2_alist, NULL));
-  dfsch_define_cstr(env, "http:query->hash",
+  dfsch_define_pkgcstr(env, inet_pkg, "http-query->hash",
                     dfsch_make_primitive(http_query_2_hash, NULL));
 
-  dfsch_define_cstr(env, "inet:urldecode",
+  dfsch_define_pkgcstr(env, inet_pkg, "urldecode",
                     dfsch_make_primitive(inet_urldecode, NULL));
-  dfsch_define_cstr(env, "inet:urlencode",
+  dfsch_define_pkgcstr(env, inet_pkg, "urlencode",
                     dfsch_make_primitive(inet_urlencode, NULL));
 
-  dfsch_define_cstr(env, "inet:base64-encode",
+  dfsch_define_pkgcstr(env, inet_pkg, "base64-encode",
                     dfsch_make_primitive(inet_base64_encode, NULL));
-  dfsch_define_cstr(env, "inet:uri-base64-encode",
+  dfsch_define_pkgcstr(env, inet_pkg, "uri-base64-encode",
                     dfsch_make_primitive(inet_uri_base64_encode, NULL));
-  dfsch_define_cstr(env, "inet:base64-decode",
+  dfsch_define_pkgcstr(env, inet_pkg, "base64-decode",
                     dfsch_make_primitive(inet_base64_decode, NULL));
-  dfsch_define_cstr(env, "inet:uri-base64-decode",
+  dfsch_define_pkgcstr(env, inet_pkg, "uri-base64-decode",
                     dfsch_make_primitive(inet_uri_base64_decode, NULL));
 
-  dfsch_define_cstr(env, "inet:xml-escape",
+  dfsch_define_pkgcstr(env, inet_pkg, "xml-escape",
                     dfsch_make_primitive(inet_xml_escape, NULL));
 
 }
