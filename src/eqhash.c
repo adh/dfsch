@@ -214,7 +214,7 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
 static int delete_entry(dfsch_eqhash_t* hash, 
                         dfsch_object_t* key){
   dfsch_eqhash_entry_t* i;
-  dfsch_eqhash_entry_t* j;
+  dfsch_eqhash_entry_t* j = NULL;
   size_t h;
   h = fast_ptr_hash(key);
   
@@ -371,8 +371,10 @@ dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash){
   if (hash->is_large){
     for (i = 0; i <= hash->contents.large.mask; i++){
       dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
-      while (e && e->key != DFSCH_INVALID_OBJECT){
-        result = dfsch_cons(dfsch_list(2, e->key, e->value), result);
+      while (e){
+        if (e->key != DFSCH_INVALID_OBJECT){
+          result = dfsch_cons(dfsch_list(2, e->key, e->value), result);
+        }
         e = e->next;
       }
     }
