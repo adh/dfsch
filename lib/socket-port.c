@@ -1,4 +1,3 @@
-#ifndef __WIN32__
 #include <dfsch/lib/socket-port.h>
 
 #include <unistd.h>
@@ -379,4 +378,3 @@ void dfsch_server_socket_run_accept_loop(dfsch_object_t* server_socket,
     pthread_detach(thread);
   }
 }
-#endif

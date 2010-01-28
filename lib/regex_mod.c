@@ -19,7 +19,6 @@
  *
  */
 
-#ifndef __WIN32__
 #include "dfsch/lib/regex.h"
 static dfsch_object_t* native_regex_compile(void *baton, 
                                             dfsch_object_t* args, 
@@ -136,4 +135,3 @@ dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx){
 
   return NULL;
 }
-#endif
