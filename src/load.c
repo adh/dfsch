@@ -350,7 +350,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
 	  sl_append(l, *list);
 	  
 	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
-	    dfsch_load_so(env, fname, get_module_symbol(name));	      
+	    dfsch_load_so(env, fname, get_module_symbol(fname));	      
 	  } else {
 	    dfsch_load_scm(env, fname, 0);
 	  }
