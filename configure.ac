@@ -3,7 +3,7 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 
 dnl package name and version number
 
-AC_INIT(dfsch, 0.4.0-dev)
+AC_INIT(dfsch, 0.4.0-dev-windows-port)
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([m4])
