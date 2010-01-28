@@ -861,7 +861,7 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string,
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
-  str = dfsch_symbol(object);
+  str = dfsch_symbol_qualified_name(object);
   if (str)
     return dfsch_make_string_cstr(str);
   else
