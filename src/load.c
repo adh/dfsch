@@ -24,6 +24,7 @@
 
 #include "dfsch/load.h"
 #include "src/util.h"
+#include "zlib.h"
 
 #include <dfsch/parse.h>
 #include <string.h>
@@ -39,6 +40,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+
 
 //#define DFSCH_DEFAULT_LIBDIR "."
 
@@ -152,6 +154,111 @@ void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
   }
 }
 
+static char* read_dsz(FILE* f){
+  size_t len;
+  size_t clen;
+  uint32_t cksum;
+  unsigned char header_buf[20];
+  unsigned char trailer_buf[12];
+  unsigned char trailer_read[12];
+  char* cbuf;
+  char* payload;
+
+  if (fread(header_buf, 20, 1, f) != 1){
+    dfsch_operating_system_error("fread");
+  }
+
+  if (memcmp(header_buf, "DsZ0\r\n\xff\n\0\r\x80\x7f", 12) != 0){
+    dfsch_error("Invalid DSZ header", NULL);
+  }
+  
+  len = (((size_t)header_buf[12]) << 24)
+    | (((size_t)header_buf[13]) << 16)
+    | (((size_t)header_buf[14]) << 8)
+    | (((size_t)header_buf[15]) << 0);
+  clen = (((size_t)header_buf[16]) << 24)
+    | (((size_t)header_buf[17]) << 16)
+    | (((size_t)header_buf[18]) << 8)
+    | (((size_t)header_buf[19]) << 0);
+
+  cbuf = GC_MALLOC_ATOMIC(clen);
+  payload = GC_MALLOC_ATOMIC(len);
+
+  if (fread(cbuf, clen, 1, f) != 1){
+    dfsch_operating_system_error("fread");
+  }
+
+  if (fread(trailer_read, 12, 1, f) != 1){
+    dfsch_operating_system_error("fread");
+  }
+
+
+  if (uncompress(payload, &len, cbuf, clen) != Z_OK){
+    dfsch_error("Invalid DSZ payload", NULL);
+  }
+
+  memcpy(trailer_buf, "DsZ!", 4);
+
+  cksum = crc32(crc32(0, NULL, 0), payload, len);
+  trailer_buf[4] = cksum >> 24;
+  trailer_buf[5] = cksum >> 16;
+  trailer_buf[6] = cksum >> 8;
+  trailer_buf[7] = cksum >> 0;
+
+  cksum = crc32(crc32(0, NULL, 0), cbuf, clen);
+  trailer_buf[8] = cksum >> 24;
+  trailer_buf[9] = cksum >> 16;
+  trailer_buf[10] = cksum >> 8;
+  trailer_buf[11] = cksum >> 0;
+
+  if (memcmp(trailer_buf, trailer_read, 12) != 0){
+    dfsch_error("Invalid DSZ trailer", NULL);
+  }
+  
+
+  return payload;
+}
+
+void dfsch_load_dsz(dfsch_object_t* env, char* fname, int toplevel){
+  FILE* f;
+  int err=0;
+  int l=0;
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  load_thread_info_t* lti = get_load_ti();
+  load_operation_t this_op;
+  dfsch_package_t* saved_package = dfsch_get_current_package();
+
+
+  f = fopen(fname, "rb");
+  if (!f){
+    dfsch_operating_system_error("fopen");
+  }
+
+  dfsch_parser_callback(parser, load_scm_callback, env);
+  dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
+  dfsch_parser_eval_env(parser, env);
+
+  DFSCH_UNWIND {
+    this_op.fname = fname;
+    this_op.toplevel = toplevel;
+    this_op.next = lti->operation;
+    lti->operation = &this_op;
+
+    dfsch_parser_feed(parser, read_dsz(f));    
+
+  } DFSCH_PROTECT {
+    fclose(f);
+    lti->operation = this_op.next;
+    dfsch_set_current_package(saved_package);
+  } DFSCH_PROTECT_END;
+
+  if (dfsch_parser_get_level(parser)!=0){
+      dfsch_error("Syntax error at end of input",
+                  dfsch_make_string_cstr(fname));
+  }
+}
+
+
 static int qs_strcmp(const void* a, const void* b){
   return strcmp(*((char**)a), *((char**)b));
 }
@@ -251,12 +358,16 @@ typedef struct module_loader_t {
 static void scm_loader(char* fname, dfsch_object_t* env){
   dfsch_load_scm(env, fname, 0);
 }
+static void dsz_loader(char* fname, dfsch_object_t* env){
+  dfsch_load_dsz(env, fname, 0);
+}
 static void so_loader(char* fname, dfsch_object_t* env){
   dfsch_load_so(env, fname, get_module_symbol(fname));
 }
 
 static module_loader_t loaders[] = {
   {".scm", scm_loader},
+  {".dsz", dsz_loader},
   {".so", so_loader},
   {".dsl", so_loader},
 };

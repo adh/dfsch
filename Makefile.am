@@ -102,6 +102,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/eqhash.c dfsch/eqhash.h	\
 	src/generic.c dfsch/generic.h	\
 	src/mkhash.c dfsch/mkhash.h
+libdfsch_la_LDFLAGS = -version-info 5:0:0
+libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm -lz
 
 BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h
@@ -115,8 +117,6 @@ CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
-libdfsch_la_LDFLAGS = -version-info 5:0:0
-libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
 
 libdfsch_cdebug_la_SOURCES = lib/cdebug.c dfsch/lib/cdebug.h
 libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0
