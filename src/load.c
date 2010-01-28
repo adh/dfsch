@@ -31,7 +31,15 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
+
+#ifdef __unix__
 #include <dlfcn.h>
+#endif
+
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 #include <dfsch/introspect.h>
@@ -44,9 +52,15 @@
 
 //#define DFSCH_DEFAULT_LIBDIR "."
 
+#ifdef __WIN32__
+#define S_ISLNK(x) 0
+#endif
+
+
 void dfsch_load_so(dfsch_object_t* ctx, 
                    char* so_name, 
                    char* sym_name){
+#if defined(__unix__)
   void *handle;
   dfsch_object_t* (*entry)(dfsch_object_t*);
   char* err;
@@ -68,6 +82,26 @@ void dfsch_load_so(dfsch_object_t* ctx,
   }
   
   entry(ctx);
+#elif defined(__WIN32__)
+  HMODULE hModule;
+  dfsch_object_t* (*entry)(dfsch_object_t*);
+
+  hModule = LoadLibraryEx(so_name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+  
+  if (!hModule){
+    dfsch_error("LoadLibraryEx() failed", NULL);
+  }
+
+  entry = GetProcAddress(hModule, sym_name);
+
+  if (!entry){
+    dfsch_error("GetProcAddress() failed", NULL);    
+  }
+
+  entry(ctx);
+#else
+  dfsch_error("Get real operating system!", NULL);
+#endif
 }
 
 static pthread_key_t load_thread_key;
@@ -699,15 +733,35 @@ DFSCH_DEFINE_FORM_IMPL(when_toplevel,
   }
 }
 
+
+#ifdef __WIN32__
+#define PATH_SEP ';'
+#else
 #define PATH_SEP ':'
+#endif
 
 dfsch_object_t* dfsch_load_construct_default_path(){
   char* env_path = getenv("DFSCH_PATH");
   dfsch_object_t* path;
 
+#ifdef __WIN32__
+  char* dfsch_home = dfsch_get_interpreter_home();
+  if (dfsch_home){
+    path = dfsch_list(2, 
+                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
+                                                           "\\share\\dfsch\\scm\\")),
+                      dfsch_make_string_cstr(dfsch_stracat(dfsch_home, 
+                                                           "\\lib\\dfsch\\")));
+  } else {
+    path = NULL;
+    fprintf(stderr, "warning: dfsch home directory is not set!\n");
+  }
+
+#else
   path = dfsch_list(2, 
                     dfsch_make_string_cstr(DFSCH_LIB_SCM_DIR),
                     dfsch_make_string_cstr(DFSCH_LIB_SO_DIR));
+#endif
 
   if (env_path && *env_path){
     char* part_ptr;
@@ -725,7 +779,7 @@ dfsch_object_t* dfsch_load_construct_default_path(){
 }
 dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
-		    dfsch_load_construct_default_path());
+                    dfsch_load_construct_default_path());
   dfsch_define_cstr(ctx, "*load-modules*", NULL);
   dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));

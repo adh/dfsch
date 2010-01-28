@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <getopt.h>
 
+#define UTIL_STANDALONE
 #include "util.c"
-int dfsch_operating_system_error_saved(){} // XXX
 
 char* output_name = NULL;
 char* c_symbol = NULL;
