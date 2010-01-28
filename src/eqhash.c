@@ -227,8 +227,15 @@ static int delete_entry(dfsch_eqhash_t* hash,
       if (j) {
         j->next = i->next;
       } else {
-        i->key = DFSCH_INVALID_OBJECT;
-        i->value = DFSCH_INVALID_OBJECT;
+        if (i->next){
+          i->key = i->next->key;
+          i->value = i->next->value;
+          i->flags = i->next->flags;
+          i->next = i->next->next;
+        } else {
+          i->key = DFSCH_INVALID_OBJECT;
+          i->value = DFSCH_INVALID_OBJECT;
+        }
       }
       return 1;
     }
