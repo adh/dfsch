@@ -23,7 +23,7 @@
   (get-variables *clean-toplevel*))
 
 (define (get-module-variables module)
-  (letrec ((toplevel (make-default-environment))
+  (letrec ((toplevel (make-top-level-environment))
            (start-state (get-variables toplevel)))
     (load-into-environment! toplevel module *load-path*)
     (for-each (lambda (x) 
