@@ -134,15 +134,18 @@ int main(int argc, char**argv){
   dfsch_object_t* ctx;
   int interactive = 1;
   int force_interactive = 0;
+#ifdef __unix__
   struct sigaction act;
+#endif
 
   GC_INIT();
 
+#ifdef __unix__
   act.sa_handler = sigint_handler_break;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
-
   sigaction(SIGINT, &act, NULL);
+#endif
 
 
   ctx = dfsch_make_top_level_environment();

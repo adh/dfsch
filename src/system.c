@@ -25,7 +25,9 @@
 #include <dfsch/number.h>
 
 #include <time.h>
+#ifdef unix
 #include <sys/times.h>
+#endif
 #include <unistd.h>
 #include <limits.h>
 
@@ -199,7 +201,7 @@ DFSCH_DEFINE_PRIMITIVE(iso_format_time, NULL){
                                          tm->tm_mday, t,
                                          tm->tm_hour, tm->tm_min, tm->tm_sec));
 }
-
+#ifdef unix
 DFSCH_DEFINE_PRIMITIVE(get_internal_real_time, NULL){
   struct tms t;
   DFSCH_ARG_END(args);
@@ -224,6 +226,7 @@ DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
 
   return NULL;
 }
+#endif
 
 
 void dfsch__system_register(dfsch_object_t *ctx){
@@ -240,10 +243,12 @@ void dfsch__system_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(get_universal_time));
   dfsch_define_cstr(ctx, "iso-format-time", 
                     DFSCH_PRIMITIVE_REF(iso_format_time));
+#ifdef unix
   dfsch_define_cstr(ctx, "get-internal-real-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_real_time));
   dfsch_define_cstr(ctx, "get-internal-run-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_run_time));
   dfsch_define_cstr(ctx, "internal-time-units-per-second", 
                     dfsch_make_number_from_long(sysconf(_SC_CLK_TCK)));
+#endif
 }

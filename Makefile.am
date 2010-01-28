@@ -7,7 +7,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
-	dfsch/lib/extref.h \
 	dfsch/lib/cdebug.h \
 	dfsch/lib/console.h \
 	dfsch/lib/xml.h \
@@ -39,11 +38,19 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/compile.h \
 	dfsch/generate.h
 
+if WIN32
+nonwin32_libs=
+else
+nonwin32_libs=\
+	libdfsch-regex.la \
+	libdfsch-http.la \
+	libdfsch-socket-port.la
+endif
+
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-console.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
-	libdfsch-regex.la \
 	libdfsch-threads.la \
 	libdfsch-cdebug.la \
 	libdfsch-collections.la \
@@ -51,12 +58,19 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
 	libdfsch-json.la \
-	libdfsch-http.la \
-	libdfsch-socket-port.la
+	$(nonwin32_libs)
+
+
+if WIN32
+nonwin32_modules=
+else
+nonwin32_modules=\
+	unix.la \
+	socket-port.la \
+	regex.la 
+endif
 
 dfschlibexec_LTLIBRARIES = threads.la \
-	regex.la \
-	unix.la \
 	inet.la \
 	gcollect.la \
 	extref.la \
@@ -68,7 +82,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	xml.la \
 	sxml.la \
 	json.la \
-	socket-port.la
+	$(nonwin32_modules)
+
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
@@ -107,121 +122,127 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h
 udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
-	./udata-gen header $(srcdir)/src/UnicodeData.txt udata.h
+	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
 udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
-	./udata-gen data $(srcdir)/src/UnicodeData.txt udata.c
+	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
-libdfsch_la_LDFLAGS = -version-info 5:0:0
-libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm
+libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
+if WIN32
+libdfsch_la_LIBADD =  -lgc -lpthreadGC2 -lm -lz
+pthread_libadd = -lpthreadGC2
+else
+libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm -lz
+pthread_libadd=
+endif
 
 libdfsch_cdebug_la_SOURCES = lib/cdebug.c dfsch/lib/cdebug.h
-libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0
-libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la -lpthread
+libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0 -no-undefined
+libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la $(pthread_libadd)
 
 cdebug_la_SOURCES = lib/cdebug_mod.c
-cdebug_la_LDFLAGS = -avoid-version  -module
-cdebug_la_LIBADD =  libdfsch.la -lpthread libdfsch-cdebug.la
+cdebug_la_LDFLAGS = -avoid-version  -module -no-undefined -shrext .dsl
+cdebug_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-cdebug.la
 
 libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
-libdfsch_console_la_LDFLAGS = -version-info 0:0:0
+libdfsch_console_la_LDFLAGS = -version-info 0:0:0 -no-undefined
 libdfsch_console_la_LIBADD =  libdfsch.la @READLINE_LIBS@
 
 console_la_SOURCES = lib/console_mod.c
-console_la_LDFLAGS = -avoid-version  -module
+console_la_LDFLAGS = -avoid-version  -module -shrext .dsl -no-undefined
 console_la_LIBADD =  libdfsch.la libdfsch-console.la
 
 libdfsch_threads_la_SOURCES = lib/threads.c dfsch/lib/threads.h
-libdfsch_threads_la_LDFLAGS = -version-info 1:0:0
-libdfsch_threads_la_LIBADD =  libdfsch.la -lpthread
+libdfsch_threads_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_threads_la_LIBADD =  libdfsch.la $(pthread_libadd)
 
 threads_la_SOURCES = lib/threads_mod.c
-threads_la_LDFLAGS = -avoid-version -module
-threads_la_LIBADD =  libdfsch.la -lpthread libdfsch-threads.la
+threads_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+threads_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-threads.la
 
 libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h
-libdfsch_regex_la_LDFLAGS = -version-info 2:0:0
+libdfsch_regex_la_LDFLAGS = -version-info 2:0:0 -no-undefined
 libdfsch_regex_la_LIBADD =  libdfsch.la
 
 regex_la_SOURCES = lib/regex_mod.c 
-regex_la_LDFLAGS = -avoid-version -module
+regex_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 regex_la_LIBADD =  libdfsch.la libdfsch-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
-unix_la_LDFLAGS = -avoid-version -module
+unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 unix_la_LIBADD =  libdfsch.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
-libdfsch_inet_la_LDFLAGS = -version-info 2:0:0
+libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
 libdfsch_inet_la_LIBADD =  libdfsch.la
 
 inet_la_SOURCES = lib/inet_mod.c
-inet_la_LDFLAGS = -avoid-version -module
+inet_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 inet_la_LIBADD =  libdfsch-inet.la libdfsch.la
 
 gcollect_la_SOURCES = lib/gcollect.c dfsch/lib/gcollect.h
-gcollect_la_LDFLAGS = -avoid-version -module
+gcollect_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 gcollect_la_LIBADD =  libdfsch.la
 
 libdfsch_extref_la_SOURCES = lib/extref.c dfsch/lib/extref.h
-libdfsch_extref_la_LDFLAGS = -version-info 1:0:0
-libdfsch_extref_la_LIBADD =  libdfsch.la
+libdfsch_extref_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_extref_la_LIBADD =  libdfsch.la -lpthread
 
 extref_la_SOURCES = lib/extref_mod.c
-extref_la_LDFLAGS = -avoid-version -module
+extref_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 extref_la_LIBADD =  libdfsch.la libdfsch-extref.la
 
 libdfsch_collections_la_SOURCES = lib/collections.c dfsch/lib/collections.h
-libdfsch_collections_la_LDFLAGS = -version-info 1:0:0
+libdfsch_collections_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libdfsch_collections_la_LIBADD =  libdfsch.la
 
 collections_la_SOURCES = lib/collections_mod.c
-collections_la_LDFLAGS = -avoid-version -module
+collections_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 collections_la_LIBADD =  libdfsch.la libdfsch-collections.la
 
 libdfsch_process_la_SOURCES = lib/process.c dfsch/lib/process.h
-libdfsch_process_la_LDFLAGS = -version-info 1:0:0
+libdfsch_process_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libdfsch_process_la_LIBADD =  libdfsch.la
 
 process_la_SOURCES = lib/process_mod.c
-process_la_LDFLAGS = -avoid-version -module
+process_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 process_la_LIBADD =  libdfsch.la libdfsch-process.la
 
 libdfsch_cmdopts_la_SOURCES = lib/cmdopts.c dfsch/lib/cmdopts.h
-libdfsch_cmdopts_la_LDFLAGS = -version-info 1:0:0
+libdfsch_cmdopts_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libdfsch_cmdopts_la_LIBADD =  libdfsch.la
 
 cmdopts_la_SOURCES = lib/cmdopts_mod.c
-cmdopts_la_LDFLAGS = -avoid-version -module
+cmdopts_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 cmdopts_la_LIBADD =  libdfsch.la libdfsch-cmdopts.la
 
 libdfsch_xml_la_SOURCES = lib/xml.c
 libdfsch_xml_la_LIBADD = libdfsch.la -lexpat
-libdfsch_xml_la_LDFLAGS =
+libdfsch_xml_la_LDFLAGS = -no-undefined
 
 libdfsch_sxml_la_SOURCES = lib/sxml.c
 libdfsch_sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-xml.la libdfsch-inet.la
-libdfsch_sxml_la_LDFLAGS =
+libdfsch_sxml_la_LDFLAGS = -no-undefined
 
 xml_la_SOURCES = lib/xml_mod.c
 xml_la_LIBADD = libdfsch.la -lexpat libdfsch-xml.la
-xml_la_LDFLAGS = -module -avoid-version
+xml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 sxml_la_SOURCES = lib/sxml_mod.c
 sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
-sxml_la_LDFLAGS = -module -avoid-version
+sxml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_json_la_SOURCES = lib/json.c
 libdfsch_json_la_LIBADD = libdfsch.la libdfsch-inet.la
-libdfsch_json_la_LDFLAGS = -version-info 1:0:0
+libdfsch_json_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 
 json_la_SOURCES = lib/json_mod.c
 json_la_LIBADD = libdfsch.la libdfsch-json.la
-json_la_LDFLAGS = -module -avoid-version
+json_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_socket_port_la_SOURCES = lib/socket-port.c
 libdfsch_socket_port_la_LIBADD = libdfsch.la
@@ -229,12 +250,12 @@ libdfsch_socket_port_la_LDFLAGS = -version-info 1:0:0
 
 socket_port_la_SOURCES = lib/socket-port_mod.c
 socket_port_la_LIBADD = libdfsch.la libdfsch-socket-port.la
-socket_port_la_LDFLAGS = -module -avoid-version
+socket_port_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_http_la_SOURCES = lib/http.c
 libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
-libdfsch_http_la_LDFLAGS = -version-info 1:0:0
+libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 
 
 dfsch_repl_SOURCES = src/repl.c
@@ -247,7 +268,7 @@ dfsch_source_tool_LDADD = -lz
 check_PROGRAMS = platform-test c-api-test json-parser-test
 
 platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
-platform_test_LDADD =  -lgc -lpthread -ldl -lm libdfsch-cmdopts.la
+platform_test_LDADD =  -lgc $(pthread_libadd) -lm libdfsch-cmdopts.la
 c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
 c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
 

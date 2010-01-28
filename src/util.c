@@ -30,6 +30,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 str_list_t* dfsch_sl_create(){
   str_list_t* list = GC_MALLOC(sizeof(str_list_t));
   
@@ -191,6 +195,8 @@ int dfsch_ascii_strcasecmp(char* a, char* b){
   return (*a != *b);
 }
 
+#ifndef UTIL_STANDALONE
+
 static void mutex_finalizer(pthread_mutex_t* mutex, void* cd){
   pthread_mutex_destroy(mutex);
 }
@@ -232,6 +238,8 @@ pthread_rwlock_t* dfsch_create_finalized_rwlock(){
   return lock;
 }
 #endif
+#endif
+
 char* dfsch_vsaprintf(char* format, va_list ap){
   char* buf = GC_MALLOC_ATOMIC(128);
   int r;
@@ -262,6 +270,26 @@ char* dfsch_saprintf(char* format, ...){
   va_end(args);
   return ret;
 }
+
+#ifndef UTIL_STANDALONE
+#ifdef __WIN32__
+char* dfsch_getcwd(){
+  char* buf;
+  DWORD len = GetCurrentDirectory(0, NULL);
+
+  if (!len){
+    dfsch_error("GetCurrentDirectory() returned error", NULL);
+  }
+
+  buf = GC_MALLOC_ATOMIC(len);
+
+  if (!GetCurrentDirectory(len, buf)){
+    dfsch_error("GetCurrentDirectory() returned error", NULL);
+  }
+
+  return buf;
+}
+#else
 char* dfsch_getcwd(){
   char* buf;
   char* ret;
@@ -280,8 +308,17 @@ char* dfsch_getcwd(){
 
   return ret;
 }
+#endif
 char* dfsch_get_path_directory(char* path){
   char* slash = strrchr(path, '/');
+
+#ifdef __WIN32__
+  char* bslash = strrchr(path, '\\');
+  if (bslash > slash){
+    slash = bslash;
+  }
+#endif
+
   if (slash){
     return dfsch_strancpy(path, slash - path);
   } else {
@@ -289,8 +326,134 @@ char* dfsch_get_path_directory(char* path){
   }
 }
 char* dfsch_realpath(char* path){
+#ifdef __WIN32__
+  if (*path == '\\' || 
+      *path == '/' ||
+      (path[0] != '\0' && path[1]==':')){
+    return path;
+  } else {
+    return dfsch_saprintf("%s\\%s", dfsch_getcwd(), path);
+  }
+#else
   char* rp = realpath(path, NULL);
   char* res = dfsch_stracpy(rp);
   free(rp);
   return res;
+#endif
 }
+
+#ifdef __WIN32__
+
+#ifdef DLL_EXPORT
+
+HMODULE hDfschInterpreter;
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpReserved){
+  if (dwReason == DLL_PROCESS_ATTACH){
+    hDfschInterpreter = hinstDLL;
+  }
+  return TRUE;
+}
+
+static char* get_home_from_module_filename(){
+  char* buf;
+  char tmpbuf[1025];
+  DWORD len = GetModuleFileName(hDfschInterpreter, tmpbuf, 1025);
+  size_t i;
+
+  if (!len){
+    return NULL;
+  }
+
+  if (len > 1024){
+    buf = GC_MALLOC_ATOMIC(len+1);
+    
+    if (!GetModuleFileName(hDfschInterpreter, buf, len+1)){
+      return NULL;
+    }
+    
+  } else {
+    buf = dfsch_stracpy(tmpbuf);
+  }
+
+  i = strlen(buf);
+
+
+  while (i && buf[i] != '\\' && buf[i] != '/'){
+    i--;
+  }
+  
+  buf[i] = '\0';
+  
+  while (i && buf[i] != '\\' && buf[i] != '/'){
+    i--;
+  }
+
+  buf[i] = '\0';
+
+  return buf;
+}
+
+#endif
+
+char* dfsch_get_interpreter_home(){
+  HKEY hKey;
+  DWORD size = 1024;
+  char buf[1025];
+  LONG res;
+  char* dfsch_home = NULL;
+
+  dfsch_home = getenv("DFSCH_HOME");
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+  if (!dfsch_home){
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                     "SOFTWARE\\dfsch\\" PACKAGE_VERSION,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS){
+      if (RegQueryValueEx(hKey, 
+                          "HomeDirectory", 
+                          NULL,
+                          NULL,
+                          buf, 
+                          &size) == ERROR_SUCCESS){
+        buf[size] = '\0';
+        dfsch_home = dfsch_stracpy(buf);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+#ifdef DLL_EXPORT
+  if (!dfsch_home){
+    dfsch_home = get_home_from_module_filename();
+  }
+#endif
+
+  return dfsch_home;
+
+
+}
+
+
+#endif
+#endif

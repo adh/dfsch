@@ -592,6 +592,7 @@ static int64_t file_port_tell(file_port_t* port){
   return ret;
 }
 
+#ifdef __unix__
 static void file_port_batch_read_start(file_port_t* port){
   if (!port->open){
     dfsch_error("Port is already closed", (dfsch_object_t*)port);
@@ -625,6 +626,7 @@ static int file_port_batch_read(file_port_t* port){
 
   return ch;
 }
+#endif
 
 
 static dfsch_slot_t file_port_slots[] = {
@@ -657,10 +659,11 @@ dfsch_port_type_t dfsch_file_port_type = {
 
   (dfsch_port_seek_t)file_port_seek,
   (dfsch_port_tell_t)file_port_tell,
-
+#ifdef __unix__
   (dfsch_port_batch_read_start_t)file_port_batch_read_start,
   (dfsch_port_batch_read_end_t)file_port_batch_read_end,
   (dfsch_port_batch_read_t)file_port_batch_read,
+#endif
 };
 
 static void file_port_finalizer(file_port_t* port, void* cd){

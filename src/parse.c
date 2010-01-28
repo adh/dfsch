@@ -191,10 +191,6 @@ static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
   parser_reset(ctx);
   dfsch_signal(c);
 }
-static void parser_abort_ex(dfsch_parser_ctx_t *ctx, dfsch_object_t* ex){
-  parser_reset(ctx);
-  dfsch_raise(ex);
-}
 
 dfsch_parser_ctx_t* dfsch_parser_create(){
   dfsch_parser_ctx_t *ctx = GC_MALLOC(sizeof(dfsch_parser_ctx_t));

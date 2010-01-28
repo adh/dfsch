@@ -20,7 +20,6 @@
  */
 
 #include "dfsch/lib/regex.h"
-
 static dfsch_object_t* native_regex_compile(void *baton, 
                                             dfsch_object_t* args, 
                                             dfsch_tail_escape_t* esc){

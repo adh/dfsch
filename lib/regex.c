@@ -20,7 +20,6 @@
  */
 
 #include "dfsch/lib/regex.h"
-
 typedef struct dfsch_regex_t {
   dfsch_type_t *type;
   regex_t regex;
