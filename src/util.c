@@ -195,6 +195,8 @@ int dfsch_ascii_strcasecmp(char* a, char* b){
   return (*a != *b);
 }
 
+#ifndef UTIL_STANDALONE
+
 static void mutex_finalizer(pthread_mutex_t* mutex, void* cd){
   pthread_mutex_destroy(mutex);
 }
@@ -236,6 +238,8 @@ pthread_rwlock_t* dfsch_create_finalized_rwlock(){
   return lock;
 }
 #endif
+#endif
+
 char* dfsch_vsaprintf(char* format, va_list ap){
   char* buf = GC_MALLOC_ATOMIC(128);
   int r;
@@ -267,6 +271,7 @@ char* dfsch_saprintf(char* format, ...){
   return ret;
 }
 
+#ifndef UTIL_STANDALONE
 #ifdef __WIN32__
 char* dfsch_getcwd(){
   char* buf;
@@ -450,4 +455,5 @@ char* dfsch_get_interpreter_home(){
 }
 
 
+#endif
 #endif
