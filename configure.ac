@@ -115,7 +115,7 @@ case $host in
      *mingw*) win32=true ;;
      *) win32=false ;;
 esac
-AM_CONDITIONAL(WIN32, test x$win32 = xtrue)
+AM_CONDITIONAL(WIN32, test x$win32 == xtrue)
 
 
 dfschlibexecdir="${libdir}/dfsch/"

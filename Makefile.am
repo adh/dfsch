@@ -133,17 +133,19 @@ udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32
 libdfsch_la_LIBADD =  -lgc -lpthreadGC2 -lm -lz
+pthread_libadd = -lpthreadGC2
 else
 libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm -lz
+pthread_libadd=
 endif
 
 libdfsch_cdebug_la_SOURCES = lib/cdebug.c dfsch/lib/cdebug.h
 libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0 -no-undefined
-libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la -lpthreadGC2
+libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la $(pthread_libadd)
 
 cdebug_la_SOURCES = lib/cdebug_mod.c
 cdebug_la_LDFLAGS = -avoid-version  -module -no-undefined -shrext .dsl
-cdebug_la_LIBADD =  libdfsch.la -lpthreadGC2 libdfsch-cdebug.la
+cdebug_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-cdebug.la
 
 libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
 libdfsch_console_la_LDFLAGS = -version-info 0:0:0 -no-undefined
@@ -155,11 +157,11 @@ console_la_LIBADD =  libdfsch.la libdfsch-console.la
 
 libdfsch_threads_la_SOURCES = lib/threads.c dfsch/lib/threads.h
 libdfsch_threads_la_LDFLAGS = -version-info 1:0:0 -no-undefined
-libdfsch_threads_la_LIBADD =  libdfsch.la -lpthreadGC2
+libdfsch_threads_la_LIBADD =  libdfsch.la $(pthread_libadd)
 
 threads_la_SOURCES = lib/threads_mod.c
 threads_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-threads_la_LIBADD =  libdfsch.la -lpthreadGC2 libdfsch-threads.la
+threads_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-threads.la
 
 libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h
 libdfsch_regex_la_LDFLAGS = -version-info 2:0:0 -no-undefined
@@ -265,7 +267,7 @@ dfsch_source_tool_LDADD = -lz
 check_PROGRAMS = platform-test c-api-test json-parser-test
 
 platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
-platform_test_LDADD =  -lgc -lpthreadGC2 -lm libdfsch-cmdopts.la
+platform_test_LDADD =  -lgc $(pthread_libadd) -lm libdfsch-cmdopts.la
 c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
 c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
 
