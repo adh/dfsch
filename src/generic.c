@@ -32,6 +32,7 @@ typedef struct standard_generic_function_t {
   size_t longest_spec_list;
   dfsch_object_t* name;
   dfsch_object_t* method_combination;
+  char* documentation;
 } standard_generic_function_t;
 
 dfsch_type_t dfsch_generic_function_type_type = {
@@ -510,6 +511,13 @@ standard_generic_function_methods(standard_generic_function_t* function){
   return dfsch_list_copy(function->methods);
 }
 
+static dfsch_slot_t standard_generic_function_slots[] = {
+  DFSCH_STRING_SLOT(standard_generic_function_t, documentation, 
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
   .super = {
     .type = DFSCH_GENERIC_FUNCTION_TYPE_TYPE,
@@ -518,7 +526,8 @@ dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
     .size = sizeof(standard_generic_function_t),
     .documentation = "Normal class of generic functions",
     .apply = apply_standard_generic_function,
-    .write = write_standard_generic_function
+    .write = write_standard_generic_function,
+    .slots = standard_generic_function_slots,
   },
 
   .add_method = standard_generic_function_add_method,
@@ -570,6 +579,14 @@ singleton_generic_function_methods(singleton_gf_t* function){
   return function->methods(function);
 }
 
+static dfsch_slot_t singleton_generic_function_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_singleton_generic_function_t, documentation, 
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+
 dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
   .super = {
     .type = DFSCH_GENERIC_FUNCTION_TYPE_TYPE,
@@ -578,7 +595,8 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
     .size = 0,
     .documentation = "Class of generic functions whose behavior is unique. "
     "Used to implement internal special cases in interpreter.",
-    .apply = apply_singleton_generic_function
+    .apply = apply_singleton_generic_function,
+    .slots = singleton_generic_function_slots,
   },
 
   .add_method = singleton_generic_function_add_method,
@@ -820,7 +838,7 @@ static dfsch_object_t* add_method_apply(dfsch_object_t* f,
 static dfsch_singleton_generic_function_t add_method = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = add_method_apply,
-  
+  .documentation = "Add method to passed generic function"  
 };
 static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
                                            dfsch_object_t* args,
@@ -841,6 +859,7 @@ static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
 static dfsch_singleton_generic_function_t remove_method = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = remove_method_apply,  
+  .documentation = "Remove method from passed generic function"
 };
 
 static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
@@ -858,7 +877,7 @@ static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
 static dfsch_singleton_generic_function_t generic_function_methods = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = generic_function_methods_apply,
-  
+  .documentation = "Return list of all methods of this generic function"
 };
 
 DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
