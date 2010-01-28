@@ -19,7 +19,6 @@
  *
  */
 
-#ifndef __WIN32__
 #include "dfsch/lib/regex.h"
 typedef struct dfsch_regex_t {
   dfsch_type_t *type;
@@ -189,4 +188,3 @@ dfsch_object_t* dfsch_regex_substrings_once(char* expression,
 
   return r;
 }
-#endif

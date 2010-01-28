@@ -111,6 +111,13 @@ fi
 
 AC_SYS_LARGEFILE 
 
+case $host in 
+     *mingw*) win32=true ;;
+     *) win32=false ;;
+esac
+AM_CONDITIONAL(WIN32, test x$win32 = xtrue)
+
+
 dfschlibexecdir="${libdir}/dfsch/"
 dfschlibscmdir="${datadir}/dfsch/scm/"
 
@@ -124,6 +131,7 @@ AC_SUBST(dfschlibexecdir)
 AC_SUBST(dfschlibscmdir)
 
 AC_SUBST(READLINE_LIBS)
+
 
 dnl automake stuff
 AM_MAINTAINER_MODE

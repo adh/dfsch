@@ -19,7 +19,6 @@
  *
  */
 
-#ifndef __WIN32__
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -1196,4 +1195,3 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   return NULL;
 }
 
-#endif

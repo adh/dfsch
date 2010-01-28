@@ -37,11 +37,19 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/eqhash.h \
 	dfsch/mkhash.h
 
+if WIN32
+nonwin32_libs=
+else
+nonwin32_libs=\
+	libdfsch-regex.la \
+	libdfsch-http.la \
+	libdfsch-socket-port.la
+endif
+
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-console.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
-	libdfsch-regex.la \
 	libdfsch-threads.la \
 	libdfsch-cdebug.la \
 	libdfsch-collections.la \
@@ -49,12 +57,19 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
 	libdfsch-json.la \
-	libdfsch-http.la \
-	libdfsch-socket-port.la
+	$(nonwin32_libs)
+
+
+if WIN32
+nonwin32_modules=
+else
+nonwin32_modules=\
+	unix.la \
+	socket-port.la \
+	regex.la 
+endif
 
 dfschlibexec_LTLIBRARIES = threads.la \
-	regex.la \
-	unix.la \
 	inet.la \
 	gcollect.la \
 	extref.la \
@@ -66,7 +81,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	xml.la \
 	sxml.la \
 	json.la \
-	socket-port.la
+	$(nonwin32_modules)
+
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
@@ -115,7 +131,11 @@ udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
-libdfsch_la_LIBADD =  -lgc -lpthreadGC2 -lm
+if WIN32
+libdfsch_la_LIBADD =  -lgc -lpthreadGC2 -lm -lz
+else
+libdfsch_la_LIBADD =  -lgc -lpthread -ldl -lm -lz
+endif
 
 libdfsch_cdebug_la_SOURCES = lib/cdebug.c dfsch/lib/cdebug.h
 libdfsch_cdebug_la_LDFLAGS = -version-info 0:0:0 -no-undefined
