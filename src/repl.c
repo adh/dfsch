@@ -90,7 +90,7 @@ static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   signal(SIGINT, sigint_handler_break);
   ret = dfsch_eval(obj, baton);
-  puts(dfsch_object_2_string(ret,100,1));
+  puts(dfsch_object_2_string(ret,-1,1));
 }
 
 void noninteractive_repl(dfsch_object_t* ctx){

@@ -116,7 +116,7 @@ void dfsch_write_object(dfsch_writer_state_t* state,
     dfsch_object_t* value = dfsch_eqhash_ref(&(state->circ_hash), object);
 
     if (value && value != DFSCH_INVALID_OBJECT){
-      if (value = DFSCH_SYM_TRUE){
+      if (value == DFSCH_SYM_TRUE){
         dfsch_eqhash_set(&(state->circ_hash),
                          object,
                          DFSCH_MAKE_FIXNUM(state->circ_counter));
