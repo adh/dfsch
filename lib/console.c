@@ -156,7 +156,9 @@ static completion_entry_t* generate_completions(char* text_part){
     } else {
       package = DFSCH_KEYWORD_PACKAGE;
     }
-    dfsch_for_package_symbols(package, compl_cb, &ctx);
+    if (package){
+      dfsch_for_package_symbols(package, compl_cb, &ctx);
+    }
   } else {
     dfsch_object_t* packages = dfsch_list_all_packages();
     while (DFSCH_PAIR_P(packages)){

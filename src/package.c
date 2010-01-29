@@ -172,9 +172,6 @@ dfsch_package_t* dfsch_find_package(char* name){
   pkg = find_package(name);
   pthread_mutex_unlock(&symbol_lock);
 
-  if (!pkg){
-    dfsch_error("No such package", dfsch_make_string_cstr(name));
-  }
 
   return pkg;
 }
@@ -473,6 +470,9 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
   if (package_name){
     if (*package_name){
       package = dfsch_find_package(package_name);
+      if (!package){
+        dfsch_error("No such package", dfsch_make_string_cstr(name));
+      }
     } else {
       package = DFSCH_KEYWORD_PACKAGE;
     }
