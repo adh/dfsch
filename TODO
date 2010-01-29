@@ -1,19 +1,13 @@
 Non-version-specific:
 * More tests
 * Documentation
-* Packages (reasonable implementation is probably simpler than it looks)
 
 For 0.4.0 (ABI broken from 0.3.0)
 * Circular printer
 * Pretty-printer
-* CL-like destructuring (&key, &optional...)
 * Dynamic variables (ISLisp-style)
 
-- Call context as argument to apply (and related things, like
-  primitives) and slot in environment frame
-
 When needed by other code:
-* Type predicates for all types
 * Structures (in C code)
 
 Sometimes:
@@ -24,7 +18,6 @@ Sometimes:
 * Missing parts of unix library (ftw, various system databases...)
 
 External modules and libraries:
-* JSON
 * Sound I/O
 * FFI
 
