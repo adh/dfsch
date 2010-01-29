@@ -526,6 +526,16 @@ char* dfsch_package_name(dfsch_object_t* package){
   return pkg->name;
 }
 
+int dfsch_interned_symbol_p(dfsch_object_t* sym){
+  symbol_t* s = DFSCH_TAG_REF(sym);
+
+  if (!DFSCH_SYMBOL_P(sym)){
+    return 0;
+  }
+  
+  return s->name && s->package;
+}
+
 dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj){
   if (DFSCH_INSTANCE_P(obj, DFSCH_PACKAGE_TYPE)){
     return (dfsch_package_t*)obj;

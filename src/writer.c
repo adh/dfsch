@@ -106,15 +106,17 @@ void dfsch_write_object(dfsch_writer_state_t* state,
   }
 
   if (state->circ_pass == 1){
-    if (!dfsch_eqhash_set_if_exists(&(state->circ_hash), 
-                                    object, DFSCH_SYM_TRUE, NULL)){
-      dfsch_eqhash_set(&(state->circ_hash), object, NULL);
-    } else {
-      return;
+    if (!DFSCH_SYMBOL_P(object) && !DFSCH_FIXNUM_P(object)){
+      if (!dfsch_eqhash_set_if_exists(&(state->circ_hash), 
+                                      object, DFSCH_SYM_TRUE, NULL)){
+        dfsch_eqhash_set(&(state->circ_hash), object, NULL);
+      } else {
+        return;
+      }
     }
   } else if (state->circ_pass == 2){
     dfsch_object_t* value = dfsch_eqhash_ref(&(state->circ_hash), object);
-
+    
     if (value && value != DFSCH_INVALID_OBJECT){
       if (value == DFSCH_SYM_TRUE){
         dfsch_eqhash_set(&(state->circ_hash),
@@ -129,7 +131,7 @@ void dfsch_write_object(dfsch_writer_state_t* state,
       }
     }
   }
-    
+  
   if (state->depth==0){
     dfsch_write_string(state, "...");
     return;
