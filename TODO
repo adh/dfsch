@@ -3,7 +3,6 @@ Non-version-specific:
 * Documentation
 
 For 0.4.0 (ABI broken from 0.3.0)
-* Circular printer
 * Pretty-printer
 * Dynamic variables (ISLisp-style)
 
