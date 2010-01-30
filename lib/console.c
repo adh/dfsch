@@ -15,9 +15,19 @@
 #endif
 
 typedef void (*sighandler_t)(int);
+struct dfsch_console_repl_command_t {
+  char* name;
+  char* doc;
+  void (*exec)(char* cmdline, void* baton);
+  void* baton;
+  dfsch_console_repl_command_t* next;
+};
 
 static dfsch_parser_ctx_t* volatile running_parser = NULL;
 static char* volatile running_prompt = NULL;
+
+static dfsch_console_repl_command_t* running_cmds = NULL;
+
 #ifdef USE_READLINE
 /* this is brain-bamaged and completely unsafe, but in line with readline 
  * documentation... go figure :) 
@@ -198,12 +208,35 @@ static char * symbol_completion_cb (const char* text, int state){
   return ((char *)NULL);
 }
 
+static char* command_completion_cb (const char*  text, int state){
+  static dfsch_console_repl_command_t* i = NULL;
+
+  if (state == 0){
+    i = running_cmds;
+  }
+
+  while (i){
+    if (strncmp(i->name, text, strlen(text)) == 0){
+      char* name = strdup(i->name);
+      i = i->next;
+      return name;
+    }
+    i = i->next;
+  }
+
+  return NULL;
+}
+
 static char ** symbol_completion (const char* text, int start, int end){
-  return rl_completion_matches (text, symbol_completion_cb);
+  if (rl_line_buffer[0] == ';'){
+    return rl_completion_matches(text, command_completion_cb);
+  } else {
+    return rl_completion_matches(text, symbol_completion_cb);
+  }
 }
 void dfsch_console_set_object_completion(){
   rl_attempted_completion_function = symbol_completion;
-  rl_basic_word_break_characters = " \t\n\"()";
+  rl_basic_word_break_characters = " \t\n\"();";
   rl_completion_append_character = '\0';
 }
 void dfsch_console_set_general_completion(){
@@ -285,13 +318,6 @@ dfsch_object_t* dfsch_console_read_object(char* prompt){
   }
 }
 
-struct dfsch_console_repl_command_t {
-  char* name;
-  char* doc;
-  void (*exec)(char* cmdline, void* baton);
-  void* baton;
-  dfsch_console_repl_command_t* next;
-};
 
 dfsch_console_repl_command_t* dfsch_console_add_command(dfsch_console_repl_command_t* cmdlist,
                                                         char* name,
@@ -351,6 +377,7 @@ int dfsch_console_read_objects_parser(char* prompt,
                                    command_help, &cmds);
 
   running_prompt = prompt;
+  running_cmds = cmds;
   __asm(";;");
   running_parser = parser;
 
@@ -373,6 +400,7 @@ int dfsch_console_read_objects_parser(char* prompt,
   } DFSCH_PROTECT {
     running_parser = NULL;
     running_prompt = NULL;
+    running_cmds = NULL;
   } DFSCH_PROTECT_END;
   return ret;
 }
@@ -410,7 +438,10 @@ static int repl_callback(dfsch_object_t *obj, repl_context_t* ctx){
 }
 
 static void command_print_depth(char* cmdline, repl_context_t* ctx){
-  ctx->print_depth = atoi(cmdline);
+  if (*cmdline){
+    ctx->print_depth = atoi(cmdline);
+  }
+  fprintf(stderr, "Print depth is %d\n", ctx->print_depth);
 }
 
 int dfsch_console_run_repl(char* prompt, 
