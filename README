@@ -17,46 +17,26 @@ example Interix), but running any non-toy code without working GC is
 not good idea. Console I/O library (used by REPL and debugger) is able
 to use readline, but can reasonably work without it.
 
-Platform that is more-or-less UNIX is currently required for correct
-operation. One thing is unix module which is currently always built
-and does not make much sense on systems that do not implement APIs
-exported by it, but it is trivial to disable this module and it's
-requirements are not too critical (I believe that MS VC CRT could
-almos pass as UNIX for purposes of this module). Interpreter library
-itself uses pthreads in few places and module support requires
-well-behaved dlopen(3). This causes problems on NetBSD where dlopen(3)
-resides in ld.so and not in libdl, which tends to confuse libgc's
-build process and our configure, this could probably be easily fixed,
-but I currently don't have reasonably fast system with NetBSD
-(Ultra 5 @ 270MHz with 64-bit only NetBSD is _REALLY_ slow). Other
-known problematic platform is Cygwin where shared libraries behave in
-ways that are simply beyond my understanding.
-
-I suppose that if you want to embbed dfsch in application that is
-supposed to run or NT or similar platforms best approach is to link
-modified version (with stubed out/removed module support and modified
-multithreading support) statically into your application. I would be
-interested in patches resulting from such endeavour.
-
 Platforms that generally work and are reasonably tested are:
  * Linux 2.6 on i386
  * Linux 2.6 on amd64
  * Linux 2.6 on Alpha
  * Linux 2.6 on Sparc (32b mode is more tested, but 64b should
                        work too)
-Platforms where it worked last time I tried:
+ * Windows 2003 - crosscompiled by mingw
+Platforms where it worked last time they was tested:
  * Linux 2.4 on StrongARM
  * Linux 2.6 on StrongARM
  * Solaris 10 on sparc
+ * Cygwin
 Platform that almost worked last time I tried:
  * NetBSD 4.0.1 on sparc (pure 64b)
-   - Problems with confused libgc shared library support as stated
-     above
- * Cygwin
-   - General shared library magic
-Platforms that simply didn't wok last time I tried:
+   - Problems with confused libgc shared library support
+Platforms that simply do not work:
  * Interix
-   - No libgc port and general lack of interest on my part.
+   - No libgc port
+ * Windows with MSVC 
+   - No support for C99
 Platforms that I'm interested in:
  * Linux on PowerPC
  * Bare hardware
