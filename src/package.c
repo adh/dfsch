@@ -498,7 +498,7 @@ char* dfsch_symbol_qualified_name(dfsch_object_t* o){
                                       DFSCH_SYMBOL_TYPE));
   if (s->name){
     if (!s->package){
-      dfsch_error("Emmiting uninterned symbol into JSON", o);
+      dfsch_error("Uninterned symbol has no qualified name", o);
     } else {
       str_list_t* sl = sl_create();
       if (!dfsch_in_current_package(o)) {
@@ -513,7 +513,7 @@ char* dfsch_symbol_qualified_name(dfsch_object_t* o){
       }
     }
   } else {
-    dfsch_error("Emmiting gensym into JSON", o);
+    dfsch_error("Uninterned symbol has no qualified name", o);
   }
 }
 
