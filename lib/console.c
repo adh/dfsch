@@ -285,10 +285,70 @@ dfsch_object_t* dfsch_console_read_object(char* prompt){
   }
 }
 
+struct dfsch_console_repl_command_t {
+  char* name;
+  char* doc;
+  void (*exec)(char* cmdline, void* baton);
+  void* baton;
+  dfsch_console_repl_command_t* next;
+};
+
+dfsch_console_repl_command_t* dfsch_console_add_command(dfsch_console_repl_command_t* cmdlist,
+                                                        char* name,
+                                                        char* doc,
+                                                        void (*exec)(char* cmdline, void* baton),
+                                                        void* baton){
+  dfsch_console_repl_command_t* rc = GC_NEW(dfsch_console_repl_command_t);
+
+  rc->next = cmdlist;
+  rc->name = name;
+  rc->doc = doc;
+  rc->exec = exec;
+  rc->baton = baton;
+  
+}
+
+static void repl_execute_command(dfsch_console_repl_command_t* cmds,
+                                 char* cmdline){
+  dfsch_console_repl_command_t* i = cmds;
+  size_t cmd_len = strcspn(cmdline, " \t");
+  char* cmd_name = dfsch_strancpy(cmdline, cmd_len);
+
+  if (cmdline[cmd_len]){
+    cmdline = cmdline + cmd_len + strspn(cmdline+cmd_len, " \t");
+  } else {
+    cmdline = "";
+  }
+  
+  while (i){
+    if (strcmp(i->name, cmd_name) == 0){
+      i->exec(cmdline, i->baton);
+      return;
+    }
+    i = i->next;
+  }
+
+  fprintf(stderr, "No such command: %s\n", cmd_name);
+}
+
+static void command_help(char* cmdline, dfsch_console_repl_command_t** cmds){
+  dfsch_console_repl_command_t* i = *cmds;
+  fprintf(stderr, "Commands:\n");
+  while (i){
+    fprintf(stderr, "%15s: %s\n", i->name, i->doc);
+    i = i->next;
+  }  
+}
+
 int dfsch_console_read_objects_parser(char* prompt,
-                                      dfsch_parser_ctx_t* parser){
+                                      dfsch_parser_ctx_t* parser,
+                                      dfsch_console_repl_command_t* cmds){
   int ret;
   char* line;
+
+  cmds = dfsch_console_add_command(cmds, "help", 
+                                   "Print list of supported commands",
+                                   command_help, &cmds);
 
   running_prompt = prompt;
   __asm(";;");
@@ -300,7 +360,11 @@ int dfsch_console_read_objects_parser(char* prompt,
       DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
                                                     "abort"), 
                                 "Return to reader"){
-        ret = dfsch_parser_feed_line(parser, line);
+        if (*line == ';'){
+          repl_execute_command(cmds, line+1);
+        } else {
+          ret = dfsch_parser_feed_line(parser, line);
+        }
       }DFSCH_END_WITH_SIMPLE_RESTART;
       if (ret){
         break;
@@ -320,26 +384,43 @@ int dfsch_console_read_objects_list_parser(char* prompt,
 
 int dfsch_console_read_objects(char* prompt,
                                dfsch_console_object_cb_t cb,
-                               void* baton){
+                               void* baton,
+                               dfsch_console_repl_command_t* cmds){
   dfsch_parser_ctx_t* parser = dfsch_parser_create();
   dfsch_parser_set_source(parser, dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
                                                       "*console-io*"));
   dfsch_parser_callback(parser, cb, baton);
-  return dfsch_console_read_objects_parser(prompt, parser);
+  return dfsch_console_read_objects_parser(prompt, parser, cmds);
 }
 int dfsch_console_read_objects_list(char* prompt,
                                     dfsch_console_object_cb_t cb,
                                     void* baton){
 }
 
-static int repl_callback(dfsch_object_t *obj, void *baton){
+typedef struct repl_context_t {
+  dfsch_object_t* env;
+  int print_depth;
+} repl_context_t;
+
+static int repl_callback(dfsch_object_t *obj, repl_context_t* ctx){
   dfsch_object_t* ret;
-  ret = dfsch_eval(obj, baton);
-  puts(dfsch_object_2_string(ret,-1,1));
+  ret = dfsch_eval(obj, ctx->env);
+  puts(dfsch_object_2_string(ret,ctx->print_depth,1));
   return 1;
 }
 
+static void command_print_depth(char* cmdline, repl_context_t* ctx){
+  ctx->print_depth = atoi(cmdline);
+}
+
 int dfsch_console_run_repl(char* prompt, 
-                           dfsch_object_t* env){
-  return dfsch_console_read_objects(prompt, repl_callback, env);
+                           dfsch_object_t* env,
+                           dfsch_console_repl_command_t* cmds){
+  repl_context_t ctx;
+  ctx.env = env;
+  ctx.print_depth = -1;
+  cmds = dfsch_console_add_command(cmds, "print-depth", 
+                                   "Set print-depth, -1 for circular printer",
+                                   command_print_depth, &ctx);
+  return dfsch_console_read_objects(prompt, repl_callback, &ctx, cmds);
 }

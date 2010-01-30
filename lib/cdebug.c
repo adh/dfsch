@@ -133,7 +133,7 @@ static void debug_main(dfsch_object_t* reason){
   
   dfsch_console_read_objects(dfsch_saprintf("dbg%d> ", 
                                             dfsch_get_debugger_depth()), 
-                             cdebug_callback, &ctx);
+                             cdebug_callback, &ctx, NULL);
 }
 
 void dfsch_cdebug_enter_debugger(dfsch_object_t* reason){

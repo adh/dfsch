@@ -33,6 +33,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/lib/cdebug.h>
 #include <dfsch/lib/cmdopts.h>
+#include <dfsch/lib/console.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -83,7 +84,7 @@ void interactive_repl(dfsch_object_t* ctx){
          dfsch_get_build_id(), __DATE__, __TIME__);
   printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
   printf("   )   (     under certain conditions; see file COPYING for details.\n");
-  dfsch_console_run_repl("]=> ", ctx);
+  dfsch_console_run_repl("]=> ", ctx, NULL);
 }
 
 static int repl_callback(dfsch_object_t *obj, void *baton){
