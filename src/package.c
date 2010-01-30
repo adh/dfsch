@@ -176,9 +176,6 @@ dfsch_package_t* dfsch_find_package(char* name){
   pkg = find_package(name);
   pthread_mutex_unlock(&symbol_lock);
 
-  if (!pkg){
-    dfsch_error("No such package", dfsch_make_string_cstr(name));
-  }
 
   return pkg;
 }
@@ -477,6 +474,9 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
   if (package_name){
     if (*package_name){
       package = dfsch_find_package(package_name);
+      if (!package){
+        dfsch_error("No such package", dfsch_make_string_cstr(name));
+      }
     } else {
       package = DFSCH_KEYWORD_PACKAGE;
     }
@@ -502,7 +502,7 @@ char* dfsch_symbol_qualified_name(dfsch_object_t* o){
                                       DFSCH_SYMBOL_TYPE));
   if (s->name){
     if (!s->package){
-      dfsch_error("Emmiting uninterned symbol into JSON", o);
+      dfsch_error("Uninterned symbol has no qualified name", o);
     } else {
       str_list_t* sl = sl_create();
       if (!dfsch_in_current_package(o)) {
@@ -517,7 +517,7 @@ char* dfsch_symbol_qualified_name(dfsch_object_t* o){
       }
     }
   } else {
-    dfsch_error("Emmiting gensym into JSON", o);
+    dfsch_error("Uninterned symbol has no qualified name", o);
   }
 }
 
@@ -528,6 +528,16 @@ dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol){
 char* dfsch_package_name(dfsch_object_t* package){
   dfsch_package_t* pkg = DFSCH_ASSERT_TYPE(package, DFSCH_PACKAGE_TYPE);
   return pkg->name;
+}
+
+int dfsch_interned_symbol_p(dfsch_object_t* sym){
+  symbol_t* s = DFSCH_TAG_REF(sym);
+
+  if (!DFSCH_SYMBOL_P(sym)){
+    return 0;
+  }
+  
+  return s->name && s->package;
 }
 
 dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj){
