@@ -514,22 +514,27 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 }
 
 
-int dfsch_variable_constant_p(object_t* name, object_t* env){
+dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
   environment_t *i;
   short flags;
+  dfsch_object_t* value;
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref_ex(&i->values, name, NULL, &flags, NULL)){
+    if (dfsch_eqhash_ref_ex(&i->values, name, &value, &flags, NULL)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-      return flags & DFSCH_VAR_CONSTANT;
+      if (flags & DFSCH_VAR_CONSTANT){
+        return value;
+      } else {
+        return DFSCH_INVALID_OBJECT;
+      }
     }
 
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  return 0;
+  return DFSCH_INVALID_OBJECT;
 }
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
@@ -838,18 +843,6 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
   return dfsch_eval_impl(exp, 
                          DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE), 
                          NULL, dfsch__get_thread_info());
-}
-
-int dfsch_constant_p(dfsch_object_t* exp, dfsch_object_t* env){
-  if (DFSCH_SYMBOL_P(exp)){
-    return dfsch_variable_constant_p(exp, env);
-  }
-
-  if (DFSCH_PAIR_P(exp)){
-    return 0;
-  }  
-
-  return 1;
 }
 
 typedef enum cll_mode {
@@ -1372,6 +1365,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__mkhash_register(ctx);
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
+  dfsch__compile_register(ctx);
 
   return ctx;
 }

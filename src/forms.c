@@ -98,6 +98,9 @@ dfsch_object_t* dfsch_generate_quote(dfsch_object_t* value){
                               DFSCH_FORM_REF(quote), 
                               value);
 }
+int dfsch_quote_expression_p(dfsch_object_t* expr){
+  return DFSCH_PAIR_P(expr) && DFSCH_FAST_CAR(expr) == DFSCH_FORM_REF(quote);
+}
 
 DFSCH_DEFINE_FORM(quasiquote, NULL, {}){ 
   /* This is non-trivial to compile right */

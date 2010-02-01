@@ -771,19 +771,6 @@ DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   return dfsch_apply_tr(func, arglist, esc);
 }
 
-DFSCH_DEFINE_PRIMITIVE(constant_p, 
-                       "Is expression constant in specified "
-                       "lexical environment?"){
-  object_t* expr;
-  object_t* env;
-
-  DFSCH_OBJECT_ARG(args, expr);
-  DFSCH_OBJECT_ARG(args, env);
-  DFSCH_ARG_END(args);
-
-  return dfsch_bool(dfsch_constant_p(expr, env));
-}
-
 DFSCH_DEFINE_PRIMITIVE(throw, 0){
   dfsch_object_t* tag;
   dfsch_object_t* value;
@@ -929,7 +916,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
-  dfsch_defconst_cstr(ctx, "constant?", DFSCH_PRIMITIVE_REF(constant_p));
 
 
 }

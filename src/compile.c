@@ -5,18 +5,18 @@ dfsch_object_t* dfsch_cons_ast_node(dfsch_object_t* head,
                                     dfsch_object_t* orig_expr,
                                     size_t count,
                                     ...){
-  size_t i;
+  size_t i = 0;
   dfsch_object_t** data;
   va_list al;
 
   va_start(al, count);
 
 
-  data = GC_MALLOC(sizeof(dfsch_object_t*)*(count+4));
+  data = GC_MALLOC(sizeof(dfsch_object_t*)*(count+5));
   data[i] = head;
   i++;
   
-  for(i = 0; i < count; i++){
+  for(i = 1; i < count+1; i++){
     data[i] = va_arg(al, dfsch_object_t*);
   }
 
@@ -40,17 +40,17 @@ dfsch_object_t* dfsch_cons_ast_node_cdr(dfsch_object_t* head,
                                         dfsch_object_t* cdr,
                                         size_t count,
                                         ...){
-  size_t i;
+  size_t i = 0;
   dfsch_object_t** data;
   va_list al;
 
   va_start(al, count);
 
-  data = GC_MALLOC(sizeof(dfsch_object_t*)*(count+4));
+  data = GC_MALLOC(sizeof(dfsch_object_t*)*(count+5));
   data[i] = head;
   i++;
   
-  for(i = 0; i < count; i++){
+  for(i = 1; i < count+1; i++){
     data[i] = va_arg(al, dfsch_object_t*);
   }
 
@@ -70,6 +70,18 @@ dfsch_object_t* dfsch_cons_ast_node_cdr(dfsch_object_t* head,
   
 }
 
+dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
+                                                dfsch_object_t* env){
+  if (DFSCH_SYMBOL_P(expression)){
+    return dfsch_variable_constant_value(expression,env);
+  } else if (dfsch_quote_expression_p(expression)){
+    return DFSCH_FAST_CAR(expression);
+  } else if (DFSCH_PAIR_P(expression)){
+    return DFSCH_INVALID_OBJECT;
+  } else {
+    return expression;
+  }
+}
 
 dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
                                                     dfsch_object_t* env){
@@ -103,11 +115,31 @@ dfsch_object_t* dfsch_constant_fold_expression(dfsch_object_t* expression,
                                                dfsch_object_t* env){
   if (DFSCH_PAIR_P(expression)){
     dfsch_object_t* operator = DFSCH_FAST_CAR(expression);
+    dfsch_object_t* operator_value;
     dfsch_object_t* args = DFSCH_FAST_CDR(expression);
 
     operator = dfsch_constant_fold_expression(operator, env);
+    operator_value = dfsch_constant_expression_value(operator, env);
     
+    if (operator_value != DFSCH_INVALID_OBJECT){
+      if (DFSCH_TYPE_OF(operator_value) == DFSCH_FORM_TYPE){
+        dfsch_form_t* form = ((dfsch_form_t*)operator_value);
+        if (form->methods.constant_fold){
+          return form->methods.constant_fold(operator_value, expression, env);
+        }
+      }
+      if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
+        return dfsch_constant_fold_expression(dfsch_macro_expand(operator_value,
+                                                                 args),
+                                              env);
+      }
+    }
+    return dfsch_cons_ast_node_cdr(operator, expression, 
+                                   dfsch_constant_fold_expression_list(args,
+                                                                       env),
+                                   0);
     
+
   } else if (DFSCH_SYMBOL_P(expression)){
     return expression; // TODO
   } else {
@@ -118,4 +150,21 @@ dfsch_object_t* dfsch_constant_fold_expression(dfsch_object_t* expression,
 
 void dfsch_compile_function(dfsch_object_t* function){
   
+}
+
+DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){
+  dfsch_object_t* expr;
+  dfsch_object_t* env;
+
+  DFSCH_OBJECT_ARG(args, expr);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_constant_fold_expression(expr, env);
+}
+
+void dfsch__compile_register(dfsch_object_t *ctx){ 
+  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+                         "constant-fold-expression", 
+                         DFSCH_PRIMITIVE_REF(constant_fold_expression));  
 }
