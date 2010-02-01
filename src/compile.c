@@ -83,6 +83,14 @@ dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
   }
 }
 
+dfsch_object_t* dfsch_make_constant_ast_node(dfsch_object_t* value){
+  if (DFSCH_SYMBOL_P(value) || DFSCH_PAIR_P(value)){
+    return dfsch_generate_quote(value);
+  } else {
+    return value;
+  }
+}
+
 dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
                                                     dfsch_object_t* env){
   dfsch_object_t *head; 
@@ -133,6 +141,12 @@ dfsch_object_t* dfsch_constant_fold_expression(dfsch_object_t* expression,
                                                                  args),
                                               env);
       }
+
+      return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
+                                     expression, 
+                                     dfsch_constant_fold_expression_list(args,
+                                                                         env),
+                                     0);
     }
     return dfsch_cons_ast_node_cdr(operator, expression, 
                                    dfsch_constant_fold_expression_list(args,
