@@ -350,9 +350,10 @@
        (sub-group sxml
                   (test 'parse-string
                         (xml:sxml-parse-string "<a foo=\"bar &quot;\"><b/></a>")
-                        '("a" (:@ ("foo" "bar \"")) ("b")))
+                        '("a" (:attributes ("foo" "bar \"")) ("b")))
                   (test 'emit-string
-                        (xml:sxml-emit-string '(a (:@ (foo "bar \"")) (b)))
+                        (xml:sxml-emit-string '(a (:attributes (foo "bar \"")) 
+                                                  (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
        
 (group "JSON support"
