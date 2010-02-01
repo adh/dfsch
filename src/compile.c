@@ -116,7 +116,8 @@ dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
     dfsch_type_error(i, DFSCH_LIST_TYPE, 1);
   }
 
-  return (dfsch_object_t*)head;  
+  return dfsch_list_annotate((dfsch_object_t*)head, 
+                             DFSCH_SYM_COMPILED_FROM, list);  
   
 }
 
