@@ -25,7 +25,6 @@
 #endif
 
 #include "internal.h"
-#include <dfsch/promise.h>
 #include <dfsch/generate.h>
 #include "util.h"
 

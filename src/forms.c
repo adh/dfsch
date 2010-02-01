@@ -25,7 +25,6 @@
 #endif
 
 #include "internal.h"
-#include <dfsch/promise.h>
 #include <dfsch/magic.h>
 #include "util.h"
 
