@@ -51,13 +51,18 @@ typedef struct dfsch__eqhash_large_t {
   size_t count;
 } dfsch__eqhash_large_t;
 
+#undef small
+#undef large
+
+typedef union dfsch__eqhash_contents_t {
+    dfsch__eqhash_small_t small;
+    dfsch__eqhash_large_t large;
+} dfsch__eqhash_contents_t;
+
 typedef struct dfsch_eqhash_t {
   int is_large; 
   /*this can be changed to char or bitfield or whatever when necessary*/
-  union {
-    dfsch__eqhash_small_t small;
-    dfsch__eqhash_large_t large;
-  } contents;
+  dfsch__eqhash_contents_t contents;
 } dfsch_eqhash_t; 
 
 void dfsch_eqhash_init(dfsch_eqhash_t* hash, int start_large);

@@ -70,6 +70,9 @@ extern "C" {
 
 #define DFSCH_TRACEPOINT_FLAG_ANON_STRING_DATA 256
 
+#define DFSCH_TRACEPOINT_FLAG_MACROEXPAND      65536
+
+
   typedef struct dfsch__tracepoint_t {
     int flags;
     union {
@@ -88,10 +91,14 @@ extern "C" {
     } data;
   } dfsch__tracepoint_t;
 
-#define DFSCH__TRACEPOINT_SHIFT(ti)                              \
-  (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth; 
+  
 #define DFSCH__TRACEPOINT(ti)                   \
   ((ti)->trace_buffer[(ti)->trace_ptr])
+
+#define DFSCH__TRACEPOINT_SHIFT(ti)                                     \
+  (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth;          \
+  DFSCH__TRACEPOINT(ti).flags = (ti)->trace_flags 
+
 #define DFSCH__TRACEPOINT_NOTIFY(ti)                             \
   if (DFSCH_UNLIKELY((ti)->trace_listener)){                     \
     (ti)->trace_listener((ti));                                  \
@@ -99,13 +106,13 @@ extern "C" {
 
 #define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                       \
   DFSCH__TRACEPOINT_SHIFT(ti);                                  \
-  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_EVAL;     \
+  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_EVAL;     \
   DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                  \
   DFSCH__TRACEPOINT(ti).data.eval.env = (en);                   \
   DFSCH__TRACEPOINT_NOTIFY(ti)
 #define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                       \
   DFSCH__TRACEPOINT_SHIFT(ti);                                       \
-  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
+  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
   DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                       \
   DFSCH__TRACEPOINT(ti).data.apply.args = (al);                      \
   DFSCH__TRACEPOINT_NOTIFY(ti)
@@ -114,7 +121,7 @@ extern "C" {
   DFSCH__TRACEPOINT_ANON_HELPER1(x)
 #define DFSCH__TRACEPOINT_ANON(ti, d, fl)                            \
   DFSCH__TRACEPOINT_SHIFT(ti);                                      \
-  DFSCH__TRACEPOINT(ti).flags = DFSCH_TRACEPOINT_KIND_ANON | (fl);  \
+  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_ANON | (fl);  \
   DFSCH__TRACEPOINT(ti).data.anon.location = __FILE__ ":"           \
     DFSCH__TRACEPOINT_ANON_HELPER2(__LINE__);                       \
   DFSCH__TRACEPOINT(ti).data.anon.data = (d);                       \
@@ -132,6 +139,9 @@ extern "C" {
     dfsch__tracepoint_listener_t trace_listener;    
     short trace_ptr;
     short trace_depth;
+    int trace_flags;
+
+    dfsch_object_t* macroexpanded_expr;
 
     void* env_freelist;
     void* pair_freelist;

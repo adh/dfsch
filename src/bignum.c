@@ -164,11 +164,12 @@ int dfsch_bignum_to_uint64(dfsch_bignum_t* b, uint64_t* rp){
   int i;
 
   if (b->length == 0){
-    return 1;
     if (rp){
       *rp = 0;
-    }
+    } 
+    return 1;
   }
+
   if ((b->length-1)*WORD_BITS + word_mag(b->words[b->length - 1]) > 64 ){
     return 0;
   }
@@ -644,7 +645,7 @@ static void bignum_div_big(bignum_t* a, bignum_t* b,
       d = ((xi << WORD_BITS) + x->words[i - 1]) / y->words[y->length - 1];
     }
 
-    while (y->words[y->length - 2] * d > 
+    while ((y->words[y->length - 2] * d) > 
            (((((dword_t)xi) << WORD_BITS) 
              + x->words[i - 1] 
              - d * y->words[y->length - 1]) << WORD_BITS)
@@ -656,7 +657,7 @@ static void bignum_div_big(bignum_t* a, bignum_t* b,
 
     for (k = 0; k < y->length && k + j - 1 < x->length; k++){
       m = y->words[k] * d;
-      u = m >> WORD_BITS;
+      u = (m >> WORD_BITS) & WORD_MASK;
       cy += x->words[k + j - 1] - m + (((dword_t)u) << WORD_BITS);
       x->words[k + j - 1] = cy & WORD_MASK;
 #if -3 >> 1 == -1 // XXX

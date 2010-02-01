@@ -19,8 +19,11 @@
  */
 
 #include <dfsch/writer.h>
+#include <dfsch/eqhash.h>
 
 #include "util.h"
+#include <limits.h>
+
 
 struct dfsch_writer_state_t {
   dfsch_object_t object_head;
@@ -29,7 +32,9 @@ struct dfsch_writer_state_t {
   int depth;
   int readability;
 
-  int c_mark;
+  int circ_pass;
+  dfsch_eqhash_t circ_hash;
+  int circ_counter;
 };
 dfsch_type_t dfsch_writer_state_type = {
   DFSCH_STANDARD_TYPE,
@@ -55,10 +60,27 @@ dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
   state->output_baton = baton;
   state->depth = max_depth;
   state->readability = readability;
-  state->c_mark = 0;
+  state->circ_pass = 0;
 
   return state;
 }
+
+void dfsch_write_object_circular(dfsch_object_t* obj,
+                                 int readability,
+                                 dfsch_output_proc_t proc,
+                                 void* baton){
+  dfsch_writer_state_t* state = 
+    dfsch_make_writer_state(INT_MAX, readability, proc, baton);
+
+  state->circ_pass = 1;
+  dfsch_eqhash_init(&(state->circ_hash), 0);
+  dfsch_write_object(state, obj);
+  state->circ_counter = 0;
+  state->circ_pass = 2;
+  dfsch_write_object(state, obj);
+  dfsch_invalidate_writer_state(state);
+}
+
 void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
   state->output_proc = NULL;
   state->output_baton = NULL;
@@ -70,7 +92,7 @@ int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state){
   return 0;
 }
 int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state){
-  return state->c_mark;
+  return state->circ_pass == 1;
 }
 
 void dfsch_write_object(dfsch_writer_state_t* state,
@@ -78,21 +100,46 @@ void dfsch_write_object(dfsch_writer_state_t* state,
   dfsch_type_t* type;
   char* ret;
 
-  if (state->c_mark){
-    // TODO
-  } else {
-    if (!object){
-      dfsch_write_string(state, "()");
-      return;
-    }
-    
-    if (state->depth==0){
-      dfsch_write_string(state, "...");
-      return;
-    }
-    
-    type = DFSCH_TYPE_OF(object);
+  if (!object){
+    dfsch_write_string(state, "()");
+    return;
   }
+
+  if (state->circ_pass == 1){
+    if (!DFSCH_SYMBOL_P(object) && !dfsch_number_p(object) && 
+        DFSCH_TYPE_OF(object) != DFSCH_PRIMITIVE_TYPE &&
+        DFSCH_TYPE_OF(object) != DFSCH_FORM_TYPE){
+      if (!dfsch_eqhash_set_if_exists(&(state->circ_hash), 
+                                      object, DFSCH_SYM_TRUE, NULL)){
+        dfsch_eqhash_set(&(state->circ_hash), object, NULL);
+      } else {
+        return;
+      }
+    }
+  } else if (state->circ_pass == 2){
+    dfsch_object_t* value = dfsch_eqhash_ref(&(state->circ_hash), object);
+    
+    if (value && value != DFSCH_INVALID_OBJECT){
+      if (value == DFSCH_SYM_TRUE){
+        dfsch_eqhash_set(&(state->circ_hash),
+                         object,
+                         DFSCH_MAKE_FIXNUM(state->circ_counter));
+        dfsch_write_string(state, saprintf("#%d=", state->circ_counter)); 
+        state->circ_counter++;
+      } else {
+        dfsch_write_string(state, saprintf("#%d#", 
+                                           DFSCH_FIXNUM_REF(value)));
+        return;
+      }
+    }
+  }
+  
+  if (state->depth==0){
+    dfsch_write_string(state, "...");
+    return;
+  }
+    
+  type = DFSCH_TYPE_OF(object);
   
   while (type){
     if (type->write){
@@ -104,7 +151,7 @@ void dfsch_write_object(dfsch_writer_state_t* state,
     type = type->superclass;
   }
 
-  if (!state->c_mark){
+  if (state->circ_pass != 1){
     dfsch_write_unreadable(state, object, "");
   }
 }
@@ -116,7 +163,7 @@ void dfsch_write_string(dfsch_writer_state_t* state,
 }
 void dfsch_write_strbuf(dfsch_writer_state_t* state,
                         char* str, size_t len){
-  if (state->c_mark){
+  if (state->circ_pass == 1){
     return;
   }
   if (state->output_proc){

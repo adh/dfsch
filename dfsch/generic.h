@@ -66,6 +66,7 @@ typedef struct dfsch_singleton_generic_function_t {
   dfsch_generic_function_add_method_t add_method;
   dfsch_generic_function_remove_method_t remove_method;
   dfsch_generic_function_methods_t methods;
+  char* documentation;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_singleton_generic_function_t;
 
@@ -116,7 +117,6 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
 
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec);
 

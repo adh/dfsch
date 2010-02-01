@@ -33,6 +33,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/lib/cdebug.h>
 #include <dfsch/lib/cmdopts.h>
+#include <dfsch/lib/console.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,19 +78,20 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 
 
 void interactive_repl(dfsch_object_t* ctx){
-  printf("  /\\___/\\    dfsch version %s [%s %s]\n", 
-         PACKAGE_VERSION, __DATE__, __TIME__);
-  printf(" ( o   o )\n");
+  printf("  /\\___/\\    dfsch version %s\n", 
+         dfsch_get_version());
+  printf(" ( o   o )     (%s) [%s %s]\n", 
+         dfsch_get_build_id(), __DATE__, __TIME__);
   printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
   printf("   )   (     under certain conditions; see file COPYING for details.\n");
-  dfsch_console_run_repl("]=> ", ctx);
+  dfsch_console_run_repl("]=> ", ctx, NULL);
 }
 
 static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   signal(SIGINT, sigint_handler_break);
   ret = dfsch_eval(obj, baton);
-  puts(dfsch_object_2_string(ret,100,1));
+  puts(dfsch_object_2_string(ret,-1,1));
 }
 
 void noninteractive_repl(dfsch_object_t* ctx){
@@ -133,15 +135,18 @@ int main(int argc, char**argv){
   dfsch_object_t* ctx;
   int interactive = 1;
   int force_interactive = 0;
+#ifdef __unix__
   struct sigaction act;
+#endif
 
   GC_INIT();
 
+#ifdef __unix__
   act.sa_handler = sigint_handler_break;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
-
   sigaction(SIGINT, &act, NULL);
+#endif
 
 
   ctx = dfsch_make_top_level_environment();

@@ -4,6 +4,7 @@
 (require :unix)
 (require :simple-tests)
 (require :json)
+(require :inet)
 
 (define-package :interp-test :dfsch :simple-tests)
 (in-package :interp-test)
@@ -43,7 +44,7 @@
                   (test 'proc-ret-1
                         (eqv? (gen-counter) (gen-counter))
                         #f))
-        
+       
        (sub-group eq?
                   (test 'eq? (eq? 'a 'a) #t)
                   (test 'eq?-false (eq? 'a 'b) #f)
@@ -119,7 +120,7 @@
 (group "control flow"
        
        (sub-group if
-                 
+                  
                   (test 'if-true (if (> 3 2) 'yes 'no) 'yes)
                   (test 'if-false (if (< 3 2) 'yes 'no) 'no)
                   (test 'if-eval 
@@ -157,7 +158,7 @@
                           ((w y) 'semivowel)
                           (else 'consonant))
                         'consonant))
-                  
+       
        (sub-group (and or)
 
                   (test 'and-true (and (= 2 2) (> 2 1)) true)
@@ -167,7 +168,13 @@
                   
                   (test 'or-true (or (= 2 2) (> 2 1)) true)
                   (test 'or-false (or (> 2 2) (< 2 1)) ()))
-                  
+
+       (sub-group when-unless
+                  (test 'when-true (when #t 1) 1)
+                  (test 'when-false (when #f 1) ())
+                  (test 'unless-true (unless #t 1) ())
+                  (test 'unless-false (unless #f 1) 1))
+       
        (sub-group do
 
                   (test 'do 
@@ -196,25 +203,49 @@
 (group "Binding constructs"
 
        (sub-group let
-                 (test 'let
-                       (let ((x 2) (y 3))
-                         (let ((x 7)
-                               (z (+ x y)))
-                           (* z x)))   
-                       35)
-                 (test 'letrec
-                       (letrec ((even?
-                                 (lambda (n)
-                                   (if (= n 0)
-                                       true
-                                       (odd? (- n 1)))))
-                                (odd?
-                                 (lambda (n)
-                                   (if (= n 0)
-                                       ()
-                                       (even? (- n 1))))))
-                         (even? 88))
-                       true))
+                  (test 'let
+                        (let ((x 2) (y 3))
+                          (* x y))           
+                        6)
+                  (test 'let2
+                        (let ((x 2) (y 3))
+                          (let ((x 7)
+                                (z (+ x y)))
+                            (* z x)))   
+                        35)
+                  (test 'let*
+                        (let ((x 2) (y 3))
+                          (let* ((x 7)
+                                 (z (+ x y)))
+                            (* z x)))                   
+                        70)
+                  (test 'letrec
+                        (letrec ((even?
+                                  (lambda (n)
+                                    (if (= n 0)
+                                        true
+                                        (odd? (- n 1)))))
+                                 (odd?
+                                  (lambda (n)
+                                    (if (= n 0)
+                                        ()
+                                        (even? (- n 1))))))
+                          (even? 88))
+                        true)
+                  (test 'named-let
+                        (let loop ((numbers '(3 -2 1 6 -5))
+                                   (nonneg '())
+                                   (neg '()))
+                          (cond ((null? numbers) (list nonneg neg))
+                                ((>= (car numbers) 0)
+                                 (loop (cdr numbers)
+                                       (cons (car numbers) nonneg)
+                                       neg))
+                                ((< (car numbers) 0)
+                                 (loop (cdr numbers)
+                                       nonneg
+                                       (cons (car numbers) neg)))))   
+                        '((6 1 3) (-5 -2))))
        (sub-group destructuring-bind
                   (test 'simple
                         (destructuring-bind (a b c) '(1 2 3)
@@ -343,17 +374,22 @@
                '(subclass . test-class))
 
          ))
-               
+
 
 (group "XML support"
        (sub-group sxml
                   (test 'parse-string
                         (xml:sxml-parse-string "<a foo=\"bar &quot;\"><b/></a>")
-                        '("a" (:@ ("foo" "bar \"")) ("b")))
+                        '("a" (:attributes ("foo" "bar \"")) ("b")))
                   (test 'emit-string
-                        (xml:sxml-emit-string '(a (:@ (foo "bar \"")) (b)))
+                        (xml:sxml-emit-string '(:a (:attributes (foo "bar \"")) 
+                                                  (b)))
+                        "<a foo=\"bar &quot;\"><b /></a>")
+                  (test 'emit-string-shorthand
+                        (xml:sxml-emit-string '(:a :foo "bar \"" 
+                                                  (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
-       
+
 (group "JSON support"
        (test 'parse-json
              (json:parse-string "[1, 2, 3]")
@@ -371,6 +407,14 @@
        (test 'json-roundtrip
              (hash->canonical-alist (json:parse-string (json:emit-string *json-test-data*)))
              (hash->canonical-alist *json-test-data*)))
+
+(group "Internet data handling"
+       (test 'http-query->alist
+             (inet:http-query->alist "q=foo&bla=a%20b")
+             '(("q" "foo") ("bla" "a b")))
+       (test 'base64
+             (inet:base64-decode (inet:base64-encode "abcdef\n\r\"01234567890"))
+             "abcdef\n\r\"01234567890"))
 
 (group "Regressions"
        (test 'gensym-write-segfault 

@@ -34,18 +34,31 @@ dfsch_object_t* dfsch_console_read_object(char* prompt);
 
 typedef int (*dfsch_console_object_cb_t)(dfsch_object_t* obj, void* baton);
 
+typedef struct dfsch_console_repl_command_t dfsch_console_repl_command_t;
+
 int dfsch_console_read_objects_parser(char* prompt,
-                                      dfsch_parser_ctx_t* parser);
+                                      dfsch_parser_ctx_t* parser,
+                                      dfsch_console_repl_command_t* cmds);
 int dfsch_console_read_objects_list_parser(char* prompt,
                                            dfsch_parser_ctx_t* parser);
 
+
+dfsch_console_repl_command_t* dfsch_console_add_command(dfsch_console_repl_command_t* cmdlist,
+                                                        char* name,
+                                                        char* doc,
+                                                        void (*exec)(char* cmdline, void* baton),
+                                                        void* baton);
+
 int dfsch_console_read_objects(char* prompt,
                                dfsch_console_object_cb_t cb,
-                               void* baton);
+                               void* baton,
+                               dfsch_console_repl_command_t* commands);
 int dfsch_console_read_objects_list(char * prompt,
                                     dfsch_console_object_cb_t cb,
                                     void* baton);
+
 int dfsch_console_run_repl(char* prompt,
-                           dfsch_object_t* env);
+                           dfsch_object_t* env,
+                           dfsch_console_repl_command_t* commands);
 
 #endif

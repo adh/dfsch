@@ -32,6 +32,7 @@ typedef struct standard_generic_function_t {
   size_t longest_spec_list;
   dfsch_object_t* name;
   dfsch_object_t* method_combination;
+  char* documentation;
 } standard_generic_function_t;
 
 dfsch_type_t dfsch_generic_function_type_type = {
@@ -510,6 +511,13 @@ standard_generic_function_methods(standard_generic_function_t* function){
   return dfsch_list_copy(function->methods);
 }
 
+static dfsch_slot_t standard_generic_function_slots[] = {
+  DFSCH_STRING_SLOT(standard_generic_function_t, documentation, 
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
   .super = {
     .type = DFSCH_GENERIC_FUNCTION_TYPE_TYPE,
@@ -518,7 +526,8 @@ dfsch_generic_function_type_t dfsch_standard_generic_function_type = {
     .size = sizeof(standard_generic_function_t),
     .documentation = "Normal class of generic functions",
     .apply = apply_standard_generic_function,
-    .write = write_standard_generic_function
+    .write = write_standard_generic_function,
+    .slots = standard_generic_function_slots,
   },
 
   .add_method = standard_generic_function_add_method,
@@ -570,6 +579,14 @@ singleton_generic_function_methods(singleton_gf_t* function){
   return function->methods(function);
 }
 
+static dfsch_slot_t singleton_generic_function_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_singleton_generic_function_t, documentation, 
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Documentation string"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+
 dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
   .super = {
     .type = DFSCH_GENERIC_FUNCTION_TYPE_TYPE,
@@ -578,7 +595,8 @@ dfsch_generic_function_type_t dfsch_singleton_generic_function_type = {
     .size = 0,
     .documentation = "Class of generic functions whose behavior is unique. "
     "Used to implement internal special cases in interpreter.",
-    .apply = apply_singleton_generic_function
+    .apply = apply_singleton_generic_function,
+    .slots = singleton_generic_function_slots,
   },
 
   .add_method = singleton_generic_function_add_method,
@@ -711,7 +729,6 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
  */
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec){
   dfsch_object_t* specializers_head = NULL;
@@ -729,12 +746,6 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
     DFSCH_OBJECT_ARG(j, var);
     DFSCH_OBJECT_ARG(j, specializer);
     DFSCH_ARG_END(j);
-
-    specializer = dfsch_eval(specializer, env);
-    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
-                                        DFSCH_STANDARD_TYPE);
-
-
 
     tmp = dfsch_cons(var, NULL);
     if (lambda_list_tail){
@@ -787,7 +798,6 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
   return t->call_next_method(context, args, esc);
 }
 
-
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
@@ -822,13 +832,13 @@ static dfsch_object_t* add_method_apply(dfsch_object_t* f,
 
   dfsch_generic_function_add_method(function, 
                                     DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
-  return NULL;
+  return method;
 }
 
 static dfsch_singleton_generic_function_t add_method = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = add_method_apply,
-  
+  .documentation = "Add method to passed generic function"  
 };
 static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
                                            dfsch_object_t* args,
@@ -849,6 +859,7 @@ static dfsch_object_t* remove_method_apply(dfsch_object_t* f,
 static dfsch_singleton_generic_function_t remove_method = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = remove_method_apply,  
+  .documentation = "Remove method from passed generic function"
 };
 
 static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
@@ -866,12 +877,14 @@ static dfsch_object_t* generic_function_methods_apply(dfsch_object_t* f,
 static dfsch_singleton_generic_function_t generic_function_methods = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .apply = generic_function_methods_apply,
-  
+  .documentation = "Return list of all methods of this generic function"
 };
 
-DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
+DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
+  dfsch_object_t* env;
   dfsch_object_t* ctx;
-  args = dfsch_eval_list(args, env);
+
+  DFSCH_OBJECT_ARG(args, env);
 
   ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
 
@@ -879,20 +892,40 @@ DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
     dfsch_error("call-next-method called outside allowed scope", NULL);
   }
 
-  return dfsch_call_next_method(ctx, args, esc);
+  return dfsch_call_next_method(ctx, args, esc);  
+}
+
+DFSCH_DEFINE_MACRO(call_next_method, "Call next less specialized method"){
+  return dfsch_immutable_list_cdr(args, 2,
+                                  DFSCH_PRIMITIVE_REF(call_next_method),
+                                  dfsch_generate_current_environment());
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
+DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_ARG_END(args);
   
 
-  return ensure_generic_function(env, name);
+  return dfsch_generate_if
+    (dfsch_generate_defined_p(name),
+     dfsch_generate_if(dfsch_generate_instance_p(name, 
+                                                 DFSCH_GENERIC_FUNCTION_TYPE),
+                       name,
+                       dfsch_generate_error("Generic function name already "
+                                             " defined as different type", 
+                                             name)),
+     dfsch_generate_define_constant(name,
+                                    dfsch_immutable_list
+                                    (2,
+                                     DFSCH_PRIMITIVE_REF(make_generic_function),
+                                     dfsch_generate_quote(name))));
+     
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
+
+DFSCH_DEFINE_MACRO(define_method, "Define new generic function"){
   dfsch_object_t* header; 
   dfsch_object_t* body;
   dfsch_object_t* name;
@@ -917,16 +950,21 @@ DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
     name = DFSCH_FAST_CAR(name);
   }
 
-  dfsch_parse_specialized_lambda_list(lambda_list, env, 
+  dfsch_parse_specialized_lambda_list(lambda_list,
                                       &lambda_list, &specializers);
- 
-  
-  method = dfsch_make_method(header, qualifiers, specializers, 
-                             dfsch_named_lambda(env, lambda_list, 
-                                                body, header));
 
-
-  return dfsch_define_method(env, name, method);
+  return dfsch_immutable_list
+    (3,
+     (dfsch_object_t*)&add_method,
+     dfsch_immutable_list(2,
+                          DFSCH_MACRO_REF(define_generic_function),
+                          name),
+     dfsch_immutable_list(5,
+                          DFSCH_PRIMITIVE_REF(make_method),
+                          dfsch_generate_quote(header),
+                          dfsch_generate_quote(qualifiers),
+                          dfsch_generate_eval_list(specializers),
+                          dfsch_generate_lambda(header, lambda_list, body)));
 }
 
 
@@ -942,11 +980,11 @@ void dfsch__generic_register(dfsch_object_t* env){
                     (dfsch_object_t*)&generic_function_methods);
 
   dfsch_defconst_cstr(env, "call-next-method",
-                    DFSCH_FORM_REF(call_next_method));
+                    DFSCH_MACRO_REF(call_next_method));
 
   dfsch_defconst_cstr(env, "define-generic-function",
-                      DFSCH_FORM_REF(define_generic_function));
+                      DFSCH_MACRO_REF(define_generic_function));
   dfsch_defconst_cstr(env, "define-method",
-                      DFSCH_FORM_REF(define_method));
+                      DFSCH_MACRO_REF(define_method));
 
 }

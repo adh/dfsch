@@ -3,19 +3,33 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 
 dnl package name and version number
 
-AC_INIT(dfsch, 0.3.0)
+AC_INIT(dfsch, 0.4.0-dev)
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([m4])
+
 AM_INIT_AUTOMAKE
 dnl AC_CONFIG_AUX_DIR(config)
 dnl checks for programs
 
 dnl AC_PROG_INTLTOOL - We dont want i18n
 
+
 LT_INIT
 
 AC_PROG_CC
+
+if test $host != $build; then
+   AC_CHECK_PROGS(CC_FOR_BUILD, gcc cc)
+fi
+
+
+if test -z "$CC_FOR_BUILD"; then
+   CC_FOR_BUILD=$CC
+fi
+ 
+AC_SUBST(CC_FOR_BUILD)
+
 AC_PROG_CPP
 AC_PROG_AWK
 AC_PROG_INSTALL
@@ -97,6 +111,13 @@ fi
 
 AC_SYS_LARGEFILE 
 
+case $host in 
+     *mingw*) win32=true ;;
+     *) win32=false ;;
+esac
+AM_CONDITIONAL(WIN32, test x$win32 == xtrue)
+
+
 dfschlibexecdir="${libdir}/dfsch/"
 dfschlibscmdir="${datadir}/dfsch/scm/"
 
@@ -110,6 +131,7 @@ AC_SUBST(dfschlibexecdir)
 AC_SUBST(dfschlibscmdir)
 
 AC_SUBST(READLINE_LIBS)
+
 
 dnl automake stuff
 AM_MAINTAINER_MODE

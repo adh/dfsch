@@ -43,6 +43,7 @@
 #include <stdarg.h>
 
 #include "types.h"
+#include "version.h"
 
 //#define ALLOC_DEBUG
 
@@ -331,14 +332,24 @@ void dfsch_async_apply_self(dfsch_object_t* proc){
 char* dfsch_object_2_string(dfsch_object_t* obj, 
                             int max_depth, int readable){
   str_list_t* sl = sl_create();
-  dfsch_writer_state_t* state = 
-    dfsch_make_writer_state(max_depth,
-                            readable?
-                            DFSCH_WRITE:
-                            DFSCH_PRINT,
-                            (dfsch_output_proc_t)sl_append,
-                            sl);
-  dfsch_write_object(state, obj);
+  if (max_depth >= 0){
+    dfsch_writer_state_t* state = 
+      dfsch_make_writer_state(max_depth,
+                              readable?
+                              DFSCH_WRITE:
+                              DFSCH_PRINT,
+                              (dfsch_output_proc_t)sl_append,
+                              sl);
+    dfsch_write_object(state, obj);
+    dfsch_invalidate_writer_state(state);
+  } else {
+    dfsch_write_object_circular(obj, 
+                                readable?
+                                DFSCH_WRITE:
+                                DFSCH_PRINT,
+                                (dfsch_output_proc_t)sl_append,
+                                sl);
+  }
   return sl_value(sl);
 }
 
@@ -503,22 +514,27 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
 }
 
 
-int dfsch_variable_constant_p(object_t* name, object_t* env){
+dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
   environment_t *i;
   short flags;
+  dfsch_object_t* value;
 
   i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
   while (i){
-    if (dfsch_eqhash_ref_ex(&i->values, name, NULL, &flags, NULL)){
+    if (dfsch_eqhash_ref_ex(&i->values, name, &value, &flags, NULL)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-      return flags & DFSCH_VAR_CONSTANT;
+      if (flags & DFSCH_VAR_CONSTANT){
+        return value;
+      } else {
+        return DFSCH_INVALID_OBJECT;
+      }
     }
 
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  return 0;
+  return DFSCH_INVALID_OBJECT;
 }
 
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
@@ -638,13 +654,35 @@ dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
   return NULL;
 }
 
+static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
+                                         dfsch_object_t* expr,
+                                         dfsch__thread_info_t* ti){
+  dfsch_object_t* new_expr;
+  dfsch_object_t* old_expr;
+  
+  DFSCH_UNWIND {
+    old_expr = ti->macroexpanded_expr;
+    ti->macroexpanded_expr = expr;
+    ti->trace_flags = 
+      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
+    new_expr = dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
+                                                        DFSCH_MACRO_TYPE))->proc, 
+                           DFSCH_FAST_CDR(expr));
+  } DFSCH_PROTECT {
+    ti->macroexpanded_expr = old_expr;    
+    ti->trace_flags = 
+      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
+  } DFSCH_PROTECT_END;
+
+  return new_expr;
+}
+
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
-
-  return dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
-                                                  DFSCH_MACRO_TYPE))->proc, 
-                     args);
+  return macro_expand_impl(macro, dfsch_cons(macro, args), 
+                           dfsch__get_thread_info());
 }
+
 
 // Evaluator
 
@@ -754,8 +792,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
-  DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
-
   if (!exp) 
     return NULL;
 
@@ -764,6 +800,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
   }
 
   if(DFSCH_PAIR_P(exp)){
+    DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
+
     object_t *f = DFSCH_FAST_CAR(exp);
 
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
@@ -782,7 +820,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     }
 
     if (DFSCH_TYPE_OF(f) == DFSCH_MACRO_TYPE){
-      return dfsch_eval_impl(dfsch_macro_expand(f, DFSCH_FAST_CDR(exp)),
+      return dfsch_eval_impl(macro_expand_impl(f, exp, ti),
 			     env,
  			     esc,
 			     ti);
@@ -805,18 +843,6 @@ dfsch_object_t* dfsch_eval(dfsch_object_t* exp, dfsch_object_t* env){
   return dfsch_eval_impl(exp, 
                          DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE), 
                          NULL, dfsch__get_thread_info());
-}
-
-int dfsch_constant_p(dfsch_object_t* exp, dfsch_object_t* env){
-  if (DFSCH_SYMBOL_P(exp)){
-    return dfsch_variable_constant_p(exp, env);
-  }
-
-  if (DFSCH_PAIR_P(exp)){
-    return 0;
-  }  
-
-  return 1;
 }
 
 typedef enum cll_mode {
@@ -1274,10 +1300,6 @@ DFSCH_PRIMITIVE_HEAD(top_level_environment){
   return baton;
 }
 
-DFSCH_DEFINE_FORM_IMPL(current_environment, 
-                       "Return lexically-enclosing environment"){
-  return env;
-}
 
 dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
@@ -1318,14 +1340,32 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
-  dfsch_define_cstr(ctx, "current-environment", 
-                    DFSCH_FORM_REF(current_environment));
   dfsch_define_cstr(ctx,"*dfsch-version*",
                     dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_define_cstr(ctx,"*dfsch-build-id*",
+                    dfsch_make_string_cstr(BUILD_ID));
   dfsch_define_cstr(ctx,"*dfsch-platform*",
                     dfsch_make_string_cstr(HOST_TRIPLET));
 
-  dfsch__native_register(ctx);
+  dfsch__primitives_register(ctx);
+  dfsch__native_cxr_register(ctx);
+  dfsch__forms_register(ctx);
+  dfsch__system_register(ctx);
+  dfsch__hash_native_register(ctx);
+  dfsch__number_native_register(ctx);
+  dfsch__string_native_register(ctx);
+  dfsch__object_native_register(ctx);
+  dfsch__weak_native_register(ctx);
+  dfsch__format_native_register(ctx);
+  dfsch__port_native_register(ctx);
+  dfsch__bignum_register(ctx);
+  dfsch__conditions_register(ctx);
+  dfsch__random_register(ctx);
+  dfsch__generic_register(ctx);
+  dfsch__mkhash_register(ctx);
+  dfsch__package_register(ctx);
+  dfsch__macros_register(ctx);
+  dfsch__compile_register(ctx);
 
   return ctx;
 }
@@ -1371,4 +1411,12 @@ dfsch_object_t* dfsch_lookup_cstr(dfsch_object_t *ctx, char *name){
 dfsch_object_t* dfsch_env_get_cstr(dfsch_object_t *ctx, char *name){
   return dfsch_env_get(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
                                            name), ctx);
+}
+
+
+char* dfsch_get_version(){
+  return PACKAGE_VERSION;
+}
+char* dfsch_get_build_id(){
+  return BUILD_ID;
 }

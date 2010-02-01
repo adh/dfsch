@@ -25,7 +25,7 @@
 #endif
 
 #include "internal.h"
-#include <dfsch/promise.h>
+#include <dfsch/generate.h>
 #include "util.h"
 
 #include <stdlib.h>
@@ -128,7 +128,12 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, "Is object instance of given type?"){
 
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
 }
-
+dfsch_object_t* dfsch_generate_instance_p(dfsch_object_t* obj,
+                                          dfsch_object_t* klass){
+  return dfsch_immutable_list(3, 
+                              DFSCH_PRIMITIVE_REF(instance_p), 
+                              obj, klass);
+}
 DFSCH_DEFINE_PRIMITIVE(slot_set, "Store value into object's slot"){
   dfsch_object_t* object;
   dfsch_object_t* value;
@@ -210,144 +215,6 @@ DFSCH_DEFINE_PRIMITIVE(get_list_annotation,
   return dfsch_get_list_annotation(list);
 }
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Basic special forms
-//
-/////////////////////////////////////////////////////////////////////////////
-
-DFSCH_DEFINE_FORM_IMPL(lambda, "Create new annonymous function"){
-  MIN_ARGS(args,1);
-  return dfsch_lambda(env,
-		      dfsch_car(args),
-		      dfsch_cdr(args));
-}
-
-DFSCH_DEFINE_FORM_IMPL(define, "Define variable or procedure"){
-
-  MIN_ARGS(args,1);  
-
-  object_t* name = dfsch_car(args);
-
-  if (DFSCH_PAIR_P(name)){
-    object_t* lambda = dfsch_named_lambda(env,dfsch_cdr(name),
-                                          dfsch_cdr(args),
-                                          dfsch_car(name));
-    name = DFSCH_FAST_CAR(name);
-    dfsch_define(name, lambda, env, DFSCH_VAR_CONSTANT);
-    return lambda;
-  }else{
-    object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  }
-}
-
-DFSCH_DEFINE_FORM_IMPL(define_variable, 
-                       "Define variable only if it is not already defined"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, 0);
-    return value;
-  } else {
-    return NULL;
-  }
-}
-DFSCH_DEFINE_FORM_IMPL(define_constant,
-                       "Define constant variable "
-                       "- intended as hint to possible future compiler"){
-  dfsch_object_t* name;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_OBJECT_ARG_OPT(args, value, NULL);
-  DFSCH_ARG_END(args);
-  
-  if (dfsch_env_get(name, env) == DFSCH_INVALID_OBJECT){
-    value = dfsch_eval(value, env);
-    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
-    dfsch_declare(name, 
-                  dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                      "constant"), 
-                  env);
-    return value;
-  } else {
-    return NULL;
-  }
-}
-
-DFSCH_DEFINE_FORM_IMPL(declare, "Add declaration specifier to given symbol"){
-  dfsch_object_t* name;
-  dfsch_object_t* decls;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_REST(args, decls);
-
-  while (DFSCH_PAIR_P(decls)){
-    dfsch_declare(name, DFSCH_FAST_CDR(decls), env);
-    decls = DFSCH_FAST_CDR(decls);
-  }
-
-  return NULL;
-}
-
-DFSCH_DEFINE_FORM_IMPL(set, "Change value of variable"){
-  NEED_ARGS(args,2);  
-
-  object_t* name = dfsch_car(args);
-  object_t* value = dfsch_eval(dfsch_car(dfsch_cdr(args)),env);
-
-  dfsch_set(name, value, env);
-  return value;
-
-}
-DFSCH_DEFINE_FORM_IMPL(unset, "Delete variable binding"){
-  object_t* name;
-
-  DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_END(args);
-
-  dfsch_unset(name, env);
-
-  return NULL;
-}
-DFSCH_DEFINE_FORM_IMPL(defined_p, 
-                       "Check if given variable is defined in "
-                       "lexically-enclosing environment"){
-  NEED_ARGS(args,1);
-  object_t* name = dfsch_car(args);
-
-  return dfsch_bool(dfsch_env_get(name, env) != DFSCH_INVALID_OBJECT);
-}
-
-DFSCH_DEFINE_PRIMITIVE(make_macro, 
-		       "Allocate new macro object implemented by function"){
-  NEED_ARGS(args,1);  
-  return dfsch_make_macro(dfsch_car(args));
-}
-DFSCH_DEFINE_FORM_IMPL(define_macro,
-                       "Define new macro implemented by standard-function"){
-  dfsch_object_t* name;
-  dfsch_object_t* arglist;
-
-  DFSCH_OBJECT_ARG(args, arglist);
-  DFSCH_OBJECT_ARG(arglist, name);
-
-  dfsch_define(name, 
-               dfsch_make_macro(dfsch_named_lambda(env,
-                                                   arglist,
-                                                   args,
-                                                   name)), 
-               env, DFSCH_VAR_CONSTANT);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -379,6 +246,12 @@ DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
 DFSCH_DEFINE_PRIMITIVE(list, NULL){
   return dfsch_list_copy(args);
 }
+dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
+  return dfsch_cons(DFSCH_PRIMITIVE_REF(list), 
+                    exps);
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(length, NULL){
   long len;
   NEED_ARGS(args,1);  
@@ -666,42 +539,6 @@ DFSCH_DEFINE_PRIMITIVE(equal_p, NULL){
   return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Logic
-//
-/////////////////////////////////////////////////////////////////////////////
-
-
-DFSCH_DEFINE_FORM_IMPL(or, "Short-circuiting logical or"){
-  object_t* i;
-  object_t* r = NULL;
-  i = args;
- 
-  while(i){
-    r = dfsch_eval(dfsch_car(i), env);
-    if (r)
-      return r;
-    i = dfsch_cdr(i);
-  }
-
-  return r;
-}
-DFSCH_DEFINE_FORM_IMPL(and, "Short-circuiting logical and"){
-  object_t* i;
-  object_t* r = DFSCH_SYM_TRUE;
-  i = args;
- 
-  while(i){
-    r = dfsch_eval(dfsch_car(i), env);
-    if (!r)
-      return r;
-
-    i = dfsch_cdr(i);
-  }
-
-  return r;
-}
 DFSCH_DEFINE_PRIMITIVE(not, "Logical not - equivalent to null?"){
   dfsch_object_t* val;
   DFSCH_OBJECT_ARG(args, val);
@@ -861,7 +698,7 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string,
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_ARG_END(args);
 
-  str = dfsch_symbol(object);
+  str = dfsch_symbol_qualified_name(object);
   if (str)
     return dfsch_make_string_cstr(str);
   else
@@ -899,13 +736,66 @@ DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
   return dfsch_macro_expand(macro, arguments);
 }
 
+DFSCH_DEFINE_PRIMITIVE(eval, "Evaluate expression in lexical environment"){
+  object_t* expr;
+  object_t* env;
+
+  DFSCH_OBJECT_ARG(args, expr);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_tr(expr, env, esc);
+}
+DFSCH_DEFINE_PRIMITIVE(eval_proc, 
+                       "Evaluate function body in lexical environment"){
+  object_t* proc;
+  object_t* env;
+
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_proc_tr(proc, env, esc);
+}
+DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
+  /* TODO: free arguments */
+  
+  object_t* func;
+  object_t* arglist;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, arglist);
+  DFSCH_ARG_END(args);
+
+  return dfsch_apply_tr(func, arglist, esc);
+}
+
+DFSCH_DEFINE_PRIMITIVE(throw, 0){
+  dfsch_object_t* tag;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, tag);
+  DFSCH_OBJECT_ARG(args, value);
+  
+  dfsch_throw(tag, value);
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(make_macro, 
+		       "Allocate new macro object implemented by function"){
+  NEED_ARGS(args,1);  
+  return dfsch_make_macro(dfsch_car(args));
+}
+dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
+  return dfsch_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
 //
 /////////////////////////////////////////////////////////////////////////////
 
-void dfsch__native_register(dfsch_object_t *ctx){ 
+void dfsch__primitives_register(dfsch_object_t *ctx){ 
   dfsch_defconst_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
   dfsch_defconst_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
   dfsch_defconst_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
@@ -921,21 +811,10 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
   dfsch_defconst_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
 
-  dfsch_defconst_cstr(ctx, "and", DFSCH_FORM_REF(and));
-  dfsch_defconst_cstr(ctx, "or",DFSCH_FORM_REF(or));
   dfsch_defconst_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
 
-  dfsch_defconst_cstr(ctx, "lambda", DFSCH_FORM_REF(lambda));
-  dfsch_defconst_cstr(ctx, "define", DFSCH_FORM_REF(define));
-  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_FORM_REF(define_variable));
-  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_FORM_REF(define_constant));
-  dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
-  dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
-  dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
-  dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
   dfsch_defconst_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
-  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_FORM_REF(define_macro));
   dfsch_defconst_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
   dfsch_defconst_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
   dfsch_defconst_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
@@ -1031,22 +910,11 @@ void dfsch__native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "make-slot-writer", 
                       DFSCH_PRIMITIVE_REF(make_slot_writer));
 
+  dfsch_defconst_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
 
-  dfsch__native_cxr_register(ctx);
-  dfsch__control_register(ctx);
-  dfsch__system_register(ctx);
-  dfsch__hash_native_register(ctx);
-  dfsch__promise_native_register(ctx);
-  dfsch__number_native_register(ctx);
-  dfsch__string_native_register(ctx);
-  dfsch__object_native_register(ctx);
-  dfsch__weak_native_register(ctx);
-  dfsch__format_native_register(ctx);
-  dfsch__port_native_register(ctx);
-  dfsch__bignum_register(ctx);
-  dfsch__conditions_register(ctx);
-  dfsch__random_register(ctx);
-  dfsch__generic_register(ctx);
-  dfsch__mkhash_register(ctx);
-  dfsch__package_register(ctx);
+  dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
+  dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+
+
 }

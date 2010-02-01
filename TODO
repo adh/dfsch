@@ -3,15 +3,12 @@ Non-version-specific:
 * Documentation
 
 For 0.4.0 (ABI broken from 0.3.0)
-* Circular printer
 * Pretty-printer
 * Dynamic variables (ISLisp-style)
-* Macroexpander + constant elimination
-* quasiquotew as macro + immutable-quasiquote
+* quasiquote as macro + immutable-quasiquote
 * loop
 
 When needed by other code:
-* Type predicates for all types
 * Structures (in C code)
 
 Sometimes:
@@ -24,4 +21,5 @@ Sometimes:
 External modules and libraries:
 * Sound I/O
 * FFI
+* DOM-like API on top of SXML
 

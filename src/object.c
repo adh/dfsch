@@ -32,7 +32,7 @@ typedef struct class_t {
   dfsch_type_t standard_type;
   dfsch_object_t* initialize_instance;
   dfsch_object_t* write_instance;
-  dfsch_object_t* initvalues;
+  dfsch_object_t* initfuncs;
   dfsch_object_t* initargs;
 } class_t;
 
@@ -129,7 +129,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
       adjust_sizes(klass->standard_type.slots,
                    klass->standard_type.superclass->size);
 
-    klass->initvalues = super->initvalues;
+    klass->initfuncs = super->initfuncs;
     klass->initargs = super->initargs;
 
   } else {
@@ -211,10 +211,11 @@ static void finalize_slots_definition(class_t* klass,
           dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_keyword(keyword, "initform")){
-          klass->initvalues = dfsch_cons(dfsch_list(2, 
-                                                    dfsch_eval(value, env), 
-                                                    slot),
-                                         klass->initvalues);
+          klass->initfuncs = dfsch_cons
+            (dfsch_list(2, 
+                        dfsch_lambda(env, NULL, dfsch_cons(value, NULL)), 
+                        slot),
+             klass->initfuncs);
         } else if(dfsch_compare_keyword(keyword, "initarg")){
           klass->initargs = dfsch_cons(dfsch_list(2, value, slot),
                                        klass->initargs);
@@ -232,7 +233,7 @@ static void finalize_slots_definition(class_t* klass,
 static void default_initialize_instance(dfsch_object_t* obj,
                                         class_t* klass,
                                         dfsch_object_t* args){
-  dfsch_object_t* i = klass->initvalues;
+  dfsch_object_t* i = klass->initfuncs;
 
   while (DFSCH_PAIR_P(i)){
     dfsch_object_t* j = DFSCH_FAST_CAR(i);
@@ -242,7 +243,7 @@ static void default_initialize_instance(dfsch_object_t* obj,
     DFSCH_OBJECT_ARG(j, value);
     DFSCH_OBJECT_ARG(j, slot);
 
-    dfsch_slot_set(obj, slot, value, 1);
+    dfsch_slot_set(obj, slot, DFSCH_INVALID_OBJECT, 1);
 
     i = DFSCH_FAST_CDR(i);
   }
@@ -267,6 +268,23 @@ static void default_initialize_instance(dfsch_object_t* obj,
     
     dfsch_slot_set(obj, dfsch_list_item(slot, 1), value, 1);
   }
+
+  i = klass->initfuncs;
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* j = DFSCH_FAST_CAR(i);
+    dfsch_object_t* value;
+    dfsch_object_t* slot;
+
+    DFSCH_OBJECT_ARG(j, value);
+    DFSCH_OBJECT_ARG(j, slot);
+    
+    if (dfsch_slot_ref(obj, slot, 1) == DFSCH_INVALID_OBJECT){
+      dfsch_slot_set(obj, slot, dfsch_apply(value, NULL), 1);
+    }
+
+    i = DFSCH_FAST_CDR(i);
+  }
+
 }
 
 static void call_initialize_instance(dfsch_object_t* obj,
@@ -306,7 +324,7 @@ DFSCH_DEFINE_PRIMITIVE(make_instance, 0){
   return dfsch_make_instance(klass, args);
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_class, NULL){
+DFSCH_DEFINE_FORM(define_class, NULL, {}){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
