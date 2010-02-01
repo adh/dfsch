@@ -104,9 +104,9 @@
                  (let ((name (entry-name item))
                        (type-name (entry-type-name item))
                        (id (entry-id item)))
-                   `(li (a (:@ (href ,(string-append link-to "#" id))
-                              ,@(unless (null? target)
-                                        `((target ,target))))
+                   `(li (a :href ,(string-append link-to "#" id)
+                           ,@(unless (null? target)
+                                     `(:target ,target))
                            ,name)
                         " " ,type-name)))
                list))))
@@ -116,7 +116,8 @@
          (let ((name (entry-name item))
                (type (entry-type-name item))
                (id (entry-id item)))
-           `(div (:@ (id ,id) (title ,name))
+           `(div :id ,id 
+                 :title ,name
                  (h2 ,(string-append type " " name))
                  (pre ,(entry-value item))
                  (p ,(entry-documentation-string item)))))
@@ -124,21 +125,23 @@
 
 (define (html-frameset title default-all)
   `(html 
-    (:@ (xmlns "http://www.w3.org/1999/xhtml"))
+    :xmlns "http://www.w3.org/1999/xhtml"
     (head ,@(when (not (null? title))
                   `((title ,title))))
-    (frameset (:@ (cols "250,*"))
-              (frame (:@ (name "index") (src ,(if default-all 
-                                                 "index-all.html"
-                                                 "index-doc.html"))))
-              (frame (:@ (name "body") (src ,(if default-all 
-                                                "body-all.html"
-                                                "body-doc.html")))))))
+    (frameset :cols "250,*"
+              (frame :name "index" 
+                     :src ,(if default-all 
+                               "index-all.html"
+                               "index-doc.html"))
+              (frame :name "body" 
+                     :src ,(if default-all 
+                               "body-all.html"
+                               "body-doc.html")))))
 
 
 (define (html-boiler-plate title infoset)
   `(html 
-    (:@ (xmlns "http://www.w3.org/1999/xhtml"))
+    :xmlns "http://www.w3.org/1999/xhtml"
     (head ,@(when (not (null? title))
                   `((title ,title))))
     (body ,@(when (not (null? title))
@@ -151,8 +154,10 @@
 (define (index-menu all?)
   (if all?
       '(p "Show: " (strong "all") " " 
-          (a (:@ (href "index-doc.html")) "documented"))
-      '(p "Show: " (a (:@ (href "index-all.html")) "all") 
+          (a :href "index-doc.html" 
+             "documented"))
+      '(p "Show: " (a :href "index-all.html" 
+                      "all") 
           " " (strong "documented"))))
 
 
