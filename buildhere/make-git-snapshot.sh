@@ -7,8 +7,8 @@ if git rev-parse --verify HEAD >/dev/null 2>&1; then
 fi
 
 if make distcheck; then
-  mv dfsch-0.4.0-dev.tar.gz dfsch-0.4.0-dev$REV.tar.gz
-  echo  dfsch-0.4.0-dev$REV.tar.gz packaged sucessfully
+  mv dfsch-0.4.0-dev-compiler.tar.gz dfsch-0.4.0-dev$REV.tar.gz
+  echo  dfsch-0.4.0-dev-compiler$REV.tar.gz packaged sucessfully
   exit 0
 fi
 

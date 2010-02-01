@@ -7,6 +7,7 @@
 
 static void safe_print_object();
 
+
 char* dfsch_format_trace(dfsch_object_t* trace){
   str_list_t* sl = sl_create();
   
@@ -24,13 +25,22 @@ char* dfsch_format_trace(dfsch_object_t* trace){
 
       } else if (dfsch_compare_keyword(tag, "eval")){
         dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
+        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
         dfsch_object_t* annot = dfsch_get_list_annotation(expr);
-        sl_printf(sl, "    EVAL %s\n",
-                  dfsch_object_2_string(expr, 10, 1));
+        sl_printf(sl, "  EVAL %s %s\n",
+                  dfsch_object_2_string(expr, 10, 1),
+                  dfsch_object_2_string(flags, 10, 1));
+
+        while (DFSCH_PAIR_P(annot) && 
+               DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
+          sl_printf(sl, "    <- %s\n", 
+                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 0));
+          annot = dfsch_get_list_annotation(DFSCH_FAST_CDR(annot));
+        }
         if (annot){
           sl_printf(sl, "     @ %s:%s\n", 
-                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 0),
-                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 0));
+                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 10, 0),
+                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 0));
           
         }
 
@@ -71,11 +81,6 @@ void dfsch_print_trace_buffer(){
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name,
               ti->trace_buffer[i].data.apply.args,
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.args)->name);
-      fprintf(stderr, "       %s\n     %s\n", 
-              dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
-                                    10, 1),
-              dfsch_object_2_string(ti->trace_buffer[i].data.apply.args, 
-                                    10, 1));
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
       {
@@ -87,15 +92,6 @@ void dfsch_print_trace_buffer(){
                 DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
                 ti->trace_buffer[i].data.eval.env,
                 DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
-        fprintf(stderr, "     %s\n", 
-                dfsch_object_2_string(ti->trace_buffer[i].data.apply.proc, 
-                                      10, 1));
-        if (annot){
-          fprintf(stderr, "       @ %s:%s\n", 
-                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 2, 0),
-                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 1, 0));
-          
-        }
       }
       break;
     }
@@ -116,9 +112,15 @@ dfsch_object_t* dfsch_get_trace(){
       break;
     }
 
+    flags = NULL;
+
+    if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_MACROEXPAND) {
+      flags = dfsch_cons_immutable(dfsch_make_keyword("macro-expansion"), 
+                                   flags);
+    }
+    
     switch (ti->trace_buffer[i].flags & 0xff){
     case DFSCH_TRACEPOINT_KIND_APPLY:
-      flags = NULL;
 
       if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_TAIL) {
         flags = dfsch_cons_immutable(dfsch_make_keyword("tail"), flags);
@@ -134,10 +136,11 @@ dfsch_object_t* dfsch_get_trace(){
                             flags);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
-      record = dfsch_vector(3,
+      record = dfsch_vector(4,
                             dfsch_make_keyword("eval"),
                             ti->trace_buffer[i].data.eval.expr,
-                            ti->trace_buffer[i].data.eval.env);
+                            ti->trace_buffer[i].data.eval.env,
+                            flags);
       break;
         
     default:

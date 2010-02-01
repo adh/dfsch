@@ -88,6 +88,7 @@ static void debug_main(dfsch_object_t* reason){
 
   if (!debugger_env){
     debugger_env = dfsch_make_top_level_environment();
+    dfsch_introspect_register(debugger_env);
   }
 
   env = dfsch_new_frame(debugger_env);
@@ -128,8 +129,6 @@ static void debug_main(dfsch_object_t* reason){
     i++;
     restarts = DFSCH_FAST_CDR(restarts);
   }
-
-  dfsch_introspect_register(env);
   
   dfsch_console_read_objects(dfsch_saprintf("dbg%d> ", 
                                             dfsch_get_debugger_depth()), 

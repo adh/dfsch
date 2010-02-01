@@ -619,7 +619,14 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->column++;
 
 	
-	parse_quote(ctx, DFSCH_SYM_QUASIQUOTE);
+        if (*data == '@'){
+          ++data;
+          ctx->column++;
+        
+          parse_quote(ctx, DFSCH_SYM_IMMUTABLE_QUASIQUOTE); 
+        }else{
+          parse_quote(ctx, DFSCH_SYM_QUASIQUOTE);
+        }
 	if (ctx->error) return;
 
 	break;

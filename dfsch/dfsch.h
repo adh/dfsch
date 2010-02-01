@@ -225,6 +225,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
   /** Construct list from arguments */
   extern dfsch_object_t* dfsch_list(size_t count, ...);
+  /** Construct list from arguments */
+  extern dfsch_object_t* dfsch_immutable_list(size_t count, ...);
   /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
   extern dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list);
@@ -413,8 +415,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
 
-  extern int dfsch_variable_constant_p(dfsch_object_t* name, 
-                                       dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_variable_constant_value(dfsch_object_t* name, 
+                                                       dfsch_object_t* env);
 
   /** Set value of variable name in environment env to value. */
   extern dfsch_object_t* dfsch_set(dfsch_object_t* name,

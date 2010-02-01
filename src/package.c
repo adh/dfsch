@@ -77,6 +77,7 @@ struct dfsch_package_t {
 
 static pkg_hash_entry_t dfsch_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_user_entries[INITIAL_PACKAGE_SIZE];
+static pkg_hash_entry_t dfsch_internal_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_keyword_entries[INITIAL_PACKAGE_SIZE];
 
 dfsch_package_t dfsch_dfsch_package = {
@@ -101,7 +102,7 @@ dfsch_package_t dfsch_dfsch_internal_package = {
   .name = "dfsch%internal",
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
-  .entries = dfsch_user_entries,
+  .entries = dfsch_internal_entries,
 };
 dfsch_package_t dfsch_keyword_package = {
   .type = DFSCH_PACKAGE_TYPE,
@@ -149,6 +150,9 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_KEYWORD_PACKAGE, "around"},
   {DFSCH_DFSCH_PACKAGE, "terminate-thread"},
   {DFSCH_DFSCH_PACKAGE, "use-value"},
+  {DFSCH_DFSCH_PACKAGE, "*macro-expanded-from*"},
+  {DFSCH_DFSCH_PACKAGE, "immutable-quasiquote"},
+  {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
 };
 
 static dfsch_package_t* find_package(char* name){

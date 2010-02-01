@@ -729,7 +729,6 @@ dfsch_method_t* dfsch_make_method(dfsch_object_t* name,
  */
 
 void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
-                                         dfsch_object_t* env,
                                          dfsch_object_t** l_l,
                                          dfsch_object_t** spec){
   dfsch_object_t* specializers_head = NULL;
@@ -747,12 +746,6 @@ void dfsch_parse_specialized_lambda_list(dfsch_object_t* s_l_l,
     DFSCH_OBJECT_ARG(j, var);
     DFSCH_OBJECT_ARG(j, specializer);
     DFSCH_ARG_END(j);
-
-    specializer = dfsch_eval(specializer, env);
-    specializer = DFSCH_ASSERT_INSTANCE(specializer, 
-                                        DFSCH_STANDARD_TYPE);
-
-
 
     tmp = dfsch_cons(var, NULL);
     if (lambda_list_tail){
@@ -805,7 +798,6 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
   return t->call_next_method(context, args, esc);
 }
 
-
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
@@ -840,7 +832,7 @@ static dfsch_object_t* add_method_apply(dfsch_object_t* f,
 
   dfsch_generic_function_add_method(function, 
                                     DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE));
-  return NULL;
+  return method;
 }
 
 static dfsch_singleton_generic_function_t add_method = {
@@ -888,9 +880,11 @@ static dfsch_singleton_generic_function_t generic_function_methods = {
   .documentation = "Return list of all methods of this generic function"
 };
 
-DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
+DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
+  dfsch_object_t* env;
   dfsch_object_t* ctx;
-  args = dfsch_eval_list(args, env);
+
+  DFSCH_OBJECT_ARG(args, env);
 
   ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
 
@@ -898,20 +892,40 @@ DFSCH_DEFINE_FORM_IMPL(call_next_method, "Call next less specialized method"){
     dfsch_error("call-next-method called outside allowed scope", NULL);
   }
 
-  return dfsch_call_next_method(ctx, args, esc);
+  return dfsch_call_next_method(ctx, args, esc);  
+}
+
+DFSCH_DEFINE_MACRO(call_next_method, "Call next less specialized method"){
+  return dfsch_immutable_list_cdr(args, 2,
+                                  DFSCH_PRIMITIVE_REF(call_next_method),
+                                  dfsch_generate_current_environment());
 }
 
 
-DFSCH_DEFINE_FORM_IMPL(define_generic_function, "Define new generic function"){
+DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_ARG_END(args);
   
 
-  return ensure_generic_function(env, name);
+  return dfsch_generate_if
+    (dfsch_generate_defined_p(name),
+     dfsch_generate_if(dfsch_generate_instance_p(name, 
+                                                 DFSCH_GENERIC_FUNCTION_TYPE),
+                       name,
+                       dfsch_generate_error("Generic function name already "
+                                             " defined as different type", 
+                                             name)),
+     dfsch_generate_define_constant(name,
+                                    dfsch_immutable_list
+                                    (2,
+                                     DFSCH_PRIMITIVE_REF(make_generic_function),
+                                     dfsch_generate_quote(name))));
+     
 }
 
-DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
+
+DFSCH_DEFINE_MACRO(define_method, "Define new generic function"){
   dfsch_object_t* header; 
   dfsch_object_t* body;
   dfsch_object_t* name;
@@ -936,16 +950,21 @@ DFSCH_DEFINE_FORM_IMPL(define_method, "Define new generic function"){
     name = DFSCH_FAST_CAR(name);
   }
 
-  dfsch_parse_specialized_lambda_list(lambda_list, env, 
+  dfsch_parse_specialized_lambda_list(lambda_list,
                                       &lambda_list, &specializers);
- 
-  
-  method = dfsch_make_method(header, qualifiers, specializers, 
-                             dfsch_named_lambda(env, lambda_list, 
-                                                body, header));
 
-
-  return dfsch_define_method(env, name, method);
+  return dfsch_immutable_list
+    (3,
+     (dfsch_object_t*)&add_method,
+     dfsch_immutable_list(2,
+                          DFSCH_MACRO_REF(define_generic_function),
+                          name),
+     dfsch_immutable_list(5,
+                          DFSCH_PRIMITIVE_REF(make_method),
+                          dfsch_generate_quote(header),
+                          dfsch_generate_quote(qualifiers),
+                          dfsch_generate_eval_list(specializers),
+                          dfsch_generate_lambda(header, lambda_list, body)));
 }
 
 
@@ -961,11 +980,11 @@ void dfsch__generic_register(dfsch_object_t* env){
                     (dfsch_object_t*)&generic_function_methods);
 
   dfsch_defconst_cstr(env, "call-next-method",
-                    DFSCH_FORM_REF(call_next_method));
+                    DFSCH_MACRO_REF(call_next_method));
 
   dfsch_defconst_cstr(env, "define-generic-function",
-                      DFSCH_FORM_REF(define_generic_function));
+                      DFSCH_MACRO_REF(define_generic_function));
   dfsch_defconst_cstr(env, "define-method",
-                      DFSCH_FORM_REF(define_method));
+                      DFSCH_MACRO_REF(define_method));
 
 }

@@ -17,7 +17,6 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
-	dfsch/promise.h \
 	dfsch/hash.h \
 	dfsch/dfsch.h \
 	dfsch/types.h \
@@ -35,7 +34,9 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/random.h \
 	dfsch/writer.h \
 	dfsch/eqhash.h \
-	dfsch/mkhash.h
+	dfsch/mkhash.h \
+	dfsch/compile.h \
+	dfsch/generate.h
 
 if WIN32
 nonwin32_libs=
@@ -98,11 +99,10 @@ EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.sc
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
 	src/parse.c dfsch/parse.h 	\
-	src/native.c src/native_cxr.c	\
-	src/control.c src/system.c 	\
+	src/primitives.c src/native_cxr.c	\
+	src/forms.c src/system.c src/macros.c	\
 	src/util.c src/util.h 		\
 	src/hash.c dfsch/hash.h 	\
-	src/promise.c dfsch/promise.h 	\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
 	src/strings.c dfsch/strings.h 	udata.h udata.c\
 	src/object.c dfsch/object.h	\
@@ -116,7 +116,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/writer.c dfsch/writer.h	\
 	src/eqhash.c dfsch/eqhash.h	\
 	src/generic.c dfsch/generic.h	\
-	src/mkhash.c dfsch/mkhash.h
+	src/mkhash.c dfsch/mkhash.h	\
+	src/compile.c dfsch/compile.h
 
 BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h

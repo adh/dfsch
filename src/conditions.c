@@ -185,6 +185,24 @@ dfsch_type_t dfsch_runtime_error_type =
 
 static int invoke_debugger_on_all_conditions = 0;
 
+static int recursive_lossage = 0;
+
+void dfsch_lose_fatally(char* message, dfsch_object_t* object){
+  if (recursive_lossage){
+    fprintf(stderr, "Recursive lossage!\n  %s\n    %p (%s)\n",
+            message, object, DFSCH_TYPE_OF(object)->name);
+    dfsch_print_trace_buffer();
+  } else {
+    recursive_lossage = 1;
+    fprintf(stderr, "%s\n  %s\n\n%s\n", 
+            message, 
+            dfsch_object_2_string(object, 10, 1),
+            dfsch_format_trace(dfsch_get_trace()));
+  }
+
+  abort();  
+}
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
@@ -203,10 +221,7 @@ void dfsch_signal(dfsch_object_t* condition){
 
   if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
     dfsch_enter_debugger(condition);
-    fputs("Unhandled error condition!\n\n", stderr);
-    fprintf(stderr, "%s\n", dfsch_object_2_string(condition, 10, 1));
-    dfsch_print_trace_buffer();
-    abort();
+    dfsch_lose_fatally("Unhandled error condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
   }
@@ -549,6 +564,27 @@ DFSCH_DEFINE_PRIMITIVE(error, "Signal an error condition"){
                                            message, fields));
   return NULL;
 }
+dfsch_object_t* dfsch_generate_error(char* message,
+                                     dfsch_object_t* obj){
+  return dfsch_immutable_list(3, 
+                              DFSCH_PRIMITIVE_REF(error), 
+                              dfsch_make_string_cstr(message),
+                              obj);
+}
+DFSCH_DEFINE_PRIMITIVE(cerror, "Signal an continuable error condition"){
+  dfsch_object_t* message;
+  dfsch_object_t* fields;
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_ARG_REST(args, fields);
+
+  DFSCH_WITH_SIMPLE_RESTART(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
+                                                "continue"),
+                            "Ignore error condition"){
+    dfsch_signal(dfsch_condition_with_fields(DFSCH_ERROR_TYPE, 
+                                           message, fields));
+  } DFSCH_END_WITH_SIMPLE_RESTART;
+  return NULL;
+}
 DFSCH_DEFINE_PRIMITIVE(runtime_error, "Signal an runtime-error condition"){
   dfsch_object_t* message;
   dfsch_object_t* fields;
@@ -576,68 +612,6 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
   return dfsch_make_string_cstr(dfsch_restart_description(restart));
 }
 
-/*
- * This is generally non-sufficient interface, but rest could be implemented 
- * as macros.
- */
-
-DFSCH_DEFINE_FORM_IMPL(handler_bind, NULL){
-  dfsch_object_t* ret;
-  dfsch_object_t* bindings;
-  dfsch_object_t* code;
-  DFSCH_OBJECT_ARG(args, bindings);
-  DFSCH_ARG_REST(args, code);
-
-  DFSCH_SAVE_HANDLERS;
-
-  while (DFSCH_PAIR_P(bindings)){
-    dfsch_object_t* type;
-    dfsch_object_t* handler;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), type);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), handler);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
-
-    type = dfsch_eval(type, env);
-    handler = dfsch_eval(handler, env);
-
-    dfsch_handler_bind(type, handler);
-    bindings = DFSCH_FAST_CDR(bindings);
-  }
-
-  ret = dfsch_eval_proc(code, env);
-
-  DFSCH_RESTORE_HANDLERS;
-  return ret;
-}
-
-DFSCH_DEFINE_FORM_IMPL(restart_bind, NULL){
-  dfsch_object_t* ret;
-  dfsch_object_t* bindings;
-  dfsch_object_t* code;
-  DFSCH_OBJECT_ARG(args, bindings);
-  DFSCH_ARG_REST(args, code);
-
-  DFSCH_SAVE_HANDLERS;
-
-  while (DFSCH_PAIR_P(bindings)){
-    dfsch_object_t* name;
-    dfsch_object_t* proc;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), name);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), proc);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
-
-    proc = dfsch_eval(proc, env);
-
-    // TODO
-    dfsch_restart_bind(dfsch_make_restart(name, proc, "", NULL));
-    bindings = DFSCH_FAST_CDR(bindings);
-  }
-
-  ret = dfsch_eval_proc(code, env);
-
-  DFSCH_RESTORE_HANDLERS;
-  return ret;
-}
 
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
@@ -673,6 +647,8 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(warning));
   dfsch_define_cstr(ctx, "error",
                     DFSCH_PRIMITIVE_REF(error));
+  dfsch_define_cstr(ctx, "cerror",
+                    DFSCH_PRIMITIVE_REF(error));
   dfsch_define_cstr(ctx, "runtime-error",
                     DFSCH_PRIMITIVE_REF(runtime_error));
 
@@ -682,8 +658,4 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "restart-description",
                     DFSCH_PRIMITIVE_REF(restart_description));
 
-  dfsch_define_cstr(ctx, "handler-bind",
-                    DFSCH_FORM_REF(handler_bind));
-  dfsch_define_cstr(ctx, "restart-bind",
-                    DFSCH_FORM_REF(restart_bind));
 }

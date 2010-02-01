@@ -91,6 +91,7 @@ typedef struct dfsch_primitive_t {
   int flags;
   char* name;
   char* documentation;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
@@ -124,16 +125,42 @@ extern dfsch_type_t dfsch_primitive_type;
                                          dfsch_tail_escape_t* esc,      \
                                          dfsch_object_t* context)
   
-#define DFSCH_DEFINE_PRIMITIVE(name, flags)     \
-  DFSCH_PRIMITIVE_HEAD(name);        \
-  DFSCH_DECLARE_PRIMITIVE(name, flags);         \
+#define DFSCH_DEFINE_PRIMITIVE(name, documentation)     \
+  DFSCH_PRIMITIVE_HEAD(name);                           \
+  DFSCH_DECLARE_PRIMITIVE(name, documentation);         \
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
 #define DFSCH_PRIMITIVE_REF_MAKE(name, baton)\
   dfsch_make_primitive(p_##name##_impl, (baton))
 
+typedef struct dfsch_macro_t {
+  dfsch_type_t* type;
+  dfsch_object_t* proc;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_macro_t;
+
+#define DFSCH_DEFINE_MACRO(name, documentation)         \
+  DFSCH_PRIMITIVE_HEAD(macro_##name);                   \
+  DFSCH_DECLARE_PRIMITIVE(macro_##name, documentation); \
+  static dfsch_macro_t macro_##name = {                 \
+    DFSCH_MACRO_TYPE,                                   \
+    DFSCH_PRIMITIVE_REF(macro_##name)                   \
+  };                                                    \
+  DFSCH_PRIMITIVE_HEAD(macro_##name)
+   
+#define DFSCH_MACRO_REF(name) ((dfsch_object_t*)&macro_##name)
+
+
+
+
 typedef struct dfsch_form_t dfsch_form_t;
+
+typedef struct dfsch_form_methods_t {
+  dfsch_object_t* (*constant_fold)(dfsch_form_t* form, 
+                                   dfsch_object_t* expr,
+                                   dfsch_object_t* env);
+} dfsch_form_methods_t;
 
 typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
                                              dfsch_object_t* env,
@@ -145,6 +172,9 @@ struct dfsch_form_t {
   void* baton;
   char* name;
   char* documentation;
+
+  dfsch_form_methods_t methods;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -158,23 +188,24 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
 
-#define DFSCH_DEFINE_FORM(name, documentation)   \
-  static dfsch_form_t form_##name = {            \
-    DFSCH_FORM_TYPE,                             \
-    form_##name##_impl,                          \
-    NULL,                                        \
-    #name,                                       \
-    documentation                                \
-  }
+#define DFSCH_FORM_METHOD_CONSTANT_FOLD(name)   \
+  static dfsch_object_t* form_##name##_constant_fold                    \
+  (dfsch_form_t* form,                                                  \
+   dfsch_object_t* expr,                                                \
+   dfsch_object_t* env)
 
-#define DFSCH_DEFINE_FORM_IMPL(name, documentation)     \
+#define DFSCH_FORM_CONSTANT_FOLD(name)                  \
+  .constant_fold = form_##name##_constant_fold
+
+#define DFSCH_DEFINE_FORM(name, documentation, methods) \
   DFSCH_FORM_IMPLEMENTATION(name);                      \
   static dfsch_form_t form_##name = {                   \
     DFSCH_FORM_TYPE,                                    \
     form_##name##_impl,                                 \
     NULL,                                               \
     #name,                                              \
-    documentation                                       \
+    documentation,                                      \
+    methods                                             \
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 
@@ -455,5 +486,9 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 
 #define DFSCH_SYM_TERMINATE_THREAD DFSCH__STATIC_SYMBOL(18)
 #define DFSCH_SYM_USE_VALUE DFSCH__STATIC_SYMBOL(19)
+
+#define DFSCH_SYM_MACRO_EXPANDED_FROM DFSCH__STATIC_SYMBOL(20)
+#define DFSCH_SYM_IMMUTABLE_QUASIQUOTE DFSCH__STATIC_SYMBOL(21)
+#define DFSCH_SYM_COMPILED_FROM DFSCH__STATIC_SYMBOL(22)
 
 #endif

@@ -33,10 +33,7 @@ typedef struct vector_t {
   object_t* data[];
 } vector_t;
 
-typedef struct macro_t {
-  dfsch_type_t* type;
-  dfsch_object_t* proc;
-} macro_t;
+typedef dfsch_macro_t macro_t;
 
 #define ENV_CONSTANT_FLAG 1
 
