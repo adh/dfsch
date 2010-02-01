@@ -106,7 +106,9 @@ void dfsch_write_object(dfsch_writer_state_t* state,
   }
 
   if (state->circ_pass == 1){
-    if (!DFSCH_SYMBOL_P(object) && !DFSCH_FIXNUM_P(object)){
+    if (!DFSCH_SYMBOL_P(object) && !dfsch_number_p(object) && 
+        DFSCH_TYPE_OF(object) != DFSCH_PRIMITIVE_TYPE &&
+        DFSCH_TYPE_OF(object) != DFSCH_FORM_TYPE){
       if (!dfsch_eqhash_set_if_exists(&(state->circ_hash), 
                                       object, DFSCH_SYM_TRUE, NULL)){
         dfsch_eqhash_set(&(state->circ_hash), object, NULL);
