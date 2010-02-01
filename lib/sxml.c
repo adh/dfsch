@@ -250,11 +250,11 @@ static void emit_attrs(emitter_t* e, dfsch_object_t* attrs){
 
     switch (dfsch_list_length(a, NULL)){
     case 1:
-      name = dfsch_symbol(DFSCH_FAST_CAR(a));
+      name = dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(a));
       e->write(e->target, dfsch_saprintf(" %s=\"%s\"", name, name));
       break;
     case 2:
-      name = dfsch_symbol(DFSCH_FAST_CAR(a));
+      name = dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(a));
       a = DFSCH_FAST_CDR(a);
       value = dfsch_string_to_cstr(DFSCH_FAST_CAR(a));
       e->write(e->target, dfsch_saprintf(" %s=\"%s\"", name, 
@@ -280,6 +280,23 @@ static void emit_element(emitter_t* e, char* name, dfsch_object_t* children){
     attrs = DFSCH_FAST_CDR(DFSCH_FAST_CAR(children));
     children = DFSCH_FAST_CDR(children);
   }
+
+  while (DFSCH_PAIR_P(children) && DFSCH_SYMBOL_P(DFSCH_FAST_CAR(children))){
+    dfsch_object_t* aname = DFSCH_FAST_CAR(children);
+    dfsch_object_t* avalue;
+    children = DFSCH_FAST_CDR(children);
+    if (!DFSCH_PAIR_P(children)){
+      dfsch_error("Keyword requires an argument", aname);
+    }
+    avalue = DFSCH_FAST_CAR(children);
+    children = DFSCH_FAST_CDR(children);
+    if (avalue == DFSCH_SYM_TRUE){
+      attrs = dfsch_cons(dfsch_list(1,aname), attrs); 
+    } else {
+      attrs = dfsch_cons(dfsch_list(2, aname, avalue), attrs); 
+    }
+  }
+
 
   e->write(e->target, "<");
   e->write(e->target, name);

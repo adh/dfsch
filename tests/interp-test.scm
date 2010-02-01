@@ -352,7 +352,11 @@
                         (xml:sxml-parse-string "<a foo=\"bar &quot;\"><b/></a>")
                         '("a" (:attributes ("foo" "bar \"")) ("b")))
                   (test 'emit-string
-                        (xml:sxml-emit-string '(a (:attributes (foo "bar \"")) 
+                        (xml:sxml-emit-string '(:a (:attributes (foo "bar \"")) 
+                                                  (b)))
+                        "<a foo=\"bar &quot;\"><b /></a>")
+                  (test 'emit-string-shorthand
+                        (xml:sxml-emit-string '(:a :foo "bar \"" 
                                                   (b)))
                         "<a foo=\"bar &quot;\"><b /></a>")))
        
