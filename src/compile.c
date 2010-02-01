@@ -1,5 +1,6 @@
 #include <dfsch/compile.h>
 #include <dfsch/magic.h>
+#include "types.h"
 
 dfsch_object_t* dfsch_cons_ast_node(dfsch_object_t* head,
                                     dfsch_object_t* orig_expr,
@@ -163,7 +164,11 @@ dfsch_object_t* dfsch_constant_fold_expression(dfsch_object_t* expression,
 
 
 void dfsch_compile_function(dfsch_object_t* function){
-  
+  closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
+                                          DFSCH_STANDARD_FUNCTION_TYPE);
+
+  func->code = dfsch_constant_fold_expression_list(func->orig_code,
+                                                   func->env);
 }
 
 DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){
@@ -177,8 +182,21 @@ DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){
   return dfsch_constant_fold_expression(expr, env);
 }
 
+DFSCH_DEFINE_PRIMITIVE(compile_function, NULL){
+  dfsch_object_t* function;
+
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_ARG_END(args);
+
+  dfsch_compile_function(function);
+
+  return function;
+}
+
 void dfsch__compile_register(dfsch_object_t *ctx){ 
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
                          "constant-fold-expression", 
                          DFSCH_PRIMITIVE_REF(constant_fold_expression));  
+  dfsch_defconst_cstr(ctx, "compile-function!",
+                      DFSCH_PRIMITIVE_REF(compile_function));
 }
