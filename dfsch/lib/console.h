@@ -30,6 +30,9 @@ char* dfsch_console_read_line(char* prompt);
 void dfsch_console_set_object_completion();
 void dfsch_console_set_general_completion();
 
+void dfsch_console_read_history(char* filename);
+void dfsch_console_save_history(char* filename, int count);
+
 dfsch_object_t* dfsch_console_read_object(char* prompt);
 
 typedef int (*dfsch_console_object_cb_t)(dfsch_object_t* obj, void* baton);

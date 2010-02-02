@@ -247,11 +247,23 @@ void dfsch_console_set_general_completion(){
    */
   rl_completion_append_character = ' ';
 }
+void dfsch_console_read_history(char* filename){
+  read_history(filename);
+}
+void dfsch_console_save_history(char* filename, int count){
+  stifle_history(count);
+  write_history(filename);
+}
+
 #else
 /* Do nothing */
 void dfsch_console_set_object_completion(){
 }
 void dfsch_console_set_general_completion(){
+}
+void dfsch_console_read_history(char* filename){
+}
+void dfsch_console_save_history(char* filename, int count){
 }
 #endif
 

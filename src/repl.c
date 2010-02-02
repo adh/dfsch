@@ -78,13 +78,23 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
 
 
 void interactive_repl(dfsch_object_t* ctx){
+  char* homedir = getenv("HOME");
   printf("  /\\___/\\    dfsch version %s\n", 
          dfsch_get_version());
   printf(" ( o   o )     (%s) [%s %s]\n", 
          dfsch_get_build_id(), __DATE__, __TIME__);
   printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
   printf("   )   (     under certain conditions; see file COPYING for details.\n");
+  if (homedir){
+    dfsch_console_read_history(dfsch_saprintf("%s/.dfsch-repl-history",
+                                              homedir));
+  }
   dfsch_console_run_repl("]=> ", ctx, NULL);
+  if (homedir){
+    dfsch_console_save_history(dfsch_saprintf("%s/.dfsch-repl-history",
+                                              homedir),
+                               100);
+  }
 }
 
 static int repl_callback(dfsch_object_t *obj, void *baton){
