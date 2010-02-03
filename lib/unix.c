@@ -948,13 +948,6 @@ DFSCH_DEFINE_PRIMITIVE(setpgrp, NULL){
   }
   return dfsch_make_number_from_long(pgid);
 }
-DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
-  unsigned int seconds;
-  DFSCH_LONG_ARG(args, seconds);
-  DFSCH_ARG_END(args);
-
-  return dfsch_make_number_from_long(sleep(seconds));
-}
 DFSCH_DEFINE_PRIMITIVE(stat, NULL){
   char* path;
   dfsch_object_t* res;
@@ -1173,8 +1166,6 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(setpgrp));
   dfsch_define_pkgcstr(ctx, unix_pkg, "setsid", 
                     DFSCH_PRIMITIVE_REF(setsid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "sleep", 
-                    DFSCH_PRIMITIVE_REF(sleep));
   dfsch_define_pkgcstr(ctx, unix_pkg, "stat", 
                     DFSCH_PRIMITIVE_REF(stat));
   dfsch_define_pkgcstr(ctx, unix_pkg, "symlink", 

@@ -222,7 +222,11 @@ DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
   DFSCH_LONG_ARG(args, time);
   DFSCH_ARG_END(args);
 
+#ifdef __WIN32__
+  Sleep(time);
+#else
   sleep(time);
+#endif
 
   return NULL;
 }
@@ -251,4 +255,6 @@ void dfsch__system_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "internal-time-units-per-second", 
                     dfsch_make_number_from_long(sysconf(_SC_CLK_TCK)));
 #endif
+  dfsch_define_cstr(ctx, "sleep", 
+                    DFSCH_PRIMITIVE_REF(sleep));
 }
