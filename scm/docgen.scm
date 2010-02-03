@@ -35,19 +35,19 @@
 (define (get-object-documentation object)
   (cond
    ((instance? object <function>)
-    (slot-ref object 'documentation))
+    (slot-ref object :documentation))
    ((instance? object <form>)
-    (slot-ref object 'documentation))
+    (slot-ref object :documentation))
    ((instance? object <standard-type>)
     `(p
-      ,(or (slot-ref object 'documentation) "")
+      ,(or (slot-ref object :documentation) "")
       (h3 "Slots:")
       (ul ,@(map (lambda (slot) 
-                   `(li ,(slot-ref slot 'name) ": " 
-                        ,(slot-ref slot 'documentation)))
+                   `(li ,(slot-ref slot :name) ": " 
+                        ,(slot-ref slot :documentation)))
                  (get-slots object)))))
    ((instance? object <macro>)
-    (get-object-documentation (slot-ref object 'procedure)))
+    (get-object-documentation (slot-ref object :proc)))
    (else ())))
 
 (define (make-counter)
