@@ -436,7 +436,7 @@ DFSCH_DEFINE_PRIMITIVE(mkdir, NULL){
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
 
-#ifdef __os__
+#ifdef __unix__
   if (mkdir(path, 0777) != 0){
     dfsch_operating_system_error("mkdir");
   }
