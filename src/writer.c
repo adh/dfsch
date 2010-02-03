@@ -116,6 +116,13 @@ void dfsch_write_object(dfsch_writer_state_t* state,
         return;
       }
     }
+
+    if (DFSCH_PAIR_P(object)){
+      dfsch_write_object(state, DFSCH_FAST_CAR(object));
+      dfsch_write_object(state, DFSCH_FAST_CDR(object));
+      return;
+    }
+
   } else if (state->circ_pass == 2){
     dfsch_object_t* value = dfsch_eqhash_ref(&(state->circ_hash), object);
     
@@ -131,6 +138,30 @@ void dfsch_write_object(dfsch_writer_state_t* state,
                                            DFSCH_FIXNUM_REF(value)));
         return;
       }
+    }
+
+    if (DFSCH_PAIR_P(object)){
+      dfsch_object_t* i = object;
+      dfsch_write_string(state, "(");
+      while (DFSCH_PAIR_P(i)){
+        dfsch_write_object(state, DFSCH_FAST_CAR(i));
+        i = DFSCH_FAST_CDR(i);
+        if (i) {
+          dfsch_write_string(state, " ");  
+        }
+
+        if (DFSCH_FIXNUM_P(dfsch_eqhash_ref(&(state->circ_hash), i))){
+          break;
+        }
+      }
+      
+      if (i){  
+        dfsch_write_string(state, ". ");  
+        dfsch_write_object(state, i);
+      }
+      
+      dfsch_write_string(state, ")");  
+      return;
     }
   }
   
