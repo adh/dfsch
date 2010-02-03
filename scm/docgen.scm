@@ -5,17 +5,17 @@
 (require :sxml)
 (require :inet)
 (require :cmdopts)
-(require :unix)
+(require :os)
 
 (define (directory? path)
-  (let ((stat (unix:stat path)))
+  (let ((stat (os:stat path)))
     (if (null? stat)
         ()
         (stat :isdir))))
 
 (define (ensure-directory path)
   (unless (directory? path)
-          (unix:mkdir path 0755)))
+          (os:mkdir path)))
 
 (define *clean-toplevel* (make-top-level-environment))
 
