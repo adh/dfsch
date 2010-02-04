@@ -4,7 +4,6 @@ Non-version-specific:
 
 For 0.4.0 (ABI broken from 0.3.0)
 * Pretty-printer
-* Dynamic variables (ISLisp-style)
 * quasiquote as macro + immutable-quasiquote
 * loop
 
