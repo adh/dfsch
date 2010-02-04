@@ -1,5 +1,27 @@
+/*
+ * dfsch - dfox's quick and dirty scheme implementation
+ *   Core macros
+ * Copyright (C) 2005-2008 Ales Hakl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
 #include <dfsch/dfsch.h>
 #include <dfsch/generate.h>
+#include <dfsch/backquote.h>
 #include "internal.h"
 
 DFSCH_DEFINE_MACRO(or, "Short-circuiting logical or"){
@@ -357,6 +379,16 @@ DFSCH_DEFINE_MACRO(do, "Iterative loop"){
        dfsch_immutable_list_cdr(initforms, 1, tmpname)));                
 }
 
+DFSCH_DEFINE_MACRO(quasiquote, NULL){ 
+  /* This is non-trivial to compile right */
+  dfsch_object_t* arg;
+  DFSCH_OBJECT_ARG(args, arg);
+  DFSCH_ARG_END(args);
+
+  return dfsch_backquote_expand(arg);
+}
+
+
 void dfsch__macros_register(dfsch_object_t *ctx){ 
   dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
   dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
@@ -375,5 +407,8 @@ void dfsch__macros_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
 
   dfsch_defconst_cstr(ctx, "do", DFSCH_MACRO_REF(do));
+
+  dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_MACRO_REF(quasiquote));
+  dfsch_defconst_cstr(ctx, "immutable-quasiquote", DFSCH_MACRO_REF(quasiquote));
 
 }

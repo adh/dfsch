@@ -234,6 +234,11 @@ DFSCH_DEFINE_PRIMITIVE(cons, NULL){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
+dfsch_object_t* dfsch_generate_cons(dfsch_object_t* car, dfsch_object_t* cdr){
+  return dfsch_immutable_list(3,
+                              DFSCH_PRIMITIVE_REF(cons),
+                              car, cdr);
+}
 DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
   dfsch_object_t* car;
   dfsch_object_t* cdr;
@@ -274,6 +279,10 @@ DFSCH_DEFINE_PRIMITIVE(zip, 0){
 DFSCH_DEFINE_PRIMITIVE(append, 0){
   return dfsch_append(args);
 }
+dfsch_object_t* dfsch_get_append_primitive(){
+  return DFSCH_PRIMITIVE_REF(append);
+}
+
 DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
   int k;
   object_t* list;

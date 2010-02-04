@@ -1,6 +1,6 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
- *   Basic native functions
+ *   Special forms
  * Copyright (C) 2005-2008 Ales Hakl
  *
  * This program is free software; you can redistribute it and/or modify
@@ -101,14 +101,6 @@ int dfsch_quote_expression_p(dfsch_object_t* expr){
   return DFSCH_PAIR_P(expr) && DFSCH_FAST_CAR(expr) == DFSCH_FORM_REF(quote);
 }
 
-DFSCH_DEFINE_FORM(quasiquote, NULL, {}){ 
-  /* This is non-trivial to compile right */
-  object_t* arg;
-  DFSCH_OBJECT_ARG(args, arg);
-  DFSCH_ARG_END(args);
-
-  return dfsch_quasiquote(env,arg);
-}
 
 DFSCH_DEFINE_FORM(begin, NULL, {}){
   return dfsch_eval_proc_tr(args, env, esc);
@@ -452,8 +444,6 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
 void dfsch__forms_register(dfsch_object_t *ctx){ 
   dfsch_defconst_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
 
-  dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_FORM_REF(quasiquote));
-  dfsch_defconst_cstr(ctx, "immutable-quasiquote", DFSCH_FORM_REF(quasiquote));
   dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
   dfsch_defconst_cstr(ctx, "if", DFSCH_FORM_REF(if));
 

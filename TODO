@@ -4,7 +4,7 @@ Non-version-specific:
 
 For 0.4.0 (ABI broken from 0.3.0)
 * Pretty-printer
-* quasiquote as macro + immutable-quasiquote
+* immutable-quasiquote
 * loop
 
 When needed by other code:

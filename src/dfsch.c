@@ -1275,25 +1275,7 @@ dfsch_object_t* dfsch_apply_with_context(dfsch_object_t* proc,
 }
 
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
-  if (dfsch_pair_p(arg)){
-    object_t* car = dfsch_car(arg);
-    object_t* cdr = dfsch_cdr(arg);
-
-    if (car == DFSCH_SYM_UNQUOTE && dfsch_pair_p(cdr)){
-      return dfsch_eval(dfsch_car(cdr), env);
-    }else if (dfsch_pair_p(car)){
-      if (dfsch_car(car) == DFSCH_SYM_UNQUOTE_SPLICING){
-        return dfsch_append(dfsch_list(2,
-                                       dfsch_eval(dfsch_car(dfsch_cdr(car)), 
-                                                  env),
-                                       dfsch_quasiquote(env, cdr)));
-      }
-    }
-
-    return dfsch_cons(dfsch_quasiquote(env,car), dfsch_quasiquote(env,cdr));
-  }else{
-    return arg;
-  }
+  return dfsch_eval(dfsch_backquote_expand(arg), env);
 }
 
 DFSCH_PRIMITIVE_HEAD(top_level_environment){
