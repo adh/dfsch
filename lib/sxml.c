@@ -30,6 +30,7 @@ static XML_Memory_Handling_Suite gc_suite = {
 };
 
 DFSCH_LOCAL_SYMBOL_CACHE(":attributes", at_symbol);
+DFSCH_LOCAL_SYMBOL_CACHE(":literal-xml", literal_symbol);
 
 static void sxml_push(parser_ctx_t* c, dfsch_object_t* tag){
   sxml_stack_t* s = GC_NEW(sxml_stack_t);
@@ -317,9 +318,13 @@ static void emit_object(emitter_t* e, dfsch_object_t* o){
   if (dfsch_string_p(o)){
     e->write(e->target, dfsch_inet_xml_escape(dfsch_string_to_cstr(o)));
   } else if (DFSCH_PAIR_P(o)){
-    emit_element(e, 
-                 dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(o)), 
-                 DFSCH_FAST_CDR(o));
+    if (DFSCH_FAST_CAR(o) == literal_symbol()){
+      e->write(e->target, dfsch_string_to_cstr(dfsch_car(DFSCH_FAST_CDR(o))));
+    } else {
+      emit_element(e, 
+                   dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(o)), 
+                   DFSCH_FAST_CDR(o));
+    }
   } else {
     dfsch_error("Invalid object in SXML infoset", o);
   }
