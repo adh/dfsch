@@ -3,10 +3,10 @@ Non-version-specific:
 * Documentation
 
 For 0.4.0 (ABI broken from 0.3.0)
-* Pretty-printer
 * loop
 
 0.4.x fetaures
+* Pretty-printer
 * circular reader
 * binary serialization
 
