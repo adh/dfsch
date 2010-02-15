@@ -23,7 +23,7 @@
 
 #include "util.h"
 #include <limits.h>
-
+#include <stdio.h>
 
 struct dfsch_writer_state_t {
   dfsch_object_t object_head;
@@ -80,6 +80,13 @@ void dfsch_write_object_circular(dfsch_object_t* obj,
   dfsch_write_object(state, obj);
   dfsch_invalidate_writer_state(state);
 }
+
+
+void dfsch_put_object(FILE* f, dfsch_object_t* obj,
+                      int max_depth){
+  
+}
+
 
 void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
   state->output_proc = NULL;

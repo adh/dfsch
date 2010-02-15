@@ -353,7 +353,6 @@ char* dfsch_object_2_string(dfsch_object_t* obj,
   return sl_value(sl);
 }
 
-
 typedef struct read_ctx_t {
   dfsch_object_t* head;
   dfsch_object_t* tail;  
