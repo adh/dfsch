@@ -33,6 +33,7 @@
 #include <dfsch/conditions.h>
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
+#include <dfsch/backquote.h>
 #include "util.h"
 #include "internal.h"
 
@@ -509,6 +510,10 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  if (DFSCH_SYMBOL_P(name) && 
+      ((dfsch__symbol_t*)DFSCH_TAG_REF(name))->package == DFSCH_KEYWORD_PACKAGE){
+    return name; /* keywords are self-evaluating when not redefined */
+  }
   return DFSCH_INVALID_OBJECT;
 }
 
@@ -753,7 +758,12 @@ static object_t* eval_list(object_t *list, environment_t* env,
     dfsch_error("Not a proper list", list);    
   }
 
-  r = dfsch_eval_impl(DFSCH_FAST_CAR(list), env, NULL, ti);
+  r = DFSCH_FAST_CAR(list);
+  if (DFSCH_SYMBOL_P(r)){
+    r = lookup_impl(r, env, ti);
+  } else {
+    r = dfsch_eval_impl(r, env, NULL, ti);
+  }
   t = tl_cons(ti, r, NULL);
   f = p = t;
 

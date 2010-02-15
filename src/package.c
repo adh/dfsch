@@ -44,7 +44,7 @@
 
 // Symbols
 
-#define INITIAL_PACKAGE_SIZE 32
+#define INITIAL_PACKAGE_SIZE 64
 #define INITIAL_PACKAGE_MASK (INITIAL_PACKAGE_SIZE - 1)
 
 typedef struct hash_entry_t hash_entry_t;
@@ -192,7 +192,7 @@ dfsch_object_t* dfsch_make_package(char* name){
     pkg->next = packages;
     pkg->sym_count = 0;
     pkg->mask = INITIAL_PACKAGE_MASK;
-    pkg->entries = GC_MALLOC(sizeof(pkg_hash_entry_t)*INITIAL_PACKAGE_SIZE);
+    pkg->entries = GC_MALLOC_ATOMIC(sizeof(pkg_hash_entry_t)*INITIAL_PACKAGE_SIZE);
     packages = pkg;
   }
   pthread_mutex_unlock(&symbol_lock);
@@ -493,8 +493,14 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
 
 
 char* dfsch_symbol(dfsch_object_t* symbol){
-  return ((symbol_t*)DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
-                                                     DFSCH_SYMBOL_TYPE)))->name;
+  symbol_t* s;
+  s = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
+                                      DFSCH_SYMBOL_TYPE));
+  if (!s->name){
+    dfsch_error("Gensym has no name", symbol);
+  }
+
+  return s->name;
 }
 char* dfsch_symbol_qualified_name(dfsch_object_t* o){
   symbol_t* s;
