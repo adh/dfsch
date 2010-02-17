@@ -177,6 +177,15 @@ void write_dsz(FILE* of, char* buf){
   
 }
 
+void usage(char* progname){
+  printf("Usage: %s [<options>] <filename> ...\n\n", progname);
+  puts("Options:");
+  puts("  -o <filename>     Load scheme file on startup");
+  puts("  -c <symbol-name>  Generate C source file");
+  puts("  -z                Only compact source, do not compress");
+  exit(0);
+}
+
 int main(int argc, char** argv){
   int c;
   str_list_t* output = sl_create();
@@ -202,13 +211,12 @@ int main(int argc, char** argv){
       puts("under certain conditions; see file COPYING for details.");
       return 0;
     default:
-      printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
-      puts("Options:");
-      puts("  -o <filename>     Load scheme file on startup");
-      puts("  -c <symbol-name>  Generate C source file");
-      puts("  -z                Only compact source, do not compress");
-      return 0;
+      usage(argv[0]);
     }
+  }
+
+  if (optind == argc){
+    usage(argv[0]);
   }
 
   for (i = optind; i < argc; i++){
