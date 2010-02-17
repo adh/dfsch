@@ -371,6 +371,8 @@ typedef struct builtin_module_t {
 
 static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
+  {"load", dfsch_load_register},
+  {"port-unsafe", dfsch_port_unsafe_register},
 };
 
 static char* pathname_directory(char* path){
