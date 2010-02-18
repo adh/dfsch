@@ -182,6 +182,7 @@ dfsch_package_t* dfsch_find_package(char* name){
 
 dfsch_object_t* dfsch_make_package(char* name){
   dfsch_package_t* pkg;
+  int i;
 
   pthread_mutex_lock(&symbol_lock);
   pkg = find_package(name);
@@ -193,6 +194,10 @@ dfsch_object_t* dfsch_make_package(char* name){
     pkg->sym_count = 0;
     pkg->mask = INITIAL_PACKAGE_MASK;
     pkg->entries = GC_MALLOC_ATOMIC(sizeof(pkg_hash_entry_t)*INITIAL_PACKAGE_SIZE);
+    for (i = 0; i <= INITIAL_PACKAGE_MASK; i++){
+      pkg->entries[i].symbol = NULL;
+      pkg->entries[i].hash = 0;
+    }
     packages = pkg;
   }
   pthread_mutex_unlock(&symbol_lock);
@@ -284,7 +289,7 @@ static void pkg_grow(dfsch_package_t* pkg){
   }
 
 #ifdef DEBUG_GROW
-  printf(";; %d/%d -> %d/%d\n", pkg->sym_count, pkg->mask, new_count, new_mask);
+  printf(";; %p %d/%d -> %d/%d\n", pkg, pkg->sym_count, pkg->mask, new_count, new_mask);
 #endif
 
   new = GC_MALLOC_ATOMIC(sizeof(pkg_hash_entry_t) * (new_mask + 1));
