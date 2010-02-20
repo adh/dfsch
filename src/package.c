@@ -188,7 +188,7 @@ dfsch_object_t* dfsch_make_package(char* name){
   pkg = find_package(name);
 
   if (!pkg){
-    pkg = dfsch_make_object(DFSCH_PACKAGE_TYPE);
+    pkg = (dfsch_package_t*)dfsch_make_object(DFSCH_PACKAGE_TYPE);
     pkg->name = dfsch_stracpy(name);
     pkg->next = packages;
     pkg->sym_count = 0;
@@ -202,13 +202,13 @@ dfsch_object_t* dfsch_make_package(char* name){
   }
   pthread_mutex_unlock(&symbol_lock);
 
-  return pkg;
+  return (dfsch_object_t*)pkg;
 }
 void dfsch_use_package(dfsch_package_t* in,
                        dfsch_package_t* pkg){
   pthread_mutex_lock(&symbol_lock);
-  if (!dfsch_member(pkg, in->use_list)){
-    in->use_list = dfsch_cons(pkg, in->use_list);
+  if (!dfsch_member((dfsch_object_t*)pkg, in->use_list)){
+    in->use_list = dfsch_cons((dfsch_object_t*)pkg, in->use_list);
   }
   pthread_mutex_unlock(&symbol_lock);
 }
@@ -257,7 +257,7 @@ static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
       entries[i].symbol = symbol;
       entries[i].hash = hash;
       if (GC_base(symbol) && GC_base(entries)){
-        GC_general_register_disappearing_link(&(entries[i].symbol), symbol);
+        // GC_general_register_disappearing_link(&(entries[i].symbol), symbol);
       }
 #ifdef DEBUG_PUT
       printf(" Put\n");
@@ -358,7 +358,7 @@ static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
   }
   
   while (DFSCH_PAIR_P(i)){
-    sym = pkg_find_symbol(DFSCH_FAST_CAR(i), name);
+    sym = pkg_find_symbol((dfsch_package_t*)DFSCH_FAST_CAR(i), name);
     if (sym){
       return sym;
     }
@@ -518,7 +518,7 @@ char* dfsch_symbol_qualified_name(dfsch_object_t* o){
       str_list_t* sl = sl_create();
       if (!dfsch_in_current_package(o)) {
         if (s->package != DFSCH_KEYWORD_PACKAGE) {
-          sl_append(sl, dfsch_package_name(s->package));
+          sl_append(sl, s->package->name);
         }
         sl_append(sl, ":");      
         sl_append(sl, s->name);
@@ -566,7 +566,7 @@ static int package_inherited(dfsch_package_t* to,
   }
 
   while (DFSCH_PAIR_P(i)){
-    if (DFSCH_FAST_CAR(i) == from){
+    if (DFSCH_FAST_CAR(i) == (dfsch_object_t*)from){
       return 1;
     }
     i = DFSCH_FAST_CDR(i);
@@ -602,7 +602,7 @@ dfsch_object_t* dfsch_list_all_packages(){
   i = packages;
 
   while (i){
-    list = dfsch_cons(i, list);
+    list = dfsch_cons((dfsch_object_t*)i, list);
     i = i->next;
   }
 
@@ -627,7 +627,7 @@ void dfsch_for_package_symbols(dfsch_package_t* pkg,
 
   pthread_mutex_unlock(&symbol_lock);
   
-  return list;
+  return;
 }
 
 void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
@@ -649,7 +649,7 @@ void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
   j = pkg->use_list;
   
   while (j){
-    dfsch_package_t* p = DFSCH_FAST_CAR(j);
+    dfsch_package_t* p = (dfsch_package_t*)DFSCH_FAST_CAR(j);
 
     for (i = 0; i <= p->mask; i++){
       if (p->entries[i].hash && p->entries[i].symbol && 
@@ -664,7 +664,7 @@ void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
 
   pthread_mutex_unlock(&symbol_lock);
   
-  return list;
+  return;
 }
 
 static void cons_cb(dfsch_object_t** list,
@@ -674,12 +674,14 @@ static void cons_cb(dfsch_object_t** list,
 
 dfsch_object_t* dfsch_list_package_symbols(dfsch_package_t* pkg){
   dfsch_object_t* list = NULL;
-  dfsch_for_package_symbols(pkg, cons_cb, &list);
+  dfsch_for_package_symbols(pkg, (dfsch_package_iteration_cb_t)cons_cb, 
+                            &list);
   return list;
 }
 dfsch_object_t* dfsch_list_all_package_symbols(dfsch_package_t* pkg){
   dfsch_object_t* list = NULL;
-  dfsch_for_all_package_symbols(pkg, cons_cb, &list);
+  dfsch_for_all_package_symbols(pkg, (dfsch_package_iteration_cb_t)cons_cb, 
+                                &list);
   return list;
 }
 
@@ -744,7 +746,7 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
                        "not already exist"){
   char* name;
   dfsch_object_t* imports;
-  dfsch_package_t* pkg;
+  dfsch_object_t* pkg;
 
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
   DFSCH_ARG_REST(args, imports);
@@ -752,7 +754,7 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
   pkg = dfsch_make_package(name);
 
   while (DFSCH_PAIR_P(imports)){
-    dfsch_use_package(pkg,
+    dfsch_use_package((dfsch_package_t*)pkg,
                       dfsch_package_designator(DFSCH_FAST_CAR(imports)));
     imports = DFSCH_FAST_CDR(imports);
   }
@@ -769,7 +771,7 @@ DFSCH_DEFINE_PRIMITIVE(in_package,
 
   dfsch_set_current_package(package);
 
-  return package;
+  return (dfsch_object_t*)package;
 }
 DFSCH_DEFINE_PRIMITIVE(use_package, 
                        "Set current package to package of supplied name"){
@@ -780,7 +782,7 @@ DFSCH_DEFINE_PRIMITIVE(use_package,
 
   dfsch_use_package(dfsch_get_current_package(), package);
 
-  return NULL;
+  return (dfsch_object_t*)NULL;
 }
 
 DFSCH_DEFINE_PRIMITIVE(unintern, "Remove given symbol from it's package"){
