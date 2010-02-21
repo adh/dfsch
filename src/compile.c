@@ -1,4 +1,5 @@
 #include <dfsch/compile.h>
+#include <dfsch/generate.h>
 #include <dfsch/magic.h>
 #include "types.h"
 
