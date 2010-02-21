@@ -31,6 +31,7 @@
 #include <dfsch/load.h>
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
+#include <dfsch/util.h>
 #include <dfsch/lib/cdebug.h>
 #include <dfsch/lib/cmdopts.h>
 #include <dfsch/lib/console.h>
