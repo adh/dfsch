@@ -32,6 +32,7 @@
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
 #include <dfsch/util.h>
+#include <dfsch/trace.h>
 #include <dfsch/lib/cdebug.h>
 #include <dfsch/lib/cmdopts.h>
 #include <dfsch/lib/console.h>
@@ -170,7 +171,7 @@ int main(int argc, char**argv){
                                         NULL));
                                         
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvd")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdtT")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
@@ -200,6 +201,12 @@ int main(int argc, char**argv){
       break;
     case 'i':
       force_interactive = 1;
+      break;
+    case 't':
+      dfsch_enable_console_trace(0);
+      break;
+    case 'T':
+      dfsch_enable_console_trace(1);
       break;
     case 'v':
       printf("dfsch version %s\n\n", PACKAGE_VERSION);

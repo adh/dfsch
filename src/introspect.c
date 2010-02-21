@@ -83,16 +83,18 @@ void dfsch_print_trace_buffer(){
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.args)->name);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
-      {
-        dfsch_object_t* annot = 
-          dfsch_get_list_annotation(ti->trace_buffer[i].data.eval.expr);
-        fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
-                ti->trace_buffer[i].flags,
-                ti->trace_buffer[i].data.eval.expr,
-                DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
-                ti->trace_buffer[i].data.eval.env,
-                DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
-      }
+      fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
+              ti->trace_buffer[i].flags,
+              ti->trace_buffer[i].data.eval.expr,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
+              ti->trace_buffer[i].data.eval.env,
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
+      break;
+    case DFSCH_TRACEPOINT_KIND_ANON:
+      fprintf(stderr, "0x%08x %s %p\n", 
+              ti->trace_buffer[i].flags,
+              ti->trace_buffer[i].data.anon.location,
+              ti->trace_buffer[i].data.anon.data);
       break;
     }
   }

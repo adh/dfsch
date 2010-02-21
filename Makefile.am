@@ -120,7 +120,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/generic.c dfsch/generic.h	\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compile.c dfsch/compile.h	\
-	src/backquote.c dfsch/backquote.h
+	src/backquote.c dfsch/backquote.h \
+	src/trace.c dfsch/trace.h
 
 BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h

@@ -130,7 +130,7 @@ extern "C" {
 #define DFSCH_TRACEPOINT(d, fl)                                 \
   DFSCH__TRACEPOINT_ANON(dfsch__get_thread_info(), (d), (fl))
 
-  typedef (*dfsch__tracepoint_listener_t)(dfsch__thread_info_t*);
+  typedef void (*dfsch__tracepoint_listener_t)(dfsch__thread_info_t*);
 
   struct dfsch__thread_info_t {
     dfsch_object_t* async_apply;
