@@ -233,6 +233,10 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei->throw_ret = NULL;
     ei->async_apply = NULL;
     ei->restart_list = dfsch__get_default_restart_list();
+#ifdef DFSCH_GC_MALLOC_MANY_PREALLOC
+    ei->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
+    ei->env_freelist = GC_malloc_many(sizeof(environment_t));
+#endif
     alloc_trace_buffer(ei, dfsch_default_trace_depth);
     pthread_setspecific(thread_key, ei);
   }
@@ -243,7 +247,7 @@ static dfsch_object_t* tl_cons(dfsch__thread_info_t* ti,
                                dfsch_object_t* car, dfsch_object_t* cdr){
   dfsch_pair_t* p;
   
-#if defined(GC_NEXT) && !defined(__CYGWIN__)
+#ifdef DFSCH_GC_MALLOC_MANY
   if (!ti->pair_freelist){
     ti->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
   }
@@ -405,7 +409,7 @@ static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   environment_t* e;
 
-#if defined(GC_NEXT) && !defined(__CYGWIN__)
+#ifdef DFSCH_GC_MALLOC_MANY
   if (!ti->env_freelist){
     ti->env_freelist = GC_malloc_many(sizeof(environment_t));
   }

@@ -18,4 +18,8 @@
 #define DFSCH_PREFETCH(addr) 
 #endif
 
+#if defined(GC_NEXT) && !defined(__CYGWIN__)
+#define DFSCH_GC_MALLOC_MANY
+#endif
+
 #endif
