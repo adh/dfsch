@@ -428,4 +428,5 @@
 ;;
 ;; Print some statistics and exit apropriately
 ;;
-(exit-func 1)
+(when-toplevel
+ (exit-func 1))

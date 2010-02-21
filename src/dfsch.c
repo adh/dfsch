@@ -210,7 +210,7 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 
-int dfsch_default_trace_depth = 3;
+static int default_trace_depth = 3;
 
 static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
                                                int depth){
@@ -222,7 +222,13 @@ static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
   ti->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * size);
 }
 
-
+void dfsch_set_trace_depth(int depth){
+  alloc_trace_buffer(dfsch__get_thread_info(), depth);
+}
+void dfsch_set_default_trace_depth(int depth){
+  default_trace_depth = depth;
+  dfsch_set_trace_depth(depth);
+}
 
 dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei;
@@ -237,7 +243,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
     ei->env_freelist = GC_malloc_many(sizeof(environment_t));
 #endif
-    alloc_trace_buffer(ei, dfsch_default_trace_depth);
+    alloc_trace_buffer(ei, default_trace_depth);
     pthread_setspecific(thread_key, ei);
   }
   return ei;
