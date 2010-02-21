@@ -22,6 +22,7 @@
 #include <dfsch/generic.h>
 #include <dfsch/magic.h>
 #include <dfsch/mkhash.h>
+#include <dfsch/generate.h>
 
 #include <stdio.h>
 

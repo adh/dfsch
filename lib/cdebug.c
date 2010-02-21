@@ -23,6 +23,7 @@
 #include <dfsch/dfsch.h>
 #include <dfsch/conditions.h>
 #include <dfsch/introspect.h>
+#include <dfsch/util.h>
 #include <stdio.h>
 #include <dfsch/lib/console.h>
 

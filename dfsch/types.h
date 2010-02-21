@@ -375,7 +375,7 @@ extern dfsch_type_t dfsch_tagged_types[4];
 #define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_tagged_types[3]))
 #define DFSCH_COMPACT_LIST_TYPE (&(dfsch_tagged_types[0]))
 
-#define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((size_t) -1))
+#define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((ptrdiff_t) -1))
 
 typedef struct dfsch_pair_t {
   dfsch_object_t* car;

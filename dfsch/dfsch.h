@@ -227,6 +227,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_list(size_t count, ...);
   /** Construct list from arguments */
   extern dfsch_object_t* dfsch_immutable_list(size_t count, ...);
+  extern dfsch_object_t* dfsch_immutable_list_cdr(dfsch_object_t* cdr,
+                                                  size_t count, ...);
   /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
   extern dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list);
@@ -295,6 +297,7 @@ extern "C" {
                                   char* name);
   /** Return package object matching given name */
   extern dfsch_package_t* dfsch_find_package(char* name);
+  extern dfsch_object_t* dfsch_make_package(char* name);
   extern dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj);
   /** Retrun current default package (as in CL's *package*) */
   extern dfsch_package_t* dfsch_get_current_package();
