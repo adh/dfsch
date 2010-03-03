@@ -1153,6 +1153,16 @@ struct dfsch_tail_escape_t {
   environment_t *arg_env;
 };
 
+static dfsch_object_t* eval_args_and_apply_primitive(dfsch_primitive_t* p,
+                                                     dfsch_object_t* args,
+                                                     dfsch_object_t* context,
+                                                     environment_t* arg_env,
+                                                     tail_escape_t* esc,
+                                                     dfsch__thread_info_t* ti){
+      args = eval_list(args, arg_env, ti);
+      return p->proc(p->baton, args, esc, context);
+}
+
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
 
@@ -1197,10 +1207,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
     if (DFSCH_LIKELY(arg_env)){
-      args = eval_list(args, arg_env, ti);
+      return eval_args_and_apply_primitive((primitive_t*)proc, args, 
+                                           context, arg_env, &myesc, ti);
+   } else {
+      return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
+                                        &myesc, context);
     }
-    return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                      &myesc, context);
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
