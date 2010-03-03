@@ -257,7 +257,7 @@ static void pkg_low_put_symbol(pkg_hash_entry_t* entries,
       entries[i].symbol = symbol;
       entries[i].hash = hash;
       if (GC_base(symbol) && GC_base(entries)){
-        // GC_general_register_disappearing_link(&(entries[i].symbol), symbol);
+        GC_general_register_disappearing_link(&(entries[i].symbol), symbol);
       }
 #ifdef DEBUG_PUT
       printf(" Put\n");
