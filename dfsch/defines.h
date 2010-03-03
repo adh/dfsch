@@ -20,9 +20,7 @@
 
 #if defined(GC_NEXT) && !defined(__CYGWIN__)
 #define DFSCH_GC_MALLOC_MANY
-#ifndef __amd64__
-#define DFSCH_GC_MALLOC_MANY_PREALLOC
-#endif
+#undef DFSCH_GC_MALLOC_MANY_PREALLOC
 #endif
 
 #endif
