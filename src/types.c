@@ -1194,6 +1194,26 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   return DFSCH_MAKE_CLIST(data);
 }
 
+dfsch_object_t* dfsch_null_immutable_list(size_t l){
+  dfsch_object_t** data;
+
+  if (l == 0){
+    return NULL;
+  }
+
+  data = GC_MALLOC(sizeof(object_t*)*(l+4));
+  
+  memset(data, 0, l*sizeof(object_t*));
+
+  data[l] = DFSCH_INVALID_OBJECT;
+  data[l+1] = NULL;
+  data[l+2] = NULL;
+  data[l+3] = NULL;
+
+  return DFSCH_MAKE_CLIST(data);
+}
+
+
 dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list, 
                                     dfsch_object_t* source,
                                     dfsch_object_t* location){

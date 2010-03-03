@@ -232,6 +232,7 @@ extern "C" {
   /** Copy list. */
   extern dfsch_object_t* dfsch_list_copy(dfsch_object_t* list);
   extern dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_null_immutable_list(size_t l);
   extern dfsch_object_t* dfsch_list_annotate(dfsch_object_t* list, 
                                              dfsch_object_t* source,
                                              dfsch_object_t* location);

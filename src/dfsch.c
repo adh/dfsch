@@ -733,49 +733,22 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
 static object_t* eval_list(object_t *list, environment_t* env, 
                            dfsch__thread_info_t* ti){
-  dfsch_object_t *i;
-  object_t *f=NULL;
-  dfsch_object_t *t, *p;
-  object_t *r; 
+  size_t l = dfsch_list_length_check(list);
+  dfsch_object_t* res = dfsch_null_immutable_list(l);
+  dfsch_object_t* j = res;
+  dfsch_object_t* i = list;
 
-  if (!list)
-    return NULL;
-  
-  if (!DFSCH_PAIR_P(list)){
-    dfsch_error("Not a proper list", list);    
-  }
-
-  r = DFSCH_FAST_CAR(list);
-  if (DFSCH_SYMBOL_P(r)){
-    r = lookup_impl(r, env, ti);
-  } else {
-    r = dfsch_eval_impl(r, env, NULL, ti);
-  }
-  t = dfsch_cons_immutable(r, NULL);
-  f = p = t;
-
-  i = DFSCH_FAST_CDR(list);
   while (DFSCH_PAIR_P(i)){
-    r = DFSCH_FAST_CAR(i);
-    i = DFSCH_FAST_CDR(i);
-    DFSCH_PREFETCH(i);
-    if (DFSCH_SYMBOL_P(r)){
-      r = lookup_impl(r, env, ti);
-    } else {
-      r = dfsch_eval_impl(r, env, NULL, ti);
+    if (DFSCH__COMPACT_LIST_CAR_FAST(j) == DFSCH_INVALID_OBJECT){
+      break; /* Can happen due to race condition in user code */
     }
-
-    t = dfsch_cons_immutable(r, NULL);
-    DFSCH_FAST_CDR_MUT(p) = t;
-    p = t;
-
+    
+    DFSCH__COMPACT_LIST_CAR_FAST(j) = dfsch_eval_impl(DFSCH_FAST_CAR(i), env, NULL, ti);
+    j = DFSCH__COMPACT_LIST_CDR_FAST(j);
+    i = DFSCH_FAST_CDR(i);
   }
 
-  if (i){
-    dfsch_error("Not a proper list", list);    
-  }
-
-  return f;
+  return res;
 }
 
 dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
