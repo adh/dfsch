@@ -137,6 +137,40 @@ static void load_scm(dfsch_object_t* env, char* fname){
   dfsch_define_cstr(env, "reload", dfsch_make_primitive(p_reload_impl, c));
 }
 
+static void print_stderr(char* str){
+  write(2, str, strlen(str));
+}
+
+static void print_maps(){
+  int fd;
+  char buf[1024];
+  int r;
+  snprintf(buf, 1024, "/proc/%d/maps", getpid());
+
+  fd = open(buf, O_RDONLY);
+
+  if (fd < 0){
+    print_stderr("Cannot read virtual memory map\n");
+    return;
+  }
+
+  while ((r = read(fd, buf, 1024)) > 0){
+    write(2, buf, r);
+  }
+}
+
+static int segv_handler(){
+  void* tracebuf[128];
+  int count;
+  signal(SIGSEGV, SIG_DFL);
+  print_stderr("\n\n*** dfsch has crashed, this should not happen ***\n");
+  print_stderr("\nNative stack trace:\n");
+  count = backtrace(tracebuf, 128);
+  backtrace_symbols_fd(tracebuf, count, 2);
+  print_stderr("\nMemory map:\n");
+  print_maps();
+}
+
 int main(int argc, char**argv){
   int c;
   dfsch_object_t* ctx;
@@ -154,7 +188,7 @@ int main(int argc, char**argv){
   sigemptyset(&act.sa_mask);
   sigaction(SIGINT, &act, NULL);
 #endif
-
+  signal(SIGSEGV, segv_handler);
 
   ctx = dfsch_make_top_level_environment();
 

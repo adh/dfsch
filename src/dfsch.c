@@ -240,7 +240,6 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
     ei->async_apply = NULL;
     ei->restart_list = dfsch__get_default_restart_list();
 #ifdef DFSCH_GC_MALLOC_MANY_PREALLOC
-    ei->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
     ei->env_freelist = GC_malloc_many(sizeof(environment_t));
 #endif
     alloc_trace_buffer(ei, default_trace_depth);
@@ -248,28 +247,6 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
   }
   return ei;
 }
-
-static dfsch_object_t* tl_cons(dfsch__thread_info_t* ti,
-                               dfsch_object_t* car, dfsch_object_t* cdr){
-  dfsch_pair_t* p;
-  
-#ifdef DFSCH_GC_MALLOC_MANY
-  if (!ti->pair_freelist){
-    ti->pair_freelist = GC_malloc_many(sizeof(dfsch_pair_t));
-  }
-  
-  p = ti->pair_freelist;
-  ti->pair_freelist = GC_NEXT(ti->pair_freelist);
-#else
-  p = GC_NEW(dfsch_pair_t);
-#endif
-
-  p->car = car;
-  p->cdr = cdr;
-
-  return DFSCH_TAG_ENCODE(p, 1);
-}
-
 
 /*
  * It seems so volatile really isn't needed around this magic, only automatic
@@ -774,7 +751,7 @@ static object_t* eval_list(object_t *list, environment_t* env,
   } else {
     r = dfsch_eval_impl(r, env, NULL, ti);
   }
-  t = tl_cons(ti, r, NULL);
+  t = dfsch_cons_immutable(r, NULL);
   f = p = t;
 
   i = DFSCH_FAST_CDR(list);
@@ -788,7 +765,7 @@ static object_t* eval_list(object_t *list, environment_t* env,
       r = dfsch_eval_impl(r, env, NULL, ti);
     }
 
-    t = tl_cons(ti, r, NULL);
+    t = dfsch_cons_immutable(r, NULL);
     DFSCH_FAST_CDR_MUT(p) = t;
     p = t;
 
