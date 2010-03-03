@@ -24,6 +24,8 @@
 #include <errno.h>
 #include <string.h>
 #include "util.h"
+#include <fcntl.h>
+#include <unistd.h>
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
   dfsch__condition_t* c;
@@ -470,6 +472,51 @@ dfsch__restart_list_t* dfsch__get_default_restart_list(){
   return &default_restart_list;
 }
 
+#ifdef __linux__
+#include <execinfo.h>
+static void print_stderr(char* str){
+  write(2, str, strlen(str));
+}
+
+static void print_maps(){
+  int fd;
+  char buf[1024];
+  int r;
+  snprintf(buf, 1024, "/proc/%d/maps", getpid());
+
+  fd = open(buf, O_RDONLY);
+
+  if (fd < 0){
+    print_stderr("Cannot read virtual memory map\n");
+    return;
+  }
+
+  while ((r = read(fd, buf, 1024)) > 0){
+    write(2, buf, r);
+  }
+}
+
+static int segv_handler(){
+  void* tracebuf[128];
+  int count;
+  signal(SIGSEGV, SIG_DFL);
+  print_stderr("\n\n*** dfsch has crashed, this should not happen ***\n");
+  print_stderr("\nNative stack trace:\n");
+  count = backtrace(tracebuf, 128);
+  backtrace_symbols_fd(tracebuf, count, 2);
+  print_stderr("\nMemory map:\n");
+  print_maps();
+}
+
+void dfsch_activate_segv_handler(){
+  signal(SIGSEGV, segv_handler);  
+}
+
+#else
+void dfsch_activate_segv_handler(){
+
+}
+#endif
 
 /*
  * Scheme binding
