@@ -1159,8 +1159,32 @@ static dfsch_object_t* eval_args_and_apply_primitive(dfsch_primitive_t* p,
                                                      environment_t* arg_env,
                                                      tail_escape_t* esc,
                                                      dfsch__thread_info_t* ti){
-      args = eval_list(args, arg_env, ti);
-      return p->proc(p->baton, args, esc, context);
+  size_t l = dfsch_list_length_check(args);
+  dfsch_object_t* res[l+4];
+  size_t j = 0;
+  dfsch_object_t* i = args;
+  
+
+  if (args){
+    while (DFSCH_PAIR_P(i)){
+      if (j >= l){
+        break; /* Can happen due to race condition in user code */
+      }
+      
+      res[j] = dfsch_eval_impl(DFSCH_FAST_CAR(i), arg_env, NULL, ti);
+      j++;
+      i = DFSCH_FAST_CDR(i);
+    }
+    
+    res[l] = DFSCH_INVALID_OBJECT;
+    res[l+1] = NULL;
+    res[l+2] = NULL;
+    res[l+3] = NULL;
+
+    args = DFSCH_MAKE_CLIST(res);
+  }
+
+  return p->proc(p->baton, args, esc, context);
 }
 
 /* it might be interesting to optionally disable tail-calls for slight 

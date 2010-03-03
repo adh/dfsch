@@ -613,7 +613,7 @@ extern "C" {
    * Store all unprocessed arguments into rest. (Syntactic sugar 2.0 :))
    */
 #define DFSCH_ARG_REST(al, rest) \
-  (rest) = (al)
+  (rest) = dfsch_list_copy(al)
 
 
 #define DFSCH_OBJECT_CACHE(constructor, name)                           \
