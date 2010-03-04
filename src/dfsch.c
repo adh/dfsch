@@ -1163,7 +1163,6 @@ static dfsch_object_t* eval_args_and_apply_primitive(dfsch_primitive_t* p,
   dfsch_object_t* res[l+4];
   size_t j = 0;
   dfsch_object_t* i = args;
-  
 
   if (args){
     while (DFSCH_PAIR_P(i)){
