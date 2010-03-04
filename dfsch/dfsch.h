@@ -205,6 +205,8 @@ extern "C" {
   extern long dfsch_list_length(dfsch_object_t* list, int* proper);
   /** Returns number of items in given finite list */
   extern long dfsch_list_length_fast(dfsch_object_t* list);
+  /** Returns number of items in given list if less than 65536 */
+  extern long dfsch_list_length_fast_bounded(dfsch_object_t* list);
   /** Returns number of items in given finite list, fail otherwise */
   extern long dfsch_list_length_check(dfsch_object_t* list);
   /** Check whenever list is mutable */

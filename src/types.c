@@ -1005,6 +1005,31 @@ long dfsch_list_length_fast(object_t* list){
 
   return count;
 }
+
+long dfsch_list_length_fast_bounded(object_t* list){
+  dfsch_object_t *i;
+  long count;
+
+  if (!list)
+    return 0;
+
+  if (!DFSCH_PAIR_P(list))
+    return -1;
+
+  i = list;
+  count = 0;
+
+  while (DFSCH_PAIR_P(i)){
+    i = DFSCH_FAST_CDR(i);
+    ++count;
+    if (count > 65535){
+      dfsch_error("Internal error: List too long", list);
+    }
+  }
+
+  return count;
+}
+
 long dfsch_list_length(object_t* list, int *proper){
   dfsch_object_t *i;
   dfsch_object_t *j; 

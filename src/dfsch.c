@@ -1159,7 +1159,7 @@ static dfsch_object_t* eval_args_and_apply_primitive(dfsch_primitive_t* p,
                                                      environment_t* arg_env,
                                                      tail_escape_t* esc,
                                                      dfsch__thread_info_t* ti){
-  size_t l = dfsch_list_length_check(args);
+  size_t l = dfsch_list_length_fast_bounded(args);
   dfsch_object_t* res[l+4];
   size_t j = 0;
   dfsch_object_t* i = args;
