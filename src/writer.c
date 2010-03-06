@@ -250,6 +250,10 @@ void dfsch_write_unreadable_with_slots(dfsch_writer_state_t* state,
   dfsch_write_unreadable_end(state);
 }
 
+void dfsch_write_unreadable_with_slots_method(dfsch_object_t* obj,
+                                              dfsch_writer_state_t* state){
+  dfsch_write_unreadable_with_slots(state, obj); // XXX
+}
 
 void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
                                   dfsch_object_t* obj){

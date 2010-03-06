@@ -40,6 +40,10 @@ extern "C" {
   void dfsch_write_pprint_begin(dfsch_writer_state_t* state);
   void dfsch_write_pprint_end(dfsch_writer_state_t* state);
 
+
+  void dfsch_write_unreadable_with_slots_method(dfsch_object_t* obj,
+                                                dfsch_writer_state_t* state);
+
 #ifdef __cplusplus
 }
 #endif
