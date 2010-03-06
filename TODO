@@ -4,11 +4,12 @@ Non-version-specific:
 
 For 0.4.0 (ABI broken from 0.3.0)
 * loop
+* Interactive inspector
+* binary serialization
 
 0.4.x fetaures
 * Pretty-printer
 * circular reader
-* binary serialization
 
 0.5:
 * bytecode compiler
