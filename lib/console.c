@@ -438,13 +438,16 @@ int dfsch_console_read_objects_list(char* prompt,
 }
 
 typedef struct repl_context_t {
-  dfsch_object_t* env;
+  dfsch_console_repl_eval_cb_t evalfun;
+  void* baton;
   int print_depth;
+  dfsch_object_t* last_result;
 } repl_context_t;
 
 static int repl_callback(dfsch_object_t *obj, repl_context_t* ctx){
   dfsch_object_t* ret;
-  ret = dfsch_eval(obj, ctx->env);
+  ret = ctx->evalfun(obj, ctx->baton);
+  ctx->last_result = ret;
   puts(dfsch_object_2_string(ret,ctx->print_depth,1));
   return 1;
 }
@@ -456,14 +459,30 @@ static void command_print_depth(char* cmdline, repl_context_t* ctx){
   fprintf(stderr, "Print depth is %d\n", ctx->print_depth);
 }
 
-int dfsch_console_run_repl(char* prompt, 
-                           dfsch_object_t* env,
-                           dfsch_console_repl_command_t* cmds){
+static void command_inspect_result(char* cmdline, repl_context_t* ctx){
+  dfsch_inspect_object(ctx->last_result);
+}
+
+int dfsch_console_run_repl_eval(char* prompt, 
+                                dfsch_console_repl_eval_cb_t evalfun,
+                                void* baton,
+                                dfsch_console_repl_command_t* cmds){
   repl_context_t ctx;
-  ctx.env = env;
+  ctx.evalfun = evalfun;
+  ctx.baton = baton;
   ctx.print_depth = -1;
+  ctx.last_result = NULL;
   cmds = dfsch_console_add_command(cmds, "print-depth", 
                                    "Set print-depth, -1 for circular printer",
                                    command_print_depth, &ctx);
+  cmds = dfsch_console_add_command(cmds, "inspect-result", 
+                                   "Inspect last result object",
+                                   command_inspect_result, &ctx);
   return dfsch_console_read_objects(prompt, repl_callback, &ctx, cmds);
+}
+
+int dfsch_console_run_repl(char* prompt, 
+                           dfsch_object_t* env,
+                           dfsch_console_repl_command_t* cmds){
+  return dfsch_console_run_repl_eval(prompt, dfsch_eval, env, cmds);
 }
