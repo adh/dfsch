@@ -158,6 +158,19 @@ dfsch_object_t* dfsch_get_trace(){
   return list;
 }
 
+static dfsch_object_t* inspector = NULL;
+
+void dfsch_set_inspector(dfsch_object_t* proc){
+  inspector = proc;
+}
+void dfsch_inspect_object(dfsch_object_t* obj){
+  if (!inspector){
+    dfsch_cerror("No inspector avaiable", NULL);
+  } else {
+    dfsch_apply(inspector, dfsch_list(1, obj));
+  }
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
   dfsch_object_t* proc;
@@ -181,6 +194,23 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   DFSCH_ARG_END(args);
   
   dfsch_enter_debugger(reason);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(set_inspector, 0){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+  
+  dfsch_set_inspector(proc);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(inspect_object, 0){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+  
+  dfsch_inspect_object(object);
 
   return NULL;
 }
@@ -276,6 +306,10 @@ void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "set-debugger!", DFSCH_PRIMITIVE_REF(set_debugger));
   dfsch_define_cstr(env, "enter-debugger", 
                     DFSCH_PRIMITIVE_REF(enter_debugger));
+
+  dfsch_define_cstr(env, "set-inspector!", DFSCH_PRIMITIVE_REF(set_inspector));
+  dfsch_define_cstr(env, "inspect-object", DFSCH_PRIMITIVE_REF(inspect_object));
+
 
   dfsch_define_cstr(env, "lookup-in-environment",
                     DFSCH_PRIMITIVE_REF(lookup_in_environment));
