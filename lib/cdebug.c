@@ -65,16 +65,13 @@ typedef struct cdebug_ctx_t {
   dfsch_object_t* restarts;
 } cdebug_ctx_t;
 
-static int cdebug_callback(dfsch_object_t *obj,  cdebug_ctx_t* ctx){
-  dfsch_object_t* ret;
-
+static dfsch_object_t* cdebug_callback(dfsch_object_t *obj,  cdebug_ctx_t* ctx){
   if (dfsch_integer_p(obj)){
-    dfsch_invoke_restart(dfsch_list_item(ctx->restarts, 
-                                         dfsch_number_to_long(obj)), 
-                         NULL);
+    return dfsch_invoke_restart(dfsch_list_item(ctx->restarts, 
+                                                dfsch_number_to_long(obj)), 
+                                NULL);
   } else {
-    ret = dfsch_eval(obj, ctx->env);
-    puts(dfsch_object_2_string(ret,100,1));
+    return dfsch_eval(obj, ctx->env);
   }
 }
 
@@ -131,9 +128,9 @@ static void debug_main(dfsch_object_t* reason){
     restarts = DFSCH_FAST_CDR(restarts);
   }
   
-  dfsch_console_read_objects(dfsch_saprintf("dbg%d> ", 
-                                            dfsch_get_debugger_depth()), 
-                             cdebug_callback, &ctx, NULL);
+  dfsch_console_run_repl_eval(dfsch_saprintf("dbg%d> ", 
+                                             dfsch_get_debugger_depth()), 
+                              cdebug_callback, &ctx, NULL);
 }
 
 void dfsch_cdebug_enter_debugger(dfsch_object_t* reason){
