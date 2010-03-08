@@ -178,6 +178,18 @@ dfsch_object_t* dfsch_describe_object(dfsch_object_t* obj){
 
   if (DFSCH_PAIR_P(obj)){
     if (dfsch_list_length(obj, NULL) > 0){
+      int j = 0;
+      i = obj;
+      while (DFSCH_PAIR_P(i)){
+        dfsch_list_collect(lc, 
+                           dfsch_list(2,
+                                      DFSCH_MAKE_FIXNUM(j),
+                                      DFSCH_FAST_CAR(i)));
+        j++;
+        i = DFSCH_FAST_CDR(i);
+      }
+
+
       return dfsch_cons(dfsch_make_string_cstr(dfsch_list_mutable_p(obj)?
                                                "proper list" : 
                                                "immutable proper list"),
