@@ -171,6 +171,53 @@ void dfsch_inspect_object(dfsch_object_t* obj){
   }
 }
 
+dfsch_object_t* dfsch_describe_object(dfsch_object_t* obj){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  dfsch_object_t* i;
+  dfsch_type_t* klass;
+
+  if (DFSCH_PAIR_P(obj)){
+    if (dfsch_list_length(obj, NULL) > 0){
+      return dfsch_cons(dfsch_make_string_cstr(dfsch_list_mutable_p(obj)?
+                                               "proper list" : 
+                                               "immutable proper list"),
+                        dfsch_collected_list(lc));
+    } else {
+      return dfsch_list(3,
+                        dfsch_make_string_cstr(DFSCH_TYPE_OF(obj)->name),
+                        dfsch_list(2, 
+                                   dfsch_make_string_cstr("car"),
+                                   DFSCH_FAST_CAR(obj)),
+                        dfsch_list(2, 
+                                   dfsch_make_string_cstr("cdr"),
+                                   DFSCH_FAST_CDR(obj)));
+    }
+  }
+  
+  klass = DFSCH_TYPE_OF(obj);
+  while (klass){
+    if (klass->describe){
+      return klass->describe(obj);
+    }
+    klass = klass->superclass;
+  }
+
+  i = dfsch_get_slots(DFSCH_TYPE_OF(obj));
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_slot_t* slot = (dfsch_slot_t*)DFSCH_FAST_CAR(i);
+    dfsch_list_collect(lc, 
+                       dfsch_list(2,
+                                  dfsch_make_string_cstr(slot->name),
+                                  dfsch_slot_ref(obj, slot, 1)));
+    
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return dfsch_cons(dfsch_make_string_cstr(DFSCH_TYPE_OF(obj)->name),
+                    dfsch_collected_list(lc));
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
   dfsch_object_t* proc;
@@ -213,6 +260,13 @@ DFSCH_DEFINE_PRIMITIVE(inspect_object, 0){
   dfsch_inspect_object(object);
 
   return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(describe_object, 0){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_describe_object(object);
 }
 
 DFSCH_DEFINE_PRIMITIVE(lookup_in_environment, 0){
@@ -309,6 +363,8 @@ void dfsch_introspect_register(dfsch_object_t* env){
 
   dfsch_define_cstr(env, "set-inspector!", DFSCH_PRIMITIVE_REF(set_inspector));
   dfsch_define_cstr(env, "inspect-object", DFSCH_PRIMITIVE_REF(inspect_object));
+  dfsch_define_cstr(env, "describe-object", 
+                    DFSCH_PRIMITIVE_REF(describe_object));
 
 
   dfsch_define_cstr(env, "lookup-in-environment",

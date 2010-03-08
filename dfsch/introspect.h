@@ -10,6 +10,6 @@ void dfsch_introspect_register(dfsch_object_t* env);
 
 void dfsch_set_inspector(dfsch_object_t* proc);
 void dfsch_inspect_object(dfsch_object_t* obj);
-
+dfsch_object_t* dfsch_describe_object(dfsch_object_t* obj);
 
 #endif

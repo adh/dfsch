@@ -234,6 +234,8 @@ typedef dfsch_object_t* (*dfsch_type_apply_t)(dfsch_object_t* object,
 /** Hash method prototype */
 typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 
+typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
+
 /** Disable weak references for this type */
 #define DFSCH_TYPEF_NO_WEAK_REFERENCES 1
 /** Allow user code to inherit from this type */
@@ -275,6 +277,8 @@ struct dfsch_type_t {
   char* documentation;
   /** type flags */
   int flags;
+
+  dfsch_type_describe_t describe;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
