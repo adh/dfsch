@@ -1126,6 +1126,33 @@ long dfsch_list_length_check(object_t* list){
   return len;
 }
 
+struct dfsch_list_collector_t {
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+};
+dfsch_list_collector_t* dfsch_make_list_collector(){
+  dfsch_list_collector_t* col = GC_NEW(dfsch_list_collector_t);
+
+  col->head = col->tail = NULL;
+
+  return col;
+}
+void dfsch_list_collect(dfsch_list_collector_t* col,
+                        dfsch_object_t* item){
+  dfsch_object_t* tp = dfsch_cons(item, NULL);
+
+  if (col->head){
+    DFSCH_FAST_CDR_MUT(col->tail) = tp;
+  } else {
+    col->head = tp;
+  }
+  col->tail = tp;
+}
+dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
+  return col->head;
+}
+
+
 dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   dfsch_object_t* it = list;
   int i;

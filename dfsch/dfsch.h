@@ -213,6 +213,13 @@ extern "C" {
   extern int dfsch_list_mutable_p(dfsch_object_t* list);
   /** Return mutable list - argument if it is mutable, fresh copy if not */
   extern dfsch_object_t* dfsch_ensure_mutable_list(dfsch_object_t* list);
+
+  typedef struct dfsch_list_collector_t dfsch_list_collector_t;
+  extern dfsch_list_collector_t* dfsch_make_list_collector();
+  extern void dfsch_list_collect(dfsch_list_collector_t* col,
+                                 dfsch_object_t* item);
+  extern dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col);
+
   /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
   /** Construct list from C array. */
