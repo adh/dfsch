@@ -11,7 +11,7 @@ typedef struct inspector_state_t {
   dfsch_object_t* slot_list;
 
   int slot_print_depth;
-} inspector_state_t*;
+} inspector_state_t;
 
 static void push_object(inspector_state_t* is, dfsch_object_t* obj){
   

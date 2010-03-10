@@ -8,6 +8,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/cdebug.h \
+	dfsch/lib/cinspect.h \
 	dfsch/lib/console.h \
 	dfsch/lib/xml.h \
 	dfsch/lib/sxml.h \
@@ -54,6 +55,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-inet.la \
 	libdfsch-threads.la \
 	libdfsch-cdebug.la \
+	libdfsch-cinspect.la \
 	libdfsch-collections.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
@@ -76,6 +78,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	gcollect.la \
 	extref.la \
 	cdebug.la \
+	cinspect.la \
 	console.la \
 	collections.la \
 	process.la \
@@ -151,6 +154,15 @@ libdfsch_cdebug_la_LIBADD =  libdfsch.la libdfsch-console.la $(pthread_libadd)
 cdebug_la_SOURCES = lib/cdebug_mod.c
 cdebug_la_LDFLAGS = -avoid-version  -module -no-undefined -shrext .dsl
 cdebug_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-cdebug.la
+
+libdfsch_cinspect_la_SOURCES = lib/cinspect.c dfsch/lib/cinspect.h
+libdfsch_cinspect_la_LDFLAGS = -version-info 0:0:0 -no-undefined
+libdfsch_cinspect_la_LIBADD =  libdfsch.la libdfsch-console.la $(pthread_libadd)
+
+cinspect_la_SOURCES = lib/cinspect_mod.c
+cinspect_la_LDFLAGS = -avoid-version  -module -no-undefined -shrext .dsl
+cinspect_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-cinspect.la
+
 
 libdfsch_console_la_SOURCES = lib/console.c dfsch/lib/console.h
 libdfsch_console_la_LDFLAGS = -version-info 0:0:0 -no-undefined
