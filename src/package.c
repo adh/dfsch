@@ -58,6 +58,11 @@ int dfsch_symbol_p(dfsch_object_t* obj){
   return DFSCH_SYMBOL_P(obj);
 }
 
+int dfsch_keyword_p(dfsch_object_t* obj){
+  return DFSCH_SYMBOL_P(obj) && dfsch_symbol_package(obj) == DFSCH_KEYWORD_PACKAGE;
+}
+
+
 typedef struct pkg_hash_entry_t {
   size_t hash;
   dfsch__symbol_t* symbol;

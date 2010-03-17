@@ -155,6 +155,8 @@ extern "C" {
   extern int dfsch_atom_p(dfsch_object_t* obj); // i.e. not pair
   /** Is OBJ a symbol? */
   extern int dfsch_symbol_p(dfsch_object_t* obj);
+  /** Is OBJ a keyword? */
+  extern int dfsch_keyword_p(dfsch_object_t* obj);
   /** Is OBJ a a number? */
   extern int dfsch_number_p(dfsch_object_t* obj);
   /** Is OBJ a primitive (native) function? */
@@ -289,6 +291,7 @@ extern "C" {
   /** Returns string representation of given symbol. */
   extern char* dfsch_symbol(dfsch_object_t* symbol);
   extern char* dfsch_symbol_qualified_name(dfsch_object_t* o);
+  extern dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol);
 
   /** Convert symbol into string usable as name of type 
    * (remove angle brackets) */
