@@ -280,7 +280,7 @@ libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
-	libdfsch-console.la libdfsch-cmdopts.la
+	libdfsch-console.la libdfsch-cmdopts.la libdfsch-cinspect.la
 
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz

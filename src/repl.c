@@ -34,6 +34,7 @@
 #include <dfsch/util.h>
 #include <dfsch/trace.h>
 #include <dfsch/lib/cdebug.h>
+#include <dfsch/lib/cinspect.h>
 #include <dfsch/lib/cmdopts.h>
 #include <dfsch/lib/console.h>
 #include <stdio.h>
@@ -164,6 +165,7 @@ int main(int argc, char**argv){
   dfsch_load_register(ctx);
   dfsch_port_unsafe_register(ctx);
   dfsch_set_standard_io_ports();
+  dfsch_cinspect_set_as_inspector();
 
   dfsch_restart_bind(dfsch_make_restart(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
                                                             "quit"),

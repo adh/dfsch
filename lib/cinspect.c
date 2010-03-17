@@ -30,3 +30,20 @@ static void inspect_object(dfsch_object_t* obj){
 void dfsch_cinspect_inspect_object(dfsch_object_t* obj){
   inspect_object(obj);
 }
+
+DFSCH_DEFINE_PRIMITIVE(inspect_object, ""){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  inspect_object(object);
+
+  return object;
+}
+
+dfsch_object_t* dfsch_cinspect_get_procedure(){
+  return DFSCH_PRIMITIVE_REF(inspect_object);
+}
+void dfsch_cinspect_set_as_inspector(){
+  dfsch_set_inspector(dfsch_cinspect_get_procedure());
+}
