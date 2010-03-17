@@ -2,5 +2,6 @@
 #include <dfsch/lib/cdebug.h>
 
 dfsch_object_t* dfsch_module_cdebug_register(dfsch_object_t* env){
-  dfsch_define_cstr(env, "cdebug:debugger-procedure", dfsch_cdebug_get_procedure());
+  dfsch_package_t* cdebug_pkg = dfsch_define_package("cdebug");
+  dfsch_define_pkgcstr(env, cdebug_pkg, "debugger-procedure", dfsch_cdebug_get_procedure());
 }
