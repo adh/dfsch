@@ -828,6 +828,18 @@ static void vector_write(vector_t* v, dfsch_writer_state_t* state){
   dfsch_write_string(state, ")");
 }
 
+static dfsch_object_t* vector_describe(vector_t* v){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  size_t i;
+  
+  for (i = 0; i < v->length; i++){
+    dfsch_list_collect(lc, dfsch_list(2, NULL, v->data[i]));
+  }
+
+  return dfsch_cons(dfsch_make_string_cstr("vector"),
+                    dfsch_collected_list(lc));
+}
+
 dfsch_type_t dfsch_vector_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -836,7 +848,8 @@ dfsch_type_t dfsch_vector_type = {
   (dfsch_type_equal_p_t)vector_equal_p,
   (dfsch_type_write_t)vector_write,
   NULL,
-  (dfsch_type_hash_t)vector_hash
+  (dfsch_type_hash_t)vector_hash,
+  .describe = (dfsch_type_describe_t)vector_describe,
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
