@@ -664,9 +664,9 @@ static void emit_json_list(dfsch_object_t* obj,
 
 static void emit_json_object(dfsch_object_t* obj, 
                              write_cb_t cb, void* target){
-  if (DFSCH_INSTANCE_P(obj, DFSCH_HASH_BASETYPE)){
+  /*  if (DFSCH_INSTANCE_P(obj, DFSCH_HASH_BASETYPE)){
     emit_json_hash(obj, cb, target);
-  } else if (DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE)){
+    } else */if (DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE)){
     emit_json_list(obj, cb, target);    
   } else if (DFSCH_INSTANCE_P(obj, DFSCH_VECTOR_TYPE)){
     emit_json_list(dfsch_vector_2_list(obj), cb, target);    

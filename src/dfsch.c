@@ -1341,7 +1341,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__number_native_register(ctx);
   dfsch__string_native_register(ctx);
   dfsch__object_native_register(ctx);
-  dfsch__weak_native_register(ctx);
+  //dfsch__weak_native_register(ctx);
   dfsch__format_native_register(ctx);
   dfsch__port_native_register(ctx);
   dfsch__bignum_register(ctx);

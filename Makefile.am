@@ -111,7 +111,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/number.c dfsch/number.h src/bignum.c dfsch/bignum.h	\
 	src/strings.c dfsch/strings.h 	udata.h udata.c\
 	src/object.c dfsch/object.h	\
-	src/weak.c dfsch/weak.h		\
 	src/format.c dfsch/format.h	\
 	src/ports.c dfsch/ports.h	\
 	src/load.c dfsch/load.h		\
@@ -125,6 +124,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/compile.c dfsch/compile.h	\
 	src/backquote.c dfsch/backquote.h \
 	src/trace.c dfsch/trace.h
+#	src/weak.c dfsch/weak.h		
+
 
 BUILT_SOURCES=udata.c udata.h version.h
 strings.o: udata.h

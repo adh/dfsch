@@ -257,8 +257,8 @@ static void mkhash_unset(dfsch_mkhash_t* h,
 
 dfsch_custom_hash_type_t dfsch_mkhash_type = {
   .parent = {
-    .type = DFSCH_CUSTOM_HASH_TYPE_TYPE,
-    .superclass = DFSCH_HASH_BASETYPE,
+    .type = DFSCH_STANDARD_TYPE, //DFSCH_CUSTOM_HASH_TYPE_TYPE,
+    .superclass = NULL, //DFSCH_MAPPING_TYPE,
     .name = "multiple-key-hash",
     .size = sizeof(dfsch_mkhash_t)
   },

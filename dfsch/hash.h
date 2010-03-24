@@ -123,12 +123,8 @@ extern "C" {
     dfsch_custom_hash_2_alist hash_2_alist;
   } dfsch_custom_hash_type_t;
 
-  extern dfsch_type_t dfsch_hash_basetype;
-#define DFSCH_HASH_BASETYPE (&dfsch_hash_basetype)
-  extern dfsch_type_t dfsch_standard_hash_type;
-#define DFSCH_STANDARD_HASH_TYPE (&dfsch_standard_hash_type)
-  extern dfsch_type_t dfsch_custom_hash_type_type;
-#define DFSCH_CUSTOM_HASH_TYPE_TYPE (&dfsch_custom_hash_type_type)
+  extern dfsch_type_t dfsch_hash_table_type;
+#define DFSCH_HASH_TABLE_TYPE (&dfsch_hash_table_type)
 
 
 
