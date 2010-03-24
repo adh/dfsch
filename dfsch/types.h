@@ -241,6 +241,34 @@ typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 /** Allow user code to inherit from this type */
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
 
+typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
+typedef dfsch_object_t* (*dfsch_collection_ref_t)(dfsch_object_t* c,
+                                                  int n);
+typedef void (*dfsch_collection_set_t)(dfsch_object_t* c,
+                                       int n,
+                                       dfsch_object_t* val);
+
+typedef struct dfsch_collection_methods_t {
+
+} dfsch_collection_methods_t;
+
+typedef dfsch_object_t* (*dfsch_mapping_ref_t)(dfsch_object_t* hash, 
+                                               dfsch_object_t* key);
+typedef void (*dfsch_mapping_set_t)(dfsch_object_t* hash, 
+                                    dfsch_object_t* key,
+                                    dfsch_object_t* value);
+typedef int (*dfsch_mapping_unset_t)(dfsch_object_t* hash, 
+                                     dfsch_object_t* key);
+typedef int (*dfsch_mapping_set_if_exists_t)(dfsch_object_t* hash, 
+                                             dfsch_object_t* key,
+                                             dfsch_object_t* value);
+
+
+typedef struct dfsch_mapping_methods_t {
+
+} dfsch_mapping_methods_t;
+
+
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
   /** When we want to use type_t as first-class object */
