@@ -798,6 +798,14 @@ dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
   return dfsch_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
 }
 
+DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection"){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_get_iterator(obj);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -924,6 +932,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+
+  dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
 
 
 }

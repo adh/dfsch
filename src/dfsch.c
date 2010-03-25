@@ -236,16 +236,16 @@ dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
 dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
                                    size_t k){
   dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
-  return DFSCH_TYPE_OF(s)->collection->ref(s, k);  
+  return DFSCH_TYPE_OF(s)->sequence->ref(s, k);  
 }
 void dfsch_sequence_set(dfsch_object_t* seq,
                                    size_t k,
                                    dfsch_object_t* value){
   dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
-  if (DFSCH_TYPE_OF(s)->collection->set){
+  if (DFSCH_TYPE_OF(s)->sequence->set){
     dfsch_error("Sequence is immutable", s);
   }
-  DFSCH_TYPE_OF(s)->collection->set(s, k, value);  
+  DFSCH_TYPE_OF(s)->sequence->set(s, k, value);  
 }
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
   if (DFSCH_PAIR_P(iterator)){

@@ -242,17 +242,24 @@ typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
 
 typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
-typedef dfsch_object_t* (*dfsch_collection_ref_t)(dfsch_object_t* c,
-                                                  int n);
-typedef void (*dfsch_collection_set_t)(dfsch_object_t* c,
-                                       int n,
-                                       dfsch_object_t* val);
 
 typedef struct dfsch_collection_methods_t {
   dfsch_collection_get_iterator_t get_iterator;
-  dfsch_collection_ref_t ref;
-  dfsch_collection_set_t set;
 } dfsch_collection_methods_t;
+
+
+typedef dfsch_object_t* (*dfsch_sequence_ref_t)(dfsch_object_t* s,
+                                                int n);
+typedef void (*dfsch_sequence_set_t)(dfsch_object_t* s,
+                                     int n,
+                                     dfsch_object_t* val);
+typedef size_t (*dfsch_sequence_length_t)(dfsch_object_t* s);
+
+typedef struct dfsch_sequence_methods_t {
+  dfsch_sequence_ref_t ref;
+  dfsch_sequence_set_t set;
+  dfsch_sequence_length_t length;
+} dfsch_sequence_methods_t;
 
 typedef dfsch_object_t* (*dfsch_mapping_ref_t)(dfsch_object_t* hash, 
                                                dfsch_object_t* key);
@@ -318,6 +325,7 @@ struct dfsch_type_t {
   dfsch_type_describe_t describe;
 
   dfsch_collection_methods_t* collection;
+  dfsch_sequence_methods_t* sequence;
   dfsch_mapping_methods_t* mapping;
 
   DFSCH_ALIGN8_DUMMY
@@ -508,9 +516,8 @@ typedef struct dfsch_pair_t {
   (DFSCH_TYPE_OF((o))->collection != NULL)
 #define DFSCH_MAPPING_P(o)                      \
   (DFSCH_TYPE_OF((o))->mapping != NULL)
-#define DFSCH_SEQUENCE_P(o)                             \
-  ((DFSCH_TYPE_OF((o))->collection != NULL) &&          \
-   (DFSCH_TYPE_OF((o))->collection->ref != NULL))
+#define DFSCH_SEQUENCE_P(o)                     \
+  (DFSCH_TYPE_OF((o))->sequence != NULL)
 
 #define DFSCH_ASSERT_COLLECTION(o)                                      \
   (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
