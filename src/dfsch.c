@@ -242,7 +242,7 @@ void dfsch_sequence_set(dfsch_object_t* seq,
                                    size_t k,
                                    dfsch_object_t* value){
   dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
-  if (DFSCH_TYPE_OF(s)->sequence->set){
+  if (!DFSCH_TYPE_OF(s)->sequence->set){
     dfsch_error("Sequence is immutable", s);
   }
   DFSCH_TYPE_OF(s)->sequence->set(s, k, value);  
@@ -283,7 +283,7 @@ void dfsch_mapping_set(dfsch_object_t* map,
                        dfsch_object_t* key,
                        dfsch_object_t* value){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
-  if (DFSCH_TYPE_OF(m)->mapping->set){
+  if (!DFSCH_TYPE_OF(m)->mapping->set){
     dfsch_error("Mapping is immutable", m);
   }
   DFSCH_TYPE_OF(m)->mapping->set(m, key, value);  
@@ -292,8 +292,8 @@ void dfsch_mapping_set(dfsch_object_t* map,
 int dfsch_mapping_unset(dfsch_object_t* map,
                          dfsch_object_t* key){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
-  if (DFSCH_TYPE_OF(m)->mapping->unset){
-    dfsch_error("Mapping is immutable", m);
+  if (!DFSCH_TYPE_OF(m)->mapping->unset){
+    dfsch_error("Mapping does not support removal of keys", m);
   }
   return DFSCH_TYPE_OF(m)->mapping->unset(m, key);  
 }
@@ -302,7 +302,7 @@ int dfsch_mapping_set_if_exists(dfsch_object_t* map,
                                  dfsch_object_t* key,
                                  dfsch_object_t* value){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
-  if (DFSCH_TYPE_OF(m)->mapping->set_if_exists){
+  if (!DFSCH_TYPE_OF(m)->mapping->set_if_exists){
     if (dfsch_mapping_ref(map, key) != DFSCH_INVALID_OBJECT){
       dfsch_mapping_set(map, key, value);
       return 1;
@@ -317,7 +317,7 @@ int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
                                      dfsch_object_t* key,
                                      dfsch_object_t* value){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
-  if (DFSCH_TYPE_OF(m)->mapping->set_if_not_exists){
+  if (!DFSCH_TYPE_OF(m)->mapping->set_if_not_exists){
     if (dfsch_mapping_ref(map, key) == DFSCH_INVALID_OBJECT){
       dfsch_mapping_set(map, key, value);
       return 1;

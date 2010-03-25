@@ -5,7 +5,7 @@
 #include <dfsch/hash.h>
 
 #define DFSCH_MKHASH_TYPE ((dfsch_type_t*)&dfsch_mkhash_type)
-extern dfsch_custom_hash_type_t dfsch_mkhash_type;
+extern dfsch_type_t dfsch_mkhash_type;
 
 typedef struct dfsch_mkhash_t dfsch_mkhash_t;
 
