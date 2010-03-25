@@ -247,6 +247,13 @@ void dfsch_sequence_set(dfsch_object_t* seq,
   }
   DFSCH_TYPE_OF(s)->sequence->set(s, k, value);  
 }
+size_t dfsch_sequence_length(dfsch_object_t* seq){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  if (!DFSCH_TYPE_OF(s)->sequence->length){
+    return 0;
+  }
+  return DFSCH_TYPE_OF(s)->sequence->length(s);  
+}
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
   if (DFSCH_PAIR_P(iterator)){
     return DFSCH_FAST_CDR(iterator);
@@ -282,36 +289,40 @@ void dfsch_mapping_set(dfsch_object_t* map,
   DFSCH_TYPE_OF(m)->mapping->set(m, key, value);  
 }
 
-void dfsch_mapping_unset(dfsch_object_t* map,
+int dfsch_mapping_unset(dfsch_object_t* map,
                          dfsch_object_t* key){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
   if (DFSCH_TYPE_OF(m)->mapping->unset){
     dfsch_error("Mapping is immutable", m);
   }
-  DFSCH_TYPE_OF(m)->mapping->unset(m, key);  
+  return DFSCH_TYPE_OF(m)->mapping->unset(m, key);  
 }
 
-void dfsch_mapping_set_if_exists(dfsch_object_t* map,
+int dfsch_mapping_set_if_exists(dfsch_object_t* map,
                                  dfsch_object_t* key,
                                  dfsch_object_t* value){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
   if (DFSCH_TYPE_OF(m)->mapping->set_if_exists){
     if (dfsch_mapping_ref(map, key) != DFSCH_INVALID_OBJECT){
       dfsch_mapping_set(map, key, value);
+      return 1;
     } 
+    return 0;
   } else {
     return DFSCH_TYPE_OF(m)->mapping->set_if_exists(m, key, value);  
   }
 }
 
-void dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
+int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
                                      dfsch_object_t* key,
                                      dfsch_object_t* value){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
   if (DFSCH_TYPE_OF(m)->mapping->set_if_not_exists){
     if (dfsch_mapping_ref(map, key) == DFSCH_INVALID_OBJECT){
       dfsch_mapping_set(map, key, value);
+      return 1;
     } 
+    return 0;
   } else {
     return DFSCH_TYPE_OF(m)->mapping->set_if_not_exists(m, key, value);  
   }

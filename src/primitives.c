@@ -810,7 +810,7 @@ DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
   dfsch_object_t* obj;
   size_t k;
   DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_LOG_ARG(args, k);
+  DFSCH_LONG_ARG(args, k);
   DFSCH_ARG_END(args);
 
   return dfsch_sequence_ref(obj, k);
@@ -821,11 +821,109 @@ DFSCH_DEFINE_PRIMITIVE(seq_set, "Set k-th element of sequence"){
   dfsch_object_t* value;
   size_t k;
   DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_LOG_ARG(args, k);
+  DFSCH_LONG_ARG(args, k);
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
-  return dfsch_sequence_set(obj, k, value);
+  dfsch_sequence_set(obj, k, value);
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(seq_length, "Get length of sequence"){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_long(dfsch_sequence_length(obj));
+}
+
+DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  dfsch_object_t* def;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG_OPT(args, def, NULL);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_mapping_ref(obj, key);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    value = def;
+  }
+
+  return value;
+}
+DFSCH_DEFINE_PRIMITIVE(map_ref_list, "Get value of mapping, return list of matches (0 or 1)"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_mapping_ref(obj, key);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } else {
+    return dfsch_cons(value, NULL);
+  }
+}
+DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set(obj, key, value);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_unset, "Remove key from mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_unset(obj, key);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_set_if_exists, 
+                       "Set value of mapping when key has already associated value"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set_if_exists(obj, key, value);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_set_if_not_exists, 
+                       "Set value of mapping unless key has already associated value"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set_if_not_exists(obj, key, value);
+  return obj;
 }
 
 
@@ -959,6 +1057,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
   dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
   dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
+  dfsch_defconst_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
+
+  dfsch_defconst_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
+  dfsch_defconst_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
+  dfsch_defconst_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
+  dfsch_defconst_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));
+  dfsch_defconst_cstr(ctx, "map-set-if-not-exists!", 
+                      DFSCH_PRIMITIVE_REF(map_set_if_not_exists));
 
 
 }

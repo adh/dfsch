@@ -531,6 +531,8 @@ extern "C" {
   void dfsch_sequence_set(dfsch_object_t* seq,
                           size_t k,
                           dfsch_object_t* value);
+  size_t dfsch_sequence_length(dfsch_object_t* seq);
+  
 
   dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator);
   dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator);
@@ -540,14 +542,14 @@ extern "C" {
   void dfsch_mapping_set(dfsch_object_t* map,
                          dfsch_object_t* key,
                          dfsch_object_t* value);
-  void dfsch_mapping_unset(dfsch_object_t* map,
-                           dfsch_object_t* key);
-  void dfsch_mapping_set_if_exists(dfsch_object_t* map,
-                                   dfsch_object_t* key,
-                                   dfsch_object_t* value);
-  void dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
-                                       dfsch_object_t* key,
-                                       dfsch_object_t* value);
+  int dfsch_mapping_unset(dfsch_object_t* map,
+                          dfsch_object_t* key);
+  int dfsch_mapping_set_if_exists(dfsch_object_t* map,
+                                  dfsch_object_t* key,
+                                  dfsch_object_t* value);
+  int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
+                                      dfsch_object_t* key,
+                                      dfsch_object_t* value);
 
 
 
