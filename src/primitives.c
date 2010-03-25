@@ -806,6 +806,29 @@ DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection")
   return dfsch_collection_get_iterator(obj);
 }
 
+DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
+  dfsch_object_t* obj;
+  size_t k;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_LOG_ARG(args, k);
+  DFSCH_ARG_END(args);
+
+  return dfsch_sequence_ref(obj, k);
+}
+
+DFSCH_DEFINE_PRIMITIVE(seq_set, "Set k-th element of sequence"){
+  dfsch_object_t* obj;
+  dfsch_object_t* value;
+  size_t k;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_LOG_ARG(args, k);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_sequence_set(obj, k, value);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -934,6 +957,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
+  dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
 
 
 }
