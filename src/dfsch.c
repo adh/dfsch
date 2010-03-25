@@ -198,6 +198,128 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
   return o;
 }
 
+dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_COLLECTION_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+dfsch_object_t* dfsch_assert_mapping(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_MAPPING_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_SEQUENCE_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+
+dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
+  dfsch_object_t* c = DFSCH_ASSERT_COLLECTION(col);
+  return DFSCH_TYPE_OF(c)->collection->get_iterator(c);
+}
+dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
+                                   size_t k){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  return DFSCH_TYPE_OF(s)->collection->ref(s, k);  
+}
+void dfsch_sequence_set(dfsch_object_t* seq,
+                                   size_t k,
+                                   dfsch_object_t* value){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  if (DFSCH_TYPE_OF(s)->collection->set){
+    dfsch_error("Sequence is immutable", s);
+  }
+  DFSCH_TYPE_OF(s)->collection->set(s, k, value);  
+}
+dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CDR(iterator);
+  }
+  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
+    dfsch_error("Object is not usable as iterator", iterator);
+  }
+  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->next(iterator);
+}
+dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CAR(iterator);
+  }
+  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
+    dfsch_error("Object is not usable as iterator", iterator);
+  }
+  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->this(iterator);
+}
+
+dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
+                                  dfsch_object_t* key){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  return DFSCH_TYPE_OF(m)->mapping->ref(m, key);  
+}
+
+void dfsch_mapping_set(dfsch_object_t* map,
+                       dfsch_object_t* key,
+                       dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (DFSCH_TYPE_OF(m)->mapping->set){
+    dfsch_error("Mapping is immutable", m);
+  }
+  DFSCH_TYPE_OF(m)->mapping->set(m, key, value);  
+}
+
+void dfsch_mapping_unset(dfsch_object_t* map,
+                         dfsch_object_t* key){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (DFSCH_TYPE_OF(m)->mapping->unset){
+    dfsch_error("Mapping is immutable", m);
+  }
+  DFSCH_TYPE_OF(m)->mapping->unset(m, key);  
+}
+
+void dfsch_mapping_set_if_exists(dfsch_object_t* map,
+                                 dfsch_object_t* key,
+                                 dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (DFSCH_TYPE_OF(m)->mapping->set_if_exists){
+    if (dfsch_mapping_ref(map, key) != DFSCH_INVALID_OBJECT){
+      dfsch_mapping_set(map, key, value);
+    } 
+  } else {
+    return DFSCH_TYPE_OF(m)->mapping->set_if_exists(m, key, value);  
+  }
+}
+
+void dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
+                                     dfsch_object_t* key,
+                                     dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (DFSCH_TYPE_OF(m)->mapping->set_if_not_exists){
+    if (dfsch_mapping_ref(map, key) == DFSCH_INVALID_OBJECT){
+      dfsch_mapping_set(map, key, value);
+    } 
+  } else {
+    return DFSCH_TYPE_OF(m)->mapping->set_if_not_exists(m, key, value);  
+  }
+}
+
+
+
+
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
 
@@ -1323,6 +1445,10 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
 
   dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
+
+  dfsch_define_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
+  dfsch_define_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
+
 
   dfsch_define_cstr(ctx, "top-level-environment", 
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));

@@ -384,6 +384,20 @@ struct dfsch_slot_t {
   {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, 0, NULL}
 
+typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
+typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
+
+typedef struct dfsch_iterator_type_t {
+  dfsch_type_t type;
+  dfsch_iterator_next_t next;
+  dfsch_iterator_this_t this;
+} dfsch_iterator_type_t;
+
+extern dfsch_type_t dfsch_iterator_type_type;
+#define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)
+extern dfsch_type_t dfsch_iterator_type;
+#define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
+
 
 /*
  * Objects should be always 8-byte aligned in memory, even on 32b platforms.
@@ -489,6 +503,21 @@ typedef struct dfsch_pair_t {
   ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+
+#define DFSCH_COLLECTION_P(o)                   \
+  (DFSCH_TYPE_OF((o))->collection != NULL)
+#define DFSCH_MAPPING_P(o)                      \
+  (DFSCH_TYPE_OF((o))->mapping != NULL)
+#define DFSCH_SEQUENCE_P(o)                             \
+  ((DFSCH_TYPE_OF((o))->collection != NULL) &&          \
+   (DFSCH_TYPE_OF((o))->collection->ref != NULL))
+
+#define DFSCH_ASSERT_COLLECTION(o)                                      \
+  (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
+#define DFSCH_ASSERT_MAPPING(o)                                 \
+  (DFSCH_MAPPING_P((o)) ? (o) : dfsch_assert_mapping((o)))
+#define DFSCH_ASSERT_SEQUENCE(o)                                \
+  (DFSCH_SEQUENCE_P((o)) ? (o) : dfsch_assert_sequence((o)))
 
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))

@@ -422,6 +422,26 @@ dfsch_type_t dfsch_meta_type = {
   NULL
 };
 
+dfsch_type_t dfsch_iterator_type_type = {
+  DFSCH_META_TYPE,
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_type_t),
+  "iterator-type",
+  NULL,
+  NULL,
+  NULL
+};
+
+dfsch_type_t dfsch_iterator_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "iterator",
+  NULL,
+  NULL,
+  NULL
+};
+
 
 static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
   dfsch_write_unreadable(state, (dfsch_object_t*)t, 
@@ -1949,3 +1969,5 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   memcpy(vector->data, array, sizeof(dfsch_object_t*) * length);
   return (object_t*)vector;
 }
+
+
