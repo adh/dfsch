@@ -52,7 +52,7 @@ extern "C" {
 #define DFSCH_WEAK_REFERENCE_TYPE (&dfsch_weak_reference_type)
   extern dfsch_type_t dfsch_weak_vector_type;
 #define DFSCH_WEAK_VECTOR_TYPE (&dfsch_weak_vector_type)
-  extern dfsch_custom_hash_type_t dfsch_weak_key_hash_type;
+  extern dfsch_type_t dfsch_weak_key_hash_type;
 #define DFSCH_WEAK_KEY_HASH_TYPE ((dfsch_type_t*)&dfsch_weak_key_hash_type)
 
 #ifdef __cplusplus

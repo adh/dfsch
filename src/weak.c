@@ -331,10 +331,10 @@ static size_t ptr_hash(dfsch_object_t* ptr){
   
   return b ^ a;
 }
-static int weak_key_hash_ref(weak_key_hash_t* h,
-                             dfsch_object_t* key,
-                             dfsch_object_t** res){
+static dfsch_object_t* weak_key_hash_ref(weak_key_hash_t* h,
+                                         dfsch_object_t* key){
   weak_hash_entry_t* e;
+  dfsch_object_t* res;
   uint32_t hash = ptr_hash(key);
   
   /* 
@@ -351,13 +351,13 @@ static int weak_key_hash_ref(weak_key_hash_t* h,
 
   if (!e){
     DFSCH_RWLOCK_UNLOCK(h->lock);
-    return 0;
+    return DFSCH_INVALID_OBJECT;
   }
 
   
-  *res = e->value;
+  res = e->value;
   DFSCH_RWLOCK_UNLOCK(h->lock);
-  return 1;
+  return res;
 }
 static void weak_key_hash_set(weak_key_hash_t* h,
                              dfsch_object_t* key,
@@ -382,20 +382,22 @@ static void weak_key_hash_set(weak_key_hash_t* h,
   DFSCH_RWLOCK_UNLOCK(h->lock);
 }
 
-dfsch_custom_hash_type_t dfsch_weak_key_hash_type = {
-  {
-    DFSCH_CUSTOM_HASH_TYPE_TYPE,
-    DFSCH_HASH_BASETYPE,
-    sizeof(weak_key_hash_t),
-    "weak-key-hash",
-    NULL,
-    NULL,
-    NULL,
-    NULL
-  },
-  (dfsch_custom_hash_ref_t)weak_key_hash_ref,
-  (dfsch_custom_hash_set_t)weak_key_hash_set,
-  
+static dfsch_mapping_methods_t weak_key_hash_map = {
+  .ref = weak_key_hash_ref,
+  .set = weak_key_hash_set
+};
+
+dfsch_type_t dfsch_weak_key_hash_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL, //DFSCH_MAPPING_TYPE,
+  sizeof(weak_key_hash_t),
+  "weak-key-hash",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+
+  .mapping = &weak_key_hash_map,
 };
 
 
