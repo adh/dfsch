@@ -482,6 +482,20 @@ dfsch_type_t dfsch_special_type = {
   "Metaclass of types with special in-memory representation"
 };
 
+static dfsch_object_t* list_get_iterator(dfsch_object_t* l){
+  return l;
+}
+
+static dfsch_collection_methods_t list_collection = {
+  .get_iterator = list_get_iterator,
+};
+
+static dfsch_sequence_methods_t list_sequence = {
+  .ref = dfsch_list_item,
+  .set = dfsch_set_list_item,
+  .length = dfsch_list_length,
+};
+
 dfsch_type_t dfsch_list_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -493,6 +507,7 @@ dfsch_type_t dfsch_list_type = {
   NULL,
   NULL,
   "Abstract superclass of list-like objects"
+
 };
 
 dfsch_type_t dfsch_function_type = {
@@ -521,7 +536,10 @@ dfsch_type_t dfsch_empty_list_type = {
   NULL,
   NULL,
   NULL,
-  "Class with only one instance - ()"
+  "Class with only one instance - ()",
+
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
 };
 
 static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
@@ -611,7 +629,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Immutable list stored as array"
+    "Immutable list stored as array",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -623,7 +644,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Normal mutable cons cell"
+    "Normal mutable cons cell",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
   {
     DFSCH_STANDARD_TYPE,
@@ -648,7 +672,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Immutable cons cell"
+    "Immutable cons cell",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
 };
 
@@ -1173,7 +1200,7 @@ dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
 }
 
 
-dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
+dfsch_object_t* dfsch_list_item(dfsch_object_t* list, size_t index){
   dfsch_object_t* it = list;
   int i;
   for (i=0; i<index; ++i){
@@ -1185,6 +1212,22 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   }
   return dfsch_car(it);
 }
+
+void dfsch_set_list_item(dfsch_object_t* list, 
+                         size_t index,
+                         dfsch_object_t* value){
+  dfsch_object_t* it = list;
+  int i;
+  for (i=0; i<index; ++i){
+    if (DFSCH_PAIR_P(it)){
+      it = DFSCH_FAST_CDR(it);
+    }else{
+      dfsch_error("No such item of list", dfsch_make_number_from_long(index));
+    }
+  }
+  dfsch_set_car(it, value);
+}
+
 
 dfsch_object_t* dfsch_list_from_array(dfsch_object_t** array, size_t length){
   dfsch_object_t *head; 

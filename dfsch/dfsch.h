@@ -212,7 +212,10 @@ extern "C" {
   extern dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col);
 
   /** Returns given item of list. */
-  extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index);
+  extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, size_t index);
+  extern void dfsch_set_list_item(dfsch_object_t* list, 
+                                  size_t index,
+                                  dfsch_object_t* value);
   /** Construct list from C array. */
   extern dfsch_object_t* dfsch_list_from_array(dfsch_object_t** array, 
                                                size_t length);

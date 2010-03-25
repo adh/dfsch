@@ -54,6 +54,16 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
+static dfsch_collection_methods_t hash_table_col = {
+  .get_iterator = dfsch_hash_2_alist
+};
+static dfsch_mapping_methods_t hash_table_map = {
+  .ref = dfsch_hash_ref,
+  .set = dfsch_hash_set,
+  .unset = dfsch_hash_unset,
+  .set_if_exists = dfsch_hash_set_if_exists,
+};
+
 dfsch_type_t dfsch_hash_table_type = {
   DFSCH_STANDARD_TYPE,
   NULL, //DFSCH_MAPPING_TYPE,
@@ -61,7 +71,10 @@ dfsch_type_t dfsch_hash_table_type = {
   "hash-table",
   NULL,
   NULL,
-  NULL
+  NULL,
+
+  .collection = &hash_table_col,
+  .mapping = &hash_table_map,
 };
 
 
