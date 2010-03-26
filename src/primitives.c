@@ -273,9 +273,6 @@ DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(zip, 0){
-  return dfsch_zip(args);
-}
 DFSCH_DEFINE_PRIMITIVE(append, 0){
   return dfsch_append(args);
 }
@@ -372,6 +369,33 @@ DFSCH_DEFINE_PRIMITIVE(assq, 0){
 
   return dfsch_assq(key, alist);
 }
+DFSCH_DEFINE_PRIMITIVE(zip, 0){
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_list_collector_t* rl = dfsch_make_list_collector();
+
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+  }
+
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    dfsch_list_collect(rl, dfsch_collected_list(al));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_collected_list(rl);
+      }
+    }
+  }
+}
 DFSCH_DEFINE_PRIMITIVE(for_each, 0){
   object_t* func;
   size_t len;
@@ -404,29 +428,33 @@ DFSCH_DEFINE_PRIMITIVE(for_each, 0){
 }
 DFSCH_DEFINE_PRIMITIVE(map, 0){
   object_t* func;
-  object_t* list;
-  object_t* head = NULL;
-  object_t* tail;
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_list_collector_t* rl = dfsch_make_list_collector();
 
   DFSCH_OBJECT_ARG(args, func);
-  list = dfsch_zip(args);
-
-  if (!list){
-    return NULL;
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
   }
 
-  while (dfsch_pair_p(list)){
-    object_t *t = dfsch_cons(dfsch_apply(func, dfsch_car(list)), NULL);
-    if (!head){
-      head = tail = t;
-    }else{
-      dfsch_set_cdr(tail, t);
-      tail = t;
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
     }
-    list = dfsch_cdr(list);
+    dfsch_list_collect(rl,
+                       dfsch_apply(func, dfsch_collected_list(al)));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_collected_list(rl);
+      }
+    }
   }
-  
-  return head;
 }
 DFSCH_DEFINE_PRIMITIVE(filter, 0){
   object_t* func;
@@ -438,8 +466,10 @@ DFSCH_DEFINE_PRIMITIVE(filter, 0){
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
 
-  while (dfsch_pair_p(list)){
-    object_t* item =  dfsch_car(list);
+  list = dfsch_collection_get_iterator(list);
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
     object_t* t;
 
     if (dfsch_apply(func, 
@@ -453,7 +483,7 @@ DFSCH_DEFINE_PRIMITIVE(filter, 0){
         tail = t;
       }
     }
-    list = dfsch_cdr(list);
+    list = dfsch_iterator_next(list);
   }
   
   return head;
