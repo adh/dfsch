@@ -374,22 +374,32 @@ DFSCH_DEFINE_PRIMITIVE(assq, 0){
 }
 DFSCH_DEFINE_PRIMITIVE(for_each, 0){
   object_t* func;
-  object_t* list;
   size_t len;
-  size_t i;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
 
   DFSCH_OBJECT_ARG(args, func);
-  list = dfsch_zip(args);
-
-  if (!list){
-    return NULL;
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
   }
 
-  while (dfsch_pair_p(list)){
-    dfsch_apply(func, dfsch_car(list));
-    list = dfsch_cdr(list);
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    dfsch_apply(func, dfsch_collected_list(al));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return NULL;
+      }
+    }
   }
-  
+
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(map, 0){
