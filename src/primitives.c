@@ -379,6 +379,9 @@ DFSCH_DEFINE_PRIMITIVE(zip, 0){
   its = dfsch_list_as_array(args, &len);
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
   }
 
 
@@ -407,6 +410,9 @@ DFSCH_DEFINE_PRIMITIVE(for_each, 0){
   its = dfsch_list_as_array(args, &len);
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
   }
 
 
@@ -438,6 +444,9 @@ DFSCH_DEFINE_PRIMITIVE(map, 0){
   its = dfsch_list_as_array(args, &len);
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
   }
 
 
