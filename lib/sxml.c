@@ -21,6 +21,7 @@ struct sxml_stack_t {
   sxml_stack_t* next;
   dfsch_object_t* head;
   dfsch_object_t* tail;
+  int last_cdata;
 };
 
 static XML_Memory_Handling_Suite gc_suite = {
@@ -51,6 +52,9 @@ static void sxml_pop(parser_ctx_t* c){
   dfsch_object_t* l = c->stack->head;
   c->stack = c->stack->next;
   sxml_append(c, l);
+  if (c->stack){
+    c->stack->last_cdata = 0;
+  }
 }
 
 static XMLCALL void start_element_handler(parser_ctx_t* c, 
@@ -77,7 +81,7 @@ static XMLCALL void end_element_handler(parser_ctx_t* c,
 static XMLCALL void character_data_handler(parser_ctx_t* c, 
                                            char *data,
                                            int len){
-  if (dfsch_string_p(DFSCH_FAST_CAR(c->stack->tail))){
+  if (c->stack->last_cdata){
     dfsch_strbuf_t* o = dfsch_string_to_buf(DFSCH_FAST_CAR(c->stack->tail));
     char* buf = GC_MALLOC_ATOMIC(len+o->len);
     memcpy(buf, o->ptr, o->len);
@@ -87,6 +91,8 @@ static XMLCALL void character_data_handler(parser_ctx_t* c,
   } else {
     sxml_append(c, dfsch_make_string_buf(data, len));
   }
+
+  c->stack->last_cdata = 1;
 }
 
 static dfsch_sxml_parser_params_t default_parser_params = {
