@@ -8,16 +8,6 @@
 #define DFSCH_HTTP_P_HTTP10  2
 #define DFSCH_HTTP_P_HTTP11  3
 
-#define DFSCH_HTTP_M_UNKNOWN 0
-#define DFSCH_HTTP_M_OPTIONS 1
-#define DFSCH_HTTP_M_GET     2
-#define DFSCH_HTTP_M_HEAD    3
-#define DFSCH_HTTP_M_POST    4
-#define DFSCH_HTTP_M_PUT     5
-#define DFSCH_HTTP_M_DELETE  6
-#define DFSCH_HTTP_M_TRACE   7
-#define DFSCH_HTTP_M_CONNECT 8
-
 #define DFSCH_HTTP_S_CONTINUE              100
 #define DFSCH_HTTP_S_SWITCHING_PROTOCOLS   101
 
@@ -82,5 +72,10 @@ dfsch_http_header_parser_t* dfsch_http_make_header_parser(dfsch_http_header_pars
                                                           void* baton);
 void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
                                          char* line);
+
+extern dfsch_type_t dfsch_http_response_type;
+#define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_response_type)
+extern dfsch_type_t dfsch_http_request_type;
+#define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_request_type)
 
 #endif

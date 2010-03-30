@@ -95,80 +95,6 @@ char* dfsch_http_get_reason(int status){
   return reasons[reason_offsets[class] + code];
 }
 
-static char* methods[] = {
-  NULL,
-  "OPTIONS",
-  "GET",
-  "HEAD",
-  "POST",
-  "PUT",
-  "DELETE",
-  "TRACE",
-  "CONNECT"
-};
-
-int dfsch_http_parse_method(char* method){
-  switch (*method){
-  case 'G':
-    if (method[1] == 'E' && method[2] == 'T' && method[3] == '\0'){
-      return DFSCH_HTTP_M_GET;
-    }
-    break;
-  case 'P':
-    method++;
-    switch(*method){
-    case 'O':
-      if (method[1] == 'S' && method[2] == 'T' && method[3] == '\0'){
-        return DFSCH_HTTP_M_POST;
-      }
-      break;
-    case 'U':
-      if (method[1] == 'T' && method[2] == '\0'){
-        return DFSCH_HTTP_M_PUT;
-      }
-      break;
-      
-    }
-  case 'H':
-    if (method[1] == 'E' && method[2] == 'A' && method[3] == 'D' &&
-        method[4] == '\0'){
-      return DFSCH_HTTP_M_HEAD;
-    }
-    break;
-  case 'O':
-    if (method[1] == 'P' && method[2] == 'T' && method[3] == 'I' &&
-        method[4] == 'O' && method[5] == 'N' && method[6] == 'S' &&
-        method[7] == '\0'){
-      return DFSCH_HTTP_M_OPTIONS;
-    }
-  case 'C':
-    if (method[1] == 'O' && method[2] == 'N' && method[3] == 'N' &&
-        method[4] == 'E' && method[5] == 'C' && method[6] == 'T' &&
-        method[7] == '\0'){
-      return DFSCH_HTTP_M_CONNECT;
-    }
-    break;
-  case 'T':
-    if (method[1] == 'R' && method[2] == 'A' && method[3] == 'C' &&
-        method[4] == 'E' && method[5] == '\0'){
-      return DFSCH_HTTP_M_TRACE;
-    }
-    break;
-  case 'D':
-    if (method[1] == 'E' && method[2] == 'L' && method[3] == 'E' &&
-        method[4] == 'T' && method[5] == 'E' && method[7] == '\0'){
-      return DFSCH_HTTP_M_DELETE;
-    }
-  }
-  
-  return DFSCH_HTTP_M_UNKNOWN;
-}
-char* dfsch_http_get_method(int method){
-  if (method >= sizeof(methods)/sizeof(char*))
-    return NULL;
-  return methods[method];
-}
-
 static int parse_protocol_fallback(char* protocol){
   char* slash;
   char* dot;
@@ -273,4 +199,33 @@ void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
                   dfsch_make_string_cstr(line));
     }
   } 
+}
+
+typedef struct http_response_t {
+  dfsch_type_t* type;
+  int status;
+  dfsch_object_t* headers;
+  dfsch_strbuf_t* body;
+} http_response_t;
+
+typedef struct http_request_t {
+  dfsch_type_t type;
+  
+  char *method;
+  char *protocol;
+  char *request_uri; 
+
+  dfsch_strbuf_t* body;
+
+  dfsch_object_t* headers;
+} http_request_t;
+
+dfsch_object_t* dfsch_make_http_response(int status,
+                                         dfsch_object_t* headers,
+                                         dfsch_strbuf_t* body){
+  http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
+}
+
+void dfsch_http_run_server(){
+
 }
