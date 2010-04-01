@@ -203,6 +203,7 @@ void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
 
 typedef struct http_response_t {
   dfsch_type_t* type;
+
   int status;
   dfsch_object_t* headers;
   dfsch_strbuf_t* body;
@@ -227,5 +228,23 @@ dfsch_object_t* dfsch_make_http_response(int status,
 }
 
 void dfsch_http_run_server(){
+
+}
+
+dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port){
+  
+}
+
+void dfsch_http_write_request(dfsch_object_t* port,
+                              dfsch_object_t* request){
+
+}
+
+dfsch_object_t* dfsch_http_read_response(dfsch_object_t* port){
+
+}
+void dfsch_http_write_response(dfsch_object_t* port,
+                               dfsch_object_t* response,
+                               int protocol){
 
 }
