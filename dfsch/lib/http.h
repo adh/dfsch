@@ -76,6 +76,6 @@ void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
 extern dfsch_type_t dfsch_http_response_type;
 #define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_response_type)
 extern dfsch_type_t dfsch_http_request_type;
-#define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_request_type)
+#define DFSCH_HTTP_REQUEST_TYPE (&dfsch_http_request_type)
 
 #endif

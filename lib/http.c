@@ -227,12 +227,25 @@ dfsch_object_t* dfsch_make_http_response(int status,
   http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
 }
 
-void dfsch_http_run_server(){
-
+dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri,
+                                        dfsch_object_t* headers,
+                                        dfsch_strbuf_t* body){
+  http_response_t* re = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
 }
 
-dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port){
-  
+
+void dfsch_http_run_server(dfsch_object_t* port,
+                           dfsch_object_t* callback){
+  do {
+    int protocol;
+    dfsch_object_t* request = dfsch_http_read_request(port, &protocol);
+    dfsch_object_t* response = dfsch_apply(callback, dfsch_list(1, request));
+  } while(dfsch_http_write_response(port, response));
+}
+
+dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port,
+                                        int* protocol){
+  dfsch_strbuf_t* request_line = dfsch_port_readline(port);
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
@@ -241,10 +254,11 @@ void dfsch_http_write_request(dfsch_object_t* port,
 }
 
 dfsch_object_t* dfsch_http_read_response(dfsch_object_t* port){
+  dfsch_strbuf_t* status_line = dfsch_port_readline(port);
 
 }
-void dfsch_http_write_response(dfsch_object_t* port,
-                               dfsch_object_t* response,
-                               int protocol){
+int dfsch_http_write_response(dfsch_object_t* port,
+                              dfsch_object_t* response,
+                              int protocol){
 
 }
