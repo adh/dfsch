@@ -33,6 +33,11 @@ extern "C" {
     size_t len;
   } dfsch_strbuf_t;
 
+  typedef struct dfsch_string_t {
+    dfsch_type_t* type;
+    dfsch_strbuf_t buf;
+  } dfsch_string_t;
+
   extern int dfsch_string_p(dfsch_object_t* obj);
 
   extern dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len);

@@ -44,11 +44,6 @@ static void * internal_memrchr(const void *buf, int c, size_t num){
   return (void *) (pMem + 1);
 }
 
-typedef struct dfsch_string_t {
-  dfsch_type_t* type;
-  dfsch_strbuf_t buf;
-} dfsch_string_t;
-
 int string_equal_p(dfsch_string_t* a, dfsch_string_t* b){
   if (a->buf.len != b->buf.len)
     return 0;
