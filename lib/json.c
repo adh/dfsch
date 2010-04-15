@@ -665,7 +665,9 @@ static void emit_json_array(dfsch_object_t* obj,
 
 static void emit_json_object(dfsch_object_t* obj, 
                              write_cb_t cb, void* target){
-  if (DFSCH_MAPPING_P(obj)){
+  if (dfsch_string_p(obj)){
+    cb(target, dfsch_object_2_string(obj, 100, 1));
+  } else if (DFSCH_MAPPING_P(obj)){
     emit_json_obj(obj, cb, target);
   } else if (DFSCH_COLLECTION_P(obj)){
     emit_json_array(obj, cb, target);    
