@@ -152,6 +152,16 @@ static size_t string_hash(dfsch_string_t* s){
   return ret;
 }
 
+static dfsch_collection_methods_t string_collection = {
+  .get_iterator = dfsch_string_2_list,
+};
+
+static dfsch_sequence_methods_t string_sequence = {
+  .ref = dfsch_string_ref,
+  .length = dfsch_string_length,
+};
+
+
 static dfsch_type_t string_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -160,7 +170,10 @@ static dfsch_type_t string_type = {
   (dfsch_type_equal_p_t)string_equal_p,
   (dfsch_type_write_t)string_write,
   NULL,
-  (dfsch_type_hash_t)string_hash
+  (dfsch_type_hash_t)string_hash,
+
+  .collection = &string_collection,
+  .sequence = &string_sequence,
 };
 #define STRING (&string_type)
 
@@ -300,7 +313,7 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   return (dfsch_object_t*)r;
 }
 
-char dfsch_string_ref(dfsch_object_t* string, size_t index){
+char dfsch_string_byte_ref(dfsch_object_t* string, size_t index){
   dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   if (index >= s->buf.len)
@@ -310,14 +323,14 @@ char dfsch_string_ref(dfsch_object_t* string, size_t index){
   return s->buf.ptr[index];
 }
 
-size_t dfsch_string_length(dfsch_object_t* string){
+size_t dfsch_string_byte_length(dfsch_object_t* string){
   dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   return s->buf.len;
 }
 
-dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
-                                       size_t end){
+dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, size_t start,
+                                            size_t end){
   dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
 
   if (end > s->buf.len)
@@ -331,7 +344,7 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, size_t start,
   return dfsch_make_string_buf(s->buf.ptr+start, end-start);
 }
 
-dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
+dfsch_object_t* dfsch_string_2_byte_list(dfsch_object_t* string){
 
   dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
   dfsch_object_t *head; 
@@ -356,7 +369,7 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
   return head;
 }
 
-dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
+dfsch_object_t* dfsch_byte_list_2_string(dfsch_object_t* list){
   dfsch_string_t* string;
   dfsch_object_t* j = list;
   size_t i=0;
@@ -455,12 +468,12 @@ static size_t string_length(char* i, char* e){
   return l;
 }
 
-size_t dfsch_string_utf8_length(dfsch_object_t* string){
+size_t dfsch_string_length(dfsch_object_t* string){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   return string_length(buf->ptr, buf->ptr + buf->len);
 }
 
-uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
+uint32_t dfsch_string_ref(dfsch_object_t* string, size_t index){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
   char* e = buf->ptr + buf->len;
@@ -483,8 +496,8 @@ uint32_t dfsch_string_utf8_ref(dfsch_object_t* string, size_t index){
   return l;
 }
 
-dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
-                                            size_t start, size_t end){
+dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
+                                       size_t start, size_t end){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
   char* e = buf->ptr + buf->len;
@@ -517,7 +530,7 @@ dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string,
 
   return dfsch_make_string_buf(sp, ep - sp);
 }
-dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
+dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
   char* e = buf->ptr + buf->len;
@@ -547,7 +560,7 @@ dfsch_object_t* dfsch_string_utf8_2_list(dfsch_object_t* string){
   return head;           
 }
 
-dfsch_object_t* dfsch_list_2_string_utf8(dfsch_object_t* list){
+dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   
   dfsch_string_t* string;
   dfsch_object_t* j = list;
@@ -1249,7 +1262,7 @@ DFSCH_DEFINE_PRIMITIVE(string_length, 0){
 
   return dfsch_make_number_from_long(dfsch_string_length(string));
 }
-DFSCH_DEFINE_PRIMITIVE(string_utf8_ref, 0){
+DFSCH_DEFINE_PRIMITIVE(string_byte_ref, 0){
   size_t index;
   object_t* string;
 
@@ -1257,16 +1270,16 @@ DFSCH_DEFINE_PRIMITIVE(string_utf8_ref, 0){
   DFSCH_LONG_ARG(args, index);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_number_from_long(dfsch_string_utf8_ref(string, index));
+  return dfsch_make_number_from_long(dfsch_string_byte_ref(string, index));
 
 }
-DFSCH_DEFINE_PRIMITIVE(string_utf8_length, 0){
+DFSCH_DEFINE_PRIMITIVE(string_byte_length, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_number_from_long(dfsch_string_utf8_length(string));
+  return dfsch_make_number_from_long(dfsch_string_byte_length(string));
 }
 DFSCH_DEFINE_PRIMITIVE(string_2_list, 0){
   object_t* string;
@@ -1276,13 +1289,13 @@ DFSCH_DEFINE_PRIMITIVE(string_2_list, 0){
 
   return dfsch_string_2_list(string);
 }
-DFSCH_DEFINE_PRIMITIVE(string_utf8_2_list, 0){
+DFSCH_DEFINE_PRIMITIVE(string_2_byte_list, 0){
   object_t* string;
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_utf8_2_list(string);
+  return dfsch_string_2_byte_list(string);
 }
 DFSCH_DEFINE_PRIMITIVE(list_2_string, 0){
   object_t* list;
@@ -1292,13 +1305,13 @@ DFSCH_DEFINE_PRIMITIVE(list_2_string, 0){
 
   return dfsch_list_2_string(list);
 }
-DFSCH_DEFINE_PRIMITIVE(list_2_string_utf8, 0){
+DFSCH_DEFINE_PRIMITIVE(byte_list_2_string, 0){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
 
-  return dfsch_list_2_string_utf8(list);
+  return dfsch_byte_list_2_string(list);
 }
 DFSCH_PRIMITIVE_HEAD(string_cmp_p){
   dfsch_strbuf_t* a;
@@ -1310,6 +1323,17 @@ DFSCH_PRIMITIVE_HEAD(string_cmp_p){
 
   return dfsch_bool(((int (*)(dfsch_strbuf_t*,dfsch_strbuf_t*)) baton)(a, b));
 }
+DFSCH_DEFINE_PRIMITIVE(byte_substring, 0){
+  size_t start, end;
+  object_t* string;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_LONG_ARG(args, start);
+  DFSCH_LONG_ARG(args, end);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_byte_substring(string, start, end);
+}
 DFSCH_DEFINE_PRIMITIVE(substring, 0){
   size_t start, end;
   object_t* string;
@@ -1320,17 +1344,6 @@ DFSCH_DEFINE_PRIMITIVE(substring, 0){
   DFSCH_ARG_END(args);
 
   return dfsch_string_substring(string, start, end);
-}
-DFSCH_DEFINE_PRIMITIVE(substring_utf8, 0){
-  size_t start, end;
-  object_t* string;
-
-  DFSCH_OBJECT_ARG(args, string);
-  DFSCH_LONG_ARG(args, start);
-  DFSCH_LONG_ARG(args, end);
-  DFSCH_ARG_END(args);
-
-  return dfsch_string_substring_utf8(string, start, end);
 }
 
 DFSCH_DEFINE_PRIMITIVE(char_downcase, 0){
@@ -1555,26 +1568,26 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 
   dfsch_define_cstr(ctx, "string-append", 
 		   DFSCH_PRIMITIVE_REF(string_append));
-  dfsch_define_cstr(ctx, "substring-bytes", 
-		   DFSCH_PRIMITIVE_REF(substring));
+  dfsch_define_cstr(ctx, "byte-substring", 
+		   DFSCH_PRIMITIVE_REF(byte_substring));
   dfsch_define_cstr(ctx, "substring", 
-		   DFSCH_PRIMITIVE_REF(substring_utf8));
+		   DFSCH_PRIMITIVE_REF(substring));
   dfsch_define_cstr(ctx, "string-byte-ref", 
-		   DFSCH_PRIMITIVE_REF(string_ref));
+		   DFSCH_PRIMITIVE_REF(string_byte_ref));
   dfsch_define_cstr(ctx, "string-ref", 
-		   DFSCH_PRIMITIVE_REF(string_utf8_ref));
+		   DFSCH_PRIMITIVE_REF(string_ref));
   dfsch_define_cstr(ctx, "string-byte-length", 
-		   DFSCH_PRIMITIVE_REF(string_length));
+		   DFSCH_PRIMITIVE_REF(string_byte_length));
   dfsch_define_cstr(ctx, "string-length", 
-		   DFSCH_PRIMITIVE_REF(string_utf8_length));
+		   DFSCH_PRIMITIVE_REF(string_length));
   dfsch_define_cstr(ctx, "string->byte-list", 
-		   DFSCH_PRIMITIVE_REF(string_2_list));
+		   DFSCH_PRIMITIVE_REF(string_2_byte_list));
   dfsch_define_cstr(ctx, "string->list", 
-		   DFSCH_PRIMITIVE_REF(string_utf8_2_list));
+		   DFSCH_PRIMITIVE_REF(string_2_list));
   dfsch_define_cstr(ctx, "byte-list->string", 
-		   DFSCH_PRIMITIVE_REF(list_2_string));
+		   DFSCH_PRIMITIVE_REF(byte_list_2_string));
   dfsch_define_cstr(ctx, "list->string", 
-		   DFSCH_PRIMITIVE_REF(list_2_string_utf8));
+		   DFSCH_PRIMITIVE_REF(list_2_string));
 
 
   dfsch_define_cstr(ctx, "string=?", 

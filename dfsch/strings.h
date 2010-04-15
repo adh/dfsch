@@ -63,15 +63,14 @@ extern "C" {
 
   extern dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list);
 
-  extern char dfsch_string_ref(dfsch_object_t* string, size_t index);
-
+  extern uint32_t dfsch_string_ref(dfsch_object_t* string, size_t index);
   extern size_t dfsch_string_length(dfsch_object_t* string);
 
   extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, 
                                                 size_t start,
                                                 size_t end);
 
-  extern dfsch_object_t* dfsch_string_substring_utf8(dfsch_object_t* string, 
+  extern dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, 
                                                      size_t start,
                                                      size_t end);
 
