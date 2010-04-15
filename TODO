@@ -4,8 +4,8 @@ Non-version-specific:
 
 For 0.4.0 (ABI broken from 0.3.0)
 * loop
-* Interactive inspector
 * binary serialization
+* byte-vector type + buffer as common superclass with string
 
 0.4.x fetaures
 * Pretty-printer
