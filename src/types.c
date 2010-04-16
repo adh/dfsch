@@ -2004,8 +2004,7 @@ dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array,
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   return v->data[k];
 }
@@ -2014,8 +2013,7 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
                                  dfsch_object_t* obj){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   v->data[k] = obj;
 
