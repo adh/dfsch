@@ -239,7 +239,7 @@ char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
   return s->buf.ptr;
 }
 dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(obj, STRING);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(obj, DFSCH_PROTO_STRING_TYPE);
 
   return &(s->buf);  
 }
@@ -284,8 +284,8 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   char* ptr;
 
   while (DFSCH_PAIR_P(i)){
-    dfsch_string_t *s = DFSCH_ASSERT_TYPE(DFSCH_FAST_CAR(i),
-                                          STRING);
+    dfsch_string_t *s = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                              DFSCH_PROTO_STRING_TYPE);
 
     
     len += s->buf.len;
@@ -299,8 +299,8 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
   i = list;
 
   while (DFSCH_PAIR_P(i)){
-    dfsch_string_t *s = DFSCH_ASSERT_TYPE(DFSCH_FAST_CAR(i),
-                                          STRING);
+    dfsch_string_t *s = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                              DFSCH_PROTO_STRING_TYPE);
 
     memcpy(ptr, s->buf.ptr, s->buf.len);
     ptr += s->buf.len;
@@ -314,7 +314,7 @@ dfsch_object_t* dfsch_string_list_append(dfsch_object_t* list){
 }
 
 char dfsch_string_byte_ref(dfsch_object_t* string, size_t index){
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(string, DFSCH_PROTO_STRING_TYPE);
 
   if (index >= s->buf.len)
     dfsch_error("Index out of bounds",
@@ -324,14 +324,14 @@ char dfsch_string_byte_ref(dfsch_object_t* string, size_t index){
 }
 
 size_t dfsch_string_byte_length(dfsch_object_t* string){
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(string, DFSCH_PROTO_STRING_TYPE);
 
   return s->buf.len;
 }
 
 dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, size_t start,
                                             size_t end){
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(string, DFSCH_PROTO_STRING_TYPE);
 
   if (end > s->buf.len)
     dfsch_error("Index out of bounds",
@@ -346,7 +346,7 @@ dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, size_t start
 
 dfsch_object_t* dfsch_string_2_byte_list(dfsch_object_t* string){
 
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(string, STRING);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(string, DFSCH_PROTO_STRING_TYPE);
   dfsch_object_t *head; 
   dfsch_object_t *tail;
   size_t i;
