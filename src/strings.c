@@ -1231,6 +1231,196 @@ static dfsch_object_t* pathname_extension(dfsch_object_t* s){
   }
 }
 
+/********************* Byte vectors **************/
+
+int byte_vector_equal_p(dfsch_string_t* a, dfsch_string_t* b){
+  if (a->buf.len != b->buf.len)
+    return 0;
+
+  return memcmp(a->buf.ptr, b->buf.ptr, a->buf.len) == 0;
+}
+
+static void byte_vector_write(dfsch_string_t* o, dfsch_writer_state_t* state){
+  char *b;
+  char *i;
+  int j;
+  size_t len = 0;
+
+  if (dfsch_writer_state_print_p(state)){
+    dfsch_write_string(state, o->buf.ptr);
+    return;
+  }
+
+  for (j = 0; j < o->buf.len; ++j){
+    switch (escape_table[o->buf.ptr[j]]){
+    case 0:
+      len += 1;
+      break;
+    case 1:
+      len += 4;
+      break;
+    default:
+      len += 2;
+      break;
+    }
+  }
+
+  b = GC_MALLOC_ATOMIC(len+4);
+  i = b;
+ 
+  *i='#';
+  i++;
+  *i='"';
+  i++;
+
+  for (j = 0; j < o->buf.len; ++j){
+    switch ((unsigned char)(o->buf.ptr[j]) < 128
+            ? escape_table[(unsigned char)(o->buf.ptr[j])]
+            : 1){
+    case 0:
+      *i = o->buf.ptr[j];
+      i++;
+      break;
+    case 1:
+      i[0] = '\\';
+      i[1] = 'x';
+      i[2] = hex_table[(((unsigned char)o->buf.ptr[j]) >> 4) & 0xf];
+      i[3] = hex_table[(((unsigned char)o->buf.ptr[j])     ) & 0xf];
+      i += 4;
+      break;
+    default:
+      i[0] = '\\';
+      i[1] = escape_table[(unsigned char)(o->buf.ptr[j])];
+      i += 2;
+      break;
+    }
+  }
+
+  *i='"';
+  i[1]=0;
+
+  dfsch_write_string(state, b);
+}
+
+static size_t byte_vector_hash(dfsch_string_t* s){
+  size_t ret = s->buf.len ^ 0xa5a5a5a5;
+  size_t i;
+
+  for (i = 0; i < s->buf.len; i++){
+    ret ^= s->buf.ptr[i] ^ (ret << 7);
+    ret ^= ((size_t)s->buf.ptr[i] << 23) ^ (ret >> 7);
+  }
+
+  return ret;
+}
+
+static dfsch_collection_methods_t byte_vector_collection = {
+  .get_iterator = dfsch_string_2_byte_list,
+};
+
+static dfsch_object_t* byte_vector_seq_ref(dfsch_string_t* bv,
+                                           size_t k){
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(bv, k, bv->buf.len);
+  return DFSCH_MAKE_FIXNUM((unsigned char)bv->buf.ptr[k]);
+}
+static void byte_vector_seq_set(dfsch_string_t* bv,
+                                size_t k,
+                                dfsch_object_t* v) {
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(bv, k, bv->buf.len);
+  bv->buf.ptr[k] = dfsch_number_to_long(v);
+}
+
+static dfsch_sequence_methods_t byte_vector_sequence = {
+  .ref = byte_vector_seq_ref,
+  .set = byte_vector_seq_set,
+  .length = dfsch_string_byte_length,
+};
+
+dfsch_type_t dfsch_byte_vector_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = DFSCH_PROTO_STRING_TYPE,
+  .name = "byte-vector",
+  .size = sizeof(dfsch_string_t),
+
+  .equal_p = (dfsch_type_equal_p_t)byte_vector_equal_p,
+  .write = (dfsch_type_write_t)byte_vector_write,
+  .hash = (dfsch_type_hash_t)byte_vector_hash,
+
+  .collection = &byte_vector_collection,
+  .sequence = &byte_vector_sequence,
+};
+
+dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len){
+  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len);
+
+  s->type = DFSCH_BYTE_VECTOR_TYPE;
+
+  s->buf.ptr = (char *)(s + 1);
+  s->buf.len = len;
+
+  if(ptr) // For allocating space to be used later
+    memcpy(s->buf.ptr, ptr, len);
+
+  return (dfsch_object_t*)s;
+}
+dfsch_object_t* dfsch_make_byte_vector_strbuf(dfsch_strbuf_t* strbuf){
+  return dfsch_make_byte_vector(strbuf->ptr, strbuf->len);
+}
+dfsch_object_t* dfsch_make_byte_vector_nocopy(char* ptr, size_t len){
+  dfsch_string_t* s = dfsch_make_object(DFSCH_BYTE_VECTOR_TYPE);
+  
+  s->buf.ptr = ptr;
+  s->buf.len = len;
+
+  return s;
+}
+
+dfsch_object_t* dfsch_list_2_byte_vector(dfsch_object_t* list){
+  dfsch_string_t* string;
+  dfsch_object_t* j = list;
+  size_t i=0;
+  string = 
+    (dfsch_string_t*)dfsch_make_byte_vector(NULL,
+                                            dfsch_list_length_check(list));
+  
+  while (DFSCH_PAIR_P((object_t*)j)){
+    string->buf.ptr[i] = dfsch_number_to_long(DFSCH_FAST_CAR(j));
+    j = DFSCH_FAST_CDR(j);
+    i++;
+  }
+
+  return (object_t*)string;
+}
+
+void dfsch_byte_vector_set(dfsch_object_t* bv, size_t k, char b){
+  dfsch_string_t* v = DFSCH_ASSERT_INSTANCE(bv, DFSCH_BYTE_VECTOR_TYPE);
+
+  if (k >= v->buf.len){
+    dfsch_error("Index out of bounds", bv);
+  }
+
+  v->buf.ptr[k] = b;
+}
+void dfsch_byte_vector_copy(dfsch_object_t* dest,
+                            size_t dest_off,
+                            dfsch_object_t* src,
+                            size_t src_off,
+                            size_t len){
+  
+}
+dfsch_object_t* dfsch_byte_vector_subvector(dfsch_object_t* bv,
+                                            size_t off,
+                                            size_t len){
+
+}
+
+dfsch_object_t* dfsch_proto_string_2_string(dfsch_object_t* ps){
+  return dfsch_make_string_strbuf(dfsch_string_to_buf(ps));
+}
+dfsch_object_t* dfsch_proto_string_2_byte_vector(dfsch_object_t* ps){
+  return dfsch_make_byte_vector_strbuf(dfsch_string_to_buf(ps));
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Scheme binding
@@ -1563,6 +1753,15 @@ DFSCH_DEFINE_PRIMITIVE(pathname_extension,
   return pathname_extension(pathname);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_byte_vector,
+                       "Create new empty byte vector"){
+  size_t len;
+  DFSCH_LONG_ARG(args, len);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_byte_vector(NULL, len);
+}
+
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<string>", &dfsch_string_type);
   dfsch_define_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
@@ -1676,5 +1875,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(pathname_filename));
   dfsch_define_cstr(ctx, "pathname-extension", 
 		   DFSCH_PRIMITIVE_REF(pathname_extension));
+
+  dfsch_define_cstr(ctx, "make-byte-vector", 
+		   DFSCH_PRIMITIVE_REF(make_byte_vector));
 
 }

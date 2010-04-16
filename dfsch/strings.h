@@ -135,6 +135,21 @@ extern "C" {
 #define DFSCH_PROTO_STRING_TYPE (&dfsch_proto_string_type)
   extern dfsch_type_t dfsch_string_type;
 #define DFSCH_STRING_TYPE (&dfsch_string_type)
+  extern dfsch_type_t dfsch_byte_vector_type;
+#define DFSCH_BYTE_VECTOR_TYPE (&dfsch_byte_vector_type)
+
+  dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len);
+  dfsch_object_t* dfsch_make_byte_vector_strbuf(dfsch_strbuf_t* strbuf);
+  dfsch_object_t* dfsch_make_byte_vector_nocopy(char* ptr, size_t len);
+  void dfsch_byte_vector_set(dfsch_object_t* bv, size_t k, char b);
+  void dfsch_byte_vector_copy(dfsch_object_t* dest,
+                              size_t dest_off,
+                              dfsch_object_t* src,
+                              size_t src_off,
+                              size_t len);
+  dfsch_object_t* dfsch_byte_vector_subvector(dfsch_object_t* bv,
+                                              size_t off,
+                                              size_t len);
 
 #ifdef __cplusplus
 }
