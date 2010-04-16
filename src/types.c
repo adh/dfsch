@@ -453,6 +453,8 @@ static dfsch_slot_t type_slots[] = {
                     "Type name"),
   DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO,
                     "Documentation string"),
+  DFSCH_OBJECT_SLOT(dfsch_type_t, superclass, DFSCH_SLOT_ACCESS_RO,
+                    "Superclass"),
   DFSCH_SLOT_TERMINATOR
 };
 
