@@ -1343,6 +1343,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   tail_escape_t myesc;
 
 
+#ifndef DFSCH_NO_TCO
   if (DFSCH_UNLIKELY(esc)){
     esc->proc = proc;
     esc->args = args;
@@ -1364,7 +1365,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     DFSCH__TRACEPOINT_APPLY(ti, proc, args, 
                            (arg_env ? DFSCH_TRACEPOINT_FLAG_APPLY_LAZY : 0));
   }
-
+#endif
 
 
   /*
@@ -1401,7 +1402,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   dfsch_error("Not a procedure", proc);
-
 }
 
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 

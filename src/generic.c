@@ -408,7 +408,7 @@ apply_standard_generic_function(standard_generic_function_t* function,
   dfsch_object_t* j = arguments;
 
 #ifdef GENERIC_PRINT_STATS
-    size_t gc_start = GC_get_total_bytes();
+  size_t gc_start = GC_get_total_bytes();
 #endif
 
   while (i < function->longest_spec_list && DFSCH_PAIR_P(j)){
