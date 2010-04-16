@@ -156,10 +156,15 @@ static dfsch_sequence_methods_t string_sequence = {
   .length = dfsch_string_length,
 };
 
+dfsch_type_t dfsch_proto_string_type = {
+  .type = DFSCH_ABSTRACT_TYPE,
+  .superclass = NULL,
+  .name = "proto-string",
+};
 
-static dfsch_type_t string_type = {
+dfsch_type_t dfsch_string_type = {
   DFSCH_STANDARD_TYPE,
-  NULL,
+  DFSCH_PROTO_STRING_TYPE,
   sizeof(dfsch_string_t),
   "string",
   (dfsch_type_equal_p_t)string_equal_p,
@@ -170,10 +175,10 @@ static dfsch_type_t string_type = {
   .collection = &string_collection,
   .sequence = &string_sequence,
 };
-#define STRING (&string_type)
+#define STRING (&dfsch_string_type)
 
 int dfsch_string_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == &string_type;
+  return DFSCH_TYPE_OF(obj) == STRING;
 }
 
 dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){
@@ -197,7 +202,7 @@ dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf){
 dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
   dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
 
-  s->type = &string_type;
+  s->type = DFSCH_STRING_TYPE;
 
   s->buf.ptr = (char *)(s + 1);
   s->buf.len = len;
@@ -211,7 +216,7 @@ dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
 }
 dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
   dfsch_string_t *s = 
-    (dfsch_string_t*)dfsch_make_object(&string_type);
+    (dfsch_string_t*)dfsch_make_object(DFSCH_STRING_TYPE);
 
   s->buf.ptr = buf->ptr;
   s->buf.len = buf->len;
@@ -1559,7 +1564,8 @@ DFSCH_DEFINE_PRIMITIVE(pathname_extension,
 }
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<string>", &string_type);
+  dfsch_define_cstr(ctx, "<string>", &dfsch_string_type);
+  dfsch_define_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
 
   dfsch_define_cstr(ctx, "string-append", 
 		   DFSCH_PRIMITIVE_REF(string_append));
