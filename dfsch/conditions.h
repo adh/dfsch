@@ -90,4 +90,10 @@ extern dfsch_type_t dfsch_operating_system_error_type;
 void dfsch_operating_system_error_saved(int e, char* funname);
 void dfsch_operating_system_error(char* funname);
 
+extern dfsch_type_t dfsch_index_error_type;
+#define DFSCH_INDEX_ERROR_TYPE (&dfsch_index_error_type)
+void dfsch_index_error(dfsch_object_t* seq,
+                       size_t index,
+                       size_t length);
+
 #endif

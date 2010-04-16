@@ -529,6 +529,9 @@ typedef struct dfsch_pair_t {
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
 
+#define DFSCH_ASSERT_SEQUENCE_INDEX(seq, idx, len)\
+  (((idx) < (len)) ? (idx) : dfsch_assert_sequence_index(seq, idx, len))
+
 typedef struct dfsch_package_t dfsch_package_t;
 
 extern dfsch_package_t dfsch_dfsch_package;

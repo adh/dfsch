@@ -228,6 +228,17 @@ dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj){
   }
   return o;
 }
+size_t dfsch_assert_sequence_index(dfsch_object_t* seq, 
+                                   size_t idx, size_t len){
+  dfsch_object_t* o;
+  while (idx >= len){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_index_error(seq, idx, len);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+    idx = dfsch_number_to_long(o);
+  }
+}
 
 dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
   dfsch_object_t* c = DFSCH_ASSERT_COLLECTION(col);

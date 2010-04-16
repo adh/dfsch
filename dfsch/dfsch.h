@@ -527,6 +527,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj);
   extern dfsch_object_t* dfsch_assert_mapping(dfsch_object_t* obj);
   extern dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj);
+  size_t dfsch_assert_sequence_index(dfsch_object_t* seq, size_t idx, size_t len);  
 
   dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col);
   dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
