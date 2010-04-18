@@ -144,6 +144,7 @@ struct dfsch_parser_ctx_t {
   enum {
     T_ATOM, // i.e. number or symbol
     T_STRING,
+    T_BYTE_VECTOR,
     T_COMMENT,
     T_NONE,
     T_HASH,
@@ -526,6 +527,125 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 
   parse_object(ctx, s);
 }
+static void dispatch_byte_vector(dfsch_parser_ctx_t *ctx, char *data){
+  char* out=data;
+  char* in=data;
+
+  while (*in){
+    switch (*in){
+    case '\\':
+      ++in;
+      switch (*in){
+      case '\n':
+	++in;
+	continue;        
+      case '\r':
+	++in;
+        if (*in == '\n'){
+          ++in;
+        }
+	continue;        
+      case 'n':
+	*out = '\n';
+	++out;
+	++in;
+	continue;
+      case 'r':
+	*out = '\r';
+	++out;
+	++in;
+	continue;
+      case 'a':
+	*out = '\a';
+	++out;
+	++in;
+	continue;
+      case 't':
+	*out = '\t';
+	++out;
+	++in;
+	continue;
+      case 'b':
+	*out = '\b';
+	++out;
+	++in;
+	continue;
+      case 'v':
+	*out = '\v';
+	++out;
+	++in;
+	continue;
+      case 'f':
+	*out = '\f';
+	++out;
+	++in;
+	continue;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+	*out = *in -'0';
+        ++in;
+        
+        if (*in >= '0' && *in <= '7'){
+          *out = ((*out)<<3) | (*in - '0');
+          ++in;
+          if (*in >= '0' && *in <= '7'){
+            *out = ((*out)<<3) | (*in - '0');
+            ++in;
+          }          
+        }
+	++out;
+	continue;
+      case 'x':
+        {
+          int i;
+          *out = 0;
+          ++in;
+          for (i=0; i<2; i++){
+            *out <<= 4;
+            if (!*in){
+              parser_abort(ctx, "Invalid escape");
+            }
+            if (*in >= 'A' && *in <= 'F'){
+              *out |= *in - 'A' + 10;
+            }else if (*in >= 'a' && *in <= 'f'){
+              *out |= *in - 'a' + 10;
+            }else if (*in >= '0' && *in <= '9'){
+              *out |= *in - '0';
+            }else{
+              parser_abort(ctx, "Invalid escape");
+            }
+            ++in;
+          }
+          ++out;
+          continue;
+        }
+      default:
+        *out = *in;
+        ++out;
+        ++in;
+        continue;  
+      }
+    default:
+      *out = *in;
+      ++out;
+      ++in;
+    }
+  }
+  
+  *out = 0;
+  
+  dfsch_object_t *s = dfsch_make_byte_vector(data, out-data);
+
+  parse_object(ctx, s);
+}
+
+
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
   printf(";; Atom: [%s]\n", data);
@@ -729,6 +849,31 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	ctx->tokenizer_state = T_NONE;
 	break;
      }
+    case T_BYTE_VECTOR: // TODO: count characters and lines
+      {
+	char *e= strchr(data, '"');
+	if (!e){
+          consume_queue(ctx->q, data);
+	  return;
+	}
+	if (e>data){
+	  while (*(e-1)=='\\'){
+	    e = strchr(e+1, '"');
+	  }
+	}
+
+	char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
+	strncpy(s, data, e-data);
+	s[e-data]=0;
+
+	dispatch_byte_vector(ctx, s);
+	if (ctx->error) return;
+
+	data = e+1;
+	
+	ctx->tokenizer_state = T_NONE;
+	break;
+     }
     case T_COMMENT:
       while (*data){
 	if (*data=='\n'){
@@ -781,6 +926,11 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ++data;
         ctx->column++;
         ctx->tokenizer_state = T_COMMENT;
+        break;
+      case '"':
+        ++data;
+        ctx->column++;
+        ctx->tokenizer_state = T_BYTE_VECTOR;
         break;
       case '.':
         ++data;
