@@ -38,7 +38,9 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/mkhash.h \
 	dfsch/compile.h \
 	dfsch/generate.h \
-	dfsch/backquote.h
+	dfsch/backquote.h \
+	dfsch/serdes.h \
+	dfsch/strhash.h
 
 if WIN32
 nonwin32_libs=
@@ -124,7 +126,9 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compile.c dfsch/compile.h	\
 	src/backquote.c dfsch/backquote.h \
-	src/trace.c dfsch/trace.h
+	src/trace.c dfsch/trace.h	\
+	src/strhash.c dfsch/strhash.h	\
+	src/serdes.c dfsch/serdes.h
 
 
 BUILT_SOURCES=udata.c udata.h version.h
