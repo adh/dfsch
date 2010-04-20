@@ -221,7 +221,7 @@ extern dfsch_type_t dfsch_form_type;
 typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
 
 typedef void (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
-typedef int (*dfsch_input_proc_t)(void* baton, char* buf, size_t len);
+typedef ssize_t (*dfsch_input_proc_t)(void* baton, char* buf, size_t len);
 typedef struct dfsch_writer_state_t dfsch_writer_state_t;
 
 /** Write / Display method prototype */
