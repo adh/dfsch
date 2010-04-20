@@ -4,22 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct dfsch_strhash__entry_t dfsch_strhash__entry_t;
-
-struct dfsch_strhash_t {
-  dfsch_strhash__entry_t** vector;
-  size_t mask;
-  size_t count;
-};
-
-struct dfsch_strhash__entry_t {
-  size_t hash;
-  char* name;
-  char* value;
-  dfsch_strhash__entry_t* next;
-};
-
-
 static size_t string_hash(char* str){
   size_t tmp=0;
   while (*str){

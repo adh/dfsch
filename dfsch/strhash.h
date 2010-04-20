@@ -1,6 +1,8 @@
 #ifndef H__dfsch__strhash__
 #define H__dfsch__strhash__
 
+#include <stdlib.h>
+
 typedef struct dfsch_strhash_t dfsch_strhash_t;
 typedef struct dfsch_strhash__entry_t dfsch_strhash__entry_t;
 
