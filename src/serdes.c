@@ -92,7 +92,6 @@ void dfsch_serializer_set_persistent_id(dfsch_serializer_t* s,
 void dfsch_serializer_set_object_hook(dfsch_serializer_t* s,
                                       dfsch_serializer_object_hook_t h,
                                       void *baton){
-  
   s->object_hook = h;
   s->oh_baton = baton;
 }
@@ -110,6 +109,7 @@ static void serialize_bytes(dfsch_serializer_t* s,
   s->oproc(s->op_baton, buf, len);
 }
 
+
 static void serialize_back_reference(dfsch_serializer_t* s,
                                      int ref){
   dfsch_serialize_stream_symbol(s, "back-reference");
@@ -121,9 +121,9 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
   dfsch_type_t* klass;
   dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);
   
-  dfsch_eqhash_set(&s->obj_map, obj, (dfsch_object_t*)(s->obj_idx + 1));
   if (idx != DFSCH_INVALID_OBJECT){
-    serialize_back_reference(s, s->obj_idx - ((int)idx));
+    dfsch_eqhash_set(&s->obj_map, obj, (dfsch_object_t*)(s->obj_idx + 1));
+    serialize_back_reference(s, ((int)idx) - s->obj_idx);
     s->obj_idx++;
   }
 
@@ -241,16 +241,26 @@ void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
   int idx = (int)dfsch_strhash_ref(&s->sym_map, sym);
   
   if (idx){
-    dfsch_serialize_integer(s, s->sym_idx - idx);
+    dfsch_serialize_integer(s, -idx);
   } else {
     size_t len = strlen(sym);
     dfsch_serialize_integer(s, len);
     serialize_bytes(s, sym, len);
+    s->sym_idx++;
+    dfsch_strhash_set(&s->sym_map, sym, (void*)s->sym_idx);
   }
-  
-  s->sym_idx++;
-  dfsch_strhash_set(&s->sym_map, sym, (void*)s->sym_idx);
 }
+
+static dfsch_strhash_t* get_deshandler_map(){
+  static dfsch_strhash_t h;
+  static init = 0;
+  if (!init){
+    dfsch_strhash_init(&h);
+    init = 1;
+  }
+  return &h;
+}
+
 
 typedef struct stream_symbol_t {
   char* name;
@@ -277,6 +287,12 @@ struct dfsch_deserializer_t {
   void* ph_baton;
 };
 
+static void update_handler_cache(stream_symbol_t* ss){
+  if (!ss->handler){
+    ss->handler = dfsch_strhash_ref(get_deshandler_map(), ss->name);
+  }
+}
+
 dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
                                               void* baton){
   
@@ -290,8 +306,21 @@ static void deserialize_bytes(dfsch_deserializer_t* ds, char*buf, size_t len){
 }
 
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds){
-  char* type = dfsch_deserialize_stream_symbol(ds);
+  stream_symbol_t* type = deserialize_stream_symbol(ds);
+  update_handler_cache(type);
 
+  if (!type->handler){
+    if (ds->unknown_handler){
+      return ds->unknown(ds, type->name, ds->uh_baton);
+    } else {
+      dfsch_error("Unknown type ID", dfsch_make_string_cstr(type->name));
+    }
+  }
+  
+  return type->handler(ds);
+}
+
+static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
   
 }
 
@@ -307,90 +336,119 @@ int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
   } else if ((lead & 0xc0) == 0x80){
     deserialize_bytes(ds, buf, 1);
     val = ((((uint64_t)lead) & 0x3f) << 8);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 0);
     val = (val ^ (1ll << 13)) - (1ll << 13);
   } else if ((lead & 0xe0) == 0xc0){
     deserialize_bytes(ds, buf, 2);
     val = ((((uint64_t)lead) & 0x1f) << 16);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 0);
     val = (val ^ (1ll << 20)) - (1ll << 20);
   } else if ((lead & 0xf0) == 0xe0){
     deserialize_bytes(ds, buf, 3);
     val = ((((uint64_t)lead) & 0x0f) << 24);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 0);
     val = (val ^ (1ll << 27)) - (1ll << 27);
   } else if ((lead & 0xf8) == 0xf0){
     deserialize_bytes(ds, buf, 4);
     val = ((((uint64_t)lead) & 0x07) << 32);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 24)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[3]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 24);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[3]) & 0xff) << 0);
     val = (val ^ (1ll << 34)) - (1ll << 34);
   } else if ((lead & 0xfc) == 0xf8){
     deserialize_bytes(ds, buf, 5);
     val = ((((uint64_t)lead) & 0x03) << 40);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 32)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 24)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[3]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[4]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 32);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 24);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[3]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[4]) & 0xff) << 0);
     val = (val ^ (1ll << 41)) - (1ll << 41);
   } else if ((lead & 0xfe) == 0xfc){
     deserialize_bytes(ds, buf, 6);
     val = ((((uint64_t)lead) & 0x01) << 48);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 40)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 32)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 24)
-    val |= ((((uint64_t)buf[3]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[4]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[5]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 40);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 32);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 24);
+    val |= ((((uint64_t)buf[3]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[4]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[5]) & 0xff) << 0);
     val = (val ^ (1ll << 48)) - (1ll << 48);
   } else if ((lead & 0xfe) == 0xfc){
     deserialize_bytes(ds, buf, 7);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 48)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 40)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 32)
-    val |= ((((uint64_t)buf[3]) & 0xff) << 24)
-    val |= ((((uint64_t)buf[4]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[5]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[6]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 48);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 40);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 32);
+    val |= ((((uint64_t)buf[3]) & 0xff) << 24);
+    val |= ((((uint64_t)buf[4]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[5]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[6]) & 0xff) << 0);
     val = (val ^ (1ll << 55)) - (1ll << 55);
   } else if (lead  == 0xff){
     deserialize_bytes(ds, buf, 8);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 56)
-    val |= ((((uint64_t)buf[1]) & 0xff) << 48)
-    val |= ((((uint64_t)buf[2]) & 0xff) << 40)
-    val |= ((((uint64_t)buf[3]) & 0xff) << 32)
-    val |= ((((uint64_t)buf[4]) & 0xff) << 24)
-    val |= ((((uint64_t)buf[5]) & 0xff) << 16)
-    val |= ((((uint64_t)buf[6]) & 0xff) << 8)
-    val |= ((((uint64_t)buf[7]) & 0xff) << 0)
+    val |= ((((uint64_t)buf[0]) & 0xff) << 56);
+    val |= ((((uint64_t)buf[1]) & 0xff) << 48);
+    val |= ((((uint64_t)buf[2]) & 0xff) << 40);
+    val |= ((((uint64_t)buf[3]) & 0xff) << 32);
+    val |= ((((uint64_t)buf[4]) & 0xff) << 24);
+    val |= ((((uint64_t)buf[5]) & 0xff) << 16);
+    val |= ((((uint64_t)buf[6]) & 0xff) << 8);
+    val |= ((((uint64_t)buf[7]) & 0xff) << 0);
   }
 
   return val;
 }
 dfsch_strbuf_t* dfsch_deserialize_strbuf(dfsch_deserializer_t* ds){
+  dfsch_strbuf_t* s = GC_NEW(dfsch_strbuf_t);
 
+  s->len = dfsch_deserialize_integer(ds);
+  s->ptr = GC_MALLOC_ATOMIC(s->len + 1);
+  deserialize_bytes(ds, s->ptr, s->len);
+  s->ptr[s->len] = 0;
+  
+  return s;
 }
-char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
 
-}
+static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
+  ssize_t len = dfsch_deserialize_integer(ds);
+  stream_symbol_t* res;
+  
+  if (len > 0){
+    res = GC_NEW(stream_symbol_t);
+    res->name = GC_MALLOC_ATOMIC(len + 1);
+    deserialize_bytes(ds, res->name, len);
+    res->name[len] = 0;
 
-static dfsch_strhash_t* get_deshandler_map(){
-  static dfsch_strhash_t h;
-  static init = 0;
-  if (!init){
-    dfsch_strhash_init(&h);
-    init = 1;
+    ds->sym_idx++;
+    
+    if (ds->sym_idx >= ds->sym_map_len){
+      ds->sym_map_len *= 2;
+      ds->sym_map = GC_REALLOC(ds->sym_map, ds->sym_map_len * sizeof(stream_symbol_t*));
+    }
+    
+    ds->sym_map[ds->sym_idx] = res;
+  } else {
+    int idx = -len;
+
+    if (idx > ds->sym_idx){
+      dfsch_error("Invalid back reference in stream", ds);
+    }
+
+    res = ds->sym_map[idx];
   }
-  return &h;
+  return res;
 }
+
+char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
+  return deserialize_stream_symbol(ds)->name;
+}
+
 
 void dfsch_register_deserializer_handler(char* name,
                                          dfsch_deserializer_handler_t h){
-  dfsch_strhash_put(get_deshandler_map(), name, (void*)h);
+  dfsch_strhash_set(get_deshandler_map(), name, (void*)h);
 }

@@ -44,6 +44,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdlib.h>
 
 extern dfsch_type_t dfsch_abstract_type;
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)

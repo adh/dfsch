@@ -53,8 +53,6 @@ typedef struct dfsch_deserializer_t dfsch_deserializer_t;
 
 dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
                                               void* baton);
-void dfsch_deserializer_set_name_environment(dfsch_deserializer_t* ds,
-                                             dfsch_object_t* env);
 
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds);
 
