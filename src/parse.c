@@ -904,6 +904,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
         if (ctx->dispatch_atom_hook){
           ctx->dispatch_atom_hook(ctx, s);
+          ctx->dispatch_atom_hook = NULL;
         } else {
           dispatch_atom(ctx, s);
         }
@@ -1014,6 +1015,15 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
+      case 'r':
+      case 'R':
+        ++data;
+        ctx->column++;
+
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;
+        break;
+
       case '\\':
         ++data;
         ctx->column++;
