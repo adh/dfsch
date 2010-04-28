@@ -728,6 +728,9 @@ static void dispatch_byte_vector(dfsch_parser_ctx_t *ctx, char *data){
   parse_object(ctx, s);
 }
 
+static void dispatch_number_base(dfsch_parser_ctx_t *ctx, char *data){
+  parse_object(ctx, dfsch_make_number_from_string(data, ctx->hash_arg));
+}
 
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
