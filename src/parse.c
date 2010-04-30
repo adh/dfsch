@@ -1015,6 +1015,31 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
+      case 'x':
+      case 'X':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 16;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'o':
+      case 'O':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 8;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'b':
+      case 'B':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 2;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+
       case 'r':
       case 'R':
         ++data;
