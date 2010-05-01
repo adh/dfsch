@@ -73,7 +73,7 @@ dfsch_port_type_t dfsch_process_output_port_type = {
     DFSCH_PORT_TYPE_TYPE,
     DFSCH_PROCESS_PORT_TYPE,
     sizeof(process_port_t),
-    "process:output-port",
+    "process-output-port",
     NULL,
     NULL,
     NULL
@@ -114,7 +114,7 @@ dfsch_port_type_t dfsch_process_input_port_type = {
     DFSCH_PORT_TYPE_TYPE,
     DFSCH_PROCESS_PORT_TYPE,
     sizeof(process_port_t),
-    "process:input-port",
+    "process-input-port",
     NULL,
     NULL,
     NULL

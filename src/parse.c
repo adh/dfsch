@@ -728,6 +728,9 @@ static void dispatch_byte_vector(dfsch_parser_ctx_t *ctx, char *data){
   parse_object(ctx, s);
 }
 
+static void dispatch_number_base(dfsch_parser_ctx_t *ctx, char *data){
+  parse_object(ctx, dfsch_make_number_from_string(data, ctx->hash_arg));
+}
 
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
@@ -901,6 +904,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 
         if (ctx->dispatch_atom_hook){
           ctx->dispatch_atom_hook(ctx, s);
+          ctx->dispatch_atom_hook = NULL;
         } else {
           dispatch_atom(ctx, s);
         }
@@ -1011,6 +1015,40 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
+      case 'x':
+      case 'X':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 16;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'o':
+      case 'O':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 8;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'b':
+      case 'B':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 2;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+
+      case 'r':
+      case 'R':
+        ++data;
+        ctx->column++;
+
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;
+        break;
+
       case '\\':
         ++data;
         ctx->column++;
