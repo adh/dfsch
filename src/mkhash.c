@@ -1,3 +1,24 @@
+/*
+ * dfsch - dfox's quick and dirty scheme implementation
+ *   Multiple keyed hash tables
+ * Copyright (C) 2005-2008 Ales Hakl
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 #include "dfsch/mkhash.h"
 #include <dfsch/util.h>
 
@@ -239,34 +260,39 @@ static dfsch_object_t** destructure_keylist(dfsch_mkhash_t* h,
   return array;
 }
 
-static int mkhash_ref(dfsch_mkhash_t* h,
-                      dfsch_object_t* key,
-                      dfsch_object_t** res){
-  return dfsch_mkhash_ref(h, destructure_keylist(h, key), res);
+static dfsch_object_t* mkhash_ref(dfsch_mkhash_t* h,
+                                  dfsch_object_t* key){
+  dfsch_object_t* res;
+  if (dfsch_mkhash_ref(h, destructure_keylist(h, key), &res)){
+    return res;
+  } else {
+    return DFSCH_INVALID_OBJECT;
+  }
 }
 static void mkhash_set(dfsch_mkhash_t* h,
                        dfsch_object_t* key,
                        dfsch_object_t* value){
   dfsch_mkhash_set(h, destructure_keylist(h, key), value);
 }
-static void mkhash_unset(dfsch_mkhash_t* h,
+static int mkhash_unset(dfsch_mkhash_t* h,
                          dfsch_object_t* key){
   dfsch_mkhash_unset(h, destructure_keylist(h, key));
+  return 1;
 }
 
-
-dfsch_custom_hash_type_t dfsch_mkhash_type = {
-  .parent = {
-    .type = DFSCH_CUSTOM_HASH_TYPE_TYPE,
-    .superclass = DFSCH_HASH_BASETYPE,
-    .name = "multiple-key-hash",
-    .size = sizeof(dfsch_mkhash_t)
-  },
-
+static dfsch_mapping_methods_t mkhash_map = {
   .ref = mkhash_ref,
   .set = mkhash_set,
-  .unset = mkhash_unset,
-  .hash_2_alist = dfsch_mkhash_2_alist,
+  .unset = mkhash_unset
+};
+
+dfsch_type_t dfsch_mkhash_type = {
+  .type = DFSCH_STANDARD_TYPE, //DFSCH_CUSTOM_HASH_TYPE_TYPE,
+  .superclass = NULL, //DFSCH_MAPPING_TYPE,
+  .name = "multiple-key-hash",
+  .size = sizeof(dfsch_mkhash_t),
+
+  .mapping = &mkhash_map,
 };
 
 

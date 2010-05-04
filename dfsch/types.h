@@ -241,6 +241,50 @@ typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 /** Allow user code to inherit from this type */
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
 
+typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
+
+typedef struct dfsch_collection_methods_t {
+  dfsch_collection_get_iterator_t get_iterator;
+} dfsch_collection_methods_t;
+
+
+typedef dfsch_object_t* (*dfsch_sequence_ref_t)(dfsch_object_t* s,
+                                                int n);
+typedef void (*dfsch_sequence_set_t)(dfsch_object_t* s,
+                                     int n,
+                                     dfsch_object_t* val);
+typedef size_t (*dfsch_sequence_length_t)(dfsch_object_t* s);
+
+typedef struct dfsch_sequence_methods_t {
+  dfsch_sequence_ref_t ref;
+  dfsch_sequence_set_t set;
+  dfsch_sequence_length_t length;
+} dfsch_sequence_methods_t;
+
+typedef dfsch_object_t* (*dfsch_mapping_ref_t)(dfsch_object_t* hash, 
+                                               dfsch_object_t* key);
+typedef void (*dfsch_mapping_set_t)(dfsch_object_t* hash, 
+                                    dfsch_object_t* key,
+                                    dfsch_object_t* value);
+typedef int (*dfsch_mapping_unset_t)(dfsch_object_t* hash, 
+                                     dfsch_object_t* key);
+typedef int (*dfsch_mapping_set_if_exists_t)(dfsch_object_t* hash, 
+                                             dfsch_object_t* key,
+                                             dfsch_object_t* value);
+typedef int (*dfsch_mapping_set_if_not_exists_t)(dfsch_object_t* hash, 
+                                                 dfsch_object_t* key,
+                                                 dfsch_object_t* value);
+
+
+typedef struct dfsch_mapping_methods_t {
+  dfsch_mapping_ref_t ref;
+  dfsch_mapping_set_t set;
+  dfsch_mapping_unset_t unset;
+  dfsch_mapping_set_if_exists_t set_if_exists;
+  dfsch_mapping_set_if_not_exists_t set_if_not_exists;
+} dfsch_mapping_methods_t;
+
+
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
   /** When we want to use type_t as first-class object */
@@ -279,6 +323,11 @@ struct dfsch_type_t {
   int flags;
 
   dfsch_type_describe_t describe;
+
+  dfsch_collection_methods_t* collection;
+  dfsch_sequence_methods_t* sequence;
+  dfsch_mapping_methods_t* mapping;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -342,6 +391,20 @@ struct dfsch_slot_t {
 #define DFSCH_LONG_SLOT(struct, name, access, doc)              \
   {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, 0, NULL}
+
+typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
+typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
+
+typedef struct dfsch_iterator_type_t {
+  dfsch_type_t type;
+  dfsch_iterator_next_t next;
+  dfsch_iterator_this_t this;
+} dfsch_iterator_type_t;
+
+extern dfsch_type_t dfsch_iterator_type_type;
+#define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)
+extern dfsch_type_t dfsch_iterator_type;
+#define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
 
 
 /*
@@ -449,8 +512,25 @@ typedef struct dfsch_pair_t {
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
 
+#define DFSCH_COLLECTION_P(o)                   \
+  (DFSCH_TYPE_OF((o))->collection != NULL)
+#define DFSCH_MAPPING_P(o)                      \
+  (DFSCH_TYPE_OF((o))->mapping != NULL)
+#define DFSCH_SEQUENCE_P(o)                     \
+  (DFSCH_TYPE_OF((o))->sequence != NULL)
+
+#define DFSCH_ASSERT_COLLECTION(o)                                      \
+  (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
+#define DFSCH_ASSERT_MAPPING(o)                                 \
+  (DFSCH_MAPPING_P((o)) ? (o) : dfsch_assert_mapping((o)))
+#define DFSCH_ASSERT_SEQUENCE(o)                                \
+  (DFSCH_SEQUENCE_P((o)) ? (o) : dfsch_assert_sequence((o)))
+
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
+
+#define DFSCH_ASSERT_SEQUENCE_INDEX(seq, idx, len)\
+  (((idx) < (len)) ? (idx) : dfsch_assert_sequence_index(seq, idx, len))
 
 typedef struct dfsch_package_t dfsch_package_t;
 

@@ -3,19 +3,19 @@
  *   Basic native functions
  * Copyright (C) 2005-2008 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -273,9 +273,6 @@ DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(zip, 0){
-  return dfsch_zip(args);
-}
 DFSCH_DEFINE_PRIMITIVE(append, 0){
   return dfsch_append(args);
 }
@@ -372,51 +369,101 @@ DFSCH_DEFINE_PRIMITIVE(assq, 0){
 
   return dfsch_assq(key, alist);
 }
+DFSCH_DEFINE_PRIMITIVE(zip, 0){
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_list_collector_t* rl = dfsch_make_list_collector();
+
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
+  }
+
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    dfsch_list_collect(rl, dfsch_collected_list(al));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_collected_list(rl);
+      }
+    }
+  }
+}
 DFSCH_DEFINE_PRIMITIVE(for_each, 0){
   object_t* func;
-  object_t* list;
   size_t len;
-  size_t i;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
 
   DFSCH_OBJECT_ARG(args, func);
-  list = dfsch_zip(args);
-
-  if (!list){
-    return NULL;
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
   }
 
-  while (dfsch_pair_p(list)){
-    dfsch_apply(func, dfsch_car(list));
-    list = dfsch_cdr(list);
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    dfsch_apply(func, dfsch_collected_list(al));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return NULL;
+      }
+    }
   }
-  
+
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(map, 0){
   object_t* func;
-  object_t* list;
-  object_t* head = NULL;
-  object_t* tail;
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_list_collector_t* rl = dfsch_make_list_collector();
 
   DFSCH_OBJECT_ARG(args, func);
-  list = dfsch_zip(args);
-
-  if (!list){
-    return NULL;
-  }
-
-  while (dfsch_pair_p(list)){
-    object_t *t = dfsch_cons(dfsch_apply(func, dfsch_car(list)), NULL);
-    if (!head){
-      head = tail = t;
-    }else{
-      dfsch_set_cdr(tail, t);
-      tail = t;
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
     }
-    list = dfsch_cdr(list);
   }
-  
-  return head;
+
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    dfsch_list_collect(rl,
+                       dfsch_apply(func, dfsch_collected_list(al)));
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_collected_list(rl);
+      }
+    }
+  }
 }
 DFSCH_DEFINE_PRIMITIVE(filter, 0){
   object_t* func;
@@ -428,8 +475,10 @@ DFSCH_DEFINE_PRIMITIVE(filter, 0){
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
 
-  while (dfsch_pair_p(list)){
-    object_t* item =  dfsch_car(list);
+  list = dfsch_collection_get_iterator(list);
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
     object_t* t;
 
     if (dfsch_apply(func, 
@@ -443,7 +492,7 @@ DFSCH_DEFINE_PRIMITIVE(filter, 0){
         tail = t;
       }
     }
-    list = dfsch_cdr(list);
+    list = dfsch_iterator_next(list);
   }
   
   return head;
@@ -798,6 +847,135 @@ dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
   return dfsch_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
 }
 
+DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection"){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_get_iterator(obj);
+}
+
+DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
+  dfsch_object_t* obj;
+  size_t k;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_LONG_ARG(args, k);
+  DFSCH_ARG_END(args);
+
+  return dfsch_sequence_ref(obj, k);
+}
+
+DFSCH_DEFINE_PRIMITIVE(seq_set, "Set k-th element of sequence"){
+  dfsch_object_t* obj;
+  dfsch_object_t* value;
+  size_t k;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_LONG_ARG(args, k);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_sequence_set(obj, k, value);
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(seq_length, "Get length of sequence"){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_long(dfsch_sequence_length(obj));
+}
+
+DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  dfsch_object_t* def;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG_OPT(args, def, NULL);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_mapping_ref(obj, key);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    value = def;
+  }
+
+  return value;
+}
+DFSCH_DEFINE_PRIMITIVE(map_ref_list, "Get value of mapping, return list of matches (0 or 1)"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_mapping_ref(obj, key);
+
+  if (value == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } else {
+    return dfsch_cons(value, NULL);
+  }
+}
+DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set(obj, key, value);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_unset, "Remove key from mapping"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_unset(obj, key);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_set_if_exists, 
+                       "Set value of mapping when key has already associated value"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set_if_exists(obj, key, value);
+  return obj;
+}
+DFSCH_DEFINE_PRIMITIVE(map_set_if_not_exists, 
+                       "Set value of mapping unless key has already associated value"){
+  dfsch_object_t* obj;
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_mapping_set_if_not_exists(obj, key, value);
+  return obj;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -924,6 +1102,18 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+
+  dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
+  dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
+  dfsch_defconst_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
+
+  dfsch_defconst_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
+  dfsch_defconst_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
+  dfsch_defconst_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
+  dfsch_defconst_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));
+  dfsch_defconst_cstr(ctx, "map-set-if-not-exists!", 
+                      DFSCH_PRIMITIVE_REF(map_set_if_not_exists));
 
 
 }

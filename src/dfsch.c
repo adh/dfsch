@@ -2,19 +2,19 @@
  * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2009 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -197,6 +197,150 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
   }
   return o;
 }
+
+dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_COLLECTION_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+dfsch_object_t* dfsch_assert_mapping(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_MAPPING_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_SEQUENCE_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, NULL, 1); //XXX
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+size_t dfsch_assert_sequence_index(dfsch_object_t* seq, 
+                                   size_t idx, size_t len){
+  dfsch_object_t* o;
+  while (idx >= len){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_index_error(seq, idx, len);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+    idx = dfsch_number_to_long(o);
+  }
+}
+
+dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
+  dfsch_object_t* c = DFSCH_ASSERT_COLLECTION(col);
+  return DFSCH_TYPE_OF(c)->collection->get_iterator(c);
+}
+dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
+                                   size_t k){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  return DFSCH_TYPE_OF(s)->sequence->ref(s, k);  
+}
+void dfsch_sequence_set(dfsch_object_t* seq,
+                                   size_t k,
+                                   dfsch_object_t* value){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  if (!DFSCH_TYPE_OF(s)->sequence->set){
+    dfsch_error("Sequence is immutable", s);
+  }
+  DFSCH_TYPE_OF(s)->sequence->set(s, k, value);  
+}
+size_t dfsch_sequence_length(dfsch_object_t* seq){
+  dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
+  if (!DFSCH_TYPE_OF(s)->sequence->length){
+    return 0;
+  }
+  return DFSCH_TYPE_OF(s)->sequence->length(s);  
+}
+dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CDR(iterator);
+  }
+  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
+    dfsch_error("Object is not usable as iterator", iterator);
+  }
+  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->next(iterator);
+}
+dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CAR(iterator);
+  }
+  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
+    dfsch_error("Object is not usable as iterator", iterator);
+  }
+  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->this(iterator);
+}
+
+dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
+                                  dfsch_object_t* key){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  return DFSCH_TYPE_OF(m)->mapping->ref(m, key);  
+}
+
+void dfsch_mapping_set(dfsch_object_t* map,
+                       dfsch_object_t* key,
+                       dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->set){
+    dfsch_error("Mapping is immutable", m);
+  }
+  DFSCH_TYPE_OF(m)->mapping->set(m, key, value);  
+}
+
+int dfsch_mapping_unset(dfsch_object_t* map,
+                         dfsch_object_t* key){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->unset){
+    dfsch_error("Mapping does not support removal of keys", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->unset(m, key);  
+}
+
+int dfsch_mapping_set_if_exists(dfsch_object_t* map,
+                                 dfsch_object_t* key,
+                                 dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->set_if_exists){
+    if (dfsch_mapping_ref(map, key) != DFSCH_INVALID_OBJECT){
+      dfsch_mapping_set(map, key, value);
+      return 1;
+    } 
+    return 0;
+  } else {
+    return DFSCH_TYPE_OF(m)->mapping->set_if_exists(m, key, value);  
+  }
+}
+
+int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
+                                     dfsch_object_t* key,
+                                     dfsch_object_t* value){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->set_if_not_exists){
+    if (dfsch_mapping_ref(map, key) == DFSCH_INVALID_OBJECT){
+      dfsch_mapping_set(map, key, value);
+      return 1;
+    } 
+    return 0;
+  } else {
+    return DFSCH_TYPE_OF(m)->mapping->set_if_not_exists(m, key, value);  
+  }
+}
+
+
+
 
 static pthread_key_t thread_key;
 static pthread_once_t thread_once = PTHREAD_ONCE_INIT;
@@ -1199,6 +1343,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   tail_escape_t myesc;
 
 
+#ifndef DFSCH_NO_TCO
   if (DFSCH_UNLIKELY(esc)){
     esc->proc = proc;
     esc->args = args;
@@ -1220,7 +1365,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     DFSCH__TRACEPOINT_APPLY(ti, proc, args, 
                            (arg_env ? DFSCH_TRACEPOINT_FLAG_APPLY_LAZY : 0));
   }
-
+#endif
 
 
   /*
@@ -1257,7 +1402,6 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   dfsch_error("Not a procedure", proc);
-
 }
 
 dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
@@ -1324,6 +1468,10 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
   dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
 
+  dfsch_define_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
+  dfsch_define_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
+
+
   dfsch_define_cstr(ctx, "top-level-environment", 
                     DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
   dfsch_define_cstr(ctx,"*dfsch-version*",
@@ -1341,7 +1489,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__number_native_register(ctx);
   dfsch__string_native_register(ctx);
   dfsch__object_native_register(ctx);
-  dfsch__weak_native_register(ctx);
+  //dfsch__weak_native_register(ctx);
   dfsch__format_native_register(ctx);
   dfsch__port_native_register(ctx);
   dfsch__bignum_register(ctx);

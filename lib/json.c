@@ -611,16 +611,17 @@ typedef void (*write_cb_t)(void* target, char* buf);
 static void emit_json_object(dfsch_object_t* obj, 
                              write_cb_t cb, void* target);
 
-static void emit_json_hash(dfsch_object_t* obj, 
-                           write_cb_t cb, void* target){
-  dfsch_object_t* i = dfsch_hash_2_alist(obj);
+static void emit_json_obj(dfsch_object_t* obj, 
+                          write_cb_t cb, void* target){
+  dfsch_object_t* i = dfsch_collection_get_iterator(obj);
   int comma = 0;
 
   cb(target, "{");
 
-  while (DFSCH_PAIR_P(i)){
-    dfsch_object_t* key = dfsch_list_item(DFSCH_FAST_CAR(i), 0);
-    dfsch_object_t* value = dfsch_list_item(DFSCH_FAST_CAR(i), 1);
+  while (i){
+    dfsch_object_t* it = dfsch_iterator_this(i);
+    dfsch_object_t* key = dfsch_list_item(it, 0);
+    dfsch_object_t* value = dfsch_list_item(it, 1);
     
     if (comma){
       cb(target, ", ");
@@ -631,27 +632,27 @@ static void emit_json_hash(dfsch_object_t* obj,
     cb(target, ": ");
     emit_json_object(value, cb, target);
 
-    i = DFSCH_FAST_CDR(i);
+    i = dfsch_iterator_next(i);
   }
 
   cb(target, "}");  
 }
 
-static void emit_json_list(dfsch_object_t* obj, 
-                           write_cb_t cb, void* target){
-  dfsch_object_t* i = obj;
+static void emit_json_array(dfsch_object_t* obj, 
+                            write_cb_t cb, void* target){
+  dfsch_object_t* i = dfsch_collection_get_iterator(obj);
   int comma = 0;
 
   cb(target, "[");
 
-  while (DFSCH_PAIR_P(i)){
+  while (i){
     if (comma){
       cb(target, ", ");
     }
     comma = 1;
 
-    emit_json_object(DFSCH_FAST_CAR(i), cb, target);
-    i = DFSCH_FAST_CDR(i);
+    emit_json_object(dfsch_iterator_this(i), cb, target);
+    i = dfsch_iterator_next(i);
   }
 
   if (i){
@@ -664,12 +665,12 @@ static void emit_json_list(dfsch_object_t* obj,
 
 static void emit_json_object(dfsch_object_t* obj, 
                              write_cb_t cb, void* target){
-  if (DFSCH_INSTANCE_P(obj, DFSCH_HASH_BASETYPE)){
-    emit_json_hash(obj, cb, target);
-  } else if (DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE)){
-    emit_json_list(obj, cb, target);    
-  } else if (DFSCH_INSTANCE_P(obj, DFSCH_VECTOR_TYPE)){
-    emit_json_list(dfsch_vector_2_list(obj), cb, target);    
+  if (dfsch_string_p(obj)){
+    cb(target, dfsch_object_2_string(obj, 100, 1));
+  } else if (DFSCH_MAPPING_P(obj)){
+    emit_json_obj(obj, cb, target);
+  } else if (DFSCH_COLLECTION_P(obj)){
+    emit_json_array(obj, cb, target);    
   } else if (obj == DFSCH_SYM_TRUE){
     cb(target, "true");
   } else if (DFSCH_SYMBOL_P(obj)){

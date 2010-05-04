@@ -2,19 +2,19 @@
  * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2009 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -449,6 +449,25 @@ void dfsch_operating_system_error(char* funname){
   dfsch_operating_system_error_saved(errno, funname);
 }
 
+dfsch_type_t dfsch_index_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_RUNTIME_ERROR_TYPE, 
+                            "index-error");
+
+void dfsch_index_error(dfsch_object_t* seq,
+                       size_t index,
+                       size_t length){
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_INDEX_ERROR_TYPE);
+  char* m = dfsch_saprintf("%d is not valid index into %s (of length %d)",
+                           index,
+                           dfsch_object_2_string(seq, 10, 1),
+                           length);
+  dfsch_condition_put_field_cstr(c, "index", DFSCH_MAKE_FIXNUM(index));
+  dfsch_condition_put_field_cstr(c, "length", DFSCH_MAKE_FIXNUM(length));
+  dfsch_condition_put_field_cstr(c, "sequence", seq);
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);  
+}
+
 DFSCH_DEFINE_PRIMITIVE(terminate_thread, NULL){
   DFSCH_ARG_END(args);
 
@@ -670,6 +689,7 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
   dfsch_define_cstr(ctx, "<operating-system-error>", 
                     DFSCH_OPERATING_SYSTEM_ERROR_TYPE);
+  dfsch_define_cstr(ctx, "<index-error>", DFSCH_INDEX_ERROR_TYPE);
   
   dfsch_define_cstr(ctx, "make-condition", 
                     DFSCH_PRIMITIVE_REF(make_condition)); 

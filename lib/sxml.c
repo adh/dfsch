@@ -21,6 +21,7 @@ struct sxml_stack_t {
   sxml_stack_t* next;
   dfsch_object_t* head;
   dfsch_object_t* tail;
+  int last_cdata;
 };
 
 static XML_Memory_Handling_Suite gc_suite = {
@@ -51,6 +52,9 @@ static void sxml_pop(parser_ctx_t* c){
   dfsch_object_t* l = c->stack->head;
   c->stack = c->stack->next;
   sxml_append(c, l);
+  if (c->stack){
+    c->stack->last_cdata = 0;
+  }
 }
 
 static XMLCALL void start_element_handler(parser_ctx_t* c, 
@@ -77,16 +81,42 @@ static XMLCALL void end_element_handler(parser_ctx_t* c,
 static XMLCALL void character_data_handler(parser_ctx_t* c, 
                                            char *data,
                                            int len){
-  if (dfsch_string_p(DFSCH_FAST_CAR(c->stack->tail))){
+
+  if (c->params->collapse_whitespace){
+    size_t i;
+    size_t j;
+    int space = 0;
+    
+    for (i = 0, j= 0; i < len; i++){
+      if (strchr(" \t\n", data[i])){
+        if (!space){
+          data[j] = ' ';
+          j++;
+        }
+        space = 1;
+      } else {
+        space = 0;
+        data[j] = data[i];
+        j++;
+      }
+    }
+    
+    len = j; 
+  }
+
+  if (c->stack->last_cdata){
     dfsch_strbuf_t* o = dfsch_string_to_buf(DFSCH_FAST_CAR(c->stack->tail));
-    char* buf = GC_MALLOC_ATOMIC(len+o->len);
+    size_t clen = len + o->len;
+    char* buf = GC_MALLOC_ATOMIC(clen);
     memcpy(buf, o->ptr, o->len);
     memcpy(buf+o->len, data, len);
 
-    DFSCH_FAST_CAR(c->stack->tail) = dfsch_make_string_buf(buf, len+o->len);
+    DFSCH_FAST_CAR(c->stack->tail) = dfsch_make_string_buf(buf, clen);
   } else {
     sxml_append(c, dfsch_make_string_buf(data, len));
   }
+
+  c->stack->last_cdata = 1;
 }
 
 static dfsch_sxml_parser_params_t default_parser_params = {

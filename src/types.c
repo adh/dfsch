@@ -2,19 +2,19 @@
  * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2009 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -422,6 +422,26 @@ dfsch_type_t dfsch_meta_type = {
   NULL
 };
 
+dfsch_type_t dfsch_iterator_type_type = {
+  DFSCH_META_TYPE,
+  DFSCH_STANDARD_TYPE,
+  sizeof(dfsch_type_t),
+  "iterator-type",
+  NULL,
+  NULL,
+  NULL
+};
+
+dfsch_type_t dfsch_iterator_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  0,
+  "iterator",
+  NULL,
+  NULL,
+  NULL
+};
+
 
 static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
   dfsch_write_unreadable(state, (dfsch_object_t*)t, 
@@ -433,6 +453,8 @@ static dfsch_slot_t type_slots[] = {
                     "Type name"),
   DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO,
                     "Documentation string"),
+  DFSCH_OBJECT_SLOT(dfsch_type_t, superclass, DFSCH_SLOT_ACCESS_RO,
+                    "Superclass"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -462,6 +484,20 @@ dfsch_type_t dfsch_special_type = {
   "Metaclass of types with special in-memory representation"
 };
 
+static dfsch_object_t* list_get_iterator(dfsch_object_t* l){
+  return l;
+}
+
+static dfsch_collection_methods_t list_collection = {
+  .get_iterator = list_get_iterator,
+};
+
+static dfsch_sequence_methods_t list_sequence = {
+  .ref = dfsch_list_item,
+  .set = dfsch_set_list_item,
+  .length = dfsch_list_length,
+};
+
 dfsch_type_t dfsch_list_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -473,6 +509,7 @@ dfsch_type_t dfsch_list_type = {
   NULL,
   NULL,
   "Abstract superclass of list-like objects"
+
 };
 
 dfsch_type_t dfsch_function_type = {
@@ -501,7 +538,10 @@ dfsch_type_t dfsch_empty_list_type = {
   NULL,
   NULL,
   NULL,
-  "Class with only one instance - ()"
+  "Class with only one instance - ()",
+
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
 };
 
 static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
@@ -591,7 +631,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Immutable list stored as array"
+    "Immutable list stored as array",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -603,7 +646,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Normal mutable cons cell"
+    "Normal mutable cons cell",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
   {
     DFSCH_STANDARD_TYPE,
@@ -628,7 +674,10 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     (dfsch_type_hash_t)pair_hash,
     NULL,
-    "Immutable cons cell"
+    "Immutable cons cell",
+
+    .collection = &list_collection,
+    .sequence = &list_sequence,  
   },
 };
 
@@ -828,11 +877,20 @@ static void vector_write(vector_t* v, dfsch_writer_state_t* state){
   dfsch_write_string(state, ")");
 }
 
+static dfsch_collection_methods_t vector_collection = {
+  .get_iterator = dfsch_vector_2_list // TODO
+};
+
+static dfsch_sequence_methods_t vector_sequence = {
+  .ref = dfsch_vector_ref,
+  .set = dfsch_vector_set,
+  .length = dfsch_vector_length
+};
 static dfsch_object_t* vector_describe(vector_t* v){
-  dfsch_list_collector_t* lc = dfsch_make_list_collector();
-  size_t i;
-  
-  for (i = 0; i < v->length; i++){
+  dfsch_list_collector_t *lc = dfsch_make_list_collector();
+  int i;
+
+  for(i = 0; i < v->length; ++i){
     dfsch_list_collect(lc, dfsch_list(2, NULL, v->data[i]));
   }
 
@@ -850,6 +908,8 @@ dfsch_type_t dfsch_vector_type = {
   NULL,
   (dfsch_type_hash_t)vector_hash,
   .describe = (dfsch_type_describe_t)vector_describe,
+  .collection = &vector_collection,
+  .sequence = &vector_sequence,
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
@@ -1166,7 +1226,7 @@ dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
 }
 
 
-dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
+dfsch_object_t* dfsch_list_item(dfsch_object_t* list, size_t index){
   dfsch_object_t* it = list;
   int i;
   for (i=0; i<index; ++i){
@@ -1178,6 +1238,22 @@ dfsch_object_t* dfsch_list_item(dfsch_object_t* list, int index){
   }
   return dfsch_car(it);
 }
+
+void dfsch_set_list_item(dfsch_object_t* list, 
+                         size_t index,
+                         dfsch_object_t* value){
+  dfsch_object_t* it = list;
+  int i;
+  for (i=0; i<index; ++i){
+    if (DFSCH_PAIR_P(it)){
+      it = DFSCH_FAST_CDR(it);
+    }else{
+      dfsch_error("No such item of list", dfsch_make_number_from_long(index));
+    }
+  }
+  dfsch_set_car(it, value);
+}
+
 
 dfsch_object_t* dfsch_list_from_array(dfsch_object_t** array, size_t length){
   dfsch_object_t *head; 
@@ -1927,8 +2003,7 @@ dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array,
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   return v->data[k];
 }
@@ -1937,8 +2012,7 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
                                  dfsch_object_t* obj){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   v->data[k] = obj;
 
@@ -1962,3 +2036,5 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
   memcpy(vector->data, array, sizeof(dfsch_object_t*) * length);
   return (object_t*)vector;
 }
+
+

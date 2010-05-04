@@ -3,19 +3,19 @@
  *   Hash tables
  * Copyright (C) 2005-2008 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -54,34 +54,27 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
-dfsch_type_t dfsch_hash_basetype = {
-  DFSCH_ABSTRACT_TYPE,
-  NULL,
-  0,
-  "hash",
-  NULL,
-  NULL,
-  NULL
+static dfsch_collection_methods_t hash_table_col = {
+  .get_iterator = dfsch_hash_2_alist
+};
+static dfsch_mapping_methods_t hash_table_map = {
+  .ref = dfsch_hash_ref,
+  .set = dfsch_hash_set,
+  .unset = dfsch_hash_unset,
+  .set_if_exists = dfsch_hash_set_if_exists,
 };
 
-dfsch_type_t dfsch_standard_hash_type = {
+dfsch_type_t dfsch_hash_table_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_HASH_BASETYPE,
+  NULL, //DFSCH_MAPPING_TYPE,
   sizeof(hash_t),
-  "standard-hash",
+  "hash-table",
   NULL,
   NULL,
-  NULL
-};
+  NULL,
 
-dfsch_type_t dfsch_custom_hash_type_type = {
-  DFSCH_META_TYPE,
-  DFSCH_STANDARD_TYPE,
-  sizeof(dfsch_custom_hash_type_t),
-  "custom-hash-type",
-  NULL,
-  NULL,
-  NULL
+  .collection = &hash_table_col,
+  .mapping = &hash_table_map,
 };
 
 
@@ -96,7 +89,7 @@ static void hash_finalizer(hash_t* h, void* cd) {
 #endif
 
 dfsch_object_t* dfsch_hash_make(int mode){
-  hash_t *h = (hash_t*)dfsch_make_object(DFSCH_STANDARD_HASH_TYPE); 
+  hash_t *h = (hash_t*)dfsch_make_object(DFSCH_HASH_TABLE_TYPE); 
 
   h->count = 0;
   h->mask = INITIAL_MASK;
@@ -110,9 +103,7 @@ dfsch_object_t* dfsch_hash_make(int mode){
   return (dfsch_object_t*)h;
 }
 int dfsch_hash_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE ||
-    DFSCH_INSTANCE_P(((dfsch_object_t*)DFSCH_TYPE_OF(obj)), 
-                     DFSCH_CUSTOM_HASH_TYPE_TYPE);
+  return DFSCH_INSTANCE_P(obj, DFSCH_HASH_TABLE_TYPE);
 }
 
 
@@ -121,21 +112,7 @@ int dfsch_hash_p(dfsch_object_t* obj){
 
 
 #define GET_HASH(obj,hash)                                              \
-  if (DFSCH_TYPE_OF(obj) == DFSCH_STANDARD_HASH_TYPE){                  \
-    hash = (hash_t*)obj;                                                \
-  } else if (!obj ||                                                    \
-             !DFSCH_INSTANCE_P(((dfsch_object_t*)DFSCH_TYPE_OF(obj)),   \
-                               DFSCH_CUSTOM_HASH_TYPE_TYPE)){           \
-    dfsch_error("Not a hash object", obj);                              \
-  }else
-
-#define HASH_TYPE(hash) ((dfsch_custom_hash_type_t*)DFSCH_TYPE_OF(hash))             
-
-#define IMPLEMENTS(hash, feature)                                       \
-  if (!HASH_TYPE(hash)->feature){                                       \
-    dfsch_error("exception:" #feature "-not-supported-by-this-hash-type", \
-                hash);                                                  \
-  }
+  hash = DFSCH_ASSERT_INSTANCE(obj, DFSCH_HASH_TABLE_TYPE)
 
 
 int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
@@ -146,10 +123,7 @@ int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
   hash_entry_t *i;
   int j;
 
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, ref);
-    return HASH_TYPE(hash_obj)->ref(hash_obj, key, res);
-  };
+  GET_HASH(hash_obj, hash);
 
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
   h = HASH(hash, key);
@@ -236,11 +210,7 @@ void dfsch_hash_put(dfsch_object_t* hash_obj,
   size_t h;
   int j;
 
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, set);
-    HASH_TYPE(hash_obj)->set(hash_obj, key, value);
-    return;
-  };
+  GET_HASH(hash_obj, hash);
 
   h = HASH(hash, key); 
 
@@ -268,11 +238,7 @@ void dfsch_hash_set(dfsch_object_t* hash_obj,
   hash_entry_t *i;
   int j;
 
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, set);
-    HASH_TYPE(hash_obj)->set(hash_obj, key, value);
-    return;
-  };
+  GET_HASH(hash_obj, hash);
 
 
   h = HASH(hash, key);
@@ -312,10 +278,7 @@ int dfsch_hash_unset(dfsch_object_t* hash_obj,
   hash_entry_t *i, *j;
   int k;
 
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, unset);
-    return HASH_TYPE(hash_obj)->unset(hash_obj, key);
-  }
+  GET_HASH(hash_obj, hash);
 
   h = HASH(hash, key);  
   DFSCH_RWLOCK_WRLOCK(&hash->lock);
@@ -360,10 +323,7 @@ int dfsch_hash_set_if_exists(dfsch_object_t* hash_obj,
   hash_entry_t *i;
   int j;
 
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, set_if_exists);
-    return HASH_TYPE(hash_obj)->set_if_exists(hash_obj, key, value);
-  }
+  GET_HASH(hash_obj, hash);
 
   h = HASH(hash, key);  
 
@@ -393,10 +353,7 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj){
   hash_entry_t *i;
   hash_t *hash;
   
-  GET_HASH(hash_obj, hash){
-    IMPLEMENTS(hash_obj, hash_2_alist);
-    return HASH_TYPE(hash_obj)->hash_2_alist(hash_obj);
-  }
+  GET_HASH(hash_obj, hash);
 
   DFSCH_RWLOCK_RDLOCK(&hash->lock);
 
@@ -535,9 +492,9 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
-  dfsch_define_cstr(ctx, "<standard-hash>", DFSCH_STANDARD_HASH_TYPE);
-  dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
+  //dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
+  dfsch_define_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
+  //  dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
   dfsch_define_cstr(ctx, "make-hash", 
                     DFSCH_PRIMITIVE_REF(make_hash));

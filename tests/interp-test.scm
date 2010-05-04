@@ -379,8 +379,8 @@
 (group "XML support"
        (sub-group sxml
                   (test 'parse-string
-                        (xml:sxml-parse-string "<a foo=\"bar &quot;\"><b/></a>")
-                        '("a" (:attributes ("foo" "bar \"")) ("b")))
+                        (xml:sxml-parse-string "<a foo=\"bar &quot;\">c<b/></a>")
+                        '("a" (:attributes ("foo" "bar \"")) "c" ("b")))
                   (test 'emit-string
                         (xml:sxml-emit-string '(:a (:attributes (foo "bar \"")) 
                                                   (b)))
