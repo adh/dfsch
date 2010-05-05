@@ -277,7 +277,7 @@ struct dfsch_deserializer_t {
   size_t obj_map_len;
   size_t obj_idx;
   
-  stream_symbol_t* sym_map;
+  stream_symbol_t** sym_map;
   size_t sym_map_len;
   size_t sym_idx;
 
@@ -305,12 +305,42 @@ static void deserialize_bytes(dfsch_deserializer_t* ds, char*buf, size_t len){
   }
 }
 
+static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
+  ssize_t len = dfsch_deserialize_integer(ds);
+  stream_symbol_t* res;
+  
+  if (len > 0){
+    res = GC_NEW(stream_symbol_t);
+    res->name = GC_MALLOC_ATOMIC(len + 1);
+    deserialize_bytes(ds, res->name, len);
+    res->name[len] = 0;
+
+    ds->sym_idx++;
+    
+    if (ds->sym_idx >= ds->sym_map_len){
+      ds->sym_map_len *= 2;
+      ds->sym_map = GC_REALLOC(ds->sym_map, ds->sym_map_len * sizeof(stream_symbol_t*));
+    }
+    
+    ds->sym_map[ds->sym_idx] = res;
+  } else {
+    int idx = -len;
+
+    if (idx > ds->sym_idx){
+      dfsch_error("Invalid back reference in stream", ds);
+    }
+
+    res = ds->sym_map[idx];
+  }
+  return res;
+}
+
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds){
   stream_symbol_t* type = deserialize_stream_symbol(ds);
   update_handler_cache(type);
 
   if (!type->handler){
-    if (ds->unknown_handler){
+    if (ds->unknown){
       return ds->unknown(ds, type->name, ds->uh_baton);
     } else {
       dfsch_error("Unknown type ID", dfsch_make_string_cstr(type->name));
@@ -411,36 +441,6 @@ dfsch_strbuf_t* dfsch_deserialize_strbuf(dfsch_deserializer_t* ds){
   s->ptr[s->len] = 0;
   
   return s;
-}
-
-static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
-  ssize_t len = dfsch_deserialize_integer(ds);
-  stream_symbol_t* res;
-  
-  if (len > 0){
-    res = GC_NEW(stream_symbol_t);
-    res->name = GC_MALLOC_ATOMIC(len + 1);
-    deserialize_bytes(ds, res->name, len);
-    res->name[len] = 0;
-
-    ds->sym_idx++;
-    
-    if (ds->sym_idx >= ds->sym_map_len){
-      ds->sym_map_len *= 2;
-      ds->sym_map = GC_REALLOC(ds->sym_map, ds->sym_map_len * sizeof(stream_symbol_t*));
-    }
-    
-    ds->sym_map[ds->sym_idx] = res;
-  } else {
-    int idx = -len;
-
-    if (idx > ds->sym_idx){
-      dfsch_error("Invalid back reference in stream", ds);
-    }
-
-    res = ds->sym_map[idx];
-  }
-  return res;
 }
 
 char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
