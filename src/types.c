@@ -1631,9 +1631,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   }
 
   return (object_t*)head;
-
 }
-
 
 dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
   object_t *head; 
@@ -1651,6 +1649,45 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
 
   return (object_t*)head;
 }
+
+dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  if (DFSCH_PAIR_P(i)){
+    return i;
+  }
+
+  head = tail = NULL;
+
+  while (i){
+    if (head){
+      object_t* tmp = dfsch_cons(dfsch_iterator_this(i),NULL);
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    }else{
+      head = tail = dfsch_cons(dfsch_iterator_this(i),NULL);
+    }
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  head = NULL;
+
+  while (i){
+    head = dfsch_cons(dfsch_iterator_this(i), head);
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+
 
 dfsch_object_t* dfsch_member(dfsch_object_t *key,
                              dfsch_object_t *list){
