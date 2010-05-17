@@ -1443,10 +1443,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 
     for (i = 0; i<len; i++){
       if (!args[i]){
-	if (i != 0){
-          dfsch_error("Not a list of same length lists", llist);
-	}
-	goto out;
+        return head;
       }
       if (!DFSCH_PAIR_P(args[i])){
 	dfsch_type_error(args[i], DFSCH_PAIR_TYPE, 0);
@@ -1473,16 +1470,6 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
     tail = tmp;
 
   }
-  
-
- out:
-  for (i = 0; i<len; i++){
-    if (args[i]){
-      dfsch_error("Not a list of same length lists", llist);
-    }
-  }
-  
-  return head;
 }
 
 
