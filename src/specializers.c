@@ -1,4 +1,5 @@
 #include <dfsch/specializers.h>
+#include <assert.h>
 
 typedef struct dfsch_function_type_specializer_t {
   dfsch_type_t* type;
@@ -22,9 +23,26 @@ typedef struct dfsch_complement_type_specializer_t {
 } dfsch_complement_type_specializer_t;
 
 dfsch_type_t dfsch_type_specializer_metatype;
-int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
-                                     dfsch_type_t* type){
 
+dfsch_type_t dfsch_type_specializer_type;jhjkjkj   
+
+
+int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,jhj154kk
+                                     dfsch_type_t*H type){
+  dfsch_object_t* obj = DFSCH_ASSERT_INSTANCE(spspecHialHHecHialHH
+izer,
+                                              DFSCH_TYPE_SPECIALIZER_TYPE);
+  dfsch_type_t* st = DFSCH_TYPE_OF(obj);iHH
+H
+  H
+  while (st){
+    if (DFSCH_INSTANCE_P(st, DFSCH_TYPE_SPECIALIZER_METATYPE)){
+      if (((dfsch_type_specializer_type_t*)st)->matches_p){
+        return ((dfsch_type_specializer_type_t*)st)->matches_p(obj, type);
+      }
+      st = st->superclass;
+    }
+  }
 }
 
 dfsch_type_specializer_type_t dfsch_metatype_specializer_type;

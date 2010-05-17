@@ -12,7 +12,9 @@ typedef struct dfsch_type_specializer_type_t {
 } dfsch_type_specializer_type_t;
 
 extern dfsch_type_t dfsch_type_specializer_metatype;
-#define DFSCH_SPECIALIZER_METATYPE (&dfsch_type_specializer_metatype)
+#define DFSCH_TYPE_SPECIALIZER_METATYPE (&dfsch_type_specializer_metatype)
+extern dfsch_type_t dfsch_type_specializer_type;
+#define DFSCH_TYPE_SPECIALIZER_TYPE (&dfsch_type_specialier_type)
 
 int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
                                      dfsch_type_t* type);
