@@ -432,6 +432,14 @@ dfsch_type_t dfsch_iterator_type_type = {
   NULL
 };
 
+static dfsch_object_t* iterator_get_iterator(dfsch_object_t* i){
+  return i;
+}
+
+dfsch_collection_methods_t dfsch_iterator_collection_methods = {
+  .get_iterator = iterator_get_iterator,
+};
+
 dfsch_type_t dfsch_iterator_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -439,7 +447,9 @@ dfsch_type_t dfsch_iterator_type = {
   "iterator",
   NULL,
   NULL,
-  NULL
+  NULL,
+
+  .collection = &dfsch_iterator_collection_methods,
 };
 
 
