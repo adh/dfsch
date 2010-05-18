@@ -889,7 +889,7 @@ DFSCH_DEFINE_PRIMITIVE(iter_this,
   DFSCH_OBJECT_ARG(args, iter);
   DFSCH_ARG_END(args);
 
-  return dfsch_iterator_next(iter);
+  return dfsch_iterator_this(iter);
 }
 
 
