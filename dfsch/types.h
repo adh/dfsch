@@ -401,6 +401,8 @@ typedef struct dfsch_iterator_type_t {
   dfsch_iterator_this_t this;
 } dfsch_iterator_type_t;
 
+extern dfsch_collection_methods_t dfsch_iterator_collection_methods;
+
 extern dfsch_type_t dfsch_iterator_type_type;
 #define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)
 extern dfsch_type_t dfsch_iterator_type;

@@ -1225,6 +1225,103 @@ dfsch_object_t* dfsch_number_factorize(dfsch_object_t* n){
   return factors;
 }
 
+/************** Number sequences ***************/
+
+typedef struct {
+  dfsch_type_t* type;
+  dfsch_object_t* from;
+  dfsch_object_t* to;
+  dfsch_object_t* step;
+  int cond;
+} number_sequence_t;
+
+static int ns_is_in_p(number_sequence_t* ns, dfsch_object_t* res){
+  if (!ns->to){
+    return 1;
+  }
+  return ns->cond == dfsch_number_cmp(res, ns->to);
+}
+
+static dfsch_object_t* ns_get_iterator(number_sequence_t* ns){
+  number_sequence_t* i = dfsch_make_object(DFSCH_NUMBER_SEQUENCE_ITERATOR_TYPE);
+  i->from = ns->from;
+  i->to = ns->to;
+  i->step = ns->step;
+  i->cond = ns->cond;
+  return i;
+}
+
+static dfsch_object_t* ns_ref(number_sequence_t* ns, size_t k){
+  dfsch_object_t* res = dfsch_number_add(ns->from, 
+                                         dfsch_number_mul(ns->step, 
+                                                          dfsch_make_number_from_long(k)));
+
+  if (!ns_is_in_p(ns, res)){
+    dfsch_error("Index out of bounds", dfsch_make_number_from_long(k));
+  }
+
+  return res;
+}
+
+static dfsch_collection_methods_t ns_collection = {
+  .get_iterator = ns_get_iterator,
+};
+
+static dfsch_sequence_methods_t ns_sequence = {
+  .ref = ns_ref,
+};
+
+dfsch_type_t dfsch_number_sequence_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "number-sequence",
+  .size = sizeof(number_sequence_t),
+  .collection = &ns_collection,
+  .sequence = &ns_sequence
+};
+
+static dfsch_object_t* nsi_this(number_sequence_t* ns){
+  return ns->from;
+}
+
+static dfsch_object_t* nsi_next(number_sequence_t* ns){
+  ns->from = dfsch_number_add(ns->from, ns->step);
+  if (!ns_is_in_p(ns, ns->from)){
+    return NULL;
+  }
+  return ns;
+}
+
+dfsch_iterator_type_t dfsch_number_sequence_iterator_type = {
+  .type = {
+    .type = DFSCH_ITERATOR_TYPE_TYPE,
+    .superclass = DFSCH_ITERATOR_TYPE,
+    .name = "number-sequence",
+    .size = sizeof(number_sequence_t),
+    .collection = &ns_collection,
+    .sequence = &ns_sequence
+  },
+  .next = nsi_next,
+  .this = nsi_this
+};
+
+dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
+                                           dfsch_object_t* to,
+                                           dfsch_object_t* step){
+  number_sequence_t* ns = dfsch_make_object(DFSCH_NUMBER_SEQUENCE_TYPE);
+  ns->from = from;
+  ns->to = to;
+  ns->step = step;
+
+  if (dfsch_number_negative_p(step)){
+    ns->cond = 1;
+  } else {
+    ns->cond = -1;
+  }
+
+  return ns;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1849,6 +1946,19 @@ DFSCH_DEFINE_PRIMITIVE(factorize, NULL){
   return dfsch_number_factorize(n);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_number_sequence, NULL){
+  dfsch_object_t* from = DFSCH_MAKE_FIXNUM(0);
+  dfsch_object_t* to = NULL;
+  dfsch_object_t* step = DFSCH_MAKE_FIXNUM(1);
+
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("from", from);
+  DFSCH_KEYWORD("to", to);
+  DFSCH_KEYWORD("step", step);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  return dfsch_make_number_sequence(from, to, step);
+}
 
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
@@ -1950,5 +2060,8 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
   dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
   dfsch_defconst_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
+
+  dfsch_defconst_cstr(ctx, "make-number-sequence", 
+                      DFSCH_PRIMITIVE_REF(make_number_sequence));
  
 }

@@ -73,9 +73,9 @@ extern "C" {
                                                     dfsch_object_t* context);
 
 
-#include <dfsch/number.h>
 #include <dfsch/types.h>
 #include <dfsch/writer.h>  
+#include <dfsch/number.h>
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
