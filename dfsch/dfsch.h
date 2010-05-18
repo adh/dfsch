@@ -73,9 +73,9 @@ extern "C" {
                                                     dfsch_object_t* context);
 
 
-#include <dfsch/number.h>
 #include <dfsch/types.h>
 #include <dfsch/writer.h>  
+#include <dfsch/number.h>
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
@@ -241,7 +241,8 @@ extern "C" {
                                              dfsch_object_t* location);
   extern dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list);
 
-  
+  extern dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list);
 
   /** Reverses list */
   extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
@@ -538,6 +539,10 @@ extern "C" {
   size_t dfsch_sequence_length(dfsch_object_t* seq);
   
 
+  /** 
+   * Return iterator pointing to next element of collection. Original iterator 
+   * is no longer valid.
+   */
   dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator);
   dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator);
 

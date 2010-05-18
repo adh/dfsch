@@ -432,6 +432,14 @@ dfsch_type_t dfsch_iterator_type_type = {
   NULL
 };
 
+static dfsch_object_t* iterator_get_iterator(dfsch_object_t* i){
+  return i;
+}
+
+dfsch_collection_methods_t dfsch_iterator_collection_methods = {
+  .get_iterator = iterator_get_iterator,
+};
+
 dfsch_type_t dfsch_iterator_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -439,7 +447,9 @@ dfsch_type_t dfsch_iterator_type = {
   "iterator",
   NULL,
   NULL,
-  NULL
+  NULL,
+
+  .collection = &dfsch_iterator_collection_methods,
 };
 
 
@@ -1433,10 +1443,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 
     for (i = 0; i<len; i++){
       if (!args[i]){
-	if (i != 0){
-          dfsch_error("Not a list of same length lists", llist);
-	}
-	goto out;
+        return head;
       }
       if (!DFSCH_PAIR_P(args[i])){
 	dfsch_type_error(args[i], DFSCH_PAIR_TYPE, 0);
@@ -1463,16 +1470,6 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
     tail = tmp;
 
   }
-  
-
- out:
-  for (i = 0; i<len; i++){
-    if (args[i]){
-      dfsch_error("Not a list of same length lists", llist);
-    }
-  }
-  
-  return head;
 }
 
 
@@ -1631,9 +1628,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   }
 
   return (object_t*)head;
-
 }
-
 
 dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
   object_t *head; 
@@ -1651,6 +1646,45 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
 
   return (object_t*)head;
 }
+
+dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  if (DFSCH_PAIR_P(i)){
+    return i;
+  }
+
+  head = tail = NULL;
+
+  while (i){
+    if (head){
+      object_t* tmp = dfsch_cons(dfsch_iterator_this(i),NULL);
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    }else{
+      head = tail = dfsch_cons(dfsch_iterator_this(i),NULL);
+    }
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  head = NULL;
+
+  while (i){
+    head = dfsch_cons(dfsch_iterator_this(i), head);
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+
 
 dfsch_object_t* dfsch_member(dfsch_object_t *key,
                              dfsch_object_t *list){

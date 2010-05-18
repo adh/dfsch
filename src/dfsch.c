@@ -267,7 +267,14 @@ size_t dfsch_sequence_length(dfsch_object_t* seq){
 }
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
   if (DFSCH_PAIR_P(iterator)){
-    return DFSCH_FAST_CDR(iterator);
+    dfsch_object_t* ret = DFSCH_FAST_CDR(iterator);
+    if (DFSCH_PAIR_P(ret)){
+      return ret;
+    } else if (!ret) {
+      return NULL;
+    } else {
+      dfsch_error("Not a proper list", ret);
+    }
   }
   if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
     dfsch_error("Object is not usable as iterator", iterator);

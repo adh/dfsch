@@ -854,6 +854,44 @@ DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection")
 
   return dfsch_collection_get_iterator(obj);
 }
+DFSCH_DEFINE_PRIMITIVE(collection_2_list, 
+                       "Convert arbitrary collection to list"){
+  object_t* col;
+
+  DFSCH_OBJECT_ARG(args, col);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_2_list(col);
+}
+DFSCH_DEFINE_PRIMITIVE(collection_2_reversed_list, 
+                       "Convert arbitrary collection to list in reverse order"){
+  object_t* col;
+
+  DFSCH_OBJECT_ARG(args, col);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_2_reversed_list(col);
+}
+
+DFSCH_DEFINE_PRIMITIVE(iter_next, 
+                       "Return iterator pointing to next element of collection. "
+                       "Original iterator is no longer valid. Returns () when "
+                       "collection contains no more elements."){
+  dfsch_object_t* iter;
+  DFSCH_OBJECT_ARG(args, iter);
+  DFSCH_ARG_END(args);
+
+  return dfsch_iterator_next(iter);
+}
+DFSCH_DEFINE_PRIMITIVE(iter_this, 
+                       "Return element pointed to by iterator"){
+  dfsch_object_t* iter;
+  DFSCH_OBJECT_ARG(args, iter);
+  DFSCH_ARG_END(args);
+
+  return dfsch_iterator_this(iter);
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
   dfsch_object_t* obj;
@@ -1104,6 +1142,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defconst_cstr(ctx, "collection->list", 
+                      DFSCH_PRIMITIVE_REF(collection_2_list));
+  dfsch_defconst_cstr(ctx, "collection->reversed-list", 
+                      DFSCH_PRIMITIVE_REF(collection_2_reversed_list));
+
+  dfsch_defconst_cstr(ctx, "iter-next!", DFSCH_PRIMITIVE_REF(iter_next));
+  dfsch_defconst_cstr(ctx, "iter-this", DFSCH_PRIMITIVE_REF(iter_this));
+
   dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
   dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
   dfsch_defconst_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
