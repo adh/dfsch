@@ -950,11 +950,11 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
                                            dfsch__thread_info_t* ti){
   size_t l = dfsch_list_length_fast_bounded(args);
   dfsch_object_t* rsa[l+4];
-  dfsch_object_t** res = rsa;
+  dfsch_object_t** res = &rsa;
   size_t j = 0;
   dfsch_object_t* i = args;
 
-  if (esc){ /* Cannot pass arguments to tail recursive functions on stack */
+  if (esc && l > 12){
     res = GC_MALLOC((l+4)*sizeof(dfsch_object_t*));
   }
 
@@ -975,6 +975,11 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
     res[l+3] = NULL;
 
     args = DFSCH_MAKE_CLIST(res);
+  }
+
+  if (args && esc && l <= 12){
+    memcpy(ti->arg_scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
+    args = DFSCH_MAKE_CLIST(ti->arg_scratch_pad);
   }
 
   return dfsch_apply_impl(proc, args, context, esc, ti);
