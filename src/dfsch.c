@@ -554,6 +554,44 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
 #endif
 
   ((dfsch_object_t*)e)->type = DFSCH_ENVIRONMENT_TYPE;
+  e->flags = 0;
+  return e;
+}
+
+dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env){
+  ((environment_t*)env)->flags |= EFRAME_RETAIN;
+  return env;
+}
+
+static void free_environment(environment_t* env, dfsch__thread_info_t* ti){
+  if ((env->flags & EFRAME_RETAIN) == 0){
+    memset(env, 0, sizeof(environment_t));
+    env->type = ti->env_freelist;
+    ti->env_freelist = env;
+  }
+}
+
+static environment_t* initialize_frame(environment_t* e,
+                                       environment_t* parent,
+                                       dfsch_object_t* context,
+                                       dfsch__thread_info_t* ti){
+  dfsch_eqhash_init(&e->values, 0);
+  e->decls = NULL;
+  e->context = context;
+  e->owner = ti;
+  e->parent = (environment_t*)parent;  
+}
+
+static environment_t* maybe_reuse_frame(environment_t* e,
+                                        environment_t* parent,
+                                        dfsch_object_t* context,
+                                        dfsch__thread_info_t* ti){
+  if ((e->flags & EFRAME_RETAIN) != 0){
+    e = alloc_environment(ti);
+  }
+  
+  initialize_frame(e, parent, context, ti);
+
   return e;
 }
 
@@ -561,12 +599,8 @@ static environment_t* new_frame_impl(environment_t* parent,
                                      dfsch_object_t* context,
                                      dfsch__thread_info_t* ti){
   environment_t* e = alloc_environment(ti);
-
-  dfsch_eqhash_init(&e->values, 0);
-  e->decls = NULL;
-  e->context = context;
-  e->owner = ti;
-  e->parent = (environment_t*)parent;
+  
+  initialize_frame(e, parent, context, ti);
 
   return e;
 }
@@ -801,19 +835,20 @@ static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
                                          dfsch__thread_info_t* ti){
   dfsch_object_t* new_expr;
   dfsch_object_t* old_expr;
+  int old_flags;
   
   DFSCH_UNWIND {
     old_expr = ti->macroexpanded_expr;
+    old_flags = ti->trace_flags;
     ti->macroexpanded_expr = expr;
-    ti->trace_flags = 
+    ti->trace_flags |= 
       ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
     new_expr = dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
                                                         DFSCH_MACRO_TYPE))->proc, 
                            DFSCH_FAST_CDR(expr));
   } DFSCH_PROTECT {
     ti->macroexpanded_expr = old_expr;    
-    ti->trace_flags = 
-      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
+    ti->trace_flags = old_flags;
   } DFSCH_PROTECT_END;
 
   return new_expr;
@@ -1326,6 +1361,8 @@ struct dfsch_tail_escape_t {
   object_t *proc;
   object_t *args;
   object_t *context;
+
+  environment_t* reuse_frame;
 };
 
 /* it might be interesting to optionally disable tail-calls for slight 
@@ -1349,6 +1386,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
 
+  myesc.reuse_frame = NULL;
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
     args = myesc.args;
@@ -1372,14 +1410,22 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
-    environment_t* env = new_frame_impl(((closure_t*) proc)->env,
-                                        context,
-                                        ti);
+    environment_t* env;
+    dfsch_object_t* r;
+    if (myesc.reuse_frame){
+      env = maybe_reuse_frame(myesc.reuse_frame, ((closure_t*) proc)->env, context, ti);
+    } else {
+      env = new_frame_impl(((closure_t*) proc)->env, context, ti);
+    }
+
+    myesc.reuse_frame = env;
     destructure_impl(((closure_t*)proc)->args, args, env, ti);
-    return dfsch_eval_proc_impl(((closure_t*)proc)->code,
-                                env,
-                                &myesc,
-                                ti);
+    r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
+                             env,
+                             &myesc,
+                             ti);
+    free_environment(env, ti);
+    return r;
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){

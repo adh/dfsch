@@ -228,7 +228,7 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_ARG_REST(args, body);
 
-  return dfsch_named_lambda(env, lambda_list, body, name);
+  return dfsch_named_lambda(dfsch_reify_environment(env), lambda_list, body, name);
 }
 
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
@@ -370,7 +370,7 @@ DFSCH_DEFINE_FORM(case, NULL, {}){
 
 DFSCH_DEFINE_FORM(current_environment, 
                   "Return lexically-enclosing environment", {}){
-  return env;
+  return dfsch_reify_environment(env);
 }
 dfsch_object_t* dfsch_generate_current_environment(){
   return dfsch_cons(DFSCH_FORM_REF(current_environment), NULL);

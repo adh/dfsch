@@ -209,6 +209,7 @@ extern dfsch_type_t dfsch_form_type;
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 
+#define DFSCH_FORM_ENVIRONMENT (dfsch_reify_environemnt(env))
 
 #define DFSCH_FORM_REF(name) ((dfsch_object_t*)&form_##name)
 

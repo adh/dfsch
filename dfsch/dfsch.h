@@ -564,6 +564,9 @@ extern "C" {
 
   /** @} */
 
+  /** Convert internal environment to on-heap frame */
+  extern dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env);
+
   
 #include <dfsch/strings.h>
 
