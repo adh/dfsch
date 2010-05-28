@@ -136,7 +136,7 @@ DFSCH_DEFINE_FORM(internal_let, NULL, {}){
     vars = DFSCH_FAST_CDR(vars);
   }
 
-  return dfsch_eval_proc_tr(code, ext_env, esc);
+  return dfsch_eval_proc_tr_free_env(code, ext_env, esc);
 }
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
@@ -228,7 +228,8 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_ARG_REST(args, body);
 
-  return dfsch_named_lambda(dfsch_reify_environment(env), lambda_list, body, name);
+  return dfsch_named_lambda(dfsch_reify_environment(env), 
+                            lambda_list, body, name);
 }
 
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,

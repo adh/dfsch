@@ -1364,6 +1364,16 @@ dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code,
                               esc, 
                               dfsch__get_thread_info());
 }
+dfsch_object_t* dfsch_eval_proc_tr_free_env(dfsch_object_t* code, 
+                                            dfsch_object_t* env,
+                                            tail_escape_t* esc){
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch_object_t* r = dfsch_eval_proc_impl(code, e, esc, ti);
+  free_environment(e, ti);
+  return r;
+}
+
 dfsch_object_t* dfsch_eval_proc(dfsch_object_t* code, dfsch_object_t* env){
   return dfsch_eval_proc_impl(code, 
                               DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
