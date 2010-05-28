@@ -560,7 +560,12 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
 }
 
 dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env){
-  ((environment_t*)env)->flags |= EFRAME_RETAIN;
+  environment_t* i = env;
+  while (i && (i->flags & EFRAME_RETAIN) == 0){
+    i->flags |= EFRAME_RETAIN;
+    i = i->parent;
+  }
+  
   return env;
 }
 
