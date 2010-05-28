@@ -144,6 +144,7 @@ extern "C" {
     dfsch_object_t* macroexpanded_expr;
 
     void* env_freelist;
+    int env_fl_depth;
 
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;

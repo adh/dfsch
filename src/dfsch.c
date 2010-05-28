@@ -549,6 +549,7 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   }
   e = ti->env_freelist;
   ti->env_freelist = GC_NEXT(ti->env_freelist);
+  ti->env_fl_depth--;
 #else
   e = GC_NEW(environment_t);
 #endif
@@ -563,11 +564,15 @@ dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env){
   return env;
 }
 
+#define ENV_FREELIST_MAX_DEPTH 32
+
 static void free_environment(environment_t* env, dfsch__thread_info_t* ti){
-  if ((env->flags & EFRAME_RETAIN) == 0){
+  if ((env->flags & EFRAME_RETAIN) == 0 &&
+      ti->env_fl_depth < ENV_FREELIST_MAX_DEPTH){
     memset(env, 0, sizeof(environment_t));
     env->type = ti->env_freelist;
     ti->env_freelist = env;
+    ti->env_fl_depth++;
   }
 }
 
