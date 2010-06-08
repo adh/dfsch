@@ -136,6 +136,8 @@ extern "C" {
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);
+  /** Is LIST empty? */
+  extern int dfsch_empty_p(dfsch_object_t* list);
   /** Is OBJ a pair? */
   extern int dfsch_pair_p(dfsch_object_t* obj);
   /** Is OBJ a proper list? */

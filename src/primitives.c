@@ -533,6 +533,13 @@ DFSCH_DEFINE_PRIMITIVE(null_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
+DFSCH_DEFINE_PRIMITIVE(empty_p, "Is list empty?"){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_bool(dfsch_empty_p(list));
+}
+
 DFSCH_DEFINE_PRIMITIVE(pair_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
@@ -1066,6 +1073,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
 
   dfsch_defconst_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
+  dfsch_defconst_cstr(ctx, "empty?", DFSCH_PRIMITIVE_REF(empty_p));
   dfsch_defconst_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
   dfsch_defconst_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
   dfsch_defconst_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));

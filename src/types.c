@@ -968,6 +968,10 @@ dfsch_type_t dfsch_lambda_list_type = {
 int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
 }
+int dfsch_empty_p(dfsch_object_t* list){
+  return !DFSCH_ASSERT_INSTANCE(list, DFSCH_LIST_TYPE);
+}
+
 int dfsch_pair_p(dfsch_object_t* obj){
   return DFSCH_PAIR_P(obj);
 }
