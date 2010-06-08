@@ -87,68 +87,53 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
 
   pthread_mutex_lock(&(sp->mutex));
 
-  if (sp->buflen >= len){
-    memcpy(buf, sp->bufhead, len);
-    sp->buflen -= len;
-    memmove(sp->buf, sp->bufhead + len, sp->buflen);
+  if (sp->buf != sp->bufhead){
+    memmove(sp->buf, sp->bufhead, sp->buflen);
     sp->bufhead = sp->buf;
-    pthread_mutex_unlock(&(sp->mutex));
-    return len;
-  } else {
-    memcpy(buf, sp->bufhead, sp->buflen);
-    my_ret = sp->buflen;
+  }
+
+  if (sp->buflen < len){
+    memcpy(buf, sp->buf, sp->buflen);
+    my_ret += sp->buflen;
     buf += sp->buflen;
     len -= sp->buflen;
     sp->buflen = 0;
-    
-    if (len < SOCK_BUFFER_SIZE){
-      tmpbuf = sp->buf;
-      tmplen = len;
-      while (tmplen){
-        ret = socket_port_real_read(sp, tmpbuf, SOCK_BUFFER_SIZE - 
-                                    (tmpbuf - sp->buf));
-        
-        tmpbuf += ret;
-        if (ret == 0){
-          memcpy(buf, sp->buf, tmpbuf - sp->buf);
-          sp->bufhead = sp->buf;
-          sp->buflen = 0;
-          pthread_mutex_unlock(&(sp->mutex));
-          return tmpbuf - sp->buf + my_ret;
-        }
-        
-        if (ret > tmplen) {
-          tmplen -= ret;
-          break;
-        }
-        tmplen -= ret;
 
+    while (len > SOCK_BUFFER_SIZE){
+      ret = socket_port_real_read(sp, buf, len);
+      if (ret == 0){
+        pthread_mutex_unlock(&(sp->mutex));
+        return my_ret;
       }
-
-      memcpy(buf, sp->buf, len);
-      sp->buflen = tmpbuf - sp->buf;
-      memmove(sp->buf, sp->buf + len, sp->buflen);
-      sp->bufhead = sp->buf;
-      my_ret += len;
-      
-      pthread_mutex_unlock(&(sp->mutex));
-      return my_ret;
-    } else {
-      while (len) {
-        ret = socket_port_real_read(sp, buf, len);
-
-        if (ret == 0){
-          return my_ret;
-        }
-
-        my_ret += ret;
-        len -= ret;
-        buf += ret;
-      }
-      pthread_mutex_unlock(&(sp->mutex));
-      return my_ret;
+      buf += ret;
+      len -= ret;
+      my_ret += ret;
+      printf("ret = %d len = %d\n", ret, len);
     }
-  }  
+
+    while (len > sp->buflen){
+      ret = socket_port_real_read(sp, sp->buf + sp->buflen, SOCK_BUFFER_SIZE - sp->buflen);
+      if (ret == 0){
+        memcpy(buf, sp->buf, sp->buflen);
+        my_ret += sp->buflen;
+        buf += sp->buflen;
+        len -= sp->buflen;
+        sp->buflen = 0;
+
+        pthread_mutex_unlock(&(sp->mutex));
+        return my_ret;
+      }
+      sp->buflen += ret;
+      printf("ret = %d sp->buflen = %d\n", ret, sp->buflen);
+    }
+  }
+
+  memcpy(buf, sp->buf, len);
+  sp->buflen -= len;
+  my_ret += len;
+  memmove(sp->buf, sp->buf + len, sp->buflen);
+  pthread_mutex_unlock(&(sp->mutex));
+  return my_ret;  
 }
 
 static void socket_port_batch_read_start(socket_port_t* port){
@@ -176,14 +161,14 @@ static int socket_port_batch_read(socket_port_t* sp){
     return ch;
   } else {
     ret = socket_port_real_read(sp, sp->buf, SOCK_BUFFER_SIZE);
-
+    sp->bufhead = sp->buf;
     if (ret == 0){
       return EOF;
     }
 
     ch = sp->buf[0];
-    sp->bufhead = sp->buf + 1;
-    sp->buflen = ret - 1;
+    sp->buf = sp->buf + 1;
+    sp->buf = ret - 1;
     return ch;
   }
 }
