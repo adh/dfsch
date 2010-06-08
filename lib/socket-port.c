@@ -108,7 +108,6 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
       buf += ret;
       len -= ret;
       my_ret += ret;
-      printf("ret = %d len = %d\n", ret, len);
     }
 
     while (len > sp->buflen){
@@ -124,7 +123,6 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
         return my_ret;
       }
       sp->buflen += ret;
-      printf("ret = %d sp->buflen = %d\n", ret, sp->buflen);
     }
   }
 
