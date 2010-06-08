@@ -45,5 +45,12 @@ dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf);
 
 char* dfsch_inet_xml_escape(char* str_buf);
 
+typedef void (*dfsch_inet_header_cb_t)(void* baton,
+                                       char* name,
+                                       char* value);
+
+void dfsch_inet_read_822_headers(dfsch_object_t* port,
+                                 dfsch_inet_header_cb_t cb,
+                                 void* baton);
 
 #endif

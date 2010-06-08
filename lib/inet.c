@@ -656,4 +656,33 @@ char* dfsch_inet_xml_escape(char* str){
   return res;
 }
 
+/* void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp, */
+/*                                          char* line){ */
+/*   char* value; */
 
+/*   if (*line == ' ' || *line == '\t') { */
+/*     if (hp->header_name) { /\* Continuation *\/ */
+/*       hp->cb(hp->baton, hp->header_name, line); */
+/*     } else { /\* Continuation of nothing *\/ */
+/*       dfsch_error("Continuation of empty header",  */
+/*                   dfsch_make_string_cstr(line)); */
+/*     } */
+/*   } else { */
+/*     value = strchr(line, ':'); */
+/*     if (value){ /\* Header *\/       */
+/*       hp->cb(hp->baton, hp->header_name, value + 1); */
+/*     } else { /\*  Random junk *\/ */
+/*       dfsch_error("Junk in header stream",  */
+/*                   dfsch_make_string_cstr(line)); */
+/*     } */
+/*   }  */
+/* } */
+
+void dfsch_inet_read_822_headers(dfsch_object_t* port,
+                                 dfsch_inet_header_cb_t cb,
+                                 void* baton){
+  dfsch_strbuf_t* line;
+
+  
+
+}
