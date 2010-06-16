@@ -718,6 +718,9 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
     line = dfsch_port_readline(port);
 
     if (!line){
+      if (name){
+        cb(baton, name, value);
+      }
       return;
     }
 

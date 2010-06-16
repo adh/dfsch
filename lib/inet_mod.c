@@ -166,6 +166,40 @@ DFSCH_DEFINE_PRIMITIVE(headers_2_list,
   return list;
 }
 
+static void headers_hash_cb_list(dfsch_object_t* hash, 
+                                 char* name,
+                                 char* value){
+  dfsch_object_t* ns = dfsch_make_string_cstr(name);
+  dfsch_object_t* old;
+
+  if (dfsch_hash_ref_fast(hash, ns, &old)){
+    if (!DFSCH_PAIR_P(old)){
+      old = dfsch_cons(old, NULL);
+      dfsch_hash_set(hash, ns, old);
+    }
+    while (DFSCH_PAIR_P(DFSCH_FAST_CDR(old))){
+      old = DFSCH_FAST_CDR(old);
+    }
+    dfsch_set_cdr(old, dfsch_cons(dfsch_make_string_cstr(value),
+                                  NULL));
+  } else {
+    dfsch_hash_set(hash, ns, dfsch_make_string_cstr(value));
+  }
+}
+
+DFSCH_DEFINE_PRIMITIVE(headers_2_map, 
+                       "Read email style headers from port into mapping object"){
+  dfsch_object_t* map = NULL;
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_OBJECT_ARG_OPT(args, map, dfsch_hash_make(DFSCH_HASH_EQUAL));
+  DFSCH_ARG_END(args);
+  
+  dfsch_inet_read_822_headers(port, headers_hash_cb_list, map);
+
+  return map;
+}
+
 
 
 
@@ -201,5 +235,7 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
 
   dfsch_define_pkgcstr(env, inet_pkg, "headers->list",
                        DFSCH_PRIMITIVE_REF(headers_2_list));
+  dfsch_define_pkgcstr(env, inet_pkg, "headers->map",
+                       DFSCH_PRIMITIVE_REF(headers_2_map));
 
 }
