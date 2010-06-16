@@ -678,6 +678,35 @@ char* dfsch_inet_xml_escape(char* str){
 /*   }  */
 /* } */
 
+static void header_name_inplace(char* name){
+  char* i = name;
+  int state = 0;
+
+  while (*i){
+    if (isalnum(*i)){
+      if (state){
+        *i = tolower(*i);
+      }else{
+        *i = toupper(*i);
+      }
+      state = 1;
+    } else {
+      state = 0;
+    }
+    i++;
+  }
+
+  i--;
+
+  while (i >= name && 
+         (*i == ' ' || 
+          *i == '\t')){
+    *i = '\0';
+    i--;
+  }
+}
+
+
 void dfsch_inet_read_822_headers(dfsch_object_t* port,
                                  dfsch_inet_header_cb_t cb,
                                  void* baton){
@@ -721,6 +750,7 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
         dfsch_error("Not a header line", dfsch_make_string_strbuf(line));
       }
       value[0] = '\0';
+      header_name_inplace(name);
       value += 1;
       while (value[0] == ' ' || value[0] == '\t'){
         value++;
