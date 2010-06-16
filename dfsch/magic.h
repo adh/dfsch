@@ -144,6 +144,7 @@ extern "C" {
     dfsch_object_t* macroexpanded_expr;
 
     void* env_freelist;
+    int env_fl_depth;
 
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
@@ -152,6 +153,8 @@ extern "C" {
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
+
+    dfsch_object_t* arg_scratch_pad[16];
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

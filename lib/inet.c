@@ -656,4 +656,108 @@ char* dfsch_inet_xml_escape(char* str){
   return res;
 }
 
+/* void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp, */
+/*                                          char* line){ */
+/*   char* value; */
 
+/*   if (*line == ' ' || *line == '\t') { */
+/*     if (hp->header_name) { /\* Continuation *\/ */
+/*       hp->cb(hp->baton, hp->header_name, line); */
+/*     } else { /\* Continuation of nothing *\/ */
+/*       dfsch_error("Continuation of empty header",  */
+/*                   dfsch_make_string_cstr(line)); */
+/*     } */
+/*   } else { */
+/*     value = strchr(line, ':'); */
+/*     if (value){ /\* Header *\/       */
+/*       hp->cb(hp->baton, hp->header_name, value + 1); */
+/*     } else { /\*  Random junk *\/ */
+/*       dfsch_error("Junk in header stream",  */
+/*                   dfsch_make_string_cstr(line)); */
+/*     } */
+/*   }  */
+/* } */
+
+static void header_name_inplace(char* name){
+  char* i = name;
+  int state = 0;
+
+  while (*i){
+    if (isalnum(*i)){
+      if (state){
+        *i = tolower(*i);
+      }else{
+        *i = toupper(*i);
+      }
+      state = 1;
+    } else {
+      state = 0;
+    }
+    i++;
+  }
+
+  i--;
+
+  while (i >= name && 
+         (*i == ' ' || 
+          *i == '\t')){
+    *i = '\0';
+    i--;
+  }
+}
+
+
+void dfsch_inet_read_822_headers(dfsch_object_t* port,
+                                 dfsch_inet_header_cb_t cb,
+                                 void* baton){
+  dfsch_strbuf_t* line;
+  char* name = NULL;
+  char* value;
+
+  for (;;){
+    line = dfsch_port_readline(port);
+
+    if (!line){
+      if (name){
+        cb(baton, name, value);
+      }
+      return;
+    }
+
+    while (line->len && (line->ptr[line->len - 1] == '\n' ||
+                         line->ptr[line->len - 1] == '\r' )){
+      line->len --;
+      line->ptr[line->len] = '\0';
+    }
+    
+    if (line->len == 0){
+      if (name){
+        cb(baton, name, value);
+      }
+      break;
+    }
+
+    if (line->ptr[0] == ' ' || line->ptr[0] == '\t'){
+      if (name == NULL){
+        dfsch_error("Unexpected continuation line", 
+                    dfsch_make_string_strbuf(line));
+      }
+      value = dfsch_stracat3(value, "\n", line->ptr+1);
+    } else {
+      if (name){
+        cb(baton, name, value);
+      }
+      name = line->ptr;
+      value = strchr(line->ptr, ':');
+      if (!value){
+        dfsch_error("Not a header line", dfsch_make_string_strbuf(line));
+      }
+      value[0] = '\0';
+      header_name_inplace(name);
+      value += 1;
+      while (value[0] == ' ' || value[0] == '\t'){
+        value++;
+      }
+    }
+  }
+}

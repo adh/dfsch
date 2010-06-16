@@ -299,6 +299,10 @@ static dfsch_object_t* apply_effective_method(effective_method_t* em,
                                               dfsch_object_t* args,
                                               dfsch_tail_escape_t* esc,
                                               dfsch_object_t* ctx){
+  if (!esc){
+    args = dfsch_list_copy_immutable(args);
+  }
+
   if (DFSCH_LIKELY(!em->around_methods)){
     return standard_mc_core(em, args, esc);
   } else {
@@ -430,7 +434,8 @@ apply_standard_generic_function(standard_generic_function_t* function,
     meths = compute_applicable_methods(function, arguments);
       
     if (!meths){
-      dfsch_error("No applicable methods", dfsch_list(2, function, arguments));
+      dfsch_error("No applicable methods", dfsch_list(2, function, 
+                                                      dfsch_list_copy(arguments)));
     }
     
     em = make_effective_method(meths, function);

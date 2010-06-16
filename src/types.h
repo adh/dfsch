@@ -39,6 +39,8 @@ typedef dfsch_macro_t macro_t;
 
 typedef struct environment_t environment_t;
 
+#define EFRAME_RETAIN 1
+
 struct environment_t {
   dfsch_type_t* type;
   environment_t* parent; 
@@ -46,6 +48,7 @@ struct environment_t {
   dfsch_eqhash_t values;
   dfsch_object_t* decls;
   dfsch_object_t* context;
+  int flags;
 };
 
 typedef struct closure_t{

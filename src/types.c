@@ -944,7 +944,6 @@ dfsch_type_t dfsch_environment_type = {
   "Lexical environment frame"
 };
 
-
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
   dfsch_write_unreadable_start(ws, (dfsch_object_t*)ll);
   print_lambda_list(ll, ws);
