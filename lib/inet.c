@@ -682,7 +682,49 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
                                  dfsch_inet_header_cb_t cb,
                                  void* baton){
   dfsch_strbuf_t* line;
+  char* name = NULL;
+  char* value;
 
-  
+  for (;;){
+    line = dfsch_port_readline(port);
 
+    if (!line){
+      return;
+    }
+
+    while (line->len && (line->ptr[line->len - 1] == '\n' ||
+                         line->ptr[line->len - 1] == '\r' )){
+      line->len --;
+      line->ptr[line->len] = '\0';
+    }
+    
+    if (line->len == 0){
+      if (name){
+        cb(baton, name, value);
+      }
+      break;
+    }
+
+    if (line->ptr[0] == ' ' || line->ptr[0] == '\t'){
+      if (name == NULL){
+        dfsch_error("Unexpected continuation line", 
+                    dfsch_make_string_strbuf(line));
+      }
+      value = dfsch_stracat3(value, "\n", line->ptr+1);
+    } else {
+      if (name){
+        cb(baton, name, value);
+      }
+      name = line->ptr;
+      value = strchr(line->ptr, ':');
+      if (!value){
+        dfsch_error("Not a header line", dfsch_make_string_strbuf(line));
+      }
+      value[0] = '\0';
+      value += 1;
+      while (value[0] == ' ' || value[0] == '\t'){
+        value++;
+      }
+    }
+  }
 }
