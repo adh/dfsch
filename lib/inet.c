@@ -742,7 +742,12 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
         dfsch_error("Unexpected continuation line", 
                     dfsch_make_string_strbuf(line));
       }
-      value = dfsch_stracat3(value, "\n", line->ptr+1);
+
+      while (line->ptr[0] == ' ' || line->ptr[0] == '\t'){
+        line->ptr++;
+        line->len--;
+      }
+      value = dfsch_stracat3(value, "\n", line->ptr);
     } else {
       if (name){
         cb(baton, name, value);
