@@ -34,6 +34,7 @@ static dfsch_object_t* debug_invoke_restart(dfsch_object_t* list,
                                             dfsch_tail_escape_t* esc){
   int index;
   DFSCH_LONG_ARG(args, index);
+  DFSCH_ARG_REST(args, args);
 
   dfsch_invoke_restart(dfsch_list_item(list, index), args);
   return NULL;

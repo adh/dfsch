@@ -432,6 +432,14 @@ dfsch_type_t dfsch_iterator_type_type = {
   NULL
 };
 
+static dfsch_object_t* iterator_get_iterator(dfsch_object_t* i){
+  return i;
+}
+
+dfsch_collection_methods_t dfsch_iterator_collection_methods = {
+  .get_iterator = iterator_get_iterator,
+};
+
 dfsch_type_t dfsch_iterator_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,
@@ -439,7 +447,9 @@ dfsch_type_t dfsch_iterator_type = {
   "iterator",
   NULL,
   NULL,
-  NULL
+  NULL,
+
+  .collection = &dfsch_iterator_collection_methods,
 };
 
 
@@ -453,6 +463,8 @@ static dfsch_slot_t type_slots[] = {
                     "Type name"),
   DFSCH_STRING_SLOT(dfsch_type_t, documentation, DFSCH_SLOT_ACCESS_RO,
                     "Documentation string"),
+  DFSCH_OBJECT_SLOT(dfsch_type_t, superclass, DFSCH_SLOT_ACCESS_RO,
+                    "Superclass"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -905,8 +917,7 @@ dfsch_type_t dfsch_vector_type = {
   (dfsch_type_write_t)vector_write,
   NULL,
   (dfsch_type_hash_t)vector_hash,
-
-  .describe = vector_describe,
+  .describe = (dfsch_type_describe_t)vector_describe,
   .collection = &vector_collection,
   .sequence = &vector_sequence,
 };
@@ -933,7 +944,6 @@ dfsch_type_t dfsch_environment_type = {
   "Lexical environment frame"
 };
 
-
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
   dfsch_write_unreadable_start(ws, (dfsch_object_t*)ll);
   print_lambda_list(ll, ws);
@@ -957,6 +967,10 @@ dfsch_type_t dfsch_lambda_list_type = {
 int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
 }
+int dfsch_empty_p(dfsch_object_t* list){
+  return !DFSCH_ASSERT_INSTANCE(list, DFSCH_LIST_TYPE);
+}
+
 int dfsch_pair_p(dfsch_object_t* obj){
   return DFSCH_PAIR_P(obj);
 }
@@ -1432,10 +1446,7 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
 
     for (i = 0; i<len; i++){
       if (!args[i]){
-	if (i != 0){
-          dfsch_error("Not a list of same length lists", llist);
-	}
-	goto out;
+        return head;
       }
       if (!DFSCH_PAIR_P(args[i])){
 	dfsch_type_error(args[i], DFSCH_PAIR_TYPE, 0);
@@ -1462,16 +1473,6 @@ dfsch_object_t* dfsch_zip(dfsch_object_t* llist){
     tail = tmp;
 
   }
-  
-
- out:
-  for (i = 0; i<len; i++){
-    if (args[i]){
-      dfsch_error("Not a list of same length lists", llist);
-    }
-  }
-  
-  return head;
 }
 
 
@@ -1630,9 +1631,7 @@ dfsch_object_t* dfsch_list_copy(dfsch_object_t* list){
   }
 
   return (object_t*)head;
-
 }
-
 
 dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
   object_t *head; 
@@ -1650,6 +1649,45 @@ dfsch_object_t* dfsch_reverse(dfsch_object_t* list){
 
   return (object_t*)head;
 }
+
+dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *tail;
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  if (DFSCH_PAIR_P(i)){
+    return i;
+  }
+
+  head = tail = NULL;
+
+  while (i){
+    if (head){
+      object_t* tmp = dfsch_cons(dfsch_iterator_this(i),NULL);
+      DFSCH_FAST_CDR_MUT(tail) = tmp;
+      tail = tmp;
+    }else{
+      head = tail = dfsch_cons(dfsch_iterator_this(i),NULL);
+    }
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list){
+  dfsch_object_t *head; 
+  dfsch_object_t *i = dfsch_collection_get_iterator(list);
+
+  head = NULL;
+
+  while (i){
+    head = dfsch_cons(dfsch_iterator_this(i), head);
+    i = dfsch_iterator_next(i);
+  }
+
+  return (object_t*)head;
+}
+
 
 dfsch_object_t* dfsch_member(dfsch_object_t *key,
                              dfsch_object_t *list){
@@ -2002,8 +2040,7 @@ dfsch_object_t* dfsch_vector_from_array(dfsch_object_t **array,
 dfsch_object_t* dfsch_vector_ref(dfsch_object_t *vector, size_t k){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   return v->data[k];
 }
@@ -2012,8 +2049,7 @@ dfsch_object_t* dfsch_vector_set(dfsch_object_t* vector, size_t k,
                                  dfsch_object_t* obj){
   vector_t* v = DFSCH_ASSERT_TYPE(vector, VECTOR);
 
-  if (v->length <= k)
-    dfsch_error("Invalid index",dfsch_make_number_from_long(k));
+  k = DFSCH_ASSERT_SEQUENCE_INDEX(vector, k, v->length);
   
   v->data[k] = obj;
 

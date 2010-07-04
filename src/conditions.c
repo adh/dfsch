@@ -449,6 +449,25 @@ void dfsch_operating_system_error(char* funname){
   dfsch_operating_system_error_saved(errno, funname);
 }
 
+dfsch_type_t dfsch_index_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_RUNTIME_ERROR_TYPE, 
+                            "index-error");
+
+void dfsch_index_error(dfsch_object_t* seq,
+                       size_t index,
+                       size_t length){
+  dfsch_object_t* c = dfsch_make_condition(DFSCH_INDEX_ERROR_TYPE);
+  char* m = dfsch_saprintf("%d is not valid index into %s (of length %d)",
+                           index,
+                           dfsch_object_2_string(seq, 10, 1),
+                           length);
+  dfsch_condition_put_field_cstr(c, "index", DFSCH_MAKE_FIXNUM(index));
+  dfsch_condition_put_field_cstr(c, "length", DFSCH_MAKE_FIXNUM(length));
+  dfsch_condition_put_field_cstr(c, "sequence", seq);
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);  
+}
+
 DFSCH_DEFINE_PRIMITIVE(terminate_thread, NULL){
   DFSCH_ARG_END(args);
 
@@ -670,6 +689,7 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_define_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
   dfsch_define_cstr(ctx, "<operating-system-error>", 
                     DFSCH_OPERATING_SYSTEM_ERROR_TYPE);
+  dfsch_define_cstr(ctx, "<index-error>", DFSCH_INDEX_ERROR_TYPE);
   
   dfsch_define_cstr(ctx, "make-condition", 
                     DFSCH_PRIMITIVE_REF(make_condition)); 

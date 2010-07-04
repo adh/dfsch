@@ -23,14 +23,17 @@
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
 #include <dfsch/magic.h>
+#include <dfsch/hash.h>
 
 #include "util.h"
 #include "internal.h"
+#include "types.h"
 
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <assert.h>
 
 //#define Q_DEBUG
 //#define T_DEBUG
@@ -128,7 +131,8 @@ struct parser_stack_t {
     P_QUOTE,
     P_HASH,
     P_EVAL,
-    P_DIRECTIVE
+    P_DIRECTIVE,
+    P_TAG_DEFINITION
   } state;
 
   dfsch_object_t *front;
@@ -144,12 +148,18 @@ struct dfsch_parser_ctx_t {
   enum {
     T_ATOM, // i.e. number or symbol
     T_STRING,
+    T_BYTE_VECTOR,
     T_COMMENT,
     T_NONE,
     T_HASH,
     T_CHAR,
     T_CHAR_CONT,
   } tokenizer_state;
+
+  unsigned int hash_arg;
+
+  void (*dispatch_atom_hook)(dfsch_parser_ctx_t* ctx,
+                             char* str);
   
   parser_stack_t *parser;
 
@@ -163,6 +173,7 @@ struct dfsch_parser_ctx_t {
 
   dfsch_object_t* env;
   dfsch_object_t* source;
+  dfsch_object_t* tag_map;
 };
 
 static void parser_reset(dfsch_parser_ctx_t *ctx){
@@ -173,6 +184,7 @@ static void parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->line = 1;
   ctx->column = 1;
   ctx->error = 0;
+  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
 }
 
 static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
@@ -212,6 +224,7 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   ctx->error = 0;
 
   ctx->env = NULL;
+  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
 
   return ctx;
 }
@@ -242,6 +255,47 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
 
   ctx->parser = tmp;
   ctx->level++;
+}
+
+static void replace_pointer(dfsch_object_t* obj,
+                            dfsch_object_t* from,
+                            dfsch_object_t* to){
+  if (DFSCH_PAIR_P(obj)) {
+    if (DFSCH_FAST_CAR(obj) == from){
+      DFSCH_FAST_CAR(obj) = to;
+    } else {
+      replace_pointer(DFSCH_FAST_CAR(obj), from, to);
+    }
+
+    if (DFSCH_FAST_CDR(obj) == from){
+      if (DFSCH__FAST_CDR_CODED_P(obj)){
+        assert(((dfsch_object_t**)(((size_t)(obj)) & ~0x03))[1] 
+               == DFSCH_INVALID_OBJECT);
+        ((dfsch_object_t**)(((size_t)(obj)) & ~0x03))[2] = to;
+      } else {
+        DFSCH_FAST_CDR_MUT(obj) = to;
+      }
+    } else {
+      replace_pointer(DFSCH_FAST_CDR(obj), from, to);
+    }
+  } else if (dfsch_vector_p(obj)){
+    int i;
+    vector_t* v = (vector_t*)obj;
+    for (i = 0; i < v->length; i++){
+      if (v->data[i] == from){
+        v->data[i] = to;
+      } else {
+        replace_pointer(v->data[i], from, to);
+      }
+    }
+  }
+}
+
+static void resolve_circular_references(dfsch_object_t* obj,
+                                        dfsch_object_t* pho){
+  if (pho != DFSCH_INVALID_OBJECT){
+    replace_pointer(obj, pho, obj);
+  }
 }
 
 #define parse_object dfsch_parser_parse_object
@@ -292,17 +346,26 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
         parser_abort(ctx, "Evaluation not permitted in this context");        
       }
       return;
+    case P_TAG_DEFINITION:
+      {
+        dfsch_object_t* tag = ctx->parser->tag;
+        dfsch_object_t* pho;
+        parser_pop(ctx);
+        dfsch_hash_ref_fast(ctx->tag_map, tag, &pho);
+        dfsch_hash_set(ctx->tag_map, tag, obj);
+        resolve_circular_references(obj, pho);
+        parse_object(ctx, obj);
+        return;
+      }
+      return;      
     default:
       parser_abort(ctx, "Unexpected object");
     }
   } else {
-    //    DFSCH_TRY { XXX
-      if (!(*ctx->callback)(obj,ctx->baton)){
-        ctx->error = 1;
-      }
-      /*} DFSCH_SCATCH(ex) {
-      parser_abort_ex(ctx, ex);
-      } DFSCH_SCATCHEND;*/
+    ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
+    if (!(*ctx->callback)(obj,ctx->baton)){
+      ctx->error = 1;
+    }
   }
 }
 
@@ -367,7 +430,28 @@ static void parse_eval(dfsch_parser_ctx_t *ctx){
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
+static void parse_tag_definition(dfsch_parser_ctx_t* ctx){
+  parser_push(ctx);
+  ctx->parser->state = P_TAG_DEFINITION;
+  ctx->parser->tag = dfsch_make_number_from_long(ctx->hash_arg);
+  dfsch_hash_set(ctx->tag_map, ctx->parser->tag, DFSCH_INVALID_OBJECT);
+}
+static void parse_tag_reference(dfsch_parser_ctx_t* ctx){
+  dfsch_object_t* val;
+  dfsch_object_t* tag = dfsch_make_number_from_long(ctx->hash_arg);
+  if (!dfsch_hash_ref_fast(ctx->tag_map, 
+                           tag,
+                           &val)){
+    parser_abort(ctx, "Reference to undefined tag");
+  }
+  
+  if (val == DFSCH_INVALID_OBJECT){
+    val = dfsch_gensym();
+    dfsch_hash_set(ctx->tag_map, tag, val);
+  }
 
+  parse_object(ctx, val);
+}
 
 
 static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
@@ -526,6 +610,128 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
 
   parse_object(ctx, s);
 }
+static void dispatch_byte_vector(dfsch_parser_ctx_t *ctx, char *data){
+  char* out=data;
+  char* in=data;
+
+  while (*in){
+    switch (*in){
+    case '\\':
+      ++in;
+      switch (*in){
+      case '\n':
+	++in;
+	continue;        
+      case '\r':
+	++in;
+        if (*in == '\n'){
+          ++in;
+        }
+	continue;        
+      case 'n':
+	*out = '\n';
+	++out;
+	++in;
+	continue;
+      case 'r':
+	*out = '\r';
+	++out;
+	++in;
+	continue;
+      case 'a':
+	*out = '\a';
+	++out;
+	++in;
+	continue;
+      case 't':
+	*out = '\t';
+	++out;
+	++in;
+	continue;
+      case 'b':
+	*out = '\b';
+	++out;
+	++in;
+	continue;
+      case 'v':
+	*out = '\v';
+	++out;
+	++in;
+	continue;
+      case 'f':
+	*out = '\f';
+	++out;
+	++in;
+	continue;
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+	*out = *in -'0';
+        ++in;
+        
+        if (*in >= '0' && *in <= '7'){
+          *out = ((*out)<<3) | (*in - '0');
+          ++in;
+          if (*in >= '0' && *in <= '7'){
+            *out = ((*out)<<3) | (*in - '0');
+            ++in;
+          }          
+        }
+	++out;
+	continue;
+      case 'x':
+        {
+          int i;
+          *out = 0;
+          ++in;
+          for (i=0; i<2; i++){
+            *out <<= 4;
+            if (!*in){
+              parser_abort(ctx, "Invalid escape");
+            }
+            if (*in >= 'A' && *in <= 'F'){
+              *out |= *in - 'A' + 10;
+            }else if (*in >= 'a' && *in <= 'f'){
+              *out |= *in - 'a' + 10;
+            }else if (*in >= '0' && *in <= '9'){
+              *out |= *in - '0';
+            }else{
+              parser_abort(ctx, "Invalid escape");
+            }
+            ++in;
+          }
+          ++out;
+          continue;
+        }
+      default:
+        *out = *in;
+        ++out;
+        ++in;
+        continue;  
+      }
+    default:
+      *out = *in;
+      ++out;
+      ++in;
+    }
+  }
+  
+  *out = 0;
+  
+  dfsch_object_t *s = dfsch_make_byte_vector(data, out-data);
+
+  parse_object(ctx, s);
+}
+
+static void dispatch_number_base(dfsch_parser_ctx_t *ctx, char *data){
+  parse_object(ctx, dfsch_make_number_from_string(data, ctx->hash_arg));
+}
+
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
   printf(";; Atom: [%s]\n", data);
@@ -649,7 +855,8 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	++data;
         ctx->column++;
 
-	ctx->tokenizer_state = T_HASH;	
+	ctx->tokenizer_state = T_HASH;
+        ctx->hash_arg = 0;
         break;
 
       case ')':
@@ -695,7 +902,12 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	strncpy(s,data,e-data);
 	s[e-data]=0;
 
-	dispatch_atom(ctx, s);
+        if (ctx->dispatch_atom_hook){
+          ctx->dispatch_atom_hook(ctx, s);
+          ctx->dispatch_atom_hook = NULL;
+        } else {
+          dispatch_atom(ctx, s);
+        }
 	if (ctx->error) return;
 
         ctx->column += e-data;
@@ -729,6 +941,31 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	ctx->tokenizer_state = T_NONE;
 	break;
      }
+    case T_BYTE_VECTOR: // TODO: count characters and lines
+      {
+	char *e= strchr(data, '"');
+	if (!e){
+          consume_queue(ctx->q, data);
+	  return;
+	}
+	if (e>data){
+	  while (*(e-1)=='\\'){
+	    e = strchr(e+1, '"');
+	  }
+	}
+
+	char *s = GC_MALLOC_ATOMIC((size_t)(e-data)+1);
+	strncpy(s, data, e-data);
+	s[e-data]=0;
+
+	dispatch_byte_vector(ctx, s);
+	if (ctx->error) return;
+
+	data = e+1;
+	
+	ctx->tokenizer_state = T_NONE;
+	break;
+     }
     case T_COMMENT:
       while (*data){
 	if (*data=='\n'){
@@ -743,6 +980,21 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       break;
     case T_HASH:
       switch(*data){
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        ctx->hash_arg = ctx->hash_arg * 10 + (*data - '0');
+        ++data;
+        ctx->column++;
+        break;
+
       case 'n':
       case 'f':
       case 'N':
@@ -763,6 +1015,40 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 	if (ctx->error) return;
         ctx->tokenizer_state = T_NONE;  
         break;
+      case 'x':
+      case 'X':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 16;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'o':
+      case 'O':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 8;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+      case 'b':
+      case 'B':
+        ++data;
+        ctx->column++;
+        ctx->hash_arg = 2;
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;        
+        break;
+
+      case 'r':
+      case 'R':
+        ++data;
+        ctx->column++;
+
+        ctx->dispatch_atom_hook=dispatch_number_base;
+        ctx->tokenizer_state = T_ATOM;
+        break;
+
       case '\\':
         ++data;
         ctx->column++;
@@ -782,12 +1068,29 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->column++;
         ctx->tokenizer_state = T_COMMENT;
         break;
+      case '"':
+        ++data;
+        ctx->column++;
+        ctx->tokenizer_state = T_BYTE_VECTOR;
+        break;
       case '.':
         ++data;
         ctx->column++;
         parse_eval(ctx);
         ctx->tokenizer_state = T_NONE;
         break;
+      case '#':
+        ++data;
+        ctx->column++;
+        parse_tag_reference(ctx);
+        ctx->tokenizer_state = T_NONE;
+        break;
+      case '=':
+        ++data;
+        ctx->column++;
+        parse_tag_definition(ctx);
+        ctx->tokenizer_state = T_NONE;
+        break;        
       default:
         parser_abort(ctx, "Invalid escape");
         return;
@@ -942,6 +1245,7 @@ void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->parser = NULL;
   ctx->level = 0 ;
   ctx->error = 0;
+  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
 }
 
 void dfsch_parser_set_source(dfsch_parser_ctx_t* ctx, dfsch_object_t* source){

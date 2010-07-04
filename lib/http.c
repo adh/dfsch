@@ -156,51 +156,6 @@ char* dfsch_http_get_protocol(int protocol){
 }
 
 
-struct dfsch_http_header_parser_t {
-  dfsch_type_t* type;
-  char* header_name;
-  dfsch_http_header_parser_cb_t cb;
-  void* baton;
-};
-
-dfsch_type_t dfsch_http_header_parser_type = {
-  .type = DFSCH_STANDARD_TYPE,
-  .size = sizeof(dfsch_http_header_parser_t),
-  .name = "http:header-parser",
-};
-
-
-dfsch_http_header_parser_t* dfsch_http_make_header_parser(dfsch_http_header_parser_cb_t cb,
-                                                          void* baton){
-  dfsch_http_header_parser_t* hp = dfsch_make_object(DFSCH_HTTP_HEADER_PARSER_TYPE);
-
-  hp->cb = cb;
-  hp->baton = baton;
-
-  return hp;
-}
-void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
-                                         char* line){
-  char* value;
-
-  if (*line == ' ' || *line == '\t') {
-    if (hp->header_name) { /* Continuation */
-      hp->cb(hp->baton, hp->header_name, line);
-    } else { /* Continuation of nothing */
-      dfsch_error("Continuation of empty header", 
-                  dfsch_make_string_cstr(line));
-    }
-  } else {
-    value = strchr(line, ':');
-    if (value){ /* Header */      
-      hp->cb(hp->baton, hp->header_name, value + 1);
-    } else { /*  Random junk */
-      dfsch_error("Junk in header stream", 
-                  dfsch_make_string_cstr(line));
-    }
-  } 
-}
-
 typedef struct http_response_t {
   dfsch_type_t* type;
 

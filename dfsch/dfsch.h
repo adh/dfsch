@@ -73,9 +73,9 @@ extern "C" {
                                                     dfsch_object_t* context);
 
 
-#include <dfsch/number.h>
 #include <dfsch/types.h>
 #include <dfsch/writer.h>  
+#include <dfsch/number.h>
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
@@ -136,6 +136,8 @@ extern "C" {
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);
+  /** Is LIST empty? */
+  extern int dfsch_empty_p(dfsch_object_t* list);
   /** Is OBJ a pair? */
   extern int dfsch_pair_p(dfsch_object_t* obj);
   /** Is OBJ a proper list? */
@@ -241,7 +243,8 @@ extern "C" {
                                              dfsch_object_t* location);
   extern dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list);
 
-  
+  extern dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list);
 
   /** Reverses list */
   extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
@@ -527,6 +530,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj);
   extern dfsch_object_t* dfsch_assert_mapping(dfsch_object_t* obj);
   extern dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj);
+  size_t dfsch_assert_sequence_index(dfsch_object_t* seq, size_t idx, size_t len);  
 
   dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col);
   dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
@@ -537,6 +541,10 @@ extern "C" {
   size_t dfsch_sequence_length(dfsch_object_t* seq);
   
 
+  /** 
+   * Return iterator pointing to next element of collection. Original iterator 
+   * is no longer valid.
+   */
   dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator);
   dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator);
 
@@ -557,6 +565,9 @@ extern "C" {
 
 
   /** @} */
+
+  /** Convert internal environment to on-heap frame */
+  extern dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env);
 
   
 #include <dfsch/strings.h>
