@@ -87,6 +87,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	sxml.la \
 	json.la \
 	os.la \
+	zlib.la \
 	$(nonwin32_modules)
 
 
@@ -196,6 +197,10 @@ unix_la_LIBADD =  libdfsch.la
 os_la_SOURCES = lib/os.c
 os_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 os_la_LIBADD =  libdfsch.la
+
+zlib_la_SOURCES = lib/zlib_mod.c
+zlib_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+zlib_la_LIBADD =  libdfsch.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
