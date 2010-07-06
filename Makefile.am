@@ -15,6 +15,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/json.h \
         dfsch/lib/socket-port.h \
         dfsch/lib/http.h \
+        dfsch/lib/csv.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
