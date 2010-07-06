@@ -61,6 +61,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
 	libdfsch-json.la \
+	libdfsch-csv.la \
 	$(nonwin32_libs)
 
 
@@ -88,6 +89,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	json.la \
 	os.la \
 	zlib.la \
+	csv.la \
 	$(nonwin32_modules)
 
 
@@ -282,6 +284,15 @@ socket_port_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 libdfsch_http_la_SOURCES = lib/http.c
 libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
 libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+
+
+libdfsch_csv_la_SOURCES = lib/csv.c
+libdfsch_csv_la_LIBADD = libdfsch.la
+libdfsch_csv_la_LDFLAGS = -no-undefined
+
+csv_la_SOURCES = lib/csv_mod.c
+csv_la_LIBADD = libdfsch.la libdfsch-csv.la
+csv_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 dfsch_repl_SOURCES = src/repl.c
