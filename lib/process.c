@@ -63,7 +63,7 @@ static void port_write_buf(process_port_t* port,
   if (len != 0){
     ret = fwrite(buf, len, 1, port->file);
     if (ret == 0){
-      dfsch_error("Error writing to process port", strerror(errno));
+      dfsch_operating_system_error("Error writing to process port");
     }
   }
 }
@@ -102,7 +102,7 @@ static ssize_t port_read_buf(process_port_t* port,
     if (feof(port->file)){
       return 0;
     } else {
-      dfsch_error("Error reading from process port", strerror(errno));
+      dfsch_operating_system_error("Error reading from process port");
     }
   }
   return ret;
