@@ -141,51 +141,37 @@ static load_thread_info_t* get_load_ti(){
   
 }
 
-static int load_scm_callback(dfsch_object_t* object,
-                             dfsch_object_t* env){
-  dfsch_eval(object, env);
-  return 1;
-}
 
-void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
+char* read_file(char* fname){
   FILE* f;
-  char buf[8193];
-  ssize_t r;
-  int err=0;
-  int l=0;
-  dfsch_parser_ctx_t *parser = dfsch_parser_create();
-  load_thread_info_t* lti = get_load_ti();
-  load_operation_t this_op;
-  dfsch_package_t* saved_package = dfsch_get_current_package();
+  char* buf = GC_MALLOC_ATOMIC(8192);
+  size_t r;
+  str_list_t* sl = sl_create();
 
   f = fopen(fname, "r");
   if (!f){
-    dfsch_operating_system_error("fopen");
+    dfsch_operating_system_error(dfsch_saprintf("Cannot open file %d",
+                                                fname));
   }
 
-  dfsch_parser_callback(parser, load_scm_callback, env);
-  dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
-  dfsch_parser_eval_env(parser, env);
-
-  DFSCH_UNWIND {
-    this_op.fname = fname;
-    this_op.toplevel = toplevel;
-    this_op.next = lti->operation;
-    lti->operation = &this_op;
-
-    while (fgets(buf, 8192, f)){
-      dfsch_parser_feed(parser, buf);
+  while (!feof(f)){
+    r = fread(buf, 1, 8192, f);
+    if (r != 0){
+      sl_nappend(sl, buf, r);
+      buf = GC_MALLOC_ATOMIC(8192);
+    } else {
+      if (ferror(f)){
+        dfsch_operating_system_error(dfsch_saprintf("Error reading file %d",
+                                                    fname));
+      }
     }
-  } DFSCH_PROTECT {
-    fclose(f);
-    lti->operation = this_op.next;
-    dfsch_set_current_package(saved_package);
-  } DFSCH_PROTECT_END;
-
-  if (dfsch_parser_get_level(parser)!=0){
-      dfsch_error("Syntax error at end of input",
-                  dfsch_make_string_cstr(fname));
   }
+  
+  return sl_value(sl);
+}
+
+void dfsch_load_scm(dfsch_object_t* env, char* fname, int toplevel){
+  dfsch_load_source(env, fname, toplevel, read_file(fname));
 }
 
 static char* read_dsz(FILE* f){
@@ -199,10 +185,12 @@ static char* read_dsz(FILE* f){
   char* payload;
 
   if (fread(header_buf, 20, 1, f) != 1){
+    fclose(f);
     dfsch_operating_system_error("fread");
   }
 
   if (memcmp(header_buf, "DsZ0\r\n\xff\n\0\r\x80\x7f", 12) != 0){
+    fclose(f);
     dfsch_error("Invalid DSZ header", NULL);
   }
   
@@ -218,13 +206,16 @@ static char* read_dsz(FILE* f){
   cbuf = GC_MALLOC_ATOMIC(clen);
   payload = GC_MALLOC_ATOMIC(len);
 
-  if (fread(cbuf, clen, 1, f) != 1){
+  if (fread(cbuf, clen, 1, f) != 1){ 
+    fclose(f);
     dfsch_operating_system_error("fread");
   }
 
   if (fread(trailer_read, 12, 1, f) != 1){
+    fclose(f);
     dfsch_operating_system_error("fread");
   }
+  fclose(f);
 
 
   if (uncompress(payload, &len, cbuf, clen) != Z_OK){
@@ -249,7 +240,6 @@ static char* read_dsz(FILE* f){
     dfsch_error("Invalid DSZ trailer", NULL);
   }
   
-
   return payload;
 }
 
@@ -261,14 +251,32 @@ void dfsch_load_dsz(dfsch_object_t* env, char* fname, int toplevel){
   load_thread_info_t* lti = get_load_ti();
   load_operation_t this_op;
   dfsch_package_t* saved_package = dfsch_get_current_package();
-
+  char* source;
 
   f = fopen(fname, "rb");
   if (!f){
     dfsch_operating_system_error("fopen");
   }
 
-  dfsch_parser_callback(parser, load_scm_callback, env);
+  dfsch_load_source(env, fname, toplevel, read_dsz(f));
+}
+
+static int load_source_callback(dfsch_object_t* object,
+                                dfsch_object_t* env){
+  dfsch_eval(object, env);
+  return 1;
+}
+
+void dfsch_load_source(dfsch_object_t* env,
+                       char* fname,
+                       int toplevel,
+                       char* source){
+  dfsch_parser_ctx_t *parser = dfsch_parser_create();
+  load_thread_info_t* lti = get_load_ti();
+  load_operation_t this_op;
+  dfsch_package_t* saved_package = dfsch_get_current_package();
+
+  dfsch_parser_callback(parser, load_source_callback, env);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
   dfsch_parser_eval_env(parser, env);
 
@@ -278,10 +286,9 @@ void dfsch_load_dsz(dfsch_object_t* env, char* fname, int toplevel){
     this_op.next = lti->operation;
     lti->operation = &this_op;
 
-    dfsch_parser_feed(parser, read_dsz(f));    
+    dfsch_parser_feed(parser, source);    
 
   } DFSCH_PROTECT {
-    fclose(f);
     lti->operation = this_op.next;
     dfsch_set_current_package(saved_package);
   } DFSCH_PROTECT_END;
@@ -289,7 +296,7 @@ void dfsch_load_dsz(dfsch_object_t* env, char* fname, int toplevel){
   if (dfsch_parser_get_level(parser)!=0){
       dfsch_error("Syntax error at end of input",
                   dfsch_make_string_cstr(fname));
-  }
+  }  
 }
 
 

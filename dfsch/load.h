@@ -51,6 +51,13 @@ extern "C" {
   extern void dfsch_load_so(dfsch_object_t* ctx, 
                             char* so_name, 
                             char* sym_name);
+  /** Load given source code buffer into given environment. */  
+  extern void dfsch_load_source(dfsch_object_t* env,
+                                char* fname,
+                                int toplevel,
+                                char* source);
+
+
   /** Load given source file (absolute path) into given environment. */
   extern void dfsch_load_scm(dfsch_object_t* ctx, char* scm_name, 
                              int toplevel);
