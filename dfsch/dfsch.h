@@ -476,6 +476,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
                                             dfsch_tail_escape_t* esc);
+  extern dfsch_object_t* dfsch_eval_proc_tr_free_env(dfsch_object_t* code, 
+                                                     dfsch_object_t* env,
+                                                     dfsch_tail_escape_t* esc);
   /** Extended variant of dfsch_apply with support for tail recursion */
   extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
