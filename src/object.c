@@ -25,6 +25,7 @@
 #include <dfsch/number.h>
 #include <dfsch/generic.h>
 #include "util.h"
+#include "internal.h"
 
 
 typedef struct class_t {
