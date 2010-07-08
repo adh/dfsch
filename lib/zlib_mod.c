@@ -43,6 +43,31 @@ DFSCH_DEFINE_PRIMITIVE(uncompress,
   return dfsch_make_string_buf(res, rlen);
 }
 
+DFSCH_DEFINE_PRIMITIVE(gzip_open_for_input,
+                       "Open gzip compressed file for reading"){
+  char* filename;
+  DFSCH_STRING_ARG(args, filename);
+  DFSCH_ARG_END(args);
+
+  return dfsch_gzip_open_for_input(filename);
+}
+DFSCH_DEFINE_PRIMITIVE(gzip_open_for_output,
+                       "Open gzip compressed file for writing"){
+  char* filename;
+  DFSCH_STRING_ARG(args, filename);
+  DFSCH_ARG_END(args);
+
+  return dfsch_gzip_open_for_output(filename);
+}
+DFSCH_DEFINE_PRIMITIVE(gzip_open_for_append,
+                       "Open gzip compressed file for appending"){
+  char* filename;
+  DFSCH_STRING_ARG(args, filename);
+  DFSCH_ARG_END(args);
+
+  return dfsch_gzip_open_for_append(filename);
+}
+
 void dfsch_module_zlib_register(dfsch_object_t* env){
   dfsch_package_t* zlib = dfsch_make_package("zlib");
   dfsch_provide(env, "zlib");
@@ -51,4 +76,11 @@ void dfsch_module_zlib_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(compress));
   dfsch_defconst_pkgcstr(env, zlib, "uncompress", 
                          DFSCH_PRIMITIVE_REF(uncompress));
+
+  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-input", 
+                         DFSCH_PRIMITIVE_REF(gzip_open_for_input));
+  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-output", 
+                         DFSCH_PRIMITIVE_REF(gzip_open_for_output));
+  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-append", 
+  DFSCH_PRIMITIVE_REF(gzip_open_for_append));
 }

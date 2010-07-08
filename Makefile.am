@@ -61,6 +61,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
 	libdfsch-json.la \
+	libdfsch-zlib.la \
 	libdfsch-csv.la \
 	$(nonwin32_libs)
 
@@ -200,9 +201,13 @@ os_la_SOURCES = lib/os.c
 os_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 os_la_LIBADD =  libdfsch.la
 
+libdfsch_zlib_la_SOURCES = lib/zlib.c dfsch/lib/zlib.h
+libdfsch_zlib_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_zlib_la_LIBADD =  libdfsch.la
+
 zlib_la_SOURCES = lib/zlib_mod.c
 zlib_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-zlib_la_LIBADD =  libdfsch.la
+zlib_la_LIBADD =  libdfsch.la libdfsch-zlib.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
