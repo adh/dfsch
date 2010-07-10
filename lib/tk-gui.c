@@ -15,7 +15,7 @@ dfsch_type_t dfsch_tcl_interpreter_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(interpreter_t),
-  "tcltk:interpreter",
+  "tk-gui-interface:interpreter",
   NULL,
   NULL,
   NULL,
@@ -48,7 +48,7 @@ dfsch_type_t dfsch_tcl_command_wrapper_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_FUNCTION_TYPE,
   sizeof(command_wrapper_t),
-  "tcltk:command-wrapper",
+  "tk-gui-interface:command-wrapper",
   NULL,
   NULL,
   (dfsch_type_apply_t)command_wrapper_apply,
@@ -169,7 +169,7 @@ void dfsch_tcl_create_command(Tcl_Interp* interp,
 }
 
 void dfsch_tcl_error(Tcl_Interp* interp){
-  dfsch_error("tcltk:error", 
+  dfsch_error("Tcl error", 
               dfsch_make_string_cstr(Tcl_GetStringResult(interp)));
 }
 
