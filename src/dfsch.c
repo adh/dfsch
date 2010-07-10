@@ -952,13 +952,22 @@ dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
                    dfsch__get_thread_info());
 }
 
+/*
+ * This functions evaluates arguments to funcall and saves them on
+ * it's own stack. Functions that are called by apply must explicitly
+ * coppy argument list if they wish to reference it from managed
+ * heap/otherwise store it.
+ */
+
 static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
                                            dfsch_object_t* args,
                                            dfsch_object_t* context,
                                            environment_t* arg_env,
                                            tail_escape_t* esc,
                                            dfsch__thread_info_t* ti){
-  size_t l = dfsch_list_length_fast_bounded(args);
+  size_t l = dfsch_list_length_fast_bounded(args); /* Fast and safe,
+                                                      but supports at
+                                                      most 64k args */
   dfsch_object_t* rsa[l+4];
   dfsch_object_t** res = &rsa;
   size_t j = 0;
