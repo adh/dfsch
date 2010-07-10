@@ -55,27 +55,18 @@ dfsch_type_t dfsch_tcl_command_wrapper_type = {
   NULL
 };
 
-typedef struct command_t {
-
-} command_t;
-dfsch_type_t dfsch_tcl_callback_command_type = {
-  .type = DFSCH_STANDARD_TYPE,
-  .superclass = NULL,
-  .size = sizeof(command_t)
-  
-};
-
+static void check_apartment(interpreter_t* i){
+  if (i->owner != dfsch__get_thread_info()){
+    dfsch_error("Intepreter used from incorrect apartment", i);
+  }
+}
 
 static interpreter_t* interpreter(dfsch_object_t* obj){
   interpreter_t* i = DFSCH_ASSERT_TYPE(obj, DFSCH_TCL_INTERPRETER_TYPE);
   if (!i->active){
     dfsch_error("Interpreter already destroyed", obj);
   }
-
-  if (i->owner != dfsch__get_thread_info()){
-    dfsch_error("Intepreter used from incorrect apartment", i);
-  }
-
+  check_apartment(i);
   return i;
 }
 
@@ -166,19 +157,15 @@ static int command_proc(command_context_t* ctx,
 
 static int cmd_counter = 0;
 
-dfsch_object_t* dfsch_tcl_create_command(dfsch_object_t* interp, 
-                                         char* name, 
-                                         dfsch_object_t* proc){
+void dfsch_tcl_create_command(Tcl_Interp* interp, 
+                              char* name, 
+                              dfsch_object_t* proc){
   command_context_t* ctx = GC_NEW_UNCOLLECTABLE(command_context_t);
-
-  if (!name){
-    name = dfsch_saprintf("dfschAnonCmd%x", cmd_counter);
-    cmd_counter++;
-  }
 
   ctx->proc = proc;
 
   Tcl_CreateCommand(interp, name, command_proc, ctx, GC_free);
+  
 }
 
 void dfsch_tcl_error(Tcl_Interp* interp){
@@ -200,7 +187,7 @@ char* dfsch_tcl_eval(Tcl_Interp* interp, char* string){
 char* dfsch_tcl_quote(char* str){
   char* ret;
   char* out;
-  ret = out = GC_MALLOC_ATOMIC(strlen(str)*2+1);
+  ret = out = GC_MALLOC_ATOMIC(strlen(str)*2+3);
   while (*str){
     switch (*str){
     case '\\':
@@ -228,6 +215,16 @@ char* dfsch_tcl_quote(char* str){
       (*out++) = '$';
       str++;
       break;
+    case '[':
+      (*out++) = '\\';
+      (*out++) = '[';
+      str++;
+      break;
+    case ']':
+      (*out++) = '\\';
+      (*out++) = ']';
+      str++;
+      break;
     default:
       (*out++) = (*str++);
     }
@@ -246,6 +243,8 @@ char* dfsch_tcl_quote_list(dfsch_object_t* list){
     i = DFSCH_FAST_CAR(list);
     if (dfsch_string_p(i)){
       dfsch_sl_append(sl, dfsch_tcl_quote(dfsch_string_to_cstr(i)));
+    } else if (dfsch_keyword_p(i)){
+      dfsch_sl_append(sl, dfsch_saprintf("-%s", dfsch_symbol(i)));
     } else {
       dfsch_sl_append(sl, dfsch_tcl_quote(dfsch_object_2_string(i, 10, 1)));      
     }
