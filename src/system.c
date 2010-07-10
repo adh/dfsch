@@ -216,6 +216,7 @@ DFSCH_DEFINE_PRIMITIVE(get_internal_run_time, NULL){
 
   return dfsch_make_number_from_long((t.tms_utime + t.tms_stime) & LONG_MAX);
 }
+#endif
 DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
   long time;
 
@@ -230,7 +231,6 @@ DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
 
   return NULL;
 }
-#endif
 
 
 void dfsch__system_register(dfsch_object_t *ctx){
