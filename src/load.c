@@ -613,14 +613,10 @@ dfsch_object_t* dfsch_read_scm_fd(int f, char* name, dfsch_object_t* eval_env){
     dfsch_operating_system_error("read");
   }
  
-  if ((err && err != DFSCH_PARSER_STOPPED) 
-      || dfsch_parser_get_level(parser) != 0){
-    if (name)
-      dfsch_error("Syntax error", dfsch_make_string_cstr(name));
-    else
-      dfsch_error("Syntax error", NULL);
-
-  }
+  if (dfsch_parser_get_level(parser)!=0){
+      dfsch_error("Syntax error at end of input",
+                  dfsch_make_string_cstr(name));
+  }  
 
   return ictx.head;
   
@@ -641,25 +637,14 @@ dfsch_object_t* dfsch_read_scm_stream(FILE* f,
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(name));
   dfsch_parser_eval_env(parser, eval_env);
 
-  while (!err && (fgets(buf, 8192, f))){
-    if (buf[strlen(buf)-1] == '\n') 
-      // I'm not interested in '\r' or any other weird ideas
-      l++;
-
-    err = dfsch_parser_feed(parser,buf);
+  while (fgets(buf, 8192, f)){
+    dfsch_parser_feed(parser,buf);
   }
 
-  if ((err && err != DFSCH_PARSER_STOPPED) 
-      || dfsch_parser_get_level(parser)!=0){
-    if (name)
-      dfsch_error("Syntax error",
-                  dfsch_cons(dfsch_make_string_cstr(name),
-                             dfsch_make_number_from_long(l)));
-    else
-      dfsch_error("Syntax error",
-                  dfsch_cons(NULL,
-                             dfsch_make_number_from_long(l)));
-  }
+  if (dfsch_parser_get_level(parser)!=0){
+      dfsch_error("Syntax error at end of input",
+                  dfsch_make_string_cstr(name));
+  }  
 
   return ictx.head;
 }
