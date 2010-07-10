@@ -77,7 +77,7 @@ lib_LTLIBRARIES = libdfsch.la \
 
 
 if TKGUI
-tkgui_modules=tk-gui.la
+tkgui_modules=tk-gui-interface.la
 else
 tkgui_modules=
 endif
@@ -318,12 +318,14 @@ csv_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_tk_gui_la_SOURCES = lib/tk-gui.c
-libdfsch_tk_gui_la_LIBADD = libdfsch.la
+libdfsch_tk_gui_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
+libdfsch_tk_gui_la_LIBADD = libdfsch.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
 libdfsch_tk_gui_la_LDFLAGS = -no-undefined
 
-tk_gui_la_SOURCES = lib/tk-gui_mod.c
-tk_gui_la_LIBADD = libdfsch.la libdfsch-tk-gui.la
-tk_gui_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+tk_gui_interface_la_SOURCES = lib/tk-gui_mod.c
+tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
+tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
+tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 dfsch_repl_SOURCES = src/repl.c
