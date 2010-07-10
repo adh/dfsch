@@ -17,6 +17,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
         dfsch/lib/http.h \
 	dfsch/lib/csv.h \
 	dfsch/lib/zlib.h \
+	dfsch/lib/tk-gui.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -42,6 +43,12 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/generate.h \
 	dfsch/backquote.h
 
+if TKGUI
+tkgui_libs=libdfsch-tk-gui.la
+else
+tkgui_libs=
+endif
+
 if WIN32
 nonwin32_libs=
 else
@@ -65,8 +72,15 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-json.la \
 	libdfsch-zlib.la \
 	libdfsch-csv.la \
-	$(nonwin32_libs)
+	$(nonwin32_libs)\
+	$(tkgui_libs)
 
+
+if TKGUI
+tkgui_modules=tk-gui.la
+else
+tkgui_modules=
+endif
 
 if WIN32
 nonwin32_modules=
@@ -93,7 +107,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	os.la \
 	zlib.la \
 	csv.la \
-	$(nonwin32_modules)
+	$(nonwin32_modules)\
+	$(tkgui_modules)
 
 
 dfschlibscm_DATA = scm/stream-functions.scm \
@@ -302,6 +317,15 @@ csv_la_LIBADD = libdfsch.la libdfsch-csv.la
 csv_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
+libdfsch_tk_gui_la_SOURCES = lib/tk-gui.c
+libdfsch_tk_gui_la_LIBADD = libdfsch.la
+libdfsch_tk_gui_la_LDFLAGS = -no-undefined
+
+tk_gui_la_SOURCES = lib/tk-gui_mod.c
+tk_gui_la_LIBADD = libdfsch.la libdfsch-tk-gui.la
+tk_gui_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la libdfsch-cinspect.la
@@ -326,3 +350,4 @@ dist-hook:
 
 version.h:
 	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
+
