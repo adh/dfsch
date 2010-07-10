@@ -224,7 +224,7 @@ DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
   DFSCH_ARG_END(args);
 
 #ifdef __WIN32__
-  Sleep(time);
+  Sleep(time * 1000); /* Why? :) */ 
 #else
   sleep(time);
 #endif
