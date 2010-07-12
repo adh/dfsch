@@ -1,7 +1,7 @@
 (provide :simple-tests)
 (require :cmdopts)
 
-(define-package :simple-tests :dfsch :cmdopts)
+(define-package :simple-tests :uses '(:dfsch :cmdopts))
 (in-package :simple-tests)
 
 (define tests-passed 0)

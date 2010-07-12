@@ -22,7 +22,7 @@
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (require :tk-gui-interface)
-(define-package :tk-gui :dfsch :tk-gui%interface)
+(define-package :tk-gui :uses '(:dfsch :tk-gui%interface))
 (in-package :tk-gui)
 
 (define *waited-window* ())
@@ -216,6 +216,7 @@
 (define-simple-wrapper open-dialog "tk_getOpenFile")
 (define-simple-wrapper save-dialog "tk_getSaveFile")
 (define-simple-wrapper directory-dialog "tk_chooseDirectory")
+(define-simple-wrapper color-dialog "tk_chooseColor")
 
 (define (button-dialog context buttons 
                        &key 

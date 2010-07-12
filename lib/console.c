@@ -32,6 +32,9 @@ static dfsch_console_repl_command_t* running_cmds = NULL;
 /* this is brain-bamaged and completely unsafe, but in line with readline 
  * documentation... go figure :) 
  */
+
+static int complete_into_packages = 0;
+
 static int rl_interrupt_function(int sig){
   if (running_parser){
     dfsch_parser_reset(running_parser);
@@ -167,7 +170,19 @@ static completion_entry_t* generate_completions(char* text_part){
       package = DFSCH_KEYWORD_PACKAGE;
     }
     if (package){
-      dfsch_for_package_symbols(package, compl_cb, &ctx);
+      if (complete_into_packages){
+        dfsch_for_package_symbols(package, compl_cb, &ctx);
+      } else {
+        dfsch_object_t* exp = dfsch_package_exported_symbols(package);
+        if (!exp){
+          dfsch_for_package_symbols(package, compl_cb, &ctx);
+        } else {
+          while (DFSCH_PAIR_P(exp)){
+            compl_cb(&ctx, DFSCH_FAST_CAR(exp));
+            exp = DFSCH_FAST_CDR(exp);
+          }
+        }
+      }
     }
   } else {
     dfsch_object_t* packages = dfsch_list_all_packages();
@@ -378,11 +393,27 @@ static void command_help(char* cmdline, dfsch_console_repl_command_t** cmds){
   }  
 }
 
+#ifdef USE_READLINE
+static void command_complete_into_pkgs(char* cmdline, void* discard){
+  complete_into_packages = !complete_into_packages;
+  fprintf(stderr, 
+          complete_into_packages
+          ?"Completing all symbols in package\n" 
+          :"Completing only exported symbols\n");
+}
+#endif
+
 int dfsch_console_read_objects_parser(char* prompt,
                                       dfsch_parser_ctx_t* parser,
                                       dfsch_console_repl_command_t* cmds){
   int ret;
   char* line;
+
+#ifdef USE_READLINE
+  cmds = dfsch_console_add_command(cmds, "complete-into-pkgs", 
+                                   "Complete into packages",
+                                   command_complete_into_pkgs, &cmds);
+#endif
 
   cmds = dfsch_console_add_command(cmds, "help", 
                                    "Print list of supported commands",

@@ -18,7 +18,6 @@
 (define-widgets window
   (:entry () 
           :grid (:row 0 :column 0) 
-          :contents() 
           :variable entry)
   (:button (:text "The Button") 
            :grid (:row 0 :column 1)
@@ -41,7 +40,11 @@
            (:button (:text "Open dialog") :pack ()
                     :events ((:command
                               (lambda ()
-                                (open-dialog context))))))))
+                                (open-dialog context)))))
+           (:button (:text "Color dialog") :pack ()
+                    :events ((:command
+                              (lambda ()
+                                (color-dialog context))))))))
 
 ;; (define entry
 ;;    (pack-widget 

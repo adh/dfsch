@@ -77,6 +77,7 @@ struct dfsch_package_t {
   size_t sym_count;
   size_t mask;
   pkg_hash_entry_t* entries;
+  dfsch_object_t* exported_symbols;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -218,6 +219,16 @@ void dfsch_use_package(dfsch_package_t* in,
   pthread_mutex_unlock(&symbol_lock);
 }
 
+void dfsch_export_symbol(dfsch_package_t* pkg,
+                         dfsch_object_t* sym){
+  dfsch__symbol_t* s = DFSCH_ASSERT_TYPE(sym, DFSCH_SYMBOL_TYPE);
+
+  /* It is well possible to export symbols from different
+   * package. Call it feature. */
+
+  pkg->exported_symbols = dfsch_cons(sym, pkg->exported_symbols);
+}
+
 
 dfsch_package_t* dfsch_get_current_package(){
   return current_package;
@@ -353,6 +364,23 @@ static dfsch__symbol_t* pkg_find_symbol(dfsch_package_t* pkg,
   return NULL;
 }
 
+static dfsch__symbol_t* pkg_find_exported_symbol(dfsch_package_t* pkg,
+                                                 char* name){
+  if (pkg->exported_symbols){
+    dfsch_object_t* i = pkg->exported_symbols;
+
+    while (DFSCH_PAIR_P(i)){
+      if (strcmp(name, 
+                 ((dfsch__symbol_t*)DFSCH_TAG_REF(DFSCH_FAST_CAR(i)))->name)){
+        return (dfsch__symbol_t*)DFSCH_TAG_REF(DFSCH_FAST_CAR(i));
+      }
+      i = DFSCH_FAST_CDR(i);
+    }
+  } else {
+    return pkg_find_symbol(pkg, name);
+  }
+}
+
 static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
                                     char* name){
   dfsch__symbol_t* sym = pkg_find_symbol(pkg, name);
@@ -363,7 +391,7 @@ static dfsch__symbol_t* find_symbol(dfsch_package_t* pkg,
   }
   
   while (DFSCH_PAIR_P(i)){
-    sym = pkg_find_symbol((dfsch_package_t*)DFSCH_FAST_CAR(i), name);
+    sym = pkg_find_exported_symbol((dfsch_package_t*)DFSCH_FAST_CAR(i), name);
     if (sym){
       return sym;
     }
@@ -615,6 +643,9 @@ dfsch_object_t* dfsch_list_all_packages(){
 
   return list;
 }
+dfsch_object_t* dfsch_package_exported_symbols(dfsch_package_t* pkg){
+  return dfsch_list_copy(pkg->exported_symbols);
+}
 void dfsch_for_package_symbols(dfsch_package_t* pkg,
                                dfsch_package_iteration_cb_t cb,
                                void* baton){
@@ -656,13 +687,22 @@ void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
   while (j){
     dfsch_package_t* p = (dfsch_package_t*)DFSCH_FAST_CAR(j);
 
-    for (i = 0; i <= p->mask; i++){
-      if (p->entries[i].hash && p->entries[i].symbol && 
-          p->entries[i].symbol->package){
-        cb(baton, DFSCH_TAG_ENCODE(p->entries[i].symbol, 2));
+    if (p->exported_symbols){
+      dfsch_object_t* k = p->exported_symbols;
+
+      while (DFSCH_PAIR_P(k)){
+        cb(baton, DFSCH_FAST_CAR(k));
+        k = DFSCH_FAST_CDR(k); 
+      }
+    } else {
+      for (i = 0; i <= p->mask; i++){
+        if (p->entries[i].hash && p->entries[i].symbol && 
+            p->entries[i].symbol->package){
+          cb(baton, DFSCH_TAG_ENCODE(p->entries[i].symbol, 2));
+        }
       }
     }
-
+    
     j = DFSCH_FAST_CDR(j);
   }
   
@@ -751,12 +791,25 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
                        "not already exist"){
   char* name;
   dfsch_object_t* imports;
+  dfsch_object_t* exports;
   dfsch_object_t* pkg;
 
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
-  DFSCH_ARG_REST(args, imports);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("uses", imports);
+  DFSCH_KEYWORD("exports", exports);
+  DFSCH_KEYWORD_PARSER_END(args);
 
   pkg = dfsch_make_package(name);
+
+  while (DFSCH_PAIR_P(exports)){
+    dfsch_export_symbol
+      (pkg, 
+       dfsch_intern_symbol
+       (pkg,
+        dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(exports))));
+    exports = DFSCH_FAST_CDR(exports);
+  }
 
   while (DFSCH_PAIR_P(imports)){
     dfsch_use_package((dfsch_package_t*)pkg,
@@ -773,21 +826,37 @@ DFSCH_DEFINE_PRIMITIVE(in_package,
   DFSCH_PACKAGE_ARG(args, package);
   DFSCH_ARG_END(args);
 
-
   dfsch_set_current_package(package);
 
   return (dfsch_object_t*)package;
 }
 DFSCH_DEFINE_PRIMITIVE(use_package, 
-                       "Set current package to package of supplied name"){
+                       "Add package to list of packages used by "
+                       "current package. Current package can be "
+                       "overriden by optional second argument"){
   dfsch_package_t* package;
+  dfsch_package_t* in;
 
   DFSCH_PACKAGE_ARG(args, package);
+  DFSCH_PACKAGE_ARG_OPT(args, in, dfsch_get_current_package());
   DFSCH_ARG_END(args);
 
-  dfsch_use_package(dfsch_get_current_package(), package);
+  dfsch_use_package(in, package);
 
   return (dfsch_object_t*)NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(export_symbol,
+                       "Export symbol from package"){
+  dfsch_package_t* package;
+  dfsch_object_t* symbol;
+
+  DFSCH_PACKAGE_ARG(args, package);
+  DFSCH_OBJECT_ARG(args, symbol);
+  DFSCH_ARG_END(args);
+  
+  dfsch_export_symbol(package, symbol);
+
+  return symbol;
 }
 
 DFSCH_DEFINE_PRIMITIVE(unintern, "Remove given symbol from it's package"){

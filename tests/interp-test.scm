@@ -7,7 +7,7 @@
 (require :inet)
 (require :zlib)
 
-(define-package :interp-test :dfsch :simple-tests)
+(define-package :interp-test :uses '(:dfsch :simple-tests))
 (in-package :interp-test)
 
 ;;; Write tests here
