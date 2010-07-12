@@ -8,7 +8,7 @@
 (window-on-delete window 
                   (lambda (window)
                     (when (string=? (message-box context
-                                                 :message "Really quit"
+                                                 :message "Really quit?"
                                                  :type "yesno"
                                                  :icon "question")
                                     "yes")
@@ -16,9 +16,8 @@
 
 (define entry
    (pack-widget 
-    (make-widget window "entry" 
-                 :text "abcdef")))
-(widget-command entry "insert" "0" "Test value")
+    (make-widget window "entry" )))
+(widget-command entry "insert" "0" "The Entry")
   
 
 (pack-widget 
