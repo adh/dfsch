@@ -26,12 +26,15 @@
 
 (define-class <widget> ()
   ((path :reader widget-path :initarg :path)
-   (context :reader widget-context :initarg :context)))
+   (context :reader widget-context :initarg :context)
+   (window :reader widget-window)))
 
 (define-method (initialize-instance (widget <widget>) parent type path 
                                     &rest args)
   (slot-set! widget :path (translate-widget-path parent path))
   (slot-set! widget :context (widget-context parent))
+  (slot-set! widget :window (widget-window parent))
+      
   (tcl-eval-list (widget-interpreter widget)
              (append (list type (widget-path widget))
                      args)))
@@ -75,14 +78,24 @@
 (define-geometry-manager-method-in place-widget-in "place")
 
 
-(define-method (widget-command (widget <widget>) &rest args)
+(define-method (widget-command-list (widget <widget>) args)
   (tcl-eval-list (widget-interpreter widget)
-             (cons (widget-path widget)
-                   args)))
+                 (cons (widget-path widget)
+                       args)))
+
+(define-method (widget-command (widget <widget>) &rest args)
+  (widget-command-list widget args))
 
 (define-method (configure-widget (widget <widget>) &rest args)
-  (apply widget-command (cons "configure" args))
+  (widget-command-list widget (cons "configure" args))
   widget)
+
+(define-method (validate-event-name (widget <widget>) name)
+  #t)
+
+(define-method (bind-event (widget <widget>) event proc &optional args)
+  (configure-widget widget event (bind-command (widget-window widget)
+                                               proc)))
 
 (define-class <window> <widget>
    ((command-list)
@@ -104,6 +117,7 @@
 (define-method (initialize-instance (win <window>) context path &rest args)
   (slot-set! win :path path)
   (slot-set! win :context context)
+  (slot-set! win :window win)
   (create-command! (widget-interpreter win)
                    (window-delete-command-name win)
                    (lambda ()
@@ -161,6 +175,21 @@
                        
 ;;;; Simple wrappers
 
-(define (message-box context &rest args)
+(define-macro (define-simple-wrapper name command)
+  `(define (,name context &rest args)
+     (tcl-eval-list (context-interpreter context)
+                    (cons ,command args))))
+
+(define-simple-wrapper message-box "tk_messageBox")
+(define-simple-wrapper open-dialog "tk_getOpenFile")
+(define-simple-wrapper save-dialog "tk_getSaveFile")
+(define-simple-wrapper directory-dialog "tk_chooseDirectory")
+
+(define (button-dialog context buttons &rest args)
   (tcl-eval-list (context-interpreter context)
-             (cons "tk_messageBox" args)))
+                 (append (list "tk_dialog" (unique-widget-name))
+                         args buttons)))
+
+
+
+

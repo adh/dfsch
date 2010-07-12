@@ -13,6 +13,7 @@
                                                  :icon "question")
                                     "yes")
                           (destroy-window window))))
+(window-title window "tk-gui demo")
 
 (define entry
    (pack-widget 
@@ -20,14 +21,14 @@
 (widget-command entry "insert" "0" "The Entry")
   
 
-(pack-widget 
- (make-widget window "button" 
-              :text "The Button"
-              :command (bind-command 
-                        window 
-                        (lambda ()
-                          (message-box context
-                                       :message (format "Value is: ~s" 
-                                                        (widget-command entry "get")))))))
+(bind-event (pack-widget 
+             (make-widget window "button" 
+                          :text "The Button"))
+            :command (lambda ()
+                       (message-box context
+                                    :message 
+                                    (format "Value is: ~s" 
+                                            (widget-command entry 
+                                                            "get")))))
 
 (wait-for-window window)
