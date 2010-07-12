@@ -22,7 +22,7 @@
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (require :tk-gui-interface)
-(define-package :tk-gui :dfsch :tk-gui%interface)
+(define-package :tk-gui :uses '(:dfsch :tk-gui%interface))
 (in-package :tk-gui)
 
 (define *waited-window* ())
