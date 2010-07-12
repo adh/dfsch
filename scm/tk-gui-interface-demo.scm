@@ -18,4 +18,4 @@
 (tk-gui-interface:eval *interp* "wm" "title" "." "dfsch evaluator")
 (tk-gui-interface:eval *interp* "pack" ".text")
 (tk-gui-interface:eval *interp* "pack" ".eval")
-(tk-gui-interface:eval *interp* "tkwait" "window" ".")
+(tk-gui-interface:event-loop *interp*)

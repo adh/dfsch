@@ -136,9 +136,9 @@ static int command_proc(command_context_t* ctx,
   int i;
   int ret;
 
-  head = cur = dfsch_multicons(argc);
+  head = cur = dfsch_multicons(argc-1);
 
-  for(i = 0; i < argc; ++i){
+  for(i = 1; i < argc; ++i){
     DFSCH_FAST_CAR(cur) = dfsch_make_string_cstr(argv[i]);
     cur = DFSCH_FAST_CDR(cur);
   }
@@ -182,6 +182,15 @@ char* dfsch_tcl_eval(Tcl_Interp* interp, char* string){
     dfsch_tcl_error(interp);
   }
   return dfsch_stracpy(Tcl_GetStringResult(interp));
+}
+
+void dfsch_tcl_event_loop(){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  while (ti->throw_tag == NULL){
+    Tcl_DoOneEvent(0);
+  }
+  dfsch__continue_unwind(ti);
 }
 
 char* dfsch_tcl_quote(char* str){
