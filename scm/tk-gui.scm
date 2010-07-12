@@ -39,8 +39,8 @@
   (slot-set! widget :window (widget-window parent))
       
   (tcl-eval-list (widget-interpreter widget)
-             (append (list type (widget-path widget))
-                     args)))
+                 (append (list type (widget-path widget))
+                         args)))
 
 (define unique-widget-name
   (let ((counter 0))
@@ -59,16 +59,16 @@
 (define-macro (define-geometry-manager-method name manager)
   `(define-method (,name (widget <widget>) &rest args)
      (tcl-eval-list (widget-interpreter widget)
-                (append (list ,manager (widget-path widget))
-                        args))
+                    (append (list ,manager (widget-path widget))
+                            args))
      widget))
 
 (define-macro (define-geometry-manager-method-in name manager)
   `(define-method (name (widget <widget>) in &rest args)
      (tcl-eval-list (widget-interpreter widget)
-                (append (list ,manager (widget-path widget) 
-                              :in (widget-path in))
-                        args))
+                    (append (list ,manager (widget-path widget) 
+                                  :in (widget-path in))
+                            args))
      widget))
 
 (define-geometry-manager-method pack-widget "pack")
@@ -96,9 +96,15 @@
 (define-method (validate-event-name (widget <widget>) name)
   #t)
 
-(define-method (bind-event (widget <widget>) event proc &optional args)
+(define-method (bind-event (widget <widget>) (event <symbol>) 
+                           proc &optional args)
   (configure-widget widget event (bind-command (widget-window widget)
                                                proc)))
+
+(define-method (bind-event (widget <widget>) (event <list>) 
+                           proc &key args append)
+  )
+
 
 (define-class <window> <widget>
    ((command-list)
@@ -194,5 +200,59 @@
                          args buttons)))
 
 
+;;;; Widgets definition macro
 
+(define *manager-table*
+  '((:pack pack-widget)
+    (:grid grid-widget)
+    (:place place-widget)))
+
+(define *widget-type-table* ())
+
+(define (register-widget-type type expander)
+  (set! *widget-type-table* (cons (list type expander) *widget-type-table*)))
+
+(define (get-manager-proc mgr)
+  (let ((entry (assq mgr *manager-table*)))
+    (unless entry
+            (error "No such manager" :manager mgr))
+    (cadr entry)))
+
+(define-method (get-widget-construction-expander (type <symbol>))
+  (if (keyword? type)
+      (get-widget-construction-expander (keyword-name type))
+      (let ((entry (assq type *widget-type-table*)))
+        (if entry
+            (cadr entry)
+            (error "Unknown widget type" type)))))
+
+(define-method (get-widget-construction-expander (type <string>))
+  (lambda (parent args) 
+    `(make-widget ,parent ,type ,@args)))
+  
+
+(define-macro (define-widget parent type args mgr mgr-args 
+                &key variable contents events)
+  (let ((tmp-widget (gensym)))
+    `(begin
+       (define ,tmp-widget ,((get-widget-construction-expander type)
+                             parent args))
+       (,(get-manager-proc mgr) ,tmp-widget ,@mgr-args)
+       ,@(when variable
+               `((define ,variable ,tmp-widget)))
+       ,@(when contents
+               `((define-widgets ,tmp-widget ,@contents)))
+       ,@(map (lambda (event-spec)
+                `(bind-event ,tmp-widget ,@event-spec))
+              events)
+       (unset! ,tmp-widget))))
+
+(define-macro (define-widgets parent &rest widget-spec)
+  (let ((parent-var (gensym)))
+    `(begin
+       (define ,parent-var ,parent)
+       ,@(map (lambda (spec)
+                `(define-widget ,parent-var ,@spec))
+              widget-spec)
+       (unset! ,parent-var))))
 
