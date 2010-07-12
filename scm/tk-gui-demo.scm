@@ -40,7 +40,11 @@
            (:button (:text "Open dialog") :pack ()
                     :events ((:command
                               (lambda ()
-                                (open-dialog context))))))))
+                                (open-dialog context)))))
+           (:button (:text "Color dialog") :pack ()
+                    :events ((:command
+                              (lambda ()
+                                (color-dialog context))))))))
 
 ;; (define entry
 ;;    (pack-widget 

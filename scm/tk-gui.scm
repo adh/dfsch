@@ -216,6 +216,7 @@
 (define-simple-wrapper open-dialog "tk_getOpenFile")
 (define-simple-wrapper save-dialog "tk_getSaveFile")
 (define-simple-wrapper directory-dialog "tk_chooseDirectory")
+(define-simple-wrapper color-dialog "tk_chooseColor")
 
 (define (button-dialog context buttons 
                        &key 
