@@ -37,6 +37,8 @@
 #endif
 
 #ifdef __WIN32__
+#define _WIN32_WINNT 0x0502
+/* For SetDllPath */
 #include <windows.h>
 #endif
 
@@ -85,12 +87,19 @@ void dfsch_load_so(dfsch_object_t* ctx,
 #elif defined(__WIN32__)
   HMODULE hModule;
   dfsch_object_t* (*entry)(dfsch_object_t*);
+  char* path = dfsch_get_path_directory(so_name);
 
-  hModule = LoadLibraryEx(so_name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-  
+  if (path){
+    SetDllDirectory(path);
+  }
+
+  hModule = LoadLibraryEx(so_name, NULL, 0);
+
   if (!hModule){
     dfsch_error("LoadLibraryEx() failed", NULL);
   }
+
+  SetDllDirectory(NULL);
 
   entry = GetProcAddress(hModule, sym_name);
 
