@@ -101,8 +101,6 @@ void dfsch_load_so(dfsch_object_t* ctx,
     }
   }
 
-  SetDllDirectory(NULL);
-
   entry = GetProcAddress(hModule, sym_name);
 
   if (!entry){
