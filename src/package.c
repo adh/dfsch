@@ -805,9 +805,10 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
   while (DFSCH_PAIR_P(exports)){
     dfsch_export_symbol
       (pkg, 
-       intern_symbol_in_package
+       dfsch_intern_symbol
        (pkg,
         dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(exports))));
+    exports = DFSCH_FAST_CDR(exports);
   }
 
   while (DFSCH_PAIR_P(imports)){
