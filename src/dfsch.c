@@ -1225,9 +1225,9 @@ static void destructure_keywords(lambda_list_t* ll,
 
   while (DFSCH_PAIR_P(j)){
     dfsch_object_t* keyword;
-    dfsch_object_t* value;
+    dfsch_object_t* keyword_value;
     DFSCH_OBJECT_ARG(j, keyword);
-    DFSCH_OBJECT_ARG(j, value);
+    DFSCH_OBJECT_ARG(j, keyword_value);
     
     i = 0;
     for (;;){
@@ -1239,7 +1239,7 @@ static void destructure_keywords(lambda_list_t* ll,
       }
       if (keyword == ll->keywords[i]){
         dfsch_eqhash_put(&env->values, ll->arg_list[i + kw_offset], 
-                         value);
+                         keyword_value);
 
         supplied[i] = 1;
         break;
