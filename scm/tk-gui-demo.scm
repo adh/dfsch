@@ -29,13 +29,15 @@
                                     (format "Value is: ~s" 
                                             (widget-command entry 
                                                             "get")))))))
-  (:button (:text "Button dialog") :grid (:row 1 :column 0)
-           :events ((:command 
-                     (lambda ()
-                       (button-dialog context
-                                      '("Nyaa" "Nyuu" "Nyan" "Knik" "Uguu")
-                                      :title "foo?"
-                                      :text "Neko?"))))))
+  (:frame () :grid (:row 1 :column 0 :columnspan 2)
+          :contents
+          ((:button (:text "Button dialog") :pack ()
+                    :events ((:command 
+                              (lambda ()
+                                (button-dialog context
+                                               '("Nyaa" "Nyuu" "Nyan" "Knik" "Uguu")
+                                               :title "foo?"
+                                               :text "Neko?"))))))))
 
 ;; (define entry
 ;;    (pack-widget 
