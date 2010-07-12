@@ -47,7 +47,23 @@
 
 (define-method (translate-widget-path (widget <widget>) path)
   (string-append (widget-path widget) path))
+(define-method (widget-interpreter (widget <widget>))
+  (context-interpreter (widget-context widget)))
 
+(define-method (pack-widget (widget <widget>) &rest args)
+  (eval-list (widget-interpreter widget)
+             (append (list "pack" (widget-path widget))
+                     args))
+  widget)
+
+(define-method (widget-command (widget <widget>) &rest args)
+  (eval-list (widget-interpreter widget)
+             (cons (widget-path widget)
+                   args)))
+
+(define-method (configure-widget (widget <widget>) &rest args)
+  (apply widget-command (cons "configure" args))
+  widget)
 
 (define-class <window> <widget>
    ((command-list)
@@ -55,8 +71,6 @@
     (destroyed? :initform ()
                 :reader window-destroyed?)))
 
-(define-method (widget-interpreter (widget <widget>))
-  (context-interpreter (widget-context widget)))
 
 
 (define unique-command-name
@@ -87,7 +101,7 @@
 
 (define-method (destroy-window (win <window>))
   (for-each (lambda (command)
-              (delete-command! (window-interpreter win) command))
+              (delete-command! (widget-interpreter win) command))
             (slot-ref win :command-list))
   (delete-command! (widget-interpreter win) 
                    (window-delete-command-name win))
@@ -98,7 +112,7 @@
 
 (define-method (bind-command (win <window>) proc)
   (let ((cmd-name (unique-command-name)))
-    (create-command (widget-interpreter win) cmd-name proc)
+    (create-command! (widget-interpreter win) cmd-name proc)
     (slot-set! win :command-list (cons cmd-name (slot-ref win :command-list)))
     cmd-name))
 
@@ -119,10 +133,15 @@
       (eval (widget-interpreter win) "wm" "title" (widget-path win))))
 
 (define-method (withdraw-window (win <window>))
-  (eval (widget-interpreter win) "wm" "withdraw" (window-path win)))
+  (eval (widget-interpreter win) "wm" "withdraw" (widget-path win)))
 
 (define (wait)
   (event-loop))
 
 
                        
+;;;; Simple wrappers
+
+(define (message-box context &rest args)
+  (eval-list (context-interpreter context)
+             (cons "tk_messageBox" args)))
