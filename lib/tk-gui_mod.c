@@ -92,7 +92,7 @@ DFSCH_DEFINE_PRIMITIVE(event_loop, 0){
 
 
 void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
-  dfsch_package_t* tk_gui = dfsch_make_package("tk-gui-interface");
+  dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface");
   dfsch_provide(env, "tk-gui-interface");
 
   dfsch_define_pkgcstr(env, tk_gui, "<interpreter>", 
@@ -104,11 +104,11 @@ void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
                        DFSCH_PRIMITIVE_REF(create_interpreter));
   dfsch_define_pkgcstr(env, tk_gui, "destroy-interpreter", 
                        DFSCH_PRIMITIVE_REF(destroy_interpreter));
-  dfsch_define_pkgcstr(env, tk_gui, "eval", 
+  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval", 
                        DFSCH_PRIMITIVE_REF(eval));
-  dfsch_define_pkgcstr(env, tk_gui, "eval-list", 
+  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval-list", 
                        DFSCH_PRIMITIVE_REF(eval_list));
-  dfsch_define_pkgcstr(env, tk_gui, "eval-string",
+  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval-string",
                        DFSCH_PRIMITIVE_REF(eval_string));
   dfsch_define_pkgcstr(env, tk_gui, "wrap-command", 
                        DFSCH_PRIMITIVE_REF(wrap_command));
