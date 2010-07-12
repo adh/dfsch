@@ -259,6 +259,8 @@ char* dfsch_tcl_quote_list(dfsch_object_t* list){
       dfsch_sl_append(sl, dfsch_tcl_quote(dfsch_string_to_cstr(i)));
     } else if (dfsch_keyword_p(i)){
       dfsch_sl_append(sl, dfsch_saprintf("-%s", dfsch_symbol(i)));
+    } else if (DFSCH_PAIR_P(i)){
+      dfsch_sl_append(sl, dfsch_tcl_quote_list(i));
     } else {
       dfsch_sl_append(sl, dfsch_tcl_quote(dfsch_object_2_string(i, 10, 1)));      
     }
