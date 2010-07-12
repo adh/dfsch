@@ -117,7 +117,11 @@ dfsch_object_t* dfsch_tcl_wrap_command(char* name,
     = (command_wrapper_t*)dfsch_make_object(DFSCH_TCL_COMMAND_WRAPPER_TYPE);
 
 
-  cw->interpreter = interpreter(interp);
+  if (interp) {
+    cw->interpreter = interpreter(interp);
+  } else {
+    cw->interpreter = NULL;
+  }
   cw->name = name;
 
   return (dfsch_object_t*)cw;
@@ -189,6 +193,7 @@ void dfsch_tcl_event_loop(){
 
   while (ti->throw_tag == NULL){
     Tcl_DoOneEvent(0);
+    dfsch_async_apply_check();
   }
   dfsch__continue_unwind(ti);
 }

@@ -30,6 +30,8 @@ DFSCH_DEFINE_PRIMITIVE(eval_list, 0){
   dfsch_object_t* list;
 
   DFSCH_TCL_INTERPRETER_ARG(args, interp);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_tcl_eval(interp, 
                                                dfsch_tcl_quote_list(list)));
