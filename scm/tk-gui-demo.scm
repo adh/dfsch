@@ -37,7 +37,11 @@
                                 (button-dialog context
                                                '("Nyaa" "Nyuu" "Nyan" "Knik" "Uguu")
                                                :title "foo?"
-                                               :text "Neko?"))))))))
+                                               :text "Neko?")))))
+           (:button (:text "Open dialog") :pack ()
+                    :events ((:command
+                              (lambda ()
+                                (open-dialog context))))))))
 
 ;; (define entry
 ;;    (pack-widget 
