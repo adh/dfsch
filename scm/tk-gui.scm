@@ -50,11 +50,30 @@
 (define-method (widget-interpreter (widget <widget>))
   (context-interpreter (widget-context widget)))
 
-(define-method (pack-widget (widget <widget>) &rest args)
-  (eval-list (widget-interpreter widget)
-             (append (list "pack" (widget-path widget))
-                     args))
-  widget)
+(define-macro (define-geometry-manager-method name manager)
+  `(define-method (,name (widget <widget>) &rest args)
+     (eval-list (widget-interpreter widget)
+                (append (list ,manager (widget-path widget))
+                        args))
+     widget))
+
+(define-macro (define-geometry-manager-method-in name manager)
+  `(define-method (name (widget <widget>) in &rest args)
+     (eval-list (widget-interpreter widget)
+                (append (list ,manager (widget-path widget) 
+                              :in (widget-path in))
+                        args))
+     widget))
+
+(define-geometry-manager-method pack-widget "pack")
+(define-geometry-manager-method-in pack-widget-in "pack")
+
+(define-geometry-manager-method grid-widget "grid")
+(define-geometry-manager-method-in grid-widget-in "grid")
+
+(define-geometry-manager-method place-widget "place")
+(define-geometry-manager-method-in place-widget-in "place")
+
 
 (define-method (widget-command (widget <widget>) &rest args)
   (eval-list (widget-interpreter widget)
