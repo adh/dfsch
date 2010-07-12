@@ -20,14 +20,22 @@
           :grid (:row 0 :column 0) 
           :contents() 
           :variable entry)
-  (:button (:text "cudlitko") 
+  (:button (:text "The Button") 
            :grid (:row 0 :column 1)
            :events ((:command
-                     (lambda () (message-box context
-                                             :message 
-                                             (format "Value is: ~s" 
-                                                     (widget-command entry 
-                                                                     "get"))))))))
+                     (lambda () 
+                       (message-box context
+                                    :message 
+                                    (format "Value is: ~s" 
+                                            (widget-command entry 
+                                                            "get")))))))
+  (:button (:text "Button dialog") :grid (:row 1 :column 0)
+           :events ((:command 
+                     (lambda ()
+                       (button-dialog context
+                                      '("Nyaa" "Nyuu" "Nyan" "Knik" "Uguu")
+                                      :title "foo?"
+                                      :text "Neko?"))))))
 
 ;; (define entry
 ;;    (pack-widget 
