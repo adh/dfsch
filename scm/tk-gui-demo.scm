@@ -18,7 +18,6 @@
 (define-widgets window
   (:entry () 
           :grid (:row 0 :column 0) 
-          :contents() 
           :variable entry)
   (:button (:text "The Button") 
            :grid (:row 0 :column 1)
