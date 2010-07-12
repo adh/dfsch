@@ -24,6 +24,9 @@
   (when withdraw-toplevel
         (withdraw-window (context-toplevel-window context))))  
 
+(define-method (wait-for-toplevel (context <context>))
+  (wait-for-window (context-toplevel-window context)))
+
 (define-class <widget> ()
   ((path :reader widget-path :initarg :path)
    (context :reader widget-context :initarg :context)
