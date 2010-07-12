@@ -37,8 +37,6 @@
 #endif
 
 #ifdef __WIN32__
-#define _WIN32_WINNT 0x0502
-/* For SetDllPath */
 #include <windows.h>
 #endif
 
@@ -87,16 +85,20 @@ void dfsch_load_so(dfsch_object_t* ctx,
 #elif defined(__WIN32__)
   HMODULE hModule;
   dfsch_object_t* (*entry)(dfsch_object_t*);
-  char* path = dfsch_get_path_directory(so_name);
-
-  if (path){
-    SetDllDirectory(path);
-  }
 
   hModule = LoadLibraryEx(so_name, NULL, 0);
 
   if (!hModule){
-    dfsch_error("LoadLibraryEx() failed", NULL);
+    /* XXX: This is ugly hack that can be probably solved slightly
+     * better by SetDllDirectory(). But SetDllDirectory is not
+     * supported before XP SP1 and also is not present in mingw's
+     * import library for kernel32.dll. 
+     */
+    hModule = LoadLibraryEx(so_name, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    
+    if (!hModule){
+      dfsch_error("LoadLibraryEx() failed", NULL);
+    }
   }
 
   SetDllDirectory(NULL);
