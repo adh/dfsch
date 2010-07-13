@@ -16,9 +16,9 @@
 (window-title window "tk-gui demo")
 
 (define-widgets window
-  (:entry () 
-          :grid (:row 0 :column 0) 
-          :variable entry)
+  (<entry> () 
+           :grid (:row 0 :column 0) 
+           :variable entry)
   (:button (:text "The Button") 
            :grid (:row 0 :column 1)
            :events ((:command
@@ -28,7 +28,12 @@
                                     (format "Value is: ~s" 
                                             (widget-command entry 
                                                             "get")))))))
-  (:frame () :grid (:row 1 :column 0 :columnspan 2)
+  (:button (:text "Second Button")
+           :grid (:row 0 :column 2)
+           :events ((:command
+                     (lambda ()
+                       (set-value entry "Foo")))))
+  (:frame () :grid (:row 1 :column 0 :columnspan 3)
           :contents
           ((:button (:text "Button dialog") :pack ()
                     :events ((:command 

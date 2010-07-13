@@ -283,3 +283,30 @@
               widget-spec)
        (unset! ,parent-var))))
 
+;;;; Entry widget
+
+(define-class <entry> <widget>
+  ())
+
+(define-method (initialize-instance (widget <entry>) parent 
+                                    &rest args)
+  (slot-set! widget :path (translate-widget-path parent 
+                                                 (unique-widget-name)))
+  (slot-set! widget :context (widget-context parent))
+  (slot-set! widget :window (widget-window parent))
+      
+  (tcl-eval-list (widget-interpreter widget)
+                 (append (list "entry" (widget-path widget))
+                         args)))
+
+(register-widget-type '<entry>
+                      (lambda (parent args)
+                        `(make-instance <entry> ,parent ,@args)))
+
+
+(define-method (get-value (entry <entry>))
+  (widget-command entry "get"))
+
+(define-method (set-value (entry <entry>) value)
+  (widget-command entry "delete" "0" "end")
+  (widget-command entry "insert" "0" value))
