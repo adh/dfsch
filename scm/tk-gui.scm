@@ -40,7 +40,7 @@
                                     &key withdraw-toplevel)
   (slot-set! context :interpreter interpreter)
   (slot-set! context :top-level-window
-             (make-instance <window> context "."))
+             (make-instance <window> context "." ()))
   (window-on-delete (context-toplevel-window context)
                     (lambda (window)
                       (withdraw-window window)))
@@ -53,13 +53,13 @@
 (define-class <widget> ()
   ((path :reader widget-path :initarg :path)
    (context :reader widget-context :initarg :context)
-   (window :reader widget-window)))
+   (window :reader widget-window :initarg :window)))
 
-(define-method (initialize-instance (widget <widget>) parent type path 
-                                    &rest args)
-  (slot-set! widget :path (translate-widget-path parent path))
-  (slot-set! widget :context (widget-context parent))
-  (slot-set! widget :window (widget-window parent))
+(define-method (initialize-instance (widget <widget>) parent type path args)
+  (call-next-method widget 
+                    :path (translate-widget-path parent path)
+                    :context (widget-context parent)
+                    :window (widget-window parent))
       
   (tcl-eval-list (widget-interpreter widget)
                  (append (list type (widget-path widget))
@@ -72,7 +72,7 @@
       (format ".win~16r" counter))))
 
 (define-macro (make-widget parent type &rest args)
-  `(make-instance <widget> ,parent ,type (unique-widget-name) ,@args))
+  `(make-instance <widget> ,parent ,type (unique-widget-name) (list ,@args)))
 
 (define-method (translate-widget-path (widget <widget>) path)
   (string-append (widget-path widget) path))
@@ -144,9 +144,9 @@
       (format "dfsch_cmd~16r" counter))))
 
 (define-macro (make-window context &rest args)
-  `(make-instance <window> ,context (unique-widget-name) ,@args))
+  `(make-instance <window> ,context (unique-widget-name) (list ,@args)))
 
-(define-method (initialize-instance (win <window>) context path &rest args)
+(define-method (initialize-instance (win <window>) context path args)
   (slot-set! win :path path)
   (slot-set! win :context context)
   (slot-set! win :window win)
@@ -288,20 +288,20 @@
 (define-class <entry> <widget>
   ())
 
-(define-method (initialize-instance (widget <entry>) parent 
-                                    &rest args)
-  (slot-set! widget :path (translate-widget-path parent 
-                                                 (unique-widget-name)))
-  (slot-set! widget :context (widget-context parent))
-  (slot-set! widget :window (widget-window parent))
+(define-method (initialize-instance (widget <entry>) parent args)
+  (call-next-method widget parent "entry" (unique-widget-name) args))
+  ;; (slot-set! widget :path (translate-widget-path parent 
+  ;;                                                (unique-widget-name)))
+  ;; (slot-set! widget :context (widget-context parent))
+  ;; (slot-set! widget :window (widget-window parent))
       
-  (tcl-eval-list (widget-interpreter widget)
-                 (append (list "entry" (widget-path widget))
-                         args)))
+  ;; (tcl-eval-list (widget-interpreter widget)
+  ;;                (append (list "entry" (widget-path widget))
+  ;;                        args)))
 
 (register-widget-type '<entry>
                       (lambda (parent args)
-                        `(make-instance <entry> ,parent ,@args)))
+                        `(make-instance <entry> ,parent (list ,@args))))
 
 
 (define-method (get-value (entry <entry>))

@@ -230,9 +230,10 @@ static void finalize_slots_definition(class_t* klass,
   }
 }
 
-static void default_initialize_instance(dfsch_object_t* obj,
-                                        class_t* klass,
-                                        dfsch_object_t* args){
+static void default_initialize_instance(dfsch_object_t* args){
+  dfsch_object_t* obj;
+  DFSCH_OBJECT_ARG(args, obj);
+  class_t* klass = DFSCH_ASSERT_INSTANCE(DFSCH_TYPE_OF(obj), DFSCH_CLASS_TYPE);
   dfsch_object_t* i = klass->initfuncs;
 
   while (DFSCH_PAIR_P(i)){
@@ -287,20 +288,25 @@ static void default_initialize_instance(dfsch_object_t* obj,
 
 }
 
-static void call_initialize_instance(dfsch_object_t* obj,
-                                     class_t* klass,
-                                     dfsch_object_t* args){
+static void call_initialize_instance(class_t* klass,
+                                     dfsch_object_t* args,
+                                     dfsch_tail_escape_t* esc){
   class_t* i = klass;
 
   while (DFSCH_INSTANCE_P(i, DFSCH_CLASS_TYPE)){
     if (i->initialize_instance){
-      dfsch_apply(i->initialize_instance, dfsch_cons(obj, args));
+      dfsch_apply_with_context(i->initialize_instance, 
+                               args, 
+                               dfsch_make_simple_method_context(call_initialize_instance,
+                                                                i->standard_type.superclass,
+                                                                args),
+                               esc);
       return;
     }
     i = i->standard_type.superclass;
   }
   
-  default_initialize_instance(obj, klass, args);
+  default_initialize_instance(args);
 }
 
 
@@ -311,8 +317,7 @@ dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
 
   obj = dfsch_make_object((dfsch_type_t*)c);
 
-  call_initialize_instance(obj, c, args);
-
+  call_initialize_instance(c, dfsch_cons(obj, args), NULL);
 
   return obj;
 }

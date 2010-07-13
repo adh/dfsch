@@ -93,6 +93,10 @@ extern dfsch_method_context_type_t dfsch_standard_method_context_type;
 #define DFSCH_STANDARD_METHOD_CONTEXT_TYPE \
   ((dfsch_type_t*)&dfsch_standard_method_context_type)
 
+extern dfsch_method_context_type_t dfsch_simple_method_context_type;
+#define DFSCH_SIMPLE_METHOD_CONTEXT_TYPE \
+  ((dfsch_type_t*)&dfsch_simple_method_context_type)
+
 extern dfsch_type_t dfsch_standard_effective_method_type;
 #define DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE \
   (&dfsch_standard_effective_method_type)
@@ -129,5 +133,14 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
 dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
                                     dfsch_object_t* name,
                                     dfsch_method_t* method);
+
+typedef dfsch_object_t* 
+(*dfsch_simple_method_callback_t)(dfsch_type_t* klass,
+                                  dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc);
+
+dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t cb,
+                                                 dfsch_type_t* klass,
+                                                 dfsch_object_t* args);
 
 #endif
