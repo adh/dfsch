@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS=-I m4
 
-bin_PROGRAMS = dfsch-repl dfsch-source-tool
+bin_PROGRAMS = dfsch-repl dfsch-source-tool dfsch-run
 
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
@@ -332,6 +332,16 @@ tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la libdfsch-cinspect.la
+
+if WIN32
+gui_flags = -mwindows
+else
+gui_flags =
+endif
+
+dfsch_run_SOURCES = src/run.c
+dfsch_run_LDADD = libdfsch.la libdfsch-cmdopts.la
+dfsch_run_LDFLAGS = $(gui_flags)
 
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
