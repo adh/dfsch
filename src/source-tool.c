@@ -192,7 +192,7 @@ int main(int argc, char** argv){
   FILE* of;
   int i;
 
-  while ((c=getopt(argc, argv, "co:z")) != -1){
+  while ((c=getopt(argc, argv, "c:o:z")) != -1){
     switch (c){
     case 'c':
       c_symbol = stracpy(optarg);
@@ -234,7 +234,42 @@ int main(int argc, char** argv){
 
   if (c_symbol){
     char* o = sl_value(output);
+    int count = 0;
     fprintf(of, "char %s[] = \"", c_symbol);
+    
+    count = strlen(c_symbol) + 10;
+
+    while (*o){
+      switch (*o){
+      case '"':
+        count += 2;
+        fputs("\\\"", of);
+      case '\n':
+        count += 2;
+        fputs("\\n", of);
+      case '\r':
+        count += 2;
+        fputs("\\r", of);
+      case '\t':
+        count += 2;
+        fputs("\\t", of);
+      case '\\':
+        count += 2;
+        fputs("\\\\", of);
+      default:
+        fputc(*o, of);
+        count++;
+      }
+      o++;
+      
+      if (count > 72){
+        fputs("\"\n  \"", of);
+        count = 2;
+      }
+    }
+
+    fprintf(of, "\";\n", c_symbol);
+
   } else {
     if (do_compress){
       write_dsz(of, sl_value(output));
@@ -243,5 +278,5 @@ int main(int argc, char** argv){
     }
   }
 
-
+  return 0;
 }

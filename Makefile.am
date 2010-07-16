@@ -121,7 +121,7 @@ man_MANS = doc/dfsch-repl.1
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
 	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
         scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm \
-	make-version-h.sh git-make-stamp.sh
+	make-version-h.sh git-make-stamp.sh src/std-lib.scm
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
@@ -146,20 +146,28 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compile.c dfsch/compile.h	\
 	src/backquote.c dfsch/backquote.h \
-	src/trace.c dfsch/trace.h
+	src/trace.c dfsch/trace.h	\
+	std-lib.c
 
 
-BUILT_SOURCES=udata.c udata.h version.h
+BUILT_SOURCES=udata.c udata.h version.h std-lib.c
 strings.o: udata.h
-udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
+udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
-udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
+udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
+std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
+	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
+	$(srcdir)/src/std-lib.scm -o std-lib.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 
-udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
+udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
 	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
+
+boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
+	$(CC_FOR_BUILD) -o boot-source-tool$(EXEEXT) -lz -lgc \
+	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32

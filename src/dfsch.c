@@ -34,6 +34,7 @@
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
 #include <dfsch/backquote.h>
+#include <dfsch/load.h>
 #include "util.h"
 #include "internal.h"
 
@@ -1495,6 +1496,7 @@ DFSCH_PRIMITIVE_HEAD(top_level_environment){
   return baton;
 }
 
+extern char dfsch__std_lib[];
 
 dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
@@ -1565,6 +1567,8 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
   dfsch__compile_register(ctx);
+
+  dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
 
   return ctx;
 }
