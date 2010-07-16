@@ -28,7 +28,7 @@
                                     (format "Value is: ~s" 
                                             (widget-command entry 
                                                             "get")))))))
-  (:button (:text "Second Button")
+  (:button (:text "Second Button" :bg "red")
            :grid (:row 0 :column 2)
            :events ((:command
                      (lambda ()

@@ -103,6 +103,19 @@
 (define-geometry-manager-method place-widget "place")
 (define-geometry-manager-method-in place-widget-in "place")
 
+(define-method (grid-configure (widget <widget>) direction index &rest args)
+  (tcl-eval-list (widget-interpreter widget)
+                 (append (list "grid" 
+                               (case direction 
+                                 ((:row) "rowconfigure")
+                                 ((:column) "columnconfigure")
+                                 (else (error "Unknown direction" 
+                                              :object direction)))
+                               (widget-path widget)
+                               index)
+                         args)))
+                               
+  
 
 (define-method (widget-command-list (widget <widget>) args)
   (tcl-eval-list (widget-interpreter widget)
@@ -279,7 +292,9 @@
     `(begin
        (define ,parent-var ,parent)
        ,@(map (lambda (spec)
-                `(define-widget ,parent-var ,@spec))
+                (if (eq? (car spec) :call-with-parent)
+                    `(,(cadr spec) ,parent-var ,@(cddr spec))
+                    `(define-widget ,parent-var ,@spec)))
               widget-spec)
        (unset! ,parent-var))))
 
