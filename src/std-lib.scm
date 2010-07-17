@@ -44,3 +44,24 @@
                         (handler-bind ((() (lambda (err)
                                              (throw ',tag (list () err)))))
                                       (list (begin ,@forms))))))
+
+(define-macro (dfsch:handler-case form &rest handlers)
+  (with-gensyms (tag handler-id result)
+                `(let* ((,handler-id :no-error)
+                        (,result (catch ',tag
+                                        (handler-bind 
+                                         ,(map (lambda (handler)
+                                                 `(,(car handler)
+                                                   (lambda (err)
+                                                     (set! ,handler-id
+                                                           ',(car handler))
+                                                     (throw ',tag err))))
+                                               handlers)
+                                         ,form))))
+                   (case ,handler-id 
+                     ,@(map (lambda (handler)
+                              `((,(car handler)) 
+                                (let ((,(caadr handler) ,result))
+                                  ,@(cddr handler))))
+                            handlers)
+                     (else ,result)))))
