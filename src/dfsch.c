@@ -1009,25 +1009,24 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
+
   if (!exp) 
     return NULL;
 
   if(DFSCH_SYMBOL_P(exp)){
+    DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
     return lookup_impl(exp, env, ti);
   }
 
   if(DFSCH_PAIR_P(exp)){
-    DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
-
     object_t *f = DFSCH_FAST_CAR(exp);
 
+    DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
     }
-
-
     
     if (DFSCH_TYPE_OF(f) == DFSCH_FORM_TYPE){
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
