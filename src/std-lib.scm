@@ -21,11 +21,11 @@
 ;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(define-package :dfsch%implementation 
-  :uses '(:dfsch :dfsch%internal)
-  :exports '())
+(dfsch:define-package :dfsch%implementation 
+                      :uses '(:dfsch :dfsch%internal)
+                      :exports '())
 
-(in-package :dfsch%implementation)
+(dfsch:in-package :dfsch%implementation)
 
 (define-macro (dfsch:with-gensyms gensyms &rest body)
   `(let ,(map (lambda (name) `(,name (gensym))) gensyms)
