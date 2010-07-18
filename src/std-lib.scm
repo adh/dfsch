@@ -66,3 +66,38 @@
                                   ,@(cddr handler))))
                             handlers)
                      (else ,result)))))
+
+(define-macro (dfsch:with-simple-restart name description &rest forms)
+  (with-gensyms (tag)
+                `(catch ',tag
+                        (restart-bind ((,name (lambda ()
+                                             (throw ',tag ()))
+                                              ,description))
+                                      ,@forms))))
+
+
+(define-macro (dfsch:restart-case form &rest restarts)
+  (with-gensyms (tag result restart-args restart-id)
+                `(let* ((,restart-id ())
+                        (,restart-args ())
+                        (,result (catch ',tag
+                                        (restart-bind 
+                                         ,(map (lambda (restart)
+                                                 `(',(car restart)
+                                                   (lambda (&rest args)
+                                                     (set! ,restart-id 
+                                                           ',restart)
+                                                     (throw ',tag ()))
+                                                   ',(when (string? (caddr 
+                                                                     restart))
+                                                           (caddr restart))))
+                                               restarts)
+                                         ,form))))
+                   (case ,restart-id 
+                     ,@(map (lambda (restart)
+                              `((,restart)
+                                (apply (lambda ,(cadr restart)
+                                         ,@(cddr restart))
+                                       ,restart-args)))
+                            restarts)
+                     (else ,result)))))
