@@ -34,15 +34,16 @@
 (define-macro (dfsch:ignore-errors &rest forms)
   (with-gensyms (tag)
                 `(catch ',tag
-                        (handler-bind ((() (lambda (err)
-                                             (throw ',tag ()))))
+                        (handler-bind ((<error> (lambda (err)
+                                                  (throw ',tag ()))))
                                       ,@forms))))
 
 (define-macro (dfsch:detect-errors &rest forms)
   (with-gensyms (tag)
                 `(catch ',tag
-                        (handler-bind ((() (lambda (err)
-                                             (throw ',tag (list () err)))))
+                        (handler-bind ((<error> (lambda (err)
+                                                  (throw ',tag 
+                                                         (list () err)))))
                                       (list (begin ,@forms))))))
 
 (define-macro (dfsch:handler-case form &rest handlers)
