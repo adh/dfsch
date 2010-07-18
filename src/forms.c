@@ -424,16 +424,21 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* name;
     dfsch_object_t* proc;
-    char* desc;
+    dfsch_object_t* desc;
     dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
     DFSCH_OBJECT_ARG(b, name);
     DFSCH_OBJECT_ARG(b, proc);
-    DFSCH_STRING_ARG_OPT(b, desc, "");
+    DFSCH_OBJECT_ARG_OPT(b, desc, NULL);
     DFSCH_ARG_END(b);
 
+    
+    name = dfsch_eval(name, env);
     proc = dfsch_eval(proc, env);
+    desc = dfsch_eval(desc, env);
 
-    dfsch_restart_bind(dfsch_make_restart(name, proc, desc, NULL));
+    dfsch_restart_bind(dfsch_make_restart(name, proc, 
+                                          dfsch_string_to_cstr(desc), 
+                                          NULL));
     bindings = DFSCH_FAST_CDR(bindings);
   }
 
