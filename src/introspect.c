@@ -38,7 +38,7 @@ char* dfsch_format_trace(dfsch_object_t* trace){
       if (dfsch_compare_keyword(tag, "apply")){
         dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
         dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2);
-        sl_printf(sl, "  APPLY %s %s\n      %s\n",
+        sl_printf(sl, "  APPLY %s %s\n",
                   dfsch_object_2_string(proc, 10, 1),
                   dfsch_object_2_string(flags, 10, 1));
 

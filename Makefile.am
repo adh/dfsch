@@ -163,10 +163,10 @@ std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
-	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
+	$(CC_FOR_BUILD) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
-	$(CC_FOR_BUILD) -o boot-source-tool$(EXEEXT) -lz -lgc \
+	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
 	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
