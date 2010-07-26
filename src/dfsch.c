@@ -34,6 +34,7 @@
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
 #include <dfsch/backquote.h>
+#include <dfsch/load.h>
 #include "util.h"
 #include "internal.h"
 
@@ -574,8 +575,10 @@ dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env){
 static void free_environment(environment_t* env, dfsch__thread_info_t* ti){
   if ((env->flags & EFRAME_RETAIN) == 0 &&
       ti->env_fl_depth < ENV_FREELIST_MAX_DEPTH){
+    int old_serial = env->flags & EFRAME_SERIAL_MASK;
     memset(env, 0, sizeof(environment_t));
     env->type = ti->env_freelist;
+    env->flags = old_serial;
     ti->env_freelist = env;
     ti->env_fl_depth++;
   }
@@ -586,6 +589,7 @@ static environment_t* initialize_frame(environment_t* e,
                                        dfsch_object_t* context,
                                        dfsch__thread_info_t* ti){
   dfsch_eqhash_init(&e->values, 0);
+  e->flags += EFRAME_SERIAL_INCR;
   e->decls = NULL;
   e->context = context;
   e->owner = ti;
@@ -952,13 +956,22 @@ dfsch_object_t* dfsch_eval_list(dfsch_object_t* list, dfsch_object_t* env){
                    dfsch__get_thread_info());
 }
 
+/*
+ * This functions evaluates arguments to funcall and saves them on
+ * it's own stack. Functions that are called by apply must explicitly
+ * coppy argument list if they wish to reference it from managed
+ * heap/otherwise store it.
+ */
+
 static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
                                            dfsch_object_t* args,
                                            dfsch_object_t* context,
                                            environment_t* arg_env,
                                            tail_escape_t* esc,
                                            dfsch__thread_info_t* ti){
-  size_t l = dfsch_list_length_fast_bounded(args);
+  size_t l = dfsch_list_length_fast_bounded(args); /* Fast and safe,
+                                                      but supports at
+                                                      most 64k args */
   dfsch_object_t* rsa[l+4];
   dfsch_object_t** res = &rsa;
   size_t j = 0;
@@ -995,29 +1008,43 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   return dfsch_apply_impl(proc, args, context, esc, ti);
 }
 
+#define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                        \
+  DFSCH__TRACEPOINT_SHIFT(ti);                                        \
+  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
+  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                        \
+  DFSCH__TRACEPOINT(ti).data.apply.args = (al);                       \
+  DFSCH__TRACEPOINT_NOTIFY(ti)
+#define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                              \
+  DFSCH__TRACEPOINT_SHIFT(ti);                                          \
+  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_EVAL;            \
+  DFSCH__TRACEPOINT(ti).flags |= (en)->flags & EFRAME_SERIAL_MASK;      \
+  DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                          \
+  DFSCH__TRACEPOINT(ti).data.eval.env = (en);                           \
+  DFSCH__TRACEPOINT_NOTIFY(ti)
+
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti){
+
   if (!exp) 
     return NULL;
 
   if(DFSCH_SYMBOL_P(exp)){
+    DFSCH__TRACEPOINT_EVAL(ti, exp, env);
     return lookup_impl(exp, env, ti);
   }
 
   if(DFSCH_PAIR_P(exp)){
-    DFSCH__TRACEPOINT_EVAL(ti, exp, (dfsch_object_t*)env);
-
     object_t *f = DFSCH_FAST_CAR(exp);
 
+    DFSCH__TRACEPOINT_EVAL(ti, exp, env);
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
     } else {
       f = dfsch_eval_impl(f , env, NULL, ti);
     }
-
-
     
     if (DFSCH_TYPE_OF(f) == DFSCH_FORM_TYPE){
       return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
@@ -1216,9 +1243,9 @@ static void destructure_keywords(lambda_list_t* ll,
 
   while (DFSCH_PAIR_P(j)){
     dfsch_object_t* keyword;
-    dfsch_object_t* value;
+    dfsch_object_t* keyword_value;
     DFSCH_OBJECT_ARG(j, keyword);
-    DFSCH_OBJECT_ARG(j, value);
+    DFSCH_OBJECT_ARG(j, keyword_value);
     
     i = 0;
     for (;;){
@@ -1230,7 +1257,7 @@ static void destructure_keywords(lambda_list_t* ll,
       }
       if (keyword == ll->keywords[i]){
         dfsch_eqhash_put(&env->values, ll->arg_list[i + kw_offset], 
-                         value);
+                         keyword_value);
 
         supplied[i] = 1;
         break;
@@ -1486,6 +1513,7 @@ DFSCH_PRIMITIVE_HEAD(top_level_environment){
   return baton;
 }
 
+extern char dfsch__std_lib[];
 
 dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
@@ -1556,6 +1584,8 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
   dfsch__compile_register(ctx);
+
+  dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
 
   return ctx;
 }

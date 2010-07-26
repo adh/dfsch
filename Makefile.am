@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS=-I m4
 
-bin_PROGRAMS = dfsch-repl dfsch-source-tool
+bin_PROGRAMS = dfsch-repl dfsch-source-tool dfsch-run
 
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/unix.h \
@@ -15,6 +15,9 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/json.h \
         dfsch/lib/socket-port.h \
         dfsch/lib/http.h \
+	dfsch/lib/csv.h \
+	dfsch/lib/zlib.h \
+	dfsch/lib/tk-gui.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -40,6 +43,12 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/generate.h \
 	dfsch/backquote.h
 
+if TKGUI
+tkgui_libs=libdfsch-tk-gui.la
+else
+tkgui_libs=
+endif
+
 if WIN32
 nonwin32_libs=
 else
@@ -61,8 +70,17 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
 	libdfsch-json.la \
-	$(nonwin32_libs)
+	libdfsch-zlib.la \
+	libdfsch-csv.la \
+	$(nonwin32_libs)\
+	$(tkgui_libs)
 
+
+if TKGUI
+tkgui_modules=tk-gui-interface.la
+else
+tkgui_modules=
+endif
 
 if WIN32
 nonwin32_modules=
@@ -87,19 +105,23 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	sxml.la \
 	json.la \
 	os.la \
-	$(nonwin32_modules)
+	zlib.la \
+	csv.la \
+	$(nonwin32_modules)\
+	$(tkgui_modules)
 
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
-	scm/unix-utils.scm
+	scm/unix-utils.scm \
+	scm/tk-gui.scm
 
 man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
 	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
         scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm \
-	make-version-h.sh git-make-stamp.sh
+	make-version-h.sh git-make-stamp.sh src/std-lib.scm
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
@@ -124,20 +146,28 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compile.c dfsch/compile.h	\
 	src/backquote.c dfsch/backquote.h \
-	src/trace.c dfsch/trace.h
+	src/trace.c dfsch/trace.h	\
+	std-lib.c
 
 
-BUILT_SOURCES=udata.c udata.h version.h
+BUILT_SOURCES=udata.c udata.h version.h std-lib.c
 strings.o: udata.h
-udata.h: udata-gen$(EXEEXT) src/UnicodeData.txt
+udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
-udata.c: udata-gen$(EXEEXT) src/UnicodeData.txt
+udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
+std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
+	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
+	$(srcdir)/src/std-lib.scm -o std-lib.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
 
-udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
-	$(CC_FOR_BUILD) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
+udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
+	$(CC_FOR_BUILD) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
+
+boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
+	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
+	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32
@@ -196,6 +226,14 @@ unix_la_LIBADD =  libdfsch.la
 os_la_SOURCES = lib/os.c
 os_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 os_la_LIBADD =  libdfsch.la
+
+libdfsch_zlib_la_SOURCES = lib/zlib.c dfsch/lib/zlib.h
+libdfsch_zlib_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_zlib_la_LIBADD =  libdfsch.la -lz
+
+zlib_la_SOURCES = lib/zlib_mod.c
+zlib_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+zlib_la_LIBADD =  libdfsch.la libdfsch-zlib.la -lz
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
@@ -279,9 +317,39 @@ libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
 libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 
 
+libdfsch_csv_la_SOURCES = lib/csv.c
+libdfsch_csv_la_LIBADD = libdfsch.la
+libdfsch_csv_la_LDFLAGS = -no-undefined
+
+csv_la_SOURCES = lib/csv_mod.c
+csv_la_LIBADD = libdfsch.la libdfsch-csv.la
+csv_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+
+libdfsch_tk_gui_la_SOURCES = lib/tk-gui.c
+libdfsch_tk_gui_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
+libdfsch_tk_gui_la_LIBADD = libdfsch.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
+libdfsch_tk_gui_la_LDFLAGS = -no-undefined
+
+tk_gui_interface_la_SOURCES = lib/tk-gui_mod.c
+tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
+tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
+tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la libdfsch-cinspect.la
+
+if WIN32
+gui_flags = -mwindows
+else
+gui_flags =
+endif
+
+dfsch_run_SOURCES = src/run.c
+dfsch_run_LDADD = libdfsch.la libdfsch-cmdopts.la
+dfsch_run_LDFLAGS = $(gui_flags)
 
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
@@ -303,3 +371,4 @@ dist-hook:
 
 version.h:
 	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
+

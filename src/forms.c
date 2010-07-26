@@ -394,9 +394,10 @@ DFSCH_DEFINE_FORM(handler_bind, NULL, {}){
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* type;
     dfsch_object_t* handler;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), type);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), handler);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+    dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
+    DFSCH_OBJECT_ARG(b, type);
+    DFSCH_OBJECT_ARG(b, handler);
+    DFSCH_ARG_END(b);
 
     type = dfsch_eval(type, env);
     handler = dfsch_eval(handler, env);
@@ -423,14 +424,21 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* name;
     dfsch_object_t* proc;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), name);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), proc);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+    dfsch_object_t* desc;
+    dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
+    DFSCH_OBJECT_ARG(b, name);
+    DFSCH_OBJECT_ARG(b, proc);
+    DFSCH_OBJECT_ARG_OPT(b, desc, NULL);
+    DFSCH_ARG_END(b);
 
+    
+    name = dfsch_eval(name, env);
     proc = dfsch_eval(proc, env);
+    desc = dfsch_eval(desc, env);
 
-    // TODO
-    dfsch_restart_bind(dfsch_make_restart(name, proc, "", NULL));
+    dfsch_restart_bind(dfsch_make_restart(name, proc, 
+                                          dfsch_string_to_cstr(desc), 
+                                          NULL));
     bindings = DFSCH_FAST_CDR(bindings);
   }
 

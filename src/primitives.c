@@ -556,6 +556,10 @@ DFSCH_DEFINE_PRIMITIVE(symbol_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
 }
+DFSCH_DEFINE_PRIMITIVE(keyword_p, NULL){
+  NEED_ARGS(args,1);  
+  return dfsch_bool(dfsch_keyword_p(dfsch_car(args)));
+}
 DFSCH_DEFINE_PRIMITIVE(string_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
@@ -755,8 +759,8 @@ DFSCH_DEFINE_PRIMITIVE(write__string,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 
-                       "Return symbol's name as string"){
+DFSCH_DEFINE_PRIMITIVE(symbol_qualified_name, 
+                       "Return symbol's qualified name as string"){
   object_t* object;
   char* str;
 
@@ -769,6 +773,38 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string,
   else
     dfsch_error("exception:not-a-symbol", object);
 }
+DFSCH_DEFINE_PRIMITIVE(symbol_name, 
+                       "Return symbols's name as string"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_symbol(object));
+}
+DFSCH_DEFINE_PRIMITIVE(symbol_package, 
+                       "Return symbols's package"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_symbol_package(object);
+}
+DFSCH_DEFINE_PRIMITIVE(keyword_name, 
+                       "Return symbols's name as string"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  if (dfsch_symbol_package(object) != DFSCH_KEYWORD_PACKAGE){
+    dfsch_error("Not a keyword", object);
+  }
+
+  return dfsch_make_string_cstr(dfsch_symbol(object));
+}
+
 DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 
                        "Intern symbol in current package"){
   char* string;
@@ -1078,6 +1114,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
   dfsch_defconst_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
   dfsch_defconst_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
+  dfsch_defconst_cstr(ctx, "keyword?", DFSCH_PRIMITIVE_REF(keyword_p));
   dfsch_defconst_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
   dfsch_defconst_cstr(ctx, "primitive?", 
                       DFSCH_PRIMITIVE_REF(primitive_p));
@@ -1122,8 +1159,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "dfsch%write-string", 
                       DFSCH_PRIMITIVE_REF(write__string));
 
-  dfsch_defconst_cstr(ctx, "symbol->string", 
-                      DFSCH_PRIMITIVE_REF(symbol_2_string));
+  dfsch_defconst_cstr(ctx, "symbol-qualified-name", 
+                      DFSCH_PRIMITIVE_REF(symbol_qualified_name));
+  dfsch_defconst_cstr(ctx, "symbol-name", 
+                      DFSCH_PRIMITIVE_REF(symbol_name));
+  dfsch_defconst_cstr(ctx, "symbol-package", 
+                      DFSCH_PRIMITIVE_REF(symbol_package));
+  dfsch_defconst_cstr(ctx, "keyword-name", 
+                      DFSCH_PRIMITIVE_REF(keyword_name));
   dfsch_defconst_cstr(ctx, "string->symbol", 
                       DFSCH_PRIMITIVE_REF(string_2_symbol));
   dfsch_defconst_cstr(ctx, "intern-symbol", 

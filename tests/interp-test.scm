@@ -5,8 +5,9 @@
 (require :simple-tests)
 (require :json)
 (require :inet)
+(require :zlib)
 
-(define-package :interp-test :dfsch :simple-tests)
+(define-package :interp-test :uses '(:dfsch :simple-tests))
 (in-package :interp-test)
 
 ;;; Write tests here
@@ -415,6 +416,11 @@
        (test 'base64
              (inet:base64-decode (inet:base64-encode "abcdef\n\r\"01234567890"))
              "abcdef\n\r\"01234567890"))
+
+(group "Zlib"
+       (test 'compress-uncompress
+             (zlib:uncompress (zlib:compress "test test\0test"))
+             "test test\0test"))
 
 (group "Regressions"
        (test 'gensym-write-segfault 

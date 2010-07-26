@@ -288,6 +288,12 @@ extern "C" {
   extern char* dfsch_symbol_qualified_name(dfsch_object_t* o);
   extern dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol);
 
+  extern void dfsch_use_package(dfsch_package_t* in,
+                                dfsch_package_t* pkg);
+  extern void dfsch_export_symbol(dfsch_package_t* pkg,
+                                  dfsch_object_t* sym);
+
+
   /** Convert symbol into string usable as name of type 
    * (remove angle brackets) */
   extern char* dfsch_symbol_2_typename(dfsch_object_t* symbol);
@@ -318,16 +324,30 @@ extern "C" {
   extern dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
                                              char* name);
   extern dfsch_object_t* dfsch_list_all_packages();
+  extern dfsch_object_t* dfsch_list_package_symbols(dfsch_package_t* pkg);
+  extern dfsch_object_t* dfsch_list_all_package_symbols(dfsch_package_t* pkg);
+  extern dfsch_object_t* dfsch_package_exported_symbols(dfsch_package_t* pkg);
+
+  
+
   /** Return name of given package */
   extern char* dfsch_package_name(dfsch_object_t* package);
   /** Intern symbol with same name in keyword package */
   extern dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym);
+
+
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
 
   typedef void (*dfsch_package_iteration_cb_t)(void* baton,
                                                dfsch_object_t* symbol);
+  extern void dfsch_for_package_symbols(dfsch_package_t* pkg,
+                                        dfsch_package_iteration_cb_t cb,
+                                        void* baton);
+  extern void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
+                                            dfsch_package_iteration_cb_t cb,
+                                            void* baton);
 
 
   /** Create new lambda closure. */
@@ -476,6 +496,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
                                             dfsch_tail_escape_t* esc);
+  extern dfsch_object_t* dfsch_eval_proc_tr_free_env(dfsch_object_t* code, 
+                                                     dfsch_object_t* env,
+                                                     dfsch_tail_escape_t* esc);
   /** Extended variant of dfsch_apply with support for tail recursion */
   extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                         dfsch_object_t* args,

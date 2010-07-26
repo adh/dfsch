@@ -804,6 +804,47 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
   return t->call_next_method(context, args, esc);
 }
 
+typedef struct simple_method_context_t {
+  dfsch_type_t* type;
+  dfsch_simple_method_callback_t cb;
+  dfsch_type_t* klass;
+  dfsch_object_t* args;
+} simple_method_context_t;
+
+static dfsch_object_t* simple_call_next_method(simple_method_context_t* ctx,
+                                               dfsch_object_t* args,
+                                               dfsch_tail_escape_t* esc){
+  if (!args){
+    args = ctx->args;
+  }
+
+  return ctx->cb(ctx->klass, args, esc);
+}
+
+dfsch_method_context_type_t dfsch_simple_method_context_type = {
+  .super = {
+    .type = DFSCH_METHOD_CONTEXT_TYPE_TYPE,
+    .superclass = DFSCH_METHOD_CONTEXT_TYPE,
+    .name = "simple-method-context",
+    .size = sizeof(simple_method_context_t)
+  },
+  .call_next_method = simple_call_next_method,
+};
+
+dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t cb,
+                                                 dfsch_type_t* klass,
+                                                 dfsch_object_t* args){
+  simple_method_context_t* ctx = dfsch_make_object(DFSCH_SIMPLE_METHOD_CONTEXT_TYPE);
+  
+  ctx->cb = cb;
+  ctx->klass = klass;
+  ctx->args = dfsch_list_copy_immutable(args);
+
+  return ctx;
+}
+
+
+
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
@@ -892,7 +933,7 @@ DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
 
   DFSCH_OBJECT_ARG(args, env);
 
-  ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
+  ctx = dfsch_find_lexical_context(env, DFSCH_METHOD_CONTEXT_TYPE);
 
   if (!ctx){
     dfsch_error("call-next-method called outside allowed scope", NULL);

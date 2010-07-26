@@ -3,19 +3,19 @@
  *   Generic functions
  * Copyright (C) 2005-2009 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -93,6 +93,10 @@ extern dfsch_method_context_type_t dfsch_standard_method_context_type;
 #define DFSCH_STANDARD_METHOD_CONTEXT_TYPE \
   ((dfsch_type_t*)&dfsch_standard_method_context_type)
 
+extern dfsch_method_context_type_t dfsch_simple_method_context_type;
+#define DFSCH_SIMPLE_METHOD_CONTEXT_TYPE \
+  ((dfsch_type_t*)&dfsch_simple_method_context_type)
+
 extern dfsch_type_t dfsch_standard_effective_method_type;
 #define DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE \
   (&dfsch_standard_effective_method_type)
@@ -129,5 +133,14 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
 dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
                                     dfsch_object_t* name,
                                     dfsch_method_t* method);
+
+typedef dfsch_object_t* 
+(*dfsch_simple_method_callback_t)(dfsch_type_t* klass,
+                                  dfsch_object_t* args,
+                                  dfsch_tail_escape_t* esc);
+
+dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t cb,
+                                                 dfsch_type_t* klass,
+                                                 dfsch_object_t* args);
 
 #endif

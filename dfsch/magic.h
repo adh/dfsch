@@ -104,18 +104,6 @@ extern "C" {
     (ti)->trace_listener((ti));                                  \
   }                                                              \
 
-#define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                       \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                  \
-  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_EVAL;     \
-  DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                  \
-  DFSCH__TRACEPOINT(ti).data.eval.env = (en);                   \
-  DFSCH__TRACEPOINT_NOTIFY(ti)
-#define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                       \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                       \
-  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
-  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                       \
-  DFSCH__TRACEPOINT(ti).data.apply.args = (al);                      \
-  DFSCH__TRACEPOINT_NOTIFY(ti)
 #define DFSCH__TRACEPOINT_ANON_HELPER1(x) #x
 #define DFSCH__TRACEPOINT_ANON_HELPER2(x) \
   DFSCH__TRACEPOINT_ANON_HELPER1(x)

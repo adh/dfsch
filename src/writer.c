@@ -125,8 +125,13 @@ void dfsch_write_object(dfsch_writer_state_t* state,
     }
 
     if (DFSCH_PAIR_P(object)){
-      dfsch_write_object(state, DFSCH_FAST_CAR(object));
-      dfsch_write_object(state, DFSCH_FAST_CDR(object));
+      dfsch_object_t* i = object;
+      while (DFSCH_PAIR_P(i)){
+        dfsch_write_object(state, DFSCH_FAST_CAR(i));
+        i = DFSCH_FAST_CDR(i);
+      }
+
+      dfsch_write_object(state, i);
       return;
     }
 

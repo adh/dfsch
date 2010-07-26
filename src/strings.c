@@ -229,7 +229,7 @@ char* dfsch_string_to_cstr(dfsch_object_t* obj){
   return s->buf.ptr;
 }
 char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
-  dfsch_string_t* s;;
+  dfsch_string_t* s;
   if (dfsch_symbol_p(obj)){
     return dfsch_symbol(obj);
   }
