@@ -533,6 +533,13 @@ DFSCH_DEFINE_PRIMITIVE(null_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_null_p(dfsch_car(args)));
 }
+DFSCH_DEFINE_PRIMITIVE(empty_p, "Is list empty?"){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_bool(dfsch_empty_p(list));
+}
+
 DFSCH_DEFINE_PRIMITIVE(pair_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
@@ -548,6 +555,10 @@ DFSCH_DEFINE_PRIMITIVE(atom_p, NULL){
 DFSCH_DEFINE_PRIMITIVE(symbol_p, NULL){
   NEED_ARGS(args,1);  
   return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
+}
+DFSCH_DEFINE_PRIMITIVE(keyword_p, NULL){
+  NEED_ARGS(args,1);  
+  return dfsch_bool(dfsch_keyword_p(dfsch_car(args)));
 }
 DFSCH_DEFINE_PRIMITIVE(string_p, NULL){
   NEED_ARGS(args,1);  
@@ -748,8 +759,8 @@ DFSCH_DEFINE_PRIMITIVE(write__string,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(symbol_2_string, 
-                       "Return symbol's name as string"){
+DFSCH_DEFINE_PRIMITIVE(symbol_qualified_name, 
+                       "Return symbol's qualified name as string"){
   object_t* object;
   char* str;
 
@@ -762,6 +773,38 @@ DFSCH_DEFINE_PRIMITIVE(symbol_2_string,
   else
     dfsch_error("exception:not-a-symbol", object);
 }
+DFSCH_DEFINE_PRIMITIVE(symbol_name, 
+                       "Return symbols's name as string"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_symbol(object));
+}
+DFSCH_DEFINE_PRIMITIVE(symbol_package, 
+                       "Return symbols's package"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_symbol_package(object);
+}
+DFSCH_DEFINE_PRIMITIVE(keyword_name, 
+                       "Return symbols's name as string"){
+  object_t* object;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  if (dfsch_symbol_package(object) != DFSCH_KEYWORD_PACKAGE){
+    dfsch_error("Not a keyword", object);
+  }
+
+  return dfsch_make_string_cstr(dfsch_symbol(object));
+}
+
 DFSCH_DEFINE_PRIMITIVE(string_2_symbol, 
                        "Intern symbol in current package"){
   char* string;
@@ -854,6 +897,44 @@ DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection")
 
   return dfsch_collection_get_iterator(obj);
 }
+DFSCH_DEFINE_PRIMITIVE(collection_2_list, 
+                       "Convert arbitrary collection to list"){
+  object_t* col;
+
+  DFSCH_OBJECT_ARG(args, col);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_2_list(col);
+}
+DFSCH_DEFINE_PRIMITIVE(collection_2_reversed_list, 
+                       "Convert arbitrary collection to list in reverse order"){
+  object_t* col;
+
+  DFSCH_OBJECT_ARG(args, col);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_2_reversed_list(col);
+}
+
+DFSCH_DEFINE_PRIMITIVE(iter_next, 
+                       "Return iterator pointing to next element of collection. "
+                       "Original iterator is no longer valid. Returns () when "
+                       "collection contains no more elements."){
+  dfsch_object_t* iter;
+  DFSCH_OBJECT_ARG(args, iter);
+  DFSCH_ARG_END(args);
+
+  return dfsch_iterator_next(iter);
+}
+DFSCH_DEFINE_PRIMITIVE(iter_this, 
+                       "Return element pointed to by iterator"){
+  dfsch_object_t* iter;
+  DFSCH_OBJECT_ARG(args, iter);
+  DFSCH_ARG_END(args);
+
+  return dfsch_iterator_this(iter);
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
   dfsch_object_t* obj;
@@ -1028,10 +1109,12 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
 
   dfsch_defconst_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
+  dfsch_defconst_cstr(ctx, "empty?", DFSCH_PRIMITIVE_REF(empty_p));
   dfsch_defconst_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
   dfsch_defconst_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
   dfsch_defconst_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
   dfsch_defconst_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
+  dfsch_defconst_cstr(ctx, "keyword?", DFSCH_PRIMITIVE_REF(keyword_p));
   dfsch_defconst_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
   dfsch_defconst_cstr(ctx, "primitive?", 
                       DFSCH_PRIMITIVE_REF(primitive_p));
@@ -1076,8 +1159,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "dfsch%write-string", 
                       DFSCH_PRIMITIVE_REF(write__string));
 
-  dfsch_defconst_cstr(ctx, "symbol->string", 
-                      DFSCH_PRIMITIVE_REF(symbol_2_string));
+  dfsch_defconst_cstr(ctx, "symbol-qualified-name", 
+                      DFSCH_PRIMITIVE_REF(symbol_qualified_name));
+  dfsch_defconst_cstr(ctx, "symbol-name", 
+                      DFSCH_PRIMITIVE_REF(symbol_name));
+  dfsch_defconst_cstr(ctx, "symbol-package", 
+                      DFSCH_PRIMITIVE_REF(symbol_package));
+  dfsch_defconst_cstr(ctx, "keyword-name", 
+                      DFSCH_PRIMITIVE_REF(keyword_name));
   dfsch_defconst_cstr(ctx, "string->symbol", 
                       DFSCH_PRIMITIVE_REF(string_2_symbol));
   dfsch_defconst_cstr(ctx, "intern-symbol", 
@@ -1104,6 +1193,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defconst_cstr(ctx, "collection->list", 
+                      DFSCH_PRIMITIVE_REF(collection_2_list));
+  dfsch_defconst_cstr(ctx, "collection->reversed-list", 
+                      DFSCH_PRIMITIVE_REF(collection_2_reversed_list));
+
+  dfsch_defconst_cstr(ctx, "iter-next!", DFSCH_PRIMITIVE_REF(iter_next));
+  dfsch_defconst_cstr(ctx, "iter-this", DFSCH_PRIMITIVE_REF(iter_this));
+
   dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
   dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
   dfsch_defconst_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));

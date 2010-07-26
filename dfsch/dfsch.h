@@ -73,9 +73,9 @@ extern "C" {
                                                     dfsch_object_t* context);
 
 
-#include <dfsch/number.h>
 #include <dfsch/types.h>
 #include <dfsch/writer.h>  
+#include <dfsch/number.h>
 
   /** Create object of given type. */
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
@@ -136,6 +136,8 @@ extern "C" {
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);
+  /** Is LIST empty? */
+  extern int dfsch_empty_p(dfsch_object_t* list);
   /** Is OBJ a pair? */
   extern int dfsch_pair_p(dfsch_object_t* obj);
   /** Is OBJ a proper list? */
@@ -241,7 +243,8 @@ extern "C" {
                                              dfsch_object_t* location);
   extern dfsch_object_t* dfsch_get_list_annotation(dfsch_object_t* list);
 
-  
+  extern dfsch_object_t* dfsch_collection_2_list(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_collection_2_reversed_list(dfsch_object_t* list);
 
   /** Reverses list */
   extern dfsch_object_t* dfsch_reverse(dfsch_object_t* list);
@@ -285,6 +288,12 @@ extern "C" {
   extern char* dfsch_symbol_qualified_name(dfsch_object_t* o);
   extern dfsch_package_t* dfsch_symbol_package(dfsch_object_t* symbol);
 
+  extern void dfsch_use_package(dfsch_package_t* in,
+                                dfsch_package_t* pkg);
+  extern void dfsch_export_symbol(dfsch_package_t* pkg,
+                                  dfsch_object_t* sym);
+
+
   /** Convert symbol into string usable as name of type 
    * (remove angle brackets) */
   extern char* dfsch_symbol_2_typename(dfsch_object_t* symbol);
@@ -315,16 +324,30 @@ extern "C" {
   extern dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
                                              char* name);
   extern dfsch_object_t* dfsch_list_all_packages();
+  extern dfsch_object_t* dfsch_list_package_symbols(dfsch_package_t* pkg);
+  extern dfsch_object_t* dfsch_list_all_package_symbols(dfsch_package_t* pkg);
+  extern dfsch_object_t* dfsch_package_exported_symbols(dfsch_package_t* pkg);
+
+  
+
   /** Return name of given package */
   extern char* dfsch_package_name(dfsch_object_t* package);
   /** Intern symbol with same name in keyword package */
   extern dfsch_object_t* dfsch_symbol_2_keyword(dfsch_object_t* sym);
+
+
 
   /** Return true or nil depending on value of BOOL. */
   extern dfsch_object_t* dfsch_bool(int bool);
 
   typedef void (*dfsch_package_iteration_cb_t)(void* baton,
                                                dfsch_object_t* symbol);
+  extern void dfsch_for_package_symbols(dfsch_package_t* pkg,
+                                        dfsch_package_iteration_cb_t cb,
+                                        void* baton);
+  extern void dfsch_for_all_package_symbols(dfsch_package_t* pkg,
+                                            dfsch_package_iteration_cb_t cb,
+                                            void* baton);
 
 
   /** Create new lambda closure. */
@@ -473,6 +496,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_eval_proc_tr(dfsch_object_t* code, 
                                             dfsch_object_t* env,
                                             dfsch_tail_escape_t* esc);
+  extern dfsch_object_t* dfsch_eval_proc_tr_free_env(dfsch_object_t* code, 
+                                                     dfsch_object_t* env,
+                                                     dfsch_tail_escape_t* esc);
   /** Extended variant of dfsch_apply with support for tail recursion */
   extern dfsch_object_t* dfsch_apply_tr(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
@@ -538,6 +564,10 @@ extern "C" {
   size_t dfsch_sequence_length(dfsch_object_t* seq);
   
 
+  /** 
+   * Return iterator pointing to next element of collection. Original iterator 
+   * is no longer valid.
+   */
   dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator);
   dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator);
 
@@ -558,6 +588,9 @@ extern "C" {
 
 
   /** @} */
+
+  /** Convert internal environment to on-heap frame */
+  extern dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env);
 
   
 #include <dfsch/strings.h>

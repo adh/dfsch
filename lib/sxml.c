@@ -122,6 +122,7 @@ static XMLCALL void character_data_handler(parser_ctx_t* c,
 static dfsch_sxml_parser_params_t default_parser_params = {
   0,
   NULL,
+  0,
   0
 };
 
@@ -147,15 +148,36 @@ static XML_Parser sxml_init(dfsch_sxml_parser_params_t* params){
   XML_SetCharacterDataHandler(p,
                               (XML_CharacterDataHandler)character_data_handler);
 
-  
+
+  if (params->fragment){
+    if (XML_Parse(p, "<frag>", 6, 0) != XML_STATUS_OK){
+      dfsch_xml_signal_error(p);
+    } 
+  }
 
   return p;
 }
 
 static dfsch_object_t* sxml_done(XML_Parser p){
   parser_ctx_t* c = XML_GetUserData(p);
+
+  if (c->params->fragment){
+    if (XML_Parse(p, "</frag>", 7, 1) != XML_STATUS_OK){
+      dfsch_xml_signal_error(p);
+    } 
+  } else {
+    if (XML_Parse(p, NULL, 0, 1) != XML_STATUS_OK){
+      dfsch_xml_signal_error(p);
+    }
+  }
+
   assert(!c->stack);
-  return c->res;
+
+  if (c->params->fragment){
+    return dfsch_cdr(c->res);
+  } else {
+    return c->res;
+  }
 }
 
 #define BUFFER_LENGTH 4096
@@ -194,9 +216,6 @@ dfsch_object_t* dfsch_sxml_parse_file(char* filename,
   }
   
   fclose(f);  
-  if (XML_Parse(p, NULL, 0, 1) != XML_STATUS_OK){
-    dfsch_xml_signal_error(p);
-  }
 
   return sxml_done(p);
 }
@@ -218,17 +237,13 @@ dfsch_object_t* dfsch_sxml_parse_port(dfsch_object_t* port,
       dfsch_xml_signal_error(p);
     }
   } 
-
-  if (XML_Parse(p, NULL, 0, 1) != XML_STATUS_OK){
-    dfsch_xml_signal_error(p);
-  }
  
   return sxml_done(p);
 }
 dfsch_object_t* dfsch_sxml_parse_buf(char* buf, size_t len,
                                          dfsch_sxml_parser_params_t* params){
   XML_Parser p = sxml_init(params);
-  if (XML_Parse(p, buf, len, 1) != XML_STATUS_OK){
+  if (XML_Parse(p, buf, len, 0) != XML_STATUS_OK){
     dfsch_xml_signal_error(p);
   }
   return sxml_done(p);
@@ -249,6 +264,9 @@ dfsch_sxml_parser_params_t* dfsch_sxml_parser_params(dfsch_object_t* args){
   DFSCH_KEYWORD_GENERIC("encoding", p->encoding, dfsch_string_to_cstr);
   DFSCH_KEYWORD_GENERIC("collapse-whitespace", 
                         p->collapse_whitespace, DFSCH_TRUE_P);
+  DFSCH_KEYWORD_GENERIC("parse-fragment", 
+                        p->fragment, DFSCH_TRUE_P);
+
   DFSCH_KEYWORD_PARSER_END(args);
   return p;
 }

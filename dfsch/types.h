@@ -210,6 +210,7 @@ extern dfsch_type_t dfsch_form_type;
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 
+#define DFSCH_FORM_ENVIRONMENT (dfsch_reify_environemnt(env))
 
 #define DFSCH_FORM_REF(name) ((dfsch_object_t*)&form_##name)
 
@@ -410,6 +411,8 @@ typedef struct dfsch_iterator_type_t {
   dfsch_iterator_next_t next;
   dfsch_iterator_this_t this;
 } dfsch_iterator_type_t;
+
+extern dfsch_collection_methods_t dfsch_iterator_collection_methods;
 
 extern dfsch_type_t dfsch_iterator_type_type;
 #define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)

@@ -129,6 +129,14 @@ char* dfsch_stracat(char* a, char* b){
   strncat(o,b,s);
   return o;
 }
+char* dfsch_stracat3(char* a, char* b, char* c){
+  size_t s = strlen(a)+strlen(b)+strlen(c)+1;
+  char* o = GC_MALLOC_ATOMIC(s);
+  strncpy(o,a,s);
+  strncat(o,b,s);
+  strncat(o,c,s);
+  return o;
+}
 
 char* dfsch_strancat(char* a, size_t an, char* b, size_t bn){
   char* o = GC_MALLOC_ATOMIC(an + bn + 1);

@@ -136,7 +136,7 @@ DFSCH_DEFINE_FORM(internal_let, NULL, {}){
     vars = DFSCH_FAST_CDR(vars);
   }
 
-  return dfsch_eval_proc_tr(code, ext_env, esc);
+  return dfsch_eval_proc_tr_free_env(code, ext_env, esc);
 }
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
@@ -228,7 +228,8 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_ARG_REST(args, body);
 
-  return dfsch_named_lambda(env, lambda_list, body, name);
+  return dfsch_named_lambda(dfsch_reify_environment(env), 
+                            lambda_list, body, name);
 }
 
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
@@ -370,7 +371,7 @@ DFSCH_DEFINE_FORM(case, NULL, {}){
 
 DFSCH_DEFINE_FORM(current_environment, 
                   "Return lexically-enclosing environment", {}){
-  return env;
+  return dfsch_reify_environment(env);
 }
 dfsch_object_t* dfsch_generate_current_environment(){
   return dfsch_cons(DFSCH_FORM_REF(current_environment), NULL);
@@ -393,9 +394,10 @@ DFSCH_DEFINE_FORM(handler_bind, NULL, {}){
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* type;
     dfsch_object_t* handler;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), type);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), handler);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+    dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
+    DFSCH_OBJECT_ARG(b, type);
+    DFSCH_OBJECT_ARG(b, handler);
+    DFSCH_ARG_END(b);
 
     type = dfsch_eval(type, env);
     handler = dfsch_eval(handler, env);
@@ -422,14 +424,21 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* name;
     dfsch_object_t* proc;
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), name);
-    DFSCH_OBJECT_ARG(DFSCH_FAST_CAR(bindings), proc);
-    DFSCH_ARG_END(DFSCH_FAST_CAR(bindings));
+    dfsch_object_t* desc;
+    dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
+    DFSCH_OBJECT_ARG(b, name);
+    DFSCH_OBJECT_ARG(b, proc);
+    DFSCH_OBJECT_ARG_OPT(b, desc, NULL);
+    DFSCH_ARG_END(b);
 
+    
+    name = dfsch_eval(name, env);
     proc = dfsch_eval(proc, env);
+    desc = dfsch_eval(desc, env);
 
-    // TODO
-    dfsch_restart_bind(dfsch_make_restart(name, proc, "", NULL));
+    dfsch_restart_bind(dfsch_make_restart(name, proc, 
+                                          dfsch_string_to_cstr(desc), 
+                                          NULL));
     bindings = DFSCH_FAST_CDR(bindings);
   }
 

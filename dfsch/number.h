@@ -136,6 +136,15 @@ dfsch_object_t* dfsch_number_logxor(dfsch_object_t* a, dfsch_object_t* b);
 dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a);
 
 
+  extern dfsch_type_t dfsch_number_sequence_type;
+#define DFSCH_NUMBER_SEQUENCE_TYPE (&dfsch_number_sequence_type)
+  extern dfsch_iterator_type_t dfsch_number_sequence_iterator_type;
+#define DFSCH_NUMBER_SEQUENCE_ITERATOR_TYPE (&dfsch_number_sequence_iterator_type)
+
+  dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
+                                             dfsch_object_t* to,
+                                             dfsch_object_t* step);
+
 #ifdef __cplusplus
 }
 #endif
