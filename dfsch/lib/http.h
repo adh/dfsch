@@ -61,18 +61,6 @@ char* dfsch_http_get_method(int method);
 int dfsch_http_parse_protocol(char* protocol);
 char* dfsch_http_get_protocol(int protocol);
 
-typedef struct dfsch_http_header_parser_t dfsch_http_header_parser_t;
-
-extern dfsch_type_t dfsch_http_header_parser_type;
-#define DFSCH_HTTP_HEADER_PARSER_TYPE (&dfsch_http_header_parser_type)
-
-typedef (*dfsch_http_header_parser_cb_t)(void* baton, char* name, char* value);
-
-dfsch_http_header_parser_t* dfsch_http_make_header_parser(dfsch_http_header_parser_cb_t cb,
-                                                          void* baton);
-void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp,
-                                         char* line);
-
 extern dfsch_type_t dfsch_http_response_type;
 #define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_response_type)
 extern dfsch_type_t dfsch_http_request_type;

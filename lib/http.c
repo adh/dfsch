@@ -161,7 +161,7 @@ typedef struct http_response_t {
 
   int status;
   dfsch_object_t* headers;
-  dfsch_strbuf_t* body;
+  dfsch_object_t* body;
 } http_response_t;
 
 typedef struct http_request_t {
@@ -171,21 +171,29 @@ typedef struct http_request_t {
   char *protocol;
   char *request_uri; 
 
-  dfsch_strbuf_t* body;
+  dfsch_object_t* body;
 
   dfsch_object_t* headers;
 } http_request_t;
 
 dfsch_object_t* dfsch_make_http_response(int status,
                                          dfsch_object_t* headers,
-                                         dfsch_strbuf_t* body){
+                                         dfsch_object_t* body){
   http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
 }
 
-dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri,
+dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
                                         dfsch_object_t* headers,
-                                        dfsch_strbuf_t* body){
+                                        dfsch_object_t* body){
   http_response_t* re = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
+
+  re->method = method;
+  re->request_uri = request_uri;
+  re->protocol = protocol;
+  re->headers = headers;
+  re->body = body;
+
+  return (dfsch_object_t*)re;
 }
 
 
@@ -195,12 +203,38 @@ void dfsch_http_run_server(dfsch_object_t* port,
     int protocol;
     dfsch_object_t* request = dfsch_http_read_request(port, &protocol);
     dfsch_object_t* response = dfsch_apply(callback, dfsch_list(1, request));
-  } while(dfsch_http_write_response(port, response));
+  } while(dfsch_http_write_response(port, response, request));
 }
 
-dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port,
-                                        int* protocol){
-  dfsch_strbuf_t* request_line = dfsch_port_readline(port);
+dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port){
+  dfsch_strbuf_t* line = dfsch_port_readline(port);
+  size_t len;
+  char* method;
+  char* request_uri;
+  char* protocol;
+  dfsch_object_t* headers;
+
+  line += strspn(line, " \t\n\r");
+  len = strcspn(line, " \t\n\r");
+
+  method = dfsch_strncpy(line, len);
+
+  line += len;
+  line += strspn(line, " \t\n\r");
+  len = strcspn(line, " \t\n\r");
+
+  request_uri = dfsch_strncpy(line, len);
+
+  line += len;
+  line += strspn(line, " \t\n\r");
+  len = strcspn(line, " \t\n\r");
+
+  protocol = dfsch_strncpy(line, len);
+
+  if (*protocol){
+    
+  }
+  
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
