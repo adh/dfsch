@@ -66,4 +66,20 @@ extern dfsch_type_t dfsch_http_response_type;
 extern dfsch_type_t dfsch_http_request_type;
 #define DFSCH_HTTP_REQUEST_TYPE (&dfsch_http_request_type)
 
+dfsch_object_t* dfsch_make_http_response(int status,
+                                         dfsch_object_t* headers,
+                                         dfsch_object_t* body);
+dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
+                                        dfsch_object_t* headers,
+                                        dfsch_object_t* body);
+void dfsch_http_run_server(dfsch_object_t* port,
+                           dfsch_object_t* callback);
+dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port);
+void dfsch_http_write_request(dfsch_object_t* port,
+                              dfsch_object_t* request);
+dfsch_object_t* dfsch_http_read_response(dfsch_object_t* port);
+int dfsch_http_write_response(dfsch_object_t* port,
+                              dfsch_object_t* response,
+                              int protocol);
+
 #endif
