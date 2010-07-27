@@ -3,9 +3,9 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 
 dnl package name and version number
 
-PACKAGE=dfsch-sqlite
+PACKAGE=dfsch-example
 VERSION=0.1
-AC_INIT(dfsch-sqlite, 0.1)
+AC_INIT(dfsch-example, 0.1)
 AC_CONFIG_SRCDIR(src/example.c)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
