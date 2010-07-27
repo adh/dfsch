@@ -766,3 +766,52 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
     }
   }
 }
+
+static void headers_list_cb(dfsch_object_t** list, 
+                            char* name,
+                            char* value){
+  *list = dfsch_cons(dfsch_list(2, 
+                                dfsch_make_string_cstr(name),
+                                dfsch_make_string_cstr(value)),
+                     *list);
+}
+
+dfsch_object_t* dfsch_inet_read_822_headers_list(dfsch_object_t* port){
+  dfsch_object_t* list = NULL;
+
+  dfsch_inet_read_822_headers(port, headers_list_cb, &list);
+
+  return list;
+}
+
+static void headers_hash_cb_list(dfsch_object_t* hash, 
+                                 char* name,
+                                 char* value){
+  dfsch_object_t* ns = dfsch_make_string_cstr(name);
+  dfsch_object_t* old;
+
+  if (dfsch_hash_ref_fast(hash, ns, &old)){
+    if (!DFSCH_PAIR_P(old)){
+      old = dfsch_cons(old, NULL);
+      dfsch_hash_set(hash, ns, old);
+    }
+    while (DFSCH_PAIR_P(DFSCH_FAST_CDR(old))){
+      old = DFSCH_FAST_CDR(old);
+    }
+    dfsch_set_cdr(old, dfsch_cons(dfsch_make_string_cstr(value),
+                                  NULL));
+  } else {
+    dfsch_hash_set(hash, ns, dfsch_make_string_cstr(value));
+  }
+}
+
+dfsch_object_t* dfsch_inet_read_822_headers_map(dfsch_object_t* port,
+                                                dfsch_object_t* map){
+  if (!map){
+    map = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  }
+
+  dfsch_inet_read_822_headers(port, headers_hash_cb_list, map);
+
+  return map;
+}
