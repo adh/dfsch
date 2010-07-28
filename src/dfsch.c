@@ -1640,3 +1640,12 @@ char* dfsch_get_version(){
 char* dfsch_get_build_id(){
   return BUILD_ID;
 }
+
+pthread_mutex_t libc_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void dfsch_lock_libc(){
+  pthread_mutex_lock(&libc_mutex);
+}
+void dfsch_unlock_libc(){
+  pthread_mutex_unlock(&libc_mutex);
+}

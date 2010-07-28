@@ -592,6 +592,10 @@ extern "C" {
   /** Convert internal environment to on-heap frame */
   extern dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env);
 
+
+  extern void dfsch_lock_libc();
+  extern void dfsch_unlock_libc();
+  
   
 #include <dfsch/strings.h>
 
