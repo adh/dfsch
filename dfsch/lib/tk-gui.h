@@ -29,10 +29,11 @@ char* dfsch_tcl_quote_list(dfsch_object_t* list);
 
 void dfsch_tcl_event_loop();
 
+dfsch_object_t* dfsch_tcl_split_list(char* list);
 
-#define DFSCH_TCL_INTERPRETER_ARG(al, name)                         \
+#define DFSCH_TCL_INTERPRETER_ARG(al, name)                             \
   DFSCH_GENERIC_ARG(al, name, Tcl_Interp*, dfsch_tcl_interpreter)
-#define DFSCH_TCL_INTERPRETER_ARG_OPT(al, name, default)         \
+#define DFSCH_TCL_INTERPRETER_ARG_OPT(al, name, default)             \
   DFSCH_GENERIC_ARG_OPT(al, name, default,                           \
                         Tcl_Interp*, dfsch_tcl_interpreter)
 

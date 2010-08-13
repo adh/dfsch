@@ -143,7 +143,13 @@ DFSCH_DEFINE_PRIMITIVE(ref_variable, 0){
   return dfsch_make_string_cstr(value);
 }
 
+DFSCH_DEFINE_PRIMITIVE(split_list, ""){
+  char* list;
+  DFSCH_STRING_ARG(args, list);
+  DFSCH_ARG_END(args);
 
+  return dfsch_tcl_split_list(list);
+}
 
 void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
   dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface");
@@ -181,5 +187,8 @@ void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
                        DFSCH_PRIMITIVE_REF(ref_variable));
   dfsch_define_pkgcstr(env, tk_gui, "unset-variable!", 
                        DFSCH_PRIMITIVE_REF(unset_variable));
+
+  dfsch_define_pkgcstr(env, tk_gui, "split-list", 
+                       DFSCH_PRIMITIVE_REF(split_list));
 
 }
