@@ -144,6 +144,7 @@
 
 (define-class <window> <widget>
    ((command-list)
+    (variable-list)
     (on-delete :accessor window-on-delete)
     (destroyed? :initform ()
                 :reader window-destroyed?)))
@@ -181,6 +182,9 @@
   (for-each (lambda (command)
               (delete-command! (widget-interpreter win) command))
             (slot-ref win :command-list))
+  (for-each (lambda (variable)
+              (unset-variable! (widget-interpreter win) variable))
+            (slot-ref win :variable-list))
   (delete-command! (widget-interpreter win) 
                    (window-delete-command-name win))
   (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
@@ -216,6 +220,26 @@
 (define (wait)
   (event-loop))
 
+;;;; Variables
+
+(define unique-variable-name
+  (let ((counter 0))
+    (lambda ()
+      (set! counter (+ 1 counter))
+      (format "dfsch_var~16r" counter))))
+
+(define-method (make-variable (ctx <context>))
+  (let ((name (unique-variable-name)))
+    (set-variable! (context-interpreter ctx) name "")
+    name))
+
+(define-method (make-variable (win <window>))
+  (let ((name (make-variable (widget-context win))))
+    (slot-set! win :variable-list
+               (cons name
+                     (slot-ref win :variable-list)))
+    name))
+  
 
                        
 ;;;; Simple wrappers
@@ -273,7 +297,7 @@
       (let ((entry (assq type *widget-type-table*)))
         (if entry
             (cadr entry)
-            (error "Unknown widget type" type)))))
+            (error "Unknown widget type" :type type)))))
 
 (define-method (get-widget-construction-expander (type <string>))
   (lambda (parent args) 
