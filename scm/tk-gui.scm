@@ -22,7 +22,8 @@
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (require :tk-gui-interface)
-(define-package :tk-gui :uses '(:dfsch :tk-gui%interface))
+(define-package :tk-gui 
+  :uses '(:dfsch :tk-gui%interface))
 (in-package :tk-gui)
 
 (define *waited-window* ())
@@ -169,7 +170,7 @@
                    (lambda ()
                      (if (window-on-delete win)
                          ((window-on-delete win) win)
-                         (destroy-window win))))
+                         (destroy-window! win))))
   (unless (string=? path ".")
           (tcl-eval-list(widget-interpreter win)
                         (cons "toplevel" 
@@ -178,14 +179,13 @@
         "wm" "protocol" path "WM_DELETE_WINDOW" 
         (window-delete-command-name win)))
 
-(define-method (destroy-window (win <window>))
+(define-method (destroy-window! (win <window>))
   (slot-set! win :destroyed? #t)
   (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
   (for-each (lambda (command)
               (delete-command! (widget-interpreter win) command))
             (slot-ref win :command-list))
-  (for-each (lambda (variable)
-              (unset-variable! (widget-interpreter win) variable))
+  (for-each destroy-variable!
             (slot-ref win :variable-list))
   (delete-command! (widget-interpreter win) 
                    (window-delete-command-name win))
@@ -222,6 +222,14 @@
 
 ;;;; Variables
 
+(define-class <variable> ()
+  ((name :reader variable-name 
+         :initarg :name)
+   (interpreter :reader variable-interpreter 
+                :initarg :interpreter)
+   (destroyed? :reader variable-destroyed? 
+               :initform ())))
+
 (define unique-variable-name
   (let ((counter 0))
     (lambda ()
@@ -231,15 +239,33 @@
 (define-method (make-variable (ctx <context>))
   (let ((name (unique-variable-name)))
     (set-variable! (context-interpreter ctx) name "")
-    name))
+    (make-instance <variable> 
+                   :name name 
+                   :interpreter (context-interpreter ctx))))
 
 (define-method (make-variable (win <window>))
-  (let ((name (make-variable (widget-context win))))
+  (let ((var (make-variable (widget-context win))))
     (slot-set! win :variable-list
-               (cons name
+               (cons var
                      (slot-ref win :variable-list)))
-    name))
+    var))
+
+(define-method (make-variable (widget <widget>))
+  (make-variable (widget-window widget)))
   
+(define-method (destroy-variable! (variable <variable>))
+  (unset-variable! (variable-interpreter variable)
+                   (variable-name variable))
+  (slot-set! variable :destroyed? #t))
+
+(define-method (get-value (variable <variable>))
+  (ref-variable (variable-interpreter variable)
+                (variable-name variable)))
+
+(define-method (set-value! (variable <variable>) value)
+  (set-variable! (variable-interpreter variable)
+                 (variable-name variable)
+                 value))
 
                        
 ;;;; Simple wrappers
@@ -373,29 +399,53 @@
 (define-method (initialize-instance (button <check-button>) parent args)
   (let ((var (make-variable (widget-window parent))))
     (call-next-method button parent "checkbutton" (unique-widget-name) 
-                      (append (list :variable var)
+                      (append (list :variable (variable-name var))
                               args))
     (slot-set! button :variable var)))
 
 (register-simple-widget-type <check-button>)
 
 (define-method (get-value (check <check-button>))
-  (string=? (ref-variable (widget-interpreter check)
-                          (slot-ref check :variable))
+  (string=? (get-value (slot-ref check :variable))
             "1"))
 
 (define-method (set-value! (check <check-button>) value)
-  (set-variable (widget-interpreter check)
-                (slot-ref check :variable)
-                (if value "1" "0")))
+  (set-value! (slot-ref check :variable)
+              (if value "1" "0")))
 
 
 ;;;; Radiobutton widget
 
 (define-class <radio-button> <basic-button>
-  ())
+  ((variable :reader radio-button-variable)
+   (value :reader radio-button-value)))
 
-(define-method (initialize-instance (button <radio-button>) parent args)
-  (call-next-method button parent "radiobutton" (unique-widget-name) args))
+(define-method (initialize-instance (button <radio-button>) 
+                                    parent variable value args)
+  (call-next-method button parent "radiobutton" (unique-widget-name) 
+                    (append (list :variable (variable-name variable)
+                                  :value value)
+                            args))
+  (slot-set! button :variable variable)
+  (slot-set! button :value value))
 
-(register-simple-widget-type <radion-button>)
+(register-widget-type '<radio-button>
+                      (lambda (parent args)
+                        (destructuring-bind
+                         (variable value &rest rest) args
+                         `(begin
+                            (unless (defined? ,variable)
+                                    (define ,variable (make-variable ,parent)))
+                            (make-instance <radio-button> 
+                                           ,parent 
+                                           ,variable 
+                                           ,value
+                                           (list ,@rest))))))
+
+(define-method (get-value (radio <radio-button>))
+  (string=? (get-value (radio-button-variable radio))
+            (radio-button-value)))
+
+(define-method (set-value! (radio <radio-button>) value)
+  (set-value! (radio-button-variable radio)
+              (if value (radio-button-value radio) ())))

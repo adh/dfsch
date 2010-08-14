@@ -12,7 +12,7 @@
                                                  :type "yesno"
                                                  :icon "question")
                                     "yes")
-                          (destroy-window window))))
+                          (destroy-window! window))))
 (window-title window "tk-gui demo")
 
 (define-widgets window
@@ -26,8 +26,7 @@
                        (message-box context
                                     :message 
                                     (format "Value is: ~s" 
-                                            (widget-command entry 
-                                                            "get")))))))
+                                            (get-value entry)))))))
   (:button (:text "Second Button" :bg "red")
            :grid (:row 0 :column 2)
            :events ((:command
@@ -63,17 +62,22 @@
            (:button (:text "Color dialog") :pack ()
                     :events ((:command
                               (lambda ()
-                                (color-dialog context))))))))
-
-;; (define entry
-;;    (pack-widget 
-;;     (make-widget window "entry" )))
-;; (widget-command entry "insert" "0" "The Entry")
-  
-
-;; (bind-event (pack-widget 
-;;              (make-widget window "button" 
-;;                           :text "The Button"))
-;;             :command (lambda ()
+                                (color-dialog context)))))))
+  (:frame () :grid (:row 3 :column 0)
+          :contents
+          ((<radio-button> (band "HF" :text "HF") :pack ())
+           (<radio-button> (band "VHF" :text "VHF") :pack ())
+           (<radio-button> (band "UHF" :text "UHF") :pack ())))
+  (:frame () :grid (:row 3 :column 1)
+          :contents
+          ((<radio-button> (band "Ka" :text "Ka") :pack ())
+           (<radio-button> (band "K" :text "K") :pack ())
+           (<radio-button> (band "Ku" :text "Ku") :pack ())))
+  (:button (:text "Tx") :grid (:row 3 :column 2)
+           :events ((:command
+                     (lambda ()
+                       (message-box context 
+                                    :message (format "Tx at ~a" 
+                                                     (get-value band))))))))
 
 (wait-for-window window)
