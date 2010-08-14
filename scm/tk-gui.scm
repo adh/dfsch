@@ -179,6 +179,8 @@
         (window-delete-command-name win)))
 
 (define-method (destroy-window (win <window>))
+  (slot-set! win :destroyed? #t)
+  (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
   (for-each (lambda (command)
               (delete-command! (widget-interpreter win) command))
             (slot-ref win :command-list))
@@ -187,8 +189,6 @@
             (slot-ref win :variable-list))
   (delete-command! (widget-interpreter win) 
                    (window-delete-command-name win))
-  (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
-  (slot-set! win :destroyed? #t)
   (when (eq? win *waited-window*)
         (throw 'waited-window-destroyed win)))
 
@@ -353,7 +353,7 @@
 (define-class <basic-button> <widget>
   ())
 
-(define (flash-button (button <button>))
+(define-method (flash-button! (button <basic-button>))
   (widget-command button "flash"))
 
 (define-class <button> <basic-button>

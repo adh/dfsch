@@ -44,6 +44,9 @@
                                     :message (if (get-value check)
                                                  "Checkbox is checked"
                                                  "Checkbox is lonely"))))))
+  (:button (:text "Flash")
+           :grid (:row 1 :column 2)
+           :events ((:command (lambda () (flash-button! check)))))
   (:frame () :grid (:row 2 :column 0 :columnspan 3)
           :contents
           ((:button (:text "Button dialog") :pack ()
