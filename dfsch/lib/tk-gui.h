@@ -26,7 +26,6 @@ char* dfsch_tcl_eval(Tcl_Interp* interp, char* string);
 char* dfsch_tcl_quote(char* str);
 char* dfsch_tcl_quote_list(dfsch_object_t* list);
 
-
 void dfsch_tcl_event_loop();
 
 dfsch_object_t* dfsch_tcl_split_list(char* list);
