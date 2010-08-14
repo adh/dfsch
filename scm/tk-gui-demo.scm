@@ -32,8 +32,19 @@
            :grid (:row 0 :column 2)
            :events ((:command
                      (lambda ()
-                       (set-value entry "Foo")))))
-  (:frame () :grid (:row 1 :column 0 :columnspan 3)
+                       (set-value! entry "Foo")))))
+  (<check-button> (:text "Check-button")
+                  :grid (:row 1 :column 0)
+                  :variable check)
+  (:button (:text "Value?")
+           :grid (:row 1 :column 1)
+           :events ((:command 
+                     (lambda ()
+                       (message-box context 
+                                    :message (if (get-value check)
+                                                 "Checkbox is checked"
+                                                 "Checkbox is lonely"))))))
+  (:frame () :grid (:row 2 :column 0 :columnspan 3)
           :contents
           ((:button (:text "Button dialog") :pack ()
                     :events ((:command 

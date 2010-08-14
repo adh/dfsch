@@ -282,7 +282,7 @@
                            (list 'make-instance 
                                  ',type 
                                  parent 
-                                 args))))
+                                 (cons 'list args)))))
 
 
 (define (get-manager-proc mgr)
@@ -344,7 +344,58 @@
 (define-method (get-value (entry <entry>))
   (widget-command entry "get"))
 
-(define-method (set-value (entry <entry>) value)
+(define-method (set-value! (entry <entry>) value)
   (widget-command entry "delete" "0" "end")
   (widget-command entry "insert" "0" value))
 
+;;;; Button widget
+
+(define-class <basic-button> <widget>
+  ())
+
+(define (flash-button (button <button>))
+  (widget-command button "flash"))
+
+(define-class <button> <basic-button>
+  ())
+
+(define-method (initialize-instance (button <button>) parent args)
+  (call-next-method button parent "button" (unique-widget-name) args))
+
+(register-simple-widget-type <button>)
+
+
+;;;; Checkbutton widget
+
+(define-class <check-button> <basic-button>
+  ((variable)))
+
+(define-method (initialize-instance (button <check-button>) parent args)
+  (let ((var (make-variable (widget-window parent))))
+    (call-next-method button parent "checkbutton" (unique-widget-name) 
+                      (append (list :variable var)
+                              args))
+    (slot-set! button :variable var)))
+
+(register-simple-widget-type <check-button>)
+
+(define-method (get-value (check <check-button>))
+  (string=? (ref-variable (widget-interpreter check)
+                          (slot-ref check :variable))
+            "1"))
+
+(define-method (set-value! (check <check-button>) value)
+  (set-variable (widget-interpreter check)
+                (slot-ref check :variable)
+                (if value "1" "0")))
+
+
+;;;; Radiobutton widget
+
+(define-class <radio-button> <basic-button>
+  ())
+
+(define-method (initialize-instance (button <radio-button>) parent args)
+  (call-next-method button parent "radiobutton" (unique-widget-name) args))
+
+(register-simple-widget-type <radion-button>)
