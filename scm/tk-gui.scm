@@ -133,14 +133,20 @@
 (define-method (validate-event-name (widget <widget>) name)
   #t)
 
-(define-method (bind-event (widget <widget>) (event <symbol>) 
-                           proc &optional args)
+(define-method (bind-event (widget <widget>) (event <symbol>) proc)
   (configure-widget widget event (bind-command (widget-window widget)
                                                proc)))
 
+
 (define-method (bind-event (widget <widget>) (event <list>) 
                            proc &key args append)
-  )
+  (tcl-eval "bind"
+            (widget-path widget)
+            event
+            (append (if append '("+") ())
+                    (cons (bind-command (widget-window widget)
+                                        proc)
+                          args))))
 
 
 (define-class <window> <widget>
