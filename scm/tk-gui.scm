@@ -455,3 +455,26 @@
 (define-method (set-value! (radio <radio-button>) value)
   (set-value! (radio-button-variable radio)
               (if value (radio-button-value radio) ())))
+
+;;;; Listbox widget
+
+(define-class <list-box> <widget>
+  ())
+
+(define-method (initialize-instance (button <list-box>) parent args)
+  (call-next-method button parent "listbox" (unique-widget-name) args))
+
+(register-simple-widget-type <list-box>)
+
+(define-method (list-box-insert (list-box <list-box>) index &rest entries)
+  (widget-command-list list-box
+                       (append (list "insert"
+                                     index)
+                               entries)))
+
+(define-method (get-selection (list-box <list-box>))
+  (split-list (widget-command list-box "curselection")))
+
+(define-method (get-value (list-box <list-box>))
+  (widget-command list-box "index" "active"))
+

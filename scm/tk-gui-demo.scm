@@ -78,6 +78,22 @@
                      (lambda ()
                        (message-box context 
                                     :message (format "Tx at ~a" 
-                                                     (get-value band))))))))
+                                                     (get-value band)))))))
+  (<list-box> () :grid (:row 4 :column 0 :columnspan 2 :rowspan 2)
+              :variable lbox)
+  (:button (:text "Selection") :grid (:row 4 :column 2)
+           :events ((:command 
+                     (lambda () 
+                       (message-box context
+                                    :message (format "Selection: ~a"
+                                                     (get-selection lbox)))))))
+  (:button (:text "Value") :grid (:row 5 :column 2)
+           :events ((:command 
+                     (lambda () 
+                       (message-box context
+                                    :message (format "Value: ~a"
+                                                     (get-value lbox))))))))
+
+(list-box-insert lbox 0 "foo" "bar" "baz" "quux")
 
 (wait-for-window window)
