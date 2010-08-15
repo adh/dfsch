@@ -204,6 +204,10 @@
     (slot-set! win :command-list (cons cmd-name (slot-ref win :command-list)))
     cmd-name))
 
+(define-method (bind-command (win <window>) (proc <string>))
+  proc)
+
+
 (define-method (window-delete-command-name (win <window>))
   (format "dfsch_delete_handler_~a" (widget-path win)))
 
