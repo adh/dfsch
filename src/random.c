@@ -3,6 +3,11 @@
 #include <sys/times.h>
 #include <sys/resource.h>
 #endif
+
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -25,11 +30,20 @@ static dfsch_object_t* random_state;
 typedef struct random_init_t {
   uint8_t uninitialized[16];
   time_t time;
+  void* sp;
+  int mii_chan_constant;
 #ifdef unix
   struct tms tms;
   clock_t clock;
   struct rusage rusage;
+  pid_t pid;
 #endif
+
+#ifdef __WIN32__
+  DWORD pid;
+  DWORD tid;
+#endif
+
   uint8_t sys_random[16];
 } random_init_t;
 
@@ -37,7 +51,11 @@ static dfsch_object_t* make_default_state(){
   random_init_t seed;
   int fd;
   seed.time = time(NULL);
+  seed.sp = &seed;
+  seed.mii_chan_constant = 8; 
+  /* You just come up with some random number, like eight -- Mitsuki  :) */
 #ifdef unix
+  seed.pid = getpid();
   seed.clock = times(&seed.tms);
   getrusage(RUSAGE_SELF, &seed.rusage);
   
@@ -49,6 +67,10 @@ static dfsch_object_t* make_default_state(){
     read(fd, &seed.sys_random, 16);
     close(fd);
   }
+#endif
+#ifdef __WIN32__
+  seed.pid = GetCurrentProcessId();
+  seed.tid = GetCurrentThreadId();
 #endif
 
   return dfsch_make_default_random_state(&seed, sizeof(random_init_t));
