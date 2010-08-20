@@ -62,6 +62,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_CRYPTO_AES_CIPHER);
   dfsch_defconst_pkgcstr(env, crypto, "<xtea>",
                          DFSCH_CRYPTO_XTEA_CIPHER);
+  dfsch_defconst_pkgcstr(env, crypto, "<blowfish>",
+                         DFSCH_CRYPTO_BLOWFISH_CIPHER);
   dfsch_defconst_pkgcstr(env, crypto, "<block-cipher>",
                          DFSCH_BLOCK_CIPHER_TYPE);
 
