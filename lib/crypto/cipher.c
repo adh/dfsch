@@ -1,8 +1,40 @@
 #include <dfsch/lib/crypto.h>
+#include <dfsch/magic.h>
 
-dfsch_type_t dfsch_symetric_cipher_type = {
+dfsch_type_t dfsch_block_cipher_type = {
   .type = DFSCH_META_TYPE,
   .superclass = DFSCH_STANDARD_TYPE,
-  .name = "crypto:symetric-cipher",
-  .size = sizeof(dfsch_symetric_cipher_t)
+  .name = "crypto:block-cipher",
+  .size = sizeof(dfsch_block_cipher_t)
 };
+
+dfsch_block_cipher_t* dfsch_block_cipher(dfsch_object_t* obj){
+  return DFSCH_ASSERT_TYPE(obj, DFSCH_BLOCK_CIPHER_TYPE);
+}
+
+dfsch_block_cipher_context_t* 
+dfsch_setup_block_cipher(dfsch_block_cipher_t* cipher,
+                            uint8_t* key,
+                            size_t key_len){
+  dfsch_block_cipher_context_t* ctx = dfsch_make_object(cipher);
+  
+  cipher->setup(ctx, key, key_len);
+
+  return ctx;
+}
+
+int dfsch_block_cipher_context_p(dfsch_object_t* obj){
+  return DFSCH_TYPE_OF(DFSCH_TYPE_OF(obj)) == DFSCH_BLOCK_CIPHER_TYPE;
+}
+
+dfsch_block_cipher_context_t* 
+dfsch_block_cipher_context(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!dfsch_block_cipher_context_p(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_error("Not a block cipher context", o);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return (dfsch_block_cipher_context_t*)o;
+}

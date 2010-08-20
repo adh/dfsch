@@ -34,7 +34,7 @@
 #include "macros.h"
 
 typedef struct aes_key_t {
-  dfsch_symetric_cipher_t* cipher;
+  dfsch_block_cipher_t* cipher;
   ulong32 eK[60], dK[60];
   int Nr;
 } aes_key_t;
@@ -427,9 +427,9 @@ static int aes_decrypt(aes_key_t* ctx, uint8_t* ct, uint8_t* pt)
 }
 
 
-dfsch_symetric_cipher_t dfsch_crypto_aes_cipher = {
+dfsch_block_cipher_t dfsch_crypto_aes_cipher = {
   .type = {
-    .type = NULL,//DFSCH_SYMETRIC_CIPHER_TYPE,
+    .type = DFSCH_BLOCK_CIPHER_TYPE,
     .name = "crypto:aes",
     .size = sizeof(aes_key_t)
   },
