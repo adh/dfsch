@@ -46,6 +46,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_string_cstr(char* string);
   extern dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf);
   extern dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len);
+  extern dfsch_object_t* dfsch_make_string_for_write(size_t len, char**buf);
 
   extern dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf);
 
