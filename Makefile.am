@@ -18,6 +18,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/csv.h \
 	dfsch/lib/zlib.h \
 	dfsch/lib/tk-gui.h \
+	dfsch/lib/crypto.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -72,6 +73,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-json.la \
 	libdfsch-zlib.la \
 	libdfsch-csv.la \
+	libdfsch-crypto.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)
 
@@ -107,6 +109,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	os.la \
 	zlib.la \
 	csv.la \
+	crypto.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)
 
@@ -335,6 +338,15 @@ tk_gui_interface_la_SOURCES = lib/tk-gui_mod.c
 tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
 tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
 tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_crypto_la_SOURCES = lib/crypto/cipher.c\
+	lib/crypto/aes.c lib/crypto/aes_tab.h
+libdfsch_crypto_la_LIBADD = libdfsch.la
+libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
+
+crypto_la_SOURCES = lib/crypto/module.c
+crypto_la_LIBADD = libdfsch.la libdfsch-crypto.la
+crypto_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 dfsch_repl_SOURCES = src/repl.c
