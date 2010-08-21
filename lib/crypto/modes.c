@@ -232,4 +232,68 @@ dfsch_block_cipher_mode_t dfsch_crypto_ofb_mode = {
   .setup = ofb_setup
 };
 
+/* This implementation of CTR mode comes from NIST recommendation,
+   which is different in significant details from AES-CTR used by TLS
+   and IPsec (which are even mutually different). CTR mode can use
+   various additional data from underlying protocol, which
+   unfortunately means that each protocol uses completely different
+   method of construing CTR value */
+
+typedef struct ctr_context_t {
+  dfsch_block_cipher_mode_context_t parent;
+  uint8_t* ctr;
+} ctr_context_t;
+
+static void ctr_setup(ctr_context_t* context,
+                      uint8_t* iv,
+                      size_t iv_len){
+  if (iv_len != context->parent.cipher->cipher->block_size){
+    dfsch_error("CTR IV length must be equal to block size", NULL);
+  }
+
+  context->ctr = GC_MALLOC_ATOMIC(iv_len);
+  memcpy(context->ctr, iv, iv_len);
+}
+
+void ctr_operate(ctr_context_t* context,
+                 uint8_t* in,
+                 uint8_t* out,
+                 size_t blocks){
+  size_t bsize = context->parent.cipher->cipher->block_size;
+  int i;
+  int j;
+  uint8_t tmp[bsize];
+
+  for (i = 0; i < blocks; i++){
+    context->parent.cipher->cipher->encrypt(context->parent.cipher, 
+                                            context->ctr, 
+                                            tmp);
+    memcpy(out + (bsize * i), in + (bsize * i), bsize);
+    memxor(out + (bsize * i), tmp, bsize);
+
+    /* Increment counter, little endian */
+    for (j = 0; j < bsize; j++){
+      context->ctr[j]++;
+      if (context->ctr[j] != 0){
+        break;
+      }
+    }
+  }
+}
+
+dfsch_block_cipher_mode_t dfsch_crypto_ctr_mode = {
+  .type = {
+    .type = DFSCH_BLOCK_CIPHER_MODE_TYPE,
+    .name = "crypto:ctr",
+    .size = sizeof(ctr_context_t),
+  },
+
+  .name = "CTR",
+
+  .encrypt = ctr_operate,
+  .decrypt = ctr_operate,
+  .setup = ctr_setup
+};
+
+
 
