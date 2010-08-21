@@ -106,6 +106,31 @@
    #define byte(x, n) (((x) >> (8 * (n))) & 255)
 #endif   
 
-/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_macros.h,v $ */
-/* $Revision: 1.15 $ */
-/* $Date: 2006/11/29 23:43:57 $ */
+
+/* a simple macro for making hash "process" functions */
+#define HASH_PROCESS(func_name, compress_name, type, block_size)   \
+  int func_name (type* md, const unsigned char *in, unsigned long inlen) \
+  {                                                                     \
+    unsigned long n;                                                    \
+    int           err;                                                  \
+    while (inlen > 0) {                                                 \
+      if (md->curlen == 0 && inlen >= block_size) {                     \
+        compress_name (md, (unsigned char *)in);                        \
+        md->length += block_size * 8;                                   \
+        in             += block_size;                                   \
+        inlen          -= block_size;                                   \
+      } else {                                                          \
+        n = MIN(inlen, (block_size - md->curlen));                      \
+        memcpy(md->buf + md->curlen, in, (size_t)n);                    \
+        md->curlen += n;                                                \
+        in             += n;                                            \
+        inlen          -= n;                                            \
+        if (md->curlen == block_size) {                                 \
+          compress_name (md, md->buf);                                  \
+          md->length += 8*block_size;                                   \
+          md->curlen = 0;                                               \
+        }                                                               \
+      }                                                                 \
+    }                                                                   \
+  }
+

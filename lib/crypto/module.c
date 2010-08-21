@@ -7,6 +7,7 @@ DFSCH_DEFINE_PRIMITIVE(setup_block_cipher,
 
   DFSCH_BLOCK_CIPHER_ARG(args, cipher);
   DFSCH_BUFFER_ARG(args, key);
+  DFSCH_ARG_END(args);
 
   return dfsch_setup_block_cipher(cipher, key->ptr, key->len);
 }
@@ -20,6 +21,7 @@ DFSCH_DEFINE_PRIMITIVE(encrypt_block,
 
   DFSCH_BLOCK_CIPHER_CONTEXT_ARG(args, ctx);
   DFSCH_BUFFER_ARG(args, block);
+  DFSCH_ARG_END(args);
 
   if (ctx->cipher->block_size != block->len){
     dfsch_error("Block length does not match cipher block length", NULL);
@@ -41,6 +43,7 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_block,
 
   DFSCH_BLOCK_CIPHER_CONTEXT_ARG(args, ctx);
   DFSCH_BUFFER_ARG(args, block);
+  DFSCH_ARG_END(args);
 
   if (ctx->cipher->block_size != block->len){
     dfsch_error("Block length does not match cipher block length", NULL);
@@ -63,6 +66,7 @@ DFSCH_DEFINE_PRIMITIVE(setup_block_cipher_mode,
   DFSCH_BLOCK_CIPHER_MODE_ARG(args, mode);
   DFSCH_BLOCK_CIPHER_CONTEXT_ARG(args, cipher);
   DFSCH_BUFFER_ARG(args, iv);
+  DFSCH_ARG_END(args);
 
   return dfsch_setup_block_cipher_mode(mode, cipher, iv->ptr, iv->len);  
 }
@@ -76,6 +80,7 @@ DFSCH_DEFINE_PRIMITIVE(encrypt_blocks,
 
   DFSCH_BLOCK_CIPHER_MODE_CONTEXT_ARG(args, ctx);
   DFSCH_BUFFER_ARG(args, blocks);
+  DFSCH_ARG_END(args);
 
   if (blocks->len % ctx->cipher->cipher->block_size != 0){
     dfsch_error("Length of supplied string is not multiple of block size", 
@@ -99,6 +104,7 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_blocks,
 
   DFSCH_BLOCK_CIPHER_MODE_CONTEXT_ARG(args, ctx);
   DFSCH_BUFFER_ARG(args, blocks);
+  DFSCH_ARG_END(args);
 
   if (blocks->len % ctx->cipher->cipher->block_size != 0){
     dfsch_error("Length of supplied string is not multiple of block size", 
@@ -109,6 +115,46 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_blocks,
 
   ctx->mode->decrypt(ctx, blocks->ptr, buf, 
                      blocks->len / ctx->cipher->cipher->block_size);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(setup_hash,
+                       "Create new hash context"){
+  dfsch_crypto_hash_t* hash;
+  dfsch_strbuf_t* key;
+
+  DFSCH_CRYPTO_HASH_ARG(args, hash);
+  DFSCH_BUFFER_ARG_OPT(args, key, DFSCH_EMPTY_STRBUF);
+  DFSCH_ARG_END(args);
+
+  return dfsch_crypto_hash_setup(hash, key->ptr, key->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(hash_process,
+                       "Process data for hashing"){
+  dfsch_crypto_hash_context_t* hash;
+  dfsch_strbuf_t* data;
+
+  DFSCH_CRYPTO_HASH_CONTEXT_ARG(args, hash);
+  DFSCH_BUFFER_ARG(args, data);
+  DFSCH_ARG_END(args);
+
+  hash->algo->process(hash, data->ptr, data->len);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(hash_result,
+                       "Get message digest"){
+  dfsch_crypto_hash_context_t* hash;
+  char* buf;
+  dfsch_object_t* str;
+
+  DFSCH_CRYPTO_HASH_CONTEXT_ARG(args, hash);
+  DFSCH_ARG_END(args);
+
+  str = dfsch_make_string_for_write(hash->algo->result_len, &buf);
+
+  hash->algo->result(hash, buf);
 
   return str;
 }
@@ -138,6 +184,12 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "<ctr>",
                          DFSCH_CRYPTO_CTR_MODE);
 
+  dfsch_defconst_pkgcstr(env, crypto, "<sha-256>",
+                         DFSCH_CRYPTO_SHA256);
+  dfsch_defconst_pkgcstr(env, crypto, "<hash>",
+                         DFSCH_CRYPTO_HASH_TYPE);
+
+
 
   dfsch_defconst_pkgcstr(env, crypto, "setup-block-cipher",
                          DFSCH_PRIMITIVE_REF(setup_block_cipher));
@@ -152,5 +204,12 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(encrypt_blocks));
   dfsch_defconst_pkgcstr(env, crypto, "decrypt-blocks",
                          DFSCH_PRIMITIVE_REF(decrypt_blocks));
+
+  dfsch_defconst_pkgcstr(env, crypto, "setup-hash",
+                         DFSCH_PRIMITIVE_REF(setup_hash));
+  dfsch_defconst_pkgcstr(env, crypto, "hash-process",
+                         DFSCH_PRIMITIVE_REF(hash_process));
+  dfsch_defconst_pkgcstr(env, crypto, "hash-result",
+                         DFSCH_PRIMITIVE_REF(hash_result));
 
 }

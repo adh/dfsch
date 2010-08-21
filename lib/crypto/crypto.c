@@ -76,3 +76,37 @@ dfsch_block_cipher_mode_context(dfsch_object_t* obj){
   }
   return (dfsch_block_cipher_mode_context_t*)o;  
 }
+
+dfsch_type_t dfsch_crypto_hash_type = {
+  .type = DFSCH_META_TYPE,
+  .superclass = DFSCH_STANDARD_TYPE,
+  .size = sizeof(dfsch_crypto_hash_t),
+  .name = "crypto:hash"
+};
+
+dfsch_block_cipher_t* dfsch_crypto_hash(dfsch_object_t* obj){
+  return DFSCH_ASSERT_TYPE(obj, DFSCH_CRYPTO_HASH_TYPE);
+}
+
+dfsch_crypto_hash_context_t* dfsch_crypto_hash_setup(dfsch_crypto_hash_t* hash,
+                                                     uint8_t* key,
+                                                     size_t key_len){
+  dfsch_crypto_hash_context_t* ctx = dfsch_make_object(hash);
+  
+  hash->setup(ctx, key, key_len);
+
+  return ctx;
+}
+int dfsch_crypto_hash_context_p(dfsch_object_t* obj){
+  return DFSCH_TYPE_OF(DFSCH_TYPE_OF(obj)) == DFSCH_CRYPTO_HASH_TYPE;
+}
+dfsch_crypto_hash_context_t* dfsch_crypto_hash_context(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!dfsch_crypto_hash_context_p(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_error("Not a block cryptographic hash context", o);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return (dfsch_crypto_hash_context_t*)o;  
+}
