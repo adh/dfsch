@@ -95,13 +95,15 @@ void cbc_decrypt(cbc_context_t* context,
                  size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
+  uint8_t tmp[bsize];
 
   for (i = 0; i < blocks; i++){
+    memcpy(tmp, in + (bsize * i), bsize);
     context->parent.cipher->cipher->decrypt(context->parent.cipher, 
                                             in + (bsize * i), 
                                             out + (bsize * i));
     memxor(out + (bsize * i), context->iv, bsize);
-    memcpy(context->iv, in + (bsize * i), bsize);
+    memcpy(context->iv, tmp, bsize);
   }
 }
 
@@ -117,6 +119,70 @@ dfsch_block_cipher_mode_t dfsch_crypto_cbc_mode = {
   .encrypt = cbc_encrypt,
   .decrypt = cbc_decrypt,
   .setup = cbc_setup
+};
+
+typedef struct cfb_context_t {
+  dfsch_block_cipher_mode_context_t parent;
+  uint8_t* iv;
+} cfb_context_t;
+
+static void cfb_setup(cfb_context_t* context,
+                      uint8_t* iv,
+                      size_t iv_len){
+  if (iv_len != context->parent.cipher->cipher->block_size){
+    dfsch_error("CFB IV length must be equal to block size", NULL);
+  }
+
+  context->iv = GC_MALLOC_ATOMIC(iv_len);
+  memcpy(context->iv, iv, iv_len);
+}
+
+void cfb_encrypt(cfb_context_t* context,
+                 uint8_t* in,
+                 uint8_t* out,
+                 size_t blocks){
+  size_t bsize = context->parent.cipher->cipher->block_size;
+  int i;
+
+  for (i = 0; i < blocks; i++){
+    context->parent.cipher->cipher->encrypt(context->parent.cipher, 
+                                            context->iv, 
+                                            context->iv);
+    memxor(context->iv, in + (bsize * i), bsize);
+    memcpy(out + (bsize * i), context->iv, bsize);
+  }
+}
+
+void cfb_decrypt(cfb_context_t* context,
+                 uint8_t* in,
+                 uint8_t* out,
+                 size_t blocks){
+  size_t bsize = context->parent.cipher->cipher->block_size;
+  int i;
+  uint8_t tmp[bsize];
+
+  for (i = 0; i < blocks; i++){
+    memcpy(tmp, in + (bsize * i), bsize);
+    context->parent.cipher->cipher->encrypt(context->parent.cipher, 
+                                            context->iv, 
+                                            out + (bsize * i));
+    memxor(out + (bsize * i), tmp, bsize);
+    memcpy(context->iv, tmp, bsize);
+  }
+}
+
+dfsch_block_cipher_mode_t dfsch_crypto_cfb_mode = {
+  .type = {
+    .type = DFSCH_BLOCK_CIPHER_MODE_TYPE,
+    .name = "crypto:cfb",
+    .size = sizeof(cfb_context_t),
+  },
+
+  .name = "CFB",
+
+  .encrypt = cfb_encrypt,
+  .decrypt = cfb_decrypt,
+  .setup = cfb_setup
 };
 
 
