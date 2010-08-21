@@ -339,7 +339,7 @@ tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
 tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
 tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
-libdfsch_crypto_la_SOURCES = lib/crypto/cipher.c\
+libdfsch_crypto_la_SOURCES = lib/crypto/cipher.c lib/crypto/modes.c\
 	lib/crypto/aes.c lib/crypto/aes_tab.h \
 	lib/crypto/xtea.c \
 	lib/crypto/blowfish.c
