@@ -129,6 +129,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
 
   dfsch_defconst_pkgcstr(env, crypto, "<ecb>",
                          DFSCH_CRYPTO_ECB_MODE);
+  dfsch_defconst_pkgcstr(env, crypto, "<cbc>",
+                         DFSCH_CRYPTO_CBC_MODE);
 
 
   dfsch_defconst_pkgcstr(env, crypto, "setup-block-cipher",
