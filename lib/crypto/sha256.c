@@ -208,7 +208,7 @@ int sha256_result(sha256_context_t * md, unsigned char *out)
 dfsch_crypto_hash_t dfsch_crypto_sha256 = {
   .type = {
     .type = DFSCH_CRYPTO_HASH_TYPE,
-    .name = "sha256",
+    .name = "sha-256",
     .size = sizeof(sha256_context_t),
   },
 
