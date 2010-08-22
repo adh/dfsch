@@ -159,6 +159,57 @@ DFSCH_DEFINE_PRIMITIVE(hash_result,
   return str;
 }
 
+DFSCH_DEFINE_PRIMITIVE(curve25519,
+                       "Calculate curve25519 function"){
+  dfsch_strbuf_t* secret;
+  dfsch_strbuf_t* basepoint;
+  char* buf;
+  dfsch_object_t* str;
+
+  DFSCH_BUFFER_ARG(args, secret);
+  DFSCH_BUFFER_ARG(args, basepoint);
+  DFSCH_ARG_END(args);
+
+  if (secret->len != 32){
+    dfsch_error("Secret key must be 32 byte string", NULL);
+  }
+  if (basepoint->len != 32){
+    dfsch_error("Basepoint must be 32 byte string", NULL);
+  }
+
+  str = dfsch_make_string_for_write(32, &buf);
+
+  dfsch_crypto_curve25519(buf, secret->ptr, basepoint->ptr);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(curve25519_secret_key,
+                       "Calculate curve25519 function"){
+  dfsch_strbuf_t* string;
+  char* buf;
+  dfsch_object_t* str;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  if (string->len != 32){
+    dfsch_error("Secret key must be 32 byte string", NULL);
+  }
+
+  str = dfsch_make_string_for_write(32, &buf);
+  memcpy(buf, string->ptr, 32);
+
+  buf[0] &= 248;
+  buf[31] &= 127;
+  buf[31] |= 64;
+
+
+  return str;
+}
+
+
+static const uint8_t curve25519_basepoint[32] = {9};
 
 void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_package_t* crypto = dfsch_make_package("crypto");
@@ -217,5 +268,14 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(hash_process));
   dfsch_defconst_pkgcstr(env, crypto, "hash-result",
                          DFSCH_PRIMITIVE_REF(hash_result));
+
+  dfsch_defconst_pkgcstr(env, crypto, "*curve25519-basepoint*",
+                         dfsch_make_string_buf(curve25519_basepoint, 32));
+  dfsch_defconst_pkgcstr(env, crypto, "curve25519",
+                         DFSCH_PRIMITIVE_REF(curve25519));
+  dfsch_defconst_pkgcstr(env, crypto, "curve25519-secret-key",
+                         DFSCH_PRIMITIVE_REF(curve25519_secret_key));
+
+
 
 }
