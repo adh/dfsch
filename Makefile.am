@@ -344,6 +344,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/aes.c lib/crypto/aes_tab.h \
 	lib/crypto/xtea.c \
 	lib/crypto/blowfish.c \
+	lib/crypto/hmac.c \
 	lib/crypto/sha256.c
 libdfsch_crypto_la_LIBADD = libdfsch.la
 libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0

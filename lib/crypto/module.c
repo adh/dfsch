@@ -186,6 +186,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
 
   dfsch_defconst_pkgcstr(env, crypto, "<sha-256>",
                          DFSCH_CRYPTO_SHA256);
+  dfsch_defconst_pkgcstr(env, crypto, "<hmac-sha-256>",
+                         dfsch_crypto_make_hmac(DFSCH_CRYPTO_SHA256));
   dfsch_defconst_pkgcstr(env, crypto, "<hash>",
                          DFSCH_CRYPTO_HASH_TYPE);
 
