@@ -347,6 +347,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/hmac.c \
 	lib/crypto/sha256.c \
 	lib/crypto/sha1.c \
+	lib/crypto/md5.c \
 	lib/crypto/curve25519.c
 libdfsch_crypto_la_LIBADD = libdfsch.la
 libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
