@@ -177,6 +177,8 @@ extern dfsch_crypto_hash_t dfsch_crypto_sha1;
 #define DFSCH_CRYPTO_SHA1 (&dfsch_crypto_sha1)
 extern dfsch_crypto_hash_t dfsch_crypto_md5;
 #define DFSCH_CRYPTO_MD5 (&dfsch_crypto_md5)
+extern dfsch_crypto_hash_t dfsch_crypto_md4;
+#define DFSCH_CRYPTO_MD4 (&dfsch_crypto_md4)
 
 
 dfsch_crypto_hash_t* dfsch_crypto_make_hmac(dfsch_crypto_hash_t* hash);

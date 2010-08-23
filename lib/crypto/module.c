@@ -247,6 +247,10 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_CRYPTO_MD5);
   dfsch_defconst_pkgcstr(env, crypto, "<hmac-md5>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_MD5));
+  dfsch_defconst_pkgcstr(env, crypto, "<md4>",
+                         DFSCH_CRYPTO_MD4);
+  dfsch_defconst_pkgcstr(env, crypto, "<hmac-md4>",
+                         dfsch_crypto_make_hmac(DFSCH_CRYPTO_MD4));
   dfsch_defconst_pkgcstr(env, crypto, "<hash>",
                          DFSCH_CRYPTO_HASH_TYPE);
 
