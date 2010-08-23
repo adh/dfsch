@@ -749,9 +749,21 @@ dfsch_object_t* dfsch_number_shr(dfsch_object_t* n, size_t count){
     return dfsch_bignum_to_number(dfsch_bignum_shr(n, count));
   } else {
     dfsch_error("Not an integer", n);
+  } 
+}
+
+dfsch_object_t* dfsch_number_shl(dfsch_object_t* n, size_t count){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    int64_t x = DFSCH_FIXNUM_REF(n) << count;
+    return dfsch_make_number_from_int64(x);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+    return dfsch_bignum_to_number(dfsch_bignum_shl(n, count));
+  } else {
+    dfsch_error("Not an integer", n);
   }
  
 }
+
 
 // Arithmetics
 
@@ -1917,6 +1929,17 @@ DFSCH_DEFINE_PRIMITIVE(shr, NULL){
 
   return dfsch_number_shr(n, count);
 }
+DFSCH_DEFINE_PRIMITIVE(shl, NULL){
+  object_t* n;
+  size_t count;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_LONG_ARG_OPT(args, count, 1);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_shl(n, count);
+}
 DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
   object_t* n;
 
@@ -2056,6 +2079,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
 
   dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
+  dfsch_defconst_cstr(ctx, "<<", DFSCH_PRIMITIVE_REF(shl));
 
   dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
   dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
