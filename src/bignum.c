@@ -836,17 +836,11 @@ static bignum_t* barret_reduce(bignum_t* x, bignum_t* m, bignum_t* mu){
   bignum_t* r2;
   bignum_t* r;
 
-  if (x->length > 2*k){
-    dfsch_bignum_div(x, m, NULL, &r);
-    return r;
-  }
-
-  printf(";; x=%s m=%s (%d) mu=%s\n", 
-         dfsch_bignum_to_string(x, 10),
-         dfsch_bignum_to_string(m, 10),
-         m->length,
-         dfsch_bignum_to_string(mu, 10));
-
+  if (x->length >= 2*k){ 
+    printf("fallback!\n"); 
+    dfsch_bignum_div(x, m, NULL, &r); 
+    return r; 
+  } 
 
   /* 1 */
   //dfsch_bignum_div(x, dfsch_bignum_shl(make_bignum_digit(1), k - 1),
@@ -860,12 +854,6 @@ static bignum_t* barret_reduce(bignum_t* x, bignum_t* m, bignum_t* mu){
   r1 = copy_bignum_words(x, (k + 1));
   r2 = copy_bignum_words(dfsch_bignum_mul(q3, m), (k+1));
   r = dfsch_bignum_sub(r1, r2);
-
-  printf(";; r1=%s r2=%s r=%s\n", 
-         dfsch_bignum_to_string(r1, 10),
-         dfsch_bignum_to_string(r2, 10),
-         dfsch_bignum_to_string(r, 10));
-
 
   /* 3 */
   if (r->negative){
@@ -899,12 +887,16 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   r = make_bignum_digit(1);
   for (i = bignum_num_bits(e); i > 0; i--){
     r = dfsch_bignum_mul(r, r);
-    if (bignum_get_bit(e, i-1)){
-      r = dfsch_bignum_mul(r, b);
-    }
     if (m){
       //      dfsch_bignum_div(r, m, NULL, &r);
       r = barret_reduce(r, m, mu);
+    }
+    if (bignum_get_bit(e, i-1)){
+      r = dfsch_bignum_mul(r, b);
+      if (m){
+        //      dfsch_bignum_div(r, m, NULL, &r);
+        r = barret_reduce(r, m, mu);
+      }
     }
   }
   
