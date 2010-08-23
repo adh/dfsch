@@ -272,6 +272,7 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
   int64_t sn = 0;
   int64_t on = 0;
+  double dn;
   int base = obase;
   int d;
   int negative = 0;
@@ -303,16 +304,28 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   }
 
   while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
+         sn <= DFSCH_FIXNUM_MAX && sn >= 0){
     d = dig_val[*string];
     if (d >= base){
       return NULL;
     }
     on = sn;
+    dn = sn;
     sn *= base;
+    dn *= base;
     sn += d;
+    dn += d;
+    if (dn != sn){
+      double d = sn > dn ? sn - dn : dn - sn;
+      double p = dn >= 0 ? dn : -dn;
+      
+      if (32.0 * d > p){
+        break;
+      }
+    }
     string++;
   }
+
 
   if (!*string){
     return dfsch_make_number_from_int64(negative ? -sn : sn);
@@ -360,7 +373,8 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
 dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
   int64_t sn = 0;
-  int64_t on = 0;
+  int64_t on;
+  double dn = 0.0;
   int base = obase;
   int d;
   int negative = 0;
@@ -393,14 +407,25 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
   }
 
   while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
+         sn <= DFSCH_FIXNUM_MAX && sn >= 0){
     d = dig_val[*string];
     if (d >= base){
       dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
     }
     on = sn;
+    dn = sn;
     sn *= base;
+    dn *= base;
     sn += d;
+    dn += d;
+    if (dn != sn){
+      double d = sn > dn ? sn - dn : dn - sn;
+      double p = dn >= 0 ? dn : -dn;
+      
+      if (32.0 * d > p){
+        break;
+      }
+    }
     string++;
   }
 
