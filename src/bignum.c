@@ -837,7 +837,6 @@ static bignum_t* barret_reduce(bignum_t* x, bignum_t* m, bignum_t* mu){
   bignum_t* r;
 
   if (x->length >= 2*k){ 
-    printf("fallback!\n"); 
     dfsch_bignum_div(x, m, NULL, &r); 
     return r; 
   } 
