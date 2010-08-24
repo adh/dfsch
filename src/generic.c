@@ -299,6 +299,10 @@ static dfsch_object_t* apply_effective_method(effective_method_t* em,
                                               dfsch_object_t* args,
                                               dfsch_tail_escape_t* esc,
                                               dfsch_object_t* ctx){
+  if (!esc){
+    args = dfsch_list_copy_immutable(args);
+  }
+
   if (DFSCH_LIKELY(!em->around_methods)){
     return standard_mc_core(em, args, esc);
   } else {
@@ -430,7 +434,8 @@ apply_standard_generic_function(standard_generic_function_t* function,
     meths = compute_applicable_methods(function, arguments);
       
     if (!meths){
-      dfsch_error("No applicable methods", dfsch_list(2, function, arguments));
+      dfsch_error("No applicable methods", dfsch_list(2, function, 
+                                                      dfsch_list_copy(arguments)));
     }
     
     em = make_effective_method(meths, function);
@@ -799,6 +804,47 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
   return t->call_next_method(context, args, esc);
 }
 
+typedef struct simple_method_context_t {
+  dfsch_type_t* type;
+  dfsch_simple_method_callback_t cb;
+  dfsch_type_t* klass;
+  dfsch_object_t* args;
+} simple_method_context_t;
+
+static dfsch_object_t* simple_call_next_method(simple_method_context_t* ctx,
+                                               dfsch_object_t* args,
+                                               dfsch_tail_escape_t* esc){
+  if (!args){
+    args = ctx->args;
+  }
+
+  return ctx->cb(ctx->klass, args, esc);
+}
+
+dfsch_method_context_type_t dfsch_simple_method_context_type = {
+  .super = {
+    .type = DFSCH_METHOD_CONTEXT_TYPE_TYPE,
+    .superclass = DFSCH_METHOD_CONTEXT_TYPE,
+    .name = "simple-method-context",
+    .size = sizeof(simple_method_context_t)
+  },
+  .call_next_method = simple_call_next_method,
+};
+
+dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t cb,
+                                                 dfsch_type_t* klass,
+                                                 dfsch_object_t* args){
+  simple_method_context_t* ctx = dfsch_make_object(DFSCH_SIMPLE_METHOD_CONTEXT_TYPE);
+  
+  ctx->cb = cb;
+  ctx->klass = klass;
+  ctx->args = dfsch_list_copy_immutable(args);
+
+  return ctx;
+}
+
+
+
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
@@ -887,7 +933,7 @@ DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
 
   DFSCH_OBJECT_ARG(args, env);
 
-  ctx = dfsch_find_lexical_context(env, DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
+  ctx = dfsch_find_lexical_context(env, DFSCH_METHOD_CONTEXT_TYPE);
 
   if (!ctx){
     dfsch_error("call-next-method called outside allowed scope", NULL);

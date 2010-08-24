@@ -84,10 +84,12 @@ fi
 AC_ARG_WITH([readline],
   AC_HELP_STRING([--with-readline], [Use readline library]))
 
+use_readline=no
 if test x"$with_readline" != x"no"; then 
         if test x"$have_readline" = x"yes"; then
-           AC_DEFINE(USE_READLINE, [1], [Use readline for input])        
-           READLINE_LIBS=$RL_LIBS
+            use_readline=yes
+            AC_DEFINE(USE_READLINE, [1], [Use readline for input])        
+            READLINE_LIBS=$RL_LIBS
         fi
 fi
 
@@ -108,6 +110,41 @@ if test x$have_expat != x1; then
         AC_MSG_RESULT()
         AC_MSG_ERROR(expat XML parser is required.)
 fi
+
+enable_tk_gui=yes
+
+AC_ARG_ENABLE([tk-gui],
+    AS_HELP_STRING([--disable-tk-gui], [Disable tk-gui module]))
+
+SC_PATH_TCLCONFIG
+SC_LOAD_TCLCONFIG
+
+if test x$"$enable_tk_gui" == x"yes"; then
+    AC_MSG_CHECKING([for a compatible version of Tcl])      
+    if test \( "${TCL_MAJOR_VERSION}" -gt 8 \) -o \( "${TCL_MAJOR_VERSION}" -eq 8 -a "${TCL_MINOR_VERSION}" -ge 4 \); then          
+        AC_SUBST(TCL_INCLUDE_SPEC)
+        AC_MSG_RESULT(yes (${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}))
+    else
+        enable_tk_gui=no
+        AC_MSG_RESULT(no)
+    fi
+fi
+
+SC_PATH_TKCONFIG
+SC_LOAD_TKCONFIG
+
+if test x$"$enable_tk_gui" == x"yes"; then
+    AC_MSG_CHECKING([for a compatible version of Tk])      
+    if test \( "${TK_MAJOR_VERSION}" -gt 8 \) -o \( "${TK_MAJOR_VERSION}" -eq 8 -a "${TK_MINOR_VERSION}" -ge 4 \); then          
+        AC_SUBST(TK_INCLUDE_SPEC)
+        AC_MSG_RESULT(yes (${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}))
+    else
+        enable_tk_gui=no
+        AC_MSG_RESULT(no)
+    fi
+fi
+
+AM_CONDITIONAL(TKGUI, test x"$enable_tk_gui" == x"yes")
 
 AC_SYS_LARGEFILE 
 
@@ -138,3 +175,13 @@ AM_MAINTAINER_MODE
 
 dnl create makefiles
 AC_OUTPUT(Makefile)
+
+cat <<EOF
+dfsch $VERSION configuration:
+
+Optional modules:
+readline ........... : $use_readline
+tk-gui ............. : $enable_tk_gui
+
+
+EOF

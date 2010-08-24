@@ -24,7 +24,7 @@ typedef struct dfsch_complement_type_specializer_t {
 
 dfsch_type_t dfsch_type_specializer_metatype;
 
-dfsch_type_t dfsch_type_specializer_type;jhjkjkj   
+dfsch_type_t dfsch_type_specializer_type;
 
 
 int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,jhj154kk
@@ -49,7 +49,20 @@ dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 dfsch_type_specializer_type_t dfsch_type_slot_specializer_type;
 dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type;
 
-dfsch_type_specializer_type_t dfsch_function_type_specializer_type;
+static int function_matches_p(dfsch_function_type_specializer_t* spec,
+                              dfsch_type_t* type){
+  return dfsch_apply(spec->proc, dfsch_list(1, type)) != NULL;
+}
+
+dfsch_type_specializer_type_t dfsch_function_type_specializer_type = {
+  .type = {
+    .type = DFSCH_TYPE_SPECIALIZER_METATYPE,
+    .superclass = DFSCH_TYPE_SPECIALIZER_TYPE,
+    .size = sizeof(dfsch_function_type_specializer_t),
+    .name = "function-type-specializer"
+  },
+  .matches_p = function_matches_p
+};
 dfsch_type_specializer_type_t dfsch_compound_type_specializer_type;
 dfsch_type_specializer_type_t dfsch_complement_type_specializer_type;
 

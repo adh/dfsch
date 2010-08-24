@@ -37,12 +37,10 @@ char* dfsch_format_trace(dfsch_object_t* trace){
       dfsch_object_t* tag = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 0);
       if (dfsch_compare_keyword(tag, "apply")){
         dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
-        dfsch_object_t* args = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2); 
-        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
-        sl_printf(sl, "  APPLY %s %s\n      %s\n",
+        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2);
+        sl_printf(sl, "  APPLY %s %s\n",
                   dfsch_object_2_string(proc, 10, 1),
-                  dfsch_object_2_string(flags, 10, 1),
-                  dfsch_object_2_string(args, 10, 1));
+                  dfsch_object_2_string(flags, 10, 1));
 
       } else if (dfsch_compare_keyword(tag, "eval")){
         dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
@@ -96,20 +94,17 @@ void dfsch_print_trace_buffer(){
       fprintf(stderr, "0x00000000\n");
       break;
     case DFSCH_TRACEPOINT_KIND_APPLY:
-      fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
+      fprintf(stderr, "0x%08x %p (%s)\n", 
               ti->trace_buffer[i].flags,
               ti->trace_buffer[i].data.apply.proc,
-              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name,
-              ti->trace_buffer[i].data.apply.args,
-              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.args)->name);
+              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
-      fprintf(stderr, "0x%08x %p (%s) %p (%s)\n", 
+      fprintf(stderr, "0x%08x %p (%s) %p\n", 
               ti->trace_buffer[i].flags,
               ti->trace_buffer[i].data.eval.expr,
               DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
-              ti->trace_buffer[i].data.eval.env,
-              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.env)->name);
+              ti->trace_buffer[i].data.eval.env);
       break;
     case DFSCH_TRACEPOINT_KIND_ANON:
       fprintf(stderr, "0x%08x %s %p\n", 
@@ -121,6 +116,16 @@ void dfsch_print_trace_buffer(){
   }
 }
 
+static dfsch_object_t* reachable_env(environment_t* env, int flags){
+  if (env->type != DFSCH_ENVIRONMENT_TYPE) {
+    return NULL;
+  }
+  if (env->flags & EFRAME_SERIAL_MASK != flags & EFRAME_SERIAL_MASK){
+    return NULL;
+  }
+  
+  return dfsch_reify_environment(env);
+}
 
 dfsch_object_t* dfsch_get_trace(){
   int i;
@@ -152,17 +157,17 @@ dfsch_object_t* dfsch_get_trace(){
         flags = dfsch_cons_immutable(dfsch_make_keyword("lazy"), flags);
       }
 
-      record = dfsch_vector(4,
+      record = dfsch_vector(3,
                             dfsch_make_keyword("apply"),
                             ti->trace_buffer[i].data.apply.proc,
-                            ti->trace_buffer[i].data.apply.args,
                             flags);
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
       record = dfsch_vector(4,
                             dfsch_make_keyword("eval"),
                             ti->trace_buffer[i].data.eval.expr,
-                            ti->trace_buffer[i].data.eval.env,
+                            reachable_env(ti->trace_buffer[i].data.eval.env,
+                                          ti->trace_buffer[i].flags),
                             flags);
       break;
         
@@ -258,6 +263,12 @@ DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
   dfsch_set_debugger(proc);
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(get_trace, 0){
+  DFSCH_ARG_END(args);
+  
+  return dfsch_get_trace();
+}
+
 DFSCH_DEFINE_PRIMITIVE(set_invoke_debugger_on_all_conditions, 0){
   dfsch_object_t* val;
   DFSCH_OBJECT_ARG(args, val);
@@ -397,6 +408,7 @@ void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_define_cstr(env, "describe-object", 
                     DFSCH_PRIMITIVE_REF(describe_object));
 
+  dfsch_define_cstr(env, "get-trace", DFSCH_PRIMITIVE_REF(get_trace));
 
   dfsch_define_cstr(env, "lookup-in-environment",
                     DFSCH_PRIMITIVE_REF(lookup_in_environment));

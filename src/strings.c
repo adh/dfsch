@@ -214,6 +214,22 @@ dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
 
   return (dfsch_object_t*)s;
 }
+
+dfsch_object_t* dfsch_make_string_for_write(size_t len, char**buf){
+  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
+
+  s->type = DFSCH_STRING_TYPE;
+
+  s->buf.ptr = (char *)(s + 1);
+  s->buf.len = len;
+
+  (*buf) = s->buf.ptr;
+
+  s->buf.ptr[len] = 0;
+
+  return (dfsch_object_t*)s;
+}
+
 dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
   dfsch_string_t *s = 
     (dfsch_string_t*)dfsch_make_object(DFSCH_STRING_TYPE);
@@ -229,7 +245,7 @@ char* dfsch_string_to_cstr(dfsch_object_t* obj){
   return s->buf.ptr;
 }
 char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
-  dfsch_string_t* s;;
+  dfsch_string_t* s;
   if (dfsch_symbol_p(obj)){
     return dfsch_symbol(obj);
   }

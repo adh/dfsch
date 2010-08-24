@@ -7,6 +7,7 @@ typedef struct dfsch_sxml_parser_params_t {
   int namespaces;
   char* encoding;
   int collapse_whitespace;
+  int fragment;
 } dfsch_sxml_parser_params_t;
 
 dfsch_sxml_parser_params_t* dfsch_sxml_parser_params(dfsch_object_t* args);

@@ -56,25 +56,19 @@ static void* extref_gc_thread(void* ignore){
   time_t cur_time;
 
   while (1){
-#ifdef __WIN32__
-      Sleep(2); /* compatibility and portability ftw! */
-#else
-      sleep(2);
-#endif
     cur_time = time(NULL);
-    while (cur_time < extref_next_gc){
-      printf(";; GC thread sleeping for %d seconds\n", extref_next_gc - cur_time);
-#ifdef __WIN32__
-      Sleep(extref_next_gc - cur_time); /* compatibility and portability ftw! */
-#else
-      sleep(extref_next_gc - cur_time);
-#endif
-      cur_time = time(NULL);
-    }
-
     pthread_mutex_lock(&extref_mutex);
-    extref_resize();
+    cur_time = time(NULL);
+    if (cur_time >= extref_next_gc){
+      extref_resize();
+    }
     pthread_mutex_unlock(&extref_mutex);
+
+#ifdef __WIN32__
+      Sleep(10000); /* compatibility and portability ftw! */
+#else
+      sleep(10);
+#endif
   }
 }
 
@@ -124,6 +118,10 @@ static void extref_put(extref_t* new){
     extref_resize();
   }
 
+  if (extref_next_gc > new->valid_to){
+    extref_next_gc = new->valid_to;
+  }
+
   pthread_mutex_unlock(&extref_mutex);
 }
 
@@ -134,28 +132,18 @@ static void extref_resize(){
   time_t cur_time;
   extref_t** new_extrefs;
   size_t new_mask;
-  
-  printf(";; resizing extrefs\n;;(");
-  for (i = 0; i <= extref_mask; i++){
-    printf("%p ", extrefs[i]);
-  }
-  printf(")\n");
-
 
   cur_time = time(NULL);
   extref_count = 0;
 
   for (i = 0; i <= extref_mask; i++){
     j = extrefs[i];
-    printf(";;; %p\n", j);
     while (j && j->valid_to < cur_time){
-      printf(";;; %p->%p\n", j, j->next);
       j = j->next;
     }
     extrefs[i] = j;
     while (j) {
-      printf(";;; %p->%p\n", j, j->next);
-      if (j->valid_to < cur_time){
+      if (j->valid_to <= cur_time){
         k->next = j->next;
       } else {
         k = j;
@@ -169,19 +157,13 @@ static void extref_resize(){
   }
 
   if (extref_next_gc < cur_time){
-    extref_next_gc = cur_time + 30;
+    extref_next_gc = cur_time + 86400;
   }
-
-  printf(";;; %d live references found\n", extref_count);
-  printf(";;; GC cycle due in %d seconds\n", extref_next_gc - cur_time);
-
 
   if (extref_count > extref_mask){
     new_mask = ((extref_mask + 1) * 2) - 1;
-    printf(";;; Grow to %d \n", new_mask);
   } else if (extref_count < extref_mask/2 && extref_mask > 255) {
     new_mask = ((extref_mask + 1) / 2) - 1;
-    printf(";;; Shrink to %d \n", new_mask);
   } else {
     return;
   }
@@ -195,7 +177,6 @@ static void extref_resize(){
       k = j->next;
       j->next = new_extrefs[j->uniqid[0] & new_mask];
       new_extrefs[j->uniqid[0] & new_mask] = j;
-      printf(";; (setf (elt new %d) %p)\n", j->uniqid[0] & new_mask, j);
       j = k;
     }
   }
@@ -385,13 +366,13 @@ dfsch_object_t* dfsch_extref_ref(char* ref){
   uint32_t uniq_id[3];
 
   if (!decode_uniqid(uniq_id, ref)){
-    dfsch_error("extref:invalid-handle", dfsch_make_string_cstr(ref));
+    dfsch_error("Invalid handle", dfsch_make_string_cstr(ref));
   }
 
   er = extref_get(uniq_id);
 
   if (!er){
-    dfsch_error("extref:expired-handle", dfsch_make_string_cstr(ref));
+    dfsch_error("Expired handle", dfsch_make_string_cstr(ref));
   }
 
   switch(er->mode){

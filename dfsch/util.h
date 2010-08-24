@@ -40,6 +40,7 @@ extern char* dfsch_sl_value(dfsch_str_list_t* list);
 extern dfsch_strbuf_t* dfsch_sl_value_strbuf(dfsch_str_list_t* list);
 
 extern char* dfsch_stracat(char* a, char* b);
+extern char* dfsch_stracat3(char* a, char* b, char* c);
 extern char* dfsch_strancat(char* a, size_t an, char* b, size_t bn);
 extern char* dfsch_stracpy(char* x);
 extern char* dfsch_strancpy(char* x, size_t n);
