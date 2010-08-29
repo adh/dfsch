@@ -787,7 +787,8 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   }
   if (a->length < b->length || 
       (a->length == b->length && 
-       a->words[a->length - 1] < b->words[b->length - 1])){
+       a->words[a->length - 1] < b->words[b->length - 1]) ||
+      dfsch_bignum_cmp_abs(a, b) < 0){
     if (qp){
       *qp = make_bignum(0);
     }
@@ -887,13 +888,13 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   for (i = bignum_num_bits(e); i > 0; i--){
     r = dfsch_bignum_mul(r, r);
     if (m){
-      //      dfsch_bignum_div(r, m, NULL, &r);
+      //dfsch_bignum_div(r, m, NULL, &r);
       r = barret_reduce(r, m, mu);
     }
     if (bignum_get_bit(e, i-1)){
       r = dfsch_bignum_mul(r, b);
       if (m){
-        //      dfsch_bignum_div(r, m, NULL, &r);
+        //dfsch_bignum_div(r, m, NULL, &r);
         r = barret_reduce(r, m, mu);
       }
     }

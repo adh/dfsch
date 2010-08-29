@@ -171,7 +171,7 @@ DFSCH_DEFINE_PRIMITIVE(curve25519,
   DFSCH_ARG_END(args);
 
   if (secret->len != 32){
-    dfsch_error("Secret key must be 32 byte string", NULL);
+    dfsch_error("Private key must be 32 byte string", NULL);
   }
   if (basepoint->len != 32){
     dfsch_error("Basepoint must be 32 byte string", NULL);
@@ -184,8 +184,8 @@ DFSCH_DEFINE_PRIMITIVE(curve25519,
   return str;
 }
 
-DFSCH_DEFINE_PRIMITIVE(curve25519_secret_key,
-                       "Calculate curve25519 function"){
+DFSCH_DEFINE_PRIMITIVE(curve25519_private_key,
+                       "Clamp private key for curve25519 function"){
   dfsch_strbuf_t* string;
   char* buf;
   dfsch_object_t* str;
@@ -194,7 +194,7 @@ DFSCH_DEFINE_PRIMITIVE(curve25519_secret_key,
   DFSCH_ARG_END(args);
 
   if (string->len != 32){
-    dfsch_error("Secret key must be 32 byte string", NULL);
+    dfsch_error("Private key must be 32 byte string", NULL);
   }
 
   str = dfsch_make_string_for_write(32, &buf);
@@ -206,6 +206,42 @@ DFSCH_DEFINE_PRIMITIVE(curve25519_secret_key,
 
 
   return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_generate_key, "Generate new RSA private key"){
+  dfsch_object_t* random_source;
+  int length;
+  DFSCH_OBJECT_ARG(args, random_source);
+  DFSCH_LONG_ARG(args, length);
+
+  return dfsch_rsa_generate_key(random_source, length);
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_get_public_key, 
+                       "Return public key matching given private key"){
+  dfsch_rsa_private_key_t* private;
+  DFSCH_RSA_PRIVATE_KEY_ARG(args, private);
+  
+  return dfsch_rsa_get_public_key(private);
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_encrypt_number,
+                       "RSA encryption operation"){
+  dfsch_rsa_public_key_t* public;
+  dfsch_object_t* message;
+  DFSCH_RSA_PUBLIC_KEY_ARG(args, public);
+  DFSCH_OBJECT_ARG(args, message);
+
+  return dfsch_rsa_encrypt(public, message);
+}
+DFSCH_DEFINE_PRIMITIVE(rsa_decrypt_number,
+                       "RSA decryption operation"){
+  dfsch_rsa_private_key_t* private;
+  dfsch_object_t* message;
+  DFSCH_RSA_PRIVATE_KEY_ARG(args, private);
+  DFSCH_OBJECT_ARG(args, message);
+
+  return dfsch_rsa_decrypt(private, message);
 }
 
 
@@ -281,9 +317,21 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          dfsch_make_string_buf(curve25519_basepoint, 32));
   dfsch_defconst_pkgcstr(env, crypto, "curve25519",
                          DFSCH_PRIMITIVE_REF(curve25519));
-  dfsch_defconst_pkgcstr(env, crypto, "curve25519-secret-key",
-                         DFSCH_PRIMITIVE_REF(curve25519_secret_key));
+  dfsch_defconst_pkgcstr(env, crypto, "curve25519-private-key",
+                         DFSCH_PRIMITIVE_REF(curve25519_private_key));
 
 
+  dfsch_defconst_pkgcstr(env, crypto, "<rsa-public-key>",
+                         DFSCH_RSA_PUBLIC_KEY_TYPE);
+  dfsch_defconst_pkgcstr(env, crypto, "<rsa-private-key>",
+                         DFSCH_RSA_PRIVATE_KEY_TYPE);
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-generate-key",
+                         DFSCH_PRIMITIVE_REF(rsa_generate_key));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-get-public-key",
+                         DFSCH_PRIMITIVE_REF(rsa_get_public_key));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-encrypt-number",
+                         DFSCH_PRIMITIVE_REF(rsa_encrypt_number));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-decrypt-number",
+                         DFSCH_PRIMITIVE_REF(rsa_decrypt_number));
 
 }

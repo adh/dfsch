@@ -190,5 +190,28 @@ void dfsch_crypto_curve25519(uint8_t *mypublic,
                              const uint8_t *secret, 
                              const uint8_t *basepoint);
 
+extern dfsch_type_t dfsch_rsa_public_key_type;
+#define DFSCH_RSA_PUBLIC_KEY_TYPE (&dfsch_rsa_public_key_type)
+extern dfsch_type_t dfsch_rsa_private_key_type;
+#define DFSCH_RSA_PRIVATE_KEY_TYPE (&dfsch_rsa_private_key_type)
+
+typedef struct dfsch_rsa_public_key_t dfsch_rsa_public_key_t;
+typedef struct dfsch_rsa_private_key_t dfsch_rsa_private_key_t;
+
+#define DFSCH_RSA_PUBLIC_KEY_ARG(al, name)                              \
+  DFSCH_TYPED_ARG(al, name, dfsch_rsa_public_key_t*,                    \
+                  DFSCH_RSA_PUBLIC_KEY_TYPE)
+#define DFSCH_RSA_PRIVATE_KEY_ARG(al, name)             \
+  DFSCH_TYPED_ARG(al, name, dfsch_rsa_private_key_t*,   \
+                  DFSCH_RSA_PRIVATE_KEY_TYPE)
+
+dfsch_rsa_private_key_t* dfsch_rsa_generate_key(dfsch_object_t* random_source,
+                                                int length);
+dfsch_rsa_public_key_t* dfsch_rsa_get_public_key(dfsch_rsa_private_key_t* prk);
+
+dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
+                                  dfsch_object_t* mn);
+dfsch_object_t* dfsch_rsa_decrypt(dfsch_rsa_private_key_t* prk,
+                                  dfsch_object_t* cn);
 
 #endif
