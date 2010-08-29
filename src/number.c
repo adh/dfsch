@@ -325,6 +325,7 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
     dn *= base;
     sn += d;
     dn += d;
+    string++;
     if (dn != sn){
       double d = sn > dn ? sn - dn : dn - sn;
       double p = dn >= 0 ? dn : -dn;
@@ -333,7 +334,6 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
         break;
       }
     }
-    string++;
   }
 
 
@@ -428,6 +428,7 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
     dn *= base;
     sn += d;
     dn += d;
+    string++;
     if (dn != sn){
       double d = sn > dn ? sn - dn : dn - sn;
       double p = dn >= 0 ? dn : -dn;
@@ -436,7 +437,6 @@ dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
         break;
       }
     }
-    string++;
   }
 
   if (!*string){
