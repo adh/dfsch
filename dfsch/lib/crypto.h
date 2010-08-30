@@ -173,6 +173,8 @@ struct dfsch_crypto_hash_context_t {
 
 extern dfsch_crypto_hash_t dfsch_crypto_sha256;
 #define DFSCH_CRYPTO_SHA256 (&dfsch_crypto_sha256)
+extern dfsch_crypto_hash_t dfsch_crypto_sha512;
+#define DFSCH_CRYPTO_SHA512 (&dfsch_crypto_sha512)
 extern dfsch_crypto_hash_t dfsch_crypto_sha1;
 #define DFSCH_CRYPTO_SHA1 (&dfsch_crypto_sha1)
 extern dfsch_crypto_hash_t dfsch_crypto_md5;
