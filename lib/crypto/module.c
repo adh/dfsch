@@ -322,6 +322,20 @@ DFSCH_DEFINE_PRIMITIVE(pss_verify,
                                             mh->ptr, mh->len));
 }
 
+DFSCH_DEFINE_PRIMITIVE(prng_state,
+                       "Returns one of internal predefined PRNG states, "
+                       ":fast (deterministic) or :safe "
+                       "(periodicaly reseeded)"){
+  int safe;
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, "type");
+  DFSCH_FLAG_VALUE("safe", 1, safe);
+  DFSCH_FLAG_VALUE("fast", 0, safe);
+  DFSCH_FLAG_PARSER_END(args);
+
+  return safe 
+    ? dfsch_crypto_get_safe_prng_state() 
+    : dfsch_crypto_get_fast_prng_state(); 
+}
 
 
 static const uint8_t curve25519_basepoint[32] = {9};
@@ -329,6 +343,9 @@ static const uint8_t curve25519_basepoint[32] = {9};
 void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_package_t* crypto = dfsch_make_package("crypto");
   dfsch_provide(env, "crypto");
+
+  dfsch_crypto_put_entropy(&crypto, sizeof(dfsch_package_t*));
+  dfsch_crypto_put_entropy(&env, sizeof(dfsch_object_t*));
 
   dfsch_defconst_pkgcstr(env, crypto, "<aes>",
                          DFSCH_CRYPTO_AES_CIPHER);
@@ -426,4 +443,6 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "pss-verify",
                          DFSCH_PRIMITIVE_REF(pss_verify));
 
+  dfsch_defconst_pkgcstr(env, crypto, "prng-state",
+                         DFSCH_PRIMITIVE_REF(prng_state));
 }

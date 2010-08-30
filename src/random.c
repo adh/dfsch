@@ -204,7 +204,7 @@ dfsch_random_state_type_t dfsch_default_random_state_type = {
     NULL
   },
   (dfsch_random_get_bytes_t)default_get_bytes,
-  0
+  1
 };
 dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len){
   default_state_t* state = dfsch_make_object(DFSCH_DEFAULT_RANDOM_STATE_TYPE);
@@ -316,7 +316,7 @@ dfsch_random_state_type_t dfsch_lcg_random_state_type = {
     NULL
   },
   (dfsch_random_get_bytes_t)lcg_get_bytes,
-  0
+  1
 };
 
 dfsch_object_t* dfsch_make_lcg_random_state(uint32_t seed){

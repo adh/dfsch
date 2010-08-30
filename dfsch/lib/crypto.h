@@ -2,6 +2,7 @@
 #define H__dfsch__lib_crypto__
 
 #include <dfsch/dfsch.h>
+#include <dfsch/random.h>
 #include <stdint.h>
 
 typedef struct dfsch_block_cipher_context_t dfsch_block_cipher_context_t;
@@ -238,5 +239,28 @@ int dfsch_crypto_pss_verify(dfsch_crypto_hash_t* hash,
                             dfsch_object_t* s,
                             uint8_t* mh,
                             size_t mhlen);
+
+extern dfsch_random_state_type_t dfsch_crypto_prng_state_type;
+#define DFSCH_CRYPTO_PRNG_STATE_TYPE (&dfsch_crypto_prng_state_type)
+
+dfsch_object_t* dfsch_crypto_make_prng_state(uint8_t* seed, int seed_len,
+                                             int use_system_sources_p);
+dfsch_object_t* dfsch_crypto_get_fast_prng_state();
+dfsch_object_t* dfsch_crypto_get_safe_prng_state();
+
+void dfsch_crypto_put_entropy(uint8_t* buf, size_t len);
+
+
+/* Salsa20 - used internally by PRNG code */
+typedef struct dfsch_salsa20_state_t {
+  uint32_t input[32];
+} dfsch_salsa20_state_t;
+
+void dfsch_salsa20_setkey(dfsch_salsa20_state_t* state, uint8_t key[32]);
+void dfsch_salsa20_addkey(dfsch_salsa20_state_t* state, uint8_t key[32]);
+void dfsch_salsa20_setiv(dfsch_salsa20_state_t* state, uint64_t iv);
+void dfsch_salsa20_get_keystream_block(dfsch_salsa20_state_t* state, 
+                                       uint8_t output[64]);
+void dfsch_salsa20_seek(dfsch_salsa20_state_t* state, uint64_t offset);
 
 #endif
