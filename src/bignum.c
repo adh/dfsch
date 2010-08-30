@@ -988,6 +988,8 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
   size_t i;
   len = bignum_num_bits(b) / 8 + 1;
   buf = GC_MALLOC_ATOMIC(len);
+
+  memset(buf, 0, len);
   
   for (i = 0; i < bignum_num_bits(b); i+=8){
     buf[len - 1 - (i >> 3)] = bignum_get_word(b, i);
