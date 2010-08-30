@@ -135,7 +135,7 @@ dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
   memset(buf, 0, len);
   ms = dfsch_bignum_to_bytes(dfsch_bignum_from_number(m));
   if (ms->len > len){
-    dfsch_error("Message too long", NULL);
+    dfsch_error("Message too long", m);
   } 
   memcpy(buf + (len - ms->len), ms->ptr, ms->len);
 
