@@ -19,6 +19,15 @@ static uint8_t memxmp(uint8_t* dst, uint8_t* src, size_t count){
   }
 }
 
+static uint8_t memor(uint8_t* src, size_t count){
+  uint8_t res = 0;
+  while (count){
+    res |= *src;
+    src++;
+    count--;
+  }
+}
+
 
 static void mgf1(dfsch_crypto_hash_t* hash, 
                  uint8_t* in, size_t ilen,
@@ -136,6 +145,7 @@ dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
   cres = buf[0];
   cres |= memxmp(lh, buf + rlen + 1, rlen);
   mptr = memchr(buf + 2*rlen + 1, 0x01, len - 2*rlen - 1);
+  cres |= memor(buf + 2*rlen + 1, mptr - (buf + 2*rlen + 1));
   
   if (mptr == NULL || cres != 0){
     dfsch_error("Invalid message", m);
