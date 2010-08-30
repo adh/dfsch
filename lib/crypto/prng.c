@@ -59,6 +59,7 @@ typedef struct system_sources_t {
 } system_sources_t;
 
 
+static uint8_t background_init[1024];
 static dfsch_crypto_hash_context_t* get_background_entropy_hash();
 static void get_data_from_background_pool(uint8_t buf[64]){
   dfsch_crypto_hash_context_t* h = get_background_entropy_hash();
@@ -66,8 +67,12 @@ static void get_data_from_background_pool(uint8_t buf[64]){
   h->algo->result(h, buf);
   h->algo->setup(h, NULL, 0);
   h->algo->process(h, buf, 64);
+  h->algo->process(h, background_init + (background_counter % 16) * 32, 32);
   h = dfsch_crypto_hash_setup(DFSCH_CRYPTO_SHA512, NULL, 0);
   h->algo->process(h, &background_counter, 8);
+  h->algo->process(h, 
+                   background_init + (background_counter % 16 + 16) * 32, 
+                   32);
   h->algo->process(h, buf, 64);
   background_counter++;
   h->algo->result(h, buf);
@@ -158,7 +163,8 @@ static void write_random_file(){
   system_sources_t ss;
   char* fname = get_random_seed_file_name();
   int fd;
-  uint8_t buf[256];
+  int i;
+  uint8_t buf[1024];
 
   if (!fname){
     return;
@@ -171,18 +177,18 @@ static void write_random_file(){
 
   fill_system_sources(&ss);
   dfsch_crypto_put_entropy(&ss, sizeof(system_sources_t));
-  get_data_from_background_pool(buf);
-  get_data_from_background_pool(buf+64);
-  get_data_from_background_pool(buf+128);
-  get_data_from_background_pool(buf+192);
-  write(fd, buf, 256);
+  for (i = 0; i < 16; i++){
+    get_data_from_background_pool(buf + i*64);
+  }
+  write(fd, buf, 1024);
   close(fd);
 }
 
 static void read_random_file(){
   char* fname = get_random_seed_file_name();
   int fd;
-  uint8_t buf[224];
+  uint8_t buf[1024];
+  int i;
 
   if (!fname){
     return;
@@ -193,9 +199,13 @@ static void read_random_file(){
     return;
   }
 
-  read(fd, buf, 224);
+  read(fd, buf, 1024);
   close(fd);
-  dfsch_crypto_put_entropy(buf, 224);
+  for (i = 0; i < 16; i++){
+    dfsch_crypto_put_entropy(buf+i*64, 64);
+    get_data_from_background_pool(buf + i*64);
+  }
+  memcpy(background_init, buf, 1024);
 }
 
 
