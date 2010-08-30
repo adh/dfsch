@@ -8,6 +8,7 @@
 
 #ifdef __WIN32__
 #include <windows.h>
+#include <rpc.h>
 #endif
 
 #include <fcntl.h>
@@ -35,28 +36,27 @@ typedef struct system_sources_t {
   clock_t clock;
   struct rusage rusage;
   pid_t pid;
+  int hostid;
 #endif
 
 #ifdef __WIN32__
   DWORD pid;
   DWORD tid;
   DWORD ticks;
+  UUID uuid;
 #endif
 } system_sources_t;
 
-static dfsch_crypto_hash_context_t* get_background_entropy_hash(){
-  static dfsch_crypto_hash_context_t* hash = NULL;
-  if (!hash){
-    hash = dfsch_crypto_hash_setup(DFSCH_CRYPTO_SHA512, NULL, 0);
-  }
-  return hash;
-}
 
+static dfsch_crypto_hash_context_t* get_background_entropy_hash();
 static void get_data_from_background_pool(uint8_t buf[64]){
   dfsch_crypto_hash_context_t* h = get_background_entropy_hash();
   h->algo->result(h, buf);
   h->algo->setup(h, NULL, 0);
   h->algo->process(h, buf, 64);
+  h = dfsch_crypto_hash_setup(DFSCH_CRYPTO_SHA512, NULL, 0);
+  h->algo->process(h, buf, 64);
+  h->algo->result(h, buf);
 }
 
 static void fill_system_sources(system_sources_t* ss){
@@ -67,6 +67,7 @@ static void fill_system_sources(system_sources_t* ss){
 #ifdef unix
   ss->pid = getpid();
   ss->clock = times(&(ss->tms));
+  ss->hostid = gethostid();
   getrusage(RUSAGE_SELF, &(ss->rusage));
   
   fd = open("/dev/urandom", O_RDONLY | O_NONBLOCK);
@@ -83,6 +84,7 @@ static void fill_system_sources(system_sources_t* ss){
   ss->pid = GetCurrentProcessId();
   ss->tid = GetCurrentThreadId();
   ss->ticks = GetTickCount();
+  UuidCreate(&(ss->uuid));
 #endif
 }
 
@@ -115,6 +117,74 @@ static void hash_system_sources(uint8_t buf[32], uint8_t old_output[64]){
 
   hs->algo->result(hs, buf);
 }
+
+static char* get_random_seed_file_name(){
+  char* randfile = getenv("DFSCH_RANDFILE");
+  char* homedir = getenv("HOME");
+  char* tempdir = getenv("TEMP"); /* windows compatibility */
+  
+  if (randfile){
+    return randfile;
+  } else if (homedir) {
+    return dfsch_saprintf("%s/.dfsch-random", homedir);
+  } else if (tempdir) {
+    return dfsch_saprintf("%s/.dfsch-random", tempdir);    
+  }
+}
+
+static void write_random_file(){
+  char* fname = get_random_seed_file_name();
+  int fd;
+  uint8_t buf[64];
+
+  if (!fname){
+    return;
+  }
+
+  fd = open(fname, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+  if (fd < 0){
+    return;
+  }
+
+  get_data_from_background_pool(buf);
+  write(fd, buf, 64);
+  close(fd);
+}
+
+static void read_random_file(){
+  char* fname = get_random_seed_file_name();
+  int fd;
+  uint8_t buf[1024];
+
+  if (!fname){
+    return;
+  }
+
+  fd = open(fname, O_RDONLY, 0600);
+  if (fd < 0){
+    return;
+  }
+
+  read(fd, buf, 64);
+  close(fd);
+  dfsch_crypto_put_entropy(buf, 64);
+}
+
+
+static dfsch_crypto_hash_context_t* get_background_entropy_hash(){
+  static dfsch_crypto_hash_context_t* hash = NULL;
+  if (!hash){
+    system_sources_t ss;
+    hash = dfsch_crypto_hash_setup(DFSCH_CRYPTO_SHA512, NULL, 0);
+    fill_system_sources(&ss);
+    hash->algo->process(hash, &ss, sizeof(system_sources_t));
+    read_random_file();
+    write_random_file();
+    atexit(write_random_file);
+  }
+  return hash;
+}
+
 
 static void prng_get_bytes(prng_state_t* state, uint8_t* buf, size_t len){
   while (len){
@@ -209,3 +279,4 @@ void dfsch_crypto_put_entropy(uint8_t* buf, size_t len){
   dfsch_crypto_hash_context_t* h = get_background_entropy_hash();
   h->algo->process(h, buf, len);
 }
+
