@@ -78,7 +78,7 @@ CONST64(0x5fcb6fab3ad6faec), CONST64(0x6c44198c4a475817)
 #define Gamma0(x)       (S(x, 1) ^ S(x, 8) ^ R(x, 7))
 #define Gamma1(x)       (S(x, 19) ^ S(x, 61) ^ R(x, 6))
 
-static int  sha512_compress(hash_state * md, unsigned char *buf)
+static int  sha512_compress(sha512_context_t * md, unsigned char *buf)
 {
     ulong64 S[8], W[80], t0, t1;
     int i;
@@ -128,18 +128,22 @@ static int  sha512_compress(hash_state * md, unsigned char *buf)
    @param md   The hash state you wish to initialize
    @return CRYPT_OK if successful
 */
-int sha512_init(hash_state * md)
+int sha512_setup(sha512_context_t * md, 
+                 uint8_t* key, size_t keylen)
 {
-    md->curlen = 0;
-    md->length = 0;
-    md->state[0] = CONST64(0x6a09e667f3bcc908);
-    md->state[1] = CONST64(0xbb67ae8584caa73b);
-    md->state[2] = CONST64(0x3c6ef372fe94f82b);
-    md->state[3] = CONST64(0xa54ff53a5f1d36f1);
-    md->state[4] = CONST64(0x510e527fade682d1);
-    md->state[5] = CONST64(0x9b05688c2b3e6c1f);
-    md->state[6] = CONST64(0x1f83d9abfb41bd6b);
-    md->state[7] = CONST64(0x5be0cd19137e2179);
+  if (keylen != 0){
+    dfsch_error("SHA-512 is not keyed", NULL);
+  }
+  md->curlen = 0;
+  md->length = 0;
+  md->state[0] = CONST64(0x6a09e667f3bcc908);
+  md->state[1] = CONST64(0xbb67ae8584caa73b);
+  md->state[2] = CONST64(0x3c6ef372fe94f82b);
+  md->state[3] = CONST64(0xa54ff53a5f1d36f1);
+  md->state[4] = CONST64(0x510e527fade682d1);
+  md->state[5] = CONST64(0x9b05688c2b3e6c1f);
+  md->state[6] = CONST64(0x1f83d9abfb41bd6b);
+  md->state[7] = CONST64(0x5be0cd19137e2179);
 }
 
 /**
@@ -149,7 +153,7 @@ int sha512_init(hash_state * md)
    @param inlen  The length of the data (octets)
    @return CRYPT_OK if successful
 */
-HASH_PROCESS(sha512_process, sha512_compress, sha512, 128)
+HASH_PROCESS(sha512_process, sha512_compress, sha512_context_t, 128)
 
 /**
    Terminate the hash to get the digest
@@ -157,13 +161,9 @@ HASH_PROCESS(sha512_process, sha512_compress, sha512, 128)
    @param out [out] The destination of the hash (64 bytes)
    @return CRYPT_OK if successful
 */
-int sha512_done(hash_state * md, unsigned char *out)
+int sha512_result(sha512_context_t * md, unsigned char *out)
 {
     int i;
-
-    if (md->curlen >= sizeof(md->buf)) {
-       return CRYPT_INVALID_ARG;
-    }
 
     /* increase the length of the message */
     md->length += md->curlen * CONST64(8);

@@ -346,6 +346,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/blowfish.c \
 	lib/crypto/hmac.c \
 	lib/crypto/sha256.c \
+	lib/crypto/sha512.c \
 	lib/crypto/sha1.c \
 	lib/crypto/md5.c \
 	lib/crypto/md4.c \
