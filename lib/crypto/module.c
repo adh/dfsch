@@ -244,6 +244,50 @@ DFSCH_DEFINE_PRIMITIVE(rsa_decrypt_number,
   return dfsch_rsa_decrypt(private, message);
 }
 
+DFSCH_DEFINE_PRIMITIVE(oaep_encode,
+                       "Encode message using OAEP scheme"){
+  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_object_t* random_source = NULL;
+  dfsch_strbuf_t* message;
+  dfsch_strbuf_t* label = DFSCH_EMPTY_STRBUF;
+  size_t length;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_BUFFER_ARG(args, message);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("random-source", random_source);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_GENERIC("label", label, dfsch_string_to_buf);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  return dfsch_crypto_oaep_encode(hash, random_source, length,
+                                  message->ptr, message->len,
+                                  label->ptr, label->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(oaep_decode,
+                       "Encode message using OAEP scheme"){
+  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_object_t* random_source = NULL;
+  dfsch_object_t* message;
+  dfsch_strbuf_t* label = DFSCH_EMPTY_STRBUF;
+  size_t length;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_OBJECT_ARG(args, message);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_GENERIC("label", label, dfsch_string_to_buf);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  return dfsch_make_string_strbuf(dfsch_crypto_oaep_decode(hash, length,
+                                                           message,
+                                                           label->ptr, 
+                                                           label->len));
+}
+
+
+
 
 static const uint8_t curve25519_basepoint[32] = {9};
 
@@ -333,5 +377,10 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(rsa_encrypt_number));
   dfsch_defconst_pkgcstr(env, crypto, "rsa-decrypt-number",
                          DFSCH_PRIMITIVE_REF(rsa_decrypt_number));
+
+  dfsch_defconst_pkgcstr(env, crypto, "oaep-encode",
+                         DFSCH_PRIMITIVE_REF(oaep_encode));
+  dfsch_defconst_pkgcstr(env, crypto, "oaep-decode",
+                         DFSCH_PRIMITIVE_REF(oaep_decode));
 
 }

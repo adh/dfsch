@@ -214,4 +214,27 @@ dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
 dfsch_object_t* dfsch_rsa_decrypt(dfsch_rsa_private_key_t* prk,
                                   dfsch_object_t* cn);
 
+dfsch_object_t* dfsch_crypto_oaep_encode(dfsch_crypto_hash_t* hash,
+                                         dfsch_object_t* random_source,
+                                         size_t len,
+                                         uint8_t* data,
+                                         size_t dlen,
+                                         uint8_t* label,
+                                         size_t llen);
+dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
+                                         size_t len,
+                                         dfsch_object_t* m,
+                                         uint8_t* label,
+                                         size_t llen);
+dfsch_object_t* dfsch_crypto_pss_encode(dfsch_crypto_hash_t* hash,
+                                        dfsch_object_t* random_source,
+                                        size_t len,
+                                        uint8_t* mh,
+                                        size_t mhlen);
+int dfsch_crypto_pss_verify(dfsch_crypto_hash_t* hash,
+                            size_t len,
+                            dfsch_object_t* s,
+                            uint8_t* mh,
+                            size_t mhlen);
+
 #endif

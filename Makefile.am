@@ -350,7 +350,8 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/md5.c \
 	lib/crypto/md4.c \
 	lib/crypto/curve25519.c \
-	lib/crypto/rsa.c
+	lib/crypto/rsa.c \
+	lib/crypto/rsa-pad.c
 libdfsch_crypto_la_LIBADD = libdfsch.la
 libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
 
