@@ -286,6 +286,41 @@ DFSCH_DEFINE_PRIMITIVE(oaep_decode,
                                                            label->len));
 }
 
+DFSCH_DEFINE_PRIMITIVE(pss_encode,
+                       "Encode signature using PSS"){
+  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_object_t* random_source = NULL;
+  dfsch_strbuf_t* mh;
+  size_t length;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_BUFFER_ARG(args, mh);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("random-source", random_source);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  return dfsch_crypto_pss_encode(hash, random_source, length,
+                                 mh->ptr, mh->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(pss_verify,
+                       "Verify signature encoded using PSS"){
+  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_object_t* signature;
+  dfsch_strbuf_t* mh;
+  size_t length;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_OBJECT_ARG(args, signature);
+  DFSCH_BUFFER_ARG(args, mh);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  return dfsch_bool(dfsch_crypto_pss_verify(hash, length, signature,
+                                            mh->ptr, mh->len));
+}
 
 
 
@@ -386,5 +421,9 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(oaep_encode));
   dfsch_defconst_pkgcstr(env, crypto, "oaep-decode",
                          DFSCH_PRIMITIVE_REF(oaep_decode));
+  dfsch_defconst_pkgcstr(env, crypto, "pss-encode",
+                         DFSCH_PRIMITIVE_REF(pss_encode));
+  dfsch_defconst_pkgcstr(env, crypto, "pss-verify",
+                         DFSCH_PRIMITIVE_REF(pss_verify));
 
 }

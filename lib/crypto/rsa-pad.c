@@ -1,5 +1,13 @@
 #include <dfsch/lib/crypto.h>
 
+static size_t bitlength_to_octets(int l){
+  if (l % 8 == 0){
+    return l / 8;
+  } else {
+    return l / 8 +1;
+  }
+}
+
 static void memxor(uint8_t* dst, uint8_t* src, size_t count){
   while (count){
     *dst ^= *src;
@@ -17,6 +25,7 @@ static uint8_t memxmp(uint8_t* dst, uint8_t* src, size_t count){
     src++;
     count--;
   }
+  return res;
 }
 
 static uint8_t memor(uint8_t* src, size_t count){
@@ -26,6 +35,7 @@ static uint8_t memor(uint8_t* src, size_t count){
     src++;
     count--;
   }
+  return res;
 }
 
 
@@ -77,6 +87,8 @@ dfsch_object_t* dfsch_crypto_oaep_encode(dfsch_crypto_hash_t* hash,
   size_t rlen;
   dfsch_crypto_hash_context_t* hc;
 
+  len = bitlength_to_octets(len);
+
   if (!hash){
     hash = DFSCH_CRYPTO_SHA256;
   }
@@ -116,6 +128,8 @@ dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
   uint8_t cres;
   uint8_t* lh;
 
+  len = bitlength_to_octets(len);
+
   if (!hash){
     hash = DFSCH_CRYPTO_SHA256;
   }
@@ -154,4 +168,107 @@ dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
   mptr++;
 
   return dfsch_strbuf_create(mptr, len - (mptr - buf));
+}
+
+dfsch_object_t* dfsch_crypto_pss_encode(dfsch_crypto_hash_t* hash,
+                                        dfsch_object_t* random_source,
+                                        size_t bits,
+                                        uint8_t* mh,
+                                        size_t mhlen){
+  uint8_t* buf;
+  static uint8_t pad1[8] = {0,0,0,0, 0,0,0,0};
+  size_t rlen;
+  dfsch_crypto_hash_context_t* hc;
+  size_t len;
+
+  len = bitlength_to_octets(bits);
+
+  if (!hash){
+    hash = DFSCH_CRYPTO_SHA256;
+  }
+
+  rlen = hash->result_len;
+
+  if (2*rlen + 2 > len){
+    dfsch_error("Modulus too short", NULL);
+  } 
+
+  buf = GC_MALLOC_ATOMIC(len);
+
+  memset(buf, 0, len);
+  buf[len-1] = 0xbc;
+
+  dfsch_random_get_bytes(random_source, buf + (len - 2*rlen - 1), rlen);
+
+  hc = dfsch_crypto_hash_setup(hash, NULL, 0);
+  hc->algo->process(hc, pad1, 8);
+  hc->algo->process(hc, mh, mhlen);
+  hc->algo->process(hc, buf + (len - 2*rlen - 1), rlen);
+  hc->algo->result(hc, buf + (len - rlen - 1));
+
+  buf[len - 2*rlen - 2] = 0x01;
+
+  mgf1(hash, buf + (len - rlen - 1), rlen, buf, len - rlen - 1);
+
+  if (bits % 8 != 0){
+    buf[0] &= (1 << bits % 8) - 1;
+  }
+
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len));  
+}
+int dfsch_crypto_pss_verify(dfsch_crypto_hash_t* hash,
+                            size_t bits,
+                            dfsch_object_t* s,
+                            uint8_t* mh,
+                            size_t mhlen){
+  uint8_t* buf;
+  uint8_t* h;
+  static uint8_t pad1[8] = {0,0,0,0, 0,0,0,0};
+  size_t rlen;
+  dfsch_crypto_hash_context_t* hc;
+  size_t len;
+  dfsch_strbuf_t* ss;
+  uint8_t cres;
+
+  len = bitlength_to_octets(bits);
+
+  if (!hash){
+    hash = DFSCH_CRYPTO_SHA256;
+  }
+
+  rlen = hash->result_len;
+
+  if (2*rlen + 2 > len){
+    dfsch_error("Modulus too short", NULL);
+  } 
+
+  buf = GC_MALLOC_ATOMIC(len);
+
+  memset(buf, 0, len);
+  ss = dfsch_bignum_to_bytes(dfsch_bignum_from_number(s));
+  if (ss->len > len){
+    dfsch_error("Signature too long", s);
+  } 
+  memcpy(buf + (len - ss->len), ss->ptr, ss->len);
+
+  mgf1(hash, buf + (len - rlen - 1), rlen, buf, len - rlen - 1);
+  
+  if (bits % 8 != 0){
+    buf[0] &= (1 << bits % 8) - 1;
+  }
+
+  h = GC_MALLOC_ATOMIC(rlen);
+
+  hc = dfsch_crypto_hash_setup(hash, NULL, 0);
+  hc->algo->process(hc, pad1, 8);
+  hc->algo->process(hc, mh, mhlen);
+  hc->algo->process(hc, buf + (len - 2*rlen - 1), rlen);
+  hc->algo->result(hc, h);
+
+  cres = buf[len - 2*rlen - 2] ^ 0x01;
+  cres |= buf[len-1] ^ 0xbc;
+  cres |= memxmp(buf + (len - rlen - 1), h, rlen);
+  cres |= memor(buf, len - 2*rlen - 2);
+
+  return cres == 0;
 }
