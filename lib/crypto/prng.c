@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <time.h>
 #include <errno.h>
 
 typedef struct prng_state_t {
@@ -27,7 +28,7 @@ typedef struct system_sources_t {
   uint8_t uninitialized[16];
   time_t time;
   void* sp;
-  uint8_t sys_random[16];
+  uint8_t sys_random[32];
   int stdlib_random;
 
 #ifdef unix
@@ -37,6 +38,12 @@ typedef struct system_sources_t {
   struct rusage rusage;
   pid_t pid;
   int hostid;
+#ifdef _POSIX_TIMERS
+  struct timespec realtime;
+  struct timespec monotonic;
+  struct timespec process;
+  struct timespec thread;
+#endif
 #endif
 
 #ifdef __WIN32__
@@ -44,6 +51,10 @@ typedef struct system_sources_t {
   DWORD tid;
   DWORD ticks;
   UUID uuid;
+  LARGE_INTEGER pcount;
+  FILETIME idle;
+  FILETIME kernel;
+  FILETIME user;
 #endif
 } system_sources_t;
 
@@ -51,11 +62,14 @@ typedef struct system_sources_t {
 static dfsch_crypto_hash_context_t* get_background_entropy_hash();
 static void get_data_from_background_pool(uint8_t buf[64]){
   dfsch_crypto_hash_context_t* h = get_background_entropy_hash();
+  static uint64_t background_counter = 0;
   h->algo->result(h, buf);
   h->algo->setup(h, NULL, 0);
   h->algo->process(h, buf, 64);
   h = dfsch_crypto_hash_setup(DFSCH_CRYPTO_SHA512, NULL, 0);
+  h->algo->process(h, &background_counter, 8);
   h->algo->process(h, buf, 64);
+  background_counter++;
   h->algo->result(h, buf);
 }
 
@@ -75,16 +89,24 @@ static void fill_system_sources(system_sources_t* ss){
     fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
   }
   if (fd >= 0){
-    read(fd, &(ss->sys_random), 16);
+    read(fd, &(ss->sys_random), 32);
     close(fd);
   }
   ss->fd = fd;
+#ifdef _POSIX_TIMERS
+  clock_gettime(CLOCK_REALTIME, &(ss->realtime));
+  clock_gettime(CLOCK_MONOTONIC, &(ss->monotonic));
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(ss->process));
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &(ss->thread));
+#endif
 #endif
 #ifdef __WIN32__
   ss->pid = GetCurrentProcessId();
   ss->tid = GetCurrentThreadId();
   ss->ticks = GetTickCount();
   UuidCreate(&(ss->uuid));
+  QueryPerformanceCounter(&(ss->pcount));
+  GetSystemTimes(&(ss->idle), &(ss->kernel), &(ss->user))
 #endif
 }
 
@@ -133,9 +155,10 @@ static char* get_random_seed_file_name(){
 }
 
 static void write_random_file(){
+  system_sources_t ss;
   char* fname = get_random_seed_file_name();
   int fd;
-  uint8_t buf[64];
+  uint8_t buf[256];
 
   if (!fname){
     return;
@@ -146,15 +169,20 @@ static void write_random_file(){
     return;
   }
 
+  fill_system_sources(&ss);
+  dfsch_crypto_put_entropy(&ss, sizeof(system_sources_t));
   get_data_from_background_pool(buf);
-  write(fd, buf, 64);
+  get_data_from_background_pool(buf+64);
+  get_data_from_background_pool(buf+128);
+  get_data_from_background_pool(buf+192);
+  write(fd, buf, 256);
   close(fd);
 }
 
 static void read_random_file(){
   char* fname = get_random_seed_file_name();
   int fd;
-  uint8_t buf[1024];
+  uint8_t buf[224];
 
   if (!fname){
     return;
@@ -165,9 +193,9 @@ static void read_random_file(){
     return;
   }
 
-  read(fd, buf, 64);
+  read(fd, buf, 224);
   close(fd);
-  dfsch_crypto_put_entropy(buf, 64);
+  dfsch_crypto_put_entropy(buf, 224);
 }
 
 
@@ -193,10 +221,15 @@ static void prng_get_bytes(prng_state_t* state, uint8_t* buf, size_t len){
         uint8_t buf[32];
         hash_system_sources(buf, state->output);
         dfsch_salsa20_addkey(&(state->salsa), buf);
+        if (state->output[63] == 0){
+          dfsch_crypto_put_entropy(buf, 32);
+        }
       }
 
       dfsch_salsa20_get_keystream_block(&(state->salsa), state->output);
-
+      if (state->output[15] == 0){
+        dfsch_crypto_put_entropy(state->output + 16, 16);
+      }
       state->output_offset = 0;
     }
     *buf = state->output[state->output_offset];

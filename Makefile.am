@@ -355,8 +355,16 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/rsa-pad.c \
 	lib/crypto/salsa20.c \
 	lib/crypto/prng.c
-libdfsch_crypto_la_LIBADD = libdfsch.la
+
+if WIN32
+lrt_ldf = 
+else
+lrt_ldf = -lrt
+endif
+
+libdfsch_crypto_la_LIBADD = libdfsch.la $(lrt_ldf)
 libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
+
 
 crypto_la_SOURCES = lib/crypto/module.c
 crypto_la_LIBADD = libdfsch.la libdfsch-crypto.la
