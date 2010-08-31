@@ -123,6 +123,37 @@ static bignum_t* copy_bignum(bignum_t* s){
   return b;
 }
 
+static bignum_t* copy_bignum_mod2(bignum_t* s, size_t m){
+  size_t bs = m % WORD_BITS;
+  size_t ws = m / WORD_BITS;
+  bignum_t* b = make_bignum(ws + 1);
+
+  b->negative = s->negative;
+  
+  if (ws >= s->length){
+    b->words[ws] = 0;
+    memcpy(b->words, s->words, sizeof(word_t)*s->length);
+  } else {
+    memcpy(b->words, s->words, sizeof(word_t)*ws);
+    b->words[ws] = s->words[ws] & ((1 << bs) - 1);
+  }
+
+  normalize_bignum(b);
+  return b;
+}
+
+static bignum_t* copy_bignum_words(bignum_t* s, size_t count){
+  bignum_t* b;
+  if (count >= s->length){
+    count = s->length;
+  }
+  b = make_bignum(count);
+  b->negative = s->negative;
+  memcpy(b->words, s->words, sizeof(word_t)*count);
+  return b;
+}
+
+
 
 bignum_t* dfsch_make_bignum_uint64(uint64_t n){
   int i;
@@ -756,7 +787,8 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   }
   if (a->length < b->length || 
       (a->length == b->length && 
-       a->words[a->length - 1] < b->words[b->length - 1])){
+       a->words[a->length - 1] < b->words[b->length - 1]) ||
+      dfsch_bignum_cmp_abs(a, b) < 0){
     if (qp){
       *qp = make_bignum(0);
     }
@@ -783,8 +815,62 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   }
 }
 
+static bignum_t* barret_prepare(bignum_t* m){
+  bignum_t* res;
+
+  dfsch_bignum_div(bignum_shl_words(make_bignum_digit(1),
+                                    m->length * 2),
+                   m,
+                   &res,
+                   NULL);
+
+  return res;
+}
+
+/* HAC 14.42 */
+static bignum_t* barret_reduce(bignum_t* x, bignum_t* m, bignum_t* mu){
+  size_t k = m->length;
+  bignum_t* q1;
+  bignum_t* q2;
+  bignum_t* q3;
+  bignum_t* r1;
+  bignum_t* r2;
+  bignum_t* r;
+
+  if (x->length >= 2*k){ 
+    dfsch_bignum_div(x, m, NULL, &r); 
+    return r; 
+  } 
+
+  /* 1 */
+  //dfsch_bignum_div(x, dfsch_bignum_shl(make_bignum_digit(1), k - 1),
+  //                 &q1, NULL);
+  q1 = bignum_shr_words(x, k - 1);
+  q2 = dfsch_bignum_mul(q1, mu);
+  //dfsch_bignum_div(q2, b_k_p1, &q3, NULL);
+  q3 = bignum_shr_words(q2, k + 1);
+
+  /* 2 */
+  r1 = copy_bignum_words(x, (k + 1));
+  r2 = copy_bignum_words(dfsch_bignum_mul(q3, m), (k+1));
+  r = dfsch_bignum_sub(r1, r2);
+
+  /* 3 */
+  if (r->negative){
+    r = dfsch_bignum_add(r, bignum_shl_words(make_bignum_digit(1), k + 1));
+  }
+
+  /* 4 */
+  while (dfsch_bignum_cmp(r, m) >= 0){
+    r = dfsch_bignum_sub(r, m);
+  }
+
+  return r;
+}
+
 bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   bignum_t* r;
+  bignum_t* mu;
   size_t i;
 
   if (m && b->negative){
@@ -794,14 +880,23 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
     dfsch_error("Zero modulus", NULL);
   }
 
+  if (m){
+    mu = barret_prepare(m);
+  }
+
   r = make_bignum_digit(1);
   for (i = bignum_num_bits(e); i > 0; i--){
     r = dfsch_bignum_mul(r, r);
+    if (m){
+      //dfsch_bignum_div(r, m, NULL, &r);
+      r = barret_reduce(r, m, mu);
+    }
     if (bignum_get_bit(e, i-1)){
       r = dfsch_bignum_mul(r, b);
-    }
-    if (m){
-      dfsch_bignum_div(r, m, NULL, &r);
+      if (m){
+        //dfsch_bignum_div(r, m, NULL, &r);
+        r = barret_reduce(r, m, mu);
+      }
     }
   }
   
@@ -988,6 +1083,8 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
   size_t i;
   len = bignum_num_bits(b) / 8 + 1;
   buf = GC_MALLOC_ATOMIC(len);
+
+  memset(buf, 0, len);
   
   for (i = 0; i < bignum_num_bits(b); i+=8){
     buf[len - 1 - (i >> 3)] = bignum_get_word(b, i);

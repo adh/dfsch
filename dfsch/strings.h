@@ -33,6 +33,9 @@ extern "C" {
     size_t len;
   } dfsch_strbuf_t;
 
+  extern dfsch_strbuf_t dfsch_empty_strbuf;
+#define DFSCH_EMPTY_STRBUF (&dfsch_empty_strbuf)
+
   typedef struct dfsch_string_t {
     dfsch_type_t* type;
     dfsch_strbuf_t buf;

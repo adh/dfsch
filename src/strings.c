@@ -27,6 +27,12 @@
 #include "udata.h"
 #include "util.h"
 
+dfsch_strbuf_t dfsch_empty_strbuf = {
+  .len = 0,
+  .ptr = NULL
+};
+
+
 static void * internal_memrchr(const void *buf, int c, size_t num){
   unsigned char *pMem = (unsigned char *) buf + num;
   

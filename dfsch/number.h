@@ -107,6 +107,8 @@ extern "C" {
   /** Modulo */
   extern dfsch_object_t* dfsch_number_mod(dfsch_object_t* a, 
                                           dfsch_object_t* b);
+  extern dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* a, 
+                                              dfsch_object_t* b);
 
   /** Less than operator */
   extern int dfsch_number_lt(dfsch_object_t* a, dfsch_object_t* b);
@@ -144,6 +146,9 @@ dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a);
   dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
                                              dfsch_object_t* to,
                                              dfsch_object_t* step);
+
+  dfsch_object_t* dfsch_number_next_prime(dfsch_object_t* n);
+
 
 #ifdef __cplusplus
 }
