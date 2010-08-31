@@ -64,6 +64,7 @@ static dfsch_crypto_hash_context_t* get_background_entropy_hash();
 static void get_data_from_background_pool(uint8_t buf[64]){
   dfsch_crypto_hash_context_t* h = get_background_entropy_hash();
   static uint64_t background_counter = 0;
+  int i;
   h->algo->result(h, buf);
   h->algo->setup(h, NULL, 0);
   h->algo->process(h, buf, 64);
@@ -73,6 +74,14 @@ static void get_data_from_background_pool(uint8_t buf[64]){
   h->algo->process(h, 
                    background_init + (background_counter % 16 + 16) * 32, 
                    32);
+  
+  for (i = 0; i < 32; i++){
+    background_init[buf[i]] ^= buf[32 + (i % 8)*4];
+    background_init[buf[i]+256] ^= buf[33 + (i % 8)*4];
+    background_init[buf[i]+512] ^= buf[34 + (i % 8)*4];
+    background_init[buf[i]+768] ^= buf[35 + (i % 8)*4];
+  };
+
   h->algo->process(h, buf, 64);
   background_counter++;
   h->algo->result(h, buf);
