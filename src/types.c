@@ -880,7 +880,7 @@ static void vector_write(vector_t* v, dfsch_writer_state_t* state){
   if (v->length > 0){
     for(i = 0; i < v->length-1; ++i){
       dfsch_write_object(state, v->data[i]);
-      dfsch_write_string(state, " ");
+      dfsch_write_space(state);
     }
     dfsch_write_object(state, v->data[v->length - 1]);
   }

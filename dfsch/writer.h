@@ -22,18 +22,19 @@ extern "C" {
   int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state);
   void dfsch_write_object(dfsch_writer_state_t* state,
-                                 dfsch_object_t* object);
+                          dfsch_object_t* object);
   void dfsch_write_string(dfsch_writer_state_t* state,
-                                 char* str);
+                          char* str);
+  void dfsch_write_space(dfsch_writer_state_t* state);
   void dfsch_write_strbuf(dfsch_writer_state_t* state,
-                                 char* str, size_t len);
+                          char* str, size_t len);
   void dfsch_write_unreadable(dfsch_writer_state_t* state,
-                                     dfsch_object_t* obj, 
-                                     char* format, ...);
+                              dfsch_object_t* obj, 
+                              char* format, ...);
   void dfsch_write_unreadable_with_slots(dfsch_writer_state_t* state,
                                          dfsch_object_t* obj);
   void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
-                                           dfsch_object_t* obj);
+                                    dfsch_object_t* obj);
   void dfsch_write_unreadable_end(dfsch_writer_state_t* state);
   void dfsch_write_pprint_newline(dfsch_writer_state_t* state);
   void dfsch_write_pprint_indent(dfsch_writer_state_t* state);

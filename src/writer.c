@@ -25,6 +25,24 @@
 #include <limits.h>
 #include <stdio.h>
 
+#define QE_TEXT        0
+#define QE_SPACE       1
+#define QE_BEGIN_GROUP 2
+#define QE_END_GROUP   3
+
+typedef struct queue_entry_t queue_entry_t;
+struct queue_entry_t {
+  int type;
+  dfsch_strbuf_t* data;
+  queue_entry_t* next;
+};
+
+typedef struct indent_entry_t indent_entry_t;
+struct indent_entry_t {
+  int indent;
+  indent_entry_t* next;
+};
+
 struct dfsch_writer_state_t {
   dfsch_object_t object_head;
   dfsch_output_proc_t output_proc;
@@ -35,6 +53,13 @@ struct dfsch_writer_state_t {
   int circ_pass;
   dfsch_eqhash_t circ_hash;
   int circ_counter;
+
+  int breaking_lines;
+  int line_length;
+  
+  queue_entry_t* qhead;
+  queue_entry_t* qtail;
+  indent_entry_t* istack;
 };
 dfsch_type_t dfsch_writer_state_type = {
   DFSCH_STANDARD_TYPE,
@@ -96,7 +121,7 @@ int dfsch_writer_state_print_p(dfsch_writer_state_t* state){
   return state->readability == DFSCH_PRINT;
 }
 int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state){
-  return 0;
+  return state->line_length != -1;
 }
 int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state){
   return state->circ_pass == 1;
@@ -159,7 +184,7 @@ void dfsch_write_object(dfsch_writer_state_t* state,
         dfsch_write_object(state, DFSCH_FAST_CAR(i));
         i = DFSCH_FAST_CDR(i);
         if (i) {
-          dfsch_write_string(state, " ");  
+          dfsch_write_space(state);  
         }
 
         if (DFSCH_FIXNUM_P(dfsch_eqhash_ref(&(state->circ_hash), i))){
@@ -204,6 +229,11 @@ void dfsch_write_string(dfsch_writer_state_t* state,
                         char* str){
   dfsch_write_strbuf(state, str, strlen(str));
 }
+
+void dfsch_write_space(dfsch_writer_state_t* state){
+  dfsch_write_string(state, " ");
+}
+
 void dfsch_write_strbuf(dfsch_writer_state_t* state,
                         char* str, size_t len){
   if (state->circ_pass == 1){
@@ -245,7 +275,7 @@ void dfsch_write_unreadable_with_slots(dfsch_writer_state_t* state,
         dfsch_write_string(state, j->name);
         dfsch_write_string(state, ": ");
         dfsch_write_object(state, dfsch_slot_ref(obj, j, 1));
-        dfsch_write_string(state, " ");
+        dfsch_write_space(state);
         j++;
       }
     }
