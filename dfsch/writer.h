@@ -36,14 +36,27 @@ extern "C" {
   void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
                                     dfsch_object_t* obj);
   void dfsch_write_unreadable_end(dfsch_writer_state_t* state);
-  void dfsch_write_pprint_newline(dfsch_writer_state_t* state);
-  void dfsch_write_pprint_indent(dfsch_writer_state_t* state);
-  void dfsch_write_pprint_begin(dfsch_writer_state_t* state);
-  void dfsch_write_pprint_end(dfsch_writer_state_t* state);
 
 
   void dfsch_write_unreadable_with_slots_method(dfsch_object_t* obj,
                                                 dfsch_writer_state_t* state);
+
+  
+  typedef struct dfsch_pprint_formatter_t dfsch_pprint_formatter_t;
+
+  dfsch_pprint_formatter_t* dfsch_make_pprint_formatter(dfsch_output_proc_t proc,
+                                                        void* baton,
+                                                        int line_length,
+                                                        int initial_indent);
+  void dfsch_pprint_begin_group(dfsch_pprint_formatter_t* pf,
+                                int indent);
+  void dfsch_pprint_end_group(dfsch_pprint_formatter_t* pf);
+  void dfsch_pprint_text_block(dfsch_pprint_formatter_t* pf,
+                               char* data,
+                               size_t len);
+  void dfsch_pprint_space(dfsch_pprint_formatter_t* pf,
+                          int count);
+  
 
 #ifdef __cplusplus
 }

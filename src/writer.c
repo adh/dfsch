@@ -25,24 +25,6 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define QE_TEXT        0
-#define QE_SPACE       1
-#define QE_BEGIN_GROUP 2
-#define QE_END_GROUP   3
-
-typedef struct queue_entry_t queue_entry_t;
-struct queue_entry_t {
-  int type;
-  dfsch_strbuf_t* data;
-  queue_entry_t* next;
-};
-
-typedef struct indent_entry_t indent_entry_t;
-struct indent_entry_t {
-  int indent;
-  indent_entry_t* next;
-};
-
 struct dfsch_writer_state_t {
   dfsch_object_t object_head;
   dfsch_output_proc_t output_proc;
@@ -54,12 +36,7 @@ struct dfsch_writer_state_t {
   dfsch_eqhash_t circ_hash;
   int circ_counter;
 
-  int breaking_lines;
-  int line_length;
-  
-  queue_entry_t* qhead;
-  queue_entry_t* qtail;
-  indent_entry_t* istack;
+  dfsch_pprint_formatter_t* formatter;
 };
 dfsch_type_t dfsch_writer_state_type = {
   DFSCH_STANDARD_TYPE,
@@ -121,7 +98,7 @@ int dfsch_writer_state_print_p(dfsch_writer_state_t* state){
   return state->readability == DFSCH_PRINT;
 }
 int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state){
-  return state->line_length != -1;
+  return state->formatter;
 }
 int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state){
   return state->circ_pass == 1;
@@ -295,27 +272,88 @@ void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
   if (state->readability == DFSCH_STRICT_WRITE){
     dfsch_error("Object has no readable representation", obj);
   }
-  dfsch_write_pprint_begin(state);
   dfsch_write_string(state,
                      saprintf("#<%s ", DFSCH_TYPE_OF(obj)->name));
-  dfsch_write_pprint_indent(state);
   dfsch_write_string(state,
                      saprintf("%p ", obj));
 }
 void dfsch_write_unreadable_end(dfsch_writer_state_t* state){
   dfsch_write_string(state, ">");
-  dfsch_write_pprint_end(state);
 }
 
-void dfsch_write_pprint_newline(dfsch_writer_state_t* state){
+#define QE_TEXT        0
+#define QE_SPACE       1
+#define QE_BEGIN_GROUP 2
+#define QE_END_GROUP   3
+
+typedef struct queue_entry_t queue_entry_t;
+struct queue_entry_t {
+  int type;
+  char* data;
+  size_t len;
+  queue_entry_t* next;
+};
+
+typedef struct indent_entry_t indent_entry_t;
+struct indent_entry_t {
+  int indent;
+  indent_entry_t* next;
+};
+
+
+struct dfsch_pprint_formatter_t {
+  dfsch_type_t* type;
+  
+  int breaking_lines;
+  int line_length;
+  int indent;
+
+  queue_entry_t* qhead;
+  queue_entry_t* qtail;
+  indent_entry_t* istack;
+
+  dfsch_output_proc_t output_proc;
+  void* output_baton;  
+};
+
+dfsch_type_t dfsch_pprint_formatter_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .size = sizeof(dfsch_pprint_formatter_t),
+  .name = "writer-state",
+  .documentation = "Internal class representing state of object writer"
+};
+
+
+dfsch_pprint_formatter_t* dfsch_make_pprint_formatter(dfsch_output_proc_t proc,
+                                                      void* baton,
+                                                      int line_length,
+                                                      int initial_indent){
+  
+}
+void dfsch_pprint_begin_group(dfsch_pprint_formatter_t* pf,
+                              int indent){
+  if (!pf){ 
+    return; 
+  }
+};
+void dfsch_pprint_end_group(dfsch_pprint_formatter_t* pf){
+  if (!pf){ 
+    return; 
+  }
 
 }
-void dfsch_write_pprint_indent(dfsch_writer_state_t* state){
+void dfsch_pprint_text_block(dfsch_pprint_formatter_t* pf,
+                             char* data,
+                             size_t len){
+  if (!pf){ 
+    return; 
+  }
 
 }
-void dfsch_write_pprint_begin(dfsch_writer_state_t* state){
-
-}
-void dfsch_write_pprint_end(dfsch_writer_state_t* state){
+void dfsch_pprint_space(dfsch_pprint_formatter_t* pf,
+                        int count){
+  if (!pf){ 
+    return; 
+  }
 
 }
