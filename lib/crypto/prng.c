@@ -52,9 +52,6 @@ typedef struct system_sources_t {
   DWORD ticks;
   UUID uuid;
   LARGE_INTEGER pcount;
-  FILETIME idle;
-  FILETIME kernel;
-  FILETIME user;
 #endif
 } system_sources_t;
 
@@ -91,8 +88,8 @@ static void fill_system_sources(system_sources_t* ss){
   int fd;
   ss->time = time(NULL);
   ss->sp = &fd;
-  ss->stdlib_random = random();
 #ifdef unix
+  ss->stdlib_random = random();
   ss->pid = getpid();
   ss->clock = times(&(ss->tms));
   ss->hostid = gethostid();
@@ -115,12 +112,12 @@ static void fill_system_sources(system_sources_t* ss){
 #endif
 #endif
 #ifdef __WIN32__
+  ss->stdlib_random = rand();
   ss->pid = GetCurrentProcessId();
   ss->tid = GetCurrentThreadId();
   ss->ticks = GetTickCount();
   UuidCreate(&(ss->uuid));
   QueryPerformanceCounter(&(ss->pcount));
-  GetSystemTimes(&(ss->idle), &(ss->kernel), &(ss->user))
 #endif
 }
 
@@ -156,15 +153,11 @@ static void hash_system_sources(uint8_t buf[32], uint8_t old_output[64]){
 
 static char* get_random_seed_file_name(){
   char* randfile = getenv("DFSCH_RANDFILE");
-  char* homedir = getenv("HOME");
-  char* tempdir = getenv("TEMP"); /* windows compatibility */
-  
   if (randfile){
     return randfile;
-  } else if (homedir) {
-    return dfsch_saprintf("%s/.dfsch-random", homedir);
-  } else if (tempdir) {
-    return dfsch_saprintf("%s/.dfsch-random", tempdir);    
+  } else {
+    return dfsch_saprintf("%s/.dfsch-random", 
+                          dfsch_get_user_local_data_directory());
   }
 }
 
