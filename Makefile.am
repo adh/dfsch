@@ -357,12 +357,12 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/prng.c
 
 if WIN32
-lrt_ldf = 
+prng_libadd = -lrpcrt4
 else
-lrt_ldf = -lrt
+prng_libadd = -lrt
 endif
 
-libdfsch_crypto_la_LIBADD = libdfsch.la $(lrt_ldf)
+libdfsch_crypto_la_LIBADD = libdfsch.la $(prng_libadd)
 libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
 
 

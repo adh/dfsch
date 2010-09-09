@@ -36,7 +36,9 @@ extern "C" {
 #endif
 
   /** Append directory to load:path */
-  dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
+  void dfsch_load_extend_path(dfsch_object_t* ctx, char* dir);
+  void dfsch_load_add_module_source(dfsch_object_t* ctx,
+                                    dfsch_object_t* src);
   /** Load given module (as by require, but unconditionally) */
   extern void dfsch_load(dfsch_object_t* env, char* name, 
                          dfsch_object_t* path_list);
