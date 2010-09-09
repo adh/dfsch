@@ -64,6 +64,8 @@ dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
   state->readability = readability;
   state->circ_pass = 0;
 
+  state->formatter = NULL;
+
   return state;
 }
 
@@ -91,6 +93,7 @@ void dfsch_put_object(FILE* f, dfsch_object_t* obj,
 
 
 void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
+  state->object_head.type = DFSCH_INVALID_OBJECT_TYPE;
   state->output_proc = NULL;
   state->output_baton = NULL;
 }
@@ -332,12 +335,12 @@ dfsch_pprint_formatter_t* dfsch_make_pprint_formatter(dfsch_output_proc_t proc,
 }
 void dfsch_pprint_begin_group(dfsch_pprint_formatter_t* pf,
                               int indent){
-  if (!pf){ 
+  if (!pf || pf->line_length < 0){ 
     return; 
   }
 };
 void dfsch_pprint_end_group(dfsch_pprint_formatter_t* pf){
-  if (!pf){ 
+  if (!pf || pf->line_length < 0){ 
     return; 
   }
 
@@ -348,12 +351,19 @@ void dfsch_pprint_text_block(dfsch_pprint_formatter_t* pf,
   if (!pf){ 
     return; 
   }
+  if (pf->line_length < 0){
+    pf->output_proc(pf->output_baton, data, len);
+  }
+
 
 }
 void dfsch_pprint_space(dfsch_pprint_formatter_t* pf,
                         int count){
   if (!pf){ 
     return; 
+  }
+  if (pf->line_length < 0){
+    pf->output_proc(pf->output_baton, " ", 1); // XXX
   }
 
 }

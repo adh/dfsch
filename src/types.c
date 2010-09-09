@@ -422,6 +422,14 @@ dfsch_type_t dfsch_meta_type = {
   NULL
 };
 
+dfsch_type_t dfsch_invalid_object_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(dfsch_object_t),
+  "invalid-object",
+};
+
+
 dfsch_type_t dfsch_iterator_type_type = {
   DFSCH_META_TYPE,
   DFSCH_STANDARD_TYPE,

@@ -53,6 +53,8 @@ extern dfsch_type_t dfsch_special_type;
 #define DFSCH_SPECIAL_TYPE ((dfsch_type_t*)&dfsch_special_type)
 extern dfsch_type_t dfsch_standard_type;
 #define DFSCH_STANDARD_TYPE ((dfsch_type_t*)&dfsch_standard_type)
+extern dfsch_type_t dfsch_invalid_object_type;
+#define DFSCH_INVALID_OBJECT_TYPE ((dfsch_type_t*)&dfsch_invalid_object_type)
 extern dfsch_type_t dfsch_list_type;
 #define DFSCH_LIST_TYPE ((dfsch_type_t*)&dfsch_list_type)
 extern dfsch_type_t dfsch_standard_function_type;
