@@ -450,6 +450,14 @@ void dfsch_load(dfsch_object_t* env, char* name,
   }
 
   while (DFSCH_PAIR_P(path)){
+    dfsch_object_t* pp = DFSCH_FAST_CAR(path);
+    if (!dfsch_string_p(pp)){
+      dfsch_apply(pp, dfsch_list(2,
+                                 env,
+                                 dfsch_make_string_cstr(name)));
+      path = DFSCH_FAST_CDR(path);
+      continue;
+    }
     l = sl_create();
     sl_append(l, dfsch_string_to_cstr(DFSCH_FAST_CAR(path)));
     sl_append(l, "/");
@@ -550,16 +558,18 @@ void dfsch_provide(dfsch_object_t* env, char* name){
                                modules));
 }
 
-dfsch_object_t* dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
+void dfsch_load_add_module_source(dfsch_object_t* ctx,
+                                  dfsch_object_t* src){
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
-    dfsch_set_cstr(ctx, "*load-path*", 
-		   dfsch_cons(dfsch_make_string_cstr(dir),
-                              path));
+    dfsch_set_cstr(ctx, "*load-path*", dfsch_cons(src, path));
   }else{
-    dfsch_define_cstr(ctx, "*load-path*", 
-                     dfsch_list(1, dfsch_make_string_cstr(dir)));
+    dfsch_define_cstr(ctx, "*load-path*", dfsch_list(1, src));
   }
+}
+
+void dfsch_load_extend_path(dfsch_object_t* ctx, char* dir){
+  dfsch_load_add_module_source(ctx, dfsch_make_string_cstr(dir));
 }
 
 typedef struct read_ctx_t {

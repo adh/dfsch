@@ -32,6 +32,7 @@
 
 #ifdef __WIN32__
 #include <windows.h>
+#include <shlobj.h>
 #endif
 
 str_list_t* dfsch_sl_create(){
@@ -464,4 +465,50 @@ char* dfsch_get_interpreter_home(){
 
 
 #endif
+#endif
+
+#ifdef __unix__
+char* dfsch_get_user_home_directory(){
+  char* homedir = getenv("HOME");
+  if (!homedir){
+    return "./";
+  }
+  return homedir;
+}
+
+char* dfsch_get_user_local_data_directory(){
+  return dfsch_get_user_home_directory();
+}
+#endif
+
+#ifdef __WIN32__
+
+char* dfsch_get_user_home_directory(){
+  char* homedir = GC_MALLOC_ATOMIC(MAX_PATH);
+
+  if (SHGetFolderPath(NULL, 
+                      CSIDL_PERSONAL|CSIDL_FLAG_CREATE, 
+                      NULL, 
+                      0, 
+                      homedir) == ERROR_SUCCESS){
+    return homedir;
+  }
+
+  return "./";
+}
+
+char* dfsch_get_user_local_data_directory(){
+  char* homedir = GC_MALLOC_ATOMIC(MAX_PATH);
+
+  if (SHGetFolderPath(NULL, 
+                      CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, 
+                      NULL, 
+                      0, 
+                      homedir) == ERROR_SUCCESS){
+    return homedir;
+  }
+
+  return "./";
+}
+
 #endif
