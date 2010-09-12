@@ -69,26 +69,41 @@ dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
   return state;
 }
 
-void dfsch_write_object_circular(dfsch_object_t* obj,
-                                 int readability,
-                                 dfsch_output_proc_t proc,
-                                 void* baton){
+void dfsch_write_object_output(dfsch_object_t* obj,
+                               int depth,
+                               int readability,
+                               dfsch_pprint_params_t* ppp,
+                               dfsch_output_proc_t proc,
+                               void* baton){
   dfsch_writer_state_t* state = 
     dfsch_make_writer_state(INT_MAX, readability, proc, baton);
 
-  state->circ_pass = 1;
-  dfsch_eqhash_init(&(state->circ_hash), 0);
-  dfsch_write_object(state, obj);
-  state->circ_counter = 0;
-  state->circ_pass = 2;
-  dfsch_write_object(state, obj);
-  dfsch_invalidate_writer_state(state);
+  if (depth < 0){
+    state->circ_pass = 1;
+    dfsch_eqhash_init(&(state->circ_hash), 0);
+    dfsch_write_object(state, obj);
+    state->circ_counter = 0;
+    state->circ_pass = 2;
+    dfsch_write_object(state, obj);
+    dfsch_invalidate_writer_state(state);
+  } else {
+    dfsch_write_object(state, obj);
+  }
 }
 
 
-void dfsch_put_object(FILE* f, dfsch_object_t* obj,
-                      int max_depth){
-  
+static void stdio_output(FILE* f, char*buf, size_t len){
+  if (fwrite(buf, len, 1, f) != 1){
+    dfsch_operating_system_error("fwrite");
+  }
+}
+
+void dfsch_write_object_stdio(dfsch_object_t* obj,
+                              int depth,
+                              int readability,
+                              dfsch_pprint_params_t* ppp,
+                              FILE* f){
+  dfsch_write_object_output(obj, depth, readability, ppp, stdio_output, f);
 }
 
 

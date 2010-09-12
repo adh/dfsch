@@ -470,26 +470,16 @@ void dfsch_async_apply_self(dfsch_object_t* proc){
 }
 
 char* dfsch_object_2_string(dfsch_object_t* obj, 
-                            int max_depth, int readable){
+                            int max_depth, 
+                            int readable){
   str_list_t* sl = sl_create();
-  if (max_depth >= 0){
-    dfsch_writer_state_t* state = 
-      dfsch_make_writer_state(max_depth,
-                              readable?
-                              DFSCH_WRITE:
-                              DFSCH_PRINT,
-                              (dfsch_output_proc_t)sl_append,
-                              sl);
-    dfsch_write_object(state, obj);
-    dfsch_invalidate_writer_state(state);
-  } else {
-    dfsch_write_object_circular(obj, 
-                                readable?
-                                DFSCH_WRITE:
-                                DFSCH_PRINT,
-                                (dfsch_output_proc_t)sl_append,
-                                sl);
-  }
+
+  dfsch_write_object_output(obj, 
+                            max_depth,
+                            readable ? DFSCH_WRITE : DFSCH_PRINT,
+                            NULL,
+                            (dfsch_output_proc_t)sl_nappend,
+                            sl);
   return sl_value(sl);
 }
 

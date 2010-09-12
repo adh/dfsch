@@ -2,6 +2,7 @@
 #define H__dfsch__writer__
 
 #include <dfsch/dfsch.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,6 +13,24 @@ extern "C" {
 #define DFSCH_STRICT_WRITE 0
 #define DFSCH_WRITE        1
 #define DFSCH_PRINT        2
+
+  typedef struct dfsch_pprint_params_t {
+    int line_length;
+    int indent;
+  } dfsch_pprint_params_t;
+
+  void dfsch_write_object_output(dfsch_object_t* obj,
+                                 int depth,
+                                 int readability,
+                                 dfsch_pprint_params_t* ppp,
+                                 dfsch_output_proc_t proc,
+                                 void* baton);
+  void dfsch_write_object_stdio(dfsch_object_t* obj,
+                                int depth,
+                                int readability,
+                                dfsch_pprint_params_t* ppp,
+                                FILE* f);
+
 
   dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
                                                 int readability,
@@ -57,6 +76,8 @@ extern "C" {
   void dfsch_pprint_space(dfsch_pprint_formatter_t* pf,
                           int count);
   
+
+
 
 #ifdef __cplusplus
 }
