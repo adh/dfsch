@@ -22,7 +22,8 @@
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (require :tk-gui-interface)
-(define-package :tk-gui :uses '(:dfsch :tk-gui%interface))
+(define-package :tk-gui 
+  :uses '(:dfsch :tk-gui%interface))
 (in-package :tk-gui)
 
 (define *waited-window* ())
@@ -132,18 +133,25 @@
 (define-method (validate-event-name (widget <widget>) name)
   #t)
 
-(define-method (bind-event (widget <widget>) (event <symbol>) 
-                           proc &optional args)
+(define-method (bind-event (widget <widget>) (event <symbol>) proc)
   (configure-widget widget event (bind-command (widget-window widget)
                                                proc)))
 
+
 (define-method (bind-event (widget <widget>) (event <list>) 
                            proc &key args append)
-  )
+  (tcl-eval "bind"
+            (widget-path widget)
+            event
+            (append (if append '("+") ())
+                    (cons (bind-command (widget-window widget)
+                                        proc)
+                          args))))
 
 
 (define-class <window> <widget>
    ((command-list)
+    (variable-list)
     (on-delete :accessor window-on-delete)
     (destroyed? :initform ()
                 :reader window-destroyed?)))
@@ -168,7 +176,7 @@
                    (lambda ()
                      (if (window-on-delete win)
                          ((window-on-delete win) win)
-                         (destroy-window win))))
+                         (destroy-window! win))))
   (unless (string=? path ".")
           (tcl-eval-list(widget-interpreter win)
                         (cons "toplevel" 
@@ -177,14 +185,16 @@
         "wm" "protocol" path "WM_DELETE_WINDOW" 
         (window-delete-command-name win)))
 
-(define-method (destroy-window (win <window>))
+(define-method (destroy-window! (win <window>))
+  (slot-set! win :destroyed? #t)
+  (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
   (for-each (lambda (command)
               (delete-command! (widget-interpreter win) command))
             (slot-ref win :command-list))
+  (for-each destroy-variable!
+            (slot-ref win :variable-list))
   (delete-command! (widget-interpreter win) 
                    (window-delete-command-name win))
-  (tcl-eval (widget-interpreter win) "destroy" (widget-path win))
-  (slot-set! win :destroyed? #t)
   (when (eq? win *waited-window*)
         (throw 'waited-window-destroyed win)))
 
@@ -193,6 +203,10 @@
     (create-command! (widget-interpreter win) cmd-name proc)
     (slot-set! win :command-list (cons cmd-name (slot-ref win :command-list)))
     cmd-name))
+
+(define-method (bind-command (win <window>) (proc <string>))
+  proc)
+
 
 (define-method (window-delete-command-name (win <window>))
   (format "dfsch_delete_handler_~a" (widget-path win)))
@@ -216,6 +230,52 @@
 (define (wait)
   (event-loop))
 
+;;;; Variables
+
+(define-class <variable> ()
+  ((name :reader variable-name 
+         :initarg :name)
+   (interpreter :reader variable-interpreter 
+                :initarg :interpreter)
+   (destroyed? :reader variable-destroyed? 
+               :initform ())))
+
+(define unique-variable-name
+  (let ((counter 0))
+    (lambda ()
+      (set! counter (+ 1 counter))
+      (format "dfsch_var~16r" counter))))
+
+(define-method (make-variable (ctx <context>))
+  (let ((name (unique-variable-name)))
+    (set-variable! (context-interpreter ctx) name "")
+    (make-instance <variable> 
+                   :name name 
+                   :interpreter (context-interpreter ctx))))
+
+(define-method (make-variable (win <window>))
+  (let ((var (make-variable (widget-context win))))
+    (slot-set! win :variable-list
+               (cons var
+                     (slot-ref win :variable-list)))
+    var))
+
+(define-method (make-variable (widget <widget>))
+  (make-variable (widget-window widget)))
+  
+(define-method (destroy-variable! (variable <variable>))
+  (unset-variable! (variable-interpreter variable)
+                   (variable-name variable))
+  (slot-set! variable :destroyed? #t))
+
+(define-method (get-value (variable <variable>))
+  (ref-variable (variable-interpreter variable)
+                (variable-name variable)))
+
+(define-method (set-value! (variable <variable>) value)
+  (set-variable! (variable-interpreter variable)
+                 (variable-name variable)
+                 value))
 
                        
 ;;;; Simple wrappers
@@ -252,6 +312,15 @@
 (define (register-widget-type type expander)
   (set! *widget-type-table* (cons (list type expander) *widget-type-table*)))
 
+(define-macro (register-simple-widget-type type)
+  `(register-widget-type ',type
+                         (lambda (parent args)
+                           (list 'make-instance 
+                                 ',type 
+                                 parent 
+                                 (cons 'list args)))))
+
+
 (define (get-manager-proc mgr)
   (let ((entry (assq mgr *manager-table*)))
     (unless entry
@@ -264,7 +333,7 @@
       (let ((entry (assq type *widget-type-table*)))
         (if entry
             (cadr entry)
-            (error "Unknown widget type" type)))))
+            (error "Unknown widget type" :type type)))))
 
 (define-method (get-widget-construction-expander (type <string>))
   (lambda (parent args) 
@@ -305,23 +374,111 @@
 
 (define-method (initialize-instance (widget <entry>) parent args)
   (call-next-method widget parent "entry" (unique-widget-name) args))
-  ;; (slot-set! widget :path (translate-widget-path parent 
-  ;;                                                (unique-widget-name)))
-  ;; (slot-set! widget :context (widget-context parent))
-  ;; (slot-set! widget :window (widget-window parent))
-      
-  ;; (tcl-eval-list (widget-interpreter widget)
-  ;;                (append (list "entry" (widget-path widget))
-  ;;                        args)))
 
-(register-widget-type '<entry>
-                      (lambda (parent args)
-                        `(make-instance <entry> ,parent (list ,@args))))
-
+(register-simple-widget-type <entry>)
 
 (define-method (get-value (entry <entry>))
   (widget-command entry "get"))
 
-(define-method (set-value (entry <entry>) value)
+(define-method (set-value! (entry <entry>) value)
   (widget-command entry "delete" "0" "end")
   (widget-command entry "insert" "0" value))
+
+;;;; Button widget
+
+(define-class <basic-button> <widget>
+  ())
+
+(define-method (flash-button! (button <basic-button>))
+  (widget-command button "flash"))
+
+(define-class <button> <basic-button>
+  ())
+
+(define-method (initialize-instance (button <button>) parent args)
+  (call-next-method button parent "button" (unique-widget-name) args))
+
+(register-simple-widget-type <button>)
+
+
+;;;; Checkbutton widget
+
+(define-class <check-button> <basic-button>
+  ((variable)))
+
+(define-method (initialize-instance (button <check-button>) parent args)
+  (let ((var (make-variable (widget-window parent))))
+    (call-next-method button parent "checkbutton" (unique-widget-name) 
+                      (append (list :variable (variable-name var))
+                              args))
+    (slot-set! button :variable var)))
+
+(register-simple-widget-type <check-button>)
+
+(define-method (get-value (check <check-button>))
+  (string=? (get-value (slot-ref check :variable))
+            "1"))
+
+(define-method (set-value! (check <check-button>) value)
+  (set-value! (slot-ref check :variable)
+              (if value "1" "0")))
+
+
+;;;; Radiobutton widget
+
+(define-class <radio-button> <basic-button>
+  ((variable :reader radio-button-variable)
+   (value :reader radio-button-value)))
+
+(define-method (initialize-instance (button <radio-button>) 
+                                    parent variable value args)
+  (call-next-method button parent "radiobutton" (unique-widget-name) 
+                    (append (list :variable (variable-name variable)
+                                  :value value)
+                            args))
+  (slot-set! button :variable variable)
+  (slot-set! button :value value))
+
+(register-widget-type '<radio-button>
+                      (lambda (parent args)
+                        (destructuring-bind
+                         (variable value &rest rest) args
+                         `(begin
+                            (unless (defined? ,variable)
+                                    (define ,variable (make-variable ,parent)))
+                            (make-instance <radio-button> 
+                                           ,parent 
+                                           ,variable 
+                                           ,value
+                                           (list ,@rest))))))
+
+(define-method (get-value (radio <radio-button>))
+  (string=? (get-value (radio-button-variable radio))
+            (radio-button-value)))
+
+(define-method (set-value! (radio <radio-button>) value)
+  (set-value! (radio-button-variable radio)
+              (if value (radio-button-value radio) ())))
+
+;;;; Listbox widget
+
+(define-class <list-box> <widget>
+  ())
+
+(define-method (initialize-instance (button <list-box>) parent args)
+  (call-next-method button parent "listbox" (unique-widget-name) args))
+
+(register-simple-widget-type <list-box>)
+
+(define-method (list-box-insert (list-box <list-box>) index &rest entries)
+  (widget-command-list list-box
+                       (append (list "insert"
+                                     index)
+                               entries)))
+
+(define-method (get-selection (list-box <list-box>))
+  (split-list (widget-command list-box "curselection")))
+
+(define-method (get-value (list-box <list-box>))
+  (widget-command list-box "index" "active"))
+

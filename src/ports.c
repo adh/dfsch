@@ -36,13 +36,6 @@
 #include <string.h>
 #include <errno.h>
 
-/*
- * Idea is that final implementation will fallback to calling these methods
- * on port object, but this is currently not of high priority and tedious 
- * to get right. So these selectors are currently unused and port operations 
- * on non-port object fail unconditionally.
- */
-
 dfsch_type_t dfsch_port_type = {
   DFSCH_ABSTRACT_TYPE,
   NULL,

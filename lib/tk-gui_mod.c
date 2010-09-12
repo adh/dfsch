@@ -90,6 +90,66 @@ DFSCH_DEFINE_PRIMITIVE(event_loop, 0){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(set_variable, 0){
+  Tcl_Interp* interp;
+  char* name;
+  char* value;
+
+  DFSCH_TCL_INTERPRETER_ARG(args, interp);
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_STRING_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  value = Tcl_SetVar(interp, name, value, TCL_GLOBAL_ONLY);
+
+  if (value == NULL){
+    dfsch_cerror("Cannot set variable", dfsch_make_string_cstr(name));
+  }
+
+  return dfsch_make_string_cstr(value);
+}
+
+DFSCH_DEFINE_PRIMITIVE(unset_variable, 0){
+  Tcl_Interp* interp;
+  char* name;
+  char* value;
+
+  DFSCH_TCL_INTERPRETER_ARG(args, interp);
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+  if (Tcl_SetVar(interp, name, value, TCL_GLOBAL_ONLY) == NULL){
+    dfsch_cerror("Cannot unset variable", dfsch_make_string_cstr(name));
+  }
+
+  return NULL;
+}
+
+
+DFSCH_DEFINE_PRIMITIVE(ref_variable, 0){
+  Tcl_Interp* interp;
+  char* name;
+  char* value;
+
+  DFSCH_TCL_INTERPRETER_ARG(args, interp);
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+  
+  value = Tcl_GetVar(interp, name, TCL_GLOBAL_ONLY);
+  if (value == NULL){
+    dfsch_error("Cannot read variable", dfsch_make_string_cstr(name));
+  }
+
+  return dfsch_make_string_cstr(value);
+}
+
+DFSCH_DEFINE_PRIMITIVE(split_list, ""){
+  char* list;
+  DFSCH_STRING_ARG(args, list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_tcl_split_list(list);
+}
 
 void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
   dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface");
@@ -120,5 +180,15 @@ void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
 
   dfsch_define_pkgcstr(env, tk_gui, "event-loop", 
                        DFSCH_PRIMITIVE_REF(event_loop));
+
+  dfsch_define_pkgcstr(env, tk_gui, "set-variable!", 
+                       DFSCH_PRIMITIVE_REF(set_variable));
+  dfsch_define_pkgcstr(env, tk_gui, "ref-variable", 
+                       DFSCH_PRIMITIVE_REF(ref_variable));
+  dfsch_define_pkgcstr(env, tk_gui, "unset-variable!", 
+                       DFSCH_PRIMITIVE_REF(unset_variable));
+
+  dfsch_define_pkgcstr(env, tk_gui, "split-list", 
+                       DFSCH_PRIMITIVE_REF(split_list));
 
 }

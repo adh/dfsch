@@ -18,9 +18,12 @@ DFSCH_DEFINE_PRIMITIVE(read_object, 0){
 }
 
 dfsch_object_t* dfsch_module_console_register(dfsch_object_t* env){
+  dfsch_package_t* console = dfsch_make_package("console");
   dfsch_provide(env, "console");
 
-  dfsch_define_cstr(env, "console:read-line", DFSCH_PRIMITIVE_REF(read_line));
-  dfsch_define_cstr(env, "console:read-object", DFSCH_PRIMITIVE_REF(read_object));
+  dfsch_define_pkgcstr(env, console, "read-line", 
+                       DFSCH_PRIMITIVE_REF(read_line));
+  dfsch_define_pkgcstr(env, console, "read-object", 
+                       DFSCH_PRIMITIVE_REF(read_object));
   return env;
 }
