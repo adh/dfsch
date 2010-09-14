@@ -117,7 +117,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
-	scm/unix-utils.scm \
+	scm/os-utils.scm \
 	scm/tk-gui.scm
 
 man_MANS = doc/dfsch-repl.1
