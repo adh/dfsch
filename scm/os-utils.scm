@@ -5,7 +5,7 @@
   :uses '(:dfsch :os)
   :exports '(:directory?
              :ensure-directory
-             :read-directory))
+             :directory->list))
 (in-package :os-utils)
 
 (define (directory? path)
@@ -18,18 +18,15 @@
   (unless (directory? path)
           (os:mkdir path 0755)))
 
-(define (ignore-dirent? dirent)
-  (or (eq? (string-ref dirent 0) #\.)
-      (eq? (string-ref dirent (- (string-length dirent) 1)) #\~)))
-
-(define (read-directory directory)
-  
+(define (directory->list directory &key full-paths? filter)  
   (let ((dd (os:opendir directory)))
     (let loop ((list ()))
       (let ((dirent (os:readdir dd)))
         (if (null? dirent)
             list
-            (if (ignore-dirent? dirent)
+            (if (and filter (not (filter dirent)))
                 (loop list)
-                (loop (cons (read-entry (string-append directory "/" dirent))
+                (loop (cons (if full-paths? 
+                                (string-append directory "/" dirent)
+                                dirent)
                             list))))))))
