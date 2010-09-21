@@ -231,10 +231,19 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     serialize_bytes(s, &buf, 8);    
   }
 }
+void dfsch_serialize_string(dfsch_serializer_t* s,
+                            char* str, size_t len){
+  dfsch_serialize_integer(s, len);
+  serialize_bytes(s, str, len);
+}
+void dfsch_serialize_cstr(dfsch_serializer_t* s,
+                          char* str){
+  dfsch_serialize_string(s, str, strlen(str));
+}
+
 void dfsch_serialize_strbuf(dfsch_serializer_t* s,
                             dfsch_strbuf_t* sb){
-  dfsch_serialize_integer(s, sb->len);
-  serialize_bytes(s, sb->ptr, sb->len);
+  dfsch_serialize_string(s, sb->ptr, sb->len);
 }
 void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
                                    char* sym){
@@ -362,8 +371,13 @@ void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
 
 
 static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
+  int ref = dfsch_deserialize_integer(ds);
   
 }
+static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
+  char* name = dfsch_deserialieze_stream_symbol(ds);
+}
+
 
 int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
   char lead;
