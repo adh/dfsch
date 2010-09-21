@@ -31,6 +31,7 @@
 #include <dfsch/conditions.h>
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
+#include <dfsch/serdes.h>
 #include "util.h"
 #include "internal.h"
 
@@ -887,6 +888,15 @@ static void vector_write(vector_t* v, dfsch_writer_state_t* state){
   dfsch_write_string(state, ")");
 }
 
+static void vector_serialize(vector_t* v, dfsch_serializer_t* s){
+  int i;
+  dfsch_serialize_stream_symbol(s, "vector");
+  dfsch_serialize_integer(s, v->length);
+  for(i = 0; i < v->length; ++i){
+    dfsch_serialize_object(s, v->data[i]);
+  }
+}
+
 static dfsch_collection_methods_t vector_collection = {
   .get_iterator = dfsch_vector_2_list // TODO
 };
@@ -920,6 +930,7 @@ dfsch_type_t dfsch_vector_type = {
   .describe = (dfsch_type_describe_t)vector_describe,
   .collection = &vector_collection,
   .sequence = &vector_sequence,
+  .serialize = vector_serialize,
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 

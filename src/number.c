@@ -24,6 +24,7 @@
 #include <dfsch/bignum.h>
 #include <dfsch/strings.h>
 #include <dfsch/random.h>
+#include <dfsch/serdes.h>
 #include "util.h"
 #include "internal.h"
 #include <stdio.h>
@@ -144,6 +145,11 @@ static int flonum_equal_p(flonum_t* a, flonum_t* b){
   return a->flonum == b->flonum;
 }
 
+static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "flonum");
+  dfsch_serialize_string(s, &(f->flonum), sizeof(double));
+}
+
 dfsch_number_type_t dfsch_flonum_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_REAL_TYPE,
@@ -153,6 +159,7 @@ dfsch_number_type_t dfsch_flonum_type = {
   (dfsch_type_write_t)flonum_write,
   NULL,
   (dfsch_type_hash_t)flonum_hash,
+  .serialize = flonum_serialize,
 };
 
 static void fracnum_write(fracnum_t* n, dfsch_writer_state_t* state){

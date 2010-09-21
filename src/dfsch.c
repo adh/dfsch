@@ -1584,6 +1584,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
   dfsch__compile_register(ctx);
+  dfsch__serdes_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
 

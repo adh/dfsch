@@ -2,6 +2,8 @@
 #include <dfsch/eqhash.h>
 #include <dfsch/strhash.h>
 
+#include "util.h"
+
 /*
  * Integer serialization format:
  *
@@ -107,6 +109,11 @@ static void serialize_bytes(dfsch_serializer_t* s,
                             char* buf,
                             size_t len){
   s->oproc(s->op_baton, buf, len);
+  while (len){
+    printf("%02hhx ", *buf);
+    buf++; len--;
+  }
+  puts("");
 }
 
 
@@ -137,7 +144,7 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
     char* pi = s->persistent_id(s, obj, s->pi_baton);
     if (pi){
       dfsch_serialize_stream_symbol(s, "persistent-id");
-      dfsch_serialize_stream_symbol(s, pi);
+      dfsch_serialize_cstr(s, pi);
       return;
     }
   }
@@ -164,33 +171,35 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
 
 void dfsch_serialize_integer(dfsch_serializer_t* s,
                              int64_t i){
-  char buf[9];
+  char *buf = GC_MALLOC_ATOMIC(9);
+
+  printf("int %d\n",i);
 
   if (i >= -(1 << 6) && i < (1 << 6)){
     buf[0] = i;
-    serialize_bytes(s, &buf, 1);
+    serialize_bytes(s, buf, 1);
   } else if (i >= -(1ll << 13) && i < (1ll << 13)){
     buf[0] = 0x80 | ((i >> 8) & 0x3f);
     buf[1] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 2);    
+    serialize_bytes(s, buf, 2);    
   } else if (i >= -(1ll << 20) && i < (1ll << 20)){
     buf[0] = 0xc0 | ((i >> 16) & 0x1f);
     buf[1] = (i >> 8) & 0xff;
     buf[2] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 3);    
+    serialize_bytes(s, buf, 3);    
   } else if (i >= -(1ll << 27) && i < (1ll << 27)){
     buf[0] = 0xe0 | ((i >> 24) & 0x0f);
     buf[1] = (i >> 16) & 0xff;
     buf[2] = (i >> 8) & 0xff;
     buf[3] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 4);    
+    serialize_bytes(s, buf, 4);    
   } else if (i >= -(1ll << 34) && i < (1ll << 34)){
     buf[0] = 0xf0 | ((i >> 32) & 0x07);
     buf[1] = (i >> 24) & 0xff;
     buf[2] = (i >> 16) & 0xff;
     buf[3] = (i >> 8) & 0xff;
     buf[4] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 5);    
+    serialize_bytes(s, buf, 5);    
   } else if (i >= -(1ll << 41) && i < (1ll << 41)){
     buf[0] = 0xf8 | ((i >> 40) & 0x03);
     buf[1] = (i >> 32) & 0xff;
@@ -198,7 +207,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     buf[3] = (i >> 16) & 0xff;
     buf[4] = (i >> 8) & 0xff;
     buf[5] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 6);    
+    serialize_bytes(s, buf, 6);    
   } else if (i >= -(1ll << 48) && i < (1ll << 48)){
     buf[0] = 0xfc | ((i >> 48) & 0x01);
     buf[1] = (i >> 40) & 0xff;
@@ -207,7 +216,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     buf[4] = (i >> 16) & 0xff;
     buf[5] = (i >> 8) & 0xff;
     buf[6] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 7);    
+    serialize_bytes(s, buf, 7);    
   } else if (i >= -(1ll << 55) && i < (1ll << 55)){
     buf[0] = 0xfe; 
     buf[1] = (i >> 48) & 0xff;
@@ -217,7 +226,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     buf[5] = (i >> 16) & 0xff;
     buf[6] = (i >> 8) & 0xff;
     buf[7] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 8);    
+    serialize_bytes(s, buf, 8);    
   } else {
     buf[0] = 0xff; 
     buf[1] = (i >> 56) & 0xff;
@@ -228,7 +237,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     buf[6] = (i >> 16) & 0xff;
     buf[7] = (i >> 8) & 0xff;
     buf[8] = (i >> 0) & 0xff;
-    serialize_bytes(s, &buf, 8);    
+    serialize_bytes(s, buf, 8);    
   }
 }
 void dfsch_serialize_string(dfsch_serializer_t* s,
@@ -476,4 +485,22 @@ char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
 void dfsch_register_deserializer_handler(char* name,
                                          dfsch_deserializer_handler_t h){
   dfsch_strhash_set(get_deshandler_map(), name, (void*)h);
+}
+
+DFSCH_DEFINE_PRIMITIVE(serialize_to_byte_vector,
+                       "Serializes one object into byte_vector"){
+  dfsch_object_t* obj;
+  dfsch_serializer_t* ser;
+  str_list_t* sl = sl_create();
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  ser = dfsch_make_serializer(sl_nappend, sl);
+  dfsch_serialize_object(ser, obj);
+  return dfsch_make_byte_vector_strbuf(dfsch_sl_value_strbuf(sl));
+}
+
+void dfsch__serdes_register(dfsch_object_t* env){
+  dfsch_defconst_cstr(env, "serialize-to-byte-vector",
+                      DFSCH_PRIMITIVE_REF(serialize_to_byte_vector));
 }
