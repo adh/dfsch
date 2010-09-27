@@ -538,6 +538,10 @@ dfsch_type_t dfsch_function_type = {
    *       convention */
 };
 
+static void empty_list_serialize(dfsch_object_t* o,
+                                 dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "empty-list");
+}
 
 dfsch_type_t dfsch_empty_list_type = {
   DFSCH_SPECIAL_TYPE,
@@ -553,6 +557,7 @@ dfsch_type_t dfsch_empty_list_type = {
 
   .collection = &list_collection,
   .sequence = &list_sequence,  
+  .serialize = empty_list_serialize,
 };
 
 static int pair_equal_p(dfsch_object_t*a, dfsch_object_t*b){
@@ -630,6 +635,26 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   }
 }
 
+static void symbol_serialize(object_t* o, dfsch_serializer_t* s){
+  symbol_t* sym;
+  sym = DFSCH_TAG_REF(o);
+
+  dfsch_serialize_stream_symbol(s, "symbol");
+
+  if (!sym->package){
+    dfsch_serialize_stream_symbol(s, "");
+  } else {
+    dfsch_serialize_stream_symbol(s,
+                                  dfsch_package_name(sym->package));
+  }
+  
+  if (!sym->name){
+    dfsch_serialize_string(s, "", 0);
+  } else {
+    dfsch_serialize_cstr(s, sym->name);
+  }
+}
+
 
 dfsch_type_t dfsch_tagged_types[4] = {
   {
@@ -673,7 +698,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     NULL,
     NULL,
     "Symbol - equal? instances are always eq?",
-    DFSCH_TYPEF_NO_WEAK_REFERENCES
+    DFSCH_TYPEF_NO_WEAK_REFERENCES,
+    .serialize = symbol_serialize,
   },
   {
     DFSCH_SPECIAL_TYPE,

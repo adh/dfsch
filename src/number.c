@@ -110,6 +110,11 @@ static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
   dfsch_write_string(state, saprintf("%" PRIdPTR, num));
 }
 
+static void fixnum_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "fixnum");
+  dfsch_serialize_integer(s, DFSCH_FIXNUM_REF(obj));
+}
+
 dfsch_number_type_t dfsch_fixnum_type = {
   DFSCH_SPECIAL_TYPE,
   DFSCH_INTEGER_TYPE,
@@ -118,7 +123,8 @@ dfsch_number_type_t dfsch_fixnum_type = {
   NULL,
   (dfsch_type_write_t)fixnum_write,
   NULL,
-  NULL
+  NULL,
+  .serialize = fixnum_serialize,
 };
 
 static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
@@ -147,7 +153,7 @@ static int flonum_equal_p(flonum_t* a, flonum_t* b){
 
 static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
   dfsch_serialize_stream_symbol(s, "flonum");
-  dfsch_serialize_string(s, &(f->flonum), sizeof(double));
+  dfsch_serialize_cstr(s, saprintf("%.32g", f->flonum));
 }
 
 dfsch_number_type_t dfsch_flonum_type = {
@@ -181,6 +187,11 @@ static uint32_t fracnum_hash(fracnum_t* n){
   h ^= dfsch_hash(n->denom);
   return h;
 }
+static void fracnum_serialize(fracnum_t* n, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "fracnum");
+  dfsch_serialize_object(s, n->num);
+  dfsch_serialize_object(s, n->denom);
+}
 
 dfsch_number_type_t dfsch_fracnum_type = {
   DFSCH_STANDARD_TYPE,
@@ -191,6 +202,7 @@ dfsch_number_type_t dfsch_fracnum_type = {
   (dfsch_type_write_t)fracnum_write,
   NULL,
   (dfsch_type_hash_t)fracnum_hash,
+  .serialize = fracnum_serialize,
 };
 
 static dfsch_object_t* frac_cons(dfsch_object_t* num, dfsch_object_t* denom){

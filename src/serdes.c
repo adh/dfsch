@@ -123,16 +123,23 @@ static void serialize_back_reference(dfsch_serializer_t* s,
   dfsch_serialize_integer(s, ref);
 }
 
+void dfsch_put_serialized_object(dfsch_serializer_t* s,
+                                 dfsch_object_t* obj){
+  s->obj_idx++;
+  dfsch_eqhash_set(&s->obj_map, obj, (dfsch_object_t*)(s->obj_idx));
+}
+
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;
   dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);
   
+  dfsch_put_serialized_object(s, obj);
+
   if (idx != DFSCH_INVALID_OBJECT){
-    dfsch_eqhash_set(&s->obj_map, obj, (dfsch_object_t*)(s->obj_idx + 1));
-    serialize_back_reference(s, ((int)idx) - s->obj_idx);
-    s->obj_idx++;
-  }
+    serialize_back_reference(s, ((int)idx));
+    return;
+  }  
 
   if (s->object_hook){
     if (s->object_hook(s, obj, s->oh_baton)){
@@ -175,7 +182,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
 
   printf("int %d\n",i);
 
-  if (i >= -(1 << 6) && i < (1 << 6)){
+  if (i >= -(1 << 6) && (i < (1 << 6))){
     buf[0] = i;
     serialize_bytes(s, buf, 1);
   } else if (i >= -(1ll << 13) && i < (1ll << 13)){

@@ -249,6 +249,9 @@ typedef int (*dfsch_type_serialize_t)(dfsch_object_t* obj,
 #define DFSCH_TYPEF_NO_WEAK_REFERENCES 1
 /** Allow user code to inherit from this type */
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
+/** Instances does not get backreferences in serialization and circular 
+ *  prints */
+#define DFSCH_TYPEF_NO_BACK_REFERENCES 4
 
 typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
 
