@@ -323,13 +323,16 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   }
 
   if (*string == '/'){
+    dfsch_object_t* t;
     string++;
     if (strchr(string, '/') != NULL){
       return NULL;
     }
-
-    n = dfsch_number_div(n,
-                         dfsch_make_number_from_string(string, obase));
+    t = dfsch_make_number_from_string_noerror(string, obase);
+    if (!t){
+      return NULL;
+    }
+    n = dfsch_number_div(n, t);
   }
 
   if (negative){
