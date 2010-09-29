@@ -240,8 +240,8 @@ typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 
 typedef struct dfsch_serializer_t dfsch_serializer_t;
-typedef int (*dfsch_type_serialize_t)(dfsch_object_t* obj,
-                                      dfsch_serializer_t* s);
+typedef void (*dfsch_type_serialize_t)(dfsch_object_t* obj,
+                                       dfsch_serializer_t* s);
 
 
 

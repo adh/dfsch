@@ -160,11 +160,8 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
 
   while (klass){
     if (klass->serialize){
-      if (klass->serialize(obj, s)){
-        return;
-      } else {
-        break;
-      }
+      klass->serialize(obj, s);
+      return;
     }
     klass = klass->superclass;
   }
