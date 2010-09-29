@@ -212,6 +212,11 @@ dfsch_rsa_private_key_t* dfsch_rsa_generate_key(dfsch_object_t* random_source,
                                                 int length);
 dfsch_rsa_public_key_t* dfsch_rsa_get_public_key(dfsch_rsa_private_key_t* prk);
 
+dfsch_object_t* dfsch_rsa_public_key_2_list(dfsch_rsa_public_key_t* puk);
+dfsch_object_t* dfsch_rsa_private_key_2_list(dfsch_rsa_private_key_t* prk);
+dfsch_rsa_public_key_t* dfsch_rsa_public_key_from_list(dfsch_object_t* list);
+dfsch_rsa_private_key_t* dfsch_rsa_private_key_from_list(dfsch_object_t* list);
+
 dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
                                   dfsch_object_t* mn);
 dfsch_object_t* dfsch_rsa_decrypt(dfsch_rsa_private_key_t* prk,
