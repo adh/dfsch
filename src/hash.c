@@ -64,6 +64,27 @@ static dfsch_mapping_methods_t hash_table_map = {
   .set_if_exists = dfsch_hash_set_if_exists,
 };
 
+static int hash_serialize(hash_t* h, dfsch_serializer_t* s){
+  int j;
+  hash_entry_t *i;
+
+  DFSCH_RWLOCK_RDLOCK(&h->lock);
+  dfsch_serialize_stream_symbol(s, "hash-table");
+  dfsch_serialize_integer(s, h->equal);
+
+  for (j=0; j<(h->mask+1); j++){
+    i = h->vector[j];
+    while (i){
+      dfsch_serialize_object(s, i->key);
+      dfsch_serialize_object(s, i->value);
+      i = i->next;
+    }
+  }
+  DFSCH_RWLOCK_UNLOCK(&h->lock);
+  return 1;
+}
+
+
 dfsch_type_t dfsch_hash_table_type = {
   DFSCH_STANDARD_TYPE,
   NULL, //DFSCH_MAPPING_TYPE,
@@ -75,6 +96,7 @@ dfsch_type_t dfsch_hash_table_type = {
 
   .collection = &hash_table_col,
   .mapping = &hash_table_map,
+  .serialize = hash_serialize,
 };
 
 
