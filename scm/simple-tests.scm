@@ -1,6 +1,6 @@
 (provide :simple-tests)
 (require :cmdopts)
-
+(require :os)
 (define-package :simple-tests :uses '(:dfsch :cmdopts))
 (in-package :simple-tests)
 
@@ -32,8 +32,8 @@
   (print "  ===========================")
   (print "  Tests total:  " (+ tests-passed tests-failed))
   (if (= tests-failed 0)
-      (unix:exit 0)
-      (unix:exit fail-status)))
+      (os:exit 0)
+      (os:exit fail-status)))
 
 
 (define (test id exp val)
