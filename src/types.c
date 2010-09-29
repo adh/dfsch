@@ -655,6 +655,41 @@ static void symbol_serialize(object_t* o, dfsch_serializer_t* s){
   }
 }
 
+static void compact_list_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  /* There is slight issue with multiple references to different
+   * virtual cells but that probably could be ignored. */
+  dfsch_object_t** i = DFSCH__COMPACT_LIST_DECODE(obj);
+  size_t len = 0;
+  while (*i != DFSCH_INVALID_OBJECT){
+    i++;
+    len++;
+  }
+  dfsch_serialize_stream_symbol(s, "compact-list");
+  dfsch_serialize_integer(s, len);
+  i = DFSCH__COMPACT_LIST_DECODE(obj);
+  for (;;){
+    dfsch_serialize_object(s, *i);
+    i++;
+    if (*i == DFSCH_INVALID_OBJECT){
+      break;
+    }
+    dfsch_put_serialized_object(s, i);
+  }
+  dfsch_serialize_object(s, i[1]);
+  dfsch_serialize_object(s, i[2]);
+  dfsch_serialize_object(s, i[3]);  
+}
+
+static void mutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "mutable-pair");
+  dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
+  dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
+}
+static void immutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "immutable-pair");
+  dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
+  dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
+}
 
 dfsch_type_t dfsch_tagged_types[4] = {
   {
@@ -670,7 +705,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     "Immutable list stored as array",
 
     .collection = &list_collection,
-    .sequence = &list_sequence,  
+    .sequence = &list_sequence,
+    .serialize = compact_list_serialize,
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -686,6 +722,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 
     .collection = &list_collection,
     .sequence = &list_sequence,  
+    .serialize = mutable_pair_serialize,
   },
   {
     DFSCH_STANDARD_TYPE,
@@ -715,6 +752,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 
     .collection = &list_collection,
     .sequence = &list_sequence,  
+    .serialize = immutable_pair_serialize,
   },
 };
 

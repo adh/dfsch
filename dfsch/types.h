@@ -474,6 +474,8 @@ typedef struct dfsch_pair_t {
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
    (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 
+#define DFSCH__COMPACT_LIST_DECODE(ptr)         \
+  ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))
 #define DFSCH__COMPACT_LIST_CDR_FAST(ptr)               \
   ((dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 #define DFSCH__COMPACT_LIST_CAR_FAST(ptr)               \
