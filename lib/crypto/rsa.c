@@ -127,6 +127,44 @@ dfsch_rsa_public_key_t* dfsch_rsa_get_public_key(dfsch_rsa_private_key_t* prk){
   return puk;
 }
 
+dfsch_object_t* dfsch_rsa_public_key_2_list(dfsch_rsa_public_key_t* puk){
+  return dfsch_list(2,
+                    puk->modulus,
+                    puk->public_exponent);
+}
+dfsch_object_t* dfsch_rsa_private_key_2_list(dfsch_rsa_private_key_t* prk){
+  return dfsch_list(8,
+                    prk->modulus,
+                    prk->public_exponent,
+                    prk->private_exponent,
+                    prk->prime1,        
+                    prk->prime2,        
+                    prk->exponent1,     
+                    prk->exponent2,
+                    prk->coefficient);
+}
+dfsch_rsa_public_key_t* dfsch_rsa_public_key_from_list(dfsch_object_t* list){
+  dfsch_rsa_public_key_t* puk = dfsch_make_object(DFSCH_RSA_PUBLIC_KEY_TYPE);
+  DFSCH_OBJECT_ARG(list, puk->modulus);
+  DFSCH_OBJECT_ARG(list, puk->public_exponent);
+  DFSCH_ARG_END(list);
+  return puk;
+}
+dfsch_rsa_private_key_t* dfsch_rsa_private_key_from_list(dfsch_object_t* list){
+  dfsch_rsa_private_key_t* prk = dfsch_make_object(DFSCH_RSA_PRIVATE_KEY_TYPE);
+  DFSCH_OBJECT_ARG(list, prk->modulus);
+  DFSCH_OBJECT_ARG(list, prk->public_exponent);
+  DFSCH_OBJECT_ARG(list, prk->private_exponent);
+  DFSCH_OBJECT_ARG(list, prk->prime1);
+  DFSCH_OBJECT_ARG(list, prk->prime2);
+  DFSCH_OBJECT_ARG(list, prk->exponent1);
+  DFSCH_OBJECT_ARG(list, prk->exponent2);
+  DFSCH_OBJECT_ARG(list, prk->coefficient);
+  DFSCH_ARG_END(list);
+  return prk;
+}
+
+
 dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
                                   dfsch_object_t* mn){
   dfsch_bignum_t* n = dfsch_bignum_from_number(puk->modulus);
