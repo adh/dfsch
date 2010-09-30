@@ -389,6 +389,11 @@ static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
 }
 static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
   char* name = dfsch_deserialieze_stream_symbol(ds);
+  if (ds->persistent){
+    return ds->persistent(ds, name, ds->ph_baton);
+  } else {
+    dfsch_error("Persistent object IDs not supported");
+  }
 }
 
 
