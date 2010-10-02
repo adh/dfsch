@@ -89,7 +89,7 @@ static void redisplay_object(inspector_state_t* is){
     DFSCH_OBJECT_ARG(slot, value);
 
     if (name){
-      fprintf(stderr, "%4d: [%*s] %s\n",
+      fprintf(stderr, "%4d: [%-*s] %s\n",
               j,
               max_len,
               dfsch_object_2_string(name, 1, 0),
