@@ -63,7 +63,7 @@ dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
 
 #ifdef ALLOC_DEBUG
   obj_count ++;
-  obj_size += type->size;
+  obj_size += type->size + size;
   printf(";; Alloc'd: #<%s 0x%x> serial %d arena %d\n", type->name, o, 
          obj_count, obj_size);
 #endif
@@ -1001,6 +1001,9 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   }
 
   if (args && esc && l <= 12){
+    /* We have to copy arguments from stack to scratchpad instead of
+       building directly in scratchpad, because scratchpad might be
+       used by recursive invocations*/
     memcpy(ti->arg_scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
     args = DFSCH_MAKE_CLIST(ti->arg_scratch_pad);
   }

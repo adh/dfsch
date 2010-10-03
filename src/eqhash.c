@@ -26,13 +26,16 @@
 #include <assert.h>
 
 #define INITIAL_MASK 0xf
+//#define EQHASH_PRINT_STATS
 
 static size_t fast_ptr_hash(dfsch_object_t* ptr){
   size_t p = (size_t) ptr;
   size_t r = p;
 
-  r *= (p << 12) | (p >> (CHAR_BIT*sizeof(size_t) - 12));
-  r ^= (p >> 5) | (p << (CHAR_BIT*sizeof(size_t) - 5));
+  r *= 0xaa553145;
+  // r *= p | (p >> (CHAR_BIT*sizeof(size_t) / 2));
+  r ^= ((r >> (CHAR_BIT*sizeof(size_t) / 2)) | 
+        (r << (CHAR_BIT*sizeof(size_t) / 2)));
 
   return r;
 }
@@ -161,7 +164,7 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
   }
 
   hash->contents.large.count++;
-  if (DFSCH_UNLIKELY(hash->contents.large.count / 2 
+  if (DFSCH_UNLIKELY(hash->contents.large.count  
                      > hash->contents.large.mask)){
     grow_hash(hash);
   }
@@ -170,7 +173,10 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
                        key, value, 0);
 }
 
-//#define EQHASH_PRINT_STATS
+#ifdef EQHASH_PRINT_STATS
+static int hits = 0;
+#endif
+
 
 static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash, 
                                         dfsch_object_t* key){
@@ -186,17 +192,19 @@ static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash,
   if (DFSCH_LIKELY(i) && 
       DFSCH_UNLIKELY(i->key == key)){
 #ifdef EQHASH_PRINT_STATS
-    printf(";; large eqhash lookup cache hit\n");
+    hits++;
 #endif
     return i;
   }
+
   
   i = BUCKET(hash, h);
   while (i){
     if (DFSCH_LIKELY(i->key == key)){
       hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] = i;
 #ifdef EQHASH_PRINT_STATS
-      printf(";; large eqhash lookup: %d\n", c);
+      printf(";; large eqhash lookup: %d (%d hits)\n", c, hits);
+      hits = 0;
 #endif
       return i;
     }
