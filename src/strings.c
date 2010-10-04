@@ -153,6 +153,11 @@ static size_t string_hash(dfsch_string_t* s){
   return ret;
 }
 
+static void string_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "string");
+  dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
+}
+
 static dfsch_collection_methods_t string_collection = {
   .get_iterator = dfsch_string_2_list,
 };
@@ -180,6 +185,7 @@ dfsch_type_t dfsch_string_type = {
 
   .collection = &string_collection,
   .sequence = &string_sequence,
+  .serialize = &string_serialize,
 };
 #define STRING (&dfsch_string_type)
 
@@ -1347,6 +1353,11 @@ static size_t byte_vector_hash(dfsch_string_t* s){
   return ret;
 }
 
+static void byte_vector_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "byte-vector");
+  dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
+}
+
 static dfsch_collection_methods_t byte_vector_collection = {
   .get_iterator = dfsch_string_2_byte_list,
 };
@@ -1381,6 +1392,7 @@ dfsch_type_t dfsch_byte_vector_type = {
 
   .collection = &byte_vector_collection,
   .sequence = &byte_vector_sequence,
+  .serialize = byte_vector_serialize,
 };
 
 dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len){
