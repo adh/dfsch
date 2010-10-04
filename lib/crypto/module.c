@@ -213,6 +213,7 @@ DFSCH_DEFINE_PRIMITIVE(rsa_generate_key, "Generate new RSA private key"){
   int length;
   DFSCH_OBJECT_ARG(args, random_source);
   DFSCH_LONG_ARG(args, length);
+  DFSCH_ARG_END(args);
 
   return dfsch_rsa_generate_key(random_source, length);
 }
@@ -221,8 +222,46 @@ DFSCH_DEFINE_PRIMITIVE(rsa_get_public_key,
                        "Return public key matching given private key"){
   dfsch_rsa_private_key_t* private;
   DFSCH_RSA_PRIVATE_KEY_ARG(args, private);
-  
+  DFSCH_ARG_END(args);
+
   return dfsch_rsa_get_public_key(private);
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_public_key_2_list, 
+                       "Return public key components as list"){
+  dfsch_rsa_private_key_t* public;
+  DFSCH_RSA_PUBLIC_KEY_ARG(args, public);
+  DFSCH_ARG_END(args);
+  return dfsch_rsa_public_key_2_list(public);
+}
+DFSCH_DEFINE_PRIMITIVE(rsa_private_key_2_list, 
+                       "Return private key components as list"){
+  dfsch_rsa_private_key_t* private;
+  DFSCH_RSA_PRIVATE_KEY_ARG(args, private);
+  DFSCH_ARG_END(args);
+  return dfsch_rsa_private_key_2_list(private);  
+}
+DFSCH_DEFINE_PRIMITIVE(make_rsa_public_key, 
+                       "Make RSA public key from components"){
+  return dfsch_rsa_public_key_from_list(args);
+}
+DFSCH_DEFINE_PRIMITIVE(make_rsa_private_key,
+                       "Make RSA private key from components"){
+  return dfsch_rsa_private_key_from_list(args);
+}
+DFSCH_DEFINE_PRIMITIVE(list_2_rsa_public_key,
+                       "Make RSA public key from list of components"){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_rsa_public_key_from_list(list);
+}
+DFSCH_DEFINE_PRIMITIVE(list_2_rsa_private_key,
+                       "Make RSA private key from list of components"){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_rsa_private_key_from_list(list);
 }
 
 DFSCH_DEFINE_PRIMITIVE(rsa_encrypt_number,
@@ -429,6 +468,19 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(rsa_generate_key));
   dfsch_defconst_pkgcstr(env, crypto, "rsa-get-public-key",
                          DFSCH_PRIMITIVE_REF(rsa_get_public_key));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-public-key->list",
+                         DFSCH_PRIMITIVE_REF(rsa_public_key_2_list));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-private-key->list",
+                         DFSCH_PRIMITIVE_REF(rsa_private_key_2_list));
+  dfsch_defconst_pkgcstr(env, crypto, "make-rsa-public-key",
+                         DFSCH_PRIMITIVE_REF(make_rsa_public_key));
+  dfsch_defconst_pkgcstr(env, crypto, "make-rsa-private-key",
+                         DFSCH_PRIMITIVE_REF(make_rsa_private_key));
+  dfsch_defconst_pkgcstr(env, crypto, "list->rsa-public-key",
+                         DFSCH_PRIMITIVE_REF(list_2_rsa_public_key));
+  dfsch_defconst_pkgcstr(env, crypto, "list->rsa-private-key",
+                         DFSCH_PRIMITIVE_REF(list_2_rsa_private_key));
+
   dfsch_defconst_pkgcstr(env, crypto, "rsa-encrypt-number",
                          DFSCH_PRIMITIVE_REF(rsa_encrypt_number));
   dfsch_defconst_pkgcstr(env, crypto, "rsa-decrypt-number",

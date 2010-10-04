@@ -998,6 +998,26 @@ dfsch_type_t dfsch_vector_type = {
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
+static dfsch_object_t* environment_describe(environment_t* env){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));
+  
+  list = dfsch_cons(dfsch_list(2,
+                               dfsch_make_string_cstr("*context*"),
+                               env->context),
+                    list);
+  list = dfsch_cons(dfsch_list(2,
+                               dfsch_make_string_cstr("*declarations*"),
+                               env->decls),
+                    list);
+  list = dfsch_cons(dfsch_list(2,
+                               dfsch_make_string_cstr("*parent*"),
+                               env->parent),
+                    list);
+
+  return dfsch_cons(dfsch_make_string_cstr("environment-frame"), list);
+}
+
 static dfsch_slot_t environment_slots[] = {
   DFSCH_OBJECT_SLOT(environment_t, parent, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "Enclosing environment or NIL for top-level"),
@@ -1016,7 +1036,8 @@ dfsch_type_t dfsch_environment_type = {
   NULL,
   
   environment_slots,
-  "Lexical environment frame"
+  "Lexical environment frame",
+  .describe = environment_describe,
 };
 
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){

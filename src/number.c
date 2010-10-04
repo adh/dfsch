@@ -299,9 +299,6 @@ static int dig_val[256] = {
 
 dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
-  int64_t sn = 0;
-  int64_t on = 0;
-  double dn;
   int base = obase;
   int d;
   int negative = 0;
@@ -332,45 +329,7 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
     }
   }
 
-  while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0){
-    d = dig_val[*string];
-    if (d >= base){
-      return NULL;
-    }
-    on = sn;
-    dn = sn;
-    sn *= base;
-    dn *= base;
-    sn += d;
-    dn += d;
-    string++;
-    if (dn != sn){
-      double d = sn > dn ? sn - dn : dn - sn;
-      double p = dn >= 0 ? dn : -dn;
-      
-      if (32.0 * d > p){
-        break;
-      }
-    }
-  }
-
-
-  if (!*string){
-    return dfsch_make_number_from_int64(negative ? -sn : sn);
-  }
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      return NULL;
-    }
-
-    return dfsch_number_div(dfsch_make_number_from_int64(negative ? -sn : sn),
-                            dfsch_make_number_from_string(string, obase));
-  }
-
-  n = DFSCH_MAKE_FIXNUM(on);
-  string--;
+  n = DFSCH_MAKE_FIXNUM(0);
 
   while (*string && *string != '/'){
     d = dig_val[*string];
@@ -383,13 +342,16 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   }
 
   if (*string == '/'){
+    dfsch_object_t* t;
     string++;
     if (strchr(string, '/') != NULL){
       return NULL;
     }
-
-    n = dfsch_number_div(n,
-                         dfsch_make_number_from_string(string+1, obase));
+    t = dfsch_make_number_from_string_noerror(string, obase);
+    if (!t){
+      return NULL;
+    }
+    n = dfsch_number_div(n, t);
   }
 
   if (negative){
@@ -400,108 +362,11 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
 }
 
 dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
-  dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
-  int64_t sn = 0;
-  int64_t on;
-  double dn = 0.0;
-  int base = obase;
-  int d;
-  int negative = 0;
-
-  if (strchr(string, '.') != NULL || 
-      (base == 10 && strpbrk(string, "eE") != NULL)){
-    if (base != 10 && base != 0){
-      dfsch_error("exception:non-supported-base-for-real-numbers",
-                  DFSCH_MAKE_FIXNUM(base));
-    }
-    return dfsch_make_number_from_double(atof(string));
+  dfsch_object_t* res = dfsch_make_number_from_string_noerror(string, obase);
+  if (!res){
+    dfsch_error("Number syntax invalid", dfsch_make_string_cstr(string));
   }
-
-  if (*string == '-'){
-    string++;
-    negative = 1;
-  }
-
-  if (base == 0){
-    if (*string == '0'){
-      string++;
-      base = 8;
-      if (*string == 'x' || *string == 'X'){
-        string++;
-        base = 16;
-      }
-    } else {
-      base = 10;
-    }
-  }
-
-  while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0){
-    d = dig_val[*string];
-    if (d >= base){
-      dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
-    }
-    on = sn;
-    dn = sn;
-    sn *= base;
-    dn *= base;
-    sn += d;
-    dn += d;
-    string++;
-    if (dn != sn){
-      double d = sn > dn ? sn - dn : dn - sn;
-      double p = dn >= 0 ? dn : -dn;
-      
-      if (32.0 * d > p){
-        break;
-      }
-    }
-  }
-
-  if (!*string){
-    return dfsch_make_number_from_int64(negative ? -sn : sn);
-  }
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      dfsch_error("exception:too-many-slashes", NULL);
-    }
-
-    return dfsch_number_div(dfsch_make_number_from_int64(negative ? -sn : sn),
-                            dfsch_make_number_from_string(string, obase));
-  }
-
-  n = DFSCH_MAKE_FIXNUM(on);
-  string--;
-
-  while (*string && *string != '/'){
-    if (*string >= 128){
-      dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
-    }
-    d = dig_val[*string];
-    if (d >= base){
-      dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
-    }
-    n = dfsch_number_mul(n, DFSCH_MAKE_FIXNUM(base));
-    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(d));
-    string++;
-  }
-
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      dfsch_error("exception:too-many-slashes", NULL);
-    }
-
-    n = dfsch_number_div(n,
-                         dfsch_make_number_from_string(string+1, obase));
-  }
-
-  if (negative){
-    return dfsch_number_neg(n);
-  } else {
-    return n;
-  }
+  return res;
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){

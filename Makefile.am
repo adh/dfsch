@@ -4,7 +4,7 @@ ACLOCAL_AMFLAGS=-I m4
 bin_PROGRAMS = dfsch-repl dfsch-source-tool dfsch-run
 
 nobase_include_HEADERS = dfsch/lib/threads.h \
-	dfsch/lib/unix.h \
+	dfsch/lib/os.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/cdebug.h \
@@ -62,6 +62,7 @@ nonwin32_libs=\
 endif
 
 lib_LTLIBRARIES = libdfsch.la \
+	libdfsch-os.la \
 	libdfsch-console.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
@@ -118,7 +119,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
-	scm/unix-utils.scm \
+	scm/os-utils.scm \
 	scm/tk-gui.scm
 
 man_MANS = doc/dfsch-repl.1
@@ -228,11 +229,15 @@ regex_la_LIBADD =  libdfsch.la libdfsch-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-unix_la_LIBADD =  libdfsch.la
+unix_la_LIBADD =  libdfsch.la libdfsch-os.la
 
-os_la_SOURCES = lib/os.c
+libdfsch_os_la_SOURCES = lib/os.c dfsch/lib/os.h
+libdfsch_os_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_os_la_LIBADD =  libdfsch.la
+
+os_la_SOURCES = lib/os_mod.c
 os_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-os_la_LIBADD =  libdfsch.la
+os_la_LIBADD =  libdfsch.la libdfsch-os.la
 
 libdfsch_zlib_la_SOURCES = lib/zlib.c dfsch/lib/zlib.h
 libdfsch_zlib_la_LDFLAGS = -version-info 1:0:0 -no-undefined

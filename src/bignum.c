@@ -887,6 +887,9 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   if (m && m->length == 0){
     dfsch_error("Zero modulus", NULL);
   }
+  if (m && m->negative){
+    dfsch_error("Negative modulus", NULL);
+  }
 
   if (m){
     mu = barret_prepare(m);

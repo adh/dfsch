@@ -392,7 +392,7 @@ static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
   if (ds->persistent){
     return ds->persistent(ds, name, ds->ph_baton);
   } else {
-    dfsch_error("Persistent object IDs not supported");
+    dfsch_error("Persistent object IDs not supported", ds);
   }
 }
 
