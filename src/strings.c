@@ -196,6 +196,24 @@ dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){
   return sb;
 }
 
+dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb){
+  return dfsch_strbuf_create(sb->ptr, sb->len);
+}
+ssize_t dfsch_strbuf_inputproc(dfsch_strbuf_t* strbuf, 
+                               char* buf, size_t len){
+  if (len > strbuf->len){
+    memcpy(buf, strbuf->ptr, strbuf->len);
+    strbuf->len = 0;
+    return strbuf->len;
+  } else {
+    memcpy(buf, strbuf->ptr, len);
+    strbuf->len -= len;
+    strbuf->ptr += len;
+    return len;
+  }
+}
+
+
 dfsch_object_t* dfsch_make_string_cstr(char* string){
   if (!string)
     return NULL;
@@ -1280,11 +1298,8 @@ static void byte_vector_write(dfsch_string_t* o, dfsch_writer_state_t* state){
     case 0:
       len += 1;
       break;
-    case 1:
-      len += 4;
-      break;
     default:
-      len += 2;
+      len += 4;
       break;
     }
   }
@@ -1305,18 +1320,12 @@ static void byte_vector_write(dfsch_string_t* o, dfsch_writer_state_t* state){
       *i = o->buf.ptr[j];
       i++;
       break;
-    case 1:
+    default:
       i[0] = '\\';
       i[1] = 'x';
       i[2] = hex_table[(((unsigned char)o->buf.ptr[j]) >> 4) & 0xf];
       i[3] = hex_table[(((unsigned char)o->buf.ptr[j])     ) & 0xf];
       i += 4;
-      break;
-    default:
-      i[0] = '\\';
-      i[1] = escape_table[(unsigned char)(o->buf.ptr[j])];
-      i += 2;
-      break;
     }
   }
 
