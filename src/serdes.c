@@ -180,7 +180,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
   printf("int %d\n",i);
 
   if (i >= -(1 << 6) && (i < (1 << 6))){
-    buf[0] = i;
+    buf[0] = i & 0x7f;
     serialize_bytes(s, buf, 1);
   } else if (i >= -(1ll << 13) && i < (1ll << 13)){
     buf[0] = 0x80 | ((i >> 8) & 0x3f);
@@ -273,17 +273,6 @@ void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
   }
 }
 
-static dfsch_strhash_t* get_deshandler_map(){
-  static dfsch_strhash_t h;
-  static init = 0;
-  if (!init){
-    dfsch_strhash_init(&h);
-    init = 1;
-  }
-  return &h;
-}
-
-
 typedef struct stream_symbol_t {
   char* name;
   dfsch_deserializer_handler_t handler;
@@ -309,6 +298,25 @@ struct dfsch_deserializer_t {
   void* ph_baton;
 };
 
+dfsch_type_t dfsch_deserializer_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "deserializer",
+  .size = sizeof(dfsch_deserializer_t),
+};
+
+static void register_core_handlers();
+static dfsch_strhash_t* get_deshandler_map(){
+  static dfsch_strhash_t h;
+  static init = 0;
+  if (!init){
+    dfsch_strhash_init(&h);
+    init = 1;
+    register_core_handlers();
+  }
+  return &h;
+}
+
 static void update_handler_cache(stream_symbol_t* ss){
   if (!ss->handler){
     ss->handler = dfsch_strhash_ref(get_deshandler_map(), ss->name);
@@ -317,7 +325,12 @@ static void update_handler_cache(stream_symbol_t* ss){
 
 dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
                                               void* baton){
-  
+  dfsch_deserializer_t* ds = dfsch_make_object(DFSCH_DESERIALIZER_TYPE);
+
+  ds->iproc = ip;
+  ds->ip_baton = baton;
+
+  return ds;
 }
 
 static void deserialize_bytes(dfsch_deserializer_t* ds, char*buf, size_t len){
@@ -381,21 +394,6 @@ void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
     ds->obj_map[ds->obj_idx] = obj;
     ds->obj_idx++;
 }
-
-
-static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
-  int ref = dfsch_deserialize_integer(ds);
-  
-}
-static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
-  char* name = dfsch_deserialieze_stream_symbol(ds);
-  if (ds->persistent){
-    return ds->persistent(ds, name, ds->ph_baton);
-  } else {
-    dfsch_error("Persistent object IDs not supported", ds);
-  }
-}
-
 
 int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
   char lead;
@@ -496,6 +494,35 @@ void dfsch_register_deserializer_handler(char* name,
   dfsch_strhash_set(get_deshandler_map(), name, (void*)h);
 }
 
+static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
+  int ref = dfsch_deserialize_integer(ds);
+  
+}
+static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  if (ds->persistent){
+    return ds->persistent(ds, name, ds->ph_baton);
+  } else {
+    dfsch_error("Persistent object IDs not supported", ds);
+  }
+}
+static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
+  int64_t u = dfsch_deserialize_integer(ds);
+  dfsch_object_t* v = dfsch_make_number_from_int64(u);
+  dfsch_deserializer_put_partial_object(ds, v);
+  return v;
+}
+
+static void register_core_handlers(){
+  dfsch_register_deserializer_handler("back-refrence",
+                                      back_reference_handler);
+  dfsch_register_deserializer_handler("persistent-id",
+                                      persistent_id_handler);
+  dfsch_register_deserializer_handler("fixnum",
+                                      fixnum_handler);
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(serialize_to_byte_vector,
                        "Serializes one object into byte_vector"){
   dfsch_object_t* obj;
@@ -509,7 +536,21 @@ DFSCH_DEFINE_PRIMITIVE(serialize_to_byte_vector,
   return dfsch_make_byte_vector_strbuf(dfsch_sl_value_strbuf(sl));
 }
 
+DFSCH_DEFINE_PRIMITIVE(deserialize_from_string,
+                       "Deserialize one object from string"){
+  dfsch_strbuf_t* string;
+  dfsch_deserializer_t* ds;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  ds = dfsch_make_deserializer(dfsch_strbuf_inputproc,
+                               dfsch_copy_strbuf(string));
+  return dfsch_deserialize_object(ds);
+}
+
 void dfsch__serdes_register(dfsch_object_t* env){
   dfsch_defconst_cstr(env, "serialize-to-byte-vector",
                       DFSCH_PRIMITIVE_REF(serialize_to_byte_vector));
+  dfsch_defconst_cstr(env, "deserialize-from-string",
+                      DFSCH_PRIMITIVE_REF(deserialize_from_string));
 }
