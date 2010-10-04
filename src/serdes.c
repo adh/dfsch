@@ -109,11 +109,6 @@ static void serialize_bytes(dfsch_serializer_t* s,
                             char* buf,
                             size_t len){
   s->oproc(s->op_baton, buf, len);
-  while (len){
-    printf("%02hhx ", *buf);
-    buf++; len--;
-  }
-  puts("");
 }
 
 
@@ -176,8 +171,6 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
 void dfsch_serialize_integer(dfsch_serializer_t* s,
                              int64_t i){
   char *buf = GC_MALLOC_ATOMIC(9);
-
-  printf("int %d\n",i);
 
   if (i >= -(1 << 6) && (i < (1 << 6))){
     buf[0] = i & 0x7f;
