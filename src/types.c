@@ -655,6 +655,14 @@ static void symbol_serialize(object_t* o, dfsch_serializer_t* s){
   }
 }
 
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("symbol", symbol){
+  char* package = dfsch_deserialize_stream_symbol(ds);
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  dfsch_object_t* sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+  dfsch_deserializer_put_partial_object(ds, sym);
+  return sym;
+}
+
 static void compact_list_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
   /* There is slight issue with multiple references to different
    * virtual cells but that probably could be ignored. */
@@ -689,6 +697,31 @@ static void immutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s)
   dfsch_serialize_stream_symbol(s, "immutable-pair");
   dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
   dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
+}
+
+static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
+  size_t len = dfsch_deserialize_integer(ds);
+  dfsch_object_t** list = GC_MALLOC(sizeof(dfsch_object_t*) * (len+4));
+  size_t i;
+
+  printf("compact-list %d %p\n", len, list);
+
+  for (i = 0; i < len; i++){
+    dfsch_deserializer_put_partial_object(ds, DFSCH_MAKE_CLIST(list+i));
+    list[i] = dfsch_deserialize_object(ds);
+  }
+
+  list[len] = DFSCH_INVALID_OBJECT;
+  list[len + 1] = dfsch_deserialize_object(ds);
+  list[len + 2] = dfsch_deserialize_object(ds);
+  list[len + 3] = dfsch_deserialize_object(ds);  
+  printf("%p\n", list);
+  return DFSCH_MAKE_CLIST(list);
+}
+
+static dfsch_object_t* empty_list_deserialize(dfsch_deserializer_t* ds){
+  dfsch_deserializer_put_partial_object(ds, NULL);
+  return NULL;
 }
 
 dfsch_type_t dfsch_tagged_types[4] = {
@@ -998,7 +1031,7 @@ dfsch_type_t dfsch_vector_type = {
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
-static dfsch_object_t* vector_handler(dfsch_deserializer_t* ds){
+static dfsch_object_t* vector_deserialize(dfsch_deserializer_t* ds){
   size_t i;
   size_t len = dfsch_deserialize_integer(ds);
   vector_t* v = dfsch_make_vector(len, NULL);
@@ -1007,11 +1040,6 @@ static dfsch_object_t* vector_handler(dfsch_deserializer_t* ds){
     v->data[i] = dfsch_deserialize_object(ds);
   }
   return v;
-}
-
-static void __attribute__((constructor)) register_handlers() {
-  dfsch_register_deserializer_handler("vector",
-                                      vector_handler);
 }
 
 static dfsch_object_t* environment_describe(environment_t* env){
@@ -1073,6 +1101,15 @@ dfsch_type_t dfsch_lambda_list_type = {
   NULL,
   "Compiled lambda-list for effective destructuring"
 };
+
+static void __attribute__((constructor)) register_handlers() {
+  dfsch_register_deserializer_handler("vector",
+                                      vector_deserialize);
+  dfsch_register_deserializer_handler("compact-list",
+                                      compact_list_deserialize);
+  dfsch_register_deserializer_handler("empty-list",
+                                      empty_list_deserialize);
+}
 
 
 

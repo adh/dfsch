@@ -305,7 +305,6 @@ static dfsch_strhash_t* get_deshandler_map(){
   if (!init){
     dfsch_strhash_init(&h);
     init = 1;
-    register_core_handlers();
   }
   return &h;
 }
@@ -522,7 +521,7 @@ static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
   return v;
 }
 
-static void register_core_handlers(){
+static void __attribute__((constructor)) register_core_handlers(){
   dfsch_register_deserializer_handler("back-reference",
                                       back_reference_handler);
   dfsch_register_deserializer_handler("persistent-id",
