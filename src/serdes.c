@@ -128,8 +128,6 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;
   dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);
-
-  dfsch_put_serialized_object(s, obj);
   
   if (idx != DFSCH_INVALID_OBJECT){
     serialize_back_reference(s, ((int)idx));
@@ -144,6 +142,8 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
       return;
     }
   }
+
+  dfsch_put_serialized_object(s, obj);
 
   if (s->object_hook){
     if (s->object_hook(s, obj, s->oh_baton)){
@@ -171,8 +171,6 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
 void dfsch_serialize_integer(dfsch_serializer_t* s,
                              int64_t i){
   char *buf = GC_MALLOC_ATOMIC(9);
-
-  printf("int %d\n", i);
 
   if (i >= -(1 << 6) && (i < (1 << 6))){
     buf[0] = i & 0x7f;
@@ -266,8 +264,6 @@ void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
     s->sym_idx++;
     dfsch_strhash_set(&s->sym_map, sym, (void*)s->sym_idx);
   }
-
-  printf("symbol: %s idx=%d cur=%d\n", sym, idx, s->sym_idx);
 }
 
 typedef struct stream_symbol_t {
@@ -354,7 +350,6 @@ static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
     res->name[len] = 0;
 
     ds->sym_idx++;
-    printf("remebered symbol %d %s\n", ds->sym_idx, res->name);
     if (ds->sym_idx >= ds->sym_map_len){
       ds->sym_map_len *= 2;
       ds->sym_map = GC_REALLOC(ds->sym_map, ds->sym_map_len * sizeof(stream_symbol_t*));
@@ -370,7 +365,6 @@ static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
     }
 
     res = ds->sym_map[idx];
-    printf("symbol backreference %d %s\n", len, res->name);
   }
   return res;
 }
@@ -509,7 +503,6 @@ static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
     dfsch_error("Invalid back reference in stream", ds);
   }
   res = ds->obj_map[ref];
-  dfsch_deserializer_put_partial_object(ds, res);
   return res;
 }
 static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
@@ -517,7 +510,6 @@ static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
   dfsch_object_t* res;
   if (ds->persistent){
     res = ds->persistent(ds, name, ds->ph_baton);
-    dfsch_deserializer_put_partial_object(ds, res);
     return res;
   } else {
     dfsch_error("Persistent object IDs not supported", ds);
