@@ -693,11 +693,34 @@ static void mutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
   dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
   dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
 }
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("mutable-pair", mutable_pair){
+  dfsch_pair_t* p = GC_NEW(dfsch_pair_t);
+
+  dfsch_deserializer_put_partial_object(ds, DFSCH_TAG_ENCODE(p, 1));
+
+  p->car = dfsch_deserialize_object(ds);
+  p->cdr = dfsch_deserialize_object(ds);
+
+  return DFSCH_TAG_ENCODE(p, 1);
+}
+
 static void immutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
   dfsch_serialize_stream_symbol(s, "immutable-pair");
   dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
   dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
 }
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("immutable-pair", immutable_pair){
+  dfsch_pair_t* p = GC_NEW(dfsch_pair_t);
+
+  dfsch_deserializer_put_partial_object(ds, DFSCH_TAG_ENCODE(p, 3));
+
+  p->car = dfsch_deserialize_object(ds);
+  p->cdr = dfsch_deserialize_object(ds);
+
+  return DFSCH_TAG_ENCODE(p, 3);
+}
+
 
 static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
   size_t len = dfsch_deserialize_integer(ds);
