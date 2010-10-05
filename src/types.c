@@ -998,6 +998,22 @@ dfsch_type_t dfsch_vector_type = {
 };
 #define VECTOR DFSCH_VECTOR_TYPE
 
+static dfsch_object_t* vector_handler(dfsch_deserializer_t* ds){
+  size_t i;
+  size_t len = dfsch_deserialize_integer(ds);
+  vector_t* v = dfsch_make_vector(len, NULL);
+  dfsch_deserializer_put_partial_object(ds, v);
+  for (i = 0; i < len; i++){
+    v->data[i] = dfsch_deserialize_object(ds);
+  }
+  return v;
+}
+
+static void __attribute__((constructor)) register_handlers() {
+  dfsch_register_deserializer_handler("vector",
+                                      vector_handler);
+}
+
 static dfsch_object_t* environment_describe(environment_t* env){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));
