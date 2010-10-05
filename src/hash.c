@@ -20,6 +20,7 @@
  */
 
 #include <dfsch/hash.h>
+#include <dfsch/serdes.h>
 #include "internal.h"
 #include <stdlib.h>
 #include "util.h"
@@ -75,12 +76,28 @@ static void hash_serialize(hash_t* h, dfsch_serializer_t* s){
   for (j=0; j<(h->mask+1); j++){
     i = h->vector[j];
     while (i){
+      dfsch_serialize_integer(s, 1);
       dfsch_serialize_object(s, i->key);
       dfsch_serialize_object(s, i->value);
       i = i->next;
     }
   }
+  dfsch_serialize_integer(s, 0);
   DFSCH_RWLOCK_UNLOCK(&h->lock);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("hash-table", hash_table){
+  int equal = dfsch_deserialize_integer(ds);
+  dfsch_object_t* hash = dfsch_hash_make(equal 
+                                         ? DFSCH_HASH_EQUAL 
+                                         : DFSCH_HASH_EQ);
+  dfsch_deserializer_put_partial_object(ds, hash);
+  while (dfsch_deserialize_integer(ds) == 1){
+    dfsch_object_t* key = dfsch_deserialize_object(ds);
+    dfsch_object_t* value = dfsch_deserialize_object(ds);
+    dfsch_hash_set(hash, key, value);
+  }
+  return hash;
 }
 
 dfsch_type_t dfsch_hash_table_type = {
