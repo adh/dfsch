@@ -342,7 +342,7 @@ static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
   ssize_t len = dfsch_deserialize_integer(ds);
   stream_symbol_t* res;
   
-  if (len > 0){
+  if (len >= 0){
     res = GC_NEW(stream_symbol_t);
     res->name = GC_MALLOC_ATOMIC(len + 1);
     deserialize_bytes(ds, res->name, len);

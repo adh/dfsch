@@ -657,7 +657,12 @@ static void symbol_serialize(object_t* o, dfsch_serializer_t* s){
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("symbol", symbol){
   char* package = dfsch_deserialize_stream_symbol(ds);
   char* name = dfsch_deserialize_stream_symbol(ds);
-  dfsch_object_t* sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+  dfsch_object_t* sym;
+  if (package && name){
+    sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+  } else {
+    sym = dfsch_gensym();
+  }
   dfsch_deserializer_put_partial_object(ds, sym);
   return sym;
 }
@@ -939,7 +944,7 @@ dfsch_type_t dfsch_macro_type = {
   NULL,
   NULL,
   macro_slots,
-  "Macro implemented by arbitrary function"
+  "Macro implemented by arbitrary function",
 };
 #define MACRO DFSCH_MACRO_TYPE
 
