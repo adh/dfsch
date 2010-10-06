@@ -680,6 +680,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
                      DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
                      dfsch__get_thread_info());
 }
+
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
@@ -702,6 +703,26 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
   }
   return DFSCH_INVALID_OBJECT;
 }
+
+dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, dfsch_object_t* value){
+  environment_t *i;
+  object_t* ret;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    ret = dfsch_eqhash_revscan(&i->values, value);
+    if (ret != DFSCH_INVALID_OBJECT){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return DFSCH_INVALID_OBJECT;  
+}
+
 
 
 dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){

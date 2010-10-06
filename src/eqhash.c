@@ -402,3 +402,30 @@ dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash){
   }
   return result;
 }
+dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
+                                     dfsch_object_t* value){
+  int i;
+
+  if (hash->is_large){
+    for (i = 0; i <= hash->contents.large.mask; i++){
+      dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
+      while (e){
+        if (e->key != DFSCH_INVALID_OBJECT){
+          if (e->value == value){
+            return e->key;
+          }
+        }
+        e = e->next;
+      }
+    }
+  } else {
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] != DFSCH_INVALID_OBJECT){
+        if (hash->contents.small.values[i] == value){
+          return hash->contents.small.keys[i];
+        }
+      }
+    }
+  }
+  return DFSCH_INVALID_OBJECT;  
+}

@@ -320,6 +320,22 @@ DFSCH_DEFINE_PRIMITIVE(lookup_in_environment, 0){
 
   return dfsch_lookup(name, env);
 }
+DFSCH_DEFINE_PRIMITIVE(find_in_environment, 0){
+  dfsch_object_t* env;
+  dfsch_object_t* value;
+  dfsch_object_t* ret;
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  ret = dfsch_env_revscan(env, value);
+  if (ret == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } else {
+    return dfsch_cons(ret, NULL);
+  }
+}
+
 DFSCH_DEFINE_PRIMITIVE(set_in_environment, 0){
   dfsch_object_t* name;
   dfsch_object_t* env;
@@ -412,6 +428,8 @@ void dfsch_introspect_register(dfsch_object_t* env){
 
   dfsch_define_cstr(env, "lookup-in-environment",
                     DFSCH_PRIMITIVE_REF(lookup_in_environment));
+  dfsch_define_cstr(env, "find-in-environment",
+                    DFSCH_PRIMITIVE_REF(find_in_environment));
   dfsch_define_cstr(env, "set-in-environment!",
                     DFSCH_PRIMITIVE_REF(set_in_environment));
   dfsch_define_cstr(env, "unset-from-environment!",
