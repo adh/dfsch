@@ -520,7 +520,6 @@ dfsch_type_t dfsch_list_type = {
   NULL,
   NULL,
   "Abstract superclass of list-like objects"
-
 };
 
 dfsch_type_t dfsch_function_type = {
