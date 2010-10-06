@@ -735,7 +735,11 @@ static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
     }
   }
   if (ll->rest){
-    dfsch_write_string(ws, "&rest ");
+    if (ll->flags & LL_FLAG_REST_IS_BODY){
+      dfsch_write_string(ws, "&body ");
+    } else {
+      dfsch_write_string(ws, "&rest ");
+    }
     dfsch_write_object(ws, ll->rest);    
     dfsch_write_string(ws, " ");
   }

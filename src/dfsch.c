@@ -1125,7 +1125,10 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                "leads to surprising behavior", NULL);
       }
       mode = CLL_KEYWORD;
-    } else if (arg == DFSCH_LK_REST){
+    } else if (arg == DFSCH_LK_REST || arg == DFSCH_LK_BODY){
+      if (arg == DFSCH_LK_BODY){
+        flags |= LL_FLAG_REST_IS_BODY;
+      }
       i = DFSCH_FAST_CDR(i);
       if (!DFSCH_PAIR_P(i)){
         dfsch_error("Missing argument for &rest", list);
