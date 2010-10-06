@@ -987,7 +987,7 @@ dfsch_type_t dfsch_lambda_list_type = {
   "Compiled lambda-list for effective destructuring"
 };
 
-
+/* ***** Object predicates ***** */
 
 int dfsch_null_p(dfsch_object_t* obj){
   return !obj;
