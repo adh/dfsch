@@ -21,6 +21,7 @@
 
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/serdes.h>
 #include "types.h"
 #include <string.h>
 
@@ -157,6 +158,12 @@ static void string_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
   dfsch_serialize_stream_symbol(se, "string");
   dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
 }
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("string", string){
+  dfsch_object_t* str = dfsch_make_string_nocopy(dfsch_deserialize_strbuf(ds));
+  dfsch_deserializer_put_partial_object(ds, str);
+  return str;
+}
+
 
 static dfsch_collection_methods_t string_collection = {
   .get_iterator = dfsch_string_2_list,
@@ -1356,6 +1363,12 @@ static size_t byte_vector_hash(dfsch_string_t* s){
 static void byte_vector_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
   dfsch_serialize_stream_symbol(se, "byte-vector");
   dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("byte-vector", byte_vector){
+  dfsch_strbuf_t* sb = dfsch_deserialize_strbuf(ds);
+  dfsch_object_t* str = dfsch_make_byte_vector_nocopy(sb->ptr, sb->len);
+  dfsch_deserializer_put_partial_object(ds, str);
+  return str;
 }
 
 static dfsch_collection_methods_t byte_vector_collection = {
