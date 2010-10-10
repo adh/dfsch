@@ -1125,7 +1125,10 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                "leads to surprising behavior", NULL);
       }
       mode = CLL_KEYWORD;
-    } else if (arg == DFSCH_LK_REST){
+    } else if (arg == DFSCH_LK_REST || arg == DFSCH_LK_BODY){
+      if (arg == DFSCH_LK_BODY){
+        flags |= LL_FLAG_REST_IS_BODY;
+      }
       i = DFSCH_FAST_CDR(i);
       if (!DFSCH_PAIR_P(i)){
         dfsch_error("Missing argument for &rest", list);
@@ -1337,8 +1340,28 @@ static void destructure_impl(lambda_list_t* ll,
   } else if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
     destructure_keywords(ll, j, env, ti);
   } else if (DFSCH_UNLIKELY(j)) {
-      dfsch_error("Too many arguments", dfsch_list(2,ll, list));
+    dfsch_error("Too many arguments", dfsch_list(2,ll, list));
   }
+
+  if (DFSCH_UNLIKELY(ll->aux_list)){
+    dfsch_object_t* vars = ll->aux_list;
+    while (DFSCH_PAIR_P(vars)){
+      dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+      object_t* var;
+      object_t* val;
+      
+      DFSCH_OBJECT_ARG(clause, var);
+      DFSCH_OBJECT_ARG(clause, val);
+      DFSCH_ARG_END(clause);
+      
+      val = dfsch_eval(val, env);
+      
+      dfsch_define(var, val, env, 0);
+      
+      vars = DFSCH_FAST_CDR(vars);
+    }
+  }
+
 }
 
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
