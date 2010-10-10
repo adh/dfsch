@@ -458,7 +458,11 @@ extern "C" {
   /** Unset variable name in environment env */
   extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
-#define DFSCH_VAR_CONSTANT 1
+  /** Variable is declared as constant - changing it leads to undefined 
+   * behavior */
+#define DFSCH_VAR_CONSTANT  1
+  /** Variable is canonical name of it's value. */
+#define DFSCH_VAR_CANONICAL 2
   
 
   /** Define variable name in environment env */
@@ -522,11 +526,18 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                                  char *name, 
+                                  void *obj); /* to suppress warnings*/
   extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
 				   dfsch_package_t* package,
 				   char *name, 
 				   void *obj); /* to suppress warnings*/
   extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
 				     dfsch_package_t* package,
 				     char *name, 
 				     void *obj); /* to suppress warnings*/

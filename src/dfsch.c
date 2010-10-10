@@ -1626,6 +1626,11 @@ void dfsch_defconst_cstr(dfsch_object_t *ctx,
                          void *obj){
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
 }
+void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                         char *name, 
+                         void *obj){
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
+}
 void dfsch_define_pkgcstr(dfsch_object_t *ctx,
                         dfsch_package_t* pkg,
                         char *name, 
@@ -1633,6 +1638,15 @@ void dfsch_define_pkgcstr(dfsch_object_t *ctx,
   
   dfsch_define(dfsch_intern_symbol(pkg, name), 
                (dfsch_object_t*)obj, ctx, 0);
+}
+void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
+                          dfsch_package_t* pkg,
+                          char *name, 
+                          void *obj){
+  
+  dfsch_define(dfsch_intern_symbol(pkg, name), 
+               (dfsch_object_t*)obj, ctx, 
+               DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
 }
 void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
                           dfsch_package_t* pkg,
