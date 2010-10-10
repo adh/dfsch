@@ -220,14 +220,16 @@ dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
   struct hostent* h;
   int fd;
 
-
+  dfsch_lock_libc();
   if ((h = gethostbyname(hostname)) == NULL){
+    dfsch_unlock_libc();
     dfsch_operating_system_error("gethostbyname");
   }
 
   inet_addr.sin_family=AF_INET;
   inet_addr.sin_port=htons(port);
   memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
+  dfsch_unlock_libc();
 
   fd = socket(PF_INET, SOCK_STREAM, 0);
   if (fd == -1){
@@ -307,13 +309,16 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
   int fd;
   struct hostent* h;
 
+  dfsch_lock_libc();
   if ((h = gethostbyname(hostname)) == NULL){ 
+    dfsch_unlock_libc();
     dfsch_operating_system_error("gethostbyname");
   }
 
   inet_addr.sin_family=AF_INET;
   inet_addr.sin_port=htons(port);
   memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
+  dfsch_unlock_libc();
 
   fd = socket(PF_INET, SOCK_STREAM, 0);
   if (fd == -1){

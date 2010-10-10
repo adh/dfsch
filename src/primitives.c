@@ -702,8 +702,8 @@ DFSCH_DEFINE_PRIMITIVE(object_2_string,
   long depth;
 
   DFSCH_OBJECT_ARG(args, object);
-  DFSCH_LONG_ARG_OPT(args, depth, 256);
-  DFSCH_OBJECT_ARG_OPT(args, readable, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, readable, DFSCH_SYM_TRUE);
+  DFSCH_LONG_ARG_OPT(args, depth, -1);
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_object_2_string(object, depth, 

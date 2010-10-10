@@ -12,7 +12,7 @@
                                                  :type "yesno"
                                                  :icon "question")
                                     "yes")
-                          (destroy-window window))))
+                          (destroy-window! window))))
 (window-title window "tk-gui demo")
 
 (define-widgets window
@@ -26,14 +26,27 @@
                        (message-box context
                                     :message 
                                     (format "Value is: ~s" 
-                                            (widget-command entry 
-                                                            "get")))))))
+                                            (get-value entry)))))))
   (:button (:text "Second Button" :bg "red")
            :grid (:row 0 :column 2)
            :events ((:command
                      (lambda ()
-                       (set-value entry "Foo")))))
-  (:frame () :grid (:row 1 :column 0 :columnspan 3)
+                       (set-value! entry "Foo")))))
+  (<check-button> (:text "Check-button")
+                  :grid (:row 1 :column 0)
+                  :variable check)
+  (:button (:text "Value?")
+           :grid (:row 1 :column 1)
+           :events ((:command 
+                     (lambda ()
+                       (message-box context 
+                                    :message (if (get-value check)
+                                                 "Checkbox is checked"
+                                                 "Checkbox is lonely"))))))
+  (:button (:text "Flash")
+           :grid (:row 1 :column 2)
+           :events ((:command (lambda () (flash-button! check)))))
+  (:frame () :grid (:row 2 :column 0 :columnspan 3)
           :contents
           ((:button (:text "Button dialog") :pack ()
                     :events ((:command 
@@ -49,17 +62,38 @@
            (:button (:text "Color dialog") :pack ()
                     :events ((:command
                               (lambda ()
-                                (color-dialog context))))))))
+                                (color-dialog context)))))))
+  (:frame () :grid (:row 3 :column 0)
+          :contents
+          ((<radio-button> (band "HF" :text "HF") :pack ())
+           (<radio-button> (band "VHF" :text "VHF") :pack ())
+           (<radio-button> (band "UHF" :text "UHF") :pack ())))
+  (:frame () :grid (:row 3 :column 1)
+          :contents
+          ((<radio-button> (band "Ka" :text "Ka") :pack ())
+           (<radio-button> (band "K" :text "K") :pack ())
+           (<radio-button> (band "Ku" :text "Ku") :pack ())))
+  (:button (:text "Tx") :grid (:row 3 :column 2)
+           :events ((:command
+                     (lambda ()
+                       (message-box context 
+                                    :message (format "Tx at ~a" 
+                                                     (get-value band)))))))
+  (<list-box> () :grid (:row 4 :column 0 :columnspan 2 :rowspan 2)
+              :variable lbox)
+  (:button (:text "Selection") :grid (:row 4 :column 2)
+           :events ((:command 
+                     (lambda () 
+                       (message-box context
+                                    :message (format "Selection: ~a"
+                                                     (get-selection lbox)))))))
+  (:button (:text "Value") :grid (:row 5 :column 2)
+           :events ((:command 
+                     (lambda () 
+                       (message-box context
+                                    :message (format "Value: ~a"
+                                                     (get-value lbox))))))))
 
-;; (define entry
-;;    (pack-widget 
-;;     (make-widget window "entry" )))
-;; (widget-command entry "insert" "0" "The Entry")
-  
-
-;; (bind-event (pack-widget 
-;;              (make-widget window "button" 
-;;                           :text "The Button"))
-;;             :command (lambda ()
+(list-box-insert lbox 0 "foo" "bar" "baz" "quux")
 
 (wait-for-window window)

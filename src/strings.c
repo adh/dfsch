@@ -27,6 +27,12 @@
 #include "udata.h"
 #include "util.h"
 
+dfsch_strbuf_t dfsch_empty_strbuf = {
+  .len = 0,
+  .ptr = NULL
+};
+
+
 static void * internal_memrchr(const void *buf, int c, size_t num){
   unsigned char *pMem = (unsigned char *) buf + num;
   
@@ -214,6 +220,22 @@ dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
 
   return (dfsch_object_t*)s;
 }
+
+dfsch_object_t* dfsch_make_string_for_write(size_t len, char**buf){
+  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
+
+  s->type = DFSCH_STRING_TYPE;
+
+  s->buf.ptr = (char *)(s + 1);
+  s->buf.len = len;
+
+  (*buf) = s->buf.ptr;
+
+  s->buf.ptr[len] = 0;
+
+  return (dfsch_object_t*)s;
+}
+
 dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
   dfsch_string_t *s = 
     (dfsch_string_t*)dfsch_make_object(DFSCH_STRING_TYPE);

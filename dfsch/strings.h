@@ -33,6 +33,9 @@ extern "C" {
     size_t len;
   } dfsch_strbuf_t;
 
+  extern dfsch_strbuf_t dfsch_empty_strbuf;
+#define DFSCH_EMPTY_STRBUF (&dfsch_empty_strbuf)
+
   typedef struct dfsch_string_t {
     dfsch_type_t* type;
     dfsch_strbuf_t buf;
@@ -46,6 +49,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_string_cstr(char* string);
   extern dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf);
   extern dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len);
+  extern dfsch_object_t* dfsch_make_string_for_write(size_t len, char**buf);
 
   extern dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf);
 
