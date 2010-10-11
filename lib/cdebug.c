@@ -95,8 +95,8 @@ static void debug_main(dfsch_object_t* reason){
   ctx.restarts = restarts;
   ctx.env = env;
 
-  dfsch_define_cstr(env, "reason", reason);
-  dfsch_define_cstr(env, "stack-trace", ustack);
+  dfsch_defcanon_cstr(env, "reason", reason);
+  dfsch_defcanon_cstr(env, "stack-trace", ustack);
 
   if (DFSCH_INSTANCE_P(reason, DFSCH_CONDITION_TYPE)){
     fprintf(stderr, "debugger invoked on %s:\n",
@@ -113,8 +113,8 @@ static void debug_main(dfsch_object_t* reason){
 
   fprintf(stderr, "\ntrace buffer:\n%s\n", dfsch_format_trace(ustack));
 
-  dfsch_define_cstr(env, "restarts", restarts);
-  dfsch_define_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,
+  dfsch_defcanon_cstr(env, "restarts", restarts);
+  dfsch_defcanon_cstr(env, "r", dfsch_make_primitive(debug_invoke_restart,
                                                    restarts));
 
   fprintf(stderr, "restarts:\n");

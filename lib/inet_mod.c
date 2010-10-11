@@ -207,35 +207,35 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
   dfsch_package_t* inet_pkg = dfsch_make_package("inet");  
   dfsch_provide(env, "inet");
 
-  dfsch_define_pkgcstr(env, inet_pkg, "http-split-query",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "http-split-query",
                     dfsch_make_primitive(http_split_query, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "http-split-path",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "http-split-path",
                     dfsch_make_primitive(http_split_path, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "http-query->alist",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "http-query->alist",
                     dfsch_make_primitive(http_query_2_alist, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "http-query->hash",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "http-query->hash",
                     dfsch_make_primitive(http_query_2_hash, NULL));
 
-  dfsch_define_pkgcstr(env, inet_pkg, "urldecode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "urldecode",
                     dfsch_make_primitive(inet_urldecode, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "urlencode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "urlencode",
                     dfsch_make_primitive(inet_urlencode, NULL));
 
-  dfsch_define_pkgcstr(env, inet_pkg, "base64-encode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "base64-encode",
                     dfsch_make_primitive(inet_base64_encode, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "uri-base64-encode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "uri-base64-encode",
                     dfsch_make_primitive(inet_uri_base64_encode, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "base64-decode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "base64-decode",
                     dfsch_make_primitive(inet_base64_decode, NULL));
-  dfsch_define_pkgcstr(env, inet_pkg, "uri-base64-decode",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "uri-base64-decode",
                     dfsch_make_primitive(inet_uri_base64_decode, NULL));
 
-  dfsch_define_pkgcstr(env, inet_pkg, "xml-escape",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "xml-escape",
                     dfsch_make_primitive(inet_xml_escape, NULL));
 
-  dfsch_define_pkgcstr(env, inet_pkg, "headers->list",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "headers->list",
                        DFSCH_PRIMITIVE_REF(headers_2_list));
-  dfsch_define_pkgcstr(env, inet_pkg, "headers->map",
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "headers->map",
                        DFSCH_PRIMITIVE_REF(headers_2_map));
 
 }

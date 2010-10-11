@@ -95,15 +95,15 @@ dfsch_object_t* dfsch_module_cmdopts_register(dfsch_object_t* env){
 
   dfsch_provide(env, "cmdopts");
 
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "<error>", DFSCH_CMDOPTS_ERROR_TYPE);
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "<error>", DFSCH_CMDOPTS_ERROR_TYPE);
 
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "make-parser", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "make-parser", 
                        DFSCH_PRIMITIVE_REF(make_parser));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-option", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "add-option", 
                        DFSCH_PRIMITIVE_REF(add_option));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-argument", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "add-argument", 
                        DFSCH_PRIMITIVE_REF(add_argument));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "parse-list", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "parse-list", 
                        DFSCH_PRIMITIVE_REF(parse_list));
 }

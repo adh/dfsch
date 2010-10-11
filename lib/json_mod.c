@@ -74,16 +74,16 @@ DFSCH_DEFINE_PRIMITIVE(emit_port,
 void dfsch_module_json_register(dfsch_object_t* env){
   dfsch_package_t* json_pkg = dfsch_make_package("json");
   dfsch_provide(env, "json");
-  dfsch_define_pkgcstr(env, json_pkg, "<parser>", DFSCH_JSON_PARSER_TYPE);
+  dfsch_defcanon_pkgcstr(env, json_pkg, "<parser>", DFSCH_JSON_PARSER_TYPE);
 
-  dfsch_define_pkgcstr(env, json_pkg, "parse-string", 
+  dfsch_defcanon_pkgcstr(env, json_pkg, "parse-string", 
                        DFSCH_PRIMITIVE_REF(parse_string));
-  dfsch_define_pkgcstr(env, json_pkg, "parse-file", 
+  dfsch_defcanon_pkgcstr(env, json_pkg, "parse-file", 
                        DFSCH_PRIMITIVE_REF(parse_file));
-  dfsch_define_pkgcstr(env, json_pkg, "parse-port", 
+  dfsch_defcanon_pkgcstr(env, json_pkg, "parse-port", 
                        DFSCH_PRIMITIVE_REF(parse_port));
 
-  dfsch_define_pkgcstr(env, json_pkg, "emit-string", 
+  dfsch_defcanon_pkgcstr(env, json_pkg, "emit-string", 
                        DFSCH_PRIMITIVE_REF(emit_string));
 
 }

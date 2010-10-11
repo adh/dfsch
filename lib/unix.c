@@ -424,71 +424,71 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_require(ctx, "os", NULL);
 
-  dfsch_define_pkgcstr(ctx, unix_pkg, "fchdir", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchdir", 
                     DFSCH_PRIMITIVE_REF(fchdir));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "chmod", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chmod", 
                     DFSCH_PRIMITIVE_REF(chmod));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "fchmod", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchmod", 
                     DFSCH_PRIMITIVE_REF(fchmod));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "chown", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chown", 
                     DFSCH_PRIMITIVE_REF(chown));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "fchown", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchown", 
                     DFSCH_PRIMITIVE_REF(fchown));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "fork", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fork", 
                     DFSCH_PRIMITIVE_REF(fork));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getegid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getegid", 
                     DFSCH_PRIMITIVE_REF(getegid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "geteuid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "geteuid", 
                     DFSCH_PRIMITIVE_REF(geteuid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getgid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgid", 
                     DFSCH_PRIMITIVE_REF(getgid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getuid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getuid", 
                     DFSCH_PRIMITIVE_REF(getuid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getpgid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgid", 
                     DFSCH_PRIMITIVE_REF(getpgid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getpgrp", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgrp", 
                     DFSCH_PRIMITIVE_REF(getpgrp));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getsid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getsid", 
                     DFSCH_PRIMITIVE_REF(getsid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getpid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpid", 
                     DFSCH_PRIMITIVE_REF(getpid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "getppid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getppid", 
                     DFSCH_PRIMITIVE_REF(getppid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "kill", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "kill", 
                     DFSCH_PRIMITIVE_REF(kill));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "killpg", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "killpg", 
                     DFSCH_PRIMITIVE_REF(killpg));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "link", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "link", 
                     DFSCH_PRIMITIVE_REF(link));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "lstat", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "lstat", 
                     DFSCH_PRIMITIVE_REF(lstat));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "mkfifo", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mkfifo", 
                     DFSCH_PRIMITIVE_REF(mkfifo));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "nice", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nice", 
                     DFSCH_PRIMITIVE_REF(nice));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "pipe", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "pipe", 
                     DFSCH_PRIMITIVE_REF(pipe));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setegid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setegid", 
                     DFSCH_PRIMITIVE_REF(setegid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "seteuid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "seteuid", 
                     DFSCH_PRIMITIVE_REF(seteuid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setgid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setgid", 
                     DFSCH_PRIMITIVE_REF(setgid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setuid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setuid", 
                     DFSCH_PRIMITIVE_REF(setuid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setpgid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgid", 
                     DFSCH_PRIMITIVE_REF(setpgid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setpgrp", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgrp", 
                     DFSCH_PRIMITIVE_REF(setpgrp));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "setsid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setsid", 
                     DFSCH_PRIMITIVE_REF(setsid));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "symlink", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "symlink", 
                     DFSCH_PRIMITIVE_REF(symlink));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "sync", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "sync", 
                     DFSCH_PRIMITIVE_REF(sync));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "wait", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "wait", 
                     DFSCH_PRIMITIVE_REF(wait));
-  dfsch_define_pkgcstr(ctx, unix_pkg, "waitpid", 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "waitpid", 
                     DFSCH_PRIMITIVE_REF(waitpid));
   
   dfsch_provide(ctx, "unix");
