@@ -324,11 +324,13 @@ DFSCH_DEFINE_PRIMITIVE(find_in_environment, 0){
   dfsch_object_t* env;
   dfsch_object_t* value;
   dfsch_object_t* ret;
+  dfsch_object_t* canonical;
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_OBJECT_ARG(args, value);
+  DFSCH_OBJECT_ARG_OPT(args, canonical, NULL);
   DFSCH_ARG_END(args);
 
-  ret = dfsch_env_revscan(env, value);
+  ret = dfsch_env_revscan(env, value, canonical != NULL);
   if (ret == DFSCH_INVALID_OBJECT){
     return NULL;
   } else {

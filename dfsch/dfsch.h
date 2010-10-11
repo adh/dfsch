@@ -446,7 +446,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
   extern dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
-                                           dfsch_object_t* value);
+                                           dfsch_object_t* value,
+                                           int canonical);
 
   extern dfsch_object_t* dfsch_variable_constant_value(dfsch_object_t* name, 
                                                        dfsch_object_t* env);
