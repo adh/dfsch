@@ -64,6 +64,7 @@ char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds);
 
 void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
                                            dfsch_object_t* obj);
+dfsch_object_t** dfsch_deserializer__skip_object(dfsch_deserializer_t* ds);
 
 typedef 
 dfsch_object_t* (*dfsch_deserializer_unknown_hook_t)(dfsch_deserializer_t* ds,

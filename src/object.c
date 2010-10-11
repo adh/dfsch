@@ -111,6 +111,22 @@ static void instance_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
   dfsch_write_unreadable_with_slots(state, obj);
 }
 
+static void instance_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_type_t* klass = DFSCH_TYPE_OF(obj);
+  dfsch_serialize_stream_symbol(s, "class-instance");
+  dfsch_serialize_object(s, klass);
+  while (klass){
+    dfsch_slot_t* i = klass->slots;
+    while (i->type){
+      dfsch_serialize_stream_symbol(s, i->name);
+      dfsch_serialize_object(s, dfsch_slot_ref(obj, i, 1));
+      i++;
+    }
+    klass = klass->superclass;
+  }
+  dfsch_serialize_stream_symbol(s, "");
+}
+
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  char* name,
                                  dfsch_object_t* slots){
@@ -139,6 +155,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   }
 
   klass->standard_type.write = instance_write;
+  klass->standard_type.serialize = instance_serialize;
 
   /* klass->standard_type.equal_p = class_equal_p;
   klass->standard_type.apply = class_apply;

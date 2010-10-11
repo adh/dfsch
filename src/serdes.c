@@ -411,14 +411,18 @@ dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds){
   return type->handler(ds);
 }
 
+dfsch_object_t** dfsch_deserializer__skip_object(dfsch_deserializer_t* ds){
+  if (ds->obj_idx >= ds->obj_map_len){
+    ds->obj_map_len *= 2;
+    ds->obj_map = GC_REALLOC(ds->obj_map, ds->obj_map_len * sizeof(dfsch_object_t*));
+  }
+  ds->obj_idx++;
+  return ds->obj_map + ds->obj_idx - 1;
+}
+
 void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
                                            dfsch_object_t* obj){
-    if (ds->obj_idx >= ds->obj_map_len){
-      ds->obj_map_len *= 2;
-      ds->obj_map = GC_REALLOC(ds->obj_map, ds->obj_map_len * sizeof(dfsch_object_t*));
-    }
-    ds->obj_map[ds->obj_idx] = obj;
-    ds->obj_idx++;
+  *(dfsch_deserializer__skip_object(ds)) = obj;
 }
 
 int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
