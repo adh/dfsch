@@ -656,7 +656,7 @@ static void symbol_serialize(object_t* o, dfsch_serializer_t* s){
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("symbol", symbol){
   char* package = dfsch_deserialize_stream_symbol(ds);
-  char* name = dfsch_deserialize_stream_symbol(ds);
+  char* name = dfsch_deserialize_strbuf(ds)->ptr;
   dfsch_object_t* sym;
   if (package && name){
     sym = dfsch_intern_symbol(dfsch_make_package(package), name);

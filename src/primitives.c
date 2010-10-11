@@ -1125,14 +1125,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
   dfsch_defcanon_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
 
-
-  dfsch_defcanon_cstr(ctx, "true", DFSCH_SYM_TRUE);
-  dfsch_defcanon_cstr(ctx, "nil", NULL);
-  dfsch_defcanon_cstr(ctx, "else", DFSCH_SYM_TRUE);
-  dfsch_defcanon_cstr(ctx, "t", DFSCH_SYM_TRUE);  
-  dfsch_defcanon_cstr(ctx, "T", DFSCH_SYM_TRUE);
-
-
   dfsch_defcanon_cstr(ctx, "make-vector", 
                       DFSCH_PRIMITIVE_REF(make_vector));
   dfsch_defcanon_cstr(ctx, "vector", 

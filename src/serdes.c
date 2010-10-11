@@ -61,6 +61,8 @@ struct dfsch_serializer_t {
 
   dfsch_serializer_unserializable_hook_t unserializable;
   void* uh_baton;
+
+  dfsch_object_t* canon_env;
 };
 
 dfsch_type_t dfsch_serializer_type = {
@@ -103,6 +105,10 @@ void dfsch_serializer_set_unserializable_hook(dfsch_serializer_t* s,
   s->unserializable = h;
   s->uh_baton = baton;
 }
+void dfsch_serializer_set_canonical_environment(dfsch_serializer_t* s,
+                                                dfsch_object_t* env){
+  s->canon_env = env;
+}
 
 
 static void serialize_bytes(dfsch_serializer_t* s,
@@ -134,6 +140,22 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
     return;
   }  
 
+  dfsch_put_serialized_object(s, obj);
+
+  if (s->canon_env){
+    dfsch_object_t* sym = dfsch_env_revscan(s->canon_env, obj, 1);
+    if (sym != DFSCH_INVALID_OBJECT && DFSCH_SYMBOL_P(sym)){
+      dfsch_package_t* package = dfsch_symbol_package(sym);
+      char* name = dfsch_symbol(sym);
+      if (package && name){
+        dfsch_serialize_stream_symbol(s, "canon-env-ref");
+        dfsch_serialize_stream_symbol(s, dfsch_package_name(package));
+        dfsch_serialize_cstr(s, name);
+        return;
+      }
+    }
+  }
+
   if (s->persistent_id){
     char* pi = s->persistent_id(s, obj, s->pi_baton);
     if (pi){
@@ -142,8 +164,6 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
       return;
     }
   }
-
-  dfsch_put_serialized_object(s, obj);
 
   if (s->object_hook){
     if (s->object_hook(s, obj, s->oh_baton)){
@@ -289,6 +309,8 @@ struct dfsch_deserializer_t {
   void* uh_baton;
   dfsch_deserializer_persistent_hook_t persistent;
   void* ph_baton;
+
+  dfsch_object_t* canon_env;
 };
 
 dfsch_type_t dfsch_deserializer_type = {
@@ -330,6 +352,12 @@ dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
 
   return ds;
 }
+
+void dfsch_deserializer_set_canonical_environment(dfsch_deserializer_t* ds,
+                                                  dfsch_object_t* env){
+  ds->canon_env = env;
+}
+
 
 static void deserialize_bytes(dfsch_deserializer_t* ds, char*buf, size_t len){
   ssize_t ret = ds->iproc(ds->ip_baton, buf, len);
@@ -520,6 +548,28 @@ static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
   dfsch_deserializer_put_partial_object(ds, v);
   return v;
 }
+static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){
+  char* package = dfsch_deserialize_stream_symbol(ds);
+  char* name = dfsch_deserialize_strbuf(ds)->ptr;
+  dfsch_object_t* sym;
+  dfsch_object_t* obj;
+  if (package && name){
+    sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+  } else {
+    dfsch_error("Invalid serialized stream: dereferencing gensym", NULL);
+  }
+  
+  if (!ds->canon_env){
+    dfsch_error("No canonical environament specified for deserialization", 
+                NULL);
+  }
+
+  obj = dfsch_lookup(sym, ds->canon_env);
+
+  dfsch_deserializer_put_partial_object(ds, obj);
+  return obj;
+}
+
 
 static void __attribute__((constructor)) register_core_handlers(){
   dfsch_register_deserializer_handler("back-reference",
@@ -528,6 +578,8 @@ static void __attribute__((constructor)) register_core_handlers(){
                                       persistent_id_handler);
   dfsch_register_deserializer_handler("fixnum",
                                       fixnum_handler);
+  dfsch_register_deserializer_handler("canon-env-ref",
+                                      canon_env_ref_handler);
 }
 
 
@@ -535,11 +587,16 @@ DFSCH_DEFINE_PRIMITIVE(serialize_to_byte_vector,
                        "Serializes one object into byte_vector"){
   dfsch_object_t* obj;
   dfsch_serializer_t* ser;
+  dfsch_object_t* canon_env;
   str_list_t* sl = sl_create();
   DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
   DFSCH_ARG_END(args);
 
   ser = dfsch_make_serializer(sl_nappend, sl);
+  if (canon_env){
+    dfsch_serializer_set_canonical_environment(ser, canon_env);
+  }
   dfsch_serialize_object(ser, obj);
   return dfsch_make_byte_vector_strbuf(dfsch_sl_value_strbuf(sl));
 }
@@ -548,11 +605,16 @@ DFSCH_DEFINE_PRIMITIVE(deserialize_from_string,
                        "Deserialize one object from string"){
   dfsch_strbuf_t* string;
   dfsch_deserializer_t* ds;
+  dfsch_object_t* canon_env;
   DFSCH_BUFFER_ARG(args, string);
+  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
   DFSCH_ARG_END(args);
 
   ds = dfsch_make_deserializer(dfsch_strbuf_inputproc,
                                dfsch_copy_strbuf(string));
+  if (canon_env){
+    dfsch_deserializer_set_canonical_environment(ds, canon_env);
+  }
   return dfsch_deserialize_object(ds);
 }
 

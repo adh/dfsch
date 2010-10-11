@@ -25,7 +25,9 @@ void dfsch_strhash_init(dfsch_strhash_t* h){
   return h;
 }
 
-static dfsch_strhash__entry_t* get_hash_entry(dfsch_strhash_t* h, char* name, size_t hash){
+static dfsch_strhash__entry_t* get_hash_entry(dfsch_strhash_t* h, 
+                                              char* name, 
+                                              size_t hash){
   dfsch_strhash__entry_t* i;
 
   i = h->vector[hash & h->mask];
@@ -38,7 +40,7 @@ static dfsch_strhash__entry_t* get_hash_entry(dfsch_strhash_t* h, char* name, si
   return NULL;
 }
 
-static int grow_table(dfsch_strhash_t* h){
+static void grow_table(dfsch_strhash_t* h){
   dfsch_strhash__entry_t** v;
   size_t s;
   size_t i;
@@ -46,9 +48,6 @@ static int grow_table(dfsch_strhash_t* h){
 
   s = (h->mask + 1) << 1;
   v = GC_MALLOC(sizeof(dfsch_strhash__entry_t*) * s);
-
-  if (!v)
-    return 0;
 
   for (i = 0; i < h->mask + 1; i++){
     j = h->vector[i];
@@ -64,23 +63,18 @@ static int grow_table(dfsch_strhash_t* h){
 
   h->vector = v;
   h->mask = s - 1;
-
-  return 1;
 }
 
-static int add_hash_entry(dfsch_strhash_t* h, 
-                          char* name, size_t hash, 
-                          char* value){
+static void add_hash_entry(dfsch_strhash_t* h, 
+                           char* name, size_t hash, 
+                           char* value){
   dfsch_strhash__entry_t* e;
 
   if ((h->count / 2) > h->mask){
-    if (!grow_table(h))
-      return 0;
+    grow_table(h);
   }
   
   e = GC_NEW(dfsch_strhash__entry_t);
-  if (!e)
-    return 0;
   
   h->count++;
 
@@ -89,7 +83,6 @@ static int add_hash_entry(dfsch_strhash_t* h,
   e->value = value;
   e->next = h->vector[hash && h->mask];
   h->vector[hash & h->mask] = e;
-  return 1;
 }
 
 void dfsch_strhash_set(dfsch_strhash_t* h, char* name, void* value){

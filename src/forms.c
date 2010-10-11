@@ -288,7 +288,7 @@ DFSCH_DEFINE_FORM(internal_define_canonical_constant, "Define constant", {}){
   DFSCH_ARG_END(args);
 
   value = dfsch_eval(value, env);
-  dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
+  dfsch_define(name, value, env, DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
   return value;
 }
 dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,

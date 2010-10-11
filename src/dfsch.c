@@ -1578,6 +1578,11 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_defcanon_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
   dfsch_defcanon_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
 
+  dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "nil", NULL);
+  dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "t", DFSCH_SYM_TRUE);  
+  dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
   dfsch_defcanon_cstr(ctx, "top-level-environment", ctx);
   dfsch_defconst_cstr(ctx,"*dfsch-version*",

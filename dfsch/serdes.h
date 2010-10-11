@@ -45,6 +45,8 @@ void dfsch_serializer_set_object_hook(dfsch_serializer_t* s,
 void dfsch_serializer_set_unserializable_hook(dfsch_serializer_t* s,
                                               dfsch_serializer_unserializable_hook_t h,
                                               void* baton);
+void dfsch_serializer_set_canonical_environment(dfsch_serializer_t* s,
+                                                dfsch_object_t* env);
 
 extern dfsch_type_t dfsch_deserializer_type;
 #define DFSCH_DESERIALIZER_TYPE (&dfsch_deserializer_type)
@@ -78,6 +80,8 @@ void dfsch_deserializer_set_unknown_hook(dfsch_deserializer_t* ds,
 void dfsch_deserializer_set_persistent_hook(dfsch_deserializer_t* ds,
                                             dfsch_deserializer_persistent_hook_t h,
                                             void* baton);
+void dfsch_deserializer_set_canonical_environment(dfsch_deserializer_t* ds,
+                                                  dfsch_object_t* env);
 
 typedef dfsch_object_t* (*dfsch_deserializer_handler_t)(dfsch_deserializer_t* ds);
 
