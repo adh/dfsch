@@ -452,36 +452,36 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__forms_register(dfsch_object_t *ctx){ 
-  dfsch_defconst_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
+  dfsch_defcanon_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
 
-  dfsch_defconst_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
-  dfsch_defconst_cstr(ctx, "if", DFSCH_FORM_REF(if));
+  dfsch_defcanon_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
+  dfsch_defcanon_cstr(ctx, "if", DFSCH_FORM_REF(if));
 
-  dfsch_defconst_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
-  dfsch_defconst_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
+  dfsch_defcanon_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
+  dfsch_defcanon_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
 
 
-  dfsch_defconst_cstr(ctx, "destructuring-bind", 
+  dfsch_defcanon_cstr(ctx, "destructuring-bind", 
                       DFSCH_FORM_REF(destructuring_bind));
 
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
                       DFSCH_FORM_REF(internal_lambda));
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
                       DFSCH_FORM_REF(internal_let));
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
                       DFSCH_FORM_REF(internal_define_variable));
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
                       DFSCH_FORM_REF(internal_define_constant));
 
   dfsch_define_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
 
-  dfsch_defconst_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
-  dfsch_defconst_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
-  dfsch_defconst_cstr(ctx, "set!", DFSCH_FORM_REF(set));
-  dfsch_defconst_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
+  dfsch_defcanon_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
+  dfsch_defcanon_cstr(ctx, "defined?", DFSCH_FORM_REF(defined_p));
+  dfsch_defcanon_cstr(ctx, "set!", DFSCH_FORM_REF(set));
+  dfsch_defcanon_cstr(ctx, "unset!", DFSCH_FORM_REF(unset));
 
-  dfsch_defconst_cstr(ctx, "case", DFSCH_FORM_REF(case));
+  dfsch_defcanon_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
   dfsch_define_cstr(ctx, "handler-bind",
                     DFSCH_FORM_REF(handler_bind));

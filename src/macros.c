@@ -390,25 +390,25 @@ DFSCH_DEFINE_MACRO(quasiquote, NULL){
 
 
 void dfsch__macros_register(dfsch_object_t *ctx){ 
-  dfsch_defconst_cstr(ctx, "and", DFSCH_MACRO_REF(and));
-  dfsch_defconst_cstr(ctx, "or",DFSCH_MACRO_REF(or));
-  dfsch_defconst_cstr(ctx, "when", DFSCH_MACRO_REF(when));
-  dfsch_defconst_cstr(ctx, "unless", DFSCH_MACRO_REF(unless));
-  dfsch_defconst_cstr(ctx, "cond", DFSCH_MACRO_REF(cond));
+  dfsch_defcanon_cstr(ctx, "and", DFSCH_MACRO_REF(and));
+  dfsch_defcanon_cstr(ctx, "or",DFSCH_MACRO_REF(or));
+  dfsch_defcanon_cstr(ctx, "when", DFSCH_MACRO_REF(when));
+  dfsch_defcanon_cstr(ctx, "unless", DFSCH_MACRO_REF(unless));
+  dfsch_defcanon_cstr(ctx, "cond", DFSCH_MACRO_REF(cond));
 
-  dfsch_defconst_cstr(ctx, "lambda", DFSCH_MACRO_REF(lambda));
-  dfsch_defconst_cstr(ctx, "define", DFSCH_MACRO_REF(define));
-  dfsch_defconst_cstr(ctx, "define-variable", DFSCH_MACRO_REF(define_variable));
-  dfsch_defconst_cstr(ctx, "define-constant", DFSCH_MACRO_REF(define_constant));
-  dfsch_defconst_cstr(ctx, "define-macro", DFSCH_MACRO_REF(define_macro));
+  dfsch_defcanon_cstr(ctx, "lambda", DFSCH_MACRO_REF(lambda));
+  dfsch_defcanon_cstr(ctx, "define", DFSCH_MACRO_REF(define));
+  dfsch_defcanon_cstr(ctx, "define-variable", DFSCH_MACRO_REF(define_variable));
+  dfsch_defcanon_cstr(ctx, "define-constant", DFSCH_MACRO_REF(define_constant));
+  dfsch_defcanon_cstr(ctx, "define-macro", DFSCH_MACRO_REF(define_macro));
 
-  dfsch_defconst_cstr(ctx, "let", DFSCH_MACRO_REF(let));
-  dfsch_defconst_cstr(ctx, "let*", DFSCH_MACRO_REF(let_seq));
-  dfsch_defconst_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
+  dfsch_defcanon_cstr(ctx, "let", DFSCH_MACRO_REF(let));
+  dfsch_defcanon_cstr(ctx, "let*", DFSCH_MACRO_REF(let_seq));
+  dfsch_defcanon_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
 
-  dfsch_defconst_cstr(ctx, "do", DFSCH_MACRO_REF(do));
+  dfsch_defcanon_cstr(ctx, "do", DFSCH_MACRO_REF(do));
 
-  dfsch_defconst_cstr(ctx, "quasiquote", DFSCH_MACRO_REF(quasiquote));
-  dfsch_defconst_cstr(ctx, "immutable-quasiquote", DFSCH_MACRO_REF(quasiquote));
+  dfsch_defcanon_cstr(ctx, "quasiquote", DFSCH_MACRO_REF(quasiquote));
+  dfsch_defcanon_cstr(ctx, "immutable-quasiquote", DFSCH_MACRO_REF(quasiquote));
 
 }

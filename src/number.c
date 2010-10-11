@@ -1916,98 +1916,98 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
   dfsch_define_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
 
-  dfsch_defconst_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
-  dfsch_defconst_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
-  dfsch_defconst_cstr(ctx, "*", DFSCH_PRIMITIVE_REF(mult));
-  dfsch_defconst_cstr(ctx, "/", DFSCH_PRIMITIVE_REF(slash));
-  dfsch_defconst_cstr(ctx, "/i", DFSCH_PRIMITIVE_REF(slash_i));
-  dfsch_defconst_cstr(ctx, "%", DFSCH_PRIMITIVE_REF(modulo));
-  dfsch_defconst_cstr(ctx, "=", DFSCH_PRIMITIVE_REF(number_equal));
-  dfsch_defconst_cstr(ctx, "<", DFSCH_PRIMITIVE_REF(lt));
-  dfsch_defconst_cstr(ctx, ">", DFSCH_PRIMITIVE_REF(gt));
-  dfsch_defconst_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
-  dfsch_defconst_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
-  dfsch_defconst_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
-  dfsch_defconst_cstr(ctx, "real?", DFSCH_PRIMITIVE_REF(real_p));
-  dfsch_defconst_cstr(ctx, "rational?", DFSCH_PRIMITIVE_REF(rational_p));
-  dfsch_defconst_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
-  dfsch_defconst_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
-  dfsch_defconst_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
-  dfsch_defconst_cstr(ctx, "exact->inexact", 
+  dfsch_defcanon_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
+  dfsch_defcanon_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
+  dfsch_defcanon_cstr(ctx, "*", DFSCH_PRIMITIVE_REF(mult));
+  dfsch_defcanon_cstr(ctx, "/", DFSCH_PRIMITIVE_REF(slash));
+  dfsch_defcanon_cstr(ctx, "/i", DFSCH_PRIMITIVE_REF(slash_i));
+  dfsch_defcanon_cstr(ctx, "%", DFSCH_PRIMITIVE_REF(modulo));
+  dfsch_defcanon_cstr(ctx, "=", DFSCH_PRIMITIVE_REF(number_equal));
+  dfsch_defcanon_cstr(ctx, "<", DFSCH_PRIMITIVE_REF(lt));
+  dfsch_defcanon_cstr(ctx, ">", DFSCH_PRIMITIVE_REF(gt));
+  dfsch_defcanon_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
+  dfsch_defcanon_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
+  dfsch_defcanon_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
+  dfsch_defcanon_cstr(ctx, "real?", DFSCH_PRIMITIVE_REF(real_p));
+  dfsch_defcanon_cstr(ctx, "rational?", DFSCH_PRIMITIVE_REF(rational_p));
+  dfsch_defcanon_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
+  dfsch_defcanon_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
+  dfsch_defcanon_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
+  dfsch_defcanon_cstr(ctx, "exact->inexact", 
                       DFSCH_PRIMITIVE_REF(exact_2_inexact));
 
-  dfsch_defconst_cstr(ctx, "pi", 
+  dfsch_defcanon_cstr(ctx, "pi", 
                       dfsch_make_number_from_double(4*atan(1)));
 
 
-  dfsch_defconst_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
+  dfsch_defcanon_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
 
-  dfsch_defconst_cstr(ctx, "exp", DFSCH_PRIMITIVE_REF(exp));
-  dfsch_defconst_cstr(ctx, "log", DFSCH_PRIMITIVE_REF(log));
-  dfsch_defconst_cstr(ctx, "expt", DFSCH_PRIMITIVE_REF(expt));
+  dfsch_defcanon_cstr(ctx, "exp", DFSCH_PRIMITIVE_REF(exp));
+  dfsch_defcanon_cstr(ctx, "log", DFSCH_PRIMITIVE_REF(log));
+  dfsch_defcanon_cstr(ctx, "expt", DFSCH_PRIMITIVE_REF(expt));
 
-  dfsch_defconst_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
-  dfsch_defconst_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
-  dfsch_defconst_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
+  dfsch_defcanon_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
+  dfsch_defcanon_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
+  dfsch_defcanon_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
 
-  dfsch_defconst_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
-  dfsch_defconst_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
-  dfsch_defconst_cstr(ctx, "atan", DFSCH_PRIMITIVE_REF(atan));
+  dfsch_defcanon_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
+  dfsch_defcanon_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
+  dfsch_defcanon_cstr(ctx, "atan", DFSCH_PRIMITIVE_REF(atan));
 
-  dfsch_defconst_cstr(ctx, "sqrt", DFSCH_PRIMITIVE_REF(sqrt));
+  dfsch_defcanon_cstr(ctx, "sqrt", DFSCH_PRIMITIVE_REF(sqrt));
 
-  dfsch_defconst_cstr(ctx, "min", DFSCH_PRIMITIVE_REF(min));
-  dfsch_defconst_cstr(ctx, "max", DFSCH_PRIMITIVE_REF(max));
+  dfsch_defcanon_cstr(ctx, "min", DFSCH_PRIMITIVE_REF(min));
+  dfsch_defcanon_cstr(ctx, "max", DFSCH_PRIMITIVE_REF(max));
 
-  dfsch_defconst_cstr(ctx, "zero?", DFSCH_PRIMITIVE_REF(zero_p));
-  dfsch_defconst_cstr(ctx, "negative?", DFSCH_PRIMITIVE_REF(negative_p));
-  dfsch_defconst_cstr(ctx, "positive?", DFSCH_PRIMITIVE_REF(positive_p));
+  dfsch_defcanon_cstr(ctx, "zero?", DFSCH_PRIMITIVE_REF(zero_p));
+  dfsch_defcanon_cstr(ctx, "negative?", DFSCH_PRIMITIVE_REF(negative_p));
+  dfsch_defcanon_cstr(ctx, "positive?", DFSCH_PRIMITIVE_REF(positive_p));
 
-  dfsch_defconst_cstr(ctx, "even?", DFSCH_PRIMITIVE_REF(even_p));
-  dfsch_defconst_cstr(ctx, "odd?", DFSCH_PRIMITIVE_REF(odd_p));
+  dfsch_defcanon_cstr(ctx, "even?", DFSCH_PRIMITIVE_REF(even_p));
+  dfsch_defcanon_cstr(ctx, "odd?", DFSCH_PRIMITIVE_REF(odd_p));
 
-  dfsch_defconst_cstr(ctx, "round", DFSCH_PRIMITIVE_REF(round));
-  dfsch_defconst_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
-  dfsch_defconst_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
-  dfsch_defconst_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
+  dfsch_defcanon_cstr(ctx, "round", DFSCH_PRIMITIVE_REF(round));
+  dfsch_defcanon_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
+  dfsch_defcanon_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
+  dfsch_defcanon_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
 
-  dfsch_defconst_cstr(ctx, "round*", DFSCH_PRIMITIVE_REF(round_i));
-  dfsch_defconst_cstr(ctx, "floor*", DFSCH_PRIMITIVE_REF(floor_i));
-  dfsch_defconst_cstr(ctx, "ceiling*", DFSCH_PRIMITIVE_REF(ceiling_i));
-  dfsch_defconst_cstr(ctx, "truncate*", DFSCH_PRIMITIVE_REF(truncate_i));
+  dfsch_defcanon_cstr(ctx, "round*", DFSCH_PRIMITIVE_REF(round_i));
+  dfsch_defcanon_cstr(ctx, "floor*", DFSCH_PRIMITIVE_REF(floor_i));
+  dfsch_defcanon_cstr(ctx, "ceiling*", DFSCH_PRIMITIVE_REF(ceiling_i));
+  dfsch_defcanon_cstr(ctx, "truncate*", DFSCH_PRIMITIVE_REF(truncate_i));
 
-  dfsch_defconst_cstr(ctx, "number->string", 
+  dfsch_defcanon_cstr(ctx, "number->string", 
                       DFSCH_PRIMITIVE_REF(number_2_string));
-  dfsch_defconst_cstr(ctx, "string->number", 
+  dfsch_defcanon_cstr(ctx, "string->number", 
                       DFSCH_PRIMITIVE_REF(string_2_number));
-  dfsch_defconst_cstr(ctx, "most-positive-fixnum",
+  dfsch_defcanon_cstr(ctx, "most-positive-fixnum",
                       DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
-  dfsch_defconst_cstr(ctx, "most-negative-fixnum",
+  dfsch_defcanon_cstr(ctx, "most-negative-fixnum",
                       DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
 
-  dfsch_defconst_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
-  dfsch_defconst_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));
-  dfsch_defconst_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
+  dfsch_defcanon_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
+  dfsch_defcanon_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));
+  dfsch_defcanon_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
 
-  dfsch_defconst_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));
-  dfsch_defconst_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
-  dfsch_defconst_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
-  dfsch_defconst_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));
+  dfsch_defcanon_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));
+  dfsch_defcanon_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
+  dfsch_defcanon_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
+  dfsch_defcanon_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));
 
-  dfsch_defconst_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
-  dfsch_defconst_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
+  dfsch_defcanon_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
+  dfsch_defcanon_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
  
-  dfsch_defconst_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
-  dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
+  dfsch_defcanon_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
+  dfsch_defcanon_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
 
-  dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
-  dfsch_defconst_cstr(ctx, "<<", DFSCH_PRIMITIVE_REF(shl));
+  dfsch_defcanon_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
+  dfsch_defcanon_cstr(ctx, "<<", DFSCH_PRIMITIVE_REF(shl));
 
-  dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
-  dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
-  dfsch_defconst_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
+  dfsch_defcanon_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
+  dfsch_defcanon_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
+  dfsch_defcanon_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
 
-  dfsch_defconst_cstr(ctx, "make-number-sequence", 
+  dfsch_defcanon_cstr(ctx, "make-number-sequence", 
                       DFSCH_PRIMITIVE_REF(make_number_sequence));
  
 }

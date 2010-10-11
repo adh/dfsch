@@ -557,8 +557,8 @@ DFSCH_DEFINE_PRIMITIVE(deserialize_from_string,
 }
 
 void dfsch__serdes_register(dfsch_object_t* env){
-  dfsch_defconst_cstr(env, "serialize-to-byte-vector",
+  dfsch_defcanon_cstr(env, "serialize-to-byte-vector",
                       DFSCH_PRIMITIVE_REF(serialize_to_byte_vector));
-  dfsch_defconst_cstr(env, "deserialize-from-string",
+  dfsch_defcanon_cstr(env, "deserialize-from-string",
                       DFSCH_PRIMITIVE_REF(deserialize_from_string));
 }

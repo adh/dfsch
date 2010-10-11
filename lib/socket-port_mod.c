@@ -64,17 +64,17 @@ DFSCH_DEFINE_PRIMITIVE(server_socket_run_accept_loop, NULL){
 void dfsch_module_socket_port_register(dfsch_object_t* env){
   dfsch_provide(env, "socket-port");
 
-  dfsch_defconst_cstr(env, "<socket-port>", DFSCH_SOCKET_PORT_TYPE);
-  dfsch_defconst_cstr(env, "<server-socket>", DFSCH_SERVER_SOCKET_TYPE);
-  dfsch_defconst_cstr(env, "tcp-connect", DFSCH_PRIMITIVE_REF(tcp_connect));
-  dfsch_defconst_cstr(env, "tcp-bind", DFSCH_PRIMITIVE_REF(tcp_bind));
-  dfsch_defconst_cstr(env, "server-socket-accept", 
+  dfsch_defcanon_cstr(env, "<socket-port>", DFSCH_SOCKET_PORT_TYPE);
+  dfsch_defcanon_cstr(env, "<server-socket>", DFSCH_SERVER_SOCKET_TYPE);
+  dfsch_defcanon_cstr(env, "tcp-connect", DFSCH_PRIMITIVE_REF(tcp_connect));
+  dfsch_defcanon_cstr(env, "tcp-bind", DFSCH_PRIMITIVE_REF(tcp_bind));
+  dfsch_defcanon_cstr(env, "server-socket-accept", 
                       DFSCH_PRIMITIVE_REF(server_socket_accept));
-  dfsch_defconst_cstr(env, "server-socket-close!", 
+  dfsch_defcanon_cstr(env, "server-socket-close!", 
                       DFSCH_PRIMITIVE_REF(server_socket_close));
-  dfsch_defconst_cstr(env, "socket-port-close!", 
+  dfsch_defcanon_cstr(env, "socket-port-close!", 
                       DFSCH_PRIMITIVE_REF(socket_port_close));
 
-  dfsch_defconst_cstr(env, "server-socket-run-accept-loop", 
+  dfsch_defcanon_cstr(env, "server-socket-run-accept-loop", 
                       DFSCH_PRIMITIVE_REF(server_socket_run_accept_loop));
 }
