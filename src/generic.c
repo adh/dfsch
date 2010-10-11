@@ -961,13 +961,13 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
                                                  DFSCH_GENERIC_FUNCTION_TYPE),
                        name,
                        dfsch_generate_error("Generic function name already "
-                                             " defined as different type", 
-                                             name)),
-     dfsch_generate_define_constant(name,
-                                    dfsch_immutable_list
-                                    (2,
-                                     DFSCH_PRIMITIVE_REF(make_generic_function),
-                                     dfsch_generate_quote(name))));
+                                            " defined as different type", 
+                                            name)),
+     dfsch_generate_define_canonical_constant(name,
+                                              dfsch_immutable_list
+                                              (2,
+                                               DFSCH_PRIMITIVE_REF(make_generic_function),
+                                               dfsch_generate_quote(name))));
      
 }
 
@@ -1019,12 +1019,12 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "make-generic-function",
                       DFSCH_PRIMITIVE_REF(make_generic_function));
   dfsch_defcanon_cstr(env, "make-method",
-                    DFSCH_PRIMITIVE_REF(make_method));
+                      DFSCH_PRIMITIVE_REF(make_method));
 
   dfsch_defcanon_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
   dfsch_defcanon_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
   dfsch_defcanon_cstr(env, "generic-function-methods", 
-                    (dfsch_object_t*)&generic_function_methods);
+                      (dfsch_object_t*)&generic_function_methods);
 
   dfsch_defcanon_cstr(env, "call-next-method",
                     DFSCH_MACRO_REF(call_next_method));

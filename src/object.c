@@ -344,7 +344,7 @@ DFSCH_DEFINE_FORM(define_class, NULL, {}){
                            dfsch_symbol_2_typename(name),
                            slots);
 
-  dfsch_define(name, klass, env, 0);
+  dfsch_define(name, klass, env, DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
   finalize_slots_definition(klass, env, slots);
   return klass;
 }

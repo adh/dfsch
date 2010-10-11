@@ -144,7 +144,7 @@ DFSCH_DEFINE_MACRO(define_macro,
   DFSCH_OBJECT_ARG(args, arglist);
   DFSCH_OBJECT_ARG(arglist, name);
 
-  return dfsch_generate_define_constant
+  return dfsch_generate_define_canonical_constant
     (name,
      dfsch_generate_make_macro(dfsch_generate_lambda(name, 
                                                      arglist, 
@@ -158,7 +158,7 @@ DFSCH_DEFINE_MACRO(define, "Define variable or procedure"){
   DFSCH_OBJECT_ARG(args, name);
 
   if (DFSCH_PAIR_P(name)){
-    return dfsch_generate_define_constant
+    return dfsch_generate_define_canonical_constant
       (DFSCH_FAST_CAR(name),
        dfsch_generate_lambda(DFSCH_FAST_CAR(name),
                              DFSCH_FAST_CDR(name),

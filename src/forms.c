@@ -278,6 +278,26 @@ dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
                               name, value);
 }
 
+DFSCH_DEFINE_FORM(internal_define_canonical_constant, "Define constant", {}){
+
+  object_t* name;
+  object_t* value;
+    
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  value = dfsch_eval(value, env);
+  dfsch_define(name, value, env, DFSCH_VAR_CONSTANT);
+  return value;
+}
+dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
+                                                         dfsch_object_t* value){
+  return dfsch_immutable_list(3, 
+                              DFSCH_FORM_REF(internal_define_canonical_constant), 
+                              name, value);
+}
+
 
 DFSCH_DEFINE_FORM(declare, "Add declaration specifier to given symbol", {}){
   dfsch_object_t* name;
@@ -465,13 +485,16 @@ void dfsch__forms_register(dfsch_object_t *ctx){
                       DFSCH_FORM_REF(destructuring_bind));
 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
-                      DFSCH_FORM_REF(internal_lambda));
+                         DFSCH_FORM_REF(internal_lambda));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
-                      DFSCH_FORM_REF(internal_let));
+                         DFSCH_FORM_REF(internal_let));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
-                      DFSCH_FORM_REF(internal_define_variable));
+                         DFSCH_FORM_REF(internal_define_variable));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
-                      DFSCH_FORM_REF(internal_define_constant));
+                         DFSCH_FORM_REF(internal_define_constant));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+                         "%define-canonical-constant", 
+                         DFSCH_FORM_REF(internal_define_canonical_constant));
 
   dfsch_defcanon_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
