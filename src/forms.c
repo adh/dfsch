@@ -473,7 +473,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 
                       DFSCH_FORM_REF(internal_define_constant));
 
-  dfsch_define_cstr(ctx, "current-environment", 
+  dfsch_defcanon_cstr(ctx, "current-environment", 
                     DFSCH_FORM_REF(current_environment));
 
   dfsch_defcanon_cstr(ctx, "declare", DFSCH_FORM_REF(declare));
@@ -483,9 +483,9 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "case", DFSCH_FORM_REF(case));
 
-  dfsch_define_cstr(ctx, "handler-bind",
+  dfsch_defcanon_cstr(ctx, "handler-bind",
                     DFSCH_FORM_REF(handler_bind));
-  dfsch_define_cstr(ctx, "restart-bind",
+  dfsch_defcanon_cstr(ctx, "restart-bind",
                     DFSCH_FORM_REF(restart_bind));
 
 }

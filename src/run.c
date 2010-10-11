@@ -118,7 +118,7 @@ int main(int argc, char**argv){
     
     dfsch_load_extend_path(ctx, directory);
 
-    dfsch_define_cstr(ctx, "*posix-argv*", 
+    dfsch_defcanon_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
     if (program_is_dsz){

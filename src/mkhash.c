@@ -307,9 +307,9 @@ DFSCH_DEFINE_PRIMITIVE(make_mkhash, "Create new multiple-key-hash object"){
 }
 
 void dfsch__mkhash_register(dfsch_object_t* env){
-  dfsch_define_cstr(env, "make-multiple-key-hash",
+  dfsch_defcanon_cstr(env, "make-multiple-key-hash",
                     DFSCH_PRIMITIVE_REF(make_mkhash));
-  dfsch_define_cstr(env, "<multiple-key-hash>",
+  dfsch_defcanon_cstr(env, "<multiple-key-hash>",
                     DFSCH_MKHASH_TYPE);
 }
 

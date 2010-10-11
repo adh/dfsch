@@ -511,33 +511,33 @@ DFSCH_DEFINE_PRIMITIVE(make_weak_key_hash, 0){
 
 
 void dfsch__weak_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);
-  dfsch_define_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
-  dfsch_define_cstr(ctx, "<weak-key-hash>", DFSCH_WEAK_KEY_HASH_TYPE);
+  dfsch_defcanon_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<weak-key-hash>", DFSCH_WEAK_KEY_HASH_TYPE);
 
-  dfsch_define_cstr(ctx, "make-weak-reference", 
+  dfsch_defcanon_cstr(ctx, "make-weak-reference", 
                     DFSCH_PRIMITIVE_REF(make_weak_reference));
-  dfsch_define_cstr(ctx, "weak-reference-live?", 
+  dfsch_defcanon_cstr(ctx, "weak-reference-live?", 
                     DFSCH_PRIMITIVE_REF(weak_reference_live_p));
-  dfsch_define_cstr(ctx, "weak-reference-dereference", 
+  dfsch_defcanon_cstr(ctx, "weak-reference-dereference", 
                     DFSCH_PRIMITIVE_REF(weak_reference_dereference));
   
-  dfsch_define_cstr(ctx, "make-weak-vector", 
+  dfsch_defcanon_cstr(ctx, "make-weak-vector", 
                    DFSCH_PRIMITIVE_REF(make_weak_vector));
-  dfsch_define_cstr(ctx, "weak-vector", 
+  dfsch_defcanon_cstr(ctx, "weak-vector", 
                    DFSCH_PRIMITIVE_REF(weak_vector));
-  dfsch_define_cstr(ctx, "weak-vector-length", 
+  dfsch_defcanon_cstr(ctx, "weak-vector-length", 
                    DFSCH_PRIMITIVE_REF(weak_vector_length));
-  dfsch_define_cstr(ctx, "weak-vector-set!", 
+  dfsch_defcanon_cstr(ctx, "weak-vector-set!", 
                    DFSCH_PRIMITIVE_REF(weak_vector_set));
-  dfsch_define_cstr(ctx, "weak-vector-ref", 
+  dfsch_defcanon_cstr(ctx, "weak-vector-ref", 
                    DFSCH_PRIMITIVE_REF(weak_vector_ref));
-  dfsch_define_cstr(ctx, "weak-vector->list", 
+  dfsch_defcanon_cstr(ctx, "weak-vector->list", 
                    DFSCH_PRIMITIVE_REF(weak_vector_2_list));
-  dfsch_define_cstr(ctx, "list->weak-vector", 
+  dfsch_defcanon_cstr(ctx, "list->weak-vector", 
                    DFSCH_PRIMITIVE_REF(list_2_weak_vector));
 
-  dfsch_define_cstr(ctx, "make-weak-key-hash", 
+  dfsch_defcanon_cstr(ctx, "make-weak-key-hash", 
                     DFSCH_PRIMITIVE_REF(make_weak_key_hash));
 
 }

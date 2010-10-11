@@ -456,10 +456,10 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
-  dfsch_define_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
+  dfsch_defcanon_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
 
-  dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
-  dfsch_define_cstr(ctx, "initialize-instance", &initialize_instance);
-  dfsch_define_cstr(ctx, "dfsch%write-instance", &write_instance);
+  dfsch_defcanon_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
+  dfsch_defcanon_cstr(ctx, "initialize-instance", &initialize_instance);
+  dfsch_defcanon_cstr(ctx, "dfsch%write-instance", &write_instance);
 }

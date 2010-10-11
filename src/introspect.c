@@ -415,38 +415,38 @@ DFSCH_DEFINE_PRIMITIVE(make_top_level_environment, 0){
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
 
-  dfsch_define_cstr(env, "set-invoke-debugger-on-all-conditions!", 
+  dfsch_defcanon_cstr(env, "set-invoke-debugger-on-all-conditions!", 
                     DFSCH_PRIMITIVE_REF(set_invoke_debugger_on_all_conditions));
-  dfsch_define_cstr(env, "set-debugger!", DFSCH_PRIMITIVE_REF(set_debugger));
-  dfsch_define_cstr(env, "enter-debugger", 
+  dfsch_defcanon_cstr(env, "set-debugger!", DFSCH_PRIMITIVE_REF(set_debugger));
+  dfsch_defcanon_cstr(env, "enter-debugger", 
                     DFSCH_PRIMITIVE_REF(enter_debugger));
 
-  dfsch_define_cstr(env, "set-inspector!", DFSCH_PRIMITIVE_REF(set_inspector));
-  dfsch_define_cstr(env, "inspect-object", DFSCH_PRIMITIVE_REF(inspect_object));
-  dfsch_define_cstr(env, "describe-object", 
+  dfsch_defcanon_cstr(env, "set-inspector!", DFSCH_PRIMITIVE_REF(set_inspector));
+  dfsch_defcanon_cstr(env, "inspect-object", DFSCH_PRIMITIVE_REF(inspect_object));
+  dfsch_defcanon_cstr(env, "describe-object", 
                     DFSCH_PRIMITIVE_REF(describe_object));
 
-  dfsch_define_cstr(env, "get-trace", DFSCH_PRIMITIVE_REF(get_trace));
+  dfsch_defcanon_cstr(env, "get-trace", DFSCH_PRIMITIVE_REF(get_trace));
 
-  dfsch_define_cstr(env, "lookup-in-environment",
+  dfsch_defcanon_cstr(env, "lookup-in-environment",
                     DFSCH_PRIMITIVE_REF(lookup_in_environment));
-  dfsch_define_cstr(env, "find-in-environment",
+  dfsch_defcanon_cstr(env, "find-in-environment",
                     DFSCH_PRIMITIVE_REF(find_in_environment));
-  dfsch_define_cstr(env, "set-in-environment!",
+  dfsch_defcanon_cstr(env, "set-in-environment!",
                     DFSCH_PRIMITIVE_REF(set_in_environment));
-  dfsch_define_cstr(env, "unset-from-environment!",
+  dfsch_defcanon_cstr(env, "unset-from-environment!",
                     DFSCH_PRIMITIVE_REF(unset_from_environment));
-  dfsch_define_cstr(env, "define-in-environment!",
+  dfsch_defcanon_cstr(env, "define-in-environment!",
                     DFSCH_PRIMITIVE_REF(define_in_environment));
-  dfsch_define_cstr(env, "get-variables",
+  dfsch_defcanon_cstr(env, "get-variables",
                     DFSCH_PRIMITIVE_REF(get_variables));
-  dfsch_define_cstr(env, "load-into-environment!",
+  dfsch_defcanon_cstr(env, "load-into-environment!",
                     DFSCH_PRIMITIVE_REF(load_into_environment));
 
-  dfsch_define_cstr(env, "make-environment",
+  dfsch_defcanon_cstr(env, "make-environment",
                     DFSCH_PRIMITIVE_REF(make_environment));
-  dfsch_define_cstr(env, "make-empty-environment",
+  dfsch_defcanon_cstr(env, "make-empty-environment",
                     DFSCH_PRIMITIVE_REF(make_empty_environment));
-  dfsch_define_cstr(env, "make-top-level-environment",
+  dfsch_defcanon_cstr(env, "make-top-level-environment",
                     DFSCH_PRIMITIVE_REF(make_top_level_environment));
 }

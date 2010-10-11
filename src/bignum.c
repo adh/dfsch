@@ -1181,9 +1181,9 @@ DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
 
 
 void dfsch__bignum_register(dfsch_object_t* ctx){
-  dfsch_define_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
-  dfsch_define_cstr(ctx, "integer-expt", DFSCH_PRIMITIVE_REF(integer_expt));
-  dfsch_define_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
-  dfsch_define_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
+  dfsch_defcanon_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "integer-expt", DFSCH_PRIMITIVE_REF(integer_expt));
+  dfsch_defcanon_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
+  dfsch_defcanon_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
 }
 

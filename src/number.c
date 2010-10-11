@@ -1907,14 +1907,14 @@ DFSCH_DEFINE_PRIMITIVE(make_number_sequence, NULL){
 
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
-  dfsch_define_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
-  dfsch_define_cstr(ctx, "<rational>", DFSCH_RATIONAL_TYPE);
-  dfsch_define_cstr(ctx, "<integer>", DFSCH_INTEGER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<rational>", DFSCH_RATIONAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<integer>", DFSCH_INTEGER_TYPE);
 
-  dfsch_define_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
-  dfsch_define_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
-  dfsch_define_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
 
   dfsch_defcanon_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
   dfsch_defcanon_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));

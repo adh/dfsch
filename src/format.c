@@ -395,5 +395,5 @@ DFSCH_DEFINE_PRIMITIVE(format, NULL){
 }
 
 void dfsch__format_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "format", DFSCH_PRIMITIVE_REF(format));  
+  dfsch_defcanon_cstr(ctx, "format", DFSCH_PRIMITIVE_REF(format));  
 }

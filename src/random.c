@@ -388,21 +388,21 @@ DFSCH_DEFINE_PRIMITIVE(make_lcg_random_state, 0){
 
 
 void dfsch__random_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<default-random-state>", 
+  dfsch_defcanon_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<default-random-state>", 
                     DFSCH_DEFAULT_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<file-random-state>", DFSCH_FILE_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<lcg-random-state>", DFSCH_LCG_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<file-random-state>", DFSCH_FILE_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<lcg-random-state>", DFSCH_LCG_RANDOM_STATE_TYPE);
 
-  dfsch_define_cstr(ctx, "random-bytes", DFSCH_PRIMITIVE_REF(random_bytes));
-  dfsch_define_cstr(ctx, "random-flonum", DFSCH_PRIMITIVE_REF(random_flonum));
-  dfsch_define_cstr(ctx, "random-bignum", DFSCH_PRIMITIVE_REF(random_bignum));
-  dfsch_define_cstr(ctx, "random", DFSCH_PRIMITIVE_REF(random));
+  dfsch_defcanon_cstr(ctx, "random-bytes", DFSCH_PRIMITIVE_REF(random_bytes));
+  dfsch_defcanon_cstr(ctx, "random-flonum", DFSCH_PRIMITIVE_REF(random_flonum));
+  dfsch_defcanon_cstr(ctx, "random-bignum", DFSCH_PRIMITIVE_REF(random_bignum));
+  dfsch_defcanon_cstr(ctx, "random", DFSCH_PRIMITIVE_REF(random));
 
-  dfsch_define_cstr(ctx, "make-default-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-default-random-state", 
                     DFSCH_PRIMITIVE_REF(make_default_random_state));
-  dfsch_define_cstr(ctx, "make-file-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-file-random-state", 
                     DFSCH_PRIMITIVE_REF(make_file_random_state));
-  dfsch_define_cstr(ctx, "make-lcg-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-lcg-random-state", 
                     DFSCH_PRIMITIVE_REF(make_lcg_random_state));
 }

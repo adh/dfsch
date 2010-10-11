@@ -563,7 +563,7 @@ void dfsch_load_add_module_source(dfsch_object_t* ctx,
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
     dfsch_set_cstr(ctx, "*load-path*", dfsch_cons(src, path));
-  }else{
+  } else {
     dfsch_define_cstr(ctx, "*load-path*", dfsch_list(1, src));
   }
 }
@@ -795,14 +795,14 @@ dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
                     dfsch_load_construct_default_path());
   dfsch_define_cstr(ctx, "*load-modules*", NULL);
-  dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
-  dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
-  dfsch_define_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
-  dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
-  dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
-  dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
+  dfsch_defcanon_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
+  dfsch_defcanon_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
+  dfsch_defcanon_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
+  dfsch_defcanon_cstr(ctx, "load!", DFSCH_FORM_REF(load));
+  dfsch_defcanon_cstr(ctx, "require", DFSCH_FORM_REF(require));
+  dfsch_defcanon_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
 
-  dfsch_define_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
+  dfsch_defcanon_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
 
   return NULL;
 }

@@ -529,25 +529,25 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
-  //dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
-  dfsch_define_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
-  //  dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
+  //dfsch_defcanon_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
+  dfsch_defcanon_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
+  //  dfsch_defcanon_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
-  dfsch_define_cstr(ctx, "make-hash", 
+  dfsch_defcanon_cstr(ctx, "make-hash", 
                     DFSCH_PRIMITIVE_REF(make_hash));
-  dfsch_define_cstr(ctx, "hash?", 
+  dfsch_defcanon_cstr(ctx, "hash?", 
                     DFSCH_PRIMITIVE_REF(hash_p));
-  dfsch_define_cstr(ctx, "hash-ref", 
+  dfsch_defcanon_cstr(ctx, "hash-ref", 
                     DFSCH_PRIMITIVE_REF(hash_ref));
-  dfsch_define_cstr(ctx, "hash-unset!", 
+  dfsch_defcanon_cstr(ctx, "hash-unset!", 
                     DFSCH_PRIMITIVE_REF(hash_unset));
-  dfsch_define_cstr(ctx, "hash-set!", 
+  dfsch_defcanon_cstr(ctx, "hash-set!", 
                     DFSCH_PRIMITIVE_REF(hash_set));
-  dfsch_define_cstr(ctx, "hash-set-if-exists!", 
+  dfsch_defcanon_cstr(ctx, "hash-set-if-exists!", 
                     DFSCH_PRIMITIVE_REF(hash_set_if_exists));
-  dfsch_define_cstr(ctx, "hash->alist", 
+  dfsch_defcanon_cstr(ctx, "hash->alist", 
                     DFSCH_PRIMITIVE_REF(hash_2_alist));
-  dfsch_define_cstr(ctx, "alist->hash", 
+  dfsch_defcanon_cstr(ctx, "alist->hash", 
                     DFSCH_PRIMITIVE_REF(alist_2_hash));
 
 }

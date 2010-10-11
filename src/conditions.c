@@ -681,48 +681,48 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
 
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
-  dfsch_define_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
-  dfsch_define_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
-  dfsch_define_cstr(ctx, "<style-warning>", DFSCH_STYLE_WARNING_TYPE);
-  dfsch_define_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
-  dfsch_define_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
-  dfsch_define_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
-  dfsch_define_cstr(ctx, "<operating-system-error>", 
+  dfsch_defcanon_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
+  dfsch_defcanon_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
+  dfsch_defcanon_cstr(ctx, "<style-warning>", DFSCH_STYLE_WARNING_TYPE);
+  dfsch_defcanon_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<runtime-error>", DFSCH_RUNTIME_ERROR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<type-error>", DFSCH_TYPE_ERROR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<operating-system-error>", 
                     DFSCH_OPERATING_SYSTEM_ERROR_TYPE);
-  dfsch_define_cstr(ctx, "<index-error>", DFSCH_INDEX_ERROR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<index-error>", DFSCH_INDEX_ERROR_TYPE);
   
-  dfsch_define_cstr(ctx, "make-condition", 
+  dfsch_defcanon_cstr(ctx, "make-condition", 
                     DFSCH_PRIMITIVE_REF(make_condition)); 
-  dfsch_define_cstr(ctx, "make-condition-with-fields", 
+  dfsch_defcanon_cstr(ctx, "make-condition-with-fields", 
                     DFSCH_PRIMITIVE_REF(make_condition_with_fields));
-  dfsch_define_cstr(ctx, "condition-field", 
+  dfsch_defcanon_cstr(ctx, "condition-field", 
                     DFSCH_PRIMITIVE_REF(condition_field));
-  dfsch_define_cstr(ctx, "condition-put-field", 
+  dfsch_defcanon_cstr(ctx, "condition-put-field", 
                     DFSCH_PRIMITIVE_REF(condition_put_field));
-  dfsch_define_cstr(ctx, "condition-fields", 
+  dfsch_defcanon_cstr(ctx, "condition-fields", 
                     DFSCH_PRIMITIVE_REF(condition_fields));
 
 
-  dfsch_define_cstr(ctx, "signal",
+  dfsch_defcanon_cstr(ctx, "signal",
                     DFSCH_PRIMITIVE_REF(signal));
-  dfsch_define_cstr(ctx, "invoke-restart",
+  dfsch_defcanon_cstr(ctx, "invoke-restart",
                     DFSCH_PRIMITIVE_REF(invoke_restart));
-  dfsch_define_cstr(ctx, "compute-restarts",
+  dfsch_defcanon_cstr(ctx, "compute-restarts",
                     DFSCH_PRIMITIVE_REF(compute_restarts));
 
-  dfsch_define_cstr(ctx, "warning",
+  dfsch_defcanon_cstr(ctx, "warning",
                     DFSCH_PRIMITIVE_REF(warning));
-  dfsch_define_cstr(ctx, "error",
+  dfsch_defcanon_cstr(ctx, "error",
                     DFSCH_PRIMITIVE_REF(error));
-  dfsch_define_cstr(ctx, "cerror",
+  dfsch_defcanon_cstr(ctx, "cerror",
                     DFSCH_PRIMITIVE_REF(error));
-  dfsch_define_cstr(ctx, "runtime-error",
+  dfsch_defcanon_cstr(ctx, "runtime-error",
                     DFSCH_PRIMITIVE_REF(runtime_error));
 
 
-  dfsch_define_cstr(ctx, "restart-name",
+  dfsch_defcanon_cstr(ctx, "restart-name",
                     DFSCH_PRIMITIVE_REF(restart_name));
-  dfsch_define_cstr(ctx, "restart-description",
+  dfsch_defcanon_cstr(ctx, "restart-description",
                     DFSCH_PRIMITIVE_REF(restart_description));
 
 }
