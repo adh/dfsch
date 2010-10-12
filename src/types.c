@@ -687,9 +687,15 @@ static void compact_list_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
     }
     dfsch_put_serialized_object(s, i);
   }
-  dfsch_serialize_object(s, i[1]);
-  dfsch_serialize_object(s, i[2]);
-  dfsch_serialize_object(s, i[3]);  
+
+  dfsch_serialize_object(s, i[1]);  
+  if (dfsch_symbol_p(i[2]) || dfsch_string_p(i[2])){
+    dfsch_serialize_object(s, i[2]);
+    dfsch_serialize_object(s, i[3]);
+  } else {
+    dfsch_serialize_object(s, NULL);
+    dfsch_serialize_object(s, NULL);
+  }
 }
 
 static void mutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
