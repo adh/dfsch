@@ -133,14 +133,15 @@ void dfsch_put_serialized_object(dfsch_serializer_t* s,
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;
-  dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);
-  
-  if (idx != DFSCH_INVALID_OBJECT){
-    serialize_back_reference(s, ((int)idx));
-    return;
-  }  
-
-  dfsch_put_serialized_object(s, obj);
+  if (obj && !DFSCH_FIXNUM_P(obj)){
+    dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);  
+    if (idx != DFSCH_INVALID_OBJECT){
+      serialize_back_reference(s, ((int)idx));
+      return;
+    }  
+    
+    dfsch_put_serialized_object(s, obj);
+  }
 
   if (s->canon_env){
     dfsch_object_t* sym = dfsch_env_revscan(s->canon_env, obj, 1);
@@ -273,7 +274,14 @@ void dfsch_serialize_strbuf(dfsch_serializer_t* s,
 }
 void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
                                    char* sym){
-  int idx = (int)dfsch_strhash_ref(&s->sym_map, sym);
+  int idx;
+
+  if (!sym || *sym == '\0'){
+    dfsch_serialize_integer(s, 0);
+    return;
+  }
+
+  idx = (int)dfsch_strhash_ref(&s->sym_map, sym);
     
   if (idx){
     dfsch_serialize_integer(s, -idx);
@@ -370,7 +378,9 @@ static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
   ssize_t len = dfsch_deserialize_integer(ds);
   stream_symbol_t* res;
   
-  if (len >= 0){
+  if (len == 0){
+    return NULL;
+  } else if (len > 0){
     res = GC_NEW(stream_symbol_t);
     res->name = GC_MALLOC_ATOMIC(len + 1);
     deserialize_bytes(ds, res->name, len);
@@ -398,6 +408,11 @@ static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
 
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds){
   stream_symbol_t* type = deserialize_stream_symbol(ds);
+
+  if (!type){
+    return NULL;
+  }
+
   update_handler_cache(type);
 
   if (!type->handler){
@@ -411,14 +426,18 @@ dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds){
   return type->handler(ds);
 }
 
+dfsch_object_t** dfsch_deserializer__skip_object(dfsch_deserializer_t* ds){
+  if (ds->obj_idx >= ds->obj_map_len){
+    ds->obj_map_len *= 2;
+    ds->obj_map = GC_REALLOC(ds->obj_map, ds->obj_map_len * sizeof(dfsch_object_t*));
+  }
+  ds->obj_idx++;
+  return ds->obj_map + ds->obj_idx - 1;
+}
+
 void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
                                            dfsch_object_t* obj){
-    if (ds->obj_idx >= ds->obj_map_len){
-      ds->obj_map_len *= 2;
-      ds->obj_map = GC_REALLOC(ds->obj_map, ds->obj_map_len * sizeof(dfsch_object_t*));
-    }
-    ds->obj_map[ds->obj_idx] = obj;
-    ds->obj_idx++;
+  *(dfsch_deserializer__skip_object(ds)) = obj;
 }
 
 int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
@@ -511,7 +530,12 @@ dfsch_strbuf_t* dfsch_deserialize_strbuf(dfsch_deserializer_t* ds){
 }
 
 char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
-  return deserialize_stream_symbol(ds)->name;
+  stream_symbol_t* ret = deserialize_stream_symbol(ds);
+  if (ret){
+    return ret->name;
+  } else {
+    return NULL;
+  }
 }
 
 
@@ -545,7 +569,6 @@ static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
 static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
   int64_t u = dfsch_deserialize_integer(ds);
   dfsch_object_t* v = dfsch_make_number_from_int64(u);
-  dfsch_deserializer_put_partial_object(ds, v);
   return v;
 }
 static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){

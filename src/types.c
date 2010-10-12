@@ -539,7 +539,7 @@ dfsch_type_t dfsch_function_type = {
 
 static void empty_list_serialize(dfsch_object_t* o,
                                  dfsch_serializer_t* s){
-  dfsch_serialize_stream_symbol(s, "empty-list");
+  dfsch_serialize_stream_symbol(s, "");
 }
 
 dfsch_type_t dfsch_empty_list_type = {
@@ -658,7 +658,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("symbol", symbol){
   char* package = dfsch_deserialize_stream_symbol(ds);
   char* name = dfsch_deserialize_strbuf(ds)->ptr;
   dfsch_object_t* sym;
-  if (package && name){
+  if (package && name[0]){
     sym = dfsch_intern_symbol(dfsch_make_package(package), name);
   } else {
     sym = dfsch_gensym();
@@ -744,11 +744,6 @@ static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
   list[len + 3] = dfsch_deserialize_object(ds);  
   printf("%p\n", list);
   return DFSCH_MAKE_CLIST(list);
-}
-
-static dfsch_object_t* empty_list_deserialize(dfsch_deserializer_t* ds){
-  dfsch_deserializer_put_partial_object(ds, NULL);
-  return NULL;
 }
 
 dfsch_type_t dfsch_tagged_types[4] = {
@@ -1162,8 +1157,6 @@ static void __attribute__((constructor)) register_handlers() {
                                       vector_deserialize);
   dfsch_register_deserializer_handler("compact-list",
                                       compact_list_deserialize);
-  dfsch_register_deserializer_handler("empty-list",
-                                      empty_list_deserialize);
 }
 
 
