@@ -125,7 +125,7 @@ static void instance_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
     }
     klass = klass->superclass;
   }
-  dfsch_serialize_stream_symbol(s, "");
+  dfsch_serialize_stream_symbol(s, NULL);
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
@@ -140,7 +140,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
 
   for(;;){
     sym = dfsch_deserialize_stream_symbol(ds);
-    if (*sym == '\0'){
+    if (!sym){
       break;
     }
     dfsch_slot_set_by_name(ins, sym, dfsch_deserialize_object(ds), 1);
