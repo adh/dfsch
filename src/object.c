@@ -23,6 +23,7 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/serdes.h>
 #include <dfsch/generic.h>
 #include "util.h"
 #include "internal.h"
@@ -125,6 +126,26 @@ static void instance_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
     klass = klass->superclass;
   }
   dfsch_serialize_stream_symbol(s, "");
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
+  dfsch_type_t* klass;
+  dfsch_object_t* ins;
+  dfsch_object_t* obj;
+  dfsch_object_t** place = dfsch_deserializer__skip_object(ds);
+  char* sym;
+  obj = dfsch_deserialize_object(ds);
+  klass = DFSCH_ASSERT_INSTANCE(obj, DFSCH_CLASS_TYPE);
+  *place = ins = dfsch_make_object(klass);
+
+  for(;;){
+    sym = dfsch_deserialize_stream_symbol(ds);
+    if (*sym == '\0'){
+      break;
+    }
+    dfsch_slot_set_by_name(ins, sym, dfsch_deserialize_object(ds), 1);
+  }
+  return ins;
 }
 
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
