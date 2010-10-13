@@ -283,6 +283,23 @@ static void slot_accessor_write(slot_accessor_t* sa,
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
 
+static void slot_accessor_serialize(slot_accessor_t* sa,
+                                    dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-accessor");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-accessor", slot_accessor){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_ACCESSOR_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
+
 dfsch_type_t dfsch_slot_accessor_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -291,7 +308,8 @@ dfsch_type_t dfsch_slot_accessor_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot accessor allows direct access to slots (runtime-only)"
+  .documentation = "Slot accessor allows direct access to slots (runtime-only)",
+  .serialize     = slot_accessor_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_accessor_for_slot(dfsch_type_t* type,
@@ -328,6 +346,22 @@ static void slot_reader_write(slot_accessor_t* sa,
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
 
+static void slot_reader_serialize(slot_accessor_t* sa,
+                                  dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-reader");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-reader", slot_reader){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_READER_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
 dfsch_type_t dfsch_slot_reader_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -336,7 +370,8 @@ dfsch_type_t dfsch_slot_reader_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot reader allows direct reading of slot value"
+  .documentation = "Slot reader allows direct reading of slot value",
+  .serialize     = slot_reader_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_reader_for_slot(dfsch_type_t* type,
@@ -370,11 +405,26 @@ static dfsch_object_t* slot_writer_apply(slot_accessor_t* sa,
 }
 
 static void slot_writer_write(slot_accessor_t* sa, 
-                                dfsch_writer_state_t* state){
+                              dfsch_writer_state_t* state){
   dfsch_write_unreadable(state, (dfsch_object_t*)sa, 
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
-
+static void slot_writer_serialize(slot_accessor_t* sa,
+                                  dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-writer");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-writer", slot_writer){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_WRITER_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
 dfsch_type_t dfsch_slot_writer_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -383,7 +433,8 @@ dfsch_type_t dfsch_slot_writer_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot writer allows direct modification of slot value"
+  .documentation = "Slot writer allows direct modification of slot value",
+  .serialize     = slot_writer_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_writer_for_slot(dfsch_type_t* type,
@@ -888,6 +939,16 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   dfsch_write_unreadable_end(state);
 }
 
+static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "standard-function");
+  dfsch_serialize_object(ser, c->args);
+  dfsch_serialize_object(ser, c->code);
+  dfsch_serialize_object(ser, c->env);
+  dfsch_serialize_object(ser, c->name);
+  dfsch_serialize_object(ser, c->orig_code);
+  dfsch_serialize_object(ser, c->documentation);
+}
+
 static dfsch_slot_t closure_slots[] = {
   DFSCH_OBJECT_SLOT(closure_t, args, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "Arguments of function (compiled lambda-list)"),
@@ -908,13 +969,14 @@ dfsch_type_t dfsch_standard_function_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_FUNCTION_TYPE,
   sizeof(closure_t),
-  "function",
+  "standard-function",
   NULL,
   (dfsch_type_write_t)function_write,
   NULL,
   NULL,
   closure_slots,
-  "User defined function"
+  "User defined function",
+  .serialize = function_serialize,
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
@@ -935,6 +997,18 @@ static void macro_write(macro_t* m, dfsch_writer_state_t* state){
   }
 }
 
+static void macro_serialize(macro_t* m, dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "macro");
+  dfsch_serialize_object(ser, m->proc);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("macro", macro){
+  macro_t* m = (macro_t*)dfsch_make_object(DFSCH_MACRO_TYPE);
+  dfsch_deserializer_put_partial_object(ds, m);
+  m->proc = dfsch_deserialize_object(ds);
+  return m;
+}
+
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -946,6 +1020,7 @@ dfsch_type_t dfsch_macro_type = {
   NULL,
   macro_slots,
   "Macro implemented by arbitrary function",
+  .serialize = macro_serialize,
 };
 #define MACRO DFSCH_MACRO_TYPE
 
@@ -1070,6 +1145,23 @@ static dfsch_object_t* vector_deserialize(dfsch_deserializer_t* ds){
   return v;
 }
 
+static void environment_serialize(environment_t* env, dfsch_serializer_t* ser){
+  dfsch_eqhash_entry_t* i = dfsch_eqhash_2_entry_list(&(env->values));
+  dfsch_serialize_stream_symbol(ser, "environment-frame");
+  
+  dfsch_serialize_object(ser, env->parent);
+  dfsch_serialize_object(ser, env->context);
+  dfsch_serialize_object(ser, env->decls);
+
+  while (i){
+    dfsch_serialize_integer(ser, i->flags);
+    dfsch_serialize_object(ser, i->key);
+    dfsch_serialize_object(ser, i->value);
+    i = i->next;
+  }
+  dfsch_serialize_integer(ser, -1); /* flags are unsigned */
+}
+
 static dfsch_object_t* environment_describe(environment_t* env){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));
@@ -1110,6 +1202,7 @@ dfsch_type_t dfsch_environment_type = {
   environment_slots,
   "Lexical environment frame",
   .describe = environment_describe,
+  .serialize = environment_serialize,
 };
 
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){

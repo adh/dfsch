@@ -806,7 +806,7 @@ void dfsch_unset(object_t* name, object_t* env){
 
 
 void dfsch_define(object_t* name, object_t* value, object_t* env,
-                  short flags){
+                  unsigned short flags){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
