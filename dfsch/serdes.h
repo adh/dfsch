@@ -10,6 +10,9 @@ extern dfsch_type_t dfsch_serializer_type;
 dfsch_serializer_t* dfsch_make_serializer(dfsch_output_proc_t op,
                                           void* baton);
 
+void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
+                                          char* format);
+
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj);
 
@@ -55,6 +58,9 @@ typedef struct dfsch_deserializer_t dfsch_deserializer_t;
 
 dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
                                               void* baton);
+
+void dfsch_deserializer_read_stream_header(dfsch_deserializer_t* ds,
+                                           char* fmt);
 
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds);
 
