@@ -882,6 +882,16 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   dfsch_write_unreadable_end(state);
 }
 
+static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "standard-function");
+  dfsch_serialize_object(ser, c->args);
+  dfsch_serialize_object(ser, c->code);
+  dfsch_serialize_object(ser, c->env);
+  dfsch_serialize_object(ser, c->name);
+  dfsch_serialize_object(ser, c->orig_code);
+  dfsch_serialize_object(ser, c->documentation);
+}
+
 static dfsch_slot_t closure_slots[] = {
   DFSCH_OBJECT_SLOT(closure_t, args, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "Arguments of function (compiled lambda-list)"),
@@ -902,13 +912,14 @@ dfsch_type_t dfsch_standard_function_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_FUNCTION_TYPE,
   sizeof(closure_t),
-  "function",
+  "standard-function",
   NULL,
   (dfsch_type_write_t)function_write,
   NULL,
   NULL,
   closure_slots,
-  "User defined function"
+  "User defined function",
+  .serialize = function_serialize,
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
 
@@ -1121,6 +1132,7 @@ dfsch_type_t dfsch_environment_type = {
   environment_slots,
   "Lexical environment frame",
   .describe = environment_describe,
+  .serialize = environment_serialize,
 };
 
 static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
