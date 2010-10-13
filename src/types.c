@@ -738,9 +738,15 @@ static void compact_list_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
     }
     dfsch_put_serialized_object(s, i);
   }
-  dfsch_serialize_object(s, i[1]);
-  dfsch_serialize_object(s, i[2]);
-  dfsch_serialize_object(s, i[3]);  
+
+  dfsch_serialize_object(s, i[1]);  
+  if (dfsch_symbol_p(i[2]) || dfsch_string_p(i[2])){
+    dfsch_serialize_object(s, i[2]);
+    dfsch_serialize_object(s, i[3]);
+  } else {
+    dfsch_serialize_object(s, NULL);
+    dfsch_serialize_object(s, NULL);
+  }
 }
 
 static void mutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
@@ -1204,6 +1210,65 @@ static void lambda_list_write(lambda_list_t* ll, dfsch_writer_state_t* ws){
   print_lambda_list(ll, ws);
   dfsch_write_unreadable_end(ws);
 }
+
+static void lambda_list_serialize(lambda_list_t* ll, dfsch_serializer_t* ser){
+  int i;
+  dfsch_serialize_stream_symbol(ser, "lambda-list");
+  dfsch_serialize_integer(ser, ll->flags);
+  dfsch_serialize_integer(ser, ll->positional_count);
+  dfsch_serialize_integer(ser, ll->keyword_count);
+  dfsch_serialize_integer(ser, ll->optional_count);
+  dfsch_serialize_object(ser, ll->rest);
+  for (i = 0; i < ll->optional_count + ll->keyword_count; i++){
+    dfsch_serialize_object(ser, ll->defaults[i]);
+  }
+  for (i = 0; i < ll->optional_count + ll->keyword_count; i++){
+    dfsch_serialize_object(ser, ll->supplied_p[i]);
+  }
+  for (i = 0; i < ll->keyword_count; i++){
+    dfsch_serialize_object(ser, ll->keywords[i]);
+  }
+  dfsch_serialize_object(ser, ll->aux_list);
+  for (i = 0; 
+       i < ll->optional_count + ll->keyword_count + ll->positional_count; 
+       i++){
+    dfsch_serialize_object(ser, ll->arg_list[i]);
+  }
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("lambda-list", lambda_list){
+  lambda_list_t* ll;
+  int i;
+  int flags = dfsch_deserialize_integer(ds);
+  size_t positional_count = dfsch_deserialize_integer(ds);
+  size_t keyword_count = dfsch_deserialize_integer(ds);
+  size_t optional_count = dfsch_deserialize_integer(ds);
+  ll = dfsch_make_object_var(DFSCH_LAMBDA_LIST_TYPE,
+                             positional_count + keyword_count + optional_count);
+  dfsch_deserializer_put_partial_object(ds, ll);
+  ll->flags = flags;
+  ll->positional_count = positional_count;
+  ll->optional_count = optional_count;
+  ll->keyword_count = keyword_count;
+  ll->rest = dfsch_deserialize_object(ds);
+  for (i = 0; i < ll->optional_count + ll->keyword_count; i++){
+    ll->defaults[i] = dfsch_deserialize_object(ds);
+  }
+  for (i = 0; i < ll->optional_count + ll->keyword_count; i++){
+    ll->supplied_p[i] = dfsch_deserialize_object(ds);
+  }
+  for (i = 0; i < ll->keyword_count; i++){
+    ll->keywords[i] = dfsch_deserialize_object(ds);
+  }
+  ll->aux_list = dfsch_deserialize_object(ds);
+  for (i = 0; 
+       i < ll->optional_count + ll->keyword_count + ll->positional_count; 
+       i++){
+    ll->arg_list[i] = dfsch_deserialize_object(ds);
+  }
+  return ll;
+}
+
 dfsch_type_t dfsch_lambda_list_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -1214,7 +1279,9 @@ dfsch_type_t dfsch_lambda_list_type = {
   NULL,
   NULL,
   NULL,
-  "Compiled lambda-list for effective destructuring"
+  "Compiled lambda-list for effective destructuring",
+
+  .serialize = lambda_list_serialize,
 };
 
 static void __attribute__((constructor)) register_handlers() {
