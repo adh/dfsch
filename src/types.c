@@ -1064,6 +1064,23 @@ static dfsch_object_t* vector_deserialize(dfsch_deserializer_t* ds){
   return v;
 }
 
+static void environment_serialize(environment_t* env, dfsch_serializer_t* ser){
+  dfsch_eqhash_entry_t* i = dfsch_eqhash_2_entry_list(&(env->values));
+  dfsch_serialize_stream_symbol(ser, "environment-frame");
+  
+  dfsch_serialize_object(ser, env->parent);
+  dfsch_serialize_object(ser, env->context);
+  dfsch_serialize_object(ser, env->decls);
+
+  while (i){
+    dfsch_serialize_integer(ser, i->flags);
+    dfsch_serialize_object(ser, i->key);
+    dfsch_serialize_object(ser, i->value);
+    i = i->next;
+  }
+  dfsch_serialize_integer(ser, -1); /* flags are unsigned */
+}
+
 static dfsch_object_t* environment_describe(environment_t* env){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));

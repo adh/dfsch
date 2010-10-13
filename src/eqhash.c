@@ -88,7 +88,7 @@ static void eqhash_large_put_low(dfsch_eqhash_entry_t* vector,
                                  size_t mask,
                                  dfsch_object_t* key, 
                                  dfsch_object_t* value,
-                                 short flags){
+                                 unsigned short flags){
   uint32_t h = fast_ptr_hash(key);
   
   if (vector[h & mask].key != DFSCH_INVALID_OBJECT){
@@ -273,7 +273,7 @@ void dfsch_eqhash_set(dfsch_eqhash_t* hash,
   dfsch_eqhash_put(hash, key, value);  
 }
 void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
-                            dfsch_object_t* key, short flags){
+                            dfsch_object_t* key, unsigned short flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
@@ -292,7 +292,7 @@ void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
 }
 int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                dfsch_object_t* key, dfsch_object_t* value,
-                               short* flags){
+                               unsigned short* flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
@@ -344,7 +344,7 @@ dfsch_object_t* dfsch_eqhash_ref(dfsch_eqhash_t* hash,
 }
 int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
                         dfsch_object_t* key, 
-                        dfsch_object_t** value, short *flags,
+                        dfsch_object_t** value, unsigned short *flags,
                         dfsch_eqhash_entry_t** entry){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
@@ -404,7 +404,7 @@ dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash){
 }
 dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
                                      dfsch_object_t* value,
-                                     short flags){
+                                     unsigned short flags){
   int i;
 
   if (hash->is_large){
@@ -430,4 +430,39 @@ dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
     }
   }
   return DFSCH_INVALID_OBJECT;  
+}
+dfsch_eqhash_entry_t* dfsch_eqhash_2_entry_list(dfsch_eqhash_t* hash){
+  dfsch_eqhash_entry_t* result = NULL;
+  dfsch_eqhash_entry_t* t;
+  int i;
+
+  if (hash->is_large){
+    for (i = 0; i <= hash->contents.large.mask; i++){
+      dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
+      while (e){
+        if (e->key != DFSCH_INVALID_OBJECT){
+          t = GC_NEW(dfsch_eqhash_entry_t);
+          t->next = result;
+          result = t;
+          t->key = e->key;
+          t->value = e->value;
+          t->flags = e->flags;
+        }
+        e = e->next;
+      }
+    }
+  } else {
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] != DFSCH_INVALID_OBJECT){
+        t = GC_NEW(dfsch_eqhash_entry_t);
+        t->next = result;
+        result = t;
+        t->key = hash->contents.small.keys[i];
+        t->value = hash->contents.small.values[i];
+        t->flags = hash->contents.small.flags[i];
+      }
+    }
+  }
+  return result;
+
 }

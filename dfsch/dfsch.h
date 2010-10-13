@@ -470,7 +470,7 @@ extern "C" {
   extern void dfsch_define(dfsch_object_t* name,
                            dfsch_object_t* value,
                            dfsch_object_t* env,
-                           short flags);
+                           unsigned short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
