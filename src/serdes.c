@@ -573,45 +573,55 @@ static void __attribute__((constructor)) register_core_handlers(){
                                       canon_env_ref_handler);
 }
 
-
-DFSCH_DEFINE_PRIMITIVE(serialize_to_byte_vector,
-                       "Serializes one object into byte_vector"){
-  dfsch_object_t* obj;
+dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj, 
+                                dfsch_object_t* canon_env){
   dfsch_serializer_t* ser;
-  dfsch_object_t* canon_env;
   str_list_t* sl = sl_create();
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
-  DFSCH_ARG_END(args);
-
   ser = dfsch_make_serializer(sl_nappend, sl);
   if (canon_env){
     dfsch_serializer_set_canonical_environment(ser, canon_env);
   }
   dfsch_serialize_object(ser, obj);
-  return dfsch_make_byte_vector_strbuf(dfsch_sl_value_strbuf(sl));
+  return dfsch_sl_value_strbuf(sl);
 }
-
-DFSCH_DEFINE_PRIMITIVE(deserialize_from_string,
-                       "Deserialize one object from string"){
-  dfsch_strbuf_t* string;
+dfsch_object_t* dfsch_deserialize(dfsch_strbuf_t* sb,
+                                  dfsch_object_t* canon_env){
   dfsch_deserializer_t* ds;
-  dfsch_object_t* canon_env;
-  DFSCH_BUFFER_ARG(args, string);
-  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
-  DFSCH_ARG_END(args);
-
   ds = dfsch_make_deserializer(dfsch_strbuf_inputproc,
-                               dfsch_copy_strbuf(string));
+                               dfsch_copy_strbuf(sb));
   if (canon_env){
     dfsch_deserializer_set_canonical_environment(ds, canon_env);
   }
   return dfsch_deserialize_object(ds);
 }
 
+
+
+DFSCH_DEFINE_PRIMITIVE(serialize,
+                       "Serializes one object into byte_vector"){
+  dfsch_object_t* obj;
+  dfsch_object_t* canon_env;
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_byte_vector_strbuf(dfsch_serialize(obj, canon_env));
+}
+
+DFSCH_DEFINE_PRIMITIVE(deserialize,
+                       "Deserialize one object from string"){
+  dfsch_strbuf_t* string;
+  dfsch_object_t* canon_env;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_deserialize(string, canon_env);
+}
+
 void dfsch__serdes_register(dfsch_object_t* env){
-  dfsch_defcanon_cstr(env, "serialize-to-byte-vector",
-                      DFSCH_PRIMITIVE_REF(serialize_to_byte_vector));
-  dfsch_defcanon_cstr(env, "deserialize-from-string",
-                      DFSCH_PRIMITIVE_REF(deserialize_from_string));
+  dfsch_defcanon_cstr(env, "serialize",
+                      DFSCH_PRIMITIVE_REF(serialize));
+  dfsch_defcanon_cstr(env, "deserialize",
+                      DFSCH_PRIMITIVE_REF(deserialize));
 }

@@ -85,5 +85,13 @@ dfsch_object_t* dfsch_get_externalized_object(char* name);
   }                                                                     \
   static dfsch_object_t* deshandler_##cname(dfsch_deserializer_t* ds)
 
+/* High-level C interface */
+
+dfsch_strbuf_t* dfsch_serialize_to_strbuf(dfsch_object_t* obj, 
+                                          dfsch_object_t* canon_env);
+dfsch_object_t* dfsch_deserialize_from_strbuf(dfsch_strbuf_t* sb,
+                                              dfsch_object_t* canon_env);
+
+
 
 #endif
