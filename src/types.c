@@ -940,6 +940,18 @@ static void macro_write(macro_t* m, dfsch_writer_state_t* state){
   }
 }
 
+static void macro_serialize(macro_t* m, dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "macro");
+  dfsch_serialize_object(ser, m->proc);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("macro", macro){
+  macro_t* m = (macro_t*)dfsch_make_object(DFSCH_MACRO_TYPE);
+  dfsch_deserializer_put_partial_object(ds, m);
+  m->proc = dfsch_deserialize_object(ds);
+  return m;
+}
+
 dfsch_type_t dfsch_macro_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -951,6 +963,7 @@ dfsch_type_t dfsch_macro_type = {
   NULL,
   macro_slots,
   "Macro implemented by arbitrary function",
+  .serialize = macro_serialize,
 };
 #define MACRO DFSCH_MACRO_TYPE
 
