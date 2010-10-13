@@ -283,6 +283,23 @@ static void slot_accessor_write(slot_accessor_t* sa,
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
 
+static void slot_accessor_serialize(slot_accessor_t* sa,
+                                    dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-accessor");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-accessor", slot_accessor){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_ACCESSOR_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
+
 dfsch_type_t dfsch_slot_accessor_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -291,7 +308,8 @@ dfsch_type_t dfsch_slot_accessor_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot accessor allows direct access to slots (runtime-only)"
+  .documentation = "Slot accessor allows direct access to slots (runtime-only)",
+  .serialize     = slot_accessor_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_accessor_for_slot(dfsch_type_t* type,
@@ -328,6 +346,22 @@ static void slot_reader_write(slot_accessor_t* sa,
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
 
+static void slot_reader_serialize(slot_accessor_t* sa,
+                                  dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-reader");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-reader", slot_reader){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_READER_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
 dfsch_type_t dfsch_slot_reader_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -336,7 +370,8 @@ dfsch_type_t dfsch_slot_reader_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot reader allows direct reading of slot value"
+  .documentation = "Slot reader allows direct reading of slot value",
+  .serialize     = slot_reader_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_reader_for_slot(dfsch_type_t* type,
@@ -370,11 +405,26 @@ static dfsch_object_t* slot_writer_apply(slot_accessor_t* sa,
 }
 
 static void slot_writer_write(slot_accessor_t* sa, 
-                                dfsch_writer_state_t* state){
+                              dfsch_writer_state_t* state){
   dfsch_write_unreadable(state, (dfsch_object_t*)sa, 
                          "%s @ %s", sa->slot->name, sa->instance_class->name);
 }
-
+static void slot_writer_serialize(slot_accessor_t* sa,
+                                  dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "slot-writer");
+  dfsch_serialize_stream_symbol(ser, sa->slot->name);
+  dfsch_serialize_object(ser, sa->instance_class);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("slot-writer", slot_writer){
+  char* name = dfsch_deserialize_stream_symbol(ds);
+  slot_accessor_t* sa = dfsch_make_object(DFSCH_SLOT_WRITER_TYPE);
+  dfsch_deserializer_put_partial_object(ds, sa);
+  dfsch_object_t* type = dfsch_deserialize_object(ds);
+  type = DFSCH_ASSERT_INSTANCE(type, DFSCH_STANDARD_TYPE);
+  sa->slot = dfsch_find_slot(type, name);
+  sa->instance_class = type;
+  return sa;
+}
 dfsch_type_t dfsch_slot_writer_type = {
   .type          = DFSCH_STANDARD_TYPE,
   .superclass    = DFSCH_FUNCTION_TYPE,
@@ -383,7 +433,8 @@ dfsch_type_t dfsch_slot_writer_type = {
   .apply         = (dfsch_type_apply_t)slot_accessor_apply,
   .write         = (dfsch_type_write_t)slot_accessor_write,
   .slots         = slot_accessor_slots,
-  .documentation = "Slot writer allows direct modification of slot value"
+  .documentation = "Slot writer allows direct modification of slot value",
+  .serialize     = slot_writer_serialize,
 };
 
 dfsch_object_t* dfsch__make_slot_writer_for_slot(dfsch_type_t* type,
