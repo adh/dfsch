@@ -53,9 +53,6 @@ struct dfsch_serializer_t {
   dfsch_output_proc_t oproc;
   void* op_baton;
 
-  dfsch_serializer_persistent_id_hook_t persistent_id;
-  void* pi_baton;
-
   dfsch_serializer_object_hook_t object_hook;
   void* oh_baton;
 
@@ -87,12 +84,6 @@ dfsch_serializer_t* dfsch_make_serializer(dfsch_output_proc_t op,
   return s;
 }
 
-void dfsch_serializer_set_persistent_id(dfsch_serializer_t* s,
-                                        dfsch_serializer_persistent_id_hook_t h,
-                                        void* baton){
-  s->persistent_id = h;
-  s->pi_baton = baton;
-}
 void dfsch_serializer_set_object_hook(dfsch_serializer_t* s,
                                       dfsch_serializer_object_hook_t h,
                                       void *baton){
@@ -154,15 +145,6 @@ void dfsch_serialize_object(dfsch_serializer_t* s,
         dfsch_serialize_cstr(s, name);
         return;
       }
-    }
-  }
-
-  if (s->persistent_id){
-    char* pi = s->persistent_id(s, obj, s->pi_baton);
-    if (pi){
-      dfsch_serialize_stream_symbol(s, "persistent-id");
-      dfsch_serialize_cstr(s, pi);
-      return;
     }
   }
 
@@ -315,8 +297,6 @@ struct dfsch_deserializer_t {
 
   dfsch_deserializer_unknown_hook_t unknown;
   void* uh_baton;
-  dfsch_deserializer_persistent_hook_t persistent;
-  void* ph_baton;
 
   dfsch_object_t* canon_env;
 };
@@ -556,16 +536,6 @@ static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
   res = ds->obj_map[ref];
   return res;
 }
-static dfsch_object_t* persistent_id_handler(dfsch_deserializer_t* ds){
-  char* name = dfsch_deserialize_stream_symbol(ds);
-  dfsch_object_t* res;
-  if (ds->persistent){
-    res = ds->persistent(ds, name, ds->ph_baton);
-    return res;
-  } else {
-    dfsch_error("Persistent object IDs not supported", ds);
-  }
-}
 static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
   int64_t u = dfsch_deserialize_integer(ds);
   dfsch_object_t* v = dfsch_make_number_from_int64(u);
@@ -597,8 +567,6 @@ static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){
 static void __attribute__((constructor)) register_core_handlers(){
   dfsch_register_deserializer_handler("back-reference",
                                       back_reference_handler);
-  dfsch_register_deserializer_handler("persistent-id",
-                                      persistent_id_handler);
   dfsch_register_deserializer_handler("fixnum",
                                       fixnum_handler);
   dfsch_register_deserializer_handler("canon-env-ref",

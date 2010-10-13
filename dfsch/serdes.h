@@ -24,10 +24,6 @@ dfsch_serializer_t* dfsch_make_subserializer(dfsch_serializer_t* s);
 void dfsch_commit_subserializer(dfsch_serializer_t* s);
 
 typedef 
-char* (*dfsch_serializer_persistent_id_hook_t)(dfsch_serializer_t* serializer,
-                                               dfsch_object_t* obj,
-                                               void* baton);
-typedef 
 int (*dfsch_serializer_object_hook_t)(dfsch_serializer_t* serializer,
                                               dfsch_object_t* obj,
                                               void* baton);
@@ -36,9 +32,6 @@ int (*dfsch_serializer_unserializable_hook_t)(dfsch_serializer_t* serializer,
                                               dfsch_object_t* obj,
                                               void* baton);
 
-void dfsch_serializer_set_persistent_id(dfsch_serializer_t* s,
-                                        dfsch_serializer_persistent_id_hook_t h,
-                                        void* baton);
 void dfsch_serializer_set_object_hook(dfsch_serializer_t* s,
                                       dfsch_serializer_object_hook_t h,
                                       void *baton);
@@ -70,17 +63,10 @@ typedef
 dfsch_object_t* (*dfsch_deserializer_unknown_hook_t)(dfsch_deserializer_t* ds,
                                                      char* name,
                                                      void* baton);
-typedef 
-dfsch_object_t* (*dfsch_deserializer_persistent_hook_t)(dfsch_deserializer_t* ds,
-                                                        char* name,
-                                                        void* baton);
 
 void dfsch_deserializer_set_unknown_hook(dfsch_deserializer_t* ds,
                                          dfsch_deserializer_unknown_hook_t h,
                                          void* baton);
-void dfsch_deserializer_set_persistent_hook(dfsch_deserializer_t* ds,
-                                            dfsch_deserializer_persistent_hook_t h,
-                                            void* baton);
 void dfsch_deserializer_set_canonical_environment(dfsch_deserializer_t* ds,
                                                   dfsch_object_t* env);
 
