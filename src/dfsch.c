@@ -853,7 +853,11 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
-  return dfsch_eqhash_2_alist(&e->values);
+  dfsch_object_t* res;
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  res = dfsch_eqhash_2_alist(&e->values);
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return res;
 }
 dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                            dfsch_type_t* klass){
