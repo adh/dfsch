@@ -30,7 +30,7 @@ static void rsa_public_key_serialize(dfsch_rsa_public_key_t* key,
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:rsa-public-key", public_key){
   dfsch_rsa_public_key_t* k = dfsch_make_object(DFSCH_RSA_PUBLIC_KEY_TYPE);
-  dfsch_deserializer_put_partial_oject(ds, k);
+  dfsch_deserializer_put_partial_object(ds, k);
   k->modulus = dfsch_deserialize_object(ds);
   k->public_exponent = dfsch_deserialize_object(ds);
   return k;
@@ -73,7 +73,7 @@ static void rsa_private_key_serialize(dfsch_rsa_private_key_t* key,
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:rsa-private-key", private_key){
   dfsch_rsa_private_key_t* k = dfsch_make_object(DFSCH_RSA_PRIVATE_KEY_TYPE);
-  dfsch_deserializer_put_partial_oject(ds, k);
+  dfsch_deserializer_put_partial_object(ds, k);
   k->modulus = dfsch_deserialize_object(ds);
   k->public_exponent = dfsch_deserialize_object(ds);
   k->private_exponent = dfsch_deserialize_object(ds);

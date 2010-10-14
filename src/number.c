@@ -156,6 +156,13 @@ static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
   dfsch_serialize_cstr(s, saprintf("%.32g", f->flonum));
 }
 
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
+  char* s = dfsch_deserialize_strbuf(ds)->ptr;
+  dfsch_object_t* fn = dfsch_make_number_from_string(s, 10);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;
+}
+
 dfsch_number_type_t dfsch_flonum_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_REAL_TYPE,
