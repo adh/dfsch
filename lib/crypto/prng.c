@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+#include <dfsch/util.h>
 
 typedef struct prng_state_t {
   dfsch_type_t* type;
