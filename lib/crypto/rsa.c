@@ -3,6 +3,7 @@
 #include <dfsch/random.h>
 #include <dfsch/bignum.h>
 #include <dfsch/number.h>
+#include <dfsch/serdes.h>
 
 struct dfsch_rsa_public_key_t {
   dfsch_type_t* type;
@@ -20,12 +21,28 @@ static dfsch_slot_t public_slots[] = {
   DFSCH_SLOT_TERMINATOR
 };
 
+static void rsa_public_key_serialize(dfsch_rsa_public_key_t* key,
+                                     dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "crypto:rsa-public-key");
+  dfsch_serialize_object(ser, key->modulus);
+  dfsch_serialize_object(ser, key->public_exponent);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:rsa-public-key", public_key){
+  dfsch_rsa_public_key_t* k = dfsch_make_object(DFSCH_RSA_PUBLIC_KEY_TYPE);
+  dfsch_deserializer_put_partial_oject(ds, k);
+  k->modulus = dfsch_deserialize_object(ds);
+  k->public_exponent = dfsch_deserialize_object(ds);
+  return k;
+}
+
 dfsch_type_t dfsch_rsa_public_key_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "rsa-public-key",
   .size = sizeof(dfsch_rsa_public_key_t),
-  .slots = &public_slots
+  .slots = &public_slots,
+  .serialize = rsa_public_key_serialize,
 };
 
 struct dfsch_rsa_private_key_t {
@@ -40,6 +57,34 @@ struct dfsch_rsa_private_key_t {
   dfsch_object_t* exponent2;
   dfsch_object_t* coefficient;
 };
+
+static void rsa_private_key_serialize(dfsch_rsa_private_key_t* key,
+                                      dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "crypto:rsa-private-key");
+  dfsch_serialize_object(ser, key->modulus);
+  dfsch_serialize_object(ser, key->public_exponent);
+  dfsch_serialize_object(ser, key->private_exponent);
+  dfsch_serialize_object(ser, key->prime1);
+  dfsch_serialize_object(ser, key->prime2);
+  dfsch_serialize_object(ser, key->exponent1);
+  dfsch_serialize_object(ser, key->exponent2);
+  dfsch_serialize_object(ser, key->coefficient);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:rsa-private-key", private_key){
+  dfsch_rsa_private_key_t* k = dfsch_make_object(DFSCH_RSA_PRIVATE_KEY_TYPE);
+  dfsch_deserializer_put_partial_oject(ds, k);
+  k->modulus = dfsch_deserialize_object(ds);
+  k->public_exponent = dfsch_deserialize_object(ds);
+  k->private_exponent = dfsch_deserialize_object(ds);
+  k->prime1 = dfsch_deserialize_object(ds);
+  k->prime2 = dfsch_deserialize_object(ds);
+  k->exponent1 = dfsch_deserialize_object(ds);
+  k->exponent2 = dfsch_deserialize_object(ds);
+  k->coefficient = dfsch_deserialize_object(ds);
+  return k;
+}
+
 
 static dfsch_slot_t private_slots[] = {
   DFSCH_OBJECT_SLOT(dfsch_rsa_private_key_t, modulus, DFSCH_SLOT_ACCESS_RO,
