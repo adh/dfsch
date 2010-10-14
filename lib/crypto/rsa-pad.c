@@ -1,4 +1,6 @@
 #include <dfsch/lib/crypto.h>
+#include <dfsch/bignum.h>
+#include <string.h>
 
 static size_t bitlength_to_octets(int l){
   if (l % 8 == 0){
@@ -113,7 +115,7 @@ dfsch_object_t* dfsch_crypto_oaep_encode(dfsch_crypto_hash_t* hash,
   mgf1(hash, buf + 1, rlen, buf + rlen + 1, len - rlen - 1);
   mgf1(hash, buf + rlen + 1, len - rlen - 1, buf + 1, rlen);
 
-  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len));
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len, 0));
 }
 dfsch_strbuf_t* dfsch_crypto_oaep_decode(dfsch_crypto_hash_t* hash,
                                          size_t len,
@@ -214,7 +216,7 @@ dfsch_object_t* dfsch_crypto_pss_encode(dfsch_crypto_hash_t* hash,
     buf[0] &= (1 << bits % 8) - 1;
   }
 
-  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len));  
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len, 0));  
 }
 int dfsch_crypto_pss_verify(dfsch_crypto_hash_t* hash,
                             size_t bits,

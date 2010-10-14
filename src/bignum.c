@@ -94,6 +94,14 @@ static void bignum_serialize(bignum_t* b, dfsch_serializer_t* s){
   dfsch_serialize_strbuf(s, dfsch_bignum_to_bytes(b));
 }
 
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("bignum", bignum){
+  int negative = dfsch_deserialize_integer(ds);
+  dfsch_strbuf_t* s = dfsch_deserialize_strbuf(ds);
+  dfsch_object_t* fn = dfsch_bignum_from_bytes(s->ptr, s->len, negative);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;
+}
+
 dfsch_number_type_t dfsch_bignum_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_INTEGER_TYPE,
@@ -1108,17 +1116,21 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
 
   return dfsch_strbuf_create(buf, len);
 }
-dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len){
+dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len, int negative){
   bignum_t* b = make_bignum(len * (WORD_BITS / 8 + 1));
   size_t i;
   
-  b->negative = 0;
+  b->negative = negative;
 
   for (i = 0; i < len; i++){
     bignum_set_word(b, i << 3, buf[len - i - 1], 0xff);
   }
   
   normalize_bignum(b);
+
+  if (b->length == 0){
+    b->negative = 0;
+  }
 
   return b;
 }
@@ -1172,11 +1184,15 @@ DFSCH_DEFINE_PRIMITIVE(bignum_2_bytes, 0){
   return dfsch_make_string_strbuf(dfsch_bignum_to_bytes(a));
 }
 DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
-  dfsch_strbuf_t* a;
-  DFSCH_BUFFER_ARG(args, a);
+  dfsch_strbuf_t* bytes;
+  dfsch_object_t* negative;
+  DFSCH_BUFFER_ARG(args, bytes);
+  DFSCH_OBJECT_ARG_OPT(args, negative, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(a->ptr, a->len));
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(bytes->ptr, 
+                                                        bytes->len,
+                                                        negative != NULL));
 }
 
 

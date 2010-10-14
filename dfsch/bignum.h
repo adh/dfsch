@@ -76,7 +76,7 @@ dfsch_bignum_t* dfsch_bignum_shl(dfsch_bignum_t* b, size_t count);
 char* dfsch_bignum_to_string(dfsch_bignum_t* b, unsigned base);
 
 dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b);
-dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len);
+dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len, int negative);
 
 int dfsch_bignum_to_uint64(dfsch_bignum_t* b, uint64_t* rp);
 int dfsch_bignum_to_int64(dfsch_bignum_t* b, int64_t* rp);

@@ -4,6 +4,8 @@
 #include <sys/resource.h>
 #endif
 
+#include <dfsch/bignum.h>
+
 #ifdef __WIN32__
 #include <windows.h>
 #endif
@@ -135,11 +137,11 @@ dfsch_object_t* dfsch_random_get_bignum(dfsch_object_t* state,
     buf = GC_MALLOC_ATOMIC(len / 8 + 1);
     dfsch_random_get_bytes(state, buf, len / 8 + 1);
     *buf &= (1 << (len & 7)) - 1;
-    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8 + 1));
+    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8 + 1, 0));
   } else {
     buf = GC_MALLOC_ATOMIC(len / 8);
     dfsch_random_get_bytes(state, buf, len / 8);
-    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8));
+    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8, 0));
   }
 }
 
