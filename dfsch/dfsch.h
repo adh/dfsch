@@ -445,6 +445,9 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
+                                           dfsch_object_t* value,
+                                           int canonical);
 
   extern dfsch_object_t* dfsch_variable_constant_value(dfsch_object_t* name, 
                                                        dfsch_object_t* env);
@@ -456,14 +459,18 @@ extern "C" {
   /** Unset variable name in environment env */
   extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
-#define DFSCH_VAR_CONSTANT 1
+  /** Variable is declared as constant - changing it leads to undefined 
+   * behavior */
+#define DFSCH_VAR_CONSTANT  1
+  /** Variable is canonical name of it's value. */
+#define DFSCH_VAR_CANONICAL 2
   
 
   /** Define variable name in environment env */
   extern void dfsch_define(dfsch_object_t* name,
                            dfsch_object_t* value,
                            dfsch_object_t* env,
-                           short flags);
+                           unsigned short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
@@ -520,11 +527,18 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                                  char *name, 
+                                  void *obj); /* to suppress warnings*/
   extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
 				   dfsch_package_t* package,
 				   char *name, 
 				   void *obj); /* to suppress warnings*/
   extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
 				     dfsch_package_t* package,
 				     char *name, 
 				     void *obj); /* to suppress warnings*/

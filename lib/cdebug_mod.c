@@ -3,5 +3,5 @@
 
 dfsch_object_t* dfsch_module_cdebug_register(dfsch_object_t* env){
   dfsch_package_t* cdebug_pkg = dfsch_make_package("cdebug");
-  dfsch_define_pkgcstr(env, cdebug_pkg, "debugger-procedure", dfsch_cdebug_get_procedure());
+  dfsch_defcanon_pkgcstr(env, cdebug_pkg, "debugger-procedure", dfsch_cdebug_get_procedure());
 }

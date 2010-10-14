@@ -44,6 +44,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdlib.h>
 
 extern dfsch_type_t dfsch_abstract_type;
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
@@ -221,7 +222,8 @@ extern dfsch_type_t dfsch_form_type;
 /** Equivalence metod prototype */
 typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
 
-typedef (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
+typedef void (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
+typedef ssize_t (*dfsch_input_proc_t)(void* baton, char* buf, size_t len);
 typedef struct dfsch_writer_state_t dfsch_writer_state_t;
 
 /** Write / Display method prototype */
@@ -237,10 +239,19 @@ typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 
 typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 
+typedef struct dfsch_serializer_t dfsch_serializer_t;
+typedef void (*dfsch_type_serialize_t)(dfsch_object_t* obj,
+                                       dfsch_serializer_t* s);
+
+
+
 /** Disable weak references for this type */
 #define DFSCH_TYPEF_NO_WEAK_REFERENCES 1
 /** Allow user code to inherit from this type */
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
+/** Instances does not get backreferences in serialization and circular 
+ *  prints */
+#define DFSCH_TYPEF_NO_BACK_REFERENCES 4
 
 typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
 
@@ -328,6 +339,8 @@ struct dfsch_type_t {
   dfsch_collection_methods_t* collection;
   dfsch_sequence_methods_t* sequence;
   dfsch_mapping_methods_t* mapping;
+
+  dfsch_type_serialize_t serialize;
 
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
@@ -461,6 +474,8 @@ typedef struct dfsch_pair_t {
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
    (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 
+#define DFSCH__COMPACT_LIST_DECODE(ptr)         \
+  ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))
 #define DFSCH__COMPACT_LIST_CDR_FAST(ptr)               \
   ((dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 #define DFSCH__COMPACT_LIST_CAR_FAST(ptr)               \

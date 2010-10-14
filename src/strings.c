@@ -21,6 +21,7 @@
 
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/serdes.h>
 #include "types.h"
 #include <string.h>
 
@@ -70,7 +71,7 @@ static char escape_table[] = {
   /* 4 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /* 5 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0, 
   /* 6 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  /* 7 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 7 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, /* DEL */ 
   /* 8 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* upper half */
   /* 9 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /* a */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
@@ -153,6 +154,17 @@ static size_t string_hash(dfsch_string_t* s){
   return ret;
 }
 
+static void string_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "string");
+  dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("string", string){
+  dfsch_object_t* str = dfsch_make_string_nocopy(dfsch_deserialize_strbuf(ds));
+  dfsch_deserializer_put_partial_object(ds, str);
+  return str;
+}
+
+
 static dfsch_collection_methods_t string_collection = {
   .get_iterator = dfsch_string_2_list,
 };
@@ -180,6 +192,7 @@ dfsch_type_t dfsch_string_type = {
 
   .collection = &string_collection,
   .sequence = &string_sequence,
+  .serialize = &string_serialize,
 };
 #define STRING (&dfsch_string_type)
 
@@ -195,6 +208,24 @@ dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){
 
   return sb;
 }
+
+dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb){
+  return dfsch_strbuf_create(sb->ptr, sb->len);
+}
+ssize_t dfsch_strbuf_inputproc(dfsch_strbuf_t* strbuf, 
+                               char* buf, size_t len){
+  if (len > strbuf->len){
+    memcpy(buf, strbuf->ptr, strbuf->len);
+    strbuf->len = 0;
+    return strbuf->len;
+  } else {
+    memcpy(buf, strbuf->ptr, len);
+    strbuf->len -= len;
+    strbuf->ptr += len;
+    return len;
+  }
+}
+
 
 dfsch_object_t* dfsch_make_string_cstr(char* string){
   if (!string)
@@ -1280,11 +1311,8 @@ static void byte_vector_write(dfsch_string_t* o, dfsch_writer_state_t* state){
     case 0:
       len += 1;
       break;
-    case 1:
-      len += 4;
-      break;
     default:
-      len += 2;
+      len += 4;
       break;
     }
   }
@@ -1305,18 +1333,12 @@ static void byte_vector_write(dfsch_string_t* o, dfsch_writer_state_t* state){
       *i = o->buf.ptr[j];
       i++;
       break;
-    case 1:
+    default:
       i[0] = '\\';
       i[1] = 'x';
       i[2] = hex_table[(((unsigned char)o->buf.ptr[j]) >> 4) & 0xf];
       i[3] = hex_table[(((unsigned char)o->buf.ptr[j])     ) & 0xf];
       i += 4;
-      break;
-    default:
-      i[0] = '\\';
-      i[1] = escape_table[(unsigned char)(o->buf.ptr[j])];
-      i += 2;
-      break;
     }
   }
 
@@ -1336,6 +1358,17 @@ static size_t byte_vector_hash(dfsch_string_t* s){
   }
 
   return ret;
+}
+
+static void byte_vector_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "byte-vector");
+  dfsch_serialize_string(se, str->buf.ptr, str->buf.len);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("byte-vector", byte_vector){
+  dfsch_strbuf_t* sb = dfsch_deserialize_strbuf(ds);
+  dfsch_object_t* str = dfsch_make_byte_vector_nocopy(sb->ptr, sb->len);
+  dfsch_deserializer_put_partial_object(ds, str);
+  return str;
 }
 
 static dfsch_collection_methods_t byte_vector_collection = {
@@ -1372,6 +1405,7 @@ dfsch_type_t dfsch_byte_vector_type = {
 
   .collection = &byte_vector_collection,
   .sequence = &byte_vector_sequence,
+  .serialize = byte_vector_serialize,
 };
 
 dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len){
@@ -1877,130 +1911,130 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_subvector,
 }
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<string>", &dfsch_string_type);
-  dfsch_define_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
-  dfsch_define_cstr(ctx, "<byte-vector>", DFSCH_BYTE_VECTOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
+  dfsch_defcanon_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
+  dfsch_defcanon_cstr(ctx, "<byte-vector>", DFSCH_BYTE_VECTOR_TYPE);
 
-  dfsch_define_cstr(ctx, "string-append", 
+  dfsch_defcanon_cstr(ctx, "string-append", 
 		   DFSCH_PRIMITIVE_REF(string_append));
-  dfsch_define_cstr(ctx, "byte-substring", 
+  dfsch_defcanon_cstr(ctx, "byte-substring", 
 		   DFSCH_PRIMITIVE_REF(byte_substring));
-  dfsch_define_cstr(ctx, "substring", 
+  dfsch_defcanon_cstr(ctx, "substring", 
 		   DFSCH_PRIMITIVE_REF(substring));
-  dfsch_define_cstr(ctx, "string-byte-ref", 
+  dfsch_defcanon_cstr(ctx, "string-byte-ref", 
 		   DFSCH_PRIMITIVE_REF(string_byte_ref));
-  dfsch_define_cstr(ctx, "string-ref", 
+  dfsch_defcanon_cstr(ctx, "string-ref", 
 		   DFSCH_PRIMITIVE_REF(string_ref));
-  dfsch_define_cstr(ctx, "string-byte-length", 
+  dfsch_defcanon_cstr(ctx, "string-byte-length", 
 		   DFSCH_PRIMITIVE_REF(string_byte_length));
-  dfsch_define_cstr(ctx, "string-length", 
+  dfsch_defcanon_cstr(ctx, "string-length", 
 		   DFSCH_PRIMITIVE_REF(string_length));
-  dfsch_define_cstr(ctx, "string->byte-list", 
+  dfsch_defcanon_cstr(ctx, "string->byte-list", 
 		   DFSCH_PRIMITIVE_REF(string_2_byte_list));
-  dfsch_define_cstr(ctx, "string->list", 
+  dfsch_defcanon_cstr(ctx, "string->list", 
 		   DFSCH_PRIMITIVE_REF(string_2_list));
-  dfsch_define_cstr(ctx, "byte-list->string", 
+  dfsch_defcanon_cstr(ctx, "byte-list->string", 
 		   DFSCH_PRIMITIVE_REF(byte_list_2_string));
-  dfsch_define_cstr(ctx, "list->string", 
+  dfsch_defcanon_cstr(ctx, "list->string", 
 		   DFSCH_PRIMITIVE_REF(list_2_string));
 
 
-  dfsch_define_cstr(ctx, "string=?", 
+  dfsch_defcanon_cstr(ctx, "string=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_eq_p));
-  dfsch_define_cstr(ctx, "string<?", 
+  dfsch_defcanon_cstr(ctx, "string<?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_lt_p));
-  dfsch_define_cstr(ctx, "string>?", 
+  dfsch_defcanon_cstr(ctx, "string>?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_gt_p));
-  dfsch_define_cstr(ctx, "string<=?", 
+  dfsch_defcanon_cstr(ctx, "string<=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_lte_p));
-  dfsch_define_cstr(ctx, "string>=?", 
+  dfsch_defcanon_cstr(ctx, "string>=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_gte_p));
 
-  dfsch_define_cstr(ctx, "string-ci=?", 
+  dfsch_defcanon_cstr(ctx, "string-ci=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_eq_p));
-  dfsch_define_cstr(ctx, "string-ci<?", 
+  dfsch_defcanon_cstr(ctx, "string-ci<?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_lt_p));
-  dfsch_define_cstr(ctx, "string-ci>?", 
+  dfsch_defcanon_cstr(ctx, "string-ci>?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_gt_p));
-  dfsch_define_cstr(ctx, "string-ci<=?", 
+  dfsch_defcanon_cstr(ctx, "string-ci<=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_lte_p));
-  dfsch_define_cstr(ctx, "string-ci>=?", 
+  dfsch_defcanon_cstr(ctx, "string-ci>=?", 
 		   dfsch_make_primitive(&p_string_cmp_p_impl,
                                         &dfsch_string_ci_gte_p));
 
-  dfsch_define_cstr(ctx, "char-upcase", 
+  dfsch_defcanon_cstr(ctx, "char-upcase", 
 		   DFSCH_PRIMITIVE_REF(char_upcase));
-  dfsch_define_cstr(ctx, "char-downcase", 
+  dfsch_defcanon_cstr(ctx, "char-downcase", 
 		   DFSCH_PRIMITIVE_REF(char_downcase));
-  dfsch_define_cstr(ctx, "char-titlecase", 
+  dfsch_defcanon_cstr(ctx, "char-titlecase", 
 		   DFSCH_PRIMITIVE_REF(char_titlecase));
-  dfsch_define_cstr(ctx, "char-category", 
+  dfsch_defcanon_cstr(ctx, "char-category", 
 		   DFSCH_PRIMITIVE_REF(char_category));
 
-  dfsch_define_cstr(ctx, "char-alphabetic?", 
+  dfsch_defcanon_cstr(ctx, "char-alphabetic?", 
 		   DFSCH_PRIMITIVE_REF(char_alphabetic_p));
-  dfsch_define_cstr(ctx, "char-numeric?", 
+  dfsch_defcanon_cstr(ctx, "char-numeric?", 
 		   DFSCH_PRIMITIVE_REF(char_numeric_p));
-  dfsch_define_cstr(ctx, "char-whitespace?", 
+  dfsch_defcanon_cstr(ctx, "char-whitespace?", 
 		   DFSCH_PRIMITIVE_REF(char_whitespace_p));
-  dfsch_define_cstr(ctx, "char-lower-case?", 
+  dfsch_defcanon_cstr(ctx, "char-lower-case?", 
 		   DFSCH_PRIMITIVE_REF(char_lower_case_p));
-  dfsch_define_cstr(ctx, "char-upper-case?", 
+  dfsch_defcanon_cstr(ctx, "char-upper-case?", 
 		   DFSCH_PRIMITIVE_REF(char_upper_case_p));
-  dfsch_define_cstr(ctx, "char-decimal?", 
+  dfsch_defcanon_cstr(ctx, "char-decimal?", 
 		   DFSCH_PRIMITIVE_REF(char_decimal_p));
-  dfsch_define_cstr(ctx, "char-mark?", 
+  dfsch_defcanon_cstr(ctx, "char-mark?", 
 		   DFSCH_PRIMITIVE_REF(char_mark_p));
 
-  dfsch_define_cstr(ctx, "string-upcase", 
+  dfsch_defcanon_cstr(ctx, "string-upcase", 
 		   DFSCH_PRIMITIVE_REF(string_upcase));
-  dfsch_define_cstr(ctx, "string-downcase", 
+  dfsch_defcanon_cstr(ctx, "string-downcase", 
 		   DFSCH_PRIMITIVE_REF(string_downcase));
-  dfsch_define_cstr(ctx, "string-titlecase", 
+  dfsch_defcanon_cstr(ctx, "string-titlecase", 
 		   DFSCH_PRIMITIVE_REF(string_titlecase));
 
-  dfsch_define_cstr(ctx, "string-search", 
+  dfsch_defcanon_cstr(ctx, "string-search", 
 		   DFSCH_PRIMITIVE_REF(string_search));
-  dfsch_define_cstr(ctx, "string-search-ci", 
+  dfsch_defcanon_cstr(ctx, "string-search-ci", 
 		   DFSCH_PRIMITIVE_REF(string_search_ci));
 
-  dfsch_define_cstr(ctx, "string-split", 
+  dfsch_defcanon_cstr(ctx, "string-split", 
 		   DFSCH_PRIMITIVE_REF(string_split));
-  dfsch_define_cstr(ctx, "string-split-on-byte", 
+  dfsch_defcanon_cstr(ctx, "string-split-on-byte", 
 		   DFSCH_PRIMITIVE_REF(string_split_on_byte));
-  dfsch_define_cstr(ctx, "string-split-on-character", 
+  dfsch_defcanon_cstr(ctx, "string-split-on-character", 
 		   DFSCH_PRIMITIVE_REF(string_split_on_character));
-  dfsch_define_cstr(ctx, "string-replace", 
+  dfsch_defcanon_cstr(ctx, "string-replace", 
 		   DFSCH_PRIMITIVE_REF(string_replace));
 
-  dfsch_define_cstr(ctx, "pathname-basename", 
+  dfsch_defcanon_cstr(ctx, "pathname-basename", 
 		   DFSCH_PRIMITIVE_REF(pathname_basename));
-  dfsch_define_cstr(ctx, "pathname-dirname", 
+  dfsch_defcanon_cstr(ctx, "pathname-dirname", 
 		   DFSCH_PRIMITIVE_REF(pathname_dirname));
-  dfsch_define_cstr(ctx, "pathname-filename", 
+  dfsch_defcanon_cstr(ctx, "pathname-filename", 
 		   DFSCH_PRIMITIVE_REF(pathname_filename));
-  dfsch_define_cstr(ctx, "pathname-extension", 
+  dfsch_defcanon_cstr(ctx, "pathname-extension", 
 		   DFSCH_PRIMITIVE_REF(pathname_extension));
 
-  dfsch_define_cstr(ctx, "make-byte-vector", 
+  dfsch_defcanon_cstr(ctx, "make-byte-vector", 
 		   DFSCH_PRIMITIVE_REF(make_byte_vector));
-  dfsch_define_cstr(ctx, "proto-string->string", 
+  dfsch_defcanon_cstr(ctx, "proto-string->string", 
 		   DFSCH_PRIMITIVE_REF(proto_string_2_string));
-  dfsch_define_cstr(ctx, "proto-string->byte-vector", 
+  dfsch_defcanon_cstr(ctx, "proto-string->byte-vector", 
 		   DFSCH_PRIMITIVE_REF(proto_string_2_byte_vector));
-  dfsch_define_cstr(ctx, "list->byte-vector", 
+  dfsch_defcanon_cstr(ctx, "list->byte-vector", 
 		   DFSCH_PRIMITIVE_REF(list_2_byte_vector));
-  dfsch_define_cstr(ctx, "copy-into-byte-vector", 
+  dfsch_defcanon_cstr(ctx, "copy-into-byte-vector", 
 		   DFSCH_PRIMITIVE_REF(copy_into_byte_vector));
-  dfsch_define_cstr(ctx, "byte-vector-subvector", 
+  dfsch_defcanon_cstr(ctx, "byte-vector-subvector", 
 		   DFSCH_PRIMITIVE_REF(byte_vector_subvector));
 }

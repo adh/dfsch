@@ -534,64 +534,64 @@ DFSCH_DEFINE_PRIMITIVE(unlink, NULL){
 dfsch_object_t* dfsch_module_os_register(dfsch_object_t* ctx){
   dfsch_package_t* os_pkg = dfsch_make_package("os");
 
-  dfsch_define_pkgcstr(ctx, os_pkg, "mode", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "mode", 
                     DFSCH_PRIMITIVE_REF(mode));
-  dfsch_define_pkgcstr(ctx, os_pkg, "sig", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "sig", 
                     DFSCH_PRIMITIVE_REF(sig));
 
-  dfsch_define_pkgcstr(ctx, os_pkg, "access", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "access", 
                     DFSCH_PRIMITIVE_REF(access));
-  dfsch_define_pkgcstr(ctx, os_pkg, "chdir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "chdir", 
                     DFSCH_PRIMITIVE_REF(chdir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "clock", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "clock", 
                     DFSCH_PRIMITIVE_REF(clock));
-  dfsch_define_pkgcstr(ctx, os_pkg, "close", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "close", 
                     DFSCH_PRIMITIVE_REF(close));
-  dfsch_define_pkgcstr(ctx, os_pkg, "closedir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "closedir", 
                     DFSCH_PRIMITIVE_REF(closedir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "creat", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "creat", 
                     DFSCH_PRIMITIVE_REF(creat));
-  dfsch_define_pkgcstr(ctx, os_pkg, "dup", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "dup", 
                     DFSCH_PRIMITIVE_REF(dup));
-  dfsch_define_pkgcstr(ctx, os_pkg, "dup2", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "dup2", 
                     DFSCH_PRIMITIVE_REF(dup2));
-  dfsch_define_pkgcstr(ctx, os_pkg, "exit", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "exit", 
                     DFSCH_PRIMITIVE_REF(exit));
-  dfsch_define_pkgcstr(ctx, os_pkg, "fstat", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "fstat", 
                        DFSCH_PRIMITIVE_REF(fstat));
-  dfsch_define_pkgcstr(ctx, os_pkg, "getcwd", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "getcwd", 
                        DFSCH_PRIMITIVE_REF(getcwd));
-  dfsch_define_pkgcstr(ctx, os_pkg, "getenv", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "getenv", 
                        DFSCH_PRIMITIVE_REF(getenv));
-  dfsch_define_pkgcstr(ctx, os_pkg, "getpid", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "getpid", 
                        DFSCH_PRIMITIVE_REF(getpid));
-  dfsch_define_pkgcstr(ctx, os_pkg, "gettimeofday", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "gettimeofday", 
                        DFSCH_PRIMITIVE_REF(gettimeofday));
-  dfsch_define_pkgcstr(ctx, os_pkg, "isatty", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "isatty", 
                     DFSCH_PRIMITIVE_REF(isatty));
-  dfsch_define_pkgcstr(ctx, os_pkg, "lseek", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "lseek", 
                     DFSCH_PRIMITIVE_REF(lseek));
-  dfsch_define_pkgcstr(ctx, os_pkg, "mkdir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "mkdir", 
                     DFSCH_PRIMITIVE_REF(mkdir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "open", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "open", 
                     DFSCH_PRIMITIVE_REF(open));
-  dfsch_define_pkgcstr(ctx, os_pkg, "opendir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "opendir", 
                     DFSCH_PRIMITIVE_REF(opendir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "raise", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "raise", 
                     DFSCH_PRIMITIVE_REF(raise));
-  dfsch_define_pkgcstr(ctx, os_pkg, "read", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "read", 
                     DFSCH_PRIMITIVE_REF(read));
-  dfsch_define_pkgcstr(ctx, os_pkg, "readdir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "readdir", 
                     DFSCH_PRIMITIVE_REF(readdir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "rename", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "rename", 
                     DFSCH_PRIMITIVE_REF(rename));
-  dfsch_define_pkgcstr(ctx, os_pkg, "rmdir", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "rmdir", 
                     DFSCH_PRIMITIVE_REF(rmdir));
-  dfsch_define_pkgcstr(ctx, os_pkg, "stat", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "stat", 
                     DFSCH_PRIMITIVE_REF(stat));
-  dfsch_define_pkgcstr(ctx, os_pkg, "write", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "write", 
                     DFSCH_PRIMITIVE_REF(write));
-  dfsch_define_pkgcstr(ctx, os_pkg, "unlink", 
+  dfsch_defcanon_pkgcstr(ctx, os_pkg, "unlink", 
                     DFSCH_PRIMITIVE_REF(unlink));
   
   dfsch_provide(ctx, "os");

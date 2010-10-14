@@ -680,6 +680,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
                      DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
                      dfsch__get_thread_info());
 }
+
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
@@ -702,6 +703,29 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
   }
   return DFSCH_INVALID_OBJECT;
 }
+
+dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
+                                  dfsch_object_t* value, 
+                                  int canonical){
+  environment_t *i;
+  object_t* ret;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    ret = dfsch_eqhash_revscan(&i->values, value, 
+                               canonical ? DFSCH_VAR_CANONICAL : 0);
+    if (ret != DFSCH_INVALID_OBJECT){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return DFSCH_INVALID_OBJECT;  
+}
+
 
 
 dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
@@ -782,7 +806,7 @@ void dfsch_unset(object_t* name, object_t* env){
 
 
 void dfsch_define(object_t* name, object_t* value, object_t* env,
-                  short flags){
+                  unsigned short flags){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -829,7 +853,11 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
-  return dfsch_eqhash_2_alist(&e->values);
+  dfsch_object_t* res;
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  res = dfsch_eqhash_2_alist(&e->values);
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return res;
 }
 dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                            dfsch_type_t* klass){
@@ -1535,10 +1563,6 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   return dfsch_eval(dfsch_backquote_expand(arg), env);
 }
 
-DFSCH_PRIMITIVE_HEAD(top_level_environment){
-  return baton;
-}
-
 extern char dfsch__std_lib[];
 
 dfsch_object_t* dfsch_make_top_level_environment(){
@@ -1546,50 +1570,54 @@ dfsch_object_t* dfsch_make_top_level_environment(){
 
   ctx = dfsch_new_frame(NULL);
 
-  dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
-  dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
-  dfsch_define_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
-  dfsch_define_cstr(ctx, "<special-type>", DFSCH_SPECIAL_TYPE);
-  dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
+  dfsch_defcanon_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
+  dfsch_defcanon_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
+  dfsch_defcanon_cstr(ctx, "<special-type>", DFSCH_SPECIAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
 
-  dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
-  dfsch_define_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
-  dfsch_define_cstr(ctx, "<slot-reader>", DFSCH_SLOT_READER_TYPE);
-  dfsch_define_cstr(ctx, "<slot-writer>", DFSCH_SLOT_WRITER_TYPE);
-  dfsch_define_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<size_t-slot>", DFSCH_SIZE_T_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<int-slot>", DFSCH_INT_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<long-slot>", DFSCH_LONG_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-reader>", DFSCH_SLOT_READER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-writer>", DFSCH_SLOT_WRITER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<size_t-slot>", DFSCH_SIZE_T_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<int-slot>", DFSCH_INT_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<long-slot>", DFSCH_LONG_SLOT_TYPE);
 
-  dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
-  dfsch_define_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
-  dfsch_define_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
-  dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
-  dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
-  dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
+  dfsch_defcanon_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
+  dfsch_defcanon_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
 
-  dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
 
-  dfsch_define_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
-  dfsch_define_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
 
+  dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "nil", NULL);
+  dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "t", DFSCH_SYM_TRUE);  
+  dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
-  dfsch_define_cstr(ctx, "top-level-environment", 
-                    DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
-  dfsch_define_cstr(ctx,"*dfsch-version*",
-                    dfsch_make_string_cstr(PACKAGE_VERSION));
-  dfsch_define_cstr(ctx,"*dfsch-build-id*",
-                    dfsch_make_string_cstr(BUILD_ID));
-  dfsch_define_cstr(ctx,"*dfsch-platform*",
-                    dfsch_make_string_cstr(HOST_TRIPLET));
+  dfsch_defcanon_cstr(ctx, "top-level-environment", ctx);
+  dfsch_defconst_cstr(ctx,"*dfsch-version*",
+                      dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_defconst_cstr(ctx,"*dfsch-build-id*",
+                      dfsch_make_string_cstr(BUILD_ID));
+  dfsch_defconst_cstr(ctx,"*dfsch-platform*",
+                      dfsch_make_string_cstr(HOST_TRIPLET));
 
   dfsch__primitives_register(ctx);
   dfsch__native_cxr_register(ctx);
@@ -1610,6 +1638,7 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
   dfsch__compile_register(ctx);
+  dfsch__serdes_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
 
@@ -1627,6 +1656,11 @@ void dfsch_defconst_cstr(dfsch_object_t *ctx,
                          void *obj){
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
 }
+void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                         char *name, 
+                         void *obj){
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
+}
 void dfsch_define_pkgcstr(dfsch_object_t *ctx,
                         dfsch_package_t* pkg,
                         char *name, 
@@ -1634,6 +1668,15 @@ void dfsch_define_pkgcstr(dfsch_object_t *ctx,
   
   dfsch_define(dfsch_intern_symbol(pkg, name), 
                (dfsch_object_t*)obj, ctx, 0);
+}
+void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
+                          dfsch_package_t* pkg,
+                          char *name, 
+                          void *obj){
+  
+  dfsch_define(dfsch_intern_symbol(pkg, name), 
+               (dfsch_object_t*)obj, ctx, 
+               DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
 }
 void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
                           dfsch_package_t* pkg,

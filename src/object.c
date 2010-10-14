@@ -23,6 +23,7 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+#include <dfsch/serdes.h>
 #include <dfsch/generic.h>
 #include "util.h"
 #include "internal.h"
@@ -111,6 +112,42 @@ static void instance_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
   dfsch_write_unreadable_with_slots(state, obj);
 }
 
+static void instance_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_type_t* klass = DFSCH_TYPE_OF(obj);
+  dfsch_serialize_stream_symbol(s, "class-instance");
+  dfsch_serialize_object(s, klass);
+  while (klass){
+    dfsch_slot_t* i = klass->slots;
+    while (i->type){
+      dfsch_serialize_stream_symbol(s, i->name);
+      dfsch_serialize_object(s, dfsch_slot_ref(obj, i, 1));
+      i++;
+    }
+    klass = klass->superclass;
+  }
+  dfsch_serialize_stream_symbol(s, NULL);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
+  dfsch_type_t* klass;
+  dfsch_object_t* ins;
+  dfsch_object_t* obj;
+  dfsch_object_t** place = dfsch_deserializer__skip_object(ds);
+  char* sym;
+  obj = dfsch_deserialize_object(ds);
+  klass = DFSCH_ASSERT_INSTANCE(obj, DFSCH_CLASS_TYPE);
+  *place = ins = dfsch_make_object(klass);
+
+  for(;;){
+    sym = dfsch_deserialize_stream_symbol(ds);
+    if (!sym){
+      break;
+    }
+    dfsch_slot_set_by_name(ins, sym, dfsch_deserialize_object(ds), 1);
+  }
+  return ins;
+}
+
 dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  char* name,
                                  dfsch_object_t* slots){
@@ -139,6 +176,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   }
 
   klass->standard_type.write = instance_write;
+  klass->standard_type.serialize = instance_serialize;
 
   /* klass->standard_type.equal_p = class_equal_p;
   klass->standard_type.apply = class_apply;
@@ -344,7 +382,7 @@ DFSCH_DEFINE_FORM(define_class, NULL, {}){
                            dfsch_symbol_2_typename(name),
                            slots);
 
-  dfsch_define(name, klass, env, 0);
+  dfsch_define(name, klass, env, DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
   finalize_slots_definition(klass, env, slots);
   return klass;
 }
@@ -456,10 +494,10 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
-  dfsch_define_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
+  dfsch_defcanon_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
 
-  dfsch_define_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
-  dfsch_define_cstr(ctx, "initialize-instance", &initialize_instance);
-  dfsch_define_cstr(ctx, "dfsch%write-instance", &write_instance);
+  dfsch_defcanon_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
+  dfsch_defcanon_cstr(ctx, "initialize-instance", &initialize_instance);
+  dfsch_defcanon_cstr(ctx, "dfsch%write-instance", &write_instance);
 }
