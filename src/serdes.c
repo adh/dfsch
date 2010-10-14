@@ -83,6 +83,9 @@ dfsch_serializer_t* dfsch_make_serializer(dfsch_output_proc_t op,
 
   return s;
 }
+dfsch_serializer_t* dfsch_serializer(dfsch_object_t* obj){
+  return DFSCH_ASSERT_INSTANCE(obj, DFSCH_SERIALIZER_TYPE);
+}
 
 void dfsch_serializer_set_object_hook(dfsch_serializer_t* s,
                                       dfsch_serializer_object_hook_t h,
@@ -332,13 +335,16 @@ dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
   ds->iproc = ip;
   ds->ip_baton = baton;
 
-  ds->sym_map = GC_MALLOC(sizeof(stream_symbol_t*)*16);
-  ds->sym_map_len = 16;
+  ds->sym_map = GC_MALLOC(sizeof(stream_symbol_t*)*256);
+  ds->sym_map_len = 256;
 
-  ds->obj_map = GC_MALLOC(sizeof(dfsch_object_t*)*16);
-  ds->obj_map_len = 16;
+  ds->obj_map = GC_MALLOC(sizeof(dfsch_object_t*)*256);
+  ds->obj_map_len = 256;
 
   return ds;
+}
+dfsch_deserializer_t* dfsch_deserializer(dfsch_object_t* obj){
+  return DFSCH_ASSERT_INSTANCE(obj, DFSCH_DESERIALIZER_TYPE);
 }
 
 void dfsch_deserializer_set_canonical_environment(dfsch_deserializer_t* ds,

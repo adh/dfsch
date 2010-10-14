@@ -9,6 +9,7 @@ extern dfsch_type_t dfsch_serializer_type;
 
 dfsch_serializer_t* dfsch_make_serializer(dfsch_output_proc_t op,
                                           void* baton);
+dfsch_serializer_t* dfsch_serializer(dfsch_object_t* obj);
 
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj);
@@ -19,9 +20,6 @@ void dfsch_serialize_strbuf(dfsch_serializer_t* s,
                             dfsch_strbuf_t* sb);
 void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
                                    char* sym);
-
-dfsch_serializer_t* dfsch_make_subserializer(dfsch_serializer_t* s);
-void dfsch_commit_subserializer(dfsch_serializer_t* s);
 
 typedef 
 int (*dfsch_serializer_object_hook_t)(dfsch_serializer_t* serializer,
@@ -48,6 +46,7 @@ typedef struct dfsch_deserializer_t dfsch_deserializer_t;
 
 dfsch_deserializer_t* dfsch_make_deserializer(dfsch_input_proc_t ip,
                                               void* baton);
+dfsch_deserializer_t* dfsch_deserializer(dfsch_object_t* obj);
 
 dfsch_object_t* dfsch_deserialize_object(dfsch_deserializer_t* ds);
 
@@ -87,11 +86,12 @@ dfsch_object_t* dfsch_get_externalized_object(char* name);
 
 /* High-level C interface */
 
-dfsch_strbuf_t* dfsch_serialize_to_strbuf(dfsch_object_t* obj, 
-                                          dfsch_object_t* canon_env);
-dfsch_object_t* dfsch_deserialize_from_strbuf(dfsch_strbuf_t* sb,
-                                              dfsch_object_t* canon_env);
+dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj, 
+                                dfsch_object_t* canon_env);
+dfsch_object_t* dfsch_deserialize(dfsch_strbuf_t* sb,
+                                  dfsch_object_t* canon_env);
 
 
+#define DFSCH_SERIALIZER_ARG
 
 #endif
