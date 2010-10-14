@@ -80,9 +80,6 @@ typedef dfsch_object_t* (*dfsch_deserializer_handler_t)(dfsch_deserializer_t* ds
 void dfsch_register_deserializer_handler(char* name,
                                          dfsch_deserializer_handler_t h);
 
-char* dfsch_get_externalized_object_name(dfsch_object_t* obj);
-dfsch_object_t* dfsch_get_externalized_object(char* name);
-
 #define DFSCH_DEFINE_DESERIALIZATION_HANDLER(name, cname)\
   static dfsch_object_t* deshandler_##cname(dfsch_deserializer_t* ds);  \
   static void __attribute__((constructor)) dhcons__##cname(){           \
@@ -98,6 +95,9 @@ dfsch_object_t* dfsch_deserialize(dfsch_strbuf_t* sb,
                                   dfsch_object_t* canon_env);
 
 
-#define DFSCH_SERIALIZER_ARG
+#define DFSCH_SERIALIZER_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, dfsch_serializer_t*, dfsch_serializer)
+#define DFSCH_DESERIALIZER_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, dfsch_deserializer_t*, dfsch_deserializer)
 
 #endif

@@ -1,6 +1,7 @@
 #include <dfsch/serdes.h>
 #include <dfsch/eqhash.h>
 #include <dfsch/strhash.h>
+#include <dfsch/ports.h>
 
 #include "util.h"
 
@@ -672,9 +673,197 @@ DFSCH_DEFINE_PRIMITIVE(deserialize,
   return dfsch_deserialize(string, canon_env);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_serializer,
+                       "Creates new serializer object writing into supplied "
+                       "port"){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_serializer(dfsch_port_write_buf, port);
+}
+
+DFSCH_DEFINE_PRIMITIVE(serializer_set_canonical_environment,
+                       "Sets cannonical environment used by serializer"){
+  dfsch_serializer_t* serializer;
+  dfsch_object_t* env;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+  
+  dfsch_serializer_set_canonical_environment(serializer, env);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(serialize_object,
+                       "Serialize object into serialization stream"){
+  dfsch_serializer_t* serializer;
+  dfsch_object_t* object;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_serialize_object(serializer, object);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(serialize_stream_symbol,
+                       "Write stream symbol (string marker) into "
+                       "serialization stream"){
+  dfsch_serializer_t* serializer;
+  char* sym;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, sym);
+  DFSCH_ARG_END(args);
+
+  dfsch_serialize_stream_symbol(serializer, sym);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(serialize_bytes,
+                       "Write raw binary data into serialization stream"){
+  dfsch_serializer_t* serializer;
+  dfsch_strbuf_t* string;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  dfsch_serialize_strbuf(serializer, string);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(serialize_integer,
+                       "Write raw binary data into serialization stream"){
+  dfsch_serializer_t* serializer;
+  int64_t number;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_INT64_ARG(args, number);
+  DFSCH_ARG_END(args);
+
+  dfsch_serialize_integer(serializer, number);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(serializer_write_stream_header,
+                       "Write (optional) header of serialized stream"){
+  dfsch_serializer_t* serializer;
+  char* format;
+  DFSCH_SERIALIZER_ARG(args, serializer);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, format);
+  DFSCH_ARG_END(args);
+
+  dfsch_serializer_write_stream_header(serializer, format);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(make_deserializer,
+                       "Creates new deserializer object reading from supplied "
+                       "port"){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_deserializer(dfsch_port_read_buf, port);
+}
+
+DFSCH_DEFINE_PRIMITIVE(deserializer_set_canonical_environment,
+                       "Sets cannonical environment used by deserializer"){
+  dfsch_deserializer_t* deserializer;
+  dfsch_object_t* env;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+  
+  dfsch_deserializer_set_canonical_environment(deserializer, env);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(deserializer_read_stream_header,
+                       "Read (optional) header of serialized stream"){
+  dfsch_deserializer_t* deserializer;
+  char* format;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, format);
+  DFSCH_ARG_END(args);
+
+  dfsch_deserializer_read_stream_header(deserializer, format);
+
+  return NULL;
+}
+
+
+DFSCH_DEFINE_PRIMITIVE(deserialize_object,
+                       "Read one object from serialized stream"){
+  dfsch_deserializer_t* deserializer;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_deserialize_object(deserializer);
+}
+DFSCH_DEFINE_PRIMITIVE(deserialize_stream_symbol,
+                       "Read stream symbol from serialized stream"){
+  dfsch_deserializer_t* deserializer;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_deserialize_stream_symbol(deserializer));
+}
+DFSCH_DEFINE_PRIMITIVE(deserialize_bytes,
+                       "Read raw bytes from serialized stream"){
+  dfsch_deserializer_t* deserializer;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_byte_vector_strbuf(dfsch_deserialize_strbuf(deserializer));
+}
+DFSCH_DEFINE_PRIMITIVE(deserialize_integer,
+                       "Read integer from serialized stream"){
+  dfsch_deserializer_t* deserializer;
+  DFSCH_DESERIALIZER_ARG(args, deserializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_number_from_int64(dfsch_deserialize_integer(deserializer));
+}
+
 void dfsch__serdes_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "serialize",
                       DFSCH_PRIMITIVE_REF(serialize));
   dfsch_defcanon_cstr(env, "deserialize",
                       DFSCH_PRIMITIVE_REF(deserialize));
+
+  dfsch_defcanon_cstr(env, "make-serializer",
+                      DFSCH_PRIMITIVE_REF(make_serializer));
+  dfsch_defcanon_cstr(env, "serializer-set-canonical-environment!",
+                      DFSCH_PRIMITIVE_REF(serializer_set_canonical_environment
+                                          ));
+
+  dfsch_defcanon_cstr(env, "serializer-write-stream-header!",
+                      DFSCH_PRIMITIVE_REF(serializer_write_stream_header));
+  dfsch_defcanon_cstr(env, "serialize-object!",
+                      DFSCH_PRIMITIVE_REF(serialize_object));
+  dfsch_defcanon_cstr(env, "serialize-bytes!",
+                      DFSCH_PRIMITIVE_REF(serialize_bytes));
+  dfsch_defcanon_cstr(env, "serialize-stream-symbol!",
+                      DFSCH_PRIMITIVE_REF(serialize_stream_symbol));
+  dfsch_defcanon_cstr(env, "serialize-integer!",
+                      DFSCH_PRIMITIVE_REF(serialize_integer));
+
+  dfsch_defcanon_cstr(env, "make-deserializer",
+                      DFSCH_PRIMITIVE_REF(make_serializer));
+  dfsch_defcanon_cstr(env, "deserializer-set-canonical-environment!",
+                      DFSCH_PRIMITIVE_REF(deserializer_set_canonical_environment
+                                          ));
+  
+  dfsch_defcanon_cstr(env, "deserializer-read-stream-header!",
+                      DFSCH_PRIMITIVE_REF(deserializer_read_stream_header));
+  dfsch_defcanon_cstr(env, "deserialize-object!",
+                      DFSCH_PRIMITIVE_REF(deserialize_object));
+  dfsch_defcanon_cstr(env, "deserialize-stream-symbol!",
+                      DFSCH_PRIMITIVE_REF(deserialize_stream_symbol));
+  dfsch_defcanon_cstr(env, "deserialize-integer!",
+                      DFSCH_PRIMITIVE_REF(deserialize_integer));
+  
 }
