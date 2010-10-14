@@ -118,6 +118,25 @@ static void serialize_back_reference(dfsch_serializer_t* s,
   dfsch_serialize_integer(s, ref);
 }
 
+#define DSS_MAGIC            "dSs0"
+#define DSS_FLAG_CANON       1
+
+#define DSS_UNKNOWN_FLAGS    (~1)
+
+void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
+                                          char* format){
+  int flags = 0;
+  serialize_bytes(s, DSS_MAGIC, 4);
+  if (s->canon_env){
+    flags |= DSS_FLAG_CANON;
+  }
+  dfsch_serialize_integer(s, flags);
+  if (format){
+    serialize_bytes(s, format, strlen(format));
+  }
+}
+
+
 void dfsch_put_serialized_object(dfsch_serializer_t* s,
                                  dfsch_object_t* obj){
   dfsch_eqhash_set(&s->obj_map, obj, (dfsch_object_t*)(s->obj_idx));
@@ -359,6 +378,34 @@ static void deserialize_bytes(dfsch_deserializer_t* ds, char*buf, size_t len){
     dfsch_error("Unexpected end of serialized stream", NULL);
   }
 }
+
+void dfsch_deserializer_read_stream_header(dfsch_deserializer_t* ds,
+                                           char* fmt){
+  char buf[4];
+  int flags;
+  deserialize_bytes(ds, buf, 4);
+  if (memcmp(buf, DSS_MAGIC, 4) != 0){
+    dfsch_error("Invalid stream header", ds);
+  }
+  flags = dfsch_deserialize_integer(ds);
+  if (flags & DSS_FLAG_CANON){
+    if (!ds->canon_env){
+      dfsch_error("Stream requires canonical environment", ds);
+    }
+  }
+  if (flags & DSS_UNKNOWN_FLAGS){
+    dfsch_error("Incompatible stream requirements", ds); 
+  }
+  if (fmt){
+    size_t len = strlen(fmt);
+    char fbuf[len];
+    deserialize_bytes(ds, fbuf, len);
+    if (memcmp(fbuf, fmt, len) != 0){
+      dfsch_error("Stream uses incompatible extended format", ds);
+    }
+  }
+}
+
 
 static stream_symbol_t* deserialize_stream_symbol(dfsch_deserializer_t* ds){
   ssize_t len = dfsch_deserialize_integer(ds);
