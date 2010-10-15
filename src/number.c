@@ -152,13 +152,48 @@ static int flonum_equal_p(flonum_t* a, flonum_t* b){
 }
 
 static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
+  int exp;
+  double x;
   dfsch_serialize_stream_symbol(s, "flonum");
-  dfsch_serialize_cstr(s, saprintf("%.32g", f->flonum));
+
+  x = f->flonum;
+  if (x < 0){
+    dfsch_serialize_integer(s, -1);
+    x = -x;
+  } else if (x == 0) {
+    dfsch_serialize_integer(s, 0);
+    return;
+  } else {
+    dfsch_serialize_integer(s, 1);
+  }
+
+  x = frexp(x, &exp);
+
+  dfsch_serialize_integer(s, exp);
+  dfsch_serialize_integer(s, (int64_t)((1LL << 53) * x));
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
-  char* s = dfsch_deserialize_strbuf(ds)->ptr;
-  dfsch_object_t* fn = dfsch_make_number_from_string(s, 10);
+  dfsch_object_t* fn;
+  double x;
+  int64_t v;
+  int exp;
+  int sign;
+
+  sign = dfsch_deserialize_integer(ds);
+  if (sign == 0){
+    x = 0;
+  } else {
+    exp = dfsch_deserialize_integer(ds);
+    v = dfsch_deserialize_integer(ds);
+    x = v;
+    x = ldexp(x / ((double)(1LL << 53)), exp);
+    if (sign == -1){
+      x = -x;
+    }
+  }
+
+  fn = dfsch_make_number_from_double(x);
   dfsch_deserializer_put_partial_object(ds, fn);
   return fn;
 }

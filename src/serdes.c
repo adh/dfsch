@@ -260,7 +260,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
     buf[6] = (i >> 16) & 0xff;
     buf[7] = (i >> 8) & 0xff;
     buf[8] = (i >> 0) & 0xff;
-    serialize_bytes(s, buf, 8);    
+    serialize_bytes(s, buf, 9);    
   }
 }
 void dfsch_serialize_string(dfsch_serializer_t* s,
@@ -475,8 +475,8 @@ void dfsch_deserializer_put_partial_object(dfsch_deserializer_t* ds,
 }
 
 int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
-  char lead;
-  char buf[8];
+  unsigned char lead;
+  unsigned char buf[8];
   int64_t val = 0;
   deserialize_bytes(ds, &lead, 1);
 
@@ -528,9 +528,9 @@ int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
     val |= ((((uint64_t)buf[4]) & 0xff) << 8);
     val |= ((((uint64_t)buf[5]) & 0xff) << 0);
     val = (val ^ (1ll << 48)) - (1ll << 48);
-  } else if ((lead & 0xfe) == 0xfc){
+  } else if (lead == 0xfe){
     deserialize_bytes(ds, buf, 7);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 48);
+    val = ((((uint64_t)buf[0]) & 0xff) << 48);
     val |= ((((uint64_t)buf[1]) & 0xff) << 40);
     val |= ((((uint64_t)buf[2]) & 0xff) << 32);
     val |= ((((uint64_t)buf[3]) & 0xff) << 24);
@@ -540,7 +540,7 @@ int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
     val = (val ^ (1ll << 55)) - (1ll << 55);
   } else if (lead  == 0xff){
     deserialize_bytes(ds, buf, 8);
-    val |= ((((uint64_t)buf[0]) & 0xff) << 56);
+    val = ((((uint64_t)buf[0]) & 0xff) << 56);
     val |= ((((uint64_t)buf[1]) & 0xff) << 48);
     val |= ((((uint64_t)buf[2]) & 0xff) << 40);
     val |= ((((uint64_t)buf[3]) & 0xff) << 32);
