@@ -151,6 +151,16 @@ static int flonum_equal_p(flonum_t* a, flonum_t* b){
   return a->flonum == b->flonum;
 }
 
+static uint64_t bit_reverse64(uint64_t v){
+  uint64_t s = sizeof(v) * CHAR_BIT;
+  uint64_t mask = ~0;         
+  while ((s >>= 1) > 0) {
+    mask ^= (mask << s);
+    v = ((v >> s) & mask) | ((v << s) & ~mask);
+  }  
+  return v;
+}
+
 static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
   int exp;
   double x;
@@ -170,7 +180,7 @@ static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
   x = frexp(x, &exp);
 
   dfsch_serialize_integer(s, exp);
-  dfsch_serialize_integer(s, (int64_t)((1LL << 53) * x));
+  dfsch_serialize_integer(s, bit_reverse64((int64_t)((1LL << 53) * x)));
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
@@ -185,7 +195,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
     x = 0;
   } else {
     exp = dfsch_deserialize_integer(ds);
-    v = dfsch_deserialize_integer(ds);
+    v = bit_reverse64(dfsch_deserialize_integer(ds));
     x = v;
     x = ldexp(x / ((double)(1LL << 53)), exp);
     if (sign == -1){
