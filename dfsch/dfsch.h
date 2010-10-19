@@ -520,6 +520,9 @@ extern "C" {
 
   /** Allocates new top-level environment. */
   extern dfsch_object_t* dfsch_make_top_level_environment();
+  /** fills existing environment with top-level definitions */
+  extern void dfsch_core_register(dfsch_object_t* ctx);
+
   /** Define new variable in given context */
   extern void dfsch_define_cstr(dfsch_object_t *ctx, 
                                 char *name, 

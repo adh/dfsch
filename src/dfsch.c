@@ -1565,11 +1565,7 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
 
 extern char dfsch__std_lib[];
 
-dfsch_object_t* dfsch_make_top_level_environment(){
-  dfsch_object_t* ctx;
-
-  ctx = dfsch_new_frame(NULL);
-
+void dfsch_core_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
   dfsch_defcanon_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
   dfsch_defcanon_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
@@ -1642,10 +1638,18 @@ dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch__load_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
+}
+
+
+dfsch_object_t* dfsch_make_top_level_environment(){
+  dfsch_object_t* ctx;
+
+  ctx = dfsch_new_frame(NULL);
+
+  dfsch_core_register(ctx);
 
   return ctx;
 }
-
 
 void dfsch_define_cstr(dfsch_object_t *ctx, 
                        char *name, 
