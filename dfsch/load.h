@@ -80,8 +80,6 @@ extern "C" {
   extern dfsch_object_t* dfsch_load_so_register(dfsch_object_t *ctx);
   /** Register scheme related part of this module. */
   extern dfsch_object_t* dfsch_load_scm_register(dfsch_object_t *ctx);
-  /** Register this module. */
-  extern dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx);
 
 #ifdef __cplusplus
 }

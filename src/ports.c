@@ -996,8 +996,6 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "string-input-port", 
                     DFSCH_PRIMITIVE_REF(string_input_port));
 
-}
-void dfsch_port_unsafe_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "set-current-output-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_output_port));
   dfsch_defcanon_cstr(ctx, "set-current-input-port!", 
@@ -1016,6 +1014,4 @@ void dfsch_port_unsafe_register(dfsch_object_t* ctx){
                     dfsch_standard_output_port());
   dfsch_defcanon_cstr(ctx, "*standard-error-port*",
                     dfsch_standard_error_port());
-  
-
 }

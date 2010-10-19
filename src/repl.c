@@ -161,9 +161,6 @@ int main(int argc, char**argv){
 
   ctx = dfsch_make_top_level_environment();
 
-
-  dfsch_load_register(ctx);
-  dfsch_port_unsafe_register(ctx);
   dfsch_set_standard_io_ports();
   dfsch_cinspect_set_as_inspector();
 
