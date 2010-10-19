@@ -61,6 +61,7 @@ typedef struct closure_t{
   environment_t* env;
   object_t* name;
   object_t* orig_code;
+  lambda_list_t* orig_args;
   object_t* documentation;
 } closure_t;
 
