@@ -788,8 +788,6 @@ static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
   dfsch_object_t** list = GC_MALLOC(sizeof(dfsch_object_t*) * (len+4));
   size_t i;
 
-  printf("compact-list %d %p\n", len, list);
-
   for (i = 0; i < len; i++){
     dfsch_deserializer_put_partial_object(ds, DFSCH_MAKE_CLIST(list+i));
     list[i] = dfsch_deserialize_object(ds);
@@ -799,7 +797,7 @@ static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
   list[len + 1] = dfsch_deserialize_object(ds);
   list[len + 2] = dfsch_deserialize_object(ds);
   list[len + 3] = dfsch_deserialize_object(ds);  
-  printf("%p\n", list);
+
   return DFSCH_MAKE_CLIST(list);
 }
 
