@@ -522,6 +522,10 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_top_level_environment();
   /** fills existing environment with top-level definitions */
   extern void dfsch_core_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level language-related definitions */
+  extern void dfsch_core_language_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level system-related definitions */
+  extern void dfsch_core_system_register(dfsch_object_t* ctx);
 
   /** Define new variable in given context */
   extern void dfsch_define_cstr(dfsch_object_t *ctx, 

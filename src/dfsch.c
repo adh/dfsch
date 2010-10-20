@@ -1565,7 +1565,9 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
 
 extern char dfsch__std_lib[];
 
-void dfsch_core_register(dfsch_object_t* ctx){
+void dfsch_core_language_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch-language");
+
   dfsch_defcanon_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
   dfsch_defcanon_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
   dfsch_defcanon_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
@@ -1618,26 +1620,38 @@ void dfsch_core_register(dfsch_object_t* ctx){
   dfsch__primitives_register(ctx);
   dfsch__native_cxr_register(ctx);
   dfsch__forms_register(ctx);
-  dfsch__system_register(ctx);
   dfsch__hash_native_register(ctx);
   dfsch__number_native_register(ctx);
   dfsch__string_native_register(ctx);
   dfsch__object_native_register(ctx);
-  //dfsch__weak_native_register(ctx);
   dfsch__format_native_register(ctx);
-  dfsch__port_native_register(ctx);
   dfsch__bignum_register(ctx);
   dfsch__conditions_register(ctx);
-  dfsch__random_register(ctx);
   dfsch__generic_register(ctx);
   dfsch__mkhash_register(ctx);
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
-  dfsch__compile_register(ctx);
-  dfsch__serdes_register(ctx);
-  dfsch__load_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
+}
+
+void dfsch_core_system_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch-system");
+
+  dfsch__system_register(ctx);
+  dfsch__port_native_register(ctx);
+  dfsch__random_register(ctx);
+  dfsch__serdes_register(ctx);
+  dfsch__load_register(ctx);
+  dfsch__compile_register(ctx);
+}
+
+
+void dfsch_core_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch");
+
+  dfsch_core_language_register(ctx);
+  dfsch_core_system_register(ctx);
 }
 
 

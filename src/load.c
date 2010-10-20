@@ -387,6 +387,9 @@ typedef struct builtin_module_t {
 
 static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
+  {"dfsch", dfsch_core_register},
+  {"dfsch-language", dfsch_core_language_register},
+  {"dfsch-system", dfsch_core_system_register},
 };
 
 static char* pathname_directory(char* path){
@@ -792,7 +795,6 @@ dfsch_object_t* dfsch_load_construct_default_path(){
 void dfsch__load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
                     dfsch_load_construct_default_path());
-  dfsch_define_cstr(ctx, "*load-modules*", NULL);
   dfsch_defcanon_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
   dfsch_defcanon_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
   dfsch_defcanon_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
