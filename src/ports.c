@@ -1003,15 +1003,17 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "set-current-error-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_error_port));
   
-  dfsch_defcanon_cstr(ctx, "open-file-port", 
-                    DFSCH_PRIMITIVE_REF(open_file_port));
-  dfsch_defcanon_cstr(ctx, "close-file-port!", 
-                    DFSCH_PRIMITIVE_REF(close_file_port));
-
   dfsch_defcanon_cstr(ctx, "*standard-input-port*",
                     dfsch_standard_input_port());
   dfsch_defcanon_cstr(ctx, "*standard-output-port*",
                     dfsch_standard_output_port());
   dfsch_defcanon_cstr(ctx, "*standard-error-port*",
                     dfsch_standard_error_port());
+}
+
+void dfsch__port_files_register(dfsch_object_t* ctx){
+  dfsch_defcanon_cstr(ctx, "open-file-port", 
+                    DFSCH_PRIMITIVE_REF(open_file_port));
+  dfsch_defcanon_cstr(ctx, "close-file-port!", 
+                    DFSCH_PRIMITIVE_REF(close_file_port));
 }
