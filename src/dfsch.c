@@ -382,6 +382,32 @@ void dfsch_set_default_trace_depth(int depth){
   dfsch_set_trace_depth(depth);
 }
 
+struct dfsch_saved_trace_t {
+  dfsch__tracepoint_t* trace_buffer;
+  short trace_ptr;
+  short trace_depth;
+};
+dfsch_saved_trace_t* dfsch_save_trace_buffer(){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  dfsch_saved_trace_t* st = GC_NEW(dfsch_saved_trace_t);
+  
+  st->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
+  memcpy(st->trace_buffer, ti->trace_buffer, 
+         sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
+  st->trace_depth = ti->trace_depth;
+  st->trace_ptr = ti->trace_ptr;
+
+  return st;
+}
+void dfsch_restore_trace_buffer(dfsch_saved_trace_t* st){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+
+  ti->trace_buffer = st->trace_buffer;
+  ti->trace_ptr = st->trace_ptr;
+  ti->trace_depth = st->trace_depth;
+}
+
+
 dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei;
   pthread_once(&thread_once, thread_key_alloc);
