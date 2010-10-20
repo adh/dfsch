@@ -901,31 +901,32 @@ dfsch_type_t dfsch_primitive_type = {
 static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
   int i;
   for (i = 0; i < ll->positional_count; i++){
+    if (i != 0) {
+      dfsch_write_string(ws, " ");
+    }
     dfsch_write_object(ws, ll->arg_list[i]);
-    dfsch_write_string(ws, " ");
   }
   if (ll->optional_count > 0){
-    dfsch_write_string(ws, "&optional ");
+    dfsch_write_string(ws, " &optional");
     for (i = 0; i < ll->optional_count; i++){
-      dfsch_write_object(ws, ll->arg_list[i + ll->positional_count]);
       dfsch_write_string(ws, " ");
+      dfsch_write_object(ws, ll->arg_list[i + ll->positional_count]);
     }
   }
   if (ll->rest){
     if (ll->flags & LL_FLAG_REST_IS_BODY){
-      dfsch_write_string(ws, "&body ");
+      dfsch_write_string(ws, " &body ");
     } else {
-      dfsch_write_string(ws, "&rest ");
+      dfsch_write_string(ws, " &rest ");
     }
     dfsch_write_object(ws, ll->rest);    
-    dfsch_write_string(ws, " ");
   }
   if (ll->keyword_count > 0){
-    dfsch_write_string(ws, "&key ");
+    dfsch_write_string(ws, " &key");
     for (i = 0; i < ll->keyword_count; i++){
+      dfsch_write_string(ws, " ");
       dfsch_write_object(ws, ll->arg_list[i + ll->positional_count 
                                           + ll->optional_count]);
-      dfsch_write_string(ws, " ");
     }
   }
 }
@@ -936,8 +937,8 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   if (c->name){
     dfsch_write_object(state, c->name);
   }
-  dfsch_write_string(state, " (");
-  print_lambda_list(c->args, state);
+  dfsch_write_string(state, "(");
+  print_lambda_list(c->orig_args, state);
   dfsch_write_string(state, ")");
 
   dfsch_write_unreadable_end(state);
@@ -2246,6 +2247,7 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
   c->orig_code = code;
+  c->orig_args = c->args;
 
   if (DFSCH_PAIR_P(code) && dfsch_string_p(DFSCH_FAST_CAR(code))){
     c->code = DFSCH_FAST_CDR(code);
