@@ -1614,6 +1614,24 @@ DFSCH_DEFINE_PRIMITIVE(tan, NULL){
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tan(z));
 }
+DFSCH_DEFINE_PRIMITIVE(sinh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(sinh(z));
+}
+DFSCH_DEFINE_PRIMITIVE(cosh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(cosh(z));
+}
+DFSCH_DEFINE_PRIMITIVE(tanh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(tanh(z));
+}
 
 DFSCH_DEFINE_PRIMITIVE(asin, NULL){
   double z;
@@ -2001,6 +2019,10 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
   dfsch_defcanon_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
   dfsch_defcanon_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
+
+  dfsch_defconst_cstr(ctx, "sinh", DFSCH_PRIMITIVE_REF(sinh));
+  dfsch_defconst_cstr(ctx, "cosh", DFSCH_PRIMITIVE_REF(cosh));
+  dfsch_defconst_cstr(ctx, "tanh", DFSCH_PRIMITIVE_REF(tanh));
 
   dfsch_defcanon_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
   dfsch_defcanon_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
