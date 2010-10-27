@@ -63,7 +63,7 @@ dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
 
 #ifdef ALLOC_DEBUG
   obj_count ++;
-  obj_size += type->size;
+  obj_size += type->size + size;
   printf(";; Alloc'd: #<%s 0x%x> serial %d arena %d\n", type->name, o, 
          obj_count, obj_size);
 #endif
@@ -382,6 +382,32 @@ void dfsch_set_default_trace_depth(int depth){
   dfsch_set_trace_depth(depth);
 }
 
+struct dfsch_saved_trace_t {
+  dfsch__tracepoint_t* trace_buffer;
+  short trace_ptr;
+  short trace_depth;
+};
+dfsch_saved_trace_t* dfsch_save_trace_buffer(){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  dfsch_saved_trace_t* st = GC_NEW(dfsch_saved_trace_t);
+  
+  st->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
+  memcpy(st->trace_buffer, ti->trace_buffer, 
+         sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
+  st->trace_depth = ti->trace_depth;
+  st->trace_ptr = ti->trace_ptr;
+
+  return st;
+}
+void dfsch_restore_trace_buffer(dfsch_saved_trace_t* st){
+  dfsch__thread_info_t *ti = dfsch__get_thread_info();
+
+  ti->trace_buffer = st->trace_buffer;
+  ti->trace_ptr = st->trace_ptr;
+  ti->trace_depth = st->trace_depth;
+}
+
+
 dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei;
   pthread_once(&thread_once, thread_key_alloc);
@@ -680,6 +706,7 @@ object_t* dfsch_lookup(object_t* name, object_t* env){
                      DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE),
                      dfsch__get_thread_info());
 }
+
 object_t* dfsch_env_get(object_t* name, object_t* env){
   environment_t *i;
   object_t* ret;
@@ -702,6 +729,29 @@ object_t* dfsch_env_get(object_t* name, object_t* env){
   }
   return DFSCH_INVALID_OBJECT;
 }
+
+dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
+                                  dfsch_object_t* value, 
+                                  int canonical){
+  environment_t *i;
+  object_t* ret;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    ret = dfsch_eqhash_revscan(&i->values, value, 
+                               canonical ? DFSCH_VAR_CANONICAL : 0);
+    if (ret != DFSCH_INVALID_OBJECT){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return DFSCH_INVALID_OBJECT;  
+}
+
 
 
 dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
@@ -782,7 +832,7 @@ void dfsch_unset(object_t* name, object_t* env){
 
 
 void dfsch_define(object_t* name, object_t* value, object_t* env,
-                  short flags){
+                  unsigned short flags){
   environment_t* e = (environment_t*)DFSCH_ASSERT_TYPE(env, 
                                                        DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -829,7 +879,11 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
-  return dfsch_eqhash_2_alist(&e->values);
+  dfsch_object_t* res;
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  res = dfsch_eqhash_2_alist(&e->values);
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return res;
 }
 dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                            dfsch_type_t* klass){
@@ -1001,6 +1055,9 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   }
 
   if (args && esc && l <= 12){
+    /* We have to copy arguments from stack to scratchpad instead of
+       building directly in scratchpad, because scratchpad might be
+       used by recursive invocations*/
     memcpy(ti->arg_scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
     args = DFSCH_MAKE_CLIST(ti->arg_scratch_pad);
   }
@@ -1122,7 +1179,10 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                "leads to surprising behavior", NULL);
       }
       mode = CLL_KEYWORD;
-    } else if (arg == DFSCH_LK_REST){
+    } else if (arg == DFSCH_LK_REST || arg == DFSCH_LK_BODY){
+      if (arg == DFSCH_LK_BODY){
+        flags |= LL_FLAG_REST_IS_BODY;
+      }
       i = DFSCH_FAST_CDR(i);
       if (!DFSCH_PAIR_P(i)){
         dfsch_error("Missing argument for &rest", list);
@@ -1334,8 +1394,28 @@ static void destructure_impl(lambda_list_t* ll,
   } else if (DFSCH_UNLIKELY(ll->keyword_count > 0)) {
     destructure_keywords(ll, j, env, ti);
   } else if (DFSCH_UNLIKELY(j)) {
-      dfsch_error("Too many arguments", dfsch_list(2,ll, list));
+    dfsch_error("Too many arguments", dfsch_list(2,ll, list));
   }
+
+  if (DFSCH_UNLIKELY(ll->aux_list)){
+    dfsch_object_t* vars = ll->aux_list;
+    while (DFSCH_PAIR_P(vars)){
+      dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+      object_t* var;
+      object_t* val;
+      
+      DFSCH_OBJECT_ARG(clause, var);
+      DFSCH_OBJECT_ARG(clause, val);
+      DFSCH_ARG_END(clause);
+      
+      val = dfsch_eval(val, env);
+      
+      dfsch_define(var, val, env, 0);
+      
+      vars = DFSCH_FAST_CDR(vars);
+    }
+  }
+
 }
 
 dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
@@ -1509,87 +1589,108 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   return dfsch_eval(dfsch_backquote_expand(arg), env);
 }
 
-DFSCH_PRIMITIVE_HEAD(top_level_environment){
-  return baton;
+extern char dfsch__std_lib[];
+
+void dfsch_core_language_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch-language");
+
+  dfsch_defcanon_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
+  dfsch_defcanon_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
+  dfsch_defcanon_cstr(ctx, "<special-type>", DFSCH_SPECIAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-reader>", DFSCH_SLOT_READER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<slot-writer>", DFSCH_SLOT_WRITER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<size_t-slot>", DFSCH_SIZE_T_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<int-slot>", DFSCH_INT_SLOT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<long-slot>", DFSCH_LONG_SLOT_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
+  dfsch_defcanon_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
+  dfsch_defcanon_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
+
+  dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "nil", NULL);
+  dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
+  dfsch_defconst_cstr(ctx, "t", DFSCH_SYM_TRUE);  
+  dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
+
+  dfsch_defcanon_cstr(ctx, "top-level-environment", ctx);
+  dfsch_defconst_cstr(ctx,"*dfsch-version*",
+                      dfsch_make_string_cstr(PACKAGE_VERSION));
+  dfsch_defconst_cstr(ctx,"*dfsch-build-id*",
+                      dfsch_make_string_cstr(BUILD_ID));
+  dfsch_defconst_cstr(ctx,"*dfsch-platform*",
+                      dfsch_make_string_cstr(HOST_TRIPLET));
+
+  dfsch__primitives_register(ctx);
+  dfsch__native_cxr_register(ctx);
+  dfsch__forms_register(ctx);
+  dfsch__hash_native_register(ctx);
+  dfsch__number_native_register(ctx);
+  dfsch__string_native_register(ctx);
+  dfsch__object_native_register(ctx);
+  dfsch__format_native_register(ctx);
+  dfsch__bignum_register(ctx);
+  dfsch__conditions_register(ctx);
+  dfsch__generic_register(ctx);
+  dfsch__mkhash_register(ctx);
+  dfsch__package_register(ctx);
+  dfsch__macros_register(ctx);
+  dfsch__port_native_register(ctx);
+
+  dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
 }
 
-extern char dfsch__std_lib[];
+void dfsch_core_system_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch-system");
+
+  dfsch__system_register(ctx);
+  dfsch__port_files_register(ctx);
+  dfsch__random_register(ctx);
+  dfsch__serdes_register(ctx);
+  dfsch__load_register(ctx);
+  dfsch__compile_register(ctx);
+}
+
+
+void dfsch_core_register(dfsch_object_t* ctx){
+  dfsch_provide(ctx, "dfsch");
+
+  dfsch_core_language_register(ctx);
+  dfsch_core_system_register(ctx);
+}
+
 
 dfsch_object_t* dfsch_make_top_level_environment(){
   dfsch_object_t* ctx;
 
   ctx = dfsch_new_frame(NULL);
 
-  dfsch_define_cstr(ctx, "<standard-type>", DFSCH_STANDARD_TYPE);
-  dfsch_define_cstr(ctx, "<abstract-type>", DFSCH_ABSTRACT_TYPE);
-  dfsch_define_cstr(ctx, "<meta-type>", DFSCH_META_TYPE);
-  dfsch_define_cstr(ctx, "<special-type>", DFSCH_SPECIAL_TYPE);
-  dfsch_define_cstr(ctx, "<standard-function>", DFSCH_STANDARD_FUNCTION_TYPE);
-
-  dfsch_define_cstr(ctx, "<slot-type>", DFSCH_SLOT_TYPE_TYPE);
-  dfsch_define_cstr(ctx, "<slot>", DFSCH_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<slot-accessor>", DFSCH_SLOT_ACCESSOR_TYPE);
-  dfsch_define_cstr(ctx, "<slot-reader>", DFSCH_SLOT_READER_TYPE);
-  dfsch_define_cstr(ctx, "<slot-writer>", DFSCH_SLOT_WRITER_TYPE);
-  dfsch_define_cstr(ctx, "<object-slot>", DFSCH_OBJECT_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<boolean-slot>", DFSCH_BOOLEAN_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<string-slot>", DFSCH_STRING_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<size_t-slot>", DFSCH_SIZE_T_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<int-slot>", DFSCH_INT_SLOT_TYPE);
-  dfsch_define_cstr(ctx, "<long-slot>", DFSCH_LONG_SLOT_TYPE);
-
-  dfsch_define_cstr(ctx, "<list>", DFSCH_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<pair>", DFSCH_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
-  dfsch_define_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
-  dfsch_define_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
-  dfsch_define_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
-  dfsch_define_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);
-  dfsch_define_cstr(ctx, "<macro>", DFSCH_MACRO_TYPE);
-  dfsch_define_cstr(ctx, "<form>", DFSCH_FORM_TYPE);
-  dfsch_define_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
-
-  dfsch_define_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
-
-  dfsch_define_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
-  dfsch_define_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
-
-
-  dfsch_define_cstr(ctx, "top-level-environment", 
-                    DFSCH_PRIMITIVE_REF_MAKE(top_level_environment, ctx));
-  dfsch_define_cstr(ctx,"*dfsch-version*",
-                    dfsch_make_string_cstr(PACKAGE_VERSION));
-  dfsch_define_cstr(ctx,"*dfsch-build-id*",
-                    dfsch_make_string_cstr(BUILD_ID));
-  dfsch_define_cstr(ctx,"*dfsch-platform*",
-                    dfsch_make_string_cstr(HOST_TRIPLET));
-
-  dfsch__primitives_register(ctx);
-  dfsch__native_cxr_register(ctx);
-  dfsch__forms_register(ctx);
-  dfsch__system_register(ctx);
-  dfsch__hash_native_register(ctx);
-  dfsch__number_native_register(ctx);
-  dfsch__string_native_register(ctx);
-  dfsch__object_native_register(ctx);
-  //dfsch__weak_native_register(ctx);
-  dfsch__format_native_register(ctx);
-  dfsch__port_native_register(ctx);
-  dfsch__bignum_register(ctx);
-  dfsch__conditions_register(ctx);
-  dfsch__random_register(ctx);
-  dfsch__generic_register(ctx);
-  dfsch__mkhash_register(ctx);
-  dfsch__package_register(ctx);
-  dfsch__macros_register(ctx);
-  dfsch__compile_register(ctx);
-
-  dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
+  dfsch_core_register(ctx);
 
   return ctx;
 }
-
 
 void dfsch_define_cstr(dfsch_object_t *ctx, 
                        char *name, 
@@ -1601,6 +1702,11 @@ void dfsch_defconst_cstr(dfsch_object_t *ctx,
                          void *obj){
   dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
 }
+void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                         char *name, 
+                         void *obj){
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, name, obj);
+}
 void dfsch_define_pkgcstr(dfsch_object_t *ctx,
                         dfsch_package_t* pkg,
                         char *name, 
@@ -1608,6 +1714,15 @@ void dfsch_define_pkgcstr(dfsch_object_t *ctx,
   
   dfsch_define(dfsch_intern_symbol(pkg, name), 
                (dfsch_object_t*)obj, ctx, 0);
+}
+void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
+                          dfsch_package_t* pkg,
+                          char *name, 
+                          void *obj){
+  
+  dfsch_define(dfsch_intern_symbol(pkg, name), 
+               (dfsch_object_t*)obj, ctx, 
+               DFSCH_VAR_CONSTANT | DFSCH_VAR_CANONICAL);
 }
 void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
                           dfsch_package_t* pkg,

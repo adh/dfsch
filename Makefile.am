@@ -4,7 +4,7 @@ ACLOCAL_AMFLAGS=-I m4
 bin_PROGRAMS = dfsch-repl dfsch-source-tool dfsch-run
 
 nobase_include_HEADERS = dfsch/lib/threads.h \
-	dfsch/lib/unix.h \
+	dfsch/lib/os.h \
 	dfsch/lib/regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/cdebug.h \
@@ -18,6 +18,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/csv.h \
 	dfsch/lib/zlib.h \
 	dfsch/lib/tk-gui.h \
+	dfsch/lib/crypto.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -42,7 +43,9 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/compile.h \
 	dfsch/generate.h \
 	dfsch/backquote.h \
-	dfsch/specializers.h
+	dfsch/specializers.h\
+	dfsch/serdes.h \
+	dfsch/strhash.h
 
 if TKGUI
 tkgui_libs=libdfsch-tk-gui.la
@@ -60,6 +63,7 @@ nonwin32_libs=\
 endif
 
 lib_LTLIBRARIES = libdfsch.la \
+	libdfsch-os.la \
 	libdfsch-console.la \
 	libdfsch-extref.la \
 	libdfsch-inet.la \
@@ -73,6 +77,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-json.la \
 	libdfsch-zlib.la \
 	libdfsch-csv.la \
+	libdfsch-crypto.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)
 
@@ -108,13 +113,14 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	os.la \
 	zlib.la \
 	csv.la \
+	crypto.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)
 
 
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
-	scm/unix-utils.scm \
+	scm/os-utils.scm \
 	scm/tk-gui.scm
 
 man_MANS = doc/dfsch-repl.1
@@ -149,6 +155,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/backquote.c dfsch/backquote.h \
 	src/trace.c dfsch/trace.h	\
 	src/specializers.c dfsch/specializers.h\
+	src/strhash.c dfsch/strhash.h	\
+	src/serdes.c dfsch/serdes.h	\
 	std-lib.c
 
 
@@ -223,11 +231,15 @@ regex_la_LIBADD =  libdfsch.la libdfsch-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-unix_la_LIBADD =  libdfsch.la
+unix_la_LIBADD =  libdfsch.la libdfsch-os.la
 
-os_la_SOURCES = lib/os.c
+libdfsch_os_la_SOURCES = lib/os.c dfsch/lib/os.h
+libdfsch_os_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libdfsch_os_la_LIBADD =  libdfsch.la
+
+os_la_SOURCES = lib/os_mod.c
 os_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-os_la_LIBADD =  libdfsch.la
+os_la_LIBADD =  libdfsch.la libdfsch-os.la
 
 libdfsch_zlib_la_SOURCES = lib/zlib.c dfsch/lib/zlib.h
 libdfsch_zlib_la_LDFLAGS = -version-info 1:0:0 -no-undefined
@@ -337,6 +349,37 @@ tk_gui_interface_la_SOURCES = lib/tk-gui_mod.c
 tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
 tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
 tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
+	lib/crypto/modes.c \
+	lib/crypto/aes.c lib/crypto/aes_tab.h \
+	lib/crypto/xtea.c \
+	lib/crypto/blowfish.c \
+	lib/crypto/hmac.c \
+	lib/crypto/sha256.c \
+	lib/crypto/sha512.c \
+	lib/crypto/sha1.c \
+	lib/crypto/md5.c \
+	lib/crypto/md4.c \
+	lib/crypto/curve25519.c \
+	lib/crypto/rsa.c \
+	lib/crypto/rsa-pad.c \
+	lib/crypto/salsa20.c \
+	lib/crypto/prng.c
+
+if WIN32
+prng_libadd = -lrpcrt4
+else
+prng_libadd = -lrt
+endif
+
+libdfsch_crypto_la_LIBADD = libdfsch.la $(prng_libadd)
+libdfsch_crypto_la_LDFLAGS = -no-undefined -version-info 1:0:0
+
+
+crypto_la_SOURCES = lib/crypto/module.c
+crypto_la_LIBADD = libdfsch.la libdfsch-crypto.la
+crypto_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 dfsch_repl_SOURCES = src/repl.c

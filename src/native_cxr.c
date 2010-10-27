@@ -58,7 +58,7 @@ void dfsch__native_cxr_register(dfsch_object_t *ctx){
   int i;
 
   for (i=0; i < (sizeof(cxr_table)/sizeof(cxr_table[0])); i++){
-    dfsch_define_cstr(ctx, cxr_table[i][0],
+    dfsch_defcanon_cstr(ctx, cxr_table[i][0],
                      DFSCH_PRIMITIVE_REF_MAKE(cxr,cxr_table[i][1]));
 
   }

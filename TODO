@@ -4,11 +4,9 @@ Non-version-specific:
 
 For 0.4.0 (ABI broken from 0.3.0)
 * loop
-* binary serialization
 
 0.4.x fetaures
 * Pretty-printer
-* circular reader
 
 0.5:
 * bytecode compiler
@@ -20,7 +18,6 @@ Sometimes:
 * Unicode
    - Normalization
    - Collation
-* syntax-rules
 * Missing parts of unix library (ftw, various system databases...)
 
 External modules and libraries:

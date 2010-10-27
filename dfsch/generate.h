@@ -19,6 +19,8 @@ dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
                                                dfsch_object_t* value);
 dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
                                                dfsch_object_t* value);
+dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
+                                                         dfsch_object_t* value);
 dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name);
 
 dfsch_object_t* dfsch_generate_instance_p(dfsch_object_t* obj,

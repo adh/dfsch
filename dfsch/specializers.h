@@ -14,7 +14,7 @@ typedef struct dfsch_type_specializer_type_t {
 extern dfsch_type_t dfsch_type_specializer_metatype;
 #define DFSCH_TYPE_SPECIALIZER_METATYPE (&dfsch_type_specializer_metatype)
 extern dfsch_type_t dfsch_type_specializer_type;
-#define DFSCH_TYPE_SPECIALIZER_TYPE (&dfsch_type_specialier_type)
+#define DFSCH_TYPE_SPECIALIZER_TYPE (&dfsch_type_specializer_type)
 
 int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
                                      dfsch_type_t* type);
@@ -47,8 +47,8 @@ extern dfsch_type_specializer_type_t dfsch_function_type_specializer_type;
 #define DFSCH_FUNCTION_TYPE_SPECIALIZER_TYPE (&dfsch_function_type_specializer_type)
 extern dfsch_type_specializer_type_t dfsch_compound_type_specializer_type;
 #define DFSCH_COMPOUND_TYPE_SPECIALIZER_TYPE (&dfsch_compound_type_specializer_type)
-extern dfsch_type_specializer_type_t dfsch_complement_type_specializer_type;
-#define DFSCH_COMPLEMENT_TYPE_SPECIALIZER_TYPE (&dfsch_complement_type_specializer_type)
+extern dfsch_type_specializer_type_t dfsch_complementary_type_specializer_type;
+#define DFSCH_COMPLEMENTARY_TYPE_SPECIALIZER_TYPE (&dfsch_complementary_type_specializer_type)
 
 dfsch_object_t* dfsch_make_type_specializer(dfsch_object_t* fun);
 dfsch_object_t* dfsch_union_specializers(dfsch_object_t* speclist);

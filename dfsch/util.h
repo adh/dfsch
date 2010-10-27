@@ -80,5 +80,7 @@ char* dfsch_getcwd();
 char* dfsch_get_path_directory(char* path);
 char* dfsch_realpath(char* path);
 
+char* dfsch_get_user_home_directory();
+char* dfsch_get_user_local_data_directory();
 
 #endif

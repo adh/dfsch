@@ -33,7 +33,7 @@ static void update_state(inspector_state_t* is, dfsch_object_t* obj){
   
   is->description = dfsch_string_to_cstr(dfsch_car(desc));
   is->slot_list = dfsch_cdr(desc);
-  dfsch_define_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
+  dfsch_defcanon_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
 }
 
 static void push_object(inspector_state_t* is, dfsch_object_t* obj){
@@ -50,11 +50,32 @@ static void pop_object(inspector_state_t* is){
 static void redisplay_object(inspector_state_t* is){
   dfsch_object_t* i;
   size_t j;
+  int max_len = -3;
 
   fprintf(stderr, "object %p is %s %s\n", 
           dfsch_car(is->object_stack),
           strchr("aeiou", is->description[0]) == NULL ? "a" : "an",
           is->description);
+
+  i = is->slot_list;
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* slot = DFSCH_FAST_CAR(i);
+    dfsch_object_t* name;
+    DFSCH_OBJECT_ARG(slot, name);
+
+    if (name){
+      int l = strlen(dfsch_object_2_string(name, 1, 0));
+      if (l > 25){
+        max_len = 25;
+        break;
+      }
+      if (l > max_len){
+        max_len = l;
+      }
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
 
   i = is->slot_list;
   j = 0;
@@ -68,8 +89,9 @@ static void redisplay_object(inspector_state_t* is){
     DFSCH_OBJECT_ARG(slot, value);
 
     if (name){
-      fprintf(stderr, "%4d: [%s] %s\n",
+      fprintf(stderr, "%4d: [%-*s] %s\n",
               j,
+              max_len,
               dfsch_object_2_string(name, 1, 0),
               dfsch_object_2_string(value, is->slot_print_depth, 1));
     } else {

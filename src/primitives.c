@@ -702,8 +702,8 @@ DFSCH_DEFINE_PRIMITIVE(object_2_string,
   long depth;
 
   DFSCH_OBJECT_ARG(args, object);
-  DFSCH_LONG_ARG_OPT(args, depth, 256);
-  DFSCH_OBJECT_ARG_OPT(args, readable, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, readable, DFSCH_SYM_TRUE);
+  DFSCH_LONG_ARG_OPT(args, depth, -1);
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_object_2_string(object, depth, 
@@ -1064,152 +1064,144 @@ DFSCH_DEFINE_PRIMITIVE(map_set_if_not_exists,
 /////////////////////////////////////////////////////////////////////////////
 
 void dfsch__primitives_register(dfsch_object_t *ctx){ 
-  dfsch_defconst_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
-  dfsch_defconst_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
-  dfsch_defconst_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
-  dfsch_defconst_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
-  dfsch_defconst_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
-  dfsch_defconst_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
-  dfsch_defconst_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
-  dfsch_defconst_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
-  dfsch_defconst_cstr(ctx, "get-list-annotation", 
+  dfsch_defcanon_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
+  dfsch_defcanon_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
+  dfsch_defcanon_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
+  dfsch_defcanon_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
+  dfsch_defcanon_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
+  dfsch_defcanon_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
+  dfsch_defcanon_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
+  dfsch_defcanon_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
+  dfsch_defcanon_cstr(ctx, "get-list-annotation", 
                       DFSCH_PRIMITIVE_REF(get_list_annotation));
 
-  dfsch_defconst_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
-  dfsch_defconst_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
-  dfsch_defconst_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
+  dfsch_defcanon_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
+  dfsch_defcanon_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
+  dfsch_defcanon_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
 
-  dfsch_defconst_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
+  dfsch_defcanon_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
 
 
-  dfsch_defconst_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
-  dfsch_defconst_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
-  dfsch_defconst_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
-  dfsch_defconst_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
-  dfsch_defconst_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
-  dfsch_defconst_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
-  dfsch_defconst_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
-  dfsch_defconst_cstr(ctx, "set-cdr!", DFSCH_PRIMITIVE_REF(set_cdr));
+  dfsch_defcanon_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_defcanon_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
+  dfsch_defcanon_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
+  dfsch_defcanon_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
+  dfsch_defcanon_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
+  dfsch_defcanon_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
+  dfsch_defcanon_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
+  dfsch_defcanon_cstr(ctx, "set-cdr!", DFSCH_PRIMITIVE_REF(set_cdr));
 
-  dfsch_defconst_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
-  dfsch_defconst_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
-  dfsch_defconst_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
-  dfsch_defconst_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
-  dfsch_defconst_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
-  dfsch_defconst_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
-  dfsch_defconst_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
-  dfsch_defconst_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
-  dfsch_defconst_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
-  dfsch_defconst_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
-  dfsch_defconst_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
-  dfsch_defconst_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
-  dfsch_defconst_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
-  dfsch_defconst_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
-  dfsch_defconst_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
-  dfsch_defconst_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
+  dfsch_defcanon_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
+  dfsch_defcanon_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
+  dfsch_defcanon_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
+  dfsch_defcanon_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
+  dfsch_defcanon_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
+  dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
+  dfsch_defcanon_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
+  dfsch_defcanon_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
+  dfsch_defcanon_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
+  dfsch_defcanon_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
+  dfsch_defcanon_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
+  dfsch_defcanon_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
+  dfsch_defcanon_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
+  dfsch_defcanon_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
+  dfsch_defcanon_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
+  dfsch_defcanon_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
 
-  dfsch_defconst_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
-  dfsch_defconst_cstr(ctx, "empty?", DFSCH_PRIMITIVE_REF(empty_p));
-  dfsch_defconst_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
-  dfsch_defconst_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
-  dfsch_defconst_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
-  dfsch_defconst_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
-  dfsch_defconst_cstr(ctx, "keyword?", DFSCH_PRIMITIVE_REF(keyword_p));
-  dfsch_defconst_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
-  dfsch_defconst_cstr(ctx, "primitive?", 
+  dfsch_defcanon_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
+  dfsch_defcanon_cstr(ctx, "empty?", DFSCH_PRIMITIVE_REF(empty_p));
+  dfsch_defcanon_cstr(ctx, "atom?", DFSCH_PRIMITIVE_REF(atom_p));
+  dfsch_defcanon_cstr(ctx, "pair?", DFSCH_PRIMITIVE_REF(pair_p));
+  dfsch_defcanon_cstr(ctx, "list?", DFSCH_PRIMITIVE_REF(list_p));
+  dfsch_defcanon_cstr(ctx, "symbol?", DFSCH_PRIMITIVE_REF(symbol_p));
+  dfsch_defcanon_cstr(ctx, "keyword?", DFSCH_PRIMITIVE_REF(keyword_p));
+  dfsch_defcanon_cstr(ctx, "string?", DFSCH_PRIMITIVE_REF(string_p));
+  dfsch_defcanon_cstr(ctx, "primitive?", 
                       DFSCH_PRIMITIVE_REF(primitive_p));
-  dfsch_defconst_cstr(ctx, "function?", DFSCH_PRIMITIVE_REF(function_p));
-  dfsch_defconst_cstr(ctx, "procedure?", 
+  dfsch_defcanon_cstr(ctx, "function?", DFSCH_PRIMITIVE_REF(function_p));
+  dfsch_defcanon_cstr(ctx, "procedure?", 
                       DFSCH_PRIMITIVE_REF(procedure_p));
-  dfsch_defconst_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));
-  dfsch_defconst_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
-  dfsch_defconst_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
+  dfsch_defcanon_cstr(ctx, "macro?", DFSCH_PRIMITIVE_REF(macro_p));
+  dfsch_defcanon_cstr(ctx, "form?", DFSCH_PRIMITIVE_REF(form_p));
+  dfsch_defcanon_cstr(ctx, "vector?", DFSCH_PRIMITIVE_REF(vector_p));
 
-
-  dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
-  dfsch_defconst_cstr(ctx, "nil", NULL);
-  dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
-  dfsch_defconst_cstr(ctx, "t", DFSCH_SYM_TRUE);  
-  dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
-
-
-  dfsch_defconst_cstr(ctx, "make-vector", 
+  dfsch_defcanon_cstr(ctx, "make-vector", 
                       DFSCH_PRIMITIVE_REF(make_vector));
-  dfsch_defconst_cstr(ctx, "vector", 
+  dfsch_defcanon_cstr(ctx, "vector", 
                       DFSCH_PRIMITIVE_REF(vector));
-  dfsch_defconst_cstr(ctx, "vector-length", 
+  dfsch_defcanon_cstr(ctx, "vector-length", 
                       DFSCH_PRIMITIVE_REF(vector_length));
-  dfsch_defconst_cstr(ctx, "vector-set!", 
+  dfsch_defcanon_cstr(ctx, "vector-set!", 
                       DFSCH_PRIMITIVE_REF(vector_set));
-  dfsch_defconst_cstr(ctx, "vector-ref", 
+  dfsch_defcanon_cstr(ctx, "vector-ref", 
                       DFSCH_PRIMITIVE_REF(vector_ref));
-  dfsch_defconst_cstr(ctx, "vector->list", 
+  dfsch_defcanon_cstr(ctx, "vector->list", 
                       DFSCH_PRIMITIVE_REF(vector_2_list));
-  dfsch_defconst_cstr(ctx, "list->vector", 
+  dfsch_defcanon_cstr(ctx, "list->vector", 
                       DFSCH_PRIMITIVE_REF(list_2_vector));
 
-  dfsch_defconst_cstr(ctx, "object->string", 
+  dfsch_defcanon_cstr(ctx, "object->string", 
                       DFSCH_PRIMITIVE_REF(object_2_string));
-  dfsch_defconst_cstr(ctx, "string->object", 
+  dfsch_defcanon_cstr(ctx, "string->object", 
                       DFSCH_PRIMITIVE_REF(string_2_object));
-  dfsch_defconst_cstr(ctx, "string->object-list", 
+  dfsch_defcanon_cstr(ctx, "string->object-list", 
                       DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_defconst_cstr(ctx, "dfsch%write-object", 
+  dfsch_defcanon_cstr(ctx, "dfsch%write-object", 
                       DFSCH_PRIMITIVE_REF(write__object));
-  dfsch_defconst_cstr(ctx, "dfsch%write-string", 
+  dfsch_defcanon_cstr(ctx, "dfsch%write-string", 
                       DFSCH_PRIMITIVE_REF(write__string));
 
-  dfsch_defconst_cstr(ctx, "symbol-qualified-name", 
+  dfsch_defcanon_cstr(ctx, "symbol-qualified-name", 
                       DFSCH_PRIMITIVE_REF(symbol_qualified_name));
-  dfsch_defconst_cstr(ctx, "symbol-name", 
+  dfsch_defcanon_cstr(ctx, "symbol-name", 
                       DFSCH_PRIMITIVE_REF(symbol_name));
-  dfsch_defconst_cstr(ctx, "symbol-package", 
+  dfsch_defcanon_cstr(ctx, "symbol-package", 
                       DFSCH_PRIMITIVE_REF(symbol_package));
-  dfsch_defconst_cstr(ctx, "keyword-name", 
+  dfsch_defcanon_cstr(ctx, "keyword-name", 
                       DFSCH_PRIMITIVE_REF(keyword_name));
-  dfsch_defconst_cstr(ctx, "string->symbol", 
+  dfsch_defcanon_cstr(ctx, "string->symbol", 
                       DFSCH_PRIMITIVE_REF(string_2_symbol));
-  dfsch_defconst_cstr(ctx, "intern-symbol", 
+  dfsch_defcanon_cstr(ctx, "intern-symbol", 
                       DFSCH_PRIMITIVE_REF(intern_symbol));
 
-  dfsch_defconst_cstr(ctx, "macro-expand", 
+  dfsch_defcanon_cstr(ctx, "macro-expand", 
                       DFSCH_PRIMITIVE_REF(macro_expand));
 
-  dfsch_defconst_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
-  dfsch_defconst_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
-  dfsch_defconst_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
-  dfsch_defconst_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
-  dfsch_defconst_cstr(ctx, "make-slot-accessor", 
+  dfsch_defcanon_cstr(ctx, "slot-ref", DFSCH_PRIMITIVE_REF(slot_ref));
+  dfsch_defcanon_cstr(ctx, "slot-set!", DFSCH_PRIMITIVE_REF(slot_set));
+  dfsch_defcanon_cstr(ctx, "get-slots", DFSCH_PRIMITIVE_REF(get_slots));
+  dfsch_defcanon_cstr(ctx, "find-slot", DFSCH_PRIMITIVE_REF(find_slot));
+  dfsch_defcanon_cstr(ctx, "make-slot-accessor", 
                       DFSCH_PRIMITIVE_REF(make_slot_accessor));
-  dfsch_defconst_cstr(ctx, "make-slot-reader", 
+  dfsch_defcanon_cstr(ctx, "make-slot-reader", 
                       DFSCH_PRIMITIVE_REF(make_slot_reader));
-  dfsch_defconst_cstr(ctx, "make-slot-writer", 
+  dfsch_defcanon_cstr(ctx, "make-slot-writer", 
                       DFSCH_PRIMITIVE_REF(make_slot_writer));
 
-  dfsch_defconst_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
+  dfsch_defcanon_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
 
-  dfsch_defconst_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
-  dfsch_defconst_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
-  dfsch_defconst_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
+  dfsch_defcanon_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
+  dfsch_defcanon_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_defcanon_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
-  dfsch_defconst_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
-  dfsch_defconst_cstr(ctx, "collection->list", 
+  dfsch_defcanon_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defcanon_cstr(ctx, "collection->list", 
                       DFSCH_PRIMITIVE_REF(collection_2_list));
-  dfsch_defconst_cstr(ctx, "collection->reversed-list", 
+  dfsch_defcanon_cstr(ctx, "collection->reversed-list", 
                       DFSCH_PRIMITIVE_REF(collection_2_reversed_list));
 
-  dfsch_defconst_cstr(ctx, "iter-next!", DFSCH_PRIMITIVE_REF(iter_next));
-  dfsch_defconst_cstr(ctx, "iter-this", DFSCH_PRIMITIVE_REF(iter_this));
+  dfsch_defcanon_cstr(ctx, "iter-next!", DFSCH_PRIMITIVE_REF(iter_next));
+  dfsch_defcanon_cstr(ctx, "iter-this", DFSCH_PRIMITIVE_REF(iter_this));
 
-  dfsch_defconst_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
-  dfsch_defconst_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
-  dfsch_defconst_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
+  dfsch_defcanon_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
+  dfsch_defcanon_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
+  dfsch_defcanon_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
 
-  dfsch_defconst_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
-  dfsch_defconst_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
-  dfsch_defconst_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
-  dfsch_defconst_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));
-  dfsch_defconst_cstr(ctx, "map-set-if-not-exists!", 
+  dfsch_defcanon_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
+  dfsch_defcanon_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
+  dfsch_defcanon_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
+  dfsch_defcanon_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));
+  dfsch_defcanon_cstr(ctx, "map-set-if-not-exists!", 
                       DFSCH_PRIMITIVE_REF(map_set_if_not_exists));
 
 

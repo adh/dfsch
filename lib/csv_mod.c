@@ -24,8 +24,8 @@ void dfsch_module_csv_register(dfsch_object_t* env){
   dfsch_package_t* csv = dfsch_make_package("csv");
   dfsch_provide(env, "csv");
   
-  dfsch_defconst_pkgcstr(env, csv, "read-line",
+  dfsch_defcanon_pkgcstr(env, csv, "read-line",
                          DFSCH_PRIMITIVE_REF(read_line));
-  dfsch_defconst_pkgcstr(env, csv, "read-file",
+  dfsch_defcanon_pkgcstr(env, csv, "read-file",
                          DFSCH_PRIMITIVE_REF(read_file));
 }

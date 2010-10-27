@@ -70,16 +70,16 @@ DFSCH_DEFINE_PRIMITIVE(emit_port, 0){
 void dfsch_module_sxml_register(dfsch_object_t* env){
   dfsch_package_t* xml_pkg = dfsch_make_package("xml");
   dfsch_provide(env, "sxml");
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-parse-string", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-parse-string", 
                        DFSCH_PRIMITIVE_REF(parse_string));
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-parse-file", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-parse-file", 
                        DFSCH_PRIMITIVE_REF(parse_file));
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-parse-port", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-parse-port", 
                        DFSCH_PRIMITIVE_REF(parse_port));
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-emit-string", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-emit-string", 
                        DFSCH_PRIMITIVE_REF(emit_string));
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-emit-file", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-emit-file", 
                        DFSCH_PRIMITIVE_REF(emit_file));
-  dfsch_define_pkgcstr(env, xml_pkg, "sxml-emit-port", 
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-emit-port", 
                        DFSCH_PRIMITIVE_REF(emit_port));
 }

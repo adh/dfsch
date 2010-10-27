@@ -27,14 +27,11 @@ dfsch_type_t dfsch_type_specializer_metatype;
 dfsch_type_t dfsch_type_specializer_type;
 
 
-int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,jhj154kk
-                                     dfsch_type_t*H type){
-  dfsch_object_t* obj = DFSCH_ASSERT_INSTANCE(spspecHialHHecHialHH
-izer,
+int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
+                                     dfsch_type_t* type){
+  dfsch_object_t* obj = DFSCH_ASSERT_INSTANCE(specializer,
                                               DFSCH_TYPE_SPECIALIZER_TYPE);
-  dfsch_type_t* st = DFSCH_TYPE_OF(obj);iHH
-H
-  H
+  dfsch_type_t* st = DFSCH_TYPE_OF(obj);
   while (st){
     if (DFSCH_INSTANCE_P(st, DFSCH_TYPE_SPECIALIZER_METATYPE)){
       if (((dfsch_type_specializer_type_t*)st)->matches_p){
@@ -64,7 +61,7 @@ dfsch_type_specializer_type_t dfsch_function_type_specializer_type = {
   .matches_p = function_matches_p
 };
 dfsch_type_specializer_type_t dfsch_compound_type_specializer_type;
-dfsch_type_specializer_type_t dfsch_complement_type_specializer_type;
+dfsch_type_specializer_type_t dfsch_complementary_type_specializer_type;
 
 dfsch_object_t* dfsch_make_type_specializer(dfsch_object_t* fun){
 

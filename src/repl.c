@@ -135,7 +135,7 @@ static void load_scm(dfsch_object_t* env, char* fname){
   dfsch_load_scm(env, fname, 0);
   c->fname = fname;
   c->env = env;
-  dfsch_define_cstr(env, "reload", dfsch_make_primitive(p_reload_impl, c));
+  dfsch_defcanon_cstr(env, "reload", dfsch_make_primitive(p_reload_impl, c));
 }
 
 
@@ -161,9 +161,6 @@ int main(int argc, char**argv){
 
   ctx = dfsch_make_top_level_environment();
 
-
-  dfsch_load_register(ctx);
-  dfsch_port_unsafe_register(ctx);
   dfsch_set_standard_io_ports();
   dfsch_cinspect_set_as_inspector();
 
@@ -245,7 +242,7 @@ int main(int argc, char**argv){
     
     dfsch_load_extend_path(ctx, directory);
 
-    dfsch_define_cstr(ctx, "*posix-argv*", 
+    dfsch_defcanon_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
     dfsch_load_scm(ctx, argv[optind], 1);

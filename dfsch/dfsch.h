@@ -445,6 +445,9 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
+                                           dfsch_object_t* value,
+                                           int canonical);
 
   extern dfsch_object_t* dfsch_variable_constant_value(dfsch_object_t* name, 
                                                        dfsch_object_t* env);
@@ -456,14 +459,18 @@ extern "C" {
   /** Unset variable name in environment env */
   extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
-#define DFSCH_VAR_CONSTANT 1
+  /** Variable is declared as constant - changing it leads to undefined 
+   * behavior */
+#define DFSCH_VAR_CONSTANT  1
+  /** Variable is canonical name of it's value. */
+#define DFSCH_VAR_CANONICAL 2
   
 
   /** Define variable name in environment env */
   extern void dfsch_define(dfsch_object_t* name,
                            dfsch_object_t* value,
                            dfsch_object_t* env,
-                           short flags);
+                           unsigned short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
@@ -513,6 +520,13 @@ extern "C" {
 
   /** Allocates new top-level environment. */
   extern dfsch_object_t* dfsch_make_top_level_environment();
+  /** fills existing environment with top-level definitions */
+  extern void dfsch_core_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level language-related definitions */
+  extern void dfsch_core_language_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level system-related definitions */
+  extern void dfsch_core_system_register(dfsch_object_t* ctx);
+
   /** Define new variable in given context */
   extern void dfsch_define_cstr(dfsch_object_t *ctx, 
                                 char *name, 
@@ -520,11 +534,18 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                                  char *name, 
+                                  void *obj); /* to suppress warnings*/
   extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
 				   dfsch_package_t* package,
 				   char *name, 
 				   void *obj); /* to suppress warnings*/
   extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
 				     dfsch_package_t* package,
 				     char *name, 
 				     void *obj); /* to suppress warnings*/
@@ -678,6 +699,82 @@ extern "C" {
       (name) = (type)(conv)(dfsch___tmp);                       \
       (al) = DFSCH_FAST_CDR((al));                              \
     }
+
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
+#define DFSCH_TYPED_ARG(al, name, type, klass)                  \
+  if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
+    dfsch_error("exception:required-argument-missing",          \
+                dfsch_make_string_cstr(#name));                 \
+  { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
+    (name) = (type)DFSCH_ASSERT_TYPE(dfsch___tmp, (klass));     \
+    (al) = DFSCH_FAST_CDR((al));                                \
+  }
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   * Uses default value instead of throwing exception when no arguments are 
+   * left.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param default Default value
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
+#define DFSCH_TYPED_ARG_OPT(al, name, default, type, klass)             \
+  if (!DFSCH_PAIR_P((al)))                                              \
+    {(name)=(default);} else                                            \
+    { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));               \
+      (name) = (type)DFSCH_ASSERT_TYPE(dfsch___tmp, (klass));           \
+      (al) = DFSCH_FAST_CDR((al));                                      \
+    }
+
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
+#define DFSCH_INSTANCE_ARG(al, name, type, klass)               \
+  if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
+    dfsch_error("exception:required-argument-missing",          \
+                dfsch_make_string_cstr(#name));                 \
+  { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
+    (name) = (type)DFSCH_ASSERT_INSTANCE(dfsch___tmp, (klass)); \
+    (al) = DFSCH_FAST_CDR((al));                                \
+  }
+  /**
+   * Parses one argument from arguments list and converts it using given 
+   * function. Intended for use in other macros, such as DFSCH_STRING_ARG.
+   * Uses default value instead of throwing exception when no arguments are 
+   * left.
+   *
+   * @param al Argument list
+   * @param name Variable or l-value.
+   * @param default Default value
+   * @param type C type of result
+   * @param conv Function for conversion from dfsch_object_t* to given type.
+   */
+#define DFSCH_INSTANCE_ARG_OPT(al, name, default, type, klass)          \
+  if (!DFSCH_PAIR_P((al)))                                              \
+    {(name)=(default);} else                                            \
+    { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));               \
+      (name) = (type)DFSCH_ASSERT_INSTANCE(dfsch___tmp, (klass));       \
+      (al) = DFSCH_FAST_CDR((al));                                      \
+    }
+
+
 
   /**
    * Throws exception if arguments list contain any arguments.

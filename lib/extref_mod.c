@@ -60,9 +60,9 @@ dfsch_object_t* dfsch_module_extref_register(dfsch_object_t* env){
   dfsch_package_t* extref = dfsch_make_package("extref");
   dfsch_provide(env, "extref");
 
-  dfsch_defconst_pkgcstr(env, extref, "make-extref", 
+  dfsch_defcanon_pkgcstr(env, extref, "make-extref", 
                          DFSCH_PRIMITIVE_REF(extref_make));
-  dfsch_defconst_pkgcstr(env, extref, "ref-extref", 
+  dfsch_defcanon_pkgcstr(env, extref, "ref-extref", 
                          DFSCH_PRIMITIVE_REF(extref_ref));
   return env;
 }

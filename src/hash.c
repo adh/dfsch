@@ -20,6 +20,7 @@
  */
 
 #include <dfsch/hash.h>
+#include <dfsch/serdes.h>
 #include "internal.h"
 #include <stdlib.h>
 #include "util.h"
@@ -64,6 +65,41 @@ static dfsch_mapping_methods_t hash_table_map = {
   .set_if_exists = dfsch_hash_set_if_exists,
 };
 
+static void hash_serialize(hash_t* h, dfsch_serializer_t* s){
+  int j;
+  hash_entry_t *i;
+
+  DFSCH_RWLOCK_RDLOCK(&h->lock);
+  dfsch_serialize_stream_symbol(s, "hash-table");
+  dfsch_serialize_integer(s, h->equal);
+
+  for (j=0; j<(h->mask+1); j++){
+    i = h->vector[j];
+    while (i){
+      dfsch_serialize_integer(s, 1);
+      dfsch_serialize_object(s, i->key);
+      dfsch_serialize_object(s, i->value);
+      i = i->next;
+    }
+  }
+  dfsch_serialize_integer(s, 0);
+  DFSCH_RWLOCK_UNLOCK(&h->lock);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("hash-table", hash_table){
+  int equal = dfsch_deserialize_integer(ds);
+  dfsch_object_t* hash = dfsch_hash_make(equal 
+                                         ? DFSCH_HASH_EQUAL 
+                                         : DFSCH_HASH_EQ);
+  dfsch_deserializer_put_partial_object(ds, hash);
+  while (dfsch_deserialize_integer(ds) == 1){
+    dfsch_object_t* key = dfsch_deserialize_object(ds);
+    dfsch_object_t* value = dfsch_deserialize_object(ds);
+    dfsch_hash_set(hash, key, value);
+  }
+  return hash;
+}
+
 dfsch_type_t dfsch_hash_table_type = {
   DFSCH_STANDARD_TYPE,
   NULL, //DFSCH_MAPPING_TYPE,
@@ -75,6 +111,7 @@ dfsch_type_t dfsch_hash_table_type = {
 
   .collection = &hash_table_col,
   .mapping = &hash_table_map,
+  .serialize = hash_serialize,
 };
 
 
@@ -492,25 +529,25 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
-  //dfsch_define_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
-  dfsch_define_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
-  //  dfsch_define_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
+  //dfsch_defcanon_cstr(ctx, "<hash>", DFSCH_HASH_BASETYPE);
+  dfsch_defcanon_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
+  //  dfsch_defcanon_cstr(ctx, "<custom-hash-type>", DFSCH_CUSTOM_HASH_TYPE_TYPE);
 
-  dfsch_define_cstr(ctx, "make-hash", 
+  dfsch_defcanon_cstr(ctx, "make-hash", 
                     DFSCH_PRIMITIVE_REF(make_hash));
-  dfsch_define_cstr(ctx, "hash?", 
+  dfsch_defcanon_cstr(ctx, "hash?", 
                     DFSCH_PRIMITIVE_REF(hash_p));
-  dfsch_define_cstr(ctx, "hash-ref", 
+  dfsch_defcanon_cstr(ctx, "hash-ref", 
                     DFSCH_PRIMITIVE_REF(hash_ref));
-  dfsch_define_cstr(ctx, "hash-unset!", 
+  dfsch_defcanon_cstr(ctx, "hash-unset!", 
                     DFSCH_PRIMITIVE_REF(hash_unset));
-  dfsch_define_cstr(ctx, "hash-set!", 
+  dfsch_defcanon_cstr(ctx, "hash-set!", 
                     DFSCH_PRIMITIVE_REF(hash_set));
-  dfsch_define_cstr(ctx, "hash-set-if-exists!", 
+  dfsch_defcanon_cstr(ctx, "hash-set-if-exists!", 
                     DFSCH_PRIMITIVE_REF(hash_set_if_exists));
-  dfsch_define_cstr(ctx, "hash->alist", 
+  dfsch_defcanon_cstr(ctx, "hash->alist", 
                     DFSCH_PRIMITIVE_REF(hash_2_alist));
-  dfsch_define_cstr(ctx, "alist->hash", 
+  dfsch_defcanon_cstr(ctx, "alist->hash", 
                     DFSCH_PRIMITIVE_REF(alist_2_hash));
 
 }
