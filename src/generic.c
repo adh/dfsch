@@ -23,6 +23,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/mkhash.h>
 #include <dfsch/generate.h>
+#include <dfsch/specializers.h>
 
 #include <stdio.h>
 
@@ -64,7 +65,7 @@ static int more_specific_method_p(dfsch_method_t* a,
     dfsch_object_t* bs = DFSCH_FAST_CAR(bi);
     
     if (as != bs){
-      if (dfsch_superclass_p(as, bs)){
+      if (dfsch_specializer_matches_type_p(bs, as)){
         return 0;
       } else {
         return 1;
@@ -156,8 +157,8 @@ static int method_applicable_p(dfsch_method_t* method,
   dfsch_object_t* si = method->specializers;
 
   while (DFSCH_PAIR_P(ai) && DFSCH_PAIR_P(si)){
-    if (!DFSCH_INSTANCE_P(DFSCH_FAST_CAR(ai),
-                          DFSCH_FAST_CAR(si))){
+    if (!dfsch_specializer_matches_type_p(DFSCH_FAST_CAR(si),
+                                          DFSCH_TYPE_OF(DFSCH_FAST_CAR(ai)))){
       return 0;
     }
 

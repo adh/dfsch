@@ -225,9 +225,19 @@ dfsch_object_t* dfsch_complementary_specializer(dfsch_object_t* specializer){
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(collection){
   return DFSCH_TYPE_COLLECTION_P(type);
 }
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(mapping){
+  return DFSCH_TYPE_MAPPING_P(type);
+}
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(sequence){
+  return DFSCH_TYPE_SEQUENCE_P(type);
+}
 
 void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<collection>>", 
                       DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(collection));
+  dfsch_defcanon_cstr(ctx, "<<mapping>>", 
+                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(mapping));
+  dfsch_defcanon_cstr(ctx, "<<sequence>>", 
+                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(sequence));
 }
 
