@@ -30,17 +30,19 @@ extern dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 typedef struct dfsch_singleton_type_specializer_t {
   dfsch_type_t* type;
   dfsch_type_specializer_matches_p_t matches_p;
+  char* name;
 } dfsch_singleton_type_specializer_t;
 
-#define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(name)                   \
-  static int spec_##name##_impl(dfsch_object_t* specializer,            \
-                                dfsch_type_t* type);                    \
-  static dfsch_singleton_type_specializer_t spec_##name={               \
-    .type = DFSCH_SINGLETON_TYPE_SPECIALIZER,                           \
-    .matches_p = spec_##name##_impl,                                    \
+#define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(n)                      \
+  static int spec_##n##_impl(dfsch_object_t* specializer,               \
+                             dfsch_type_t* type);                       \
+  static dfsch_singleton_type_specializer_t spec_##n = {                \
+    .type = DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE,                      \
+    .matches_p = spec_##n##_impl,                                       \
+    .name = #n                                                          \
   };                                                                    \
-  static int spec_##name##_impl(dfsch_object_t* specializer,            \
-                                dfsch_type_t* type)
+  static int spec_##n##_impl(dfsch_object_t* specializer,               \
+                             dfsch_type_t* type)
 
 #define DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(name)\
   ((dfsch_object_t*)&spec_##name)

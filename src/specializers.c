@@ -59,8 +59,26 @@ int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
 }
 
 dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
-dfsch_type_specializer_type_t dfsch_type_slot_specializer_type;
-dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type;
+
+
+static void singleton_write(dfsch_singleton_type_specializer_t* s, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)s, "%s", s->name);
+}
+static int singleton_matches_p(dfsch_singleton_type_specializer_t* spec,
+                              dfsch_type_t* type){
+  return spec->matches_p(spec, type);
+}
+
+dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type = {
+  .type = {
+    .type = DFSCH_TYPE_SPECIALIZER_METATYPE,
+    .superclass = DFSCH_TYPE_SPECIALIZER_TYPE,
+    .size = sizeof(dfsch_singleton_type_specializer_t),
+    .name = "singleton-type-specializer",
+    .write = singleton_write,
+  },
+  .matches_p = singleton_matches_p
+};
 
 static int function_matches_p(function_type_specializer_t* spec,
                               dfsch_type_t* type){
@@ -204,5 +222,12 @@ dfsch_object_t* dfsch_complementary_specializer(dfsch_object_t* specializer){
   return (dfsch_object_t*)spec;
 }
 
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(collection){
+  return DFSCH_TYPE_COLLECTION_P(type);
+}
 
+void dfsch__specializers_register(dfsch_object_t* ctx){
+  dfsch_defcanon_cstr(ctx, "<<collection>>", 
+                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(collection));
+}
 

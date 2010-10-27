@@ -1657,6 +1657,8 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch__mkhash_register(ctx);
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
+  dfsch__specializers_register(ctx);
+
   dfsch__port_native_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
