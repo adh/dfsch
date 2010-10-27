@@ -222,14 +222,18 @@ dfsch_object_t* dfsch_complementary_specializer(dfsch_object_t* specializer){
   return (dfsch_object_t*)spec;
 }
 
-DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(collection){
-  return DFSCH_TYPE_COLLECTION_P(type);
-}
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(mapping){
   return DFSCH_TYPE_MAPPING_P(type);
 }
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(sequence){
   return DFSCH_TYPE_SEQUENCE_P(type);
+}
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(collection){
+  if (type == DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(mapping) ||
+      type == DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(sequence)){
+    return 1;
+  }
+  return DFSCH_TYPE_COLLECTION_P(type);
 }
 
 void dfsch__specializers_register(dfsch_object_t* ctx){

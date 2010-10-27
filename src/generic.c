@@ -1028,7 +1028,7 @@ void dfsch__generic_register(dfsch_object_t* env){
                       (dfsch_object_t*)&generic_function_methods);
 
   dfsch_defcanon_cstr(env, "call-next-method",
-                    DFSCH_MACRO_REF(call_next_method));
+                      DFSCH_MACRO_REF(call_next_method));
 
   dfsch_defcanon_cstr(env, "define-generic-function",
                       DFSCH_MACRO_REF(define_generic_function));
