@@ -32,6 +32,7 @@
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
 #include <dfsch/serdes.h>
+#include <dfsch/specializers.h>
 #include "util.h"
 #include "internal.h"
 
@@ -522,7 +523,7 @@ static dfsch_slot_t type_slots[] = {
 
 dfsch_type_t dfsch_standard_type = {
   DFSCH_META_TYPE,
-  NULL,
+  DFSCH_TYPE_SPECIALIZER_TYPE,
   sizeof(dfsch_type_t),
   "standard-type",
   NULL,
