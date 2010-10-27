@@ -27,18 +27,23 @@ typedef struct dfsch_metatype_specializer_t {
 extern dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 #define DFSCH_METATYPE_SPECIALIZER_TYPE (&dfsch_metatype_specializer_type)
 
-typedef struct dfsch_type_slot_specializer_t {
-  dfsch_metatype_specializer_t parent;
-  size_t slot_offset;
-} dfsch_type_slot_specializer_t;
-
-extern dfsch_type_specializer_type_t dfsch_type_slot_specializer_type;
-#define DFSCH_TYPE_SLOT_SPECIALIZER_TYPE (&dfsch_type_slot_specializer_type)
-
 typedef struct dfsch_singleton_type_specializer_t {
   dfsch_type_t* type;
   dfsch_type_specializer_matches_p_t matches_p;
 } dfsch_singleton_type_specializer_t;
+
+#define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(name)                   \
+  static int spec_##name##_impl(dfsch_object_t* specializer,            \
+                                dfsch_type_t* type);                    \
+  static dfsch_singleton_type_specializer_t spec_##name={               \
+    .type = DFSCH_SINGLETON_TYPE_SPECIALIZER,                           \
+    .matches_p = spec_##name##_impl,                                    \
+  };                                                                    \
+  static int spec_##name##_impl(dfsch_object_t* specializer,            \
+                                dfsch_type_t* type)
+
+#define DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(name)\
+  ((dfsch_object_t*)&spec_##name)
 
 extern dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type;
 #define DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE (&dfsch_singleton_type_specializer_type)

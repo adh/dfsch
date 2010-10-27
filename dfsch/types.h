@@ -530,12 +530,20 @@ typedef struct dfsch_pair_t {
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
 
+#define DFSCH_TYPE_COLLECTION_P(t)                   \
+  (((dfsch_type_t*)(t))->collection != NULL)
 #define DFSCH_COLLECTION_P(o)                   \
-  (DFSCH_TYPE_OF((o))->collection != NULL)
-#define DFSCH_MAPPING_P(o)                      \
-  (DFSCH_TYPE_OF((o))->mapping != NULL)
-#define DFSCH_SEQUENCE_P(o)                     \
-  (DFSCH_TYPE_OF((o))->sequence != NULL)
+  (DFSCH_TYPE_COLLECTION_P(DFSCH_TYPE_OF((o))))
+
+#define DFSCH_TYPE_MAPPING_P(t)                   \
+  (((dfsch_type_t*)(t))->mapping != NULL)
+#define DFSCH_MAPPING_P(o)                   \
+  (DFSCH_TYPE_MAPPING_P(DFSCH_TYPE_OF((o))))
+
+#define DFSCH_TYPE_SEQUENCE_P(t)                   \
+  (((dfsch_type_t*)(t))->sequence != NULL)
+#define DFSCH_SEQUENCE_P(o)                   \
+  (DFSCH_TYPE_SEQUENCE_P(DFSCH_TYPE_OF((o))))
 
 #define DFSCH_ASSERT_COLLECTION(o)                                      \
   (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
