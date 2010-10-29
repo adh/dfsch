@@ -259,6 +259,17 @@ DFSCH_DEFINE_PRIMITIVE(make_type_specializer,
   return dfsch_make_type_specializer(proc);
 }
 
+DFSCH_DEFINE_PRIMITIVE(specializer_matches_type_p,
+                       "Test whenever given type is matched by specializer"){
+  dfsch_object_t* specializer;
+  dfsch_object_t* type;
+  DFSCH_OBJECT_ARG(args, specializer);
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_bool(dfsch_specializer_matches_type_p(specializer, type));
+}
+
 void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<collection>>", 
                       DFSCH_COLLECTION_SPECIALIZER);
@@ -271,5 +282,7 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
 
   dfsch_defcanon_cstr(ctx, "make-type-specializer",
                       DFSCH_PRIMITIVE_REF(make_type_specializer));
+  dfsch_defcanon_cstr(ctx, "specializer-matches-type?",
+                      DFSCH_PRIMITIVE_REF(specializer_matches_type_p));
 }
 
