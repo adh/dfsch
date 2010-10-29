@@ -1,4 +1,5 @@
 #include <dfsch/specializers.h>
+#include <dfsch/serdes.h>
 #include <assert.h>
 
 typedef struct function_type_specializer_t {
@@ -37,9 +38,12 @@ dfsch_type_t dfsch_type_specializer_type = {
 
 
 int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
-                                     dfsch_type_t* type){
+                                     dfsch_object_t* type){
   dfsch_object_t* obj = DFSCH_ASSERT_INSTANCE(specializer,
                                               DFSCH_TYPE_SPECIALIZER_TYPE);
+  dfsch_object_t* t = DFSCH_ASSERT_INSTANCE(type,
+                                            DFSCH_TYPE_SPECIALIZER_TYPE);
+  
   dfsch_type_t* st = DFSCH_TYPE_OF(obj);
   
   if (type == obj){
@@ -49,14 +53,20 @@ int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
   while (st){
     if (DFSCH_INSTANCE_P(st, DFSCH_TYPE_SPECIALIZER_METATYPE)){
       if (((dfsch_type_specializer_type_t*)st)->matches_p){
-        return ((dfsch_type_specializer_type_t*)st)->matches_p(obj, type);
+        return ((dfsch_type_specializer_type_t*)st)->matches_p(obj, t);
       }
       st = st->superclass;
     } else {
-      return dfsch_superclass_p(type, obj);
+      if (DFSCH_INSTANCE_P(t, DFSCH_STANDARD_TYPE) && 
+          DFSCH_INSTANCE_P(obj, DFSCH_STANDARD_TYPE)){
+        return dfsch_superclass_p(t, obj);
+      } else {
+        return 0;
+      }
     }
   }
 }
+
 
 dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 
@@ -222,26 +232,57 @@ dfsch_object_t* dfsch_complementary_specializer(dfsch_object_t* specializer){
   return (dfsch_object_t*)spec;
 }
 
-DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(mapping){
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_mapping_specializer, 
+                                        "mapping"){
   return DFSCH_TYPE_MAPPING_P(type);
 }
-DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(sequence){
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_sequence_specializer, 
+                                        "sequence"){
   return DFSCH_TYPE_SEQUENCE_P(type);
 }
-DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(collection){
-  if (type == DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(mapping) ||
-      type == DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(sequence)){
-    return 1;
-  }
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_collection_specializer, 
+                                        "collection"){
   return DFSCH_TYPE_COLLECTION_P(type);
+}
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_serializable_specializer,
+                                        "serializable"){
+  return dfsch_type_serializable_p(type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(make_type_specializer, 
+                       "Create new type specializer from arbitrary "
+                       "discriminating function"){
+  dfsch_object_t* proc;
+  DFSCH_OBJECT_ARG(args, proc);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_type_specializer(proc);
+}
+
+DFSCH_DEFINE_PRIMITIVE(specializer_matches_type_p,
+                       "Test whenever given type is matched by specializer"){
+  dfsch_object_t* specializer;
+  dfsch_object_t* type;
+  DFSCH_OBJECT_ARG(args, specializer);
+  DFSCH_OBJECT_ARG(args, type);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_bool(dfsch_specializer_matches_type_p(specializer, type));
 }
 
 void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<collection>>", 
-                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(collection));
+                      DFSCH_COLLECTION_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<mapping>>", 
-                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(mapping));
+                      DFSCH_MAPPING_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<sequence>>", 
-                      DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(sequence));
+                      DFSCH_SEQUENCE_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<serializable>>", 
+                      DFSCH_SERIALIZABLE_SPECIALIZER);
+
+  dfsch_defcanon_cstr(ctx, "make-type-specializer",
+                      DFSCH_PRIMITIVE_REF(make_type_specializer));
+  dfsch_defcanon_cstr(ctx, "specializer-matches-type?",
+                      DFSCH_PRIMITIVE_REF(specializer_matches_type_p));
 }
 
