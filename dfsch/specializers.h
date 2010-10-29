@@ -9,7 +9,8 @@ typedef int (*dfsch_type_specializer_matches_p_t)(dfsch_object_t* specializer,
 typedef struct dfsch_type_specializer_type_t {
   dfsch_type_t type;
   dfsch_type_specializer_matches_p_t matches_p;
-} dfsch_type_specializer_type_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_type_specializer_type_t;
 
 extern dfsch_type_t dfsch_type_specializer_metatype;
 #define DFSCH_TYPE_SPECIALIZER_METATYPE (&dfsch_type_specializer_metatype)
@@ -22,7 +23,8 @@ int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
 typedef struct dfsch_metatype_specializer_t {
   dfsch_type_t* type;
   dfsch_type_t* required_metatype;
-} dfsch_metatype_specializer_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_metatype_specializer_t;
 
 extern dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 #define DFSCH_METATYPE_SPECIALIZER_TYPE (&dfsch_metatype_specializer_type)
@@ -31,7 +33,8 @@ typedef struct dfsch_singleton_type_specializer_t {
   dfsch_type_t* type;
   dfsch_type_specializer_matches_p_t matches_p;
   char* name;
-} dfsch_singleton_type_specializer_t;
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_singleton_type_specializer_t;
 
 #define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(n)                      \
   static int spec_##n##_impl(dfsch_object_t* specializer,               \
