@@ -14,6 +14,7 @@ dfsch_serializer_t* dfsch_serializer(dfsch_object_t* obj);
 void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
                                           char* format);
 
+int dfsch_type_serializable_p(dfsch_type_t* type);
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj);
 

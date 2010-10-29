@@ -4,7 +4,7 @@
 #include <dfsch/dfsch.h>
 
 typedef int (*dfsch_type_specializer_matches_p_t)(dfsch_object_t* specializer,
-                                                  dfsch_type_t* type);
+                                                  dfsch_object_t* type);
 
 typedef struct dfsch_type_specializer_type_t {
   dfsch_type_t type;
@@ -17,7 +17,7 @@ extern dfsch_type_t dfsch_type_specializer_type;
 #define DFSCH_TYPE_SPECIALIZER_TYPE (&dfsch_type_specializer_type)
 
 int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
-                                     dfsch_type_t* type);
+                                     dfsch_object_t* type);
 
 typedef struct dfsch_metatype_specializer_t {
   dfsch_type_t* type;
@@ -30,22 +30,29 @@ extern dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 typedef struct dfsch_singleton_type_specializer_t {
   dfsch_type_t* type;
   dfsch_type_specializer_matches_p_t matches_p;
+  dfsch_object_t* superspecializer;
   char* name;
 } dfsch_singleton_type_specializer_t;
 
-#define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(n)                      \
+#define DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(n, iname)               \
   static int spec_##n##_impl(dfsch_object_t* specializer,               \
                              dfsch_type_t* type);                       \
-  static dfsch_singleton_type_specializer_t spec_##n = {                \
+  dfsch_singleton_type_specializer_t n = {                              \
     .type = DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE,                      \
     .matches_p = spec_##n##_impl,                                       \
-    .name = #n                                                          \
+    .name = iname,                                                      \
   };                                                                    \
   static int spec_##n##_impl(dfsch_object_t* specializer,               \
                              dfsch_type_t* type)
 
-#define DFSCH_SINGLETON_TYPE_SPECIALIZER_REF(name)\
-  ((dfsch_object_t*)&spec_##name)
+extern dfsch_singleton_type_specializer_t dfsch_mapping_specializer;
+#define DFSCH_MAPPING_SPECIALIZER (&dfsch_mapping_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_sequence_specializer;
+#define DFSCH_SEQUENCE_SPECIALIZER (&dfsch_sequence_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_collection_specializer;
+#define DFSCH_COLLECTION_SPECIALIZER (&dfsch_collection_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_serializable_specializer;
+#define DFSCH_SERIALIZABLE_SPECIALIZER (&dfsch_serializable_specializer)
 
 extern dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type;
 #define DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE (&dfsch_singleton_type_specializer_type)
