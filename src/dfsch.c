@@ -1534,6 +1534,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 0);
 #endif
 
+  async_apply_check(ti);
 
   /*
    * Two most common cases are written here explicitly (for historical

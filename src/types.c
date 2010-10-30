@@ -504,6 +504,56 @@ dfsch_type_t dfsch_iterator_type = {
   .collection = &dfsch_iterator_collection_methods,
 };
 
+typedef struct {
+  dfsch_type_t* type;
+  dfsch_object_t* sequence;
+  size_t index;
+  size_t length;
+} sequence_iterator_t;
+
+
+static dfsch_object_t* si_this(sequence_iterator_t* si){
+  return dfsch_sequence_ref(si->sequence, si->index);
+}
+
+static dfsch_object_t* si_next(sequence_iterator_t* si){
+  si->index++;
+  if (si->index < si->length){
+    return si;
+  } else {
+    return NULL;
+  }
+}
+
+dfsch_iterator_type_t dfsch_sequence_iterator_type = {
+  .type = {
+    .type = DFSCH_ITERATOR_TYPE_TYPE, 
+    .superclass = DFSCH_ITERATOR_TYPE,
+    .name = "sequence-iterator",
+    .size = sizeof(sequence_iterator_t),
+    .collection = &dfsch_iterator_collection_methods,
+  },
+  .next = si_next,
+  .this = si_this
+};
+
+dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence){
+  sequence_iterator_t* si = dfsch_make_object(DFSCH_SEQUENCE_ITERATOR_TYPE);
+  
+  si->sequence = DFSCH_ASSERT_SEQUENCE(sequence);
+  si->index = 0;
+  si->length = dfsch_sequence_length(si->sequence);
+
+  if (si->length == 0){
+    return NULL;
+  }
+
+  return si;
+}
+
+dfsch_collection_methods_t dfsch_sequence_collection_methods = {
+  .get_iterator = dfsch_make_sequence_iterator,
+};
 
 static void type_write(dfsch_type_t* t, dfsch_writer_state_t* state){
   dfsch_write_unreadable(state, (dfsch_object_t*)t, 
@@ -1100,10 +1150,6 @@ static void vector_serialize(vector_t* v, dfsch_serializer_t* s){
   }
 }
 
-static dfsch_collection_methods_t vector_collection = {
-  .get_iterator = dfsch_vector_2_list // TODO
-};
-
 static dfsch_sequence_methods_t vector_sequence = {
   .ref = dfsch_vector_ref,
   .set = dfsch_vector_set,
@@ -1131,7 +1177,7 @@ dfsch_type_t dfsch_vector_type = {
   NULL,
   (dfsch_type_hash_t)vector_hash,
   .describe = (dfsch_type_describe_t)vector_describe,
-  .collection = &vector_collection,
+  .collection = DFSCH_COLLECTION_AS_SEQUENCE,
   .sequence = &vector_sequence,
   .serialize = vector_serialize,
 };

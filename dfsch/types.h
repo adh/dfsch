@@ -422,6 +422,14 @@ extern dfsch_type_t dfsch_iterator_type_type;
 extern dfsch_type_t dfsch_iterator_type;
 #define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
 
+extern dfsch_iterator_type_t dfsch_sequence_iterator_type;
+#define DFSCH_SEQUENCE_ITERATOR_TYPE \
+  ((dfsch_type_t*)&dfsch_sequence_iterator_type)
+
+dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence);
+
+extern dfsch_collection_methods_t dfsch_sequence_collection_methods;
+#define DFSCH_COLLECTION_AS_SEQUENCE (&dfsch_sequence_collection_methods)
 
 /*
  * Objects should be always 8-byte aligned in memory, even on 32b platforms.
