@@ -276,8 +276,14 @@ DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
 DFSCH_DEFINE_PRIMITIVE(append, 0){
   return dfsch_append(args);
 }
+DFSCH_DEFINE_PRIMITIVE(nconc, 0){
+  return dfsch_nconc(args);
+}
 dfsch_object_t* dfsch_get_append_primitive(){
   return DFSCH_PRIMITIVE_REF(append);
+}
+dfsch_object_t* dfsch_get_nconc_primitive(){
+  return DFSCH_PRIMITIVE_REF(nconc);
 }
 
 DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
@@ -1094,6 +1100,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "length", DFSCH_PRIMITIVE_REF(length));
   dfsch_defcanon_cstr(ctx, "zip", DFSCH_PRIMITIVE_REF(zip));
   dfsch_defcanon_cstr(ctx, "append", DFSCH_PRIMITIVE_REF(append));
+  dfsch_defcanon_cstr(ctx, "nconc", DFSCH_PRIMITIVE_REF(nconc));
   dfsch_defcanon_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
   dfsch_defcanon_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));

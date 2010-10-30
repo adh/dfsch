@@ -853,6 +853,11 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           ctx->column++;
         
           parse_quote(ctx, DFSCH_SYM_UNQUOTE_SPLICING); 
+        }else if (*data == '.'){
+          ++data;
+          ctx->column++;
+        
+          parse_quote(ctx, DFSCH_SYM_UNQUOTE_NCONCING); 
         }else{
           parse_quote(ctx, DFSCH_SYM_UNQUOTE);
         }

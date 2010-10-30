@@ -60,7 +60,7 @@
                                                handlers)
                                          ,form))))
                    (case ,handler-id 
-                     ,@(map (lambda (handler)
+                     ,.(map (lambda (handler)
                               `((,(car handler)) 
                                 (let ((,(caadr handler) ,result))
                                   ,@(cddr handler))))

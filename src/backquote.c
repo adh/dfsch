@@ -47,15 +47,30 @@ dfsch_object_t* dfsch_backquote_expand(dfsch_object_t* arg){
 
     if (car == DFSCH_SYM_UNQUOTE && dfsch_pair_p(cdr)){
       return dfsch_car(cdr);
-    } else if (car == DFSCH_SYM_QUASIQUOTE) {
+    } else if (car == DFSCH_SYM_QUASIQUOTE || 
+               car == DFSCH_SYM_IMMUTABLE_QUASIQUOTE) {
       return backquote_nested(arg);
     } else if (dfsch_pair_p(car)){
       if (dfsch_car(car) == DFSCH_SYM_UNQUOTE_SPLICING){
-        return dfsch_immutable_list(3,
-                                    dfsch_get_append_primitive(),
-                                    dfsch_car(dfsch_cdr(car)),
-                                    dfsch_backquote_expand(cdr));
-    }
+        if (cdr){
+          return dfsch_immutable_list(3,
+                                      dfsch_get_append_primitive(),
+                                      dfsch_car(dfsch_cdr(car)),
+                                      dfsch_backquote_expand(cdr));
+        } else {
+          return dfsch_car(dfsch_cdr(car));
+        }
+      } else if (dfsch_car(car) == DFSCH_SYM_UNQUOTE_NCONCING){
+        if (cdr){
+          return dfsch_immutable_list(3,
+                                      dfsch_get_nconc_primitive(),
+                                      dfsch_car(dfsch_cdr(car)),
+                                      dfsch_backquote_expand(cdr));
+        } else {
+          return dfsch_car(dfsch_cdr(car));
+        }
+      }
+
     }
 
     return dfsch_generate_cons(dfsch_backquote_expand(car), 

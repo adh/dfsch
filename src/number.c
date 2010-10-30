@@ -134,8 +134,9 @@ static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
     dfsch_write_string(state, ".");
   }
 }
-static uint32_t flonum_hash(flonum_t* n){
-  char* ptr = ((char*)&(n->flonum));
+
+static uint32_t hash_double(double val){
+  char* ptr = ((char*)&val);
   size_t i = sizeof(double);
   uint32_t hash = 0xc32e64c9;
 
@@ -146,6 +147,10 @@ static uint32_t flonum_hash(flonum_t* n){
   }
 
   return hash;
+}
+
+static uint32_t flonum_hash(flonum_t* n){
+  return hash_double(n->flonum);
 }
 static int flonum_equal_p(flonum_t* a, flonum_t* b){
   return a->flonum == b->flonum;
@@ -304,11 +309,22 @@ dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
   dfsch_error("exception:not-a-rational-number", n);
 }
 
+flonum_t* flonum_cache[256];
+
 dfsch_object_t* dfsch_make_number_from_double(double num){
   flonum_t *n;
+  uint32_t hash = hash_double(num);
+
+  n = flonum_cache[hash & 0xff];
+  
+  if (n && n->flonum == num){
+    return n;
+  }
+
   n = (flonum_t*)dfsch_make_object(DFSCH_FLONUM_TYPE);
 
   n->flonum = num;
+  flonum_cache[hash & 0xff] = n;
 
   return (dfsch_object_t*)n;
 }

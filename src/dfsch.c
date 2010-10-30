@@ -100,6 +100,8 @@ int dfsch_equal_p(dfsch_object_t *a, dfsch_object_t *b){
   if (!a || !b)
     return 0;
 
+  dfsch_async_apply_check();
+
   if (DFSCH_TYPE_OF(a) != DFSCH_TYPE_OF(b)){
     if (DFSCH_PAIR_P(a) && DFSCH_PAIR_P(b)){
       return (dfsch_equal_p(DFSCH_FAST_CAR(a), DFSCH_FAST_CAR(b)) &&
@@ -1528,6 +1530,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   } else {
     DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 0);
   }
+#else
+  DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 0);
 #endif
 
 
@@ -1617,6 +1621,7 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
   dfsch_defcanon_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
   dfsch_defcanon_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<compact-list>", DFSCH_COMPACT_LIST_TYPE);
   dfsch_defcanon_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
   dfsch_defcanon_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
   dfsch_defcanon_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);

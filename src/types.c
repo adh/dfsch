@@ -1851,6 +1851,39 @@ dfsch_object_t* dfsch_append(dfsch_object_t* llist){
   return head;
 }
 
+dfsch_object_t* dfsch_nconc(dfsch_object_t* llist){
+  dfsch_object_t* res = NULL;
+  dfsch_object_t* last = NULL;
+  dfsch_object_t* i = llist;
+  dfsch_object_t* j;
+
+  for (;;){
+    j = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+
+    if (last){
+      dfsch_set_cdr(last, j);
+    } else {
+      res = j;
+    }
+    if (!DFSCH_PAIR_P(i)){
+      return res;
+    }
+
+    if (!j) {
+      continue;
+    }
+
+    while (DFSCH_PAIR_P(j)){
+      last = j;
+      j = DFSCH_FAST_CDR(j);
+    }
+    if (j){
+      dfsch_error("Improper list", NULL);
+    }
+  }
+}
+
 dfsch_object_t* dfsch_list(size_t count, ...){
   dfsch_object_t *head; 
   dfsch_object_t *cur;
