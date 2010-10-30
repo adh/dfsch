@@ -31,6 +31,7 @@ dfsch_object_t* dfsch_generate_error(char* message,
 dfsch_object_t* dfsch_generate_cons(dfsch_object_t* car, dfsch_object_t* cdr);
 dfsch_object_t* dfsch_generate_quote(dfsch_object_t* value);
 dfsch_object_t* dfsch_get_append_primitive();
+dfsch_object_t* dfsch_get_nconc_primitive();
 
 
 #endif

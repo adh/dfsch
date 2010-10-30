@@ -282,6 +282,9 @@ DFSCH_DEFINE_PRIMITIVE(nconc, 0){
 dfsch_object_t* dfsch_get_append_primitive(){
   return DFSCH_PRIMITIVE_REF(append);
 }
+dfsch_object_t* dfsch_get_nconc_primitive(){
+  return DFSCH_PRIMITIVE_REF(nconc);
+}
 
 DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
   int k;
