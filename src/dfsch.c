@@ -1617,6 +1617,7 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<mutable-pair>", DFSCH_MUTABLE_PAIR_TYPE);
   dfsch_defcanon_cstr(ctx, "<immutable-pair>", DFSCH_IMMUTABLE_PAIR_TYPE);
   dfsch_defcanon_cstr(ctx, "<empty-list>", DFSCH_EMPTY_LIST_TYPE);
+  dfsch_defcanon_cstr(ctx, "<compact-list>", DFSCH_COMPACT_LIST_TYPE);
   dfsch_defcanon_cstr(ctx, "<symbol>", DFSCH_SYMBOL_TYPE);
   dfsch_defcanon_cstr(ctx, "<primitive>", DFSCH_PRIMITIVE_TYPE);
   dfsch_defcanon_cstr(ctx, "<function>", DFSCH_FUNCTION_TYPE);

@@ -47,7 +47,8 @@ dfsch_object_t* dfsch_backquote_expand(dfsch_object_t* arg){
 
     if (car == DFSCH_SYM_UNQUOTE && dfsch_pair_p(cdr)){
       return dfsch_car(cdr);
-    } else if (car == DFSCH_SYM_QUASIQUOTE) {
+    } else if (car == DFSCH_SYM_QUASIQUOTE || 
+               car == DFSCH_SYM_IMMUTABLE_QUASIQUOTE) {
       return backquote_nested(arg);
     } else if (dfsch_pair_p(car)){
       if (dfsch_car(car) == DFSCH_SYM_UNQUOTE_SPLICING){
