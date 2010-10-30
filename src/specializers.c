@@ -270,6 +270,26 @@ DFSCH_DEFINE_PRIMITIVE(specializer_matches_type_p,
   return dfsch_bool(dfsch_specializer_matches_type_p(specializer, type));
 }
 
+DFSCH_DEFINE_PRIMITIVE(union_specializers,
+                       "Create new specializer which is union of supplied "
+                       "specializers"){
+  return dfsch_union_specializers(args);
+}
+DFSCH_DEFINE_PRIMITIVE(intersect_specializers,
+                       "Create new specializer which is intersection of "
+                       "supplied specializers"){
+  return dfsch_intersect_specializers(args);
+}
+DFSCH_DEFINE_PRIMITIVE(complementary_specializer,
+                       "Create new specializer which is complement of "
+                       "supplied specializer"){
+  dfsch_object_t* specializer;
+  DFSCH_OBJECT_ARG(args, specializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_complementary_specializer(specializer);
+}
+
 void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<collection>>", 
                       DFSCH_COLLECTION_SPECIALIZER);
@@ -284,5 +304,11 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
                       DFSCH_PRIMITIVE_REF(make_type_specializer));
   dfsch_defcanon_cstr(ctx, "specializer-matches-type?",
                       DFSCH_PRIMITIVE_REF(specializer_matches_type_p));
+  dfsch_defcanon_cstr(ctx, "union-specializers",
+                      DFSCH_PRIMITIVE_REF(union_specializers));
+  dfsch_defcanon_cstr(ctx, "intersect-specializers",
+                      DFSCH_PRIMITIVE_REF(intersect_specializers));
+  dfsch_defcanon_cstr(ctx, "complementary-specializer",
+                      DFSCH_PRIMITIVE_REF(complementary_specializer));
 }
 
