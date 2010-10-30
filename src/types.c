@@ -571,7 +571,9 @@ dfsch_type_t dfsch_list_type = {
   NULL,
   NULL,
   NULL,
-  "Abstract superclass of list-like objects"
+  "Abstract superclass of list-like objects",
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
 };
 
 dfsch_type_t dfsch_function_type = {
