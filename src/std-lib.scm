@@ -94,7 +94,7 @@
                                                restarts)
                                          ,form))))
                    (case ,restart-id 
-                     ,@(map (lambda (restart)
+                     ,.(map (lambda (restart)
                               `((,restart)
                                 (apply (lambda ,(cadr restart)
                                          ,@(cddr restart))
