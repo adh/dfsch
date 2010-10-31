@@ -144,6 +144,17 @@ void dfsch_put_serialized_object(dfsch_serializer_t* s,
   s->obj_idx++;
 }
 
+int dfsch_type_serializable_p(dfsch_type_t* type){
+  while (type){
+    if (type->serialize){
+      return 1;
+    }
+    type = type->superclass;
+  }
+  
+  return 0;
+}
+
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;

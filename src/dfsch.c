@@ -253,8 +253,8 @@ dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
   return DFSCH_TYPE_OF(s)->sequence->ref(s, k);  
 }
 void dfsch_sequence_set(dfsch_object_t* seq,
-                                   size_t k,
-                                   dfsch_object_t* value){
+                        size_t k,
+                        dfsch_object_t* value){
   dfsch_object_t* s = DFSCH_ASSERT_SEQUENCE(seq);
   if (!DFSCH_TYPE_OF(s)->sequence->set){
     dfsch_error("Sequence is immutable", s);
@@ -268,6 +268,7 @@ size_t dfsch_sequence_length(dfsch_object_t* seq){
   }
   return DFSCH_TYPE_OF(s)->sequence->length(s);  
 }
+
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
   if (DFSCH_PAIR_P(iterator)){
     dfsch_object_t* ret = DFSCH_FAST_CDR(iterator);
@@ -1663,6 +1664,8 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch__mkhash_register(ctx);
   dfsch__package_register(ctx);
   dfsch__macros_register(ctx);
+  dfsch__specializers_register(ctx);
+
   dfsch__port_native_register(ctx);
 
   dfsch_load_source(ctx, "*linked-standard-library*", 0, dfsch__std_lib);
