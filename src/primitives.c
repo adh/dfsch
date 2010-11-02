@@ -886,6 +886,11 @@ DFSCH_DEFINE_PRIMITIVE(throw, 0){
   dfsch_throw(tag, value);
   return NULL;
 }
+dfsch_object_t* dfsch_generate_throw(dfsch_object_t* tag,
+                                     dfsch_object_t* value){
+  return dfsch_immutable_list(3, DFSCH_PRIMITIVE_REF(throw), tag, value);
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(make_macro, 
 		       "Allocate new macro object implemented by function"){
@@ -893,7 +898,7 @@ DFSCH_DEFINE_PRIMITIVE(make_macro,
   return dfsch_make_macro(dfsch_car(args));
 }
 dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
-  return dfsch_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
+  return dfsch_immutable_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
 }
 
 DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection"){

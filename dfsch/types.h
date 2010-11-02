@@ -616,4 +616,6 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 #define DFSCH_SYM_COMPILED_FROM DFSCH__STATIC_SYMBOL(22)
 #define DFSCH_SYM_UNQUOTE_NCONCING DFSCH__STATIC_SYMBOL(23)
 
+#define DFSCH_SYM_BREAK DFSCH__STATIC_SYMBOL(24)
+
 #endif

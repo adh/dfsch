@@ -426,15 +426,15 @@ extern "C" {
 
   /** Convenience wrapper for signaling error condition from C code */
   extern void dfsch_error(char* type, 
-                          dfsch_object_t* data);
+                          dfsch_object_t* data) DFSCH_FUNC_COLD;
   /** Convenience wrapper for signaling recoverable error condition */
   extern void dfsch_cerror(char* type, 
-                           dfsch_object_t* data);
+                           dfsch_object_t* data) DFSCH_FUNC_COLD;
 
   /** Apply procedure later in evaluation (useful for signal handlers) */
   extern void dfsch_async_apply_self(dfsch_object_t* proc);
   /** Check for pending asynchronous apply */
-  extern void dfsch_async_apply_check();
+  extern void dfsch_async_apply_check() DFSCH_FUNC_HOT;
 
 
   // Lexical binding:

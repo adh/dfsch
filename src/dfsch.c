@@ -663,7 +663,7 @@ dfsch_object_t* dfsch_new_frame(dfsch_object_t* parent){
 
 static object_t* lookup_impl(object_t* name, 
                              environment_t* env,
-                             dfsch__thread_info_t* ti){
+                             dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   environment_t *i;
   object_t* ret;
 
@@ -956,7 +956,7 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
  * works even through C-code.
  */
 
-static void async_apply_check(dfsch__thread_info_t* ti){
+static inline void async_apply_check(dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   if (DFSCH_UNLIKELY(ti->async_apply)){
     dfsch_object_t* proc;
     proc = ti->async_apply;
@@ -1025,7 +1025,7 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
                                            dfsch_object_t* context,
                                            environment_t* arg_env,
                                            tail_escape_t* esc,
-                                           dfsch__thread_info_t* ti){
+                                           dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   size_t l = dfsch_list_length_fast_bounded(args); /* Fast and safe,
                                                       but supports at
                                                       most 64k args */
@@ -1086,7 +1086,7 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
-                                       dfsch__thread_info_t* ti){
+                                       dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
 
   if (!exp) 
     return NULL;
@@ -1352,7 +1352,7 @@ static void destructure_keywords(lambda_list_t* ll,
 static void destructure_impl(lambda_list_t* ll,
                              dfsch_object_t* list,
                              environment_t* env,
-                             dfsch__thread_info_t* ti){
+                             dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   int i;
   dfsch_object_t* j = list;
 
@@ -1438,7 +1438,7 @@ dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist,
 static dfsch_object_t* dfsch_eval_proc_impl(dfsch_object_t* code, 
                                             environment_t* env,
                                             tail_escape_t* esc,
-                                            dfsch__thread_info_t* ti){
+                                            dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   dfsch_object_t *i;
   dfsch_object_t *old_frame;
   dfsch_object_t *my_frame;
@@ -1507,7 +1507,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                         dfsch_object_t* args,
                                         dfsch_object_t* context,
                                         tail_escape_t* esc,
-                                        dfsch__thread_info_t* ti){
+                                        dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   dfsch_object_t* r;
   tail_escape_t myesc;
 

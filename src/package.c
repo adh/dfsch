@@ -160,6 +160,7 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "immutable-quasiquote"},
   {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
   {DFSCH_DFSCH_PACKAGE, "unquote-nconcing"},
+  {DFSCH_DFSCH_PACKAGE, "break"},
 };
 
 static dfsch_package_t* find_package(char* name){

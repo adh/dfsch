@@ -111,6 +111,24 @@ dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
                     exps);
 }
 
+DFSCH_DEFINE_FORM(loop, "Inifinite loop", {}){
+  dfsch_object_t* res;
+  DFSCH_CATCH_BEGIN(DFSCH_SYM_BREAK) {
+    for(;;){
+      dfsch_eval_proc(args, env);
+    }
+  } DFSCH_CATCH {
+    res = DFSCH_CATCH_VALUE;
+  } DFSCH_CATCH_END;
+
+  return res;
+}
+dfsch_object_t* dfsch_generate_loop(dfsch_object_t* exps){
+  return dfsch_cons(DFSCH_FORM_REF(loop), 
+                    exps);
+}
+
+
 DFSCH_DEFINE_FORM(internal_let, NULL, {}){
   object_t *vars;
   object_t *code;
@@ -183,16 +201,6 @@ DFSCH_DEFINE_FORM(catch, NULL, {}){
 
   return ret;
 }
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// do
-//
-/////////////////////////////////////////////////////////////////////////////
-
-
 
 DFSCH_DEFINE_FORM(destructuring_bind, NULL, {}){
   dfsch_object_t *arglist;
@@ -473,6 +481,7 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
 
 void dfsch__forms_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
+  dfsch_defcanon_cstr(ctx, "loop", DFSCH_FORM_REF(loop));
 
   dfsch_defcanon_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
   dfsch_defcanon_cstr(ctx, "if", DFSCH_FORM_REF(if));
