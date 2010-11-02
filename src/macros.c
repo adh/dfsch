@@ -388,16 +388,6 @@ DFSCH_DEFINE_MACRO(quasiquote, NULL){
   return dfsch_backquote_expand(arg);
 }
 
-DFSCH_DEFINE_MACRO(break, "Break from loop"){
-  dfsch_object_t* arg;
-  DFSCH_OBJECT_ARG_OPT(args, arg, NULL);
-  DFSCH_ARG_END(args);
-  
-  return dfsch_generate_throw(dfsch_generate_quote(DFSCH_SYM_BREAK), 
-                              arg);
-}
-
-
 void dfsch__macros_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "and", DFSCH_MACRO_REF(and));
   dfsch_defcanon_cstr(ctx, "or",DFSCH_MACRO_REF(or));
@@ -416,7 +406,6 @@ void dfsch__macros_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "letrec", DFSCH_MACRO_REF(letrec));
 
   dfsch_defcanon_cstr(ctx, "do", DFSCH_MACRO_REF(do));
-  dfsch_defcanon_cstr(ctx, "break", DFSCH_MACRO_REF(break));
 
   dfsch_defcanon_cstr(ctx, "quasiquote", DFSCH_MACRO_REF(quasiquote));
   dfsch_defcanon_cstr(ctx, "immutable-quasiquote", DFSCH_MACRO_REF(quasiquote));

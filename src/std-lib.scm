@@ -33,72 +33,81 @@
 
 (define-macro (dfsch:ignore-errors &rest forms)
   (with-gensyms (tag)
-                `(catch ',tag
-                        (handler-bind ((<error> (lambda (err)
-                                                  (throw ',tag ()))))
-                                      ,@forms))))
+    `(catch ',tag
+            (handler-bind ((<error> (lambda (err)
+                                      (throw ',tag ()))))
+              ,@forms))))
 
 (define-macro (dfsch:detect-errors &rest forms)
   (with-gensyms (tag)
-                `(catch ',tag
-                        (handler-bind ((<error> (lambda (err)
-                                                  (throw ',tag 
-                                                         (list () err)))))
-                                      (list (begin ,@forms))))))
+    `(catch ',tag
+            (handler-bind ((<error> (lambda (err)
+                                      (throw ',tag 
+                                             (list () err)))))
+              (list (begin ,@forms))))))
 
 (define-macro (dfsch:handler-case form &rest handlers)
   (with-gensyms (tag handler-id result)
-                `(let* ((,handler-id :no-error)
-                        (,result (catch ',tag
-                                        (handler-bind 
-                                         ,(map (lambda (handler)
-                                                 `(,(car handler)
-                                                   (lambda (err)
-                                                     (set! ,handler-id
-                                                           ',(car handler))
-                                                     (throw ',tag err))))
-                                               handlers)
-                                         ,form))))
-                   (case ,handler-id 
-                     ,.(map (lambda (handler)
-                              `((,(car handler)) 
-                                (let ((,(caadr handler) ,result))
-                                  ,@(cddr handler))))
+    `(let* ((,handler-id :no-error)
+            (,result (catch ',tag
+                            (handler-bind 
+                                ,(map (lambda (handler)
+                                        `(,(car handler)
+                                          (lambda (err)
+                                            (set! ,handler-id
+                                                  ',(car handler))
+                                            (throw ',tag err))))
+                                      handlers)
+                              ,form))))
+       (case ,handler-id 
+         ,.(map (lambda (handler)
+                  `((,(car handler)) 
+                    (let ((,(caadr handler) ,result))
+                      ,@(cddr handler))))
                             handlers)
-                     (else ,result)))))
+         (else ,result)))))
 
 (define-macro (dfsch:with-simple-restart name description &rest forms)
   (with-gensyms (tag)
-                `(catch ',tag
-                        (restart-bind ((,name (lambda ()
-                                             (throw ',tag ()))
-                                              ,description))
-                                      ,@forms))))
+    `(catch ',tag
+            (restart-bind ((,name (lambda ()
+                                    (throw ',tag ()))
+                                  ,description))
+              ,@forms))))
 
 
 (define-macro (dfsch:restart-case form &rest restarts)
   (with-gensyms (tag result restart-args restart-id)
-                `(let* ((,restart-id ())
-                        (,restart-args ())
-                        (,result (catch ',tag
-                                        (restart-bind 
-                                         ,(map (lambda (restart)
-                                                 `(',(car restart)
-                                                   (lambda (&rest args)
-                                                     (set! ,restart-id 
-                                                           ',restart)
-                                                     (throw ',tag ()))
-                                                   ',(when (string? (caddr 
-                                                                     restart))
-                                                           (caddr restart))))
-                                               restarts)
-                                         ,form))))
-                   (case ,restart-id 
-                     ,.(map (lambda (restart)
-                              `((,restart)
-                                (apply (lambda ,(cadr restart)
-                                         ,@(cddr restart))
-                                       ,restart-args)))
-                            restarts)
-                     (else ,result)))))
+    `(let* ((,restart-id ())
+            (,restart-args ())
+            (,result (catch ',tag
+                            (restart-bind 
+                                ,(map (lambda (restart)
+                                        `(',(car restart)
+                                          (lambda (&rest args)
+                                            (set! ,restart-id 
+                                                  ',restart)
+                                            (throw ',tag ()))
+                                          ',(when (string? (caddr 
+                                                            restart))
+                                                  (caddr restart))))
+                                      restarts)
+                              ,form))))
+       (case ,restart-id 
+         ,.(map (lambda (restart)
+                  `((,restart)
+                    (apply (lambda ,(cadr restart)
+                             ,@(cddr restart))
+                           ,restart-args)))
+                restarts)
+         (else ,result)))))
+
+
+
+(define-macro (dfsch:loop &rest exprs)
+  (with-gensyms (tag)
+    `(catch ',tag
+       (let ()
+         (define (break value) (throw ',tag value))
+         (%loop ,@exprs)))))
 
