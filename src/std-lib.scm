@@ -111,3 +111,9 @@
          (define (break value) (throw ',tag value))
          (%loop ,@exprs)))))
 
+(define (dfsch:make-simple-method-combination operator)
+  (lambda (methods function)
+    (lambda args
+      (reduce operator (map (lambda (meth)
+                              (call-method meth () args))
+                            (get-primary-methods methods))))))
