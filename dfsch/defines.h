@@ -34,4 +34,10 @@
 #undef DFSCH_GC_MALLOC_MANY_PREALLOC
 #endif
 
+#ifdef DFSCH_OMIT_DOCUMENTATION
+#define DFSCH_DOC_STRING(str) NULL
+#else
+#define DFSCH_DOC_STRING(str) (str)
+#endif
+
 #endif

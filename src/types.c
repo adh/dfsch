@@ -1039,6 +1039,7 @@ dfsch_type_t dfsch_standard_function_type = {
 static dfsch_slot_t macro_slots[] = {
   DFSCH_OBJECT_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
                     "Procedure implementing macro"),
+  DFSCH_SLOT_TERMINATOR  
 };
 
 static void macro_write(macro_t* m, dfsch_writer_state_t* state){

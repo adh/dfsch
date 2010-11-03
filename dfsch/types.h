@@ -107,7 +107,7 @@ extern dfsch_type_t dfsch_primitive_type;
     NULL,                                               \
     0,                                                  \
     #name,                                              \
-    documentation                                       \
+    DFSCH_DOC_STRING(documentation)                     \
   }
   
 #define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags, documentation)   \
@@ -117,7 +117,7 @@ extern dfsch_type_t dfsch_primitive_type;
     baton,                                                              \
     flags,                                                              \
     #name,                                                              \
-    documentation                                                       \
+    DFSCH_DOC_STRING(documentation)                                     \
   }
 
 #define DFSCH_PRIMITIVE_HEAD(name)                                      \
@@ -205,7 +205,7 @@ extern dfsch_type_t dfsch_form_type;
     form_##name##_impl,                                 \
     NULL,                                               \
     #name,                                              \
-    documentation,                                      \
+    DFSCH_DOC_STRING(documentation),                    \
     methods                                             \
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
