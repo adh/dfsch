@@ -200,6 +200,17 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
   }
   return o;
 }
+dfsch_object_t* dfsch_assert_metaclass_instance(dfsch_object_t* obj, 
+                                                dfsch_type_t* type){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_INSTANCE_P(DFSCH_TYPE_OF(o), type)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(DFSCH_TYPE_OF(o), type, 1);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
 
 dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj){
   dfsch_object_t* o = obj;

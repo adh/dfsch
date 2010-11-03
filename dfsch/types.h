@@ -537,6 +537,10 @@ typedef struct dfsch_pair_t {
   ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+#define DFSCH_ASSERT_METACLASS_INSTANCE(o, t)                           \
+  (DFSCH_INSTANCE_P(DFSCH_TYPE_OF((o)), (t)) ?                          \
+   (o) : dfsch_assert_metaclass_instance((o), (t)))
+
 
 #define DFSCH_TYPE_COLLECTION_P(t)                   \
   (((dfsch_type_t*)(t))->collection != NULL)

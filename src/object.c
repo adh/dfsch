@@ -28,30 +28,18 @@
 #include "util.h"
 #include "internal.h"
 
-
-typedef struct class_t {
-  dfsch_type_t standard_type;
-  dfsch_object_t* initialize_instance;
-  dfsch_object_t* write_instance;
-  dfsch_object_t* initfuncs;
-  dfsch_object_t* initargs;
-} class_t;
-
-
-dfsch_type_t dfsch_class_type = {
-  DFSCH_STANDARD_TYPE,
-  DFSCH_STANDARD_TYPE,
-  sizeof(class_t),
-  "class",
-
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-
-  NULL,
-  "Metaclass for user-defined classes"
+dfsch_type_t dfsch_metaclass_type = {
+  .type = DFSCH_META_TYPE,
+  .superclass = DFSCH_STANDARD_TYPE,
+  .name= "metaclass",
+  .size = sizeof(dfsch_metaclass_t),
 };
+
+typedef dfsch_standard_class_t class_t;
+
+dfsch_object_t* standard_allocate_instance(class_t* c){
+  return dfsch_make_object((dfsch_type_t*)c);
+}
 
 static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
   dfsch_object_t* i = slot_desc;
@@ -101,7 +89,7 @@ static size_t adjust_sizes(dfsch_slot_t* slots, size_t parent_size){
 static void instance_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
   class_t* i = DFSCH_TYPE_OF(obj);
 
-  while (DFSCH_INSTANCE_P(i, DFSCH_CLASS_TYPE)){
+  while (DFSCH_INSTANCE_P(i, DFSCH_STANDARD_CLASS_TYPE)){
     if (i->write_instance){
       dfsch_apply(i->write_instance, dfsch_list(2, obj, state));
       return;
@@ -135,7 +123,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
   dfsch_object_t** place = dfsch_deserializer__skip_object(ds);
   char* sym;
   obj = dfsch_deserialize_object(ds);
-  klass = DFSCH_ASSERT_INSTANCE(obj, DFSCH_CLASS_TYPE);
+  klass = DFSCH_ASSERT_INSTANCE(obj, DFSCH_STANDARD_CLASS_TYPE);
   *place = ins = dfsch_make_object(klass);
 
   for(;;){
@@ -148,17 +136,17 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("class-instance", class_instance){
   return ins;
 }
 
-dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
-                                 char* name,
-                                 dfsch_object_t* slots){
-  class_t* klass = (class_t*)dfsch_make_object(DFSCH_CLASS_TYPE);
+dfsch_object_t* standard_make_class(dfsch_metaclass_t* metaclass,
+                                    class_t* super,
+                                    char* name,
+                                    dfsch_object_t* slots){
+  class_t* klass = (class_t*)dfsch_make_object(DFSCH_STANDARD_CLASS_TYPE);
 
+  klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   klass->standard_type.name = name;
   klass->standard_type.slots = make_slots(slots);
-  klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
-  if (superclass){
-    class_t* super = DFSCH_ASSERT_INSTANCE(superclass,
-                                           DFSCH_CLASS_TYPE);
+
+  if (super){
 
     klass->standard_type.superclass = (dfsch_type_t*)super;
 
@@ -183,6 +171,54 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   klass->standard_type.hash = class_hash;*/
 
   return (dfsch_object_t*)klass;
+}
+
+dfsch_metaclass_t dfsch_standard_class_type = {
+  .type = {
+    DFSCH_METACLASS_TYPE,
+    DFSCH_STANDARD_TYPE,
+    sizeof(class_t),
+    "standard-class",
+    
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    
+    NULL,
+    "Metaclass for normal user-defined classes"
+  },
+  .allocate_instance = standard_allocate_instance,
+  .make_class = standard_make_class
+};
+
+
+dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
+                                 dfsch_object_t* metaclass,
+                                 char* name,
+                                 dfsch_object_t* slots){
+  dfsch_metaclass_t* mc;
+  dfsch_object_t* super = NULL;
+
+  if (superclass){
+    super = DFSCH_ASSERT_METACLASS_INSTANCE(superclass,
+                                            DFSCH_METACLASS_TYPE);
+  }
+
+  if (metaclass){
+    mc = DFSCH_ASSERT_INSTANCE(metaclass, DFSCH_METACLASS_TYPE);
+  } else if (super) {
+    mc = DFSCH_TYPE_OF(super);
+  } else {
+    mc = DFSCH_STANDARD_CLASS_TYPE;
+  }
+
+  if (super && !dfsch_superclass_p(mc, DFSCH_TYPE_OF(super))){
+    dfsch_error("Metaclass is not subclass of superclass metaclass",
+                mc);
+  }
+
+  return mc->make_class(mc, super, name, slots);
 }
 
 static dfsch_slot_t* find_direct_slot(class_t* type, 
@@ -266,7 +302,8 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
                        "Default implementation of initialize-instance"){
   dfsch_object_t* obj;
   DFSCH_OBJECT_ARG(args, obj);
-  class_t* klass = DFSCH_ASSERT_INSTANCE(DFSCH_TYPE_OF(obj), DFSCH_CLASS_TYPE);
+  class_t* klass = DFSCH_ASSERT_INSTANCE(DFSCH_TYPE_OF(obj), 
+                                         DFSCH_STANDARD_CLASS_TYPE);
   dfsch_object_t* i = klass->initfuncs;
 
   while (DFSCH_PAIR_P(i)){
@@ -318,14 +355,14 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
 
     i = DFSCH_FAST_CDR(i);
   }
-
 }
 
 dfsch_object_t* dfsch_allocate_instance(dfsch_object_t* klass){
   dfsch_object_t* obj;
-  class_t* c = DFSCH_ASSERT_INSTANCE(klass, DFSCH_CLASS_TYPE);
+  class_t* c = DFSCH_ASSERT_METACLASS_INSTANCE(klass, 
+                                               DFSCH_METACLASS_TYPE);
 
-  obj = dfsch_make_object((dfsch_type_t*)c);
+  obj = ((dfsch_metaclass_t*)DFSCH_TYPE_OF(c))->allocate_instance(c);
 
   return obj;
 }
@@ -343,13 +380,18 @@ DFSCH_DEFINE_FORM(define_class, NULL, {}){
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
   dfsch_object_t* klass;
+  dfsch_object_t* metaclass = DFSCH_STANDARD_CLASS_TYPE;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
   DFSCH_OBJECT_ARG(args, slots);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("metaclass", metaclass);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
   superclass= dfsch_eval(superclass, env);
-  klass = dfsch_make_class(superclass, 
+  klass = dfsch_make_class(superclass,
+                           metaclass,
                            dfsch_symbol_2_typename(name),
                            slots);
 
@@ -372,7 +414,7 @@ static void write_instance_add_method(dfsch_object_t* function,
   }
 
   klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
-                                DFSCH_CLASS_TYPE);
+                                DFSCH_STANDARD_CLASS_TYPE);
 
   klass->write_instance = method->function;
 }
@@ -390,7 +432,7 @@ static void write_instance_remove_method(dfsch_object_t* function,
   }
 
   klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
-                                DFSCH_CLASS_TYPE);
+                                DFSCH_STANDARD_CLASS_TYPE);
 
   klass->write_instance = NULL;
 }
@@ -421,7 +463,7 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
-  dfsch_defcanon_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "<standard-class>", DFSCH_STANDARD_CLASS_TYPE);
   dfsch_defcanon_cstr(ctx, "allocate-instance", 
                       DFSCH_PRIMITIVE_REF(allocate_instance));
 
