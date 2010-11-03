@@ -865,14 +865,32 @@ DFSCH_DEFINE_PRIMITIVE(eval_proc,
   return dfsch_eval_proc_tr(proc, env, esc);
 }
 DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
-  /* TODO: free arguments */
-  
   object_t* func;
-  object_t* arglist;
+  object_t* head = NULL;
+  object_t* tail;
+  object_t* arglist = NULL;
 
   DFSCH_OBJECT_ARG(args, func);
-  DFSCH_OBJECT_ARG(args, arglist);
-  DFSCH_ARG_END(args);
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* elem = DFSCH_FAST_CAR(args);
+    args = DFSCH_FAST_CDR(args);
+    if (!args){
+      arglist = elem;
+      break;
+    }
+    elem = dfsch_cons(elem, NULL);
+    if (!head){
+      head = tail = elem;
+    } else {
+      DFSCH_FAST_CDR_MUT(tail) = elem;
+      tail = elem;
+    }
+  }
+
+  if (head){
+    DFSCH_FAST_CDR_MUT(tail) = arglist;
+    arglist = head;
+  }
 
   return dfsch_apply_tr(func, arglist, esc);
 }

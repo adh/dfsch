@@ -113,7 +113,7 @@
 
 (define (dfsch:make-instance class &rest init-args)
   (let ((inst (allocate-instance class)))
-    (apply initialize-instance (cons inst init-args))
+    (apply initialize-instance inst init-args)
     inst))
 
 (define (dfsch:make-simple-method-combination operator)
