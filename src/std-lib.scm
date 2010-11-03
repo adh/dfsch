@@ -111,6 +111,11 @@
          (define (break value) (throw ',tag value))
          (%loop ,@exprs)))))
 
+(define (dfsch:make-instance class &rest init-args)
+  (let ((inst (allocate-instance class)))
+    (apply initialize-instance (cons inst init-args))
+    inst))
+
 (define (dfsch:make-simple-method-combination operator)
   (lambda (methods function)
     (lambda args

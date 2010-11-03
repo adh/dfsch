@@ -227,26 +227,20 @@ static void finalize_slots_definition(class_t* klass,
         if(dfsch_compare_keyword(keyword, "accessor")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_accessor_for_slot(klass, slot);
-          dfsch_method_t* method = 
-            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+          dfsch_define_method(env, value, NULL, dfsch_cons(klass, NULL), 
                               accessor);
-          dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_keyword(keyword, "reader")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_reader_for_slot(klass, slot);
-          dfsch_method_t* method = 
-            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+          dfsch_define_method(env, value, NULL, dfsch_cons(klass, NULL), 
                               accessor);
-          dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_keyword(keyword, "write")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_writer_for_slot(klass, slot);
-          dfsch_method_t* method = 
-            dfsch_make_method(accessor, NULL, dfsch_cons(klass, NULL), 
+          dfsch_define_method(env, value, NULL, dfsch_cons(klass, NULL), 
                               accessor);
-          dfsch_define_method(env, value, method);
           
         } else if(dfsch_compare_keyword(keyword, "initform")){
           klass->initfuncs = dfsch_cons
@@ -268,7 +262,8 @@ static void finalize_slots_definition(class_t* klass,
   }
 }
 
-static void default_initialize_instance(dfsch_object_t* args){
+DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
+                       "Default implementation of initialize-instance"){
   dfsch_object_t* obj;
   DFSCH_OBJECT_ARG(args, obj);
   class_t* klass = DFSCH_ASSERT_INSTANCE(DFSCH_TYPE_OF(obj), DFSCH_CLASS_TYPE);
@@ -326,45 +321,21 @@ static void default_initialize_instance(dfsch_object_t* args){
 
 }
 
-static void call_initialize_instance(class_t* klass,
-                                     dfsch_object_t* args,
-                                     dfsch_tail_escape_t* esc){
-  class_t* i = klass;
-
-  while (DFSCH_INSTANCE_P(i, DFSCH_CLASS_TYPE)){
-    if (i->initialize_instance){
-      dfsch_apply_with_context(i->initialize_instance, 
-                               args, 
-                               dfsch_make_simple_method_context(call_initialize_instance,
-                                                                i->standard_type.superclass,
-                                                                args),
-                               esc);
-      return;
-    }
-    i = i->standard_type.superclass;
-  }
-  
-  default_initialize_instance(args);
-}
-
-
-dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
-                                    dfsch_object_t* args){
+dfsch_object_t* dfsch_allocate_instance(dfsch_object_t* klass){
   dfsch_object_t* obj;
   class_t* c = DFSCH_ASSERT_INSTANCE(klass, DFSCH_CLASS_TYPE);
 
   obj = dfsch_make_object((dfsch_type_t*)c);
 
-  call_initialize_instance(c, dfsch_cons(obj, args), NULL);
-
   return obj;
 }
 
-DFSCH_DEFINE_PRIMITIVE(make_instance, 0){
+DFSCH_DEFINE_PRIMITIVE(allocate_instance, 0){
   dfsch_object_t* klass;
   DFSCH_OBJECT_ARG(args, klass);
+  DFSCH_ARG_END(args);
 
-  return dfsch_make_instance(klass, args);
+  return dfsch_allocate_instance(klass);
 }
 
 DFSCH_DEFINE_FORM(define_class, NULL, {}){
@@ -386,50 +357,6 @@ DFSCH_DEFINE_FORM(define_class, NULL, {}){
   finalize_slots_definition(klass, env, slots);
   return klass;
 }
-
-static void initialize_instance_add_method(dfsch_object_t* function,
-                                           dfsch_method_t* method){
-  class_t* klass;
-
-  if (dfsch_list_length_check(method->specializers) != 1){
-    dfsch_error("initialize-instance methods can only specialize on first"
-                " argument", method);
-  }
-  if (method->qualifiers != NULL){
-    dfsch_error("initialize-instance cannot have non-primary methods",
-                method);
-  }
-
-  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
-                                DFSCH_CLASS_TYPE);
-
-  klass->initialize_instance = method->function;
-}
-static void initialize_instance_remove_method(dfsch_object_t* function,
-                                              dfsch_method_t* method){
-  class_t* klass;
-
-  if (dfsch_list_length_check(method->specializers) != 1){
-    dfsch_error("initialize-instance methods can only specialize on first"
-                " argument", method);
-  }
-  if (method->qualifiers != NULL){
-    dfsch_error("initialize-instance cannot have non-primary methods",
-                method);
-  }
-
-  klass = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(method->specializers),
-                                DFSCH_CLASS_TYPE);
-
-  klass->initialize_instance = NULL;
-}
-
-
-static dfsch_singleton_generic_function_t initialize_instance = {
-  .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
-  .add_method = initialize_instance_add_method,  
-  .remove_method = initialize_instance_remove_method,  
-};
 
 static void write_instance_add_method(dfsch_object_t* function,
                                            dfsch_method_t* method){
@@ -495,9 +422,14 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<class>", DFSCH_CLASS_TYPE);
-  dfsch_defcanon_cstr(ctx, "make-instance", DFSCH_PRIMITIVE_REF(make_instance));
+  dfsch_defcanon_cstr(ctx, "allocate-instance", 
+                      DFSCH_PRIMITIVE_REF(allocate_instance));
+
+
+  dfsch_define_method_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, "initialize-instance",
+                              NULL, NULL, 
+                              DFSCH_PRIMITIVE_REF(default_initialize_instance));
 
   dfsch_defcanon_cstr(ctx, "define-class", DFSCH_FORM_REF(define_class));
-  dfsch_defcanon_cstr(ctx, "initialize-instance", &initialize_instance);
   dfsch_defcanon_cstr(ctx, "dfsch%write-instance", &write_instance);
 }

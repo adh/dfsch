@@ -132,9 +132,23 @@ dfsch_object_t* dfsch_call_next_method(dfsch_object_t* context,
                                        dfsch_object_t* args,
                                        dfsch_tail_escape_t* esc);
 
-dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
-                                    dfsch_object_t* name,
-                                    dfsch_method_t* method);
+void dfsch_define_method(dfsch_object_t* env,
+                         dfsch_object_t* name,
+                         dfsch_object_t* qualifiers,
+                         dfsch_object_t* specializers,
+                         dfsch_object_t* function);
+void dfsch_define_method_pkgcstr(dfsch_object_t* env,
+                                 dfsch_package_t* pkg,
+                                 char* name,
+                                 dfsch_object_t* qualifiers,
+                                 dfsch_object_t* specializers,
+                                 dfsch_object_t* function);
+
+
+void dfsch_add_method_proc(dfsch_object_t* gfunc,
+                           dfsch_object_t* qualifiers,
+                           dfsch_object_t* specializers,
+                           dfsch_object_t* function);
 
 typedef dfsch_object_t* 
 (*dfsch_simple_method_callback_t)(dfsch_type_t* klass,

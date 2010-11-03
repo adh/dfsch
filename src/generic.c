@@ -679,12 +679,36 @@ static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
   return fun;
 }
 
-dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
-                                    dfsch_object_t* name,
-                                    dfsch_method_t* method){
+void dfsch_define_method(dfsch_object_t* env,
+                         dfsch_object_t* name,
+                         dfsch_object_t* qualifiers,
+                         dfsch_object_t* specializers,
+                         dfsch_object_t* proc){
   dfsch_object_t* function = ensure_generic_function(env, name);
-  dfsch_generic_function_add_method(function, method);
-  return method;
+  dfsch_add_method_proc(function, qualifiers, specializers, proc);
+}
+void dfsch_define_method_pkgcstr(dfsch_object_t* env,
+                                 dfsch_package_t* pkg,
+                                 char* name,
+                                 dfsch_object_t* qualifiers,
+                                 dfsch_object_t* specializers,
+                                 dfsch_object_t* function){
+  dfsch_define_method(env,
+                      dfsch_intern_symbol(pkg, name),
+                      qualifiers, specializers, function);
+}
+
+void dfsch_add_method_proc(dfsch_object_t* gfunc,
+                           dfsch_object_t* qualifiers,
+                           dfsch_object_t* specializers,
+                           dfsch_object_t* proc){
+  dfsch_object_t* name = proc;
+
+  dfsch_generic_function_add_method(gfunc,
+                                    dfsch_make_method(name,
+                                                      qualifiers,
+                                                      specializers,
+                                                      proc));
 }
 
 
