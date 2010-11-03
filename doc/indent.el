@@ -9,3 +9,6 @@
 
 (put 'catch 'scheme-indent-function 1)
 (put 'loop 'scheme-indent-function 0)
+
+(put 'when 'scheme-indent-function 1)
+(put 'unless 'scheme-indent-function 1)

@@ -105,7 +105,9 @@ extern dfsch_type_t dfsch_method_type;
 #define DFSCH_METHOD_TYPE (&dfsch_method_type)
 
 
-dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name);
+dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name,
+                                            dfsch_object_t* method_combination,
+                                            char* documentation);
 
 void dfsch_generic_function_add_method(dfsch_object_t* function,
                                        dfsch_method_t* method);
@@ -142,5 +144,10 @@ typedef dfsch_object_t*
 dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t cb,
                                                  dfsch_type_t* klass,
                                                  dfsch_object_t* args);
+
+dfsch_object_t* dfsch_get_primary_methods(dfsch_object_t* methods);
+dfsch_object_t* dfsch_get_qualified_methods(dfsch_object_t* methods,
+                                            dfsch_object_t* qualifier);
+
 
 #endif
