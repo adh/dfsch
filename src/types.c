@@ -214,7 +214,7 @@ dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj,
     dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }
 
-  return slot->type->ref(((char*) obj)+slot->offset);
+  return slot->type->ref(((char*) obj)+slot->offset, obj, slot);
 }
 void dfsch_slot_set(dfsch_object_t* obj, 
                     dfsch_slot_t* slot, 
@@ -225,7 +225,7 @@ void dfsch_slot_set(dfsch_object_t* obj,
     dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }
   
-  slot->type->set(((char*) obj)+slot->offset, value);
+  slot->type->set(((char*) obj)+slot->offset, value, obj, slot);
 }
 dfsch_object_t* dfsch_slot_ref_by_name(dfsch_object_t* obj, 
                                        char* slot,

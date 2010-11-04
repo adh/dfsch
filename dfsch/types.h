@@ -345,8 +345,13 @@ struct dfsch_type_t {
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
-typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr);
-typedef void (*dfsch_accessor_set_t)(void* ptr, dfsch_object_t* obj);
+typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr, 
+                                                dfsch_object_t* obj, 
+                                                dfsch_slot_t* slot);
+typedef void (*dfsch_accessor_set_t)(void* ptr, 
+                                     dfsch_object_t* value,
+                                     dfsch_object_t* obj,
+                                     dfsch_slot_t* slot);
 
 typedef struct dfsch_slot_type_t {
   dfsch_type_t standard_type;
@@ -380,6 +385,7 @@ struct dfsch_slot_t {
   size_t offset;
   int access;
   char* documentation;
+  void* user_data;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
