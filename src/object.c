@@ -60,6 +60,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
     j->type = DFSCH_OBJECT_SLOT_TYPE;
     j->name = dfsch_symbol(name);
     j->documentation = NULL;
+    j->access = DFSCH_SLOT_ACCESS_RW;
 
     j++;
     slot_count--;

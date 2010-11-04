@@ -352,12 +352,22 @@ typedef void (*dfsch_accessor_set_t)(void* ptr,
                                      dfsch_object_t* value,
                                      dfsch_object_t* obj,
                                      dfsch_slot_t* slot);
+typedef void (*dfsch_slot_type_init_t)(dfsch_type_t* type,
+                                       dfsch_slot_t* slot);
+typedef dfsch_object_t* (*dfsch_slot_instance_init_t)(void* ptr, 
+                                                      dfsch_object_t* obj, 
+                                                      dfsch_slot_t* slot);
 
 typedef struct dfsch_slot_type_t {
   dfsch_type_t standard_type;
   dfsch_accessor_ref_t ref;
   dfsch_accessor_set_t set;
   size_t size;
+  size_t alignment;
+  
+  dfsch_slot_type_init_t type_init;
+  dfsch_slot_instance_init_t instance_init;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_slot_type_t;
 
