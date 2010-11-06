@@ -285,6 +285,14 @@ extern "C" {
   dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
                                   dfsch_object_t* comp);
 
+  dfsch_object_t* dfsch_plist_get(dfsch_object_t* plist,
+                                  dfsch_object_t* indicator);
+  dfsch_object_t* dfsch_plist_remove_keys(dfsch_object_t* plist,
+                                          dfsch_object_t* keys);
+  dfsch_object_t* dfsch_plist_filter_keys(dfsch_object_t* plist,
+                                          dfsch_object_t* keys);
+
+
 
   /** Expand quasi-quoted expression */
   extern dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, 

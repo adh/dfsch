@@ -2315,6 +2315,74 @@ dfsch_object_t* dfsch_assv(dfsch_object_t *key,
 }
 
 
+// plist utils
+
+dfsch_object_t* dfsch_plist_get(dfsch_object_t* plist,
+                                dfsch_object_t* indicator){
+  dfsch_object_t* i = plist;
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* ind = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(i)){
+      dfsch_error("Invlaid plist", plist);
+    }
+    if (ind == indicator){
+      return i;
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return NULL;
+}
+
+dfsch_object_t* dfsch_plist_remove_keys(dfsch_object_t* plist,
+                                        dfsch_object_t* keys){
+  dfsch_object_t* i = plist;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* ind = DFSCH_FAST_CAR(i);
+    dfsch_object_t* value;
+    i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(i)){
+      dfsch_error("Invlaid plist", plist);
+    }
+    value = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    
+    if (!dfsch_memq(ind, keys)){
+      dfsch_list_collect(lc, ind);
+      dfsch_list_collect(lc, value);
+    }
+  }
+
+  return dfsch_collected_list(lc);
+}
+
+dfsch_object_t* dfsch_plist_filter_keys(dfsch_object_t* plist,
+                                        dfsch_object_t* keys){
+  dfsch_object_t* i = plist;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* ind = DFSCH_FAST_CAR(i);
+    dfsch_object_t* value;
+    i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(i)){
+      dfsch_error("Invlaid plist", plist);
+    }
+    value = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    
+    if (dfsch_memq(ind, keys)){
+      dfsch_list_collect(lc, ind);
+      dfsch_list_collect(lc, value);
+    }
+  }
+
+  return dfsch_collected_list(lc);
+}
 
 
 // closures

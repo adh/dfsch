@@ -527,7 +527,39 @@ DFSCH_DEFINE_PRIMITIVE(reduce, 0){
   return tally;
 }
 
+DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
+                       "(eg. list of &key arguments)"){
+  dfsch_object_t* plist;
+  dfsch_object_t* indicator;
 
+  DFSCH_OBJECT_ARG(args, plist);
+  DFSCH_OBJECT_ARG(args, indicator);
+  DFSCH_ARG_END(args);
+
+  return dfsch_plist_get(plist, indicator);
+}
+DFSCH_DEFINE_PRIMITIVE(plist_remove_keys, "Return copy of plist with "
+                       "specified keys removed"){
+  dfsch_object_t* plist;
+  dfsch_object_t* keys;
+
+  DFSCH_OBJECT_ARG(args, plist);
+  DFSCH_OBJECT_ARG(args, keys);
+  DFSCH_ARG_END(args);
+
+  return dfsch_plist_remove_keys(plist, keys);
+}
+DFSCH_DEFINE_PRIMITIVE(plist_filter_keys, "Return copy of plist with "
+                       "only specified keys"){
+  dfsch_object_t* plist;
+  dfsch_object_t* keys;
+
+  DFSCH_OBJECT_ARG(args, plist);
+  DFSCH_OBJECT_ARG(args, keys);
+  DFSCH_ARG_END(args);
+
+  return dfsch_plist_filter_keys(plist, keys);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1137,6 +1169,12 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
   dfsch_defcanon_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
   dfsch_defcanon_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));
+
+  dfsch_defcanon_cstr(ctx, "plist-get", DFSCH_PRIMITIVE_REF(plist_get));
+  dfsch_defcanon_cstr(ctx, "plist-remove-keys", 
+                      DFSCH_PRIMITIVE_REF(plist_remove_keys));
+  dfsch_defcanon_cstr(ctx, "plist-filter-keys", 
+                      DFSCH_PRIMITIVE_REF(plist_filter_keys));
 
   dfsch_defcanon_cstr(ctx, "null?", DFSCH_PRIMITIVE_REF(null_p));
   dfsch_defcanon_cstr(ctx, "empty?", DFSCH_PRIMITIVE_REF(empty_p));
