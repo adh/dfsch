@@ -1320,6 +1320,10 @@ dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
     ns->cond = -1;
   }
 
+  if (!ns_is_in_p(ns, ns->from)){
+    return NULL;
+  }
+
   return ns;
 }
 
