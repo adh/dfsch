@@ -122,3 +122,23 @@
       (reduce operator (map (lambda (meth)
                               (call-method meth () args))
                             (get-primary-methods methods))))))
+
+(define-macro (dfsch:define-class name superclass slots &rest class-opts)
+  (let ((class-slots (map 
+                      (lambda (desc)
+                        (letrec ((name (if (pair? desc) (car desc) desc))
+                                 (opts (if (pair? desc) (cdr desc) ()))
+                                 (opt-expr (plist-remove-keys opts 
+                                                              '(:accessor 
+                                                                :reader 
+                                                                :writer
+                                                                :initform)))
+                                 (init-form (when (plist-get opts :initform)
+                                              (car (plist-get opts 
+                                                              :initform)))))
+                          (append (list 'list name) opt-expr)))
+                      slots)))
+    `(define ,name (make-class ',name 
+                               ,superclass 
+                               (list ,class-slots)
+                               ,@class-opts))))
