@@ -51,13 +51,20 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc,
 
   while (slot_count && DFSCH_PAIR_P(i)){
     dfsch_object_t* name;
+    dfsch_object_t* spec;
     dfsch_object_t* type = default_type;
     if (DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
-      dfsch_object_t* args = DFSCH_FAST_CAR(i);
-      DFSCH_OBJECT_ARG(args, name);
+      spec = DFSCH_FAST_CAR(i);
+      DFSCH_OBJECT_ARG(spec, name);
     } else {
       name = DFSCH_FAST_CAR(i);
+      spec = NULL;
     }
+    DFSCH_KEYWORD_PARSER_BEGIN(spec);
+    DFSCH_KEYWORD("type", type);
+    DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(spec);
+    
+    type = DFSCH_ASSERT_INSTANCE(type, DFSCH_SLOT_TYPE_TYPE);
 
     j->type = type;
     j->name = dfsch_symbol(name);
@@ -301,7 +308,7 @@ static void finalize_slots_definition(class_t* klass,
           dfsch_define_method(env, value, NULL, dfsch_cons(klass, NULL), 
                               accessor);
           
-        } else if(dfsch_compare_keyword(keyword, "write")){
+        } else if(dfsch_compare_keyword(keyword, "writer")){
           dfsch_object_t* accessor = 
             dfsch__make_slot_writer_for_slot(klass, slot);
           dfsch_define_method(env, value, NULL, dfsch_cons(klass, NULL), 
@@ -417,6 +424,23 @@ DFSCH_DEFINE_PRIMITIVE(allocate_instance, 0){
   return dfsch_allocate_instance(klass);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
+  dfsch_object_t* name;
+  dfsch_object_t* superclass;
+  dfsch_object_t* slots;
+  dfsch_object_t* metaclass = DFSCH_STANDARD_CLASS_TYPE;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, superclass);
+  DFSCH_OBJECT_ARG(args, slots);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("metaclass", metaclass);
+  DFSCH_KEYWORD_PARSER_END(args);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_class(superclass, metaclass, dfsch_symbol_2_typename(name),
+                          slots);  
+}
+
 DFSCH_DEFINE_FORM(define_class, NULL, {}){
   dfsch_object_t* name;
   dfsch_object_t* superclass;
@@ -508,6 +532,7 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<standard-class>", DFSCH_STANDARD_CLASS_TYPE);
   dfsch_defcanon_cstr(ctx, "allocate-instance", 
                       DFSCH_PRIMITIVE_REF(allocate_instance));
+  dfsch_defcanon_cstr(ctx, "make-class", DFSCH_PRIMITIVE_REF(make_class));
 
 
   dfsch_define_method_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, "initialize-instance",

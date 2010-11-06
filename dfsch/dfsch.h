@@ -903,6 +903,8 @@ extern "C" {
 #define DFSCH_KEYWORD_PARSER_END(args)                          \
   dfsch_error("exception:unknown-keyword", dfsch___keyword);    \
 }
+#define DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(args)              \
+}
 
 #define DFSCH_SYMBOL_ARG(al, name)                      \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_symbol)
