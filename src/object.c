@@ -25,6 +25,7 @@
 #include <dfsch/number.h>
 #include <dfsch/serdes.h>
 #include <dfsch/generic.h>
+#include <assert.h>
 #include "util.h"
 #include "internal.h"
 
@@ -41,7 +42,8 @@ dfsch_object_t* standard_allocate_instance(class_t* c){
   return dfsch_make_object((dfsch_type_t*)c);
 }
 
-static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
+static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc,
+                                dfsch_slot_type_t* default_type){
   dfsch_object_t* i = slot_desc;
   size_t slot_count = dfsch_list_length_check(slot_desc);
   dfsch_slot_t* slots = GC_MALLOC((slot_count + 1) * sizeof(dfsch_slot_t));
@@ -49,7 +51,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
 
   while (slot_count && DFSCH_PAIR_P(i)){
     dfsch_object_t* name;
-    dfsch_object_t* type;
+    dfsch_object_t* type = default_type;
     if (DFSCH_PAIR_P(DFSCH_FAST_CAR(i))){
       dfsch_object_t* args = DFSCH_FAST_CAR(i);
       DFSCH_OBJECT_ARG(args, name);
@@ -57,7 +59,7 @@ static dfsch_slot_t* make_slots(dfsch_object_t* slot_desc){
       name = DFSCH_FAST_CAR(i);
     }
 
-    j->type = DFSCH_OBJECT_SLOT_TYPE;
+    j->type = type;
     j->name = dfsch_symbol(name);
     j->documentation = NULL;
     j->access = DFSCH_SLOT_ACCESS_RW;
@@ -80,11 +82,40 @@ static size_t adjust_sizes(dfsch_slot_t* slots, size_t parent_size){
     parent_size = sizeof(dfsch_object_t);
   }
   while (slots->type){
+    while (parent_size % slots->type->alignment != 0){
+      parent_size++;
+    }
     slots->offset = parent_size;
-    parent_size += sizeof(dfsch_object_t*);
+    parent_size += slots->type->size;
     slots++;
   }
   return parent_size;
+}
+
+static void init_class_slots(dfsch_type_t* klass){
+  dfsch_slot_t* j = klass->slots;
+
+  while (j->type){
+    if (j->type->type_init){
+      j->type->type_init(klass, j);
+    }
+    j++;
+  }
+}
+
+void dfsch_make_class_slots(dfsch_slot_type_t* default_slot_type,
+                            dfsch_type_t* klass,
+                            dfsch_object_t* defs){
+  size_t parent_size = sizeof(dfsch_object_t);
+  
+  if (klass->superclass){
+    parent_size = klass->superclass->size;
+  }
+
+  klass->slots = make_slots(defs, default_slot_type);
+  assert(klass->slots);
+  klass->size = adjust_sizes(klass->slots, parent_size);
+  init_class_slots(klass);
 }
 
 static void instance_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
@@ -145,24 +176,21 @@ dfsch_object_t* standard_make_class(dfsch_metaclass_t* metaclass,
 
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   klass->standard_type.name = name;
-  klass->standard_type.slots = make_slots(slots);
 
   if (super){
 
     klass->standard_type.superclass = (dfsch_type_t*)super;
-
-    klass->standard_type.size = 
-      adjust_sizes(klass->standard_type.slots,
-                   klass->standard_type.superclass->size);
 
     klass->initfuncs = super->initfuncs;
     klass->initargs = super->initargs;
 
   } else {
     klass->standard_type.superclass = NULL;
-    klass->standard_type.size = adjust_sizes(klass->standard_type.slots,
-                                             sizeof(dfsch_object_t));
   }
+
+  dfsch_make_class_slots(DFSCH_OBJECT_SLOT_TYPE, klass, slots);
+
+  assert(klass->standard_type.slots);
 
   klass->standard_type.write = instance_write;
   klass->standard_type.serialize = instance_serialize;
@@ -357,6 +385,19 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
     i = DFSCH_FAST_CDR(i);
   }
 }
+static void initialize_instance_slots(dfsch_object_t* inst, 
+                                      dfsch_type_t* type){
+  while (type){
+    dfsch_slot_t* j = type->slots;
+    while (j->type){
+      if (j->type->instance_init){
+        j->type->instance_init(((char*) inst)+j->offset, inst, j);
+      }
+      j++;
+    }
+    type = type->superclass;
+  }
+}
 
 dfsch_object_t* dfsch_allocate_instance(dfsch_object_t* klass){
   dfsch_object_t* obj;
@@ -364,7 +405,7 @@ dfsch_object_t* dfsch_allocate_instance(dfsch_object_t* klass){
                                                DFSCH_METACLASS_TYPE);
 
   obj = ((dfsch_metaclass_t*)DFSCH_TYPE_OF(c))->allocate_instance(c);
-
+  initialize_instance_slots(obj, c);
   return obj;
 }
 

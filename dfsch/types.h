@@ -342,6 +342,8 @@ struct dfsch_type_t {
 
   dfsch_type_serialize_t serialize;
 
+  dfsch_object_t* slot_metadata;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -395,7 +397,7 @@ struct dfsch_slot_t {
   size_t offset;
   int access;
   char* documentation;
-  void* user_data;
+  void* slot_data;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 

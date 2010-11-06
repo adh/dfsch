@@ -63,6 +63,10 @@ typedef struct dfsch_standard_class_t {
   dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                       dfsch_object_t* args);
 
+  void dfsch_make_class_slots(dfsch_slot_type_t* default_slot_type,
+                              dfsch_type_t* klass,
+                              dfsch_object_t* defs);
+
 #ifdef __cplusplus
 }
 #endif
