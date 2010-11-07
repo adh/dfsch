@@ -117,7 +117,8 @@ dfsch_slot_type_t dfsch_object_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("object-slot", "Generic object-pointer slot"),
   object_accessor_ref,
   object_accessor_set,
-  sizeof(dfsch_object_t*)
+  sizeof(dfsch_object_t*),
+  sizeof(dfsch_object_t*),  
 };
 
 static dfsch_object_t* boolean_accessor_ref(void* ptr){
@@ -130,7 +131,8 @@ dfsch_slot_type_t dfsch_boolean_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("boolean-slot", "Slot holding boolean value as C int"),
   boolean_accessor_ref,
   boolean_accessor_set,
-  sizeof(int)
+  sizeof(int),
+  sizeof(int),
 };
 
 static dfsch_object_t* string_accessor_ref(void* ptr){
@@ -143,6 +145,7 @@ dfsch_slot_type_t dfsch_string_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("string-slot", "Slot holding string as C char*"),
   string_accessor_ref,
   string_accessor_set,
+  sizeof(char*),
   sizeof(char*)
 };
 
@@ -158,7 +161,8 @@ dfsch_slot_type_t dfsch_string_slot_type = {
                          "Slot containing C " #name "value"),      \
     name ## _accessor_ref,                                              \
     name ## _accessor_set,                                              \
-    sizeof(type)                                                        \
+    sizeof(type),                                                       \
+    sizeof(type),                                                       \
   };                                                                    \
 
 INT_ACCESSOR(int, int)
@@ -214,7 +218,7 @@ dfsch_object_t* dfsch_slot_ref(dfsch_object_t* obj,
     dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }
 
-  return slot->type->ref(((char*) obj)+slot->offset);
+  return slot->type->ref(((char*) obj)+slot->offset, obj, slot);
 }
 void dfsch_slot_set(dfsch_object_t* obj, 
                     dfsch_slot_t* slot, 
@@ -225,7 +229,7 @@ void dfsch_slot_set(dfsch_object_t* obj,
     dfsch_error("Slot not accesible", (dfsch_object_t*)slot);
   }
   
-  slot->type->set(((char*) obj)+slot->offset, value);
+  slot->type->set(((char*) obj)+slot->offset, value, obj, slot);
 }
 dfsch_object_t* dfsch_slot_ref_by_name(dfsch_object_t* obj, 
                                        char* slot,

@@ -342,17 +342,34 @@ struct dfsch_type_t {
 
   dfsch_type_serialize_t serialize;
 
+  dfsch_object_t* slot_metadata;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
-typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr);
-typedef void (*dfsch_accessor_set_t)(void* ptr, dfsch_object_t* obj);
+typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr, 
+                                                dfsch_object_t* obj, 
+                                                dfsch_slot_t* slot);
+typedef void (*dfsch_accessor_set_t)(void* ptr, 
+                                     dfsch_object_t* value,
+                                     dfsch_object_t* obj,
+                                     dfsch_slot_t* slot);
+typedef void (*dfsch_slot_type_init_t)(dfsch_type_t* type,
+                                       dfsch_slot_t* slot);
+typedef dfsch_object_t* (*dfsch_slot_instance_init_t)(void* ptr, 
+                                                      dfsch_object_t* obj, 
+                                                      dfsch_slot_t* slot);
 
 typedef struct dfsch_slot_type_t {
   dfsch_type_t standard_type;
   dfsch_accessor_ref_t ref;
   dfsch_accessor_set_t set;
   size_t size;
+  size_t alignment;
+  
+  dfsch_slot_type_init_t type_init;
+  dfsch_slot_instance_init_t instance_init;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_slot_type_t;
 
@@ -380,6 +397,8 @@ struct dfsch_slot_t {
   size_t offset;
   int access;
   char* documentation;
+  void* slot_data;
+  dfsch_object_t* options;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -537,6 +556,10 @@ typedef struct dfsch_pair_t {
   ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+#define DFSCH_ASSERT_METACLASS_INSTANCE(o, t)                           \
+  (DFSCH_INSTANCE_P(DFSCH_TYPE_OF((o)), (t)) ?                          \
+   (o) : dfsch_assert_metaclass_instance((o), (t)))
+
 
 #define DFSCH_TYPE_COLLECTION_P(t)                   \
   (((dfsch_type_t*)(t))->collection != NULL)

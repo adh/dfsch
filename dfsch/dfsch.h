@@ -118,6 +118,8 @@ extern "C" {
   extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
   extern void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type);
   extern dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj, dfsch_type_t* type);
+  extern dfsch_object_t* dfsch_assert_metaclass_instance(dfsch_object_t* obj, 
+                                                         dfsch_type_t* type);
   /** Get superclass of given type */
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
 
@@ -900,6 +902,8 @@ extern "C" {
 
 #define DFSCH_KEYWORD_PARSER_END(args)                          \
   dfsch_error("exception:unknown-keyword", dfsch___keyword);    \
+}
+#define DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(args)              \
 }
 
 #define DFSCH_SYMBOL_ARG(al, name)                      \

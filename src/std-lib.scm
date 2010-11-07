@@ -122,3 +122,46 @@
       (reduce operator (map (lambda (meth)
                               (call-method meth () args))
                             (get-primary-methods methods))))))
+
+(define-macro (dfsch:define-class name superclass slots &rest class-opts)
+  (let ((class-slots (map 
+                      (lambda (desc)
+                        (letrec ((name (if (pair? desc) (car desc) desc))
+                                 (opts (if (pair? desc) (cdr desc) ()))
+                                 (opt-expr (plist-remove-keys opts 
+                                                              '(:accessor 
+                                                                :reader 
+                                                                :writer
+                                                                :initform)))
+                                 (init-form (plist-get opts :initform)))
+                          `(list ',name ,@opt-expr 
+                                 ,@(when init-form
+                                     `(:initfunc 
+                                       (lambda () ,(car init-form)))))))
+                      slots)))
+    `(begin 
+       (%define-canonical-constant ,name (make-class ',name 
+                                                     ,superclass 
+                                                     (list ,@class-slots)
+                                                     ,@class-opts))
+       ,@(mapcan 
+          (lambda (desc)
+            (letrec ((sname (if (pair? desc) (car desc) desc))
+                     (opts (if (pair? desc) (cdr desc) ()))
+                     (accessor (plist-get opts :accessor))
+                     (writer (plist-get opts :writer))
+                     (reader (plist-get opts :reader)))
+              (append 
+               (when accessor
+                 `((%define-canonical-constant ,(car accessor)
+                                               (make-slot-accessor ,name 
+                                                                   ',sname))))
+               (when writer
+                 `((%define-canonical-constant ,(car writer)
+                                               (make-slot-writer ,name 
+                                                                   ',sname))))
+               (when reader
+                 `((%define-canonical-constant ,(car reader)
+                                               (make-slot-reader ,name 
+                                                                 ',sname)))))))
+              slots))))
