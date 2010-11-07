@@ -366,7 +366,8 @@ dfsch_object_t* dfsch_allocate_instance(dfsch_object_t* klass){
   return obj;
 }
 
-DFSCH_DEFINE_PRIMITIVE(allocate_instance, 0){
+DFSCH_DEFINE_PRIMITIVE(allocate_instance, "Allocate new instance of "
+                       "user-defined class"){
   dfsch_object_t* klass;
   DFSCH_OBJECT_ARG(args, klass);
   DFSCH_ARG_END(args);
