@@ -1222,6 +1222,41 @@ dfsch_strbuf_t* dfsch_string_replace(dfsch_strbuf_t* str,
   return sl_value_strbuf(sl); 
 }
 
+dfsch_object_t* dfsch_byte_vector_translate(dfsch_object_t* str,
+                                            dfsch_strbuf_t* from,
+                                            dfsch_strbuf_t* to){
+  dfsch_string_t* res = dfsch_make_string_strbuf(dfsch_string_to_buf(str));
+  char* ptr = res->buf.ptr;
+  size_t len = res->buf.len;
+  char* optr = ptr;
+  size_t olen = 0;
+
+  while (len){
+    char* found = memchr(from->ptr, *ptr, from->len);
+
+    if (found){
+      size_t off = found - from->ptr;
+      if (off < to->len){
+        *optr = to->ptr[off];
+        optr++;
+        olen++;
+      }
+      
+    } else {
+      olen++;
+      optr++;
+    }
+    len--;
+    ptr++;
+  }
+  
+  res->buf.len = olen;
+
+  return res;
+}
+
+
+
 static dfsch_object_t* pathname_dirname(dfsch_object_t* s){
   dfsch_strbuf_t* str = dfsch_string_to_buf(s);
   char *slash = internal_memrchr(str->ptr, '/', str->len);
@@ -1909,6 +1944,19 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_subvector,
 
   return dfsch_byte_vector_subvector(original, offset, length);
 }
+DFSCH_DEFINE_PRIMITIVE(byte_vector_translate, 
+                       "Replace bytes in FROM with coresponding bytes in TO"){
+  dfsch_object_t* string;
+  dfsch_strbuf_t* from;
+  dfsch_strbuf_t* to;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, from);
+  DFSCH_BUFFER_ARG(args, to);
+  DFSCH_ARG_END(args);
+
+  return dfsch_byte_vector_translate(string, from, to);
+}
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
@@ -2037,4 +2085,6 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(copy_into_byte_vector));
   dfsch_defcanon_cstr(ctx, "byte-vector-subvector", 
 		   DFSCH_PRIMITIVE_REF(byte_vector_subvector));
+  dfsch_defcanon_cstr(ctx, "byte-vector-translate", 
+		   DFSCH_PRIMITIVE_REF(byte_vector_translate));
 }
