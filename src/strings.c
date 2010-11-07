@@ -787,7 +787,7 @@ static dfsch_object_t* string_case(dfsch_object_t* s, int m){
     } else if (ch <= 0x10ffff){
       len += 4;
     } else {
-      dfsch_error("Invalid unicode character", DFSCH_FAST_CAR(j));
+      dfsch_error("Invalid unicode character", DFSCH_MAKE_FIXNUM(ch));
     }
 
     i = next_char(i, e);
@@ -1255,6 +1255,111 @@ dfsch_object_t* dfsch_byte_vector_translate(dfsch_object_t* str,
   return res;
 }
 
+#define CHAR_DELETE 0xffffffff
+
+static uint32_t translate_char(uint32_t ch,
+                               dfsch_strbuf_t* from,
+                               dfsch_strbuf_t* to){
+  size_t idx = 0;
+  char* i = from->ptr;
+  char* e = from->ptr + from->len;
+
+  for (;;){
+    if (!i || i == e){
+      return ch;
+    }
+    if (get_char(i,e) == ch){
+      break;
+    }
+    i = next_char(i, e);
+    idx++;
+  }
+
+  i = to->ptr;
+  e = to->ptr + to->len;
+  
+  while (i && i != e){
+    if (!idx){
+      return get_char(i, e);
+    }
+    i = next_char(i, e);
+    idx--;
+  }
+
+  return CHAR_DELETE;
+}
+
+dfsch_object_t* dfsch_string_translate(dfsch_object_t* s, 
+                                       dfsch_strbuf_t* from,
+                                       dfsch_strbuf_t* to){
+  dfsch_strbuf_t* buf = dfsch_string_to_buf(s);
+  char* i = buf->ptr;
+  char* e = buf->ptr + buf->len;
+  dfsch_string_t* string;
+  int f;
+  size_t j = 0;
+  size_t len = 0;
+  
+  if (buf->len == 0){
+    return dfsch_make_string_buf(NULL, 0);
+  }
+
+  len = 0;
+  f = 1;
+  while (i){
+    uint32_t ch = get_char(i, e);
+
+    ch = translate_char(ch, from, to);
+
+    if (ch <= 0x7f){
+      len += 1;
+    } else if (ch <= 0x7ff) {
+      len += 2;
+    } else if (ch <= 0xffff) {
+      len += 3;
+    } else if (ch <= 0x10ffff){
+      len += 4;
+    } else if (ch != CHAR_DELETE) {
+      dfsch_error("Invalid unicode character", DFSCH_MAKE_FIXNUM(ch));
+    }
+
+    i = next_char(i, e);
+  }
+
+  string = (dfsch_string_t*)dfsch_make_string_buf(NULL, len);
+
+  i = buf->ptr;
+  j = 0;
+  f = 1;
+  while (i){
+    uint32_t ch = get_char(i, e);
+    ch = translate_char(ch, from, to);
+
+    if (ch <= 0x7f){
+      string->buf.ptr[j] = ch;
+      j += 1;
+    } else if (ch <= 0x7ff) {
+      string->buf.ptr[j] = 0xc0 | ((ch >> 6) & 0x1f); 
+      string->buf.ptr[j+1] = 0x80 | (ch & 0x3f);
+      j += 2;
+    } else if (ch <= 0xffff) {
+      string->buf.ptr[j] = 0xe0 | ((ch >> 12) & 0x0f); 
+      string->buf.ptr[j+1] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[j+2] = 0x80 | (ch & 0x3f);
+      j += 3;
+    } else if (ch != CHAR_DELETE) {
+      string->buf.ptr[j] = 0xf0 | ((ch >> 18) & 0x07); 
+      string->buf.ptr[j+1] = 0x80 | ((ch >> 12) & 0x3f);
+      string->buf.ptr[j+2] = 0x80 | ((ch >> 6) & 0x3f);
+      string->buf.ptr[j+3] = 0x80 | (ch & 0x3f);
+      j += 4;
+    } 
+
+    i = next_char(i, e);
+  }
+
+  return (object_t*)string;
+}
 
 
 static dfsch_object_t* pathname_dirname(dfsch_object_t* s){
@@ -1957,6 +2062,19 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_translate,
 
   return dfsch_byte_vector_translate(string, from, to);
 }
+DFSCH_DEFINE_PRIMITIVE(string_translate, 
+                       "Replace characters in FROM with coresponding from TO"){
+  dfsch_object_t* string;
+  dfsch_strbuf_t* from;
+  dfsch_strbuf_t* to;
+
+  DFSCH_OBJECT_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, from);
+  DFSCH_BUFFER_ARG(args, to);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_translate(string, from, to);
+}
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
@@ -2087,4 +2205,6 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(byte_vector_subvector));
   dfsch_defcanon_cstr(ctx, "byte-vector-translate", 
 		   DFSCH_PRIMITIVE_REF(byte_vector_translate));
+  dfsch_defcanon_cstr(ctx, "string-translate", 
+		   DFSCH_PRIMITIVE_REF(string_translate));
 }

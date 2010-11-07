@@ -140,6 +140,9 @@ extern "C" {
   dfsch_object_t* dfsch_byte_vector_translate(dfsch_object_t* str,
                                               dfsch_strbuf_t* from,
                                               dfsch_strbuf_t* to);
+  dfsch_object_t* dfsch_string_translate(dfsch_object_t* s, 
+                                         dfsch_strbuf_t* from,
+                                         dfsch_strbuf_t* to);
 
   extern dfsch_type_t dfsch_proto_string;
 #define DFSCH_PROTO_STRING_TYPE (&dfsch_proto_string_type)
