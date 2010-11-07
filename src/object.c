@@ -300,19 +300,7 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
   class_t* klass = DFSCH_ASSERT_INSTANCE(DFSCH_TYPE_OF(obj), 
                                          DFSCH_STANDARD_CLASS_TYPE);
   dfsch_object_t* i = klass->initfuncs;
-
-  while (DFSCH_PAIR_P(i)){
-    dfsch_object_t* j = DFSCH_FAST_CAR(i);
-    dfsch_object_t* value;
-    dfsch_object_t* slot;
-
-    DFSCH_OBJECT_ARG(j, value);
-    DFSCH_OBJECT_ARG(j, slot);
-
-    dfsch_slot_set(obj, slot, DFSCH_INVALID_OBJECT, 1);
-
-    i = DFSCH_FAST_CDR(i);
-  }
+  dfsch_object_t* initialized = NULL;
 
   while (DFSCH_PAIR_P(args)){                                 
     dfsch_object_t* keyword;                                
@@ -331,8 +319,11 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
     if (!slot){
       dfsch_error("Unknown keyword", keyword);      
     }
+
+    slot = dfsch_list_item(slot, 1);
     
-    dfsch_slot_set(obj, dfsch_list_item(slot, 1), value, 1);
+    dfsch_slot_set(obj, slot, value, 1);
+    initialized = dfsch_cons(slot, initialized);
   }
 
   i = klass->initfuncs;
@@ -344,7 +335,7 @@ DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
     DFSCH_OBJECT_ARG(j, value);
     DFSCH_OBJECT_ARG(j, slot);
     
-    if (dfsch_slot_ref(obj, slot, 1) == DFSCH_INVALID_OBJECT){
+    if (!dfsch_memq(slot, initialized)){
       dfsch_slot_set(obj, slot, dfsch_apply(value, NULL), 1);
     }
 
