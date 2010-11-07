@@ -133,10 +133,11 @@
                                                                 :reader 
                                                                 :writer
                                                                 :initform)))
-                                 (init-form (when (plist-get opts :initform)
-                                              (car (plist-get opts 
-                                                              :initform)))))
-                          `(list ',name ,@opt-expr)))
+                                 (init-form (plist-get opts :initform)))
+                          `(list ',name ,@opt-expr 
+                                 ,@(when init-form
+                                     `(:initfunc 
+                                       (lambda () ,(car init-form)))))))
                       slots)))
     `(begin 
        (%define-canonical-constant ,name (make-class ',name 

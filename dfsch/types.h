@@ -398,6 +398,7 @@ struct dfsch_slot_t {
   int access;
   char* documentation;
   void* slot_data;
+  dfsch_object_t* options;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
