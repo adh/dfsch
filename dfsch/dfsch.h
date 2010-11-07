@@ -186,7 +186,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_string_2_object_list(char* str);
   
   extern char* dfsch_object_2_string(dfsch_object_t* obj, 
-                                     int max_depth, int readable);
+                                     int max_depth, int mode);
   
   /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();

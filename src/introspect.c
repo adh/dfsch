@@ -39,39 +39,42 @@ char* dfsch_format_trace(dfsch_object_t* trace){
         dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
         dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2);
         sl_printf(sl, "  APPLY %s %s\n",
-                  dfsch_object_2_string(proc, 10, 1),
-                  dfsch_object_2_string(flags, 10, 1));
+                  dfsch_object_2_string(proc, 10, DFSCH_WRITE),
+                  dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
       } else if (dfsch_compare_keyword(tag, "eval")){
         dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
         dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
         dfsch_object_t* annot = dfsch_get_list_annotation(expr);
         sl_printf(sl, "  EVAL %s %s\n",
-                  dfsch_object_2_string(expr, 10, 1),
-                  dfsch_object_2_string(flags, 10, 1));
+                  dfsch_object_2_string(expr, 10, DFSCH_WRITE),
+                  dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
         while (DFSCH_PAIR_P(annot) && 
                DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
           sl_printf(sl, "    <- %s\n", 
-                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 0));
+                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
+                                          DFSCH_WRITE));
           annot = dfsch_get_list_annotation(DFSCH_FAST_CDR(annot));
         }
         if (annot){
           sl_printf(sl, "     @ %s:%s\n", 
-                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 10, 0),
-                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 0));
+                  dfsch_object_2_string(DFSCH_FAST_CAR(annot), 10, 
+                                        DFSCH_PRINT),
+                  dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10,
+                                        DFSCH_PRINT));
           
         }
 
       } else {
         sl_printf(sl, "  UNKNOWN %s\n", 
                   dfsch_object_2_string(DFSCH_FAST_CAR(trace),
-                                        10, 1));
+                                        10, DFSCH_WRITE));
       }
     } else {
       sl_printf(sl, "  INVALID %s\n", 
                 dfsch_object_2_string(DFSCH_FAST_CAR(trace),
-                                      10, 1));
+                                      10, DFSCH_WRITE));
     }
 
     trace = DFSCH_FAST_CDR(trace);

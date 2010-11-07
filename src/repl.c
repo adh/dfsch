@@ -67,7 +67,7 @@ static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
       exit((int)dfsch_number_to_long(dfsch_car(args)));
     }
   default:
-    fputs(dfsch_object_2_string(args,100,0),stderr);
+    fputs(dfsch_object_2_string(args,100,DFSCH_PRINT),stderr);
     fputs("\n",stderr);
     fflush(stderr);
     exit(1);
@@ -99,7 +99,7 @@ static int repl_callback(dfsch_object_t *obj, void *baton){
   dfsch_object_t* ret;
   signal(SIGINT, sigint_handler_break);
   ret = dfsch_eval(obj, baton);
-  puts(dfsch_object_2_string(ret,-1,1));
+  puts(dfsch_object_2_string(ret,-1,DFSCH_WRITE));
 }
 
 void noninteractive_repl(dfsch_object_t* ctx){
@@ -192,7 +192,7 @@ int main(int argc, char**argv){
     case 'E':
       {
         puts(dfsch_object_2_string(dfsch_eval_proc(dfsch_string_2_object_list(optarg), ctx),
-                                   100, 1));
+                                   100, DFSCH_STRICT_WRITE));
         interactive = 0;
 
         break;

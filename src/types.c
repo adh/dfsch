@@ -729,7 +729,8 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
                                                o, 
                                                s->name)); 
     } else {
-      if (!dfsch_in_current_package(o)) {
+      if (dfsch_writer_state_strict_write_p(state) || 
+          !dfsch_in_current_package(o)) {
         if (s->package != DFSCH_KEYWORD_PACKAGE) {
           dfsch_write_string(state, dfsch_package_name(s->package));
         }

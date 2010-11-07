@@ -785,12 +785,15 @@ DFSCH_DEFINE_PRIMITIVE(null_port, NULL){
 DFSCH_DEFINE_PRIMITIVE(write, NULL){
   dfsch_object_t* port;
   dfsch_object_t* object;
+  dfsch_object_t* strict;
   char *buf;
   DFSCH_OBJECT_ARG(args, object);
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_OBJECT_ARG_OPT(args, strict, NULL);  
   DFSCH_ARG_END(args);
 
-  buf = dfsch_object_2_string(object, 1000, 1);
+  buf = dfsch_object_2_string(object, 1000, (strict != NULL) ? 
+                              DFSCH_STRICT_WRITE : DFSCH_WRITE);
   dfsch_port_write_buf(port, buf, strlen(buf));
   
   return NULL;
@@ -803,7 +806,7 @@ DFSCH_DEFINE_PRIMITIVE(display, NULL){
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
-  buf = dfsch_object_2_string(object, 1000, 0);
+  buf = dfsch_object_2_string(object, 1000, DFSCH_PRINT);
   dfsch_port_write_buf(port, buf, strlen(buf));
   
   return NULL;

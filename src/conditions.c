@@ -198,7 +198,7 @@ void dfsch_lose_fatally(char* message, dfsch_object_t* object){
     recursive_lossage = 1;
     fprintf(stderr, "%s\n  %s\n\n%s\n", 
             message, 
-            dfsch_object_2_string(object, 10, 1),
+            dfsch_object_2_string(object, 10, DFSCH_WRITE),
             dfsch_format_trace(dfsch_get_trace()));
   }
 
@@ -421,12 +421,14 @@ void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type,
                                  dfsch_bool(instance_suffices));
   if (instance_suffices){
     m = dfsch_saprintf("%s is not an instance of %s",
-                       dfsch_object_2_string(datum, 10, 1),
-                       dfsch_object_2_string((dfsch_object_t*)type, 10, 1));
+                       dfsch_object_2_string(datum, 10, DFSCH_WRITE),
+                       dfsch_object_2_string((dfsch_object_t*)type, 10, 
+                                             DFSCH_WRITE));
   } else {
     m = dfsch_saprintf("%s is not of type %s",
-                       dfsch_object_2_string(datum, 10, 1),
-                       dfsch_object_2_string((dfsch_object_t*)type, 10, 1));
+                       dfsch_object_2_string(datum, 10, DFSCH_WRITE),
+                       dfsch_object_2_string((dfsch_object_t*)type, 10, 
+                                             DFSCH_WRITE));
   }
   dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
   dfsch_signal(c);
@@ -459,7 +461,7 @@ void dfsch_index_error(dfsch_object_t* seq,
   dfsch_object_t* c = dfsch_make_condition(DFSCH_INDEX_ERROR_TYPE);
   char* m = dfsch_saprintf("%d is not valid index into %s (of length %d)",
                            index,
-                           dfsch_object_2_string(seq, 10, 1),
+                           dfsch_object_2_string(seq, 10, DFSCH_WRITE),
                            length);
   dfsch_condition_put_field_cstr(c, "index", DFSCH_MAKE_FIXNUM(index));
   dfsch_condition_put_field_cstr(c, "length", DFSCH_MAKE_FIXNUM(length));
