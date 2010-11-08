@@ -15,10 +15,11 @@
 
 (when (defined? *posix-argv*)
       (let ((parser (make-parser)))
-        (add-option parser "one-test-fail" 
+        (add-option parser  
                     (lambda (p v) 
                       (set! one-test-fail #t)
-                      (print "Running in strict mode")))
+                      (print "Running in strict mode"))
+                    :long-option "one-test-fail")
         (parse-list parser (cdr *posix-argv*))))
 
 

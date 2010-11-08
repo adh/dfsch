@@ -888,7 +888,7 @@ DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("method-combination", method_combination);
   DFSCH_KEYWORD_GENERIC("documentation", documentation,
-                        dfsch_number_to_long);
+                        dfsch_string_to_cstr);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 

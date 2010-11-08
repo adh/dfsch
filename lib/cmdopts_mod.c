@@ -38,16 +38,21 @@ static void lisp_callback(dfsch_cmdopts_t* parser,
 
 DFSCH_DEFINE_PRIMITIVE(add_option, "Define new command line option"){
   dfsch_object_t* parser;
-  dfsch_object_t* has_arg;
-  char short_opt;
-  char* long_opt;
+  dfsch_object_t* has_arg = NULL;
+  char short_opt = 0;
+  char* long_opt = NULL;
   dfsch_object_t* function;
 
   DFSCH_OBJECT_ARG(args, parser);
-  DFSCH_STRING_ARG(args, long_opt);
   DFSCH_OBJECT_ARG(args, function);
-  DFSCH_LONG_ARG_OPT(args, short_opt, 0);
-  DFSCH_OBJECT_ARG_OPT(args, has_arg, NULL);
+
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("has-argument", has_arg);
+  DFSCH_KEYWORD_GENERIC("long-option", long_opt,
+                        dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("short-option", short_opt,
+                        dfsch_number_to_long);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
   
   dfsch_cmdopts_add_option(DFSCH_ASSERT_TYPE(parser, 
