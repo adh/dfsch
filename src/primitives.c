@@ -40,18 +40,17 @@ typedef dfsch_object_t object_t;
 
 #define NEED_ARGS(args,count)                                   \
   if (dfsch_list_length_check(args)!=(count))                   \
-    dfsch_error("exception:wrong-number-of-arguments",(args));
+    dfsch_error("Wrong number of argument",(args));
 #define MIN_ARGS(args,count)                            \
   if (dfsch_list_length_check(args)<(count))            \
-    dfsch_error("exception:too-few-arguments", (args));
+    dfsch_error("Required arument missing", (args));
 
 // TODO: document all native functions somewhere
 
 // Native procedures:
 
 DFSCH_DEFINE_PRIMITIVE(gensym, "Allocate new unnamed symbol"){
-  if (args)
-    dfsch_error("exception:too-many-arguments", args);
+  DFSCH_ARG_END(args);
 
   return dfsch_gensym();
 }
@@ -83,7 +82,7 @@ DFSCH_DEFINE_PRIMITIVE(type_name, "Get name of given type"){
   DFSCH_ARG_END(args);
 
   if (!DFSCH_INSTANCE_P(object, DFSCH_STANDARD_TYPE)){
-    dfsch_error("exception:not-a-type", object);
+    dfsch_error("Not a type", object);
   }
 
   return dfsch_make_string_cstr(((dfsch_type_t*)object)->name);
@@ -105,11 +104,11 @@ DFSCH_DEFINE_PRIMITIVE(superclass_p,
   DFSCH_ARG_END(args);
 
   if (!DFSCH_INSTANCE_P(sub, DFSCH_STANDARD_TYPE)){
-    dfsch_error("exception:not-a-type", sub);
+    dfsch_error("Not a type", sub);
   }
 
   if (super && !DFSCH_INSTANCE_P(super, DFSCH_STANDARD_TYPE)){
-    dfsch_error("exception:not-a-type", super);
+    dfsch_error("Not a type", super);
   }
 
   return dfsch_bool(dfsch_superclass_p((dfsch_type_t*)sub, 
@@ -123,7 +122,7 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, "Is object instance of given type?"){
   DFSCH_ARG_END(args);
 
   if (type && !DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
-    dfsch_error("exception:not-a-standard-type", type);
+    dfsch_error("Not a type", type);
   }
 
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
@@ -732,7 +731,7 @@ DFSCH_DEFINE_PRIMITIVE(vector_length, NULL){
   DFSCH_ARG_END(args);
 
   if (!dfsch_vector_p(vector))
-    dfsch_error("exception:not-a-vector",vector);
+    dfsch_error("Not a vector",vector);
 
   return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
@@ -858,10 +857,7 @@ DFSCH_DEFINE_PRIMITIVE(symbol_qualified_name,
   DFSCH_ARG_END(args);
 
   str = dfsch_symbol_qualified_name(object);
-  if (str)
-    return dfsch_make_string_cstr(str);
-  else
-    dfsch_error("exception:not-a-symbol", object);
+  return dfsch_make_string_cstr(str);
 }
 DFSCH_DEFINE_PRIMITIVE(symbol_name, 
                        "Return symbols's name as string"){

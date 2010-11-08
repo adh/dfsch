@@ -654,7 +654,7 @@ extern "C" {
    */
 #define DFSCH_OBJECT_ARG(al, name)                      \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   (name) = DFSCH_FAST_CAR((al));                        \
   (al) = DFSCH_FAST_CDR((al))
@@ -667,7 +667,7 @@ extern "C" {
    */
 #define DFSCH_DISCARD_ARG(al, name)                     \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   (al) = DFSCH_FAST_CDR((al))
 
@@ -697,7 +697,7 @@ extern "C" {
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)         \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \
     (name) = (type)(conv)(dfsch___tmp);                 \
@@ -734,7 +734,7 @@ extern "C" {
    */
 #define DFSCH_TYPED_ARG(al, name, type, klass)                  \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
-    dfsch_error("exception:required-argument-missing",          \
+    dfsch_error("Required argument missing",                    \
                 dfsch_make_string_cstr(#name));                 \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
     (name) = (type)DFSCH_ASSERT_TYPE(dfsch___tmp, (klass));     \
@@ -771,7 +771,7 @@ extern "C" {
    */
 #define DFSCH_INSTANCE_ARG(al, name, type, klass)               \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
-    dfsch_error("exception:required-argument-missing",          \
+    dfsch_error("Required argument missing",                    \
                 dfsch_make_string_cstr(#name));                 \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
     (name) = (type)DFSCH_ASSERT_INSTANCE(dfsch___tmp, (klass)); \
@@ -806,7 +806,7 @@ extern "C" {
    */
 #define DFSCH_ARG_END(al)                               \
   if ((al) != NULL)                                     \
-    dfsch_error("exception:too-many-arguments",NULL)
+    dfsch_error("Too many arguments",NULL)
 
   /**
    * Store all unprocessed arguments into rest. (Syntactic sugar 2.0 :))
@@ -840,23 +840,23 @@ extern "C" {
   dfsch_object_t* dfsch___flag = DFSCH_FAST_CAR((args));        \
   if (!dfsch_symbol_p(dfsch___flag)) break;
   
-#define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name)                 \
-  if (!DFSCH_PAIR_P((args))){                                   \
-    dfsch_error("exception:required-argument-missing", #name);  \
-  }                                                             \
-  {                                                             \
-  dfsch_object_t* dfsch___flag;                                 \
-  dfsch___flag = DFSCH_FAST_CAR((args));                        \
-  if (!dfsch_symbol_p(dfsch___flag)) {                          \
-    dfsch_error("exception:not-a-symbol", dfsch___flag);        \
+#define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name)                         \
+  if (!DFSCH_PAIR_P((args))){                                           \
+    dfsch_error("Required argument missing", #name);                    \
+  }                                                                     \
+  {                                                                     \
+  dfsch_object_t* dfsch___flag;                                         \
+  dfsch___flag = DFSCH_FAST_CAR((args));                                \
+  if (!dfsch_symbol_p(dfsch___flag)) {                                  \
+    dfsch_error("Non-symbol when flag was expected", dfsch___flag);     \
   }
 
-#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name)             \
-  if (DFSCH_PAIR_P((args))){                                    \
-  dfsch_object_t* dfsch___flag;                                 \
-  dfsch___flag = DFSCH_FAST_CAR((args));                        \
-  if (!dfsch_symbol_p(dfsch___flag)) {                          \
-    dfsch_error("exception:not-a-symbol", dfsch___flag);        \
+#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name)                     \
+  if (DFSCH_PAIR_P((args))){                                            \
+  dfsch_object_t* dfsch___flag;                                         \
+  dfsch___flag = DFSCH_FAST_CAR((args));                                \
+  if (!dfsch_symbol_p(dfsch___flag)) {                                  \
+    dfsch_error("Non-symbol when flag was expected", dfsch___flag);     \
   }
 
       
@@ -883,7 +883,7 @@ extern "C" {
   dfsch___keyword = DFSCH_FAST_CAR((args));                             \
   (args) = DFSCH_FAST_CDR((args));                                      \
   if (!DFSCH_PAIR_P((args))){                                           \
-    dfsch_error("exception:keyword-without-arguemnt", dfsch___keyword); \
+    dfsch_error("Keyword without argument", dfsch___keyword); \
   }                                                                     \
   dfsch___value = DFSCH_FAST_CAR((args));                               \
   (args) = DFSCH_FAST_CDR((args));

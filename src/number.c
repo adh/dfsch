@@ -297,7 +297,7 @@ dfsch_object_t* dfsch_number_numerator(dfsch_object_t* n){
   if (dfsch_integer_p(n)){
     return n;
   }
-  dfsch_error("exception:not-a-rational-number", n);
+  dfsch_error("Not a rational number", n);
 }
 dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
@@ -306,7 +306,7 @@ dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
   if (dfsch_integer_p(n)){
     return DFSCH_MAKE_FIXNUM(1);
   }
-  dfsch_error("exception:not-a-rational-number", n);
+  dfsch_error("Not a rational number", n);
 }
 
 flonum_t* flonum_cache[256];
@@ -451,7 +451,7 @@ double dfsch_number_to_double(dfsch_object_t *n){
     return dfsch_number_to_double(((fracnum_t*)n)->num) /
       dfsch_number_to_double(((fracnum_t*)n)->denom);
   }
-  dfsch_error("exception:not-a-real-number", n);
+  dfsch_error("Not a  real number", n);
 }
 dfsch_object_t* dfsch_number_to_inexact(dfsch_object_t* n){
   return dfsch_make_number_from_double(dfsch_number_to_double(n));
@@ -464,12 +464,12 @@ long dfsch_number_to_long(dfsch_object_t *n){
   } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r) || 
         r < LONG_MIN || r > LONG_MAX){
-      dfsch_error("exception:value-too-large", NULL);
+      dfsch_error("Value too large", NULL);
     }
 
     return r;
   }
-  dfsch_error("exception:not-an-integer", n);
+  dfsch_error("Not an integer", n);
 }
 
 int64_t dfsch_number_to_int64(dfsch_object_t *n){
@@ -479,12 +479,12 @@ int64_t dfsch_number_to_int64(dfsch_object_t *n){
     return DFSCH_FIXNUM_REF(n);
   } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r)){
-      dfsch_error("exception:value-too-large", NULL);
+      dfsch_error("Value too large", NULL);
     }
 
     return r;
   }
-  dfsch_error("exception:not-an-integer", n);
+  dfsch_error("Not an integer", n);
 }
 
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -906,13 +906,13 @@ dfsch_object_t* dfsch_number_div (dfsch_object_t* a,
     double bn = dfsch_number_to_double((dfsch_object_t*) b);
   
     if (bn == 0.0)
-      dfsch_error("exception:division-by-zero", NULL);
+      dfsch_error("Division by zero", NULL);
 
     return dfsch_make_number_from_double(an / bn); 
   }
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-    dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("Division by zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
@@ -934,7 +934,7 @@ dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,
   dfsch_bignum_t* r;
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-    dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("Division by zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
@@ -962,7 +962,7 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
     long bn = dfsch_number_to_long((dfsch_object_t*) b);
  
     if (bn == 0)
-      dfsch_error("exception:division-by-zero", NULL);
+      dfsch_error("Division by zero", NULL);
     
     return dfsch_make_number_from_long(an % bn); 
   }

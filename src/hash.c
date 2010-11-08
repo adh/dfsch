@@ -524,7 +524,7 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_hash, NULL){
   if (dfsch_compare_keyword(mode, "eq?"))
     return dfsch_alist_2_hash(alist, DFSCH_HASH_EQ);
 
-  dfsch_error("exception:unknown-mode", mode);
+  dfsch_error("Unknown hash mode", mode);
 }
 
 

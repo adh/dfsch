@@ -86,7 +86,7 @@ static dfsch_object_t* decoded_time_apply(decoded_time_t* time,
     return dfsch_bool(time->tm.tm_isdst == 1);
   }
 
-  dfsch_error("exception:no-such-decoded-time-field", selector);
+  dfsch_error("Unknown field requested", selector);
 }
 
 size_t decoded_time_hash(decoded_time_t* time){
@@ -111,7 +111,7 @@ dfsch_object_t* dfsch_make_decoded_time(){
 
 struct tm* dfsch_decoded_time_get_tm(dfsch_object_t* time){
   if (DFSCH_TYPE_OF(time) != &decoded_time_type){
-    dfsch_error("exception:not-a-decoded-time", time);
+    dfsch_error("Not a decoded time", time);
   }
 
   return &(((decoded_time_t*)time)->tm);
