@@ -32,6 +32,10 @@
               start-state)
     (get-variables toplevel)))
 
+(define-generic get-object-documentation
+  :method-combination (make-simple-method-combination list))
+
+
 (define (get-object-documentation object)
   (cond
    ((instance? object <function>)

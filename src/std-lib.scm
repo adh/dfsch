@@ -119,9 +119,19 @@
 (define (dfsch:make-simple-method-combination operator)
   (lambda (methods function)
     (lambda args
-      (reduce operator (map (lambda (meth)
-                              (call-method meth () args))
-                            (get-primary-methods methods))))))
+      (operator (map (lambda (meth)
+                       (call-method meth () args))
+                     (get-primary-methods methods))))))
+
+(define-macro (dfsch:define-custom-specializer name args &body code)
+  `(%define-canonical-constant ,name
+                               (make-type-specializer (%lambda ,name ,args ,@code))))
+
+(define-macro (dfsch:define-has-slot-specializer name slot)
+  `(define-custom-specializer ,name (type)
+     (ignore-errors (find-slot type ',slot) #t)))
+
+(define-has-slot-specializer dfsch:<<documented>> :documentation)
 
 (define-macro (dfsch:define-class name superclass slots &rest class-opts)
   (let ((class-slots (map 
