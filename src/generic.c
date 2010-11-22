@@ -1009,7 +1009,6 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
                                               (args, 2,
                                                DFSCH_PRIMITIVE_REF(make_generic_function),
                                                dfsch_generate_quote(name))));
-     
 }
 
 
