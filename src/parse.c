@@ -259,12 +259,18 @@ static void parser_push(dfsch_parser_ctx_t *ctx){
 
 static void replace_pointer(dfsch_object_t* obj,
                             dfsch_object_t* from,
-                            dfsch_object_t* to){
+                            dfsch_object_t* to,
+                            dfsch_eqhash_t* closed){
+  if (dfsch_eqhash_ref(closed, obj) != DFSCH_INVALID_OBJECT){
+    return;
+  }
+  dfsch_eqhash_put(closed, obj, obj);
+
   if (DFSCH_PAIR_P(obj)) {
     if (DFSCH_FAST_CAR(obj) == from){
       DFSCH_FAST_CAR(obj) = to;
     } else {
-      replace_pointer(DFSCH_FAST_CAR(obj), from, to);
+      replace_pointer(DFSCH_FAST_CAR(obj), from, to, closed);
     }
 
     if (DFSCH_FAST_CDR(obj) == from){
@@ -276,7 +282,7 @@ static void replace_pointer(dfsch_object_t* obj,
         DFSCH_FAST_CDR_MUT(obj) = to;
       }
     } else {
-      replace_pointer(DFSCH_FAST_CDR(obj), from, to);
+      replace_pointer(DFSCH_FAST_CDR(obj), from, to, closed);
     }
   } else if (dfsch_vector_p(obj)){
     int i;
@@ -285,7 +291,7 @@ static void replace_pointer(dfsch_object_t* obj,
       if (v->data[i] == from){
         v->data[i] = to;
       } else {
-        replace_pointer(v->data[i], from, to);
+        replace_pointer(v->data[i], from, to, closed);
       }
     }
   }
@@ -293,8 +299,10 @@ static void replace_pointer(dfsch_object_t* obj,
 
 static void resolve_circular_references(dfsch_object_t* obj,
                                         dfsch_object_t* pho){
+  dfsch_eqhash_t closed;
+  dfsch_eqhash_init(&closed, 1);
   if (pho != DFSCH_INVALID_OBJECT){
-    replace_pointer(obj, pho, obj);
+    replace_pointer(obj, pho, obj, &closed);
   }
 }
 
@@ -845,6 +853,11 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           ctx->column++;
         
           parse_quote(ctx, DFSCH_SYM_UNQUOTE_SPLICING); 
+        }else if (*data == '.'){
+          ++data;
+          ctx->column++;
+        
+          parse_quote(ctx, DFSCH_SYM_UNQUOTE_NCONCING); 
         }else{
           parse_quote(ctx, DFSCH_SYM_UNQUOTE);
         }

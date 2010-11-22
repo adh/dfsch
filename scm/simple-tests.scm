@@ -1,6 +1,6 @@
 (provide :simple-tests)
 (require :cmdopts)
-
+(require :os)
 (define-package :simple-tests :uses '(:dfsch :cmdopts))
 (in-package :simple-tests)
 
@@ -15,10 +15,11 @@
 
 (when (defined? *posix-argv*)
       (let ((parser (make-parser)))
-        (add-option parser "one-test-fail" 
+        (add-option parser  
                     (lambda (p v) 
                       (set! one-test-fail #t)
-                      (print "Running in strict mode")))
+                      (print "Running in strict mode"))
+                    :long-option "one-test-fail")
         (parse-list parser (cdr *posix-argv*))))
 
 
@@ -32,8 +33,8 @@
   (print "  ===========================")
   (print "  Tests total:  " (+ tests-passed tests-failed))
   (if (= tests-failed 0)
-      (unix:exit 0)
-      (unix:exit fail-status)))
+      (os:exit 0)
+      (os:exit fail-status)))
 
 
 (define (test id exp val)

@@ -23,6 +23,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/mkhash.h>
 #include <dfsch/generate.h>
+#include <dfsch/specializers.h>
 
 #include <stdio.h>
 
@@ -64,7 +65,7 @@ static int more_specific_method_p(dfsch_method_t* a,
     dfsch_object_t* bs = DFSCH_FAST_CAR(bi);
     
     if (as != bs){
-      if (dfsch_superclass_p(as, bs)){
+      if (dfsch_specializer_matches_type_p(bs, as)){
         return 0;
       } else {
         return 1;
@@ -156,8 +157,8 @@ static int method_applicable_p(dfsch_method_t* method,
   dfsch_object_t* si = method->specializers;
 
   while (DFSCH_PAIR_P(ai) && DFSCH_PAIR_P(si)){
-    if (!DFSCH_INSTANCE_P(DFSCH_FAST_CAR(ai),
-                          DFSCH_FAST_CAR(si))){
+    if (!dfsch_specializer_matches_type_p(DFSCH_FAST_CAR(si),
+                                          DFSCH_TYPE_OF(DFSCH_FAST_CAR(ai)))){
       return 0;
     }
 
@@ -321,12 +322,13 @@ dfsch_type_t dfsch_standard_effective_method_type = {
   .apply = apply_effective_method
 };
 
-static dfsch_object_t* get_primary_methods(dfsch_object_t* methods){
+dfsch_object_t* dfsch_get_primary_methods(dfsch_object_t* methods){
   dfsch_object_t* head = NULL;
   dfsch_object_t* tail;
 
   while (DFSCH_PAIR_P(methods)){
-    dfsch_method_t* method = DFSCH_FAST_CAR(methods);
+    dfsch_method_t* method = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(methods),
+                                                   DFSCH_METHOD_TYPE);
 
     if (!method->qualifiers){
       dfsch_object_t* tmp = dfsch_cons(method, NULL);
@@ -342,13 +344,14 @@ static dfsch_object_t* get_primary_methods(dfsch_object_t* methods){
 
   return head;
 }
-static dfsch_object_t* get_qualified_methods(dfsch_object_t* methods,
-                                             dfsch_object_t* qualifier){
+dfsch_object_t* dfsch_get_qualified_methods(dfsch_object_t* methods,
+                                            dfsch_object_t* qualifier){
   dfsch_object_t* head = NULL;
   dfsch_object_t* tail;
 
   while (DFSCH_PAIR_P(methods)){
-    dfsch_method_t* method = DFSCH_FAST_CAR(methods);
+    dfsch_method_t* method = DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(methods),
+                                                   DFSCH_METHOD_TYPE);
 
     if (DFSCH_PAIR_P(method->qualifiers) &&
         DFSCH_FAST_CAR(method->qualifiers) == qualifier &&
@@ -369,14 +372,15 @@ static dfsch_object_t* get_qualified_methods(dfsch_object_t* methods,
 
 static effective_method_t* make_effective_method(dfsch_object_t* methods,
                                                  dfsch_object_t* genfun){
+  
   effective_method_t* em = 
     dfsch_make_object(DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE);
 
-  em->primary_methods = get_primary_methods(methods);
-  em->after_methods = dfsch_reverse(get_qualified_methods(methods, 
-                                                          DFSCH_QUAL_AFTER));
-  em->before_methods = get_qualified_methods(methods, DFSCH_QUAL_BEFORE);
-  em->around_methods = get_qualified_methods(methods, DFSCH_QUAL_AROUND);
+  em->primary_methods = dfsch_get_primary_methods(methods);
+  em->after_methods = dfsch_reverse(dfsch_get_qualified_methods(methods, 
+                                                                DFSCH_QUAL_AFTER));
+  em->before_methods = dfsch_get_qualified_methods(methods, DFSCH_QUAL_BEFORE);
+  em->around_methods = dfsch_get_qualified_methods(methods, DFSCH_QUAL_AROUND);
 
   if (em->around_methods){
     dfsch_object_t* i;
@@ -437,14 +441,18 @@ apply_standard_generic_function(standard_generic_function_t* function,
       dfsch_error("No applicable methods", dfsch_list(2, function, 
                                                       dfsch_list_copy(arguments)));
     }
-    
-    em = make_effective_method(meths, function);
+    if (function->method_combination){
+      em = dfsch_apply(function->method_combination,
+                       dfsch_list(2, meths, function));
+    } else {
+      em = make_effective_method(meths, function);
+    }
     dfsch_mkhash_set(function->dispatch_cache, cache_keys, em);
   }
 #ifdef GENERIC_PRINT_STATS
   fprintf(stderr, ";; dispatch finish heap_delta=%d\n", GC_get_total_bytes() - gc_start);
 #endif
-  return apply_effective_method(em, arguments, esc, context);
+  return dfsch_apply_with_context(em, arguments, context, esc);
   
 }
 static void write_standard_generic_function(standard_generic_function_t* gf,
@@ -623,12 +631,15 @@ dfsch_generic_function_t* dfsch_assert_generic_function(dfsch_object_t* obj){
 }
 
 
-dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name){
+dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name,
+                                            dfsch_object_t* method_combination,
+                                            char* documentation){
   standard_generic_function_t* gf = (standard_generic_function_t*)
     dfsch_make_object(DFSCH_STANDARD_GENERIC_FUNCTION_TYPE);
 
   gf->name = name;
   gf->methods = NULL;
+  gf->method_combination = method_combination;
   gf->dispatch_cache = dfsch_make_mkhash(0, 0);
 
   return (dfsch_object_t*)gf;
@@ -662,18 +673,42 @@ static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
     }
   }
 
-  fun = dfsch_make_generic_function(name);
+  fun = dfsch_make_generic_function(name, NULL, NULL);
   dfsch_define(name, fun, env, DFSCH_VAR_CONSTANT);
 
   return fun;
 }
 
-dfsch_object_t* dfsch_define_method(dfsch_object_t* env,
-                                    dfsch_object_t* name,
-                                    dfsch_method_t* method){
+void dfsch_define_method(dfsch_object_t* env,
+                         dfsch_object_t* name,
+                         dfsch_object_t* qualifiers,
+                         dfsch_object_t* specializers,
+                         dfsch_object_t* proc){
   dfsch_object_t* function = ensure_generic_function(env, name);
-  dfsch_generic_function_add_method(function, method);
-  return method;
+  dfsch_add_method_proc(function, qualifiers, specializers, proc);
+}
+void dfsch_define_method_pkgcstr(dfsch_object_t* env,
+                                 dfsch_package_t* pkg,
+                                 char* name,
+                                 dfsch_object_t* qualifiers,
+                                 dfsch_object_t* specializers,
+                                 dfsch_object_t* function){
+  dfsch_define_method(env,
+                      dfsch_intern_symbol(pkg, name),
+                      qualifiers, specializers, function);
+}
+
+void dfsch_add_method_proc(dfsch_object_t* gfunc,
+                           dfsch_object_t* qualifiers,
+                           dfsch_object_t* specializers,
+                           dfsch_object_t* proc){
+  dfsch_object_t* name = proc;
+
+  dfsch_generic_function_add_method(gfunc,
+                                    dfsch_make_method(name,
+                                                      qualifiers,
+                                                      specializers,
+                                                      proc));
 }
 
 
@@ -847,10 +882,17 @@ dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t 
 
 DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
   dfsch_object_t* name;
+  dfsch_object_t* method_combination = NULL;
+  char* documentation = NULL;
   DFSCH_OBJECT_ARG(args, name);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("method-combination", method_combination);
+  DFSCH_KEYWORD_GENERIC("documentation", documentation,
+                        dfsch_string_to_cstr);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_generic_function(name);
+  return dfsch_make_generic_function(name, method_combination, documentation);
 }
 DFSCH_DEFINE_PRIMITIVE(make_method, ""){
   dfsch_object_t* name;
@@ -952,7 +994,6 @@ DFSCH_DEFINE_MACRO(call_next_method, "Call next less specialized method"){
 DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_END(args);
   
 
   return dfsch_generate_if
@@ -961,14 +1002,13 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
                                                  DFSCH_GENERIC_FUNCTION_TYPE),
                        name,
                        dfsch_generate_error("Generic function name already "
-                                             " defined as different type", 
-                                             name)),
-     dfsch_generate_define_constant(name,
-                                    dfsch_immutable_list
-                                    (2,
-                                     DFSCH_PRIMITIVE_REF(make_generic_function),
-                                     dfsch_generate_quote(name))));
-     
+                                            " defined as different type", 
+                                            name)),
+     dfsch_generate_define_canonical_constant(name,
+                                              dfsch_immutable_list_cdr
+                                              (args, 2,
+                                               DFSCH_PRIMITIVE_REF(make_generic_function),
+                                               dfsch_generate_quote(name))));
 }
 
 
@@ -1015,23 +1055,64 @@ DFSCH_DEFINE_MACRO(define_method, "Define new generic function"){
 }
 
 
+DFSCH_DEFINE_PRIMITIVE(call_method, "Calls method with list of next-methods"){
+  dfsch_object_t* method;
+  dfsch_object_t* next_methods;
+  dfsch_object_t* arg_list;
+
+  DFSCH_OBJECT_ARG(args, method);
+  DFSCH_OBJECT_ARG(args, next_methods);
+  DFSCH_OBJECT_ARG(args, arg_list);
+  DFSCH_ARG_END(args);
+  return dfsch_call_method(DFSCH_ASSERT_INSTANCE(method, DFSCH_METHOD_TYPE),
+                           next_methods,
+                           arg_list,
+                           esc);
+}
+
+DFSCH_DEFINE_PRIMITIVE(get_primary_methods, 
+                       "Filter primary methods from method list"){
+  dfsch_object_t* methods;
+  DFSCH_OBJECT_ARG(args, methods);
+  DFSCH_ARG_END(args);
+  return dfsch_get_primary_methods(methods);
+}
+DFSCH_DEFINE_PRIMITIVE(get_qualified_methods, 
+                       "Filter qualified methods from method list"){
+  dfsch_object_t* methods;
+  dfsch_object_t* qualifier;
+  DFSCH_OBJECT_ARG(args, methods);
+  DFSCH_OBJECT_ARG(args, qualifier);
+  DFSCH_ARG_END(args);
+  return dfsch_get_qualified_methods(methods, qualifier);
+}
+
+
 void dfsch__generic_register(dfsch_object_t* env){
-  dfsch_defconst_cstr(env, "make-generic-function",
+  dfsch_defcanon_cstr(env, "make-generic-function",
                       DFSCH_PRIMITIVE_REF(make_generic_function));
-  dfsch_defconst_cstr(env, "make-method",
-                    DFSCH_PRIMITIVE_REF(make_method));
+  dfsch_defcanon_cstr(env, "make-method",
+                      DFSCH_PRIMITIVE_REF(make_method));
 
-  dfsch_defconst_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
-  dfsch_defconst_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
-  dfsch_defconst_cstr(env, "generic-function-methods", 
-                    (dfsch_object_t*)&generic_function_methods);
+  dfsch_defcanon_cstr(env, "add-method!", (dfsch_object_t*)&add_method);
+  dfsch_defcanon_cstr(env, "remove-method!", (dfsch_object_t*)&remove_method);
+  dfsch_defcanon_cstr(env, "generic-function-methods", 
+                      (dfsch_object_t*)&generic_function_methods);
 
-  dfsch_defconst_cstr(env, "call-next-method",
-                    DFSCH_MACRO_REF(call_next_method));
+  dfsch_defcanon_cstr(env, "call-next-method",
+                      DFSCH_MACRO_REF(call_next_method));
 
-  dfsch_defconst_cstr(env, "define-generic-function",
+  dfsch_defcanon_cstr(env, "define-generic-function",
                       DFSCH_MACRO_REF(define_generic_function));
-  dfsch_defconst_cstr(env, "define-method",
+  dfsch_defcanon_cstr(env, "define-method",
                       DFSCH_MACRO_REF(define_method));
+
+  dfsch_defcanon_cstr(env, "call-method",
+                      DFSCH_PRIMITIVE_REF(call_method));
+
+  dfsch_defcanon_cstr(env, "get-primary-methods",
+                      DFSCH_PRIMITIVE_REF(get_primary_methods));
+  dfsch_defcanon_cstr(env, "get-qualified-methods",
+                      DFSCH_PRIMITIVE_REF(get_qualified_methods));
 
 }

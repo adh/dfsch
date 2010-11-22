@@ -35,7 +35,7 @@ struct dfsch_eqhash_entry_t {
   dfsch_object_t* key;
   dfsch_eqhash_entry_t* next;
   dfsch_object_t* value;
-  short flags;
+  unsigned short flags;
 };
 
 typedef struct dfsch__eqhash_small_t {
@@ -67,21 +67,26 @@ typedef struct dfsch_eqhash_t {
 
 void dfsch_eqhash_init(dfsch_eqhash_t* hash, int start_large);
 void dfsch_eqhash_put(dfsch_eqhash_t* hash,
-                      dfsch_object_t* key, dfsch_object_t* value);
+                      dfsch_object_t* key, dfsch_object_t* value) DFSCH_FUNC_HOT;
 void dfsch_eqhash_set(dfsch_eqhash_t* hash,
-                      dfsch_object_t* key, dfsch_object_t* value);
+                      dfsch_object_t* key, dfsch_object_t* value) DFSCH_FUNC_HOT;
 int dfsch_eqhash_unset(dfsch_eqhash_t* hash, dfsch_object_t* key);
 void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
-                            dfsch_object_t* key, short flags);
+                            dfsch_object_t* key, unsigned short flags);
 int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                dfsch_object_t* key, dfsch_object_t* value,
-                               short* flags);
+                               unsigned short* flags);
 dfsch_object_t* dfsch_eqhash_ref(dfsch_eqhash_t* hash,
-                                 dfsch_object_t* key);
+                                 dfsch_object_t* key) DFSCH_FUNC_HOT;
 int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
                         dfsch_object_t* key, 
-                        dfsch_object_t** value, short *flags, 
+                        dfsch_object_t** value, 
+                        unsigned short *flags, 
                         dfsch_eqhash_entry_t** entry);
 
 dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash);
+dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
+                                     dfsch_object_t* value,
+                                     unsigned short flags);
+dfsch_eqhash_entry_t* dfsch_eqhash_2_entry_list(dfsch_eqhash_t* hash);
 #endif

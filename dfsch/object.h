@@ -28,14 +28,47 @@
 extern "C" {
 #endif
 
-  extern dfsch_type_t dfsch_class_type;
-#define DFSCH_CLASS_TYPE (&dfsch_class_type)
+  typedef struct dfsch_metaclass_t dfsch_metaclass_t;
+
+  typedef dfsch_object_t* (*dfsch_alloc_instance_t)(dfsch_object_t* klass);
+  typedef dfsch_object_t* (*dfsch_make_class_t)(dfsch_metaclass_t* mc,
+                                                dfsch_object_t* super,
+                                                char* name,
+                                                dfsch_object_t* slots,
+                                                dfsch_object_t* options);
+
+  struct dfsch_metaclass_t {
+    dfsch_type_t type;
+    dfsch_alloc_instance_t allocate_instance;
+    dfsch_make_class_t make_class;
+  };
+
+  extern dfsch_type_t dfsch_metaclass_type;
+#define DFSCH_METACLASS_TYPE (&dfsch_metaclass_type)
+
+  extern dfsch_metaclass_t dfsch_standard_class_type;
+#define DFSCH_STANDARD_CLASS_TYPE (&dfsch_standard_class_type)
+
+typedef struct dfsch_standard_class_t {
+  dfsch_type_t standard_type;
+  dfsch_object_t* write_instance;
+  dfsch_object_t* initfuncs;
+  dfsch_object_t* initargs;
+} dfsch_standard_class_t;
+
 
   dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
+                                   dfsch_object_t* metaclass,
                                    char* name,
-                                   dfsch_object_t* slots);
+                                   dfsch_object_t* slots,
+                                   dfsch_object_t* options);
   dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                       dfsch_object_t* args);
+
+  void dfsch_make_class_slots(dfsch_slot_type_t* default_slot_type,
+                              dfsch_type_t* klass,
+                              dfsch_object_t* defs);
+  void dfsch_standard_class_prepare_slots(dfsch_standard_class_t* klass);
 
 #ifdef __cplusplus
 }

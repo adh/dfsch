@@ -166,9 +166,6 @@ extern "C" {
   dfsch_object_t* dfsch_open_file_port(char* filename, char* mode);
   void dfsch_close_file_port(dfsch_object_t* port);
 
-
-  void dfsch_port_unsafe_register(dfsch_object_t* ctx);
-
 #ifdef __cplusplus
 }
 #endif

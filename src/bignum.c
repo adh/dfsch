@@ -23,6 +23,7 @@
 #include "dfsch/bignum.h"
 
 #include <dfsch/dfsch.h>
+#include <dfsch/serdes.h>
 #include "util.h"
 #include "internal.h"
 #include <string.h>
@@ -87,6 +88,20 @@ static void bignum_write(bignum_t* b, dfsch_writer_state_t* state){
   dfsch_write_string(state, dfsch_bignum_to_string(b, 10));
 }
 
+static void bignum_serialize(bignum_t* b, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "bignum");
+  dfsch_serialize_integer(s, b->negative);
+  dfsch_serialize_strbuf(s, dfsch_bignum_to_bytes(b));
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("bignum", bignum){
+  int negative = dfsch_deserialize_integer(ds);
+  dfsch_strbuf_t* s = dfsch_deserialize_strbuf(ds);
+  dfsch_object_t* fn = dfsch_bignum_from_bytes(s->ptr, s->len, negative);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;
+}
+
 dfsch_number_type_t dfsch_bignum_type = {
   DFSCH_STANDARD_TYPE,
   DFSCH_INTEGER_TYPE,
@@ -95,7 +110,8 @@ dfsch_number_type_t dfsch_bignum_type = {
   (dfsch_type_equal_p_t)dfsch_bignum_equal_p,
   (dfsch_type_write_t)bignum_write,
   NULL,
-  (dfsch_type_hash_t)bignum_hash
+  (dfsch_type_hash_t)bignum_hash,
+  .serialize = bignum_serialize,
 };
 
 static void normalize_bignum(bignum_t* n){
@@ -122,6 +138,37 @@ static bignum_t* copy_bignum(bignum_t* s){
   memcpy(b->words, s->words, sizeof(word_t)*s->length);
   return b;
 }
+
+static bignum_t* copy_bignum_mod2(bignum_t* s, size_t m){
+  size_t bs = m % WORD_BITS;
+  size_t ws = m / WORD_BITS;
+  bignum_t* b = make_bignum(ws + 1);
+
+  b->negative = s->negative;
+  
+  if (ws >= s->length){
+    b->words[ws] = 0;
+    memcpy(b->words, s->words, sizeof(word_t)*s->length);
+  } else {
+    memcpy(b->words, s->words, sizeof(word_t)*ws);
+    b->words[ws] = s->words[ws] & ((1 << bs) - 1);
+  }
+
+  normalize_bignum(b);
+  return b;
+}
+
+static bignum_t* copy_bignum_words(bignum_t* s, size_t count){
+  bignum_t* b;
+  if (count >= s->length){
+    count = s->length;
+  }
+  b = make_bignum(count);
+  b->negative = s->negative;
+  memcpy(b->words, s->words, sizeof(word_t)*count);
+  return b;
+}
+
 
 
 bignum_t* dfsch_make_bignum_uint64(uint64_t n){
@@ -595,6 +642,43 @@ static bignum_t* bignum_shr_words(bignum_t* b, size_t count){
 
   return res;
 }
+size_t dfsch_bignum_lsb(bignum_t* b){
+  size_t i;
+  size_t res = 0;
+
+  for (i = 0; i < b->length; i++){
+    if (b->words[i]){
+      break;
+    }
+    res += WORD_BITS;
+  }
+
+  if (i < b->length){
+    word_t w = b->words[i];
+    while ((w & 1) == 0){
+      res++;
+      w >>= 1;
+    }
+  }
+
+  return res;
+}
+
+size_t dfsch_bignum_msb(bignum_t* b){
+  size_t res = (b->length - 1) * WORD_BITS;
+  word_t w;
+
+  if (b->length){
+    w = b->words[b->length - 1];
+    while (w){
+      res++;
+      w >>=1;
+    }
+    return res - 1;
+  } else {
+    return 0;
+  }
+}
 
 static void bignum_div_digit(bignum_t* a, word_t b,
                              bignum_t**qp, word_t* rp){
@@ -719,7 +803,8 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   }
   if (a->length < b->length || 
       (a->length == b->length && 
-       a->words[a->length - 1] < b->words[b->length - 1])){
+       a->words[a->length - 1] < b->words[b->length - 1]) ||
+      dfsch_bignum_cmp_abs(a, b) < 0){
     if (qp){
       *qp = make_bignum(0);
     }
@@ -746,8 +831,62 @@ void dfsch_bignum_div(bignum_t* a, bignum_t* b,
   }
 }
 
+static bignum_t* barret_prepare(bignum_t* m){
+  bignum_t* res;
+
+  dfsch_bignum_div(bignum_shl_words(make_bignum_digit(1),
+                                    m->length * 2),
+                   m,
+                   &res,
+                   NULL);
+
+  return res;
+}
+
+/* HAC 14.42 */
+static bignum_t* barret_reduce(bignum_t* x, bignum_t* m, bignum_t* mu){
+  size_t k = m->length;
+  bignum_t* q1;
+  bignum_t* q2;
+  bignum_t* q3;
+  bignum_t* r1;
+  bignum_t* r2;
+  bignum_t* r;
+
+  if (x->length >= 2*k){ 
+    dfsch_bignum_div(x, m, NULL, &r); 
+    return r; 
+  } 
+
+  /* 1 */
+  //dfsch_bignum_div(x, dfsch_bignum_shl(make_bignum_digit(1), k - 1),
+  //                 &q1, NULL);
+  q1 = bignum_shr_words(x, k - 1);
+  q2 = dfsch_bignum_mul(q1, mu);
+  //dfsch_bignum_div(q2, b_k_p1, &q3, NULL);
+  q3 = bignum_shr_words(q2, k + 1);
+
+  /* 2 */
+  r1 = copy_bignum_words(x, (k + 1));
+  r2 = copy_bignum_words(dfsch_bignum_mul(q3, m), (k+1));
+  r = dfsch_bignum_sub(r1, r2);
+
+  /* 3 */
+  if (r->negative){
+    r = dfsch_bignum_add(r, bignum_shl_words(make_bignum_digit(1), k + 1));
+  }
+
+  /* 4 */
+  while (dfsch_bignum_cmp(r, m) >= 0){
+    r = dfsch_bignum_sub(r, m);
+  }
+
+  return r;
+}
+
 bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   bignum_t* r;
+  bignum_t* mu;
   size_t i;
 
   if (m && b->negative){
@@ -756,15 +895,27 @@ bignum_t* dfsch_bignum_exp(bignum_t* b, bignum_t* e, bignum_t* m){
   if (m && m->length == 0){
     dfsch_error("Zero modulus", NULL);
   }
+  if (m && m->negative){
+    dfsch_error("Negative modulus", NULL);
+  }
+
+  if (m){
+    mu = barret_prepare(m);
+  }
 
   r = make_bignum_digit(1);
   for (i = bignum_num_bits(e); i > 0; i--){
     r = dfsch_bignum_mul(r, r);
+    if (m){
+      //dfsch_bignum_div(r, m, NULL, &r);
+      r = barret_reduce(r, m, mu);
+    }
     if (bignum_get_bit(e, i-1)){
       r = dfsch_bignum_mul(r, b);
-    }
-    if (m){
-      dfsch_bignum_div(r, m, NULL, &r);
+      if (m){
+        //dfsch_bignum_div(r, m, NULL, &r);
+        r = barret_reduce(r, m, mu);
+      }
     }
   }
   
@@ -874,43 +1025,33 @@ dfsch_bignum_t* dfsch_bignum_shr(bignum_t* b, size_t count){
   return r;
 }
 
-size_t dfsch_bignum_lsb(bignum_t* b){
+dfsch_bignum_t* dfsch_bignum_shl(bignum_t* b, size_t count){
+  bignum_t* r;
   size_t i;
-  size_t res = 0;
+  size_t bs = count % WORD_BITS;
+  size_t ws = count / WORD_BITS;
 
-  for (i = 0; i < b->length; i++){
-    if (b->words[i]){
-      break;
-    }
-    res += WORD_BITS;
+  r = make_bignum(b->length + ws + 1);
+  r->negative = b->negative;
+  for (i = 0; i < ws; i++){
+    r->words[i] = 0;
+  }
+  r->words[ws] = (b->words[0] << bs) & WORD_MASK;
+  for (i = 1; i < b->length; i++){
+    r->words[i + ws] = ((b->words[i] << bs) | 
+                        (b->words[i - 1] >> (WORD_BITS - bs))) & WORD_MASK;
+  }
+  r->words[r->length - 1] = (b->words[b->length - 1] >> (WORD_BITS - bs)) & WORD_MASK;
+
+  for (i = 0; i < r->length; i++){
+    printf(";; %x \n", r->words[i]);
   }
 
-  if (i < b->length){
-    word_t w = b->words[i];
-    while ((w & 1) == 0){
-      res++;
-      w >>= 1;
-    }
-  }
-
-  return res;
+  normalize_bignum(r);
+  return r;
 }
 
-size_t dfsch_bignum_msb(bignum_t* b){
-  size_t res = (b->length - 1) * WORD_BITS;
-  word_t w;
 
-  if (b->length){
-    w = b->words[b->length - 1];
-    while (w){
-      res++;
-      w >>=1;
-    }
-    return res - 1;
-  } else {
-    return 0;
-  }
-}
 
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 
@@ -961,6 +1102,8 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
   size_t i;
   len = bignum_num_bits(b) / 8 + 1;
   buf = GC_MALLOC_ATOMIC(len);
+
+  memset(buf, 0, len);
   
   for (i = 0; i < bignum_num_bits(b); i+=8){
     buf[len - 1 - (i >> 3)] = bignum_get_word(b, i);
@@ -973,17 +1116,21 @@ dfsch_strbuf_t* dfsch_bignum_to_bytes(dfsch_bignum_t* b){
 
   return dfsch_strbuf_create(buf, len);
 }
-dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len){
+dfsch_bignum_t* dfsch_bignum_from_bytes(uint8_t* buf, size_t len, int negative){
   bignum_t* b = make_bignum(len * (WORD_BITS / 8 + 1));
   size_t i;
   
-  b->negative = 0;
+  b->negative = negative;
 
   for (i = 0; i < len; i++){
     bignum_set_word(b, i << 3, buf[len - i - 1], 0xff);
   }
   
   normalize_bignum(b);
+
+  if (b->length == 0){
+    b->negative = 0;
+  }
 
   return b;
 }
@@ -1037,18 +1184,22 @@ DFSCH_DEFINE_PRIMITIVE(bignum_2_bytes, 0){
   return dfsch_make_string_strbuf(dfsch_bignum_to_bytes(a));
 }
 DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
-  dfsch_strbuf_t* a;
-  DFSCH_BUFFER_ARG(args, a);
+  dfsch_strbuf_t* bytes;
+  dfsch_object_t* negative;
+  DFSCH_BUFFER_ARG(args, bytes);
+  DFSCH_OBJECT_ARG_OPT(args, negative, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(a->ptr, a->len));
+  return dfsch_bignum_to_number(dfsch_bignum_from_bytes(bytes->ptr, 
+                                                        bytes->len,
+                                                        negative != NULL));
 }
 
 
 void dfsch__bignum_register(dfsch_object_t* ctx){
-  dfsch_define_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
-  dfsch_define_cstr(ctx, "integer-expt", DFSCH_PRIMITIVE_REF(integer_expt));
-  dfsch_define_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
-  dfsch_define_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
+  dfsch_defcanon_cstr(ctx, "<bignum>", DFSCH_BIGNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "integer-expt", DFSCH_PRIMITIVE_REF(integer_expt));
+  dfsch_defcanon_cstr(ctx, "integer->bytes", DFSCH_PRIMITIVE_REF(bignum_2_bytes));
+  dfsch_defcanon_cstr(ctx, "bytes->integer", DFSCH_PRIMITIVE_REF(bytes_2_bignum));  
 }
 

@@ -159,6 +159,8 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "*macro-expanded-from*"},
   {DFSCH_DFSCH_PACKAGE, "immutable-quasiquote"},
   {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
+  {DFSCH_DFSCH_PACKAGE, "unquote-nconcing"},
+  {DFSCH_DFSCH_PACKAGE, "break"},
 };
 
 static dfsch_package_t* find_package(char* name){
@@ -905,23 +907,23 @@ DFSCH_DEFINE_PRIMITIVE(list_all_package_symbols,
 
 
 void dfsch__package_register(dfsch_object_t *ctx){
-  dfsch_defconst_cstr(ctx, "define-package",
+  dfsch_defcanon_cstr(ctx, "define-package",
                       DFSCH_PRIMITIVE_REF(define_package));
-  dfsch_defconst_cstr(ctx, "in-package",
+  dfsch_defcanon_cstr(ctx, "in-package",
                       DFSCH_PRIMITIVE_REF(in_package));
-  dfsch_defconst_cstr(ctx, "use-package",
+  dfsch_defcanon_cstr(ctx, "use-package",
                       DFSCH_PRIMITIVE_REF(use_package));
 
-  dfsch_defconst_cstr(ctx, "unintern",
+  dfsch_defcanon_cstr(ctx, "unintern",
                       DFSCH_PRIMITIVE_REF(unintern));
 
-  dfsch_defconst_cstr(ctx, "find-package",
+  dfsch_defcanon_cstr(ctx, "find-package",
                       DFSCH_PRIMITIVE_REF(find_package));
-  dfsch_defconst_cstr(ctx, "list-all-packages",
+  dfsch_defcanon_cstr(ctx, "list-all-packages",
                       DFSCH_PRIMITIVE_REF(list_all_packages));
-  dfsch_defconst_cstr(ctx, "list-package-symbols",
+  dfsch_defcanon_cstr(ctx, "list-package-symbols",
                       DFSCH_PRIMITIVE_REF(list_package_symbols));
-  dfsch_defconst_cstr(ctx, "list-all-package-symbols",
+  dfsch_defcanon_cstr(ctx, "list-all-package-symbols",
                       DFSCH_PRIMITIVE_REF(list_package_symbols));
 
 }

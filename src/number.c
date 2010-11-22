@@ -24,6 +24,7 @@
 #include <dfsch/bignum.h>
 #include <dfsch/strings.h>
 #include <dfsch/random.h>
+#include <dfsch/serdes.h>
 #include "util.h"
 #include "internal.h"
 #include <stdio.h>
@@ -109,6 +110,11 @@ static void fixnum_write(dfsch_object_t* n, dfsch_writer_state_t* state){
   dfsch_write_string(state, saprintf("%" PRIdPTR, num));
 }
 
+static void fixnum_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "fixnum");
+  dfsch_serialize_integer(s, DFSCH_FIXNUM_REF(obj));
+}
+
 dfsch_number_type_t dfsch_fixnum_type = {
   DFSCH_SPECIAL_TYPE,
   DFSCH_INTEGER_TYPE,
@@ -117,7 +123,8 @@ dfsch_number_type_t dfsch_fixnum_type = {
   NULL,
   (dfsch_type_write_t)fixnum_write,
   NULL,
-  NULL
+  NULL,
+  .serialize = fixnum_serialize,
 };
 
 static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
@@ -127,8 +134,9 @@ static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
     dfsch_write_string(state, ".");
   }
 }
-static uint32_t flonum_hash(flonum_t* n){
-  char* ptr = ((char*)&(n->flonum));
+
+static uint32_t hash_double(double val){
+  char* ptr = ((char*)&val);
   size_t i = sizeof(double);
   uint32_t hash = 0xc32e64c9;
 
@@ -140,8 +148,69 @@ static uint32_t flonum_hash(flonum_t* n){
 
   return hash;
 }
+
+static uint32_t flonum_hash(flonum_t* n){
+  return hash_double(n->flonum);
+}
 static int flonum_equal_p(flonum_t* a, flonum_t* b){
   return a->flonum == b->flonum;
+}
+
+static uint64_t bit_reverse64(uint64_t v){
+  uint64_t s = sizeof(v) * CHAR_BIT;
+  uint64_t mask = ~0;         
+  while ((s >>= 1) > 0) {
+    mask ^= (mask << s);
+    v = ((v >> s) & mask) | ((v << s) & ~mask);
+  }  
+  return v;
+}
+
+static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
+  int exp;
+  double x;
+  dfsch_serialize_stream_symbol(s, "flonum");
+
+  x = f->flonum;
+  if (x < 0){
+    dfsch_serialize_integer(s, -1);
+    x = -x;
+  } else if (x == 0) {
+    dfsch_serialize_integer(s, 0);
+    return;
+  } else {
+    dfsch_serialize_integer(s, 1);
+  }
+
+  x = frexp(x, &exp);
+
+  dfsch_serialize_integer(s, exp);
+  dfsch_serialize_integer(s, bit_reverse64((int64_t)((1LL << 53) * x)));
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
+  dfsch_object_t* fn;
+  double x;
+  int64_t v;
+  int exp;
+  int sign;
+
+  sign = dfsch_deserialize_integer(ds);
+  if (sign == 0){
+    x = 0;
+  } else {
+    exp = dfsch_deserialize_integer(ds);
+    v = bit_reverse64(dfsch_deserialize_integer(ds));
+    x = v;
+    x = ldexp(x / ((double)(1LL << 53)), exp);
+    if (sign == -1){
+      x = -x;
+    }
+  }
+
+  fn = dfsch_make_number_from_double(x);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;
 }
 
 dfsch_number_type_t dfsch_flonum_type = {
@@ -153,6 +222,7 @@ dfsch_number_type_t dfsch_flonum_type = {
   (dfsch_type_write_t)flonum_write,
   NULL,
   (dfsch_type_hash_t)flonum_hash,
+  .serialize = flonum_serialize,
 };
 
 static void fracnum_write(fracnum_t* n, dfsch_writer_state_t* state){
@@ -174,6 +244,11 @@ static uint32_t fracnum_hash(fracnum_t* n){
   h ^= dfsch_hash(n->denom);
   return h;
 }
+static void fracnum_serialize(fracnum_t* n, dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "fracnum");
+  dfsch_serialize_object(s, n->num);
+  dfsch_serialize_object(s, n->denom);
+}
 
 dfsch_number_type_t dfsch_fracnum_type = {
   DFSCH_STANDARD_TYPE,
@@ -184,6 +259,7 @@ dfsch_number_type_t dfsch_fracnum_type = {
   (dfsch_type_write_t)fracnum_write,
   NULL,
   (dfsch_type_hash_t)fracnum_hash,
+  .serialize = fracnum_serialize,
 };
 
 static dfsch_object_t* frac_cons(dfsch_object_t* num, dfsch_object_t* denom){
@@ -221,7 +297,7 @@ dfsch_object_t* dfsch_number_numerator(dfsch_object_t* n){
   if (dfsch_integer_p(n)){
     return n;
   }
-  dfsch_error("exception:not-a-rational-number", n);
+  dfsch_error("Not a rational number", n);
 }
 dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
   if (DFSCH_TYPE_OF(n) == DFSCH_FRACNUM_TYPE){
@@ -230,14 +306,25 @@ dfsch_object_t* dfsch_number_denominator(dfsch_object_t* n){
   if (dfsch_integer_p(n)){
     return DFSCH_MAKE_FIXNUM(1);
   }
-  dfsch_error("exception:not-a-rational-number", n);
+  dfsch_error("Not a rational number", n);
 }
+
+flonum_t* flonum_cache[256];
 
 dfsch_object_t* dfsch_make_number_from_double(double num){
   flonum_t *n;
+  uint32_t hash = hash_double(num);
+
+  n = flonum_cache[hash & 0xff];
+  
+  if (n && n->flonum == num){
+    return n;
+  }
+
   n = (flonum_t*)dfsch_make_object(DFSCH_FLONUM_TYPE);
 
   n->flonum = num;
+  flonum_cache[hash & 0xff] = n;
 
   return (dfsch_object_t*)n;
 }
@@ -256,7 +343,7 @@ dfsch_object_t* dfsch_make_number_from_int64(int64_t num){
   return DFSCH_MAKE_FIXNUM(num);
 }
 
-static int dig_val[128] = {
+static int dig_val[256] = {
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
@@ -265,13 +352,21 @@ static int dig_val[128] = {
   37, 10, 11, 12, 13,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
   25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37,
   37, 10, 11, 12, 13,  14, 15, 16, 17,  18, 19, 20, 21,  22, 23, 24, 
-  25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37
+  25, 26, 27, 28, 29,  30, 31, 32, 33,  34, 35, 36, 37,  37, 37, 37,
+
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
+  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
 };
 
 dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
-  int64_t sn = 0;
-  int64_t on = 0;
   int base = obase;
   int d;
   int negative = 0;
@@ -302,33 +397,7 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
     }
   }
 
-  while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
-    d = dig_val[*string];
-    if (d >= base){
-      return NULL;
-    }
-    on = sn;
-    sn *= base;
-    sn += d;
-    string++;
-  }
-
-  if (!*string){
-    return dfsch_make_number_from_int64(negative ? -sn : sn);
-  }
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      return NULL;
-    }
-
-    return dfsch_number_div(dfsch_make_number_from_int64(negative ? -sn : sn),
-                            dfsch_make_number_from_string(string, obase));
-  }
-
-  n = DFSCH_MAKE_FIXNUM(on);
-  string--;
+  n = DFSCH_MAKE_FIXNUM(0);
 
   while (*string && *string != '/'){
     d = dig_val[*string];
@@ -341,13 +410,16 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   }
 
   if (*string == '/'){
+    dfsch_object_t* t;
     string++;
     if (strchr(string, '/') != NULL){
       return NULL;
     }
-
-    n = dfsch_number_div(n,
-                         dfsch_make_number_from_string(string+1, obase));
+    t = dfsch_make_number_from_string_noerror(string, obase);
+    if (!t){
+      return NULL;
+    }
+    n = dfsch_number_div(n, t);
   }
 
   if (negative){
@@ -358,93 +430,11 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
 }
 
 dfsch_object_t* dfsch_make_number_from_string(char* string, int obase){
-  dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
-  int64_t sn = 0;
-  int64_t on = 0;
-  int base = obase;
-  int d;
-  int negative = 0;
-
-  if (strchr(string, '.') != NULL || 
-      (base == 10 && strpbrk(string, "eE") != NULL)){
-    if (base != 10 && base != 0){
-      dfsch_error("exception:non-supported-base-for-real-numbers",
-                  DFSCH_MAKE_FIXNUM(base));
-    }
-    return dfsch_make_number_from_double(atof(string));
+  dfsch_object_t* res = dfsch_make_number_from_string_noerror(string, obase);
+  if (!res){
+    dfsch_error("Number syntax invalid", dfsch_make_string_cstr(string));
   }
-
-  if (*string == '-'){
-    string++;
-    negative = 1;
-  }
-
-  if (base == 0){
-    if (*string == '0'){
-      string++;
-      base = 8;
-      if (*string == 'x' || *string == 'X'){
-        string++;
-        base = 16;
-      }
-    } else {
-      base = 10;
-    }
-  }
-
-  while (*string && *string != '/' && 
-         sn <= DFSCH_FIXNUM_MAX && sn >= 0 && sn >= on){
-    d = dig_val[*string];
-    if (d >= base){
-      dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
-    }
-    on = sn;
-    sn *= base;
-    sn += d;
-    string++;
-  }
-
-  if (!*string){
-    return dfsch_make_number_from_int64(negative ? -sn : sn);
-  }
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      dfsch_error("exception:too-many-slashes", NULL);
-    }
-
-    return dfsch_number_div(dfsch_make_number_from_int64(negative ? -sn : sn),
-                            dfsch_make_number_from_string(string, obase));
-  }
-
-  n = DFSCH_MAKE_FIXNUM(on);
-  string--;
-
-  while (*string && *string != '/'){
-    d = dig_val[*string];
-    if (d >= base){
-      dfsch_error("exception:invalid-digit", DFSCH_MAKE_FIXNUM(*string));
-    }
-    n = dfsch_number_mul(n, DFSCH_MAKE_FIXNUM(base));
-    n = dfsch_number_add(n, DFSCH_MAKE_FIXNUM(d));
-    string++;
-  }
-
-  if (*string == '/'){
-    string++;
-    if (strchr(string, '/') != NULL){
-      dfsch_error("exception:too-many-slashes", NULL);
-    }
-
-    n = dfsch_number_div(n,
-                         dfsch_make_number_from_string(string+1, obase));
-  }
-
-  if (negative){
-    return dfsch_number_neg(n);
-  } else {
-    return n;
-  }
+  return res;
 }
 
 double dfsch_number_to_double(dfsch_object_t *n){
@@ -461,7 +451,7 @@ double dfsch_number_to_double(dfsch_object_t *n){
     return dfsch_number_to_double(((fracnum_t*)n)->num) /
       dfsch_number_to_double(((fracnum_t*)n)->denom);
   }
-  dfsch_error("exception:not-a-real-number", n);
+  dfsch_error("Not a  real number", n);
 }
 dfsch_object_t* dfsch_number_to_inexact(dfsch_object_t* n){
   return dfsch_make_number_from_double(dfsch_number_to_double(n));
@@ -474,12 +464,12 @@ long dfsch_number_to_long(dfsch_object_t *n){
   } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r) || 
         r < LONG_MIN || r > LONG_MAX){
-      dfsch_error("exception:value-too-large", NULL);
+      dfsch_error("Value too large", NULL);
     }
 
     return r;
   }
-  dfsch_error("exception:not-an-integer", n);
+  dfsch_error("Not an integer", n);
 }
 
 int64_t dfsch_number_to_int64(dfsch_object_t *n){
@@ -489,12 +479,12 @@ int64_t dfsch_number_to_int64(dfsch_object_t *n){
     return DFSCH_FIXNUM_REF(n);
   } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
     if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r)){
-      dfsch_error("exception:value-too-large", NULL);
+      dfsch_error("Value too large", NULL);
     }
 
     return r;
   }
-  dfsch_error("exception:not-an-integer", n);
+  dfsch_error("Not an integer", n);
 }
 
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -543,7 +533,7 @@ char* dfsch_number_to_string(dfsch_object_t *n, int base){
     dfsch_error("Unsupported base for this numeric type", NULL);
   }
 
-  return dfsch_object_2_string(n, 1, 1); /* fallback */
+  return dfsch_object_2_string(n, 1, DFSCH_WRITE); /* fallback */
 }
 char* dfsch_number_format(dfsch_object_t* n, int width, int digits){
   double num = dfsch_number_to_double(n);
@@ -749,9 +739,21 @@ dfsch_object_t* dfsch_number_shr(dfsch_object_t* n, size_t count){
     return dfsch_bignum_to_number(dfsch_bignum_shr(n, count));
   } else {
     dfsch_error("Not an integer", n);
+  } 
+}
+
+dfsch_object_t* dfsch_number_shl(dfsch_object_t* n, size_t count){
+  if (DFSCH_TYPE_OF(n) == DFSCH_FIXNUM_TYPE){
+    int64_t x = DFSCH_FIXNUM_REF(n) << count;
+    return dfsch_make_number_from_int64(x);
+  } else if (DFSCH_TYPE_OF(n) == DFSCH_BIGNUM_TYPE){
+    return dfsch_bignum_to_number(dfsch_bignum_shl(n, count));
+  } else {
+    dfsch_error("Not an integer", n);
   }
  
 }
+
 
 // Arithmetics
 
@@ -904,13 +906,13 @@ dfsch_object_t* dfsch_number_div (dfsch_object_t* a,
     double bn = dfsch_number_to_double((dfsch_object_t*) b);
   
     if (bn == 0.0)
-      dfsch_error("exception:division-by-zero", NULL);
+      dfsch_error("Division by zero", NULL);
 
     return dfsch_make_number_from_double(an / bn); 
   }
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-    dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("Division by zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
@@ -932,7 +934,7 @@ dfsch_object_t* dfsch_number_div_i(dfsch_object_t* a,
   dfsch_bignum_t* r;
 
   if (b == DFSCH_MAKE_FIXNUM(0)){
-    dfsch_error("exception:division-by-zero", NULL);
+    dfsch_error("Division by zero", NULL);
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
@@ -960,7 +962,7 @@ dfsch_object_t* dfsch_number_mod (dfsch_object_t* a,
     long bn = dfsch_number_to_long((dfsch_object_t*) b);
  
     if (bn == 0)
-      dfsch_error("exception:division-by-zero", NULL);
+      dfsch_error("Division by zero", NULL);
     
     return dfsch_make_number_from_long(an % bn); 
   }
@@ -1318,6 +1320,10 @@ dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
     ns->cond = -1;
   }
 
+  if (!ns_is_in_p(ns, ns->from)){
+    return NULL;
+  }
+
   return ns;
 }
 
@@ -1628,6 +1634,24 @@ DFSCH_DEFINE_PRIMITIVE(tan, NULL){
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tan(z));
 }
+DFSCH_DEFINE_PRIMITIVE(sinh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(sinh(z));
+}
+DFSCH_DEFINE_PRIMITIVE(cosh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(cosh(z));
+}
+DFSCH_DEFINE_PRIMITIVE(tanh, NULL){
+  double z;
+  DFSCH_DOUBLE_ARG(args, z);
+  DFSCH_ARG_END(args);
+  return dfsch_make_number_from_double(tanh(z));
+}
 
 DFSCH_DEFINE_PRIMITIVE(asin, NULL){
   double z;
@@ -1917,6 +1941,17 @@ DFSCH_DEFINE_PRIMITIVE(shr, NULL){
 
   return dfsch_number_shr(n, count);
 }
+DFSCH_DEFINE_PRIMITIVE(shl, NULL){
+  object_t* n;
+  size_t count;
+
+  DFSCH_OBJECT_ARG(args, n);
+  DFSCH_LONG_ARG_OPT(args, count, 1);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_number_shl(n, count);
+}
 DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
   object_t* n;
 
@@ -1962,106 +1997,111 @@ DFSCH_DEFINE_PRIMITIVE(make_number_sequence, NULL){
 
 
 void dfsch__number_native_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
-  dfsch_define_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
-  dfsch_define_cstr(ctx, "<rational>", DFSCH_RATIONAL_TYPE);
-  dfsch_define_cstr(ctx, "<integer>", DFSCH_INTEGER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<number>", DFSCH_NUMBER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<real>", DFSCH_REAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<rational>", DFSCH_RATIONAL_TYPE);
+  dfsch_defcanon_cstr(ctx, "<integer>", DFSCH_INTEGER_TYPE);
 
-  dfsch_define_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
-  dfsch_define_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
-  dfsch_define_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<fixnum>", DFSCH_FIXNUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<flonum>", DFSCH_FLONUM_TYPE);
+  dfsch_defcanon_cstr(ctx, "<fracnum>", DFSCH_FRACNUM_TYPE);
 
-  dfsch_defconst_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
-  dfsch_defconst_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
-  dfsch_defconst_cstr(ctx, "*", DFSCH_PRIMITIVE_REF(mult));
-  dfsch_defconst_cstr(ctx, "/", DFSCH_PRIMITIVE_REF(slash));
-  dfsch_defconst_cstr(ctx, "/i", DFSCH_PRIMITIVE_REF(slash_i));
-  dfsch_defconst_cstr(ctx, "%", DFSCH_PRIMITIVE_REF(modulo));
-  dfsch_defconst_cstr(ctx, "=", DFSCH_PRIMITIVE_REF(number_equal));
-  dfsch_defconst_cstr(ctx, "<", DFSCH_PRIMITIVE_REF(lt));
-  dfsch_defconst_cstr(ctx, ">", DFSCH_PRIMITIVE_REF(gt));
-  dfsch_defconst_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
-  dfsch_defconst_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
-  dfsch_defconst_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
-  dfsch_defconst_cstr(ctx, "real?", DFSCH_PRIMITIVE_REF(real_p));
-  dfsch_defconst_cstr(ctx, "rational?", DFSCH_PRIMITIVE_REF(rational_p));
-  dfsch_defconst_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
-  dfsch_defconst_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
-  dfsch_defconst_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
-  dfsch_defconst_cstr(ctx, "exact->inexact", 
+  dfsch_defcanon_cstr(ctx, "+", DFSCH_PRIMITIVE_REF(plus));
+  dfsch_defcanon_cstr(ctx, "-", DFSCH_PRIMITIVE_REF(minus));
+  dfsch_defcanon_cstr(ctx, "*", DFSCH_PRIMITIVE_REF(mult));
+  dfsch_defcanon_cstr(ctx, "/", DFSCH_PRIMITIVE_REF(slash));
+  dfsch_defcanon_cstr(ctx, "/i", DFSCH_PRIMITIVE_REF(slash_i));
+  dfsch_defcanon_cstr(ctx, "%", DFSCH_PRIMITIVE_REF(modulo));
+  dfsch_defcanon_cstr(ctx, "=", DFSCH_PRIMITIVE_REF(number_equal));
+  dfsch_defcanon_cstr(ctx, "<", DFSCH_PRIMITIVE_REF(lt));
+  dfsch_defcanon_cstr(ctx, ">", DFSCH_PRIMITIVE_REF(gt));
+  dfsch_defcanon_cstr(ctx, "<=", DFSCH_PRIMITIVE_REF(lte));
+  dfsch_defcanon_cstr(ctx, ">=", DFSCH_PRIMITIVE_REF(gte));
+  dfsch_defcanon_cstr(ctx, "number?", DFSCH_PRIMITIVE_REF(number_p));
+  dfsch_defcanon_cstr(ctx, "real?", DFSCH_PRIMITIVE_REF(real_p));
+  dfsch_defcanon_cstr(ctx, "rational?", DFSCH_PRIMITIVE_REF(rational_p));
+  dfsch_defcanon_cstr(ctx, "integer?", DFSCH_PRIMITIVE_REF(integer_p));
+  dfsch_defcanon_cstr(ctx, "exact?", DFSCH_PRIMITIVE_REF(exact_p));
+  dfsch_defcanon_cstr(ctx, "inexact?", DFSCH_PRIMITIVE_REF(inexact_p));
+  dfsch_defcanon_cstr(ctx, "exact->inexact", 
                       DFSCH_PRIMITIVE_REF(exact_2_inexact));
 
-  dfsch_defconst_cstr(ctx, "pi", 
+  dfsch_defcanon_cstr(ctx, "pi", 
                       dfsch_make_number_from_double(4*atan(1)));
 
 
-  dfsch_defconst_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
+  dfsch_defcanon_cstr(ctx, "abs", DFSCH_PRIMITIVE_REF(abs));
 
-  dfsch_defconst_cstr(ctx, "exp", DFSCH_PRIMITIVE_REF(exp));
-  dfsch_defconst_cstr(ctx, "log", DFSCH_PRIMITIVE_REF(log));
-  dfsch_defconst_cstr(ctx, "expt", DFSCH_PRIMITIVE_REF(expt));
+  dfsch_defcanon_cstr(ctx, "exp", DFSCH_PRIMITIVE_REF(exp));
+  dfsch_defcanon_cstr(ctx, "log", DFSCH_PRIMITIVE_REF(log));
+  dfsch_defcanon_cstr(ctx, "expt", DFSCH_PRIMITIVE_REF(expt));
 
-  dfsch_defconst_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
-  dfsch_defconst_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
-  dfsch_defconst_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
+  dfsch_defcanon_cstr(ctx, "sin", DFSCH_PRIMITIVE_REF(sin));
+  dfsch_defcanon_cstr(ctx, "cos", DFSCH_PRIMITIVE_REF(cos));
+  dfsch_defcanon_cstr(ctx, "tan", DFSCH_PRIMITIVE_REF(tan));
 
-  dfsch_defconst_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
-  dfsch_defconst_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
-  dfsch_defconst_cstr(ctx, "atan", DFSCH_PRIMITIVE_REF(atan));
+  dfsch_defconst_cstr(ctx, "sinh", DFSCH_PRIMITIVE_REF(sinh));
+  dfsch_defconst_cstr(ctx, "cosh", DFSCH_PRIMITIVE_REF(cosh));
+  dfsch_defconst_cstr(ctx, "tanh", DFSCH_PRIMITIVE_REF(tanh));
 
-  dfsch_defconst_cstr(ctx, "sqrt", DFSCH_PRIMITIVE_REF(sqrt));
+  dfsch_defcanon_cstr(ctx, "asin", DFSCH_PRIMITIVE_REF(asin));
+  dfsch_defcanon_cstr(ctx, "acos", DFSCH_PRIMITIVE_REF(acos));
+  dfsch_defcanon_cstr(ctx, "atan", DFSCH_PRIMITIVE_REF(atan));
 
-  dfsch_defconst_cstr(ctx, "min", DFSCH_PRIMITIVE_REF(min));
-  dfsch_defconst_cstr(ctx, "max", DFSCH_PRIMITIVE_REF(max));
+  dfsch_defcanon_cstr(ctx, "sqrt", DFSCH_PRIMITIVE_REF(sqrt));
 
-  dfsch_defconst_cstr(ctx, "zero?", DFSCH_PRIMITIVE_REF(zero_p));
-  dfsch_defconst_cstr(ctx, "negative?", DFSCH_PRIMITIVE_REF(negative_p));
-  dfsch_defconst_cstr(ctx, "positive?", DFSCH_PRIMITIVE_REF(positive_p));
+  dfsch_defcanon_cstr(ctx, "min", DFSCH_PRIMITIVE_REF(min));
+  dfsch_defcanon_cstr(ctx, "max", DFSCH_PRIMITIVE_REF(max));
 
-  dfsch_defconst_cstr(ctx, "even?", DFSCH_PRIMITIVE_REF(even_p));
-  dfsch_defconst_cstr(ctx, "odd?", DFSCH_PRIMITIVE_REF(odd_p));
+  dfsch_defcanon_cstr(ctx, "zero?", DFSCH_PRIMITIVE_REF(zero_p));
+  dfsch_defcanon_cstr(ctx, "negative?", DFSCH_PRIMITIVE_REF(negative_p));
+  dfsch_defcanon_cstr(ctx, "positive?", DFSCH_PRIMITIVE_REF(positive_p));
 
-  dfsch_defconst_cstr(ctx, "round", DFSCH_PRIMITIVE_REF(round));
-  dfsch_defconst_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
-  dfsch_defconst_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
-  dfsch_defconst_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
+  dfsch_defcanon_cstr(ctx, "even?", DFSCH_PRIMITIVE_REF(even_p));
+  dfsch_defcanon_cstr(ctx, "odd?", DFSCH_PRIMITIVE_REF(odd_p));
 
-  dfsch_defconst_cstr(ctx, "round*", DFSCH_PRIMITIVE_REF(round_i));
-  dfsch_defconst_cstr(ctx, "floor*", DFSCH_PRIMITIVE_REF(floor_i));
-  dfsch_defconst_cstr(ctx, "ceiling*", DFSCH_PRIMITIVE_REF(ceiling_i));
-  dfsch_defconst_cstr(ctx, "truncate*", DFSCH_PRIMITIVE_REF(truncate_i));
+  dfsch_defcanon_cstr(ctx, "round", DFSCH_PRIMITIVE_REF(round));
+  dfsch_defcanon_cstr(ctx, "floor", DFSCH_PRIMITIVE_REF(floor));
+  dfsch_defcanon_cstr(ctx, "ceiling", DFSCH_PRIMITIVE_REF(ceiling));
+  dfsch_defcanon_cstr(ctx, "truncate", DFSCH_PRIMITIVE_REF(truncate));
 
-  dfsch_defconst_cstr(ctx, "number->string", 
+  dfsch_defcanon_cstr(ctx, "round*", DFSCH_PRIMITIVE_REF(round_i));
+  dfsch_defcanon_cstr(ctx, "floor*", DFSCH_PRIMITIVE_REF(floor_i));
+  dfsch_defcanon_cstr(ctx, "ceiling*", DFSCH_PRIMITIVE_REF(ceiling_i));
+  dfsch_defcanon_cstr(ctx, "truncate*", DFSCH_PRIMITIVE_REF(truncate_i));
+
+  dfsch_defcanon_cstr(ctx, "number->string", 
                       DFSCH_PRIMITIVE_REF(number_2_string));
-  dfsch_defconst_cstr(ctx, "string->number", 
+  dfsch_defcanon_cstr(ctx, "string->number", 
                       DFSCH_PRIMITIVE_REF(string_2_number));
-  dfsch_defconst_cstr(ctx, "most-positive-fixnum",
+  dfsch_defcanon_cstr(ctx, "most-positive-fixnum",
                       DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MAX));
-  dfsch_defconst_cstr(ctx, "most-negative-fixnum",
+  dfsch_defcanon_cstr(ctx, "most-negative-fixnum",
                       DFSCH_MAKE_FIXNUM(DFSCH_FIXNUM_MIN));
 
-  dfsch_defconst_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
-  dfsch_defconst_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));
-  dfsch_defconst_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
+  dfsch_defcanon_cstr(ctx, "gcd", DFSCH_PRIMITIVE_REF(gcd));
+  dfsch_defcanon_cstr(ctx, "mod-inv", DFSCH_PRIMITIVE_REF(mod_inv));
+  dfsch_defcanon_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
 
-  dfsch_defconst_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));
-  dfsch_defconst_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
-  dfsch_defconst_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
-  dfsch_defconst_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));
+  dfsch_defcanon_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));
+  dfsch_defcanon_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
+  dfsch_defcanon_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
+  dfsch_defcanon_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));
 
-  dfsch_defconst_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
-  dfsch_defconst_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
+  dfsch_defcanon_cstr(ctx, "lsb", DFSCH_PRIMITIVE_REF(lsb));
+  dfsch_defcanon_cstr(ctx, "msb", DFSCH_PRIMITIVE_REF(msb));
  
-  dfsch_defconst_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
-  dfsch_defconst_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
+  dfsch_defcanon_cstr(ctx, "1+", DFSCH_PRIMITIVE_REF(inc));
+  dfsch_defcanon_cstr(ctx, "1-", DFSCH_PRIMITIVE_REF(dec));
 
-  dfsch_defconst_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
+  dfsch_defcanon_cstr(ctx, ">>", DFSCH_PRIMITIVE_REF(shr));
+  dfsch_defcanon_cstr(ctx, "<<", DFSCH_PRIMITIVE_REF(shl));
 
-  dfsch_defconst_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
-  dfsch_defconst_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
-  dfsch_defconst_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
+  dfsch_defcanon_cstr(ctx, "prime?", DFSCH_PRIMITIVE_REF(prime_p));
+  dfsch_defcanon_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
+  dfsch_defcanon_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
 
-  dfsch_defconst_cstr(ctx, "make-number-sequence", 
+  dfsch_defcanon_cstr(ctx, "make-number-sequence", 
                       DFSCH_PRIMITIVE_REF(make_number_sequence));
  
 }

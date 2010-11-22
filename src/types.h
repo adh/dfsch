@@ -11,6 +11,7 @@ typedef dfsch__symbol_t symbol_t;
 typedef dfsch_primitive_t primitive_t;
 
 #define LL_FLAG_ALLOW_OTHER_KEYS 1
+#define LL_FLAG_REST_IS_BODY     2
 
 typedef struct lambda_list_t {
   dfsch_type_t* type;
@@ -60,6 +61,7 @@ typedef struct closure_t{
   environment_t* env;
   object_t* name;
   object_t* orig_code;
+  lambda_list_t* orig_args;
   object_t* documentation;
 } closure_t;
 

@@ -151,6 +151,10 @@ extern "C" {
 
   dfsch__restart_list_t* dfsch__get_default_restart_list();
 
+  typedef struct dfsch_saved_trace_t dfsch_saved_trace_t;
+  dfsch_saved_trace_t* dfsch_save_trace_buffer();
+  void dfsch_restore_trace_buffer(dfsch_saved_trace_t* st);
+
 
 #define DFSCH__DEBUG_TAG printf(";; %s:%d %s\n", __FILE__, __LINE__, __func__)
 

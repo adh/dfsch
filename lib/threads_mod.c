@@ -158,41 +158,43 @@ DFSCH_DEFINE_PRIMITIVE(channel_write, "Write object into channel"){
 
 
 dfsch_object_t* dfsch_module_threads_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "thread:create", 
-                    DFSCH_PRIMITIVE_REF(thread_create));
-  dfsch_define_cstr(ctx, "thread:join", 
-                    DFSCH_PRIMITIVE_REF(thread_join));
-  dfsch_define_cstr(ctx, "thread:detach", 
-                    DFSCH_PRIMITIVE_REF(thread_detach));
-  dfsch_define_cstr(ctx, "thread:self", 
-                    DFSCH_PRIMITIVE_REF(thread_self));
-
-  dfsch_define_cstr(ctx, "mutex:create", 
-                    DFSCH_PRIMITIVE_REF(mutex_create));
-  dfsch_define_cstr(ctx, "mutex:lock", 
-                    DFSCH_PRIMITIVE_REF(mutex_lock));
-  dfsch_define_cstr(ctx, "mutex:trylock", 
-                    DFSCH_PRIMITIVE_REF(mutex_trylock));
-  dfsch_define_cstr(ctx, "mutex:unlock", 
-                    DFSCH_PRIMITIVE_REF(mutex_unlock));
-
-  dfsch_define_cstr(ctx, "condition:create", 
-                    DFSCH_PRIMITIVE_REF(condition_create));
-  dfsch_define_cstr(ctx, "condition:wait", 
-                    DFSCH_PRIMITIVE_REF(condition_wait));
-  dfsch_define_cstr(ctx, "condition:signal", 
-                    DFSCH_PRIMITIVE_REF(condition_signal));
-  dfsch_define_cstr(ctx, "condition:broadcast", 
-                    DFSCH_PRIMITIVE_REF(condition_broadcast));
-
-  dfsch_define_cstr(ctx, "channel:create", 
-                    DFSCH_PRIMITIVE_REF(channel_create));
-  dfsch_define_cstr(ctx, "channel:read", 
-                    DFSCH_PRIMITIVE_REF(channel_read));
-  dfsch_define_cstr(ctx, "channel:write", 
-                    DFSCH_PRIMITIVE_REF(channel_write));
-
+  dfsch_package_t* threads = dfsch_make_package("threads");
   dfsch_provide(ctx, "threads");
+
+  dfsch_defcanon_pkgcstr(ctx, threads, "thread-create", 
+                         DFSCH_PRIMITIVE_REF(thread_create));
+  dfsch_defcanon_pkgcstr(ctx, threads, "thread-join", 
+                         DFSCH_PRIMITIVE_REF(thread_join));
+  dfsch_defcanon_pkgcstr(ctx, threads, "thread-detach", 
+                         DFSCH_PRIMITIVE_REF(thread_detach));
+  dfsch_defcanon_pkgcstr(ctx, threads, "thread-self", 
+                         DFSCH_PRIMITIVE_REF(thread_self));
+
+  dfsch_defcanon_pkgcstr(ctx, threads, "mutex-create", 
+                         DFSCH_PRIMITIVE_REF(mutex_create));
+  dfsch_defcanon_pkgcstr(ctx, threads, "mutex-lock", 
+                         DFSCH_PRIMITIVE_REF(mutex_lock));
+  dfsch_defcanon_pkgcstr(ctx, threads, "mutex-trylock", 
+                         DFSCH_PRIMITIVE_REF(mutex_trylock));
+  dfsch_defcanon_pkgcstr(ctx, threads, "mutex-unlock", 
+                         DFSCH_PRIMITIVE_REF(mutex_unlock));
+
+  dfsch_defcanon_pkgcstr(ctx, threads, "condition-create", 
+                         DFSCH_PRIMITIVE_REF(condition_create));
+  dfsch_defcanon_pkgcstr(ctx, threads, "condition-wait", 
+                         DFSCH_PRIMITIVE_REF(condition_wait));
+  dfsch_defcanon_pkgcstr(ctx, threads, "condition-signal", 
+                         DFSCH_PRIMITIVE_REF(condition_signal));
+  dfsch_defcanon_pkgcstr(ctx, threads, "condition-broadcast", 
+                         DFSCH_PRIMITIVE_REF(condition_broadcast));
+
+  dfsch_defcanon_pkgcstr(ctx, threads, "channel-create", 
+                         DFSCH_PRIMITIVE_REF(channel_create));
+  dfsch_defcanon_pkgcstr(ctx, threads, "channel-read", 
+                         DFSCH_PRIMITIVE_REF(channel_read));
+  dfsch_defcanon_pkgcstr(ctx, threads, "channel-write", 
+                         DFSCH_PRIMITIVE_REF(channel_write));
+
 
   return NULL;
 }

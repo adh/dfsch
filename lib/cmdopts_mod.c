@@ -38,16 +38,21 @@ static void lisp_callback(dfsch_cmdopts_t* parser,
 
 DFSCH_DEFINE_PRIMITIVE(add_option, "Define new command line option"){
   dfsch_object_t* parser;
-  dfsch_object_t* has_arg;
-  char short_opt;
-  char* long_opt;
+  dfsch_object_t* has_arg = NULL;
+  char short_opt = 0;
+  char* long_opt = NULL;
   dfsch_object_t* function;
 
   DFSCH_OBJECT_ARG(args, parser);
-  DFSCH_STRING_ARG(args, long_opt);
   DFSCH_OBJECT_ARG(args, function);
-  DFSCH_LONG_ARG_OPT(args, short_opt, 0);
-  DFSCH_OBJECT_ARG_OPT(args, has_arg, NULL);
+
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("has-argument", has_arg);
+  DFSCH_KEYWORD_GENERIC("long-option", long_opt,
+                        dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("short-option", short_opt,
+                        dfsch_number_to_long);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
   
   dfsch_cmdopts_add_option(DFSCH_ASSERT_TYPE(parser, 
@@ -95,15 +100,15 @@ dfsch_object_t* dfsch_module_cmdopts_register(dfsch_object_t* env){
 
   dfsch_provide(env, "cmdopts");
 
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "<error>", DFSCH_CMDOPTS_ERROR_TYPE);
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "<parser>", DFSCH_CMDOPTS_PARSER_TYPE);
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "<error>", DFSCH_CMDOPTS_ERROR_TYPE);
 
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "make-parser", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "make-parser", 
                        DFSCH_PRIMITIVE_REF(make_parser));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-option", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "add-option", 
                        DFSCH_PRIMITIVE_REF(add_option));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "add-argument", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "add-argument", 
                        DFSCH_PRIMITIVE_REF(add_argument));
-  dfsch_define_pkgcstr(env, cmdopts_pkg, "parse-list", 
+  dfsch_defcanon_pkgcstr(env, cmdopts_pkg, "parse-list", 
                        DFSCH_PRIMITIVE_REF(parse_list));
 }

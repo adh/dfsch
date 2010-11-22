@@ -3,6 +3,13 @@
 #include <sys/times.h>
 #include <sys/resource.h>
 #endif
+
+#include <dfsch/bignum.h>
+
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -25,11 +32,20 @@ static dfsch_object_t* random_state;
 typedef struct random_init_t {
   uint8_t uninitialized[16];
   time_t time;
+  void* sp;
+  int mii_chan_constant;
 #ifdef unix
   struct tms tms;
   clock_t clock;
   struct rusage rusage;
+  pid_t pid;
 #endif
+
+#ifdef __WIN32__
+  DWORD pid;
+  DWORD tid;
+#endif
+
   uint8_t sys_random[16];
 } random_init_t;
 
@@ -37,7 +53,11 @@ static dfsch_object_t* make_default_state(){
   random_init_t seed;
   int fd;
   seed.time = time(NULL);
+  seed.sp = &seed;
+  seed.mii_chan_constant = 8; 
+  /* You just come up with some random number, like eight -- Mitsuki  :) */
 #ifdef unix
+  seed.pid = getpid();
   seed.clock = times(&seed.tms);
   getrusage(RUSAGE_SELF, &seed.rusage);
   
@@ -49,6 +69,10 @@ static dfsch_object_t* make_default_state(){
     read(fd, &seed.sys_random, 16);
     close(fd);
   }
+#endif
+#ifdef __WIN32__
+  seed.pid = GetCurrentProcessId();
+  seed.tid = GetCurrentThreadId();
 #endif
 
   return dfsch_make_default_random_state(&seed, sizeof(random_init_t));
@@ -113,11 +137,11 @@ dfsch_object_t* dfsch_random_get_bignum(dfsch_object_t* state,
     buf = GC_MALLOC_ATOMIC(len / 8 + 1);
     dfsch_random_get_bytes(state, buf, len / 8 + 1);
     *buf &= (1 << (len & 7)) - 1;
-    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8 + 1));
+    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8 + 1, 0));
   } else {
     buf = GC_MALLOC_ATOMIC(len / 8);
     dfsch_random_get_bytes(state, buf, len / 8);
-    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8));
+    return dfsch_bignum_to_number(dfsch_bignum_from_bytes(buf, len / 8, 0));
   }
 }
 
@@ -182,7 +206,7 @@ dfsch_random_state_type_t dfsch_default_random_state_type = {
     NULL
   },
   (dfsch_random_get_bytes_t)default_get_bytes,
-  0
+  1
 };
 dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len){
   default_state_t* state = dfsch_make_object(DFSCH_DEFAULT_RANDOM_STATE_TYPE);
@@ -294,7 +318,7 @@ dfsch_random_state_type_t dfsch_lcg_random_state_type = {
     NULL
   },
   (dfsch_random_get_bytes_t)lcg_get_bytes,
-  0
+  1
 };
 
 dfsch_object_t* dfsch_make_lcg_random_state(uint32_t seed){
@@ -366,21 +390,21 @@ DFSCH_DEFINE_PRIMITIVE(make_lcg_random_state, 0){
 
 
 void dfsch__random_register(dfsch_object_t *ctx){ 
-  dfsch_define_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<default-random-state>", 
+  dfsch_defcanon_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<default-random-state>", 
                     DFSCH_DEFAULT_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<file-random-state>", DFSCH_FILE_RANDOM_STATE_TYPE);
-  dfsch_define_cstr(ctx, "<lcg-random-state>", DFSCH_LCG_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<file-random-state>", DFSCH_FILE_RANDOM_STATE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<lcg-random-state>", DFSCH_LCG_RANDOM_STATE_TYPE);
 
-  dfsch_define_cstr(ctx, "random-bytes", DFSCH_PRIMITIVE_REF(random_bytes));
-  dfsch_define_cstr(ctx, "random-flonum", DFSCH_PRIMITIVE_REF(random_flonum));
-  dfsch_define_cstr(ctx, "random-bignum", DFSCH_PRIMITIVE_REF(random_bignum));
-  dfsch_define_cstr(ctx, "random", DFSCH_PRIMITIVE_REF(random));
+  dfsch_defcanon_cstr(ctx, "random-bytes", DFSCH_PRIMITIVE_REF(random_bytes));
+  dfsch_defcanon_cstr(ctx, "random-flonum", DFSCH_PRIMITIVE_REF(random_flonum));
+  dfsch_defcanon_cstr(ctx, "random-bignum", DFSCH_PRIMITIVE_REF(random_bignum));
+  dfsch_defcanon_cstr(ctx, "random", DFSCH_PRIMITIVE_REF(random));
 
-  dfsch_define_cstr(ctx, "make-default-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-default-random-state", 
                     DFSCH_PRIMITIVE_REF(make_default_random_state));
-  dfsch_define_cstr(ctx, "make-file-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-file-random-state", 
                     DFSCH_PRIMITIVE_REF(make_file_random_state));
-  dfsch_define_cstr(ctx, "make-lcg-random-state", 
+  dfsch_defcanon_cstr(ctx, "make-lcg-random-state", 
                     DFSCH_PRIMITIVE_REF(make_lcg_random_state));
 }

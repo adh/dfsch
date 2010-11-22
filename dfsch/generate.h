@@ -19,16 +19,21 @@ dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
                                                dfsch_object_t* value);
 dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
                                                dfsch_object_t* value);
+dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
+                                                         dfsch_object_t* value);
 dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name);
 
 dfsch_object_t* dfsch_generate_instance_p(dfsch_object_t* obj,
                                           dfsch_object_t* klass);
 dfsch_object_t* dfsch_generate_error(char* message,
                                       dfsch_object_t* obj);
+dfsch_object_t* dfsch_generate_throw(dfsch_object_t* tag,
+                                     dfsch_object_t* value);
 
 dfsch_object_t* dfsch_generate_cons(dfsch_object_t* car, dfsch_object_t* cdr);
 dfsch_object_t* dfsch_generate_quote(dfsch_object_t* value);
 dfsch_object_t* dfsch_get_append_primitive();
+dfsch_object_t* dfsch_get_nconc_primitive();
 
 
 #endif

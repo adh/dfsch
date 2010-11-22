@@ -269,3 +269,25 @@ char* dfsch_tcl_quote_list(dfsch_object_t* list){
 
   return dfsch_sl_value(sl);
 }
+
+dfsch_object_t* dfsch_tcl_split_list(char* list){
+  int argc;
+  char** argv;
+  int i;
+  dfsch_object_t* vec;
+  
+  if (Tcl_SplitList(NULL, list, &argc, &argv) == TCL_ERROR){
+    dfsch_error("Syntax error", dfsch_make_string_cstr(list));
+  }
+
+
+  vec = dfsch_make_vector(argc, NULL);
+
+  for (i = 0; i < argc; i++){
+    dfsch_vector_set(vec, i, dfsch_make_string_cstr(argv[i]));
+  }
+
+  Tcl_Free(argv);
+
+  return vec;
+}

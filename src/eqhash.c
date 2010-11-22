@@ -26,13 +26,15 @@
 #include <assert.h>
 
 #define INITIAL_MASK 0xf
+//#define EQHASH_PRINT_STATS
 
-static size_t fast_ptr_hash(dfsch_object_t* ptr){
+static uint32_t fast_ptr_hash(dfsch_object_t* ptr){
   size_t p = (size_t) ptr;
-  size_t r = p;
+  uint32_t r = p;
 
-  r *= (p << 12) | (p >> (CHAR_BIT*sizeof(size_t) - 12));
-  r ^= (p >> 5) | (p << (CHAR_BIT*sizeof(size_t) - 5));
+  r *= 2654435761;
+  // r *= p | (p >> (CHAR_BIT*sizeof(size_t) / 2));
+  r ^= (r >> 16);
 
   return r;
 }
@@ -86,8 +88,8 @@ static void eqhash_large_put_low(dfsch_eqhash_entry_t* vector,
                                  size_t mask,
                                  dfsch_object_t* key, 
                                  dfsch_object_t* value,
-                                 short flags){
-  size_t h = fast_ptr_hash(key);
+                                 unsigned short flags){
+  uint32_t h = fast_ptr_hash(key);
   
   if (vector[h & mask].key != DFSCH_INVALID_OBJECT){
     vector[h & mask].next = alloc_entry(key, value, flags, vector[h & mask].next);
@@ -102,7 +104,6 @@ static void eqhash_large_put_low(dfsch_eqhash_entry_t* vector,
 
 static void convert_to_large(dfsch_eqhash_t* hash){
   dfsch_eqhash_entry_t** vector = alloc_vector(INITIAL_MASK);
-  size_t h;
   int i;
   
   for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
@@ -130,7 +131,6 @@ static void grow_hash(dfsch_eqhash_t* hash){
   dfsch_eqhash_entry_t* i;
   dfsch_eqhash_entry_t* j;
   int k;
-  size_t h;
 
   for (k = 0; k <= hash->contents.large.mask; k++){
     i = &hash->contents.large.vector[k];
@@ -161,7 +161,7 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
   }
 
   hash->contents.large.count++;
-  if (DFSCH_UNLIKELY(hash->contents.large.count / 2 
+  if (DFSCH_UNLIKELY(hash->contents.large.count  
                      > hash->contents.large.mask)){
     grow_hash(hash);
   }
@@ -170,33 +170,38 @@ void dfsch_eqhash_put(dfsch_eqhash_t* hash,
                        key, value, 0);
 }
 
-//#define EQHASH_PRINT_STATS
+#ifdef EQHASH_PRINT_STATS
+static int hits = 0;
+#endif
+
 
 static dfsch_eqhash_entry_t* find_entry(dfsch_eqhash_t* hash, 
                                         dfsch_object_t* key){
   dfsch_eqhash_entry_t* i;
-  size_t h;
+  uint32_t h;
 
 #ifdef EQHASH_PRINT_STATS
   int c = 0;
 #endif
 
   h = fast_ptr_hash(key);
-  i = hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE];
+  i = hash->contents.large.cache[(h >> 16) % DFSCH_EQHASH_CACHE_SIZE];
   if (DFSCH_LIKELY(i) && 
       DFSCH_UNLIKELY(i->key == key)){
 #ifdef EQHASH_PRINT_STATS
-    printf(";; large eqhash lookup cache hit\n");
+    hits++;
 #endif
     return i;
   }
+
   
   i = BUCKET(hash, h);
   while (i){
     if (DFSCH_LIKELY(i->key == key)){
-      hash->contents.large.cache[(h >> 10) % DFSCH_EQHASH_CACHE_SIZE] = i;
+      hash->contents.large.cache[(h >> 16) % DFSCH_EQHASH_CACHE_SIZE] = i;
 #ifdef EQHASH_PRINT_STATS
-      printf(";; large eqhash lookup: %d\n", c);
+      printf(";; large eqhash lookup: %d (%d hits)\n", c, hits);
+      hits = 0;
 #endif
       return i;
     }
@@ -268,7 +273,7 @@ void dfsch_eqhash_set(dfsch_eqhash_t* hash,
   dfsch_eqhash_put(hash, key, value);  
 }
 void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
-                            dfsch_object_t* key, short flags){
+                            dfsch_object_t* key, unsigned short flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
@@ -287,7 +292,7 @@ void dfsch_eqhash_set_flags(dfsch_eqhash_t* hash,
 }
 int dfsch_eqhash_set_if_exists(dfsch_eqhash_t* hash,
                                dfsch_object_t* key, dfsch_object_t* value,
-                               short* flags){
+                               unsigned short* flags){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
     if (e) {
@@ -339,7 +344,7 @@ dfsch_object_t* dfsch_eqhash_ref(dfsch_eqhash_t* hash,
 }
 int dfsch_eqhash_ref_ex(dfsch_eqhash_t* hash,
                         dfsch_object_t* key, 
-                        dfsch_object_t** value, short *flags,
+                        dfsch_object_t** value, unsigned short *flags,
                         dfsch_eqhash_entry_t** entry){
   if (hash->is_large){
     dfsch_eqhash_entry_t* e = find_entry(hash, key);
@@ -396,4 +401,68 @@ dfsch_object_t* dfsch_eqhash_2_alist(dfsch_eqhash_t* hash){
     }
   }
   return result;
+}
+dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
+                                     dfsch_object_t* value,
+                                     unsigned short flags){
+  int i;
+
+  if (hash->is_large){
+    for (i = 0; i <= hash->contents.large.mask; i++){
+      dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
+      while (e){
+        if (e->key != DFSCH_INVALID_OBJECT){
+          if (e->value == value && (e->flags & flags) == flags){
+            return e->key;
+          }
+        }
+        e = e->next;
+      }
+    }
+  } else {
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] != DFSCH_INVALID_OBJECT){
+        if (hash->contents.small.values[i] == value &&
+            (hash->contents.small.flags[i] & flags) == flags){
+          return hash->contents.small.keys[i];
+        }
+      }
+    }
+  }
+  return DFSCH_INVALID_OBJECT;  
+}
+dfsch_eqhash_entry_t* dfsch_eqhash_2_entry_list(dfsch_eqhash_t* hash){
+  dfsch_eqhash_entry_t* result = NULL;
+  dfsch_eqhash_entry_t* t;
+  int i;
+
+  if (hash->is_large){
+    for (i = 0; i <= hash->contents.large.mask; i++){
+      dfsch_eqhash_entry_t* e = &hash->contents.large.vector[i];
+      while (e){
+        if (e->key != DFSCH_INVALID_OBJECT){
+          t = GC_NEW(dfsch_eqhash_entry_t);
+          t->next = result;
+          result = t;
+          t->key = e->key;
+          t->value = e->value;
+          t->flags = e->flags;
+        }
+        e = e->next;
+      }
+    }
+  } else {
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] != DFSCH_INVALID_OBJECT){
+        t = GC_NEW(dfsch_eqhash_entry_t);
+        t->next = result;
+        result = t;
+        t->key = hash->contents.small.keys[i];
+        t->value = hash->contents.small.values[i];
+        t->flags = hash->contents.small.flags[i];
+      }
+    }
+  }
+  return result;
+
 }

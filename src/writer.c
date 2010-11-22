@@ -95,6 +95,9 @@ void dfsch_invalidate_writer_state(dfsch_writer_state_t* state){
 int dfsch_writer_state_print_p(dfsch_writer_state_t* state){
   return state->readability == DFSCH_PRINT;
 }
+int dfsch_writer_state_strict_write_p(dfsch_writer_state_t* state){
+  return state->readability == DFSCH_STRICT_WRITE;
+}
 int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state){
   return 0;
 }
