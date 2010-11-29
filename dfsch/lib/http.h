@@ -66,20 +66,47 @@ extern dfsch_type_t dfsch_http_response_type;
 extern dfsch_type_t dfsch_http_request_type;
 #define DFSCH_HTTP_REQUEST_TYPE (&dfsch_http_request_type)
 
-dfsch_object_t* dfsch_make_http_response(int status,
-                                         dfsch_object_t* headers,
-                                         dfsch_object_t* body);
-dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
-                                        dfsch_object_t* headers,
-                                        dfsch_object_t* body);
+typedef struct dfsch_http_response_t {
+  dfsch_type_t* type;
+
+  int status;
+  dfsch_object_t* headers;
+  dfsch_object_t* body;
+} dfsch_http_response_t;
+
+typedef struct dfsch_http_request_t {
+  dfsch_type_t type;
+  
+  char *method;
+  char *protocol;
+  char *request_uri; 
+
+  dfsch_object_t* body;
+
+  dfsch_object_t* headers;
+} dfsch_http_request_t;
+
+
+dfsch_http_response_t* dfsch_make_http_response(int status,
+                                                dfsch_object_t* headers,
+                                                dfsch_object_t* body);
+dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
+                                              dfsch_object_t* headers,
+                                              dfsch_object_t* body);
 void dfsch_http_run_server(dfsch_object_t* port,
-                           dfsch_object_t* callback);
-dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port);
+                           dfsch_object_t* callback,
+                           dfsch_object_t* body_reader,
+                           dfsch_object_t* body_serializer);
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
+                                              dfsch_object_t* body_reader);
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_object_t* request);
-dfsch_object_t* dfsch_http_read_response(dfsch_object_t* port);
+                              dfsch_http_request_t* request,
+                              dfsch_object_t* body_serializer);
+dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
+                                                dfsch_object_t* body_reader);
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_object_t* response,
-                              int protocol);
+                              dfsch_http_response_t* response,
+                              dfsch_http_request_t* request,
+                              dfsch_object_t* body_serializer);
 
 #endif
