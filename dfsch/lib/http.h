@@ -97,11 +97,9 @@ void dfsch_http_run_server(dfsch_object_t* port,
                            dfsch_object_t* callback,
                            dfsch_object_t* body_reader,
                            dfsch_object_t* body_serializer);
-dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
-                                              dfsch_object_t* body_reader);
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port);
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_http_request_t* request,
-                              dfsch_object_t* body_serializer);
+                              dfsch_http_request_t* request);
 dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
                                                 dfsch_object_t* body_reader);
 int dfsch_http_write_response(dfsch_object_t* port,

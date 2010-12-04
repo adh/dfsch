@@ -240,9 +240,19 @@ dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_http_request_t* request,
-                              dfsch_object_t* body_serializer){
+                              dfsch_http_request_t* request){
   dfsch_str_list_t* sl = dfsch_sl_create();
+
+  dfsch_strbuf_t* body_buf = NULL;
+  dfsch_strbuf_t* head;
+
+  if (request->body){
+    if (!request->protocol){
+      dfsch_error("Non-empty body for HTTP/0.9 request", request);
+    }
+
+    body_buf = dfsch_string_to_strbuf(request->body);
+  }
 
   dfsch_sl_append(sl, request->method);
   dfsch_sl_append(sl, " ");
@@ -268,9 +278,21 @@ void dfsch_http_write_request(dfsch_object_t* port,
 
       i = DFSCH_FAST_CDR(i);
     }
+
+    if (body_buf){
+      dfsch_sl_append(sl, dfsch_saprintf("Content-Length: %d\r\n", body_buf->len));
+    }
+
     dfsch_sl_append(sl, "\r\n");
+    
   }
 
+  head = dfsch_sl_value_strbuf(sl);
+
+  dfsch_port_write_buf(port, head->ptr, head->len);
+  if (body_buf){
+    dfsch_port_write_buf(port, body_buf->ptr, body_buf->len);    
+  }
 }
 
 dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
@@ -282,5 +304,16 @@ int dfsch_http_write_response(dfsch_object_t* port,
                               dfsch_http_response_t* response,
                               dfsch_http_request_t* request,
                               dfsch_object_t* body_serializer){
-  
+  int plain = 0;
+  int has_content = 1;
+
+  if (request){
+    plain = request->protocol == NULL;
+    has_content = strcmp(request->method, "HEAD") != 0;
+  }
+
+  if (plain && has_content){
+    dfsch_error("HTTP/0.9 request without response content", request);
+  }
+
 }
