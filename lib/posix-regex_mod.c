@@ -19,7 +19,7 @@
  *
  */
 
-#include "dfsch/lib/regex.h"
+#include "dfsch/lib/posix-regex.h"
 static dfsch_object_t* native_regex_compile(void *baton, 
                                             dfsch_object_t* args, 
                                             dfsch_tail_escape_t* esc){
@@ -119,19 +119,20 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
 }
 
 
-dfsch_object_t* dfsch_module_regex_register(dfsch_object_t *ctx){
-  dfsch_defcanon_cstr(ctx, "regex-compile", 
+dfsch_object_t* dfsch_module_posix_regex_register(dfsch_object_t *ctx){
+  dfsch_package_t* posix_regex = dfsch_make_package("posix-regex");
+  dfsch_defcanon_pkgcstr(ctx, posix_regex, "compile", 
                    dfsch_make_primitive(&native_regex_compile,NULL));
-  dfsch_defcanon_cstr(ctx, "regex-match?", 
+  dfsch_defcanon_pkgcstr(ctx, posix_regex, "match?", 
                    dfsch_make_primitive(&native_regex_match_p,NULL));
-  dfsch_defcanon_cstr(ctx, "regex-substrings", 
+  dfsch_defcanon_pkgcstr(ctx, posix_regex, "substrings", 
                    dfsch_make_primitive(&native_regex_substrings,NULL));
-  dfsch_defcanon_cstr(ctx, "regex-match-once?", 
+  dfsch_defcanon_pkgcstr(ctx, posix_regex, "match-once?", 
                    dfsch_make_primitive(&native_regex_match_once_p,NULL));
-  dfsch_defcanon_cstr(ctx, "regex-substrings-once", 
+  dfsch_defcanon_pkgcstr(ctx, posix_regex, "substrings-once", 
                    dfsch_make_primitive(&native_regex_substrings_once, NULL));
 
-  dfsch_provide(ctx, "regex");
+  dfsch_provide(ctx, "posix-regex");
 
   return NULL;
 }

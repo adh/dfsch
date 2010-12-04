@@ -1,4 +1,4 @@
-(require :regex)
+(require :posix-regex)
 (require :xml)
 (require :sxml)
 (require :unix)
@@ -324,17 +324,17 @@
 
        (test 'degenerated-list-qq `(,@'() . foo) 'foo))
 
-(group "Regular expressions"
-       (define r0 (regex-compile "[ab]+"))
-       (define r0b (regex-compile "[ab]+" :basic))
-       (define r1 (regex-compile "^([^ ]+) +([^ ]+)$"))
-       (test 'extended (regex-match? r0 "baba") #t)
-       (test 'basic (regex-match? r0b "baba") #f)
+(group "POSIX regular expressions"
+       (define r0 (posix-regex:compile "[ab]+"))
+       (define r0b (posix-regex:compile "[ab]+" :basic))
+       (define r1 (posix-regex:compile "^([^ ]+) +([^ ]+)$"))
+       (test 'extended (posix-regex:match? r0 "baba") #t)
+       (test 'basic (posix-regex:match? r0b "baba") #f)
        (test 'substring 
-             (regex-substrings r1 "aaa bbb") 
+             (posix-regex:substrings r1 "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb")))
        (test 'substring-once 
-             (regex-substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
+             (posix-regex:substrings-once "^([^ ]+) +([^ ]+)$" "aaa bbb") 
              #(#(0 7 "aaa bbb") #(0 3 "aaa") #(4 7 "bbb"))))
 
 (group "Format"

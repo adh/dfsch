@@ -111,6 +111,25 @@ if test x$have_expat != x1; then
         AC_MSG_ERROR(expat XML parser is required.)
 fi
 
+enable_pcre=yes
+
+AC_ARG_ENABLE([pcre],
+    AS_HELP_STRING([--disable-pcre], [Disable pcre module]))
+AC_ARG_WITH([pcre],
+  AC_HELP_STRING([--with-pcre=PATH], [Path to PCRE installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
+AC_CHECK_LIB(pcre, pcre_compile, 
+                    [have_pcre=$have_pcre], [have_pcre="0"])
+
+if [ have_pcre = "0" ] ; then
+    enable_pcre=no
+fi
+
+AM_CONDITIONAL(PCRE, test x"$enable_pcre" == x"yes")
+
 enable_tk_gui=yes
 
 AC_ARG_ENABLE([tk-gui],
@@ -182,6 +201,7 @@ dfsch $VERSION configuration:
 Optional modules:
 readline ........... : $use_readline
 tk-gui ............. : $enable_tk_gui
+pcre ............... : $enable_pcre
 
 
 EOF

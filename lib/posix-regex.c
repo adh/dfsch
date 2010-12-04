@@ -19,7 +19,7 @@
  *
  */
 
-#include "dfsch/lib/regex.h"
+#include "dfsch/lib/posix-regex.h"
 typedef struct dfsch_regex_t {
   dfsch_type_t *type;
   regex_t regex;
@@ -30,7 +30,7 @@ static dfsch_type_t regex_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
   sizeof(dfsch_regex_t),
-  "regex",
+  "posix-regex",
   NULL, // equal?
   NULL, // write
   NULL, // apply

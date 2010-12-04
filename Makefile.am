@@ -5,7 +5,7 @@ bin_PROGRAMS = dfsch-repl dfsch-source-tool dfsch-run
 
 nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/os.h \
-	dfsch/lib/regex.h \
+	dfsch/lib/posix-regex.h \
 	dfsch/lib/inet.h \
 	dfsch/lib/cdebug.h \
 	dfsch/lib/cinspect.h \
@@ -18,6 +18,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/csv.h \
 	dfsch/lib/zlib.h \
 	dfsch/lib/tk-gui.h \
+	dfsch/lib/pcre.h \
 	dfsch/lib/crypto.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
@@ -49,15 +50,25 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 
 if TKGUI
 tkgui_libs=libdfsch-tk-gui.la
+tkgui_modules=tk-gui-interface.la
 else
 tkgui_libs=
+tkgui_modules=
+endif
+
+if PCRE
+pcre_libs=libdfsch-pcre.la
+pcre_modules=pcre.la
+else
+pcre_libs=
+pcre_modules=
 endif
 
 if WIN32
 nonwin32_libs=
 else
 nonwin32_libs=\
-	libdfsch-regex.la \
+	libdfsch-posix-regex.la \
 	libdfsch-http.la \
 	libdfsch-socket-port.la
 endif
@@ -79,14 +90,10 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-csv.la \
 	libdfsch-crypto.la \
 	$(nonwin32_libs)\
-	$(tkgui_libs)
+	$(tkgui_libs)\
+	$(pcre_libs)
 
 
-if TKGUI
-tkgui_modules=tk-gui-interface.la
-else
-tkgui_modules=
-endif
 
 if WIN32
 nonwin32_modules=
@@ -94,7 +101,7 @@ else
 nonwin32_modules=\
 	unix.la \
 	socket-port.la \
-	regex.la 
+	posix-regex.la
 endif
 
 dfschlibexec_LTLIBRARIES = threads.la \
@@ -115,7 +122,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	csv.la \
 	crypto.la \
 	$(nonwin32_modules)\
-	$(tkgui_modules)
+	$(tkgui_modules)\
+	$(pcre_modules)
 
 
 dfschlibscm_DATA = scm/stream-functions.scm \
@@ -221,13 +229,13 @@ threads_la_SOURCES = lib/threads_mod.c
 threads_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 threads_la_LIBADD =  libdfsch.la $(pthread_libadd) libdfsch-threads.la
 
-libdfsch_regex_la_SOURCES = lib/regex.c dfsch/lib/regex.h
-libdfsch_regex_la_LDFLAGS = -version-info 2:0:0 -no-undefined
-libdfsch_regex_la_LIBADD =  libdfsch.la
+libdfsch_posix_regex_la_SOURCES = lib/posix-regex.c dfsch/lib/posix-regex.h
+libdfsch_posix_regex_la_LDFLAGS = -version-info 2:0:0 -no-undefined
+libdfsch_posix_regex_la_LIBADD =  libdfsch.la
 
-regex_la_SOURCES = lib/regex_mod.c 
-regex_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-regex_la_LIBADD =  libdfsch.la libdfsch-regex.la
+posix_regex_la_SOURCES = lib/posix-regex_mod.c 
+posix_regex_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+posix_regex_la_LIBADD =  libdfsch.la libdfsch-posix-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
@@ -385,6 +393,15 @@ crypto_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 dfsch_repl_SOURCES = src/repl.c
 dfsch_repl_LDADD = libdfsch.la libdfsch-cdebug.la \
 	libdfsch-console.la libdfsch-cmdopts.la libdfsch-cinspect.la
+
+libdfsch_pcre_la_SOURCES = lib/pcre.c
+libdfsch_pcre_la_LIBADD = libdfsch.la -lpcre
+libdfsch_pcre_la_LDFLAGS = -no-undefined
+
+pcre_la_SOURCES = lib/pcre_mod.c
+pcre_la_LIBADD = libdfsch.la libdfsch-pcre.la
+pcre_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 if WIN32
 gui_flags = -mwindows
