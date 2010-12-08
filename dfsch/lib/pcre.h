@@ -4,10 +4,10 @@
 #include <dfsch/dfsch.h>
 #include <pcre.h>
 
-dfsch_type_t dfsch_pcre_pattern_type;
+extern dfsch_type_t dfsch_pcre_pattern_type;
 #define DFSCH_PCRE_PATTERN_TYPE (&dfsch_pcre_pattern_type)
 
-pcre* dfsch_pcre_get_code(dfsch_object_t* pat);
+pcre* dfsch_pcre_get_pattern(dfsch_object_t* pat);
 int dfsch_pcre_parse_options(dfsch_object_t* al);
 
 dfsch_pcre_pattern_t* dfsch_pcre_compile(char* pattern,
