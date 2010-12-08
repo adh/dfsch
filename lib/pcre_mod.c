@@ -30,6 +30,6 @@ void dfsch_module_pcre_register(dfsch_object_t* env){
   dfsch_provide(env, "pcre");
   dfsch_defcanon_pkgcstr(env, pcre, "compile",
                          DFSCH_PRIMITIVE_REF(compile));
-  dfsch_defcanon_pkgcstr(env, pcre, "match",
+  dfsch_defcanon_pkgcstr(env, pcre, "match?",
                          DFSCH_PRIMITIVE_REF(match));
 }
