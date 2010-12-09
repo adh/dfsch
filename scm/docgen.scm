@@ -32,6 +32,10 @@
               start-state)
     (get-variables toplevel)))
 
+(define-generic get-object-documentation
+  :method-combination (make-simple-method-combination list))
+
+
 (define (get-object-documentation object)
   (cond
    ((instance? object <function>)
@@ -207,20 +211,35 @@
 (define output-directory ())
 (define module-name ())
 (define default-all #f)
+(define indexes ())
+(define output-index ())
+(define url-prefix "")
 
 (let ((parser (cmdopts:make-parser)))
   (cmdopts:add-option parser "module" 
                       (lambda (p v)
                         (set! module-name (string->object v)))
                       0 #t)
+  (cmdopts:add-option parser "index" 
+                      (lambda (p v)
+                        (set! indexes (cons (load-index v) indexes)))
+                      0 #t)
   (cmdopts:add-option parser "default-all" 
                       (lambda (p v)
                         (set! default-all #t))
                       0 #f)
+  (cmdopts:add-option parser "output-index"
+                      (lambda (p v)
+                        (set! output-index v))
+                      0 #t)
+  (cmdopts:add-option parser "url-prefix"
+                      (lambda (p v)
+                        (set! output-index v))
+                      0 #t)
   (cmdopts:add-argument parser 
                         (lambda (p v)
                           (set! output-directory v))
-                        'required)
+                        :required)
   (cmdopts:parse-list parser (cdr *posix-argv*)))
 
 (if (null? module-name)

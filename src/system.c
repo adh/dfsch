@@ -86,7 +86,7 @@ static dfsch_object_t* decoded_time_apply(decoded_time_t* time,
     return dfsch_bool(time->tm.tm_isdst == 1);
   }
 
-  dfsch_error("exception:no-such-decoded-time-field", selector);
+  dfsch_error("Unknown field requested", selector);
 }
 
 size_t decoded_time_hash(decoded_time_t* time){
@@ -111,7 +111,7 @@ dfsch_object_t* dfsch_make_decoded_time(){
 
 struct tm* dfsch_decoded_time_get_tm(dfsch_object_t* time){
   if (DFSCH_TYPE_OF(time) != &decoded_time_type){
-    dfsch_error("exception:not-a-decoded-time", time);
+    dfsch_error("Not a decoded time", time);
   }
 
   return &(((decoded_time_t*)time)->tm);
@@ -234,27 +234,27 @@ DFSCH_DEFINE_PRIMITIVE(sleep, NULL){
 
 
 void dfsch__system_register(dfsch_object_t *ctx){
-  dfsch_define_cstr(ctx, "<decoded-time>", &decoded_time_type);
+  dfsch_defcanon_cstr(ctx, "<decoded-time>", &decoded_time_type);
 
 
-  dfsch_define_cstr(ctx, "decode-universal-time", 
+  dfsch_defcanon_cstr(ctx, "decode-universal-time", 
                     DFSCH_PRIMITIVE_REF(decode_universal_time));
-  dfsch_define_cstr(ctx, "encode-universal-time", 
+  dfsch_defcanon_cstr(ctx, "encode-universal-time", 
                     DFSCH_PRIMITIVE_REF(encode_universal_time));
-  dfsch_define_cstr(ctx, "get-decoded-time", 
+  dfsch_defcanon_cstr(ctx, "get-decoded-time", 
                     DFSCH_PRIMITIVE_REF(get_decoded_time));
-  dfsch_define_cstr(ctx, "get-universal-time", 
+  dfsch_defcanon_cstr(ctx, "get-universal-time", 
                     DFSCH_PRIMITIVE_REF(get_universal_time));
-  dfsch_define_cstr(ctx, "iso-format-time", 
+  dfsch_defcanon_cstr(ctx, "iso-format-time", 
                     DFSCH_PRIMITIVE_REF(iso_format_time));
 #ifdef unix
-  dfsch_define_cstr(ctx, "get-internal-real-time", 
+  dfsch_defcanon_cstr(ctx, "get-internal-real-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_real_time));
-  dfsch_define_cstr(ctx, "get-internal-run-time", 
+  dfsch_defcanon_cstr(ctx, "get-internal-run-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_run_time));
-  dfsch_define_cstr(ctx, "internal-time-units-per-second", 
+  dfsch_defcanon_cstr(ctx, "internal-time-units-per-second", 
                     dfsch_make_number_from_long(sysconf(_SC_CLK_TCK)));
 #endif
-  dfsch_define_cstr(ctx, "sleep", 
+  dfsch_defcanon_cstr(ctx, "sleep", 
                     DFSCH_PRIMITIVE_REF(sleep));
 }

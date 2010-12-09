@@ -44,6 +44,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdlib.h>
 
 extern dfsch_type_t dfsch_abstract_type;
 #define DFSCH_ABSTRACT_TYPE ((dfsch_type_t*)&dfsch_abstract_type)
@@ -106,7 +107,7 @@ extern dfsch_type_t dfsch_primitive_type;
     NULL,                                               \
     0,                                                  \
     #name,                                              \
-    documentation                                       \
+    DFSCH_DOC_STRING(documentation)                     \
   }
   
 #define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags, documentation)   \
@@ -116,7 +117,7 @@ extern dfsch_type_t dfsch_primitive_type;
     baton,                                                              \
     flags,                                                              \
     #name,                                                              \
-    documentation                                                       \
+    DFSCH_DOC_STRING(documentation)                                     \
   }
 
 #define DFSCH_PRIMITIVE_HEAD(name)                                      \
@@ -204,7 +205,7 @@ extern dfsch_type_t dfsch_form_type;
     form_##name##_impl,                                 \
     NULL,                                               \
     #name,                                              \
-    documentation,                                      \
+    DFSCH_DOC_STRING(documentation),                    \
     methods                                             \
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
@@ -221,7 +222,8 @@ extern dfsch_type_t dfsch_form_type;
 /** Equivalence metod prototype */
 typedef int (*dfsch_type_equal_p_t)(dfsch_object_t*, dfsch_object_t*);
 
-typedef (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
+typedef void (*dfsch_output_proc_t)(void* baton, char* buf, size_t len);
+typedef ssize_t (*dfsch_input_proc_t)(void* baton, char* buf, size_t len);
 typedef struct dfsch_writer_state_t dfsch_writer_state_t;
 
 /** Write / Display method prototype */
@@ -237,10 +239,19 @@ typedef uint32_t (*dfsch_type_hash_t)(dfsch_object_t* obj);
 
 typedef dfsch_object_t* (*dfsch_type_describe_t)(dfsch_object_t* object);
 
+typedef struct dfsch_serializer_t dfsch_serializer_t;
+typedef void (*dfsch_type_serialize_t)(dfsch_object_t* obj,
+                                       dfsch_serializer_t* s);
+
+
+
 /** Disable weak references for this type */
 #define DFSCH_TYPEF_NO_WEAK_REFERENCES 1
 /** Allow user code to inherit from this type */
 #define DFSCH_TYPEF_USER_EXTENSIBLE    2
+/** Instances does not get backreferences in serialization and circular 
+ *  prints */
+#define DFSCH_TYPEF_NO_BACK_REFERENCES 4
 
 typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
 
@@ -329,17 +340,36 @@ struct dfsch_type_t {
   dfsch_sequence_methods_t* sequence;
   dfsch_mapping_methods_t* mapping;
 
+  dfsch_type_serialize_t serialize;
+
+  dfsch_object_t* slot_metadata;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
-typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr);
-typedef void (*dfsch_accessor_set_t)(void* ptr, dfsch_object_t* obj);
+typedef dfsch_object_t* (*dfsch_accessor_ref_t)(void* ptr, 
+                                                dfsch_object_t* obj, 
+                                                dfsch_slot_t* slot);
+typedef void (*dfsch_accessor_set_t)(void* ptr, 
+                                     dfsch_object_t* value,
+                                     dfsch_object_t* obj,
+                                     dfsch_slot_t* slot);
+typedef void (*dfsch_slot_type_init_t)(dfsch_type_t* type,
+                                       dfsch_slot_t* slot);
+typedef dfsch_object_t* (*dfsch_slot_instance_init_t)(void* ptr, 
+                                                      dfsch_object_t* obj, 
+                                                      dfsch_slot_t* slot);
 
 typedef struct dfsch_slot_type_t {
   dfsch_type_t standard_type;
   dfsch_accessor_ref_t ref;
   dfsch_accessor_set_t set;
   size_t size;
+  size_t alignment;
+  
+  dfsch_slot_type_init_t type_init;
+  dfsch_slot_instance_init_t instance_init;
+
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_slot_type_t;
 
@@ -367,6 +397,8 @@ struct dfsch_slot_t {
   size_t offset;
   int access;
   char* documentation;
+  void* slot_data;
+  dfsch_object_t* options;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
 
@@ -409,6 +441,14 @@ extern dfsch_type_t dfsch_iterator_type_type;
 extern dfsch_type_t dfsch_iterator_type;
 #define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
 
+extern dfsch_iterator_type_t dfsch_sequence_iterator_type;
+#define DFSCH_SEQUENCE_ITERATOR_TYPE \
+  ((dfsch_type_t*)&dfsch_sequence_iterator_type)
+
+dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence);
+
+extern dfsch_collection_methods_t dfsch_sequence_collection_methods;
+#define DFSCH_COLLECTION_AS_SEQUENCE (&dfsch_sequence_collection_methods)
 
 /*
  * Objects should be always 8-byte aligned in memory, even on 32b platforms.
@@ -461,6 +501,8 @@ typedef struct dfsch_pair_t {
    ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))[2] :                   \
    (dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 
+#define DFSCH__COMPACT_LIST_DECODE(ptr)         \
+  ((dfsch_object_t**)(((size_t)(ptr)) & ~0x03))
 #define DFSCH__COMPACT_LIST_CDR_FAST(ptr)               \
   ((dfsch_object_t*)(((dfsch_object_t**)(ptr))+1))
 #define DFSCH__COMPACT_LIST_CAR_FAST(ptr)               \
@@ -514,13 +556,25 @@ typedef struct dfsch_pair_t {
   ((DFSCH_TYPE_OF((o)) == (t)) ? ((void*)(o)) : dfsch_assert_type((o), (t)))
 #define DFSCH_ASSERT_INSTANCE(o, t)                                     \
   (DFSCH_INSTANCE_P((o), (t)) ? (o) : dfsch_assert_instance((o), (t)))
+#define DFSCH_ASSERT_METACLASS_INSTANCE(o, t)                           \
+  (DFSCH_INSTANCE_P(DFSCH_TYPE_OF((o)), (t)) ?                          \
+   (o) : dfsch_assert_metaclass_instance((o), (t)))
 
+
+#define DFSCH_TYPE_COLLECTION_P(t)                   \
+  (((dfsch_type_t*)(t))->collection != NULL)
 #define DFSCH_COLLECTION_P(o)                   \
-  (DFSCH_TYPE_OF((o))->collection != NULL)
-#define DFSCH_MAPPING_P(o)                      \
-  (DFSCH_TYPE_OF((o))->mapping != NULL)
-#define DFSCH_SEQUENCE_P(o)                     \
-  (DFSCH_TYPE_OF((o))->sequence != NULL)
+  (DFSCH_TYPE_COLLECTION_P(DFSCH_TYPE_OF((o))))
+
+#define DFSCH_TYPE_MAPPING_P(t)                   \
+  (((dfsch_type_t*)(t))->mapping != NULL)
+#define DFSCH_MAPPING_P(o)                   \
+  (DFSCH_TYPE_MAPPING_P(DFSCH_TYPE_OF((o))))
+
+#define DFSCH_TYPE_SEQUENCE_P(t)                   \
+  (((dfsch_type_t*)(t))->sequence != NULL)
+#define DFSCH_SEQUENCE_P(o)                   \
+  (DFSCH_TYPE_SEQUENCE_P(DFSCH_TYPE_OF((o))))
 
 #define DFSCH_ASSERT_COLLECTION(o)                                      \
   (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
@@ -583,5 +637,8 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 #define DFSCH_SYM_MACRO_EXPANDED_FROM DFSCH__STATIC_SYMBOL(20)
 #define DFSCH_SYM_IMMUTABLE_QUASIQUOTE DFSCH__STATIC_SYMBOL(21)
 #define DFSCH_SYM_COMPILED_FROM DFSCH__STATIC_SYMBOL(22)
+#define DFSCH_SYM_UNQUOTE_NCONCING DFSCH__STATIC_SYMBOL(23)
+
+#define DFSCH_SYM_BREAK DFSCH__STATIC_SYMBOL(24)
 
 #endif

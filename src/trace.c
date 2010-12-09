@@ -16,14 +16,14 @@ static void trace_listener(dfsch__thread_info_t* ti){
     case DFSCH_TRACEPOINT_KIND_APPLY:
       fprintf(stderr, "Tracepoint(%d): APPLY %s %s\n",
               GC_get_total_bytes(),
-              dfsch_object_2_string(tp->data.apply.proc, 10, 10),
-              dfsch_object_2_string(tp->data.apply.args, 10, 10));
+              dfsch_object_2_string(tp->data.apply.proc, 10, DFSCH_WRITE),
+              dfsch_object_2_string(tp->data.apply.args, 10, DFSCH_WRITE));
       break;
     case DFSCH_TRACEPOINT_KIND_EVAL:
       fprintf(stderr, "Tracepoint(%d): EVAL %s %s\n",
               GC_get_total_bytes(),
-              dfsch_object_2_string(tp->data.eval.expr, 10, 10),
-              dfsch_object_2_string(tp->data.eval.env, 10, 10));
+              dfsch_object_2_string(tp->data.eval.expr, 10, DFSCH_WRITE),
+              dfsch_object_2_string(tp->data.eval.env, 10, DFSCH_WRITE));
       break;
     case DFSCH_TRACEPOINT_KIND_ANON:
       fprintf(stderr, "Tracepoint(%d): ANON %s %p\n",
@@ -33,7 +33,7 @@ static void trace_listener(dfsch__thread_info_t* ti){
       break;
     }
   } DFSCH_PROTECT {
-  ti->trace_listener = trace_listener;  
+    ti->trace_listener = trace_listener;  
   } DFSCH_PROTECT_END;
   
 }

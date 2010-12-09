@@ -442,6 +442,11 @@
        (test 'negative-divide (/ -1 2) -1/2)
        (test 'fracnum-absolute-value (abs -1/2) 1/2))
 
+(group "Serialization"
+       (test 'serdes-roundtrip
+             (deserialize (serialize '(1 2 3 #(a b c) 3.1415 "foo")))
+             '(1 2 3 #(a b c) 3.1415 "foo")))
+
 ;;; End of tests
 ;;
 ;; Print some statistics and exit apropriately

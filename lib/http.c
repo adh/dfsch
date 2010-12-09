@@ -1,5 +1,6 @@
 #include <dfsch/lib/http.h>
-
+#include <dfsch/magic.h>
+#include <dfsch/util.h>
 #include <ctype.h>
 
 static char *reasons[] = {
@@ -156,36 +157,22 @@ char* dfsch_http_get_protocol(int protocol){
 }
 
 
-typedef struct http_response_t {
-  dfsch_type_t* type;
+dfsch_http_response_t* dfsch_make_http_response(int status,
+                                                dfsch_object_t* headers,
+                                                dfsch_object_t* body){
+  dfsch_http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
 
-  int status;
-  dfsch_object_t* headers;
-  dfsch_object_t* body;
-} http_response_t;
+  re->status = status;
+  re->headers = headers;
+  re->body = body;
 
-typedef struct http_request_t {
-  dfsch_type_t type;
-  
-  char *method;
-  char *protocol;
-  char *request_uri; 
-
-  dfsch_object_t* body;
-
-  dfsch_object_t* headers;
-} http_request_t;
-
-dfsch_object_t* dfsch_make_http_response(int status,
-                                         dfsch_object_t* headers,
-                                         dfsch_object_t* body){
-  http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
+  return re;
 }
 
-dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
-                                        dfsch_object_t* headers,
-                                        dfsch_object_t* body){
-  http_request_t* re = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
+dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
+                                              dfsch_object_t* headers,
+                                              dfsch_object_t* body){
+  dfsch_http_request_t* re = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
 
   re->method = method;
   re->request_uri = request_uri;
@@ -193,64 +180,107 @@ dfsch_object_t* dfsch_make_http_request(char* method, char* request_uri, char* p
   re->headers = headers;
   re->body = body;
 
-  return (dfsch_object_t*)re;
+  return re;
 }
 
 
 void dfsch_http_run_server(dfsch_object_t* port,
-                           dfsch_object_t* callback){
+                           dfsch_object_t* callback,
+                           dfsch_object_t* body_reader,
+                           dfsch_object_t* body_serializer){
   dfsch_object_t* request;
   dfsch_object_t* response;
-
-  do {
-    request = dfsch_http_read_request(port);
-    response = dfsch_apply(callback, dfsch_list(1, request));
-  } while(dfsch_http_write_response(port, response, request));
+  DFSCH_UNWIND {
+    while (request = dfsch_http_read_request(port, body_reader)) {
+      response = dfsch_apply(callback, dfsch_list(1, request));
+      dfsch_http_write_response(port, response, request, body_serializer);
+    }
+  } DFSCH_PROTECT {
+    dfsch_port_close(port);
+  } DFSCH_PROTECT_END;
 }
 
-dfsch_object_t* dfsch_http_read_request(dfsch_object_t* port){
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
+                                              dfsch_object_t* body_reader){
   dfsch_strbuf_t* line = dfsch_port_readline(port);
   size_t len;
-  char* method;
-  char* request_uri;
-  char* protocol;
-  dfsch_object_t* headers;
+  dfsch_http_request_t* req = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
+
+  if (!line){
+    return NULL;
+  }
 
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
-  method = dfsch_strncpy(line, len);
+  req->method = dfsch_strncpy(line, len);
 
   line += len;
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
-  request_uri = dfsch_strncpy(line, len);
+  req->request_uri = dfsch_strncpy(line, len);
 
   line += len;
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
-  protocol = dfsch_strncpy(line, len);
+  if (len){
+    req->protocol = dfsch_strncpy(line, len);
 
-  if (*protocol){
-    headers = dfsch_inet_read_822_headers_map(port, NULL);
+    req->headers = dfsch_inet_read_822_headers_list(port, NULL);
+  } else {
+    req->protocol = NULL; /* HTTP/0.9 */
   }
   
-  
+  req->body = NULL;
+  req->body = dfsch_apply(body_reader, dfsch_list(2, req, port));
+
+  return req;
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_object_t* request){
+                              dfsch_http_request_t* request,
+                              dfsch_object_t* body_serializer){
+  dfsch_str_list_t* sl = dfsch_sl_create();
+
+  dfsch_sl_append(sl, request->method);
+  dfsch_sl_append(sl, " ");
+  dfsch_sl_append(sl, request->request_uri);
+  if (request->protocol){
+    dfsch_sl_append(sl, " ");
+    dfsch_sl_append(sl, request->protocol);
+  }    
+  dfsch_sl_append(sl, "\r\n");
+
+  if (request->protocol){
+    dfsch_object_t* i = request->headers;
+
+    while (DFSCH_PAIR_P(i)){
+      dfsch_object_t* header = DFSCH_FAST_CAR(i);
+      char* name;
+      char* value;
+      DFSCH_STRING_ARG(header, name);
+      DFSCH_STRING_ARG(header, value);
+      DFSCH_ARG_END(header);
+      
+      dfsch_sl_append(sl, dfsch_saprintf("%s: %s\r\n", name, value));
+
+      i = DFSCH_FAST_CDR(i);
+    }
+    dfsch_sl_append(sl, "\r\n");
+  }
 
 }
 
-dfsch_object_t* dfsch_http_read_response(dfsch_object_t* port){
+dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
+                                                dfsch_object_t* body_reader){
   dfsch_strbuf_t* status_line = dfsch_port_readline(port);
 
 }
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_object_t* response,
-                              int protocol){
+                              dfsch_http_response_t* response,
+                              dfsch_http_request_t* request,
+                              dfsch_object_t* body_serializer){
   
 }

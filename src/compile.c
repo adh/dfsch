@@ -216,9 +216,9 @@ DFSCH_DEFINE_PRIMITIVE(compile_function, NULL){
 }
 
 void dfsch__compile_register(dfsch_object_t *ctx){ 
-  dfsch_defconst_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
                          "constant-fold-expression", 
                          DFSCH_PRIMITIVE_REF(constant_fold_expression));  
-  dfsch_defconst_cstr(ctx, "compile-function!",
+  dfsch_defcanon_cstr(ctx, "compile-function!",
                       DFSCH_PRIMITIVE_REF(compile_function));
 }

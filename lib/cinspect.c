@@ -33,7 +33,7 @@ static void update_state(inspector_state_t* is, dfsch_object_t* obj){
   
   is->description = dfsch_string_to_cstr(dfsch_car(desc));
   is->slot_list = dfsch_cdr(desc);
-  dfsch_define_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
+  dfsch_defcanon_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
 }
 
 static void push_object(inspector_state_t* is, dfsch_object_t* obj){

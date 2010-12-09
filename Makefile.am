@@ -42,7 +42,10 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/mkhash.h \
 	dfsch/compile.h \
 	dfsch/generate.h \
-	dfsch/backquote.h
+	dfsch/backquote.h \
+	dfsch/specializers.h\
+	dfsch/serdes.h \
+	dfsch/strhash.h
 
 if TKGUI
 tkgui_libs=libdfsch-tk-gui.la
@@ -151,6 +154,9 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/compile.c dfsch/compile.h	\
 	src/backquote.c dfsch/backquote.h \
 	src/trace.c dfsch/trace.h	\
+	src/specializers.c dfsch/specializers.h\
+	src/strhash.c dfsch/strhash.h	\
+	src/serdes.c dfsch/serdes.h	\
 	std-lib.c
 
 

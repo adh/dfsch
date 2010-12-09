@@ -155,40 +155,40 @@ void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
   dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface");
   dfsch_provide(env, "tk-gui-interface");
 
-  dfsch_define_pkgcstr(env, tk_gui, "<interpreter>", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "<interpreter>", 
                        DFSCH_TCL_INTERPRETER_TYPE);
-  dfsch_define_pkgcstr(env, tk_gui, "<command-wrapper>", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "<command-wrapper>", 
                        DFSCH_TCL_COMMAND_WRAPPER_TYPE);
 
-  dfsch_define_pkgcstr(env, tk_gui, "create-interpreter", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "create-interpreter", 
                        DFSCH_PRIMITIVE_REF(create_interpreter));
-  dfsch_define_pkgcstr(env, tk_gui, "destroy-interpreter", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "destroy-interpreter", 
                        DFSCH_PRIMITIVE_REF(destroy_interpreter));
-  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "tcl-eval", 
                        DFSCH_PRIMITIVE_REF(eval));
-  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval-list", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "tcl-eval-list", 
                        DFSCH_PRIMITIVE_REF(eval_list));
-  dfsch_define_pkgcstr(env, tk_gui, "tcl-eval-string",
+  dfsch_defcanon_pkgcstr(env, tk_gui, "tcl-eval-string",
                        DFSCH_PRIMITIVE_REF(eval_string));
-  dfsch_define_pkgcstr(env, tk_gui, "wrap-command", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "wrap-command", 
                        DFSCH_PRIMITIVE_REF(wrap_command));
 
-  dfsch_define_pkgcstr(env, tk_gui, "create-command!", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "create-command!", 
                        DFSCH_PRIMITIVE_REF(create_command));
-  dfsch_define_pkgcstr(env, tk_gui, "delete-command!", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "delete-command!", 
                        DFSCH_PRIMITIVE_REF(delete_command));
 
-  dfsch_define_pkgcstr(env, tk_gui, "event-loop", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "event-loop", 
                        DFSCH_PRIMITIVE_REF(event_loop));
 
-  dfsch_define_pkgcstr(env, tk_gui, "set-variable!", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "set-variable!", 
                        DFSCH_PRIMITIVE_REF(set_variable));
-  dfsch_define_pkgcstr(env, tk_gui, "ref-variable", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "ref-variable", 
                        DFSCH_PRIMITIVE_REF(ref_variable));
-  dfsch_define_pkgcstr(env, tk_gui, "unset-variable!", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "unset-variable!", 
                        DFSCH_PRIMITIVE_REF(unset_variable));
 
-  dfsch_define_pkgcstr(env, tk_gui, "split-list", 
+  dfsch_defcanon_pkgcstr(env, tk_gui, "split-list", 
                        DFSCH_PRIMITIVE_REF(split_list));
 
 }

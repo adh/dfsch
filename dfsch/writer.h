@@ -9,9 +9,9 @@ extern "C" {
 
 
 #define DFSCH_WRITE_CIRCULAR -1
-#define DFSCH_STRICT_WRITE 0
+#define DFSCH_PRINT        0
 #define DFSCH_WRITE        1
-#define DFSCH_PRINT        2
+#define DFSCH_STRICT_WRITE 2
 
   dfsch_writer_state_t* dfsch_make_writer_state(int max_depth,
                                                 int readability,
@@ -19,6 +19,7 @@ extern "C" {
                                                 void* baton);
   void dfsch_invalidate_writer_state(dfsch_writer_state_t* state);
   int dfsch_writer_state_print_p(dfsch_writer_state_t* state);
+  int dfsch_writer_state_strict_write_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state);
   void dfsch_write_object(dfsch_writer_state_t* state,

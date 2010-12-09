@@ -2,6 +2,19 @@
  * dfsch - Scheme-like Lisp dialect
  * Copyright (C) 2005-2008 Ales Hakl
  *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -105,6 +118,8 @@ extern "C" {
   extern int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type);
   extern void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type);
   extern dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj, dfsch_type_t* type);
+  extern dfsch_object_t* dfsch_assert_metaclass_instance(dfsch_object_t* obj, 
+                                                         dfsch_type_t* type);
   /** Get superclass of given type */
   extern dfsch_object_t* dfsch_superclass(dfsch_object_t* obj);
 
@@ -171,7 +186,7 @@ extern "C" {
   extern dfsch_object_t* dfsch_string_2_object_list(char* str);
   
   extern char* dfsch_object_2_string(dfsch_object_t* obj, 
-                                     int max_depth, int readable);
+                                     int max_depth, int mode);
   
   /** Returns empty list, equivalent to NULL */
   extern dfsch_object_t* dfsch_nil();
@@ -271,6 +286,14 @@ extern "C" {
   /** Sort list according to passed comparison function */
   dfsch_object_t* dfsch_sort_list(dfsch_object_t* list,
                                   dfsch_object_t* comp);
+
+  dfsch_object_t* dfsch_plist_get(dfsch_object_t* plist,
+                                  dfsch_object_t* indicator);
+  dfsch_object_t* dfsch_plist_remove_keys(dfsch_object_t* plist,
+                                          dfsch_object_t* keys);
+  dfsch_object_t* dfsch_plist_filter_keys(dfsch_object_t* plist,
+                                          dfsch_object_t* keys);
+
 
 
   /** Expand quasi-quoted expression */
@@ -413,15 +436,15 @@ extern "C" {
 
   /** Convenience wrapper for signaling error condition from C code */
   extern void dfsch_error(char* type, 
-                          dfsch_object_t* data);
+                          dfsch_object_t* data) DFSCH_FUNC_COLD;
   /** Convenience wrapper for signaling recoverable error condition */
   extern void dfsch_cerror(char* type, 
-                           dfsch_object_t* data);
+                           dfsch_object_t* data) DFSCH_FUNC_COLD;
 
   /** Apply procedure later in evaluation (useful for signal handlers) */
   extern void dfsch_async_apply_self(dfsch_object_t* proc);
   /** Check for pending asynchronous apply */
-  extern void dfsch_async_apply_check();
+  extern void dfsch_async_apply_check() DFSCH_FUNC_HOT;
 
 
   // Lexical binding:
@@ -445,6 +468,9 @@ extern "C" {
    */
   extern dfsch_object_t* dfsch_env_get(dfsch_object_t* name, 
                                        dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_env_revscan(dfsch_object_t* env, 
+                                           dfsch_object_t* value,
+                                           int canonical);
 
   extern dfsch_object_t* dfsch_variable_constant_value(dfsch_object_t* name, 
                                                        dfsch_object_t* env);
@@ -456,14 +482,18 @@ extern "C" {
   /** Unset variable name in environment env */
   extern void dfsch_unset(dfsch_object_t* name, dfsch_object_t* env);
 
-#define DFSCH_VAR_CONSTANT 1
+  /** Variable is declared as constant - changing it leads to undefined 
+   * behavior */
+#define DFSCH_VAR_CONSTANT  1
+  /** Variable is canonical name of it's value. */
+#define DFSCH_VAR_CANONICAL 2
   
 
   /** Define variable name in environment env */
   extern void dfsch_define(dfsch_object_t* name,
                            dfsch_object_t* value,
                            dfsch_object_t* env,
-                           short flags);
+                           unsigned short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
 
@@ -513,6 +543,13 @@ extern "C" {
 
   /** Allocates new top-level environment. */
   extern dfsch_object_t* dfsch_make_top_level_environment();
+  /** fills existing environment with top-level definitions */
+  extern void dfsch_core_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level language-related definitions */
+  extern void dfsch_core_language_register(dfsch_object_t* ctx);
+  /** fills existing environment with top-level system-related definitions */
+  extern void dfsch_core_system_register(dfsch_object_t* ctx);
+
   /** Define new variable in given context */
   extern void dfsch_define_cstr(dfsch_object_t *ctx, 
                                 char *name, 
@@ -520,11 +557,18 @@ extern "C" {
   extern void dfsch_defconst_cstr(dfsch_object_t *ctx, 
                                   char *name, 
                                   void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_cstr(dfsch_object_t *ctx, 
+                                  char *name, 
+                                  void *obj); /* to suppress warnings*/
   extern void dfsch_define_pkgcstr(dfsch_object_t *ctx, 
 				   dfsch_package_t* package,
 				   char *name, 
 				   void *obj); /* to suppress warnings*/
   extern void dfsch_defconst_pkgcstr(dfsch_object_t *ctx, 
+				     dfsch_package_t* package,
+				     char *name, 
+				     void *obj); /* to suppress warnings*/
+  extern void dfsch_defcanon_pkgcstr(dfsch_object_t *ctx, 
 				     dfsch_package_t* package,
 				     char *name, 
 				     void *obj); /* to suppress warnings*/
@@ -610,7 +654,7 @@ extern "C" {
    */
 #define DFSCH_OBJECT_ARG(al, name)                      \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   (name) = DFSCH_FAST_CAR((al));                        \
   (al) = DFSCH_FAST_CDR((al))
@@ -623,7 +667,7 @@ extern "C" {
    */
 #define DFSCH_DISCARD_ARG(al, name)                     \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   (al) = DFSCH_FAST_CDR((al))
 
@@ -653,7 +697,7 @@ extern "C" {
    */
 #define DFSCH_GENERIC_ARG(al, name, type, conv)         \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))              \
-    dfsch_error("exception:required-argument-missing",  \
+    dfsch_error("Required argument missing",            \
                 dfsch_make_string_cstr(#name));         \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al)); \
     (name) = (type)(conv)(dfsch___tmp);                 \
@@ -690,7 +734,7 @@ extern "C" {
    */
 #define DFSCH_TYPED_ARG(al, name, type, klass)                  \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
-    dfsch_error("exception:required-argument-missing",          \
+    dfsch_error("Required argument missing",                    \
                 dfsch_make_string_cstr(#name));                 \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
     (name) = (type)DFSCH_ASSERT_TYPE(dfsch___tmp, (klass));     \
@@ -727,7 +771,7 @@ extern "C" {
    */
 #define DFSCH_INSTANCE_ARG(al, name, type, klass)               \
   if (DFSCH_UNLIKELY(!DFSCH_PAIR_P((al))))                      \
-    dfsch_error("exception:required-argument-missing",          \
+    dfsch_error("Required argument missing",                    \
                 dfsch_make_string_cstr(#name));                 \
   { dfsch_object_t* dfsch___tmp = DFSCH_FAST_CAR((al));         \
     (name) = (type)DFSCH_ASSERT_INSTANCE(dfsch___tmp, (klass)); \
@@ -762,7 +806,7 @@ extern "C" {
    */
 #define DFSCH_ARG_END(al)                               \
   if ((al) != NULL)                                     \
-    dfsch_error("exception:too-many-arguments",NULL)
+    dfsch_error("Too many arguments",NULL)
 
   /**
    * Store all unprocessed arguments into rest. (Syntactic sugar 2.0 :))
@@ -796,23 +840,23 @@ extern "C" {
   dfsch_object_t* dfsch___flag = DFSCH_FAST_CAR((args));        \
   if (!dfsch_symbol_p(dfsch___flag)) break;
   
-#define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name)                 \
-  if (!DFSCH_PAIR_P((args))){                                   \
-    dfsch_error("exception:required-argument-missing", #name);  \
-  }                                                             \
-  {                                                             \
-  dfsch_object_t* dfsch___flag;                                 \
-  dfsch___flag = DFSCH_FAST_CAR((args));                        \
-  if (!dfsch_symbol_p(dfsch___flag)) {                          \
-    dfsch_error("exception:not-a-symbol", dfsch___flag);        \
+#define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name)                         \
+  if (!DFSCH_PAIR_P((args))){                                           \
+    dfsch_error("Required argument missing", #name);                    \
+  }                                                                     \
+  {                                                                     \
+  dfsch_object_t* dfsch___flag;                                         \
+  dfsch___flag = DFSCH_FAST_CAR((args));                                \
+  if (!dfsch_symbol_p(dfsch___flag)) {                                  \
+    dfsch_error("Non-symbol when flag was expected", dfsch___flag);     \
   }
 
-#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name)             \
-  if (DFSCH_PAIR_P((args))){                                    \
-  dfsch_object_t* dfsch___flag;                                 \
-  dfsch___flag = DFSCH_FAST_CAR((args));                        \
-  if (!dfsch_symbol_p(dfsch___flag)) {                          \
-    dfsch_error("exception:not-a-symbol", dfsch___flag);        \
+#define DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, name)                     \
+  if (DFSCH_PAIR_P((args))){                                            \
+  dfsch_object_t* dfsch___flag;                                         \
+  dfsch___flag = DFSCH_FAST_CAR((args));                                \
+  if (!dfsch_symbol_p(dfsch___flag)) {                                  \
+    dfsch_error("Non-symbol when flag was expected", dfsch___flag);     \
   }
 
       
@@ -839,7 +883,7 @@ extern "C" {
   dfsch___keyword = DFSCH_FAST_CAR((args));                             \
   (args) = DFSCH_FAST_CDR((args));                                      \
   if (!DFSCH_PAIR_P((args))){                                           \
-    dfsch_error("exception:keyword-without-arguemnt", dfsch___keyword); \
+    dfsch_error("Keyword without argument", dfsch___keyword); \
   }                                                                     \
   dfsch___value = DFSCH_FAST_CAR((args));                               \
   (args) = DFSCH_FAST_CDR((args));
@@ -858,6 +902,8 @@ extern "C" {
 
 #define DFSCH_KEYWORD_PARSER_END(args)                          \
   dfsch_error("exception:unknown-keyword", dfsch___keyword);    \
+}
+#define DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(args)              \
 }
 
 #define DFSCH_SYMBOL_ARG(al, name)                      \

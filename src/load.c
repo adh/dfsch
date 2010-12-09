@@ -284,6 +284,7 @@ void dfsch_load_source(dfsch_object_t* env,
   load_thread_info_t* lti = get_load_ti();
   load_operation_t this_op;
   dfsch_package_t* saved_package = dfsch_get_current_package();
+  dfsch_saved_trace_t* st = dfsch_save_trace_buffer();
 
   dfsch_parser_callback(parser, load_source_callback, env);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
@@ -296,7 +297,8 @@ void dfsch_load_source(dfsch_object_t* env,
     lti->operation = &this_op;
 
     dfsch_parser_feed(parser, source);    
-
+    dfsch_restore_trace_buffer(st); 
+    /* do not restore trace buffer on unwind */
   } DFSCH_PROTECT {
     lti->operation = this_op.next;
     dfsch_set_current_package(saved_package);
@@ -387,8 +389,9 @@ typedef struct builtin_module_t {
 
 static builtin_module_t builtin_modules[] = {
   {"introspect", dfsch_introspect_register},
-  {"load", dfsch_load_register},
-  {"port-unsafe", dfsch_port_unsafe_register},
+  {"dfsch", dfsch_core_register},
+  {"dfsch-language", dfsch_core_language_register},
+  {"dfsch-system", dfsch_core_system_register},
 };
 
 static char* pathname_directory(char* path){
@@ -563,7 +566,7 @@ void dfsch_load_add_module_source(dfsch_object_t* ctx,
   dfsch_object_t* path = dfsch_env_get_cstr(ctx, "*load-path*");
   if (path != DFSCH_INVALID_OBJECT){
     dfsch_set_cstr(ctx, "*load-path*", dfsch_cons(src, path));
-  }else{
+  } else {
     dfsch_define_cstr(ctx, "*load-path*", dfsch_list(1, src));
   }
 }
@@ -791,18 +794,15 @@ dfsch_object_t* dfsch_load_construct_default_path(){
 
   return path;
 }
-dfsch_object_t* dfsch_load_register(dfsch_object_t *ctx){
+void dfsch__load_register(dfsch_object_t *ctx){
   dfsch_define_cstr(ctx, "*load-path*", 
                     dfsch_load_construct_default_path());
-  dfsch_define_cstr(ctx, "*load-modules*", NULL);
-  dfsch_define_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
-  dfsch_define_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
-  dfsch_define_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
-  dfsch_define_cstr(ctx, "load!", DFSCH_FORM_REF(load));
-  dfsch_define_cstr(ctx, "require", DFSCH_FORM_REF(require));
-  dfsch_define_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
+  dfsch_defcanon_cstr(ctx, "load-scm!",  DFSCH_FORM_REF(load_scm));
+  dfsch_defcanon_cstr(ctx, "read-scm", DFSCH_PRIMITIVE_REF(read_scm));
+  dfsch_defcanon_cstr(ctx, "load-so!", DFSCH_FORM_REF(load_so));
+  dfsch_defcanon_cstr(ctx, "load!", DFSCH_FORM_REF(load));
+  dfsch_defcanon_cstr(ctx, "require", DFSCH_FORM_REF(require));
+  dfsch_defcanon_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
 
-  dfsch_define_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
-
-  return NULL;
+  dfsch_defcanon_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
 }

@@ -45,6 +45,9 @@ extern "C" {
   extern int dfsch_proto_string_p(dfsch_object_t* obj);
 
   extern dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len);
+  extern dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb);
+  extern ssize_t dfsch_strbuf_inputproc(dfsch_strbuf_t* strbuf, 
+                                        char* buf, size_t len);
   
   extern dfsch_object_t* dfsch_make_string_cstr(char* string);
   extern dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf);
@@ -134,6 +137,12 @@ extern "C" {
                                               dfsch_strbuf_t* to,
                                               int max_matches,
                                               int case_sensitive);
+  dfsch_object_t* dfsch_byte_vector_translate(dfsch_object_t* str,
+                                              dfsch_strbuf_t* from,
+                                              dfsch_strbuf_t* to);
+  dfsch_object_t* dfsch_string_translate(dfsch_object_t* s, 
+                                         dfsch_strbuf_t* from,
+                                         dfsch_strbuf_t* to);
 
   extern dfsch_type_t dfsch_proto_string;
 #define DFSCH_PROTO_STRING_TYPE (&dfsch_proto_string_type)

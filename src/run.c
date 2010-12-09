@@ -74,10 +74,6 @@ int main(int argc, char**argv){
   dfsch_activate_segv_handler();
 
   ctx = dfsch_make_top_level_environment();
-
-
-  dfsch_load_register(ctx);
-  dfsch_port_unsafe_register(ctx);
   dfsch_set_standard_io_ports();
                                         
   while ((c=getopt(argc, argv, "+L:zv" WINDOWS_FLAGS)) != -1){
@@ -118,7 +114,7 @@ int main(int argc, char**argv){
     
     dfsch_load_extend_path(ctx, directory);
 
-    dfsch_define_cstr(ctx, "*posix-argv*", 
+    dfsch_defcanon_cstr(ctx, "*posix-argv*", 
                       dfsch_cmdopts_argv_to_list(argc - optind, 
                                                  argv + optind));
     if (program_is_dsz){

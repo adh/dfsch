@@ -72,15 +72,15 @@ void dfsch_module_zlib_register(dfsch_object_t* env){
   dfsch_package_t* zlib = dfsch_make_package("zlib");
   dfsch_provide(env, "zlib");
 
-  dfsch_defconst_pkgcstr(env, zlib, "compress", 
+  dfsch_defcanon_pkgcstr(env, zlib, "compress", 
                          DFSCH_PRIMITIVE_REF(compress));
-  dfsch_defconst_pkgcstr(env, zlib, "uncompress", 
+  dfsch_defcanon_pkgcstr(env, zlib, "uncompress", 
                          DFSCH_PRIMITIVE_REF(uncompress));
 
-  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-input", 
+  dfsch_defcanon_pkgcstr(env, zlib, "gzip-open-for-input", 
                          DFSCH_PRIMITIVE_REF(gzip_open_for_input));
-  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-output", 
+  dfsch_defcanon_pkgcstr(env, zlib, "gzip-open-for-output", 
                          DFSCH_PRIMITIVE_REF(gzip_open_for_output));
-  dfsch_defconst_pkgcstr(env, zlib, "gzip-open-for-append", 
+  dfsch_defcanon_pkgcstr(env, zlib, "gzip-open-for-append", 
   DFSCH_PRIMITIVE_REF(gzip_open_for_append));
 }
