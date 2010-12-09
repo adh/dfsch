@@ -159,7 +159,7 @@ char* dfsch_http_get_protocol(int protocol){
 
 dfsch_http_response_t* dfsch_make_http_response(int status,
                                                 dfsch_object_t* headers,
-                                                dfsch_object_t* body){
+                                                dfsch_strbuf_t* body){
   dfsch_http_response_t* re = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
 
   re->status = status;
@@ -171,7 +171,7 @@ dfsch_http_response_t* dfsch_make_http_response(int status,
 
 dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
                                               dfsch_object_t* headers,
-                                              dfsch_object_t* body){
+                                              dfsch_strbuf_t* body){
   dfsch_http_request_t* re = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
 
   re->method = method;
@@ -185,23 +185,20 @@ dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, c
 
 
 void dfsch_http_run_server(dfsch_object_t* port,
-                           dfsch_object_t* callback,
-                           dfsch_object_t* body_reader,
-                           dfsch_object_t* body_serializer){
+                           dfsch_object_t* callback){
   dfsch_object_t* request;
   dfsch_object_t* response;
   DFSCH_UNWIND {
-    while (request = dfsch_http_read_request(port, body_reader)) {
+    while (request = dfsch_http_read_request(port)) {
       response = dfsch_apply(callback, dfsch_list(1, request));
-      dfsch_http_write_response(port, response, request, body_serializer);
+      dfsch_http_write_response(port, response, request);
     }
   } DFSCH_PROTECT {
     dfsch_port_close(port);
   } DFSCH_PROTECT_END;
 }
 
-dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
-                                              dfsch_object_t* body_reader){
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port){
   dfsch_strbuf_t* line = dfsch_port_readline(port);
   size_t len;
   dfsch_http_request_t* req = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
@@ -233,16 +230,17 @@ dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
     req->protocol = NULL; /* HTTP/0.9 */
   }
   
-  req->body = NULL;
-  req->body = dfsch_apply(body_reader, dfsch_list(2, req, port));
+  if (req->method != "GET"){
+    dfsch_error("Unimplemented", NULL);
+  }
 
   return req;
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_http_request_t* request,
-                              dfsch_object_t* body_serializer){
+                              dfsch_http_request_t* request){
   dfsch_str_list_t* sl = dfsch_sl_create();
+  dfsch_strbuf_t* headbuf;
 
   dfsch_sl_append(sl, request->method);
   dfsch_sl_append(sl, " ");
@@ -255,6 +253,11 @@ void dfsch_http_write_request(dfsch_object_t* port,
 
   if (request->protocol){
     dfsch_object_t* i = request->headers;
+
+    if (request->body){
+      dfsch_sl_append(sl, dfsch_saprintf("%Content-Length: %d\r\n",
+                                         request->body->len));
+    }
 
     while (DFSCH_PAIR_P(i)){
       dfsch_object_t* header = DFSCH_FAST_CAR(i);
@@ -271,16 +274,20 @@ void dfsch_http_write_request(dfsch_object_t* port,
     dfsch_sl_append(sl, "\r\n");
   }
 
+  dfsch_port_write_buf(port, headbuf->ptr, headbuf->len);
+
+  if (request->body){
+    dfsch_port_write_buf(sl, request->body->ptr, request->body->len);
+  }
+
 }
 
-dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
-                                                dfsch_object_t* body_reader){
+dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
   dfsch_strbuf_t* status_line = dfsch_port_readline(port);
 
 }
 int dfsch_http_write_response(dfsch_object_t* port,
                               dfsch_http_response_t* response,
-                              dfsch_http_request_t* request,
-                              dfsch_object_t* body_serializer){
+                              dfsch_http_request_t* request){
   
 }
