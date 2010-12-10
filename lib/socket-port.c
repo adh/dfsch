@@ -1,4 +1,5 @@
 #include <dfsch/lib/socket-port.h>
+#include <dfsch/magic.h>
 
 #include <unistd.h>
 #include <errno.h>
@@ -159,14 +160,14 @@ static int socket_port_batch_read(socket_port_t* sp){
     return ch;
   } else {
     ret = socket_port_real_read(sp, sp->buf, SOCK_BUFFER_SIZE);
-    sp->bufhead = sp->buf;
     if (ret == 0){
       return EOF;
     }
 
     ch = sp->buf[0];
-    sp->buf = sp->buf + 1;
-    sp->buf = ret - 1;
+    sp->buf = sp->buf;
+    sp->bufhead = sp->buf + 1;
+    sp->buflen = ret;
     return ch;
   }
 }
@@ -383,8 +384,11 @@ typedef struct stream_server_context_t {
 
 static void* stream_server_thread(void* arg){
   stream_server_context_t* ctx = arg;
-  ctx->cb(ctx->baton, ctx->port);
-  dfsch_socket_port_close(ctx->port);
+  DFSCH_UNWIND {
+    ctx->cb(ctx->baton, ctx->port);
+  } DFSCH_PROTECT {
+    dfsch_socket_port_close(ctx->port);
+  } DFSCH_PROTECT_END;
 }
 
 void dfsch_server_socket_run_accept_loop(dfsch_object_t* server_socket,

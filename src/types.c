@@ -149,6 +149,21 @@ dfsch_slot_type_t dfsch_string_slot_type = {
   sizeof(char*)
 };
 
+static dfsch_object_t* buffer_accessor_ref(void* ptr){
+  return dfsch_make_bytevector_nocopy((*((dfsch_strbuf_t**)ptr))->ptr,
+                                      (*((dfsch_strbuf_t**)ptr))->len);
+}
+static void buffer_accessor_set(void* ptr, dfsch_object_t* obj){
+  *((dfsch_strbuf_t**)ptr) = dfsch_string_to_buf(obj);
+}
+dfsch_slot_type_t dfsch_buffer_slot_type = {
+  DFSCH_SLOT_TYPE_HEAD("buffer-slot", "Slot holding byte-vector as strbuf_t*"),
+  string_accessor_ref,
+  string_accessor_set,
+  sizeof(char*),
+  sizeof(char*)
+};
+
 #define INT_ACCESSOR(type, name) \
   static dfsch_object_t* name ## _accessor_ref(void* ptr){              \
     return dfsch_make_number_from_long(*((type*)ptr));                  \
@@ -332,6 +347,16 @@ dfsch_object_t* dfsch_make_slot_accessor(dfsch_type_t* type,
                                             dfsch_find_slot(type, slot));
 }
 
+void dfsch_define_slot_accessor(dfsch_object_t* env,
+                                dfsch_package_t* pkg,
+                                char* name,
+                                dfsch_type_t* type,
+                                char* slot_name){
+  dfsch_define_method_pkgcstr(env, pkg, name,
+                              NULL, dfsch_list(1, type),
+                              dfsch_make_slot_accessor(type, slot_name));
+}
+
 static dfsch_object_t* slot_reader_apply(slot_accessor_t* sa,
                                          dfsch_object_t* args,
                                          dfsch_tail_escape_t* esc,
@@ -393,6 +418,18 @@ dfsch_object_t* dfsch_make_slot_reader(dfsch_type_t* type,
   return dfsch__make_slot_reader_for_slot(type,
                                           dfsch_find_slot(type, slot));
 }
+
+void dfsch_define_slot_reader(dfsch_object_t* env,
+                                dfsch_package_t* pkg,
+                                char* name,
+                                dfsch_type_t* type,
+                                char* slot_name){
+  dfsch_define_method_pkgcstr(env, pkg, name,
+                              NULL, dfsch_list(1, type),
+                              dfsch_make_slot_reader(type, slot_name));
+}
+
+
 static dfsch_object_t* slot_writer_apply(slot_accessor_t* sa,
                                          dfsch_object_t* args,
                                          dfsch_tail_escape_t* esc,
@@ -455,6 +492,15 @@ dfsch_object_t* dfsch_make_slot_writer(dfsch_type_t* type,
                                        char* slot){
   return dfsch__make_slot_writer_for_slot(type,
                                           dfsch_find_slot(type, slot));
+}
+void dfsch_define_slot_writer(dfsch_object_t* env,
+                              dfsch_package_t* pkg,
+                              char* name,
+                              dfsch_type_t* type,
+                              char* slot_name){
+  dfsch_define_method_pkgcstr(env, pkg, name,
+                              NULL, dfsch_list(1, type),
+                              dfsch_make_slot_writer(type, slot_name));
 }
 
 

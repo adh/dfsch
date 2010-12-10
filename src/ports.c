@@ -181,6 +181,7 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
   DFSCH_UNWIND {
     while (1){
       ch = dfsch_port_batch_read(port);
+
       if (ch == -1){
         break;
       }

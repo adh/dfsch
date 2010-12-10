@@ -2107,6 +2107,22 @@ DFSCH_DEFINE_PRIMITIVE(string_translate,
   return dfsch_string_translate(string, from, to);
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_starts_with_p,
+                       "Does string begin with given substring?"){
+  dfsch_strbuf_t* string;
+  dfsch_strbuf_t* start;
+
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_BUFFER_ARG(args, start);
+  DFSCH_ARG_END(args);
+
+  if (string->len > start->len){
+    return NULL;
+  }
+
+  return dfsch_bool(memcmp(string->ptr, start->ptr, start->len) == 0);
+}
+
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
   dfsch_defcanon_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
@@ -2238,4 +2254,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(byte_vector_translate));
   dfsch_defcanon_cstr(ctx, "string-translate", 
 		   DFSCH_PRIMITIVE_REF(string_translate));
+
+  dfsch_defcanon_cstr(ctx, "string-starts-with?", 
+		   DFSCH_PRIMITIVE_REF(string_starts_with_p));
+
 }

@@ -674,7 +674,7 @@ static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
   }
 
   fun = dfsch_make_generic_function(name, NULL, NULL);
-  dfsch_define(name, fun, env, DFSCH_VAR_CONSTANT);
+  dfsch_define(name, fun, env, DFSCH_VAR_CANONICAL);
 
   return fun;
 }

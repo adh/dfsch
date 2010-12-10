@@ -8,8 +8,6 @@
 #define DFSCH_HTTP_P_HTTP10  2
 #define DFSCH_HTTP_P_HTTP11  3
 
-#define DFSCH_HTTP_S_CONTENT_ONLY          0
-
 #define DFSCH_HTTP_S_CONTINUE              100
 #define DFSCH_HTTP_S_SWITCHING_PROTOCOLS   101
 
@@ -57,11 +55,6 @@
 char* dfsch_http_header_name(char* name);
 char* dfsch_http_get_reason_string(int status);
 
-int dfsch_http_parse_method(char* method);
-char* dfsch_http_get_method(int method);
-
-int dfsch_http_parse_protocol(char* protocol);
-char* dfsch_http_get_protocol(int protocol);
 
 extern dfsch_type_t dfsch_http_response_type;
 #define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_response_type)
@@ -70,12 +63,15 @@ extern dfsch_type_t dfsch_http_request_type;
 
 #define DFSCH_HTTP_REQUEST_ARG(al, name)                                \
   DFSCH_INSTANCE_ARG(al, name, dfsch_http_request_t*, DFSCH_HTTP_REQUEST_TYPE)
+#define DFSCH_HTTP_RESPONSE_ARG(al, name)                                \
+  DFSCH_INSTANCE_ARG(al, name, dfsch_http_response_t*, DFSCH_HTTP_RESPONSE_TYPE)
 
 
 typedef struct dfsch_http_response_t {
   dfsch_type_t* type;
 
   int status;
+  char* protocol;
   dfsch_object_t* headers;
   dfsch_strbuf_t* body;
 } dfsch_http_response_t;
@@ -94,6 +90,7 @@ typedef struct dfsch_http_request_t {
 
 
 dfsch_http_response_t* dfsch_make_http_response(int status,
+                                                char* protocol,
                                                 dfsch_object_t* headers,
                                                 dfsch_strbuf_t* body);
 dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, char* protocol,
