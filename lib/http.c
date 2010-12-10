@@ -2,6 +2,7 @@
 #include <dfsch/magic.h>
 #include <dfsch/util.h>
 #include <ctype.h>
+#include <dfsch/ports.h>
 
 static char *reasons[] = {
 #define REASON_100 0
@@ -156,6 +157,35 @@ char* dfsch_http_get_protocol(int protocol){
   return protocols[protocol];
 }
 
+static dfsch_slot_t response_slots[] = {
+  DFSCH_SLOT_TERMINATOR
+};
+
+dfsch_type_t dfsch_http_response_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "http:response",
+  .size = sizeof(dfsch_http_response_t),
+  .slots = &response_slots,
+};
+
+static dfsch_slot_t request_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_http_request_t, method, DFSCH_SLOT_ACCESS_RW,
+                    "Request method"),
+  DFSCH_STRING_SLOT(dfsch_http_request_t, protocol, DFSCH_SLOT_ACCESS_RW,
+                    "Request protocol"),
+  DFSCH_STRING_SLOT(dfsch_http_request_t, request_uri, DFSCH_SLOT_ACCESS_RW,
+                    "Request URI"),
+  DFSCH_OBJECT_SLOT(dfsch_http_request_t, headers, DFSCH_SLOT_ACCESS_RW,
+                    "List of headers"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+dfsch_type_t dfsch_http_request_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "http:request",
+  .size = sizeof(dfsch_http_request_t),
+  .slots = &request_slots,
+};
 
 dfsch_http_response_t* dfsch_make_http_response(int status,
                                                 dfsch_object_t* headers,
@@ -188,50 +218,74 @@ void dfsch_http_run_server(dfsch_object_t* port,
                            dfsch_object_t* callback){
   dfsch_object_t* request;
   dfsch_object_t* response;
-  DFSCH_UNWIND {
-    while (request = dfsch_http_read_request(port)) {
-      response = dfsch_apply(callback, dfsch_list(1, request));
-      dfsch_http_write_response(port, response, request);
-    }
-  } DFSCH_PROTECT {
-    dfsch_port_close(port);
-  } DFSCH_PROTECT_END;
+  while (request = dfsch_http_read_request(port)) {
+    response = dfsch_apply(callback, dfsch_list(1, request));
+    dfsch_http_write_response(port, response);
+  }
+}
+
+static size_t get_content_length(dfsch_object_t* headers){
+  dfsch_object_t* hdr = dfsch_string_assoc(headers, "Content-Length");
+  char* val;
+  char* eptr;
+  size_t value;
+  if (!hdr){
+    return 0;
+  }
+
+  val = dfsch_string_to_cstr(dfsch_list_item(hdr, 1));
+  
+
+  value = strtoll(val, &eptr, 10);
+  if (*eptr){
+    dfsch_error("Syntax error in Content-Legth", hdr);
+  }
+  return value;
 }
 
 dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port){
-  dfsch_strbuf_t* line = dfsch_port_readline(port);
+  dfsch_strbuf_t* lb = dfsch_port_readline(port);
+  char* line;
   size_t len;
   dfsch_http_request_t* req = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
 
-  if (!line){
+  if (!lb){
     return NULL;
   }
+
+  line = lb->ptr;
 
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
-  req->method = dfsch_strncpy(line, len);
+  req->method = dfsch_strancpy(line, len);
 
   line += len;
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
-  req->request_uri = dfsch_strncpy(line, len);
+  req->request_uri = dfsch_strancpy(line, len);
 
   line += len;
   line += strspn(line, " \t\n\r");
   len = strcspn(line, " \t\n\r");
 
   if (len){
-    req->protocol = dfsch_strncpy(line, len);
+    req->protocol = dfsch_strancpy(line, len);
 
     req->headers = dfsch_inet_read_822_headers_list(port, NULL);
   } else {
-    req->protocol = NULL; /* HTTP/0.9 */
+    req->protocol = ""; /* HTTP/0.9 */
   }
   
-  if (req->method != "GET"){
-    dfsch_error("Unimplemented", NULL);
+  len = get_content_length(req->headers);
+  if (len){
+    req->body = dfsch_alloc_strbuf(len);
+    if (dfsch_port_read_buf(port, req->body->ptr, len) != len){
+      dfsch_error("Unexpected EOF reading request content", NULL);
+    }
+  } else {
+    req->body = NULL;
   }
 
   return req;
@@ -241,6 +295,14 @@ void dfsch_http_write_request(dfsch_object_t* port,
                               dfsch_http_request_t* request){
   dfsch_str_list_t* sl = dfsch_sl_create();
   dfsch_strbuf_t* headbuf;
+
+  dfsch_strbuf_t* head;
+
+  if (request->body){
+    if (!request->protocol){
+      dfsch_error("Non-empty body for HTTP/0.9 request", request);
+    }
+  }
 
   dfsch_sl_append(sl, request->method);
   dfsch_sl_append(sl, " ");
@@ -254,11 +316,6 @@ void dfsch_http_write_request(dfsch_object_t* port,
   if (request->protocol){
     dfsch_object_t* i = request->headers;
 
-    if (request->body){
-      dfsch_sl_append(sl, dfsch_saprintf("%Content-Length: %d\r\n",
-                                         request->body->len));
-    }
-
     while (DFSCH_PAIR_P(i)){
       dfsch_object_t* header = DFSCH_FAST_CAR(i);
       char* name;
@@ -267,19 +324,27 @@ void dfsch_http_write_request(dfsch_object_t* port,
       DFSCH_STRING_ARG(header, value);
       DFSCH_ARG_END(header);
       
-      dfsch_sl_append(sl, dfsch_saprintf("%s: %s\r\n", name, value));
+      if (strcmp(name, "Content-Length") != 0 || !request->body){
+        dfsch_sl_append(sl, dfsch_saprintf("%s: %s\r\n", name, value));
+      }
 
       i = DFSCH_FAST_CDR(i);
     }
-    dfsch_sl_append(sl, "\r\n");
+
+    if (request->body){
+      dfsch_sl_append(sl, dfsch_saprintf("Content-Length: %d\r\n",
+                                         request->body->len));
+    }
+
+    dfsch_sl_append(sl, "\r\n");    
   }
 
-  dfsch_port_write_buf(port, headbuf->ptr, headbuf->len);
+  head = dfsch_sl_value_strbuf(sl);
 
+  dfsch_port_write_buf(port, head->ptr, head->len);
   if (request->body){
-    dfsch_port_write_buf(sl, request->body->ptr, request->body->len);
+    dfsch_port_write_buf(port, request->body->ptr, request->body->len);    
   }
-
 }
 
 dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
@@ -287,7 +352,5 @@ dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
 
 }
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_http_response_t* response,
-                              dfsch_http_request_t* request){
-  
+                              dfsch_http_response_t* response){
 }

@@ -94,6 +94,7 @@ else
 nonwin32_modules=\
 	unix.la \
 	socket-port.la \
+	http.la \
 	regex.la 
 endif
 
@@ -329,6 +330,10 @@ socket_port_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 libdfsch_http_la_SOURCES = lib/http.c
 libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
 libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+
+http_la_SOURCES = lib/http_mod.c
+http_la_LIBADD = libdfsch.la libdfsch-http.la
+http_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_csv_la_SOURCES = lib/csv.c

@@ -839,13 +839,14 @@ DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
-  buf = GC_MALLOC_ATOMIC(len);
+  buf = GC_MALLOC_ATOMIC(len+1);
   len = dfsch_port_read_buf(port, buf, len);
   
   if (len == 0){
     return NULL;
   }
 
+  buf[len] = '\0';
   return dfsch_make_string_buf(buf, len);
 }
 

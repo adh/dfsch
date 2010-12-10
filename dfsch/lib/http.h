@@ -8,6 +8,8 @@
 #define DFSCH_HTTP_P_HTTP10  2
 #define DFSCH_HTTP_P_HTTP11  3
 
+#define DFSCH_HTTP_S_CONTENT_ONLY          0
+
 #define DFSCH_HTTP_S_CONTINUE              100
 #define DFSCH_HTTP_S_SWITCHING_PROTOCOLS   101
 
@@ -66,6 +68,10 @@ extern dfsch_type_t dfsch_http_response_type;
 extern dfsch_type_t dfsch_http_request_type;
 #define DFSCH_HTTP_REQUEST_TYPE (&dfsch_http_request_type)
 
+#define DFSCH_HTTP_REQUEST_ARG(al, name)                                \
+  DFSCH_INSTANCE_ARG(al, name, dfsch_http_request_t*, DFSCH_HTTP_REQUEST_TYPE)
+
+
 typedef struct dfsch_http_response_t {
   dfsch_type_t* type;
 
@@ -100,7 +106,6 @@ void dfsch_http_write_request(dfsch_object_t* port,
                               dfsch_http_request_t* request);
 dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port);
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_http_response_t* response,
-                              dfsch_http_request_t* request);
+                              dfsch_http_response_t* response);
 
 #endif

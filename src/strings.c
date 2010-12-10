@@ -209,6 +209,12 @@ dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){
   return sb;
 }
 
+dfsch_strbuf_t* dfsch_alloc_strbuf(size_t len){
+  dfsch_strbuf_t* sb = dfsch_strbuf_create(GC_MALLOC_ATOMIC(len+1), len);
+  sb->ptr[len] = '\0';
+  return sb;
+}
+
 dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb){
   return dfsch_strbuf_create(sb->ptr, sb->len);
 }
@@ -1635,6 +1641,31 @@ dfsch_object_t* dfsch_proto_string_2_string(dfsch_object_t* ps){
 dfsch_object_t* dfsch_proto_string_2_byte_vector(dfsch_object_t* ps){
   return dfsch_make_byte_vector_strbuf(dfsch_string_to_buf(ps));
 }
+
+/* C utilities */
+
+dfsch_object_t* dfsch_string_assoc(dfsch_object_t* alist,
+                                   char* string){
+  dfsch_object_t* i = alist;
+
+  while (DFSCH_PAIR_P(i)){
+    dfsch_object_t* val = dfsch_car(DFSCH_FAST_CAR(i));
+
+    if (DFSCH_INSTANCE_P(val, DFSCH_PROTO_STRING_TYPE)){
+      if (strcmp(dfsch_string_to_cstr(val), string) == 0){
+        return DFSCH_FAST_CAR(i);
+      }
+    }
+
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  if (i){
+    dfsch_error("Improper alist", alist);
+  }
+  return NULL;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
