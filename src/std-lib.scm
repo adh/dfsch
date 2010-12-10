@@ -147,7 +147,9 @@
                           `(list ',name ,@opt-expr 
                                  ,@(when init-form
                                      `(:initfunc 
-                                       (lambda () ,(car init-form)))))))
+                                       (lambda () 
+                                         "slot initializer" 
+                                         ,(car init-form)))))))
                       slots)))
     `(begin 
        (%define-canonical-constant ,name (make-class ',name 

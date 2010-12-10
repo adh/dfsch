@@ -244,18 +244,23 @@ int main(int argc, char** argv){
       case '"':
         count += 2;
         fputs("\\\"", of);
+        break;
       case '\n':
         count += 2;
         fputs("\\n", of);
+        break;
       case '\r':
         count += 2;
         fputs("\\r", of);
+        break;
       case '\t':
         count += 2;
         fputs("\\t", of);
+        break;
       case '\\':
         count += 2;
         fputs("\\\\", of);
+        break;
       default:
         fputc(*o, of);
         count++;

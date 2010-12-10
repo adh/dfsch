@@ -44,7 +44,7 @@
    (handler-map :reader server-handler-map
                 :initform ())
    (vhosts? :reader server-vhosts?
-                  :initarg :vhosts?)))
+            :initarg :vhosts?)))
 
 (define-method (add-handler! (server <server>) path handler)
   (slot-set! server :handler-map
