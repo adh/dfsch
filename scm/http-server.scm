@@ -120,20 +120,22 @@
     (slot-set! txn :response-port ())
     res))
 
-(define-method (serve-client (server <server>) sock)
-  (letrec ((request (read-request sock))
-           (txn (make-instance <transaction> request 
+(define-method (serve-client (server <server>) request)
+  (letrec ((txn (make-instance <transaction> request 
                                :vhosts? (server-vhosts? server)))
            (handler (find-handler server (path txn))))
     (handler txn)
-    (write-response sock (finalize-transaction txn))))
+    (finalize-transaction txn)))
            
 
 (define-method (run-server (server <server>))
   (server-socket-run-accept-loop (tcp-bind (server-hostname server)
                                            (server-port server))
                                  (lambda (sock)
-                                   (serve-client server sock))))
+                                   (run-http-server sock 
+                                                    (lambda (req)
+                                                      (serve-client server
+                                                                    req))))))
 
 (define-method (run-server-in-background (server <server>))
   (threads:thread-detach (threads:thread-create run-server (list server))))

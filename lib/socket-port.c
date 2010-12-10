@@ -39,6 +39,8 @@ static void socket_port_write_buf(socket_port_t* port,
     dfsch_error("Port is closed", (dfsch_object_t*)port);
   }
 
+  signal(SIGPIPE, SIG_IGN);
+
   while (len){
     ret = write(port->fd, buf, len);
     if (ret == 0){
@@ -384,6 +386,7 @@ typedef struct stream_server_context_t {
 
 static void* stream_server_thread(void* arg){
   stream_server_context_t* ctx = arg;
+  dfsch_set_error_policy(DFSCH_EP_THREAD);
   DFSCH_UNWIND {
     ctx->cb(ctx->baton, ctx->port);
   } DFSCH_PROTECT {

@@ -12,6 +12,7 @@ typedef struct dfsch__condition_t {
 
 char* dfsch__condition_write(dfsch__condition_t* c, int depth, int readable);
 
+
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type);
 
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
@@ -52,6 +53,10 @@ extern dfsch_type_t dfsch_error_type;
 extern dfsch_type_t dfsch_runtime_error_type;
 #define DFSCH_RUNTIME_ERROR_TYPE (&dfsch_runtime_error_type)
 
+#define DFSCH_EP_PROCESS 0
+#define DFSCH_EP_THREAD  1
+
+void dfsch_set_error_policy(int pol);
 void dfsch_signal(dfsch_object_t* condition);
 void dfsch_set_debugger(dfsch_object_t* proc);
 void dfsch_set_invoke_debugger_on_all_conditions(int val);
