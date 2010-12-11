@@ -180,7 +180,7 @@ void write_dsz(FILE* of, char* buf){
 void usage(char* progname){
   printf("Usage: %s [<options>] <filename> ...\n\n", progname);
   puts("Options:");
-  puts("  -o <filename>     Load scheme file on startup");
+  puts("  -o <filename>     Specify name of output file");
   puts("  -c <symbol-name>  Generate C source file");
   puts("  -z                Only compact source, do not compress");
   exit(0);
