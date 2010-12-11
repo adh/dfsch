@@ -28,7 +28,8 @@
 (require :threads)
 
 (when-toplevel
- (require :gcollect))
+ (require :gcollect)
+ (require :cmdopts))
 
 (define-package :http-server
   :uses '(:dfsch :http :inet))
@@ -148,7 +149,22 @@
 
 
 (when-toplevel
- (define s (make-instance <server> :port 2080 :hostname "localhost"))
+ (define port 2080)
+ (define hostname "localhost")
+ (let ((p (cmdopts:make-parser)))
+   (cmdopts:add-option p 
+                       (lambda (p v) 
+                         (set! port (string->object v)))
+                       :long-option "port"
+                       :has-argument #t)
+   (cmdopts:add-option p 
+                       (lambda (p v) 
+                         (set! hostname v))
+                       :long-option "hostname"
+                       :has-argument #t)
+   (cmdopts:parse-list p (cdr *posix-argv*)))
+
+ (define s (make-instance <server> :port port :hostname hostname))
  (add-handler! s "/" (lambda (txn)
                        (display "Hello world!" (response-port txn))
                        (set-response-header! txn "Content-Type" "text/plain")))
