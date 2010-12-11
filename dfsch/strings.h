@@ -45,6 +45,7 @@ extern "C" {
   extern int dfsch_proto_string_p(dfsch_object_t* obj);
 
   extern dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len);
+  extern dfsch_strbuf_t* dfsch_alloc_strbuf(size_t len);
   extern dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb);
   extern ssize_t dfsch_strbuf_inputproc(dfsch_strbuf_t* strbuf, 
                                         char* buf, size_t len);
@@ -163,6 +164,9 @@ extern "C" {
   dfsch_object_t* dfsch_byte_vector_subvector(dfsch_object_t* bv,
                                               size_t off,
                                               size_t len);
+
+  dfsch_object_t* dfsch_string_assoc(dfsch_object_t* alist,
+                                     char* string);
 
 #ifdef __cplusplus
 }

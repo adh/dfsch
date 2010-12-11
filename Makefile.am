@@ -101,6 +101,7 @@ else
 nonwin32_modules=\
 	unix.la \
 	socket-port.la \
+	http.la \
 	posix-regex.la
 endif
 
@@ -129,7 +130,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 dfschlibscm_DATA = scm/stream-functions.scm \
 	scm/simple-tests.scm \
 	scm/os-utils.scm \
-	scm/tk-gui.scm
+	scm/tk-gui.scm \
+	scm/http-server.scm
 
 man_MANS = doc/dfsch-repl.1
 
@@ -337,6 +339,10 @@ socket_port_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 libdfsch_http_la_SOURCES = lib/http.c
 libdfsch_http_la_LIBADD = libdfsch.la -lexpat libdfsch-inet.la
 libdfsch_http_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+
+http_la_SOURCES = lib/http_mod.c
+http_la_LIBADD = libdfsch.la libdfsch-http.la
+http_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_csv_la_SOURCES = lib/csv.c

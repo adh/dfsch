@@ -181,6 +181,7 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
   DFSCH_UNWIND {
     while (1){
       ch = dfsch_port_batch_read(port);
+
       if (ch == -1){
         break;
       }
@@ -839,13 +840,14 @@ DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
   DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
-  buf = GC_MALLOC_ATOMIC(len);
+  buf = GC_MALLOC_ATOMIC(len+1);
   len = dfsch_port_read_buf(port, buf, len);
   
   if (len == 0){
     return NULL;
   }
 
+  buf[len] = '\0';
   return dfsch_make_string_buf(buf, len);
 }
 

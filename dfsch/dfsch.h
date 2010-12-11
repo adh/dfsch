@@ -148,6 +148,21 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_slot_writer(dfsch_type_t* type,
                                                 char* slot);
 
+  extern void dfsch_define_slot_accessor(dfsch_object_t* env,
+                                         dfsch_package_t* pkg,
+                                         char* name,
+                                         dfsch_type_t* type,
+                                         char* slot_name);
+  extern void dfsch_define_slot_reader(dfsch_object_t* env,
+                                       dfsch_package_t* pkg,
+                                       char* name,
+                                       dfsch_type_t* type,
+                                       char* slot_name);
+  extern void dfsch_define_slot_writer(dfsch_object_t* env,
+                                       dfsch_package_t* pkg,
+                                       char* name,
+                                       dfsch_type_t* type,
+                                       char* slot_name);
 
   /** Is OBJ null? */
   extern int dfsch_null_p(dfsch_object_t* obj);

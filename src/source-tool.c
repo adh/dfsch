@@ -180,7 +180,7 @@ void write_dsz(FILE* of, char* buf){
 void usage(char* progname){
   printf("Usage: %s [<options>] <filename> ...\n\n", progname);
   puts("Options:");
-  puts("  -o <filename>     Load scheme file on startup");
+  puts("  -o <filename>     Specify name of output file");
   puts("  -c <symbol-name>  Generate C source file");
   puts("  -z                Only compact source, do not compress");
   exit(0);
@@ -244,18 +244,23 @@ int main(int argc, char** argv){
       case '"':
         count += 2;
         fputs("\\\"", of);
+        break;
       case '\n':
         count += 2;
         fputs("\\n", of);
+        break;
       case '\r':
         count += 2;
         fputs("\\r", of);
+        break;
       case '\t':
         count += 2;
         fputs("\\t", of);
+        break;
       case '\\':
         count += 2;
         fputs("\\\\", of);
+        break;
       default:
         fputc(*o, of);
         count++;

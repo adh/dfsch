@@ -384,6 +384,8 @@ extern dfsch_slot_type_t dfsch_boolean_slot_type;
 #define DFSCH_BOOLEAN_SLOT_TYPE (&dfsch_boolean_slot_type)
 extern dfsch_slot_type_t dfsch_string_slot_type;
 #define DFSCH_STRING_SLOT_TYPE (&dfsch_string_slot_type)
+extern dfsch_slot_type_t dfsch_buffer_slot_type;
+#define DFSCH_BUFFER_SLOT_TYPE (&dfsch_buffer_slot_type)
 extern dfsch_slot_type_t dfsch_size_t_slot_type;
 #define DFSCH_SIZE_T_SLOT_TYPE (&dfsch_size_t_slot_type)
 extern dfsch_slot_type_t dfsch_int_slot_type;
@@ -417,6 +419,8 @@ struct dfsch_slot_t {
   {DFSCH_BOOLEAN_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_STRING_SLOT(struct, name, access, doc)                    \
   {DFSCH_STRING_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
+#define DFSCH_BUFFER_SLOT(struct, name, access, doc)                    \
+  {DFSCH_BUFFER_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_SIZE_T_SLOT(struct, name, access, doc)                    \
   {DFSCH_SIZE_T_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_INT_SLOT(struct, name, access, doc)               \

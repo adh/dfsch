@@ -143,6 +143,7 @@ extern "C" {
     dfsch__restart_list_t* restart_list; 
 
     dfsch_object_t* arg_scratch_pad[16];
+    int error_policy;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

@@ -205,6 +205,10 @@ void dfsch_lose_fatally(char* message, dfsch_object_t* object){
   abort();  
 }
 
+void dfsch_set_error_policy(int pol){
+  dfsch__get_thread_info()->error_policy = pol;
+}
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
@@ -223,6 +227,13 @@ void dfsch_signal(dfsch_object_t* condition){
 
   if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
     dfsch_enter_debugger(condition);
+    if (ti->error_policy == DFSCH_EP_THREAD){
+      fprintf(stderr, "Unhandled error condition in thread %p\n  %s\n\n%s\n", 
+              ti,
+              dfsch_object_2_string(condition, 10, DFSCH_WRITE),
+              dfsch_format_trace(dfsch_get_trace()));
+      dfsch_invoke_restart(DFSCH_SYM_TERMINATE_THREAD, NULL);
+    }
     dfsch_lose_fatally("Unhandled error condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
@@ -346,6 +357,7 @@ void dfsch_handler_bind(dfsch_type_t* type,
 
   ti->handler_list = l;
 }
+
 
 dfsch_object_t* dfsch_compute_restarts(){
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
