@@ -124,8 +124,13 @@
   (letrec ((txn (make-instance <transaction> request 
                                :vhosts? (server-vhosts? server)))
            (handler (find-handler server (path txn))))
-    (handler txn)
-    (finalize-transaction txn)))
+    (if handler
+        (begin
+          (handler txn)
+          (finalize-transaction txn))
+        (make-response :status 404
+                       :headers '(("Content-Type" "text/plain"))
+                       :body "No matching handler found"))))
            
 
 (define-method (run-server (server <server>))
