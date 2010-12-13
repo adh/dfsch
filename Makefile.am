@@ -40,7 +40,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/writer.h \
 	dfsch/eqhash.h \
 	dfsch/mkhash.h \
-	dfsch/compile.h \
+	dfsch/compiler.h \
 	dfsch/generate.h \
 	dfsch/backquote.h \
 	dfsch/specializers.h\
@@ -129,8 +129,10 @@ man_MANS = doc/dfsch-repl.1
 
 EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
 	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
-        scm/stream-functions.scm scm/simple-tests.scm scm/unix-utils.scm \
-	make-version-h.sh git-make-stamp.sh src/std-lib.scm
+        scm/stream-functions.scm scm/simple-tests.scm scm/os-utils.scm \
+	make-version-h.sh git-make-stamp.sh src/std-lib.scm \
+	scm/tk-gui-demo.scm \
+	$(dfschlibscm_DATA)
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
@@ -153,7 +155,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/generic.c dfsch/generic.h	\
 	src/weak.c dfsch/weak.h		\
 	src/mkhash.c dfsch/mkhash.h	\
-	src/compile.c dfsch/compile.h	\
+	src/compiler.c dfsch/compiler.h	\
 	src/backquote.c dfsch/backquote.h \
 	src/trace.c dfsch/trace.h	\
 	src/specializers.c dfsch/specializers.h\
@@ -172,7 +174,7 @@ std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
 	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
 	$(srcdir)/src/std-lib.scm -o std-lib.c
 
-CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h
+CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT)
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
 	$(CC_FOR_BUILD) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
@@ -371,7 +373,8 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/rsa.c \
 	lib/crypto/rsa-pad.c \
 	lib/crypto/salsa20.c \
-	lib/crypto/prng.c
+	lib/crypto/prng.c \
+	lib/crypto/macros.h
 
 if WIN32
 prng_libadd = -lrpcrt4
