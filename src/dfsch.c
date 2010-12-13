@@ -1687,7 +1687,7 @@ void dfsch_core_system_register(dfsch_object_t* ctx){
   dfsch__random_register(ctx);
   dfsch__serdes_register(ctx);
   dfsch__load_register(ctx);
-  dfsch__compile_register(ctx);
+  dfsch__compiler_register(ctx);
 }
 
 

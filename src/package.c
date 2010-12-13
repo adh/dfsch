@@ -373,7 +373,8 @@ static dfsch__symbol_t* pkg_find_exported_symbol(dfsch_package_t* pkg,
 
     while (DFSCH_PAIR_P(i)){
       if (strcmp(name, 
-                 ((dfsch__symbol_t*)DFSCH_TAG_REF(DFSCH_FAST_CAR(i)))->name)){
+                 ((dfsch__symbol_t*)DFSCH_TAG_REF(DFSCH_FAST_CAR(i)))
+                 ->name) == 0){
         return (dfsch__symbol_t*)DFSCH_TAG_REF(DFSCH_FAST_CAR(i));
       }
       i = DFSCH_FAST_CDR(i);

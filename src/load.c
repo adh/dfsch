@@ -158,23 +158,28 @@ char* read_file(char* fname){
   str_list_t* sl = sl_create();
 
   f = fopen(fname, "r");
-  if (!f){
-    dfsch_operating_system_error(dfsch_saprintf("Cannot open file %d",
-                                                fname));
-  }
-
-  while (!feof(f)){
-    r = fread(buf, 1, 8192, f);
-    if (r != 0){
-      sl_nappend(sl, buf, r);
-      buf = GC_MALLOC_ATOMIC(8192);
-    } else {
-      if (ferror(f)){
-        dfsch_operating_system_error(dfsch_saprintf("Error reading file %d",
-                                                    fname));
+  DFSCH_UNWIND {
+    if (!f){
+      dfsch_operating_system_error(dfsch_saprintf("Cannot open file %d",
+                                                  fname));
+    }
+    
+    while (!feof(f)){
+      r = fread(buf, 1, 8192, f);
+      if (r != 0){
+        sl_nappend(sl, buf, r);
+        buf = GC_MALLOC_ATOMIC(8192);
+      } else {
+        if (ferror(f)){
+          dfsch_operating_system_error(dfsch_saprintf("Error reading file %d",
+                                                      fname));
+        }
       }
     }
-  }
+    
+  } DFSCH_PROTECT {
+    fclose(f);
+  } DFSCH_PROTECT_END;
   
   return sl_value(sl);
 }

@@ -35,7 +35,7 @@
 #include <stdarg.h>
 #include <dfsch/number.h>
 #include <dfsch/generate.h>
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 
 typedef dfsch_object_t object_t;
 

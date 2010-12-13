@@ -18,7 +18,7 @@
  *
  */
 
-#include <dfsch/compile.h>
+#include <dfsch/compiler.h>
 #include <dfsch/generate.h>
 #include <dfsch/magic.h>
 #include "types.h"
@@ -215,7 +215,7 @@ DFSCH_DEFINE_PRIMITIVE(compile_function, NULL){
   return function;
 }
 
-void dfsch__compile_register(dfsch_object_t *ctx){ 
+void dfsch__compiler_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
                          "constant-fold-expression", 
                          DFSCH_PRIMITIVE_REF(constant_fold_expression));  

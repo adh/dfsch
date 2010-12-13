@@ -27,11 +27,17 @@
 (require :socket-port)
 (require :threads)
 
-(when-toplevel
- (require :gcollect))
-
 (define-package :http-server
-  :uses '(:dfsch :http :inet))
+  :uses '(:dfsch :http :inet)
+  :exports '(:<server> 
+             :<transaction> 
+             :add-handler! 
+             :remove-handler! 
+             :handler-matches? 
+             :get-request-header
+             :set-response-header
+             :run-server
+             :run-server-in-background))
 (in-package :http-server)
 
 (define-class <server> ()
@@ -50,6 +56,12 @@
   (slot-set! server :handler-map
              (append (server-handler-map server)
                      (list (list path handler)))))
+
+(define-method (remove-handler! (server <server>) path)
+  (slot-set! server :handler-map
+             (filter (lambda (hr)
+                       (not (equal? (car hr) path)))
+                     (server-handler-map server))))
 
 (define-method (find-handler (server <server>) path)
   (catch 'found
@@ -147,28 +159,3 @@
   
 
 
-(when-toplevel
- (define s (make-instance <server> :port 2080 :hostname "localhost"))
- (add-handler! s "/" (lambda (txn)
-                       (display "Hello world!" (response-port txn))
-                       (set-response-header! txn "Content-Type" "text/plain")))
- (add-handler! s "/gc-stats"
-               (lambda (txn)
-                 (display "  dfsch memory statistics\r\n" (response-port txn))
-                 (display "===========================\r\n\r\n" 
-                          (response-port txn))
-                 (display (format "Number of GC cycles: ~a\r\n\r\n" (gc-count))
-                          (response-port txn))
-                 (display (format "~a bytes free in ~a byte heap\r\n\r\n" 
-                                  (gc-free-bytes) (gc-heap-size))
-                          (response-port txn))
-                 (display (format "~a bytes allocated since last GC\r\n" 
-                                  (gc-bytes-since-gc))
-                          (response-port txn))
-                 (display (format "~a bytes allocated total\r\n" 
-                                  (gc-total-bytes))
-                          (response-port txn))
-
-                 (set-response-header! txn "Content-Type" "text/plain")))
-                 
- (run-server s))
