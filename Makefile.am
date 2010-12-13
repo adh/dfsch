@@ -119,20 +119,21 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(tkgui_modules)
 
 
-dfschlibscm_DATA = scm/stream-functions.scm \
-	scm/simple-tests.scm \
-	scm/os-utils.scm \
-	scm/tk-gui.scm \
-	scm/http-server.scm
+dfschlibscm_DATA = lib-scm/stream-functions.scm \
+	lib-scm/simple-tests.scm \
+	lib-scm/os-utils.scm \
+	lib-scm/tk-gui.scm \
+	lib-scm/http-server.scm
 
 man_MANS = doc/dfsch-repl.1
 
-EXTRA_DIST = scm/morse.scm tests/scm-test.sh tests/interp-test.scm scm/struct.scm \
-	doc/dfsch-repl.1 src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc scm/docgen.scm \
-        scm/stream-functions.scm scm/simple-tests.scm scm/os-utils.scm \
+EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
+	doc/dfsch-repl.1\
+	src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh src/std-lib.scm \
-	scm/tk-gui-demo.scm \
-	$(dfschlibscm_DATA)
+	$(dfschlibscm_DATA) \
+	examples/tk-gui-demo.scm \
+	examples/http-server-demo.scm
 
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
