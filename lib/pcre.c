@@ -80,6 +80,7 @@ int dfsch_pcre_match(pcre* pattern,
 
   pcre_fullinfo(pattern, NULL, PCRE_INFO_BACKREFMAX, &backref);
 
+  backref++;
   vs = backref * 3;
   int vec[vs];
 
@@ -227,10 +228,7 @@ dfsch_object_t* dfsch_pcre_split(pcre* pattern,
   pcre_fullinfo(pattern, NULL, PCRE_INFO_OPTIONS, &comp_options);
   pcre_fullinfo(pattern, NULL, PCRE_INFO_BACKREFMAX, &backref);
 
-  if (backref == 0){
-    backref = 1;
-  }
-
+  backref++;
   vs = backref * 3;
   int vec[vs];
 
@@ -255,12 +253,63 @@ dfsch_object_t* dfsch_pcre_split(pcre* pattern,
 static void expand_replacement(dfsch_str_list_t* sl,
                                char* template, size_t tlen,
                                char* buf, int count, int *vec){
-  
+  char* pos;
+  while (pos = memchr(template, '\\', tlen)){
+    dfsch_sl_nappend(sl, template, pos - template);
+    template = pos +1;
+    tlen -= pos - template + 1;
+    if (*template == '\\'){
+      dfsch_sl_append(sl, "\\");
+    } else {
+      int idx;
+      
+      if (*template < '0' || *template > '9'){
+        dfsch_error("Invalid reference in template", 
+                    DFSCH_MAKE_FIXNUM(*template));
+      }
+
+      idx = *template - '0';
+      if (idx < count){
+        dfsch_error("Invalid reference index in template", 
+                    DFSCH_MAKE_FIXNUM(idx));
+      }
+      
+      dfsch_sl_nappend(sl, buf + vec[idx*2],
+                       vec[idx*2 + 1] - vec[idx*2]);
+    }
+    
+  }
+  dfsch_sl_nappend(sl, template, tlen);
 }
 
 dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
                                    char* string, size_t len,
                                    char* template, size_t tlen,
                                    int options){
+  int res;
+  size_t vs;
+  int ssl;
+  int off = 0;
+  dfsch_str_list_t* sl = dfsch_sl_create();
+  int comp_options;
+  int count;
 
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_OPTIONS, &comp_options);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &ssl);
+
+  ssl++;
+  vs = ssl * 3;
+  int vec[vs];
+
+  while (count = match_res(pcre_exec(pattern, NULL, 
+                                     string, len, off, 
+                                     options, vec, vs))){
+    dfsch_sl_nappend(sl, string + off, vec[0] - off);
+    expand_replacement(sl, template, tlen, string, count, vec);
+    off = vec[1];
+  }
+
+  dfsch_sl_nappend(sl, string + off, len - off);
+
+  return dfsch_sl_value_strbuf(sl); 
 }
