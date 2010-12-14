@@ -1,4 +1,10 @@
 #include "dfsch/lib/pcre.h"
+#include <dfsch/util.h>
+#include <dfsch/hash.h>
+
+#ifndef PCRE_UCP
+#define PCRE_UCP 0
+#endif
 
 typedef struct pattern_t {
   dfsch_type_t* type;
@@ -18,7 +24,7 @@ pcre* dfsch_pcre_get_pattern(dfsch_object_t* pat){
 
   if (DFSCH_INSTANCE_P(pat, DFSCH_PROTO_STRING_TYPE)){
     p = dfsch_pcre_compile(dfsch_proto_string_to_cstr(pat), 
-                           dfsch_string_p(pat) ? PCRE_UTF8 : 0);
+                           dfsch_string_p(pat) ? PCRE_UTF8 | PCRE_UCP : 0);
   } else {
     p = DFSCH_ASSERT_TYPE(pat, DFSCH_PCRE_PATTERN_TYPE);
   }
@@ -81,6 +87,27 @@ int dfsch_pcre_match(pcre* pattern,
                              string, len, 0, 
                              options, vec, vs));
 }
+
+static dfsch_object_t* make_substring(char* string,
+                                      int* vec, int i,
+                                      int comp_options, 
+                                      int share_buf){
+  if (vec[i * 2] < 0){
+    return NULL;
+  }
+  
+  if (share_buf){
+    return dfsch_make_byte_vector_nocopy(string + vec[i * 2],
+                                         vec[i * 2 + 1] - vec[i * 2]);      
+  } else if (comp_options & PCRE_UTF8){
+    return dfsch_make_string_buf(string + vec[i * 2],
+                                 vec[i * 2 + 1] - vec[i * 2]);
+  } else {
+    return dfsch_make_byte_vector(string + vec[i * 2],
+                                  vec[i * 2 + 1] - vec[i * 2]);
+  }
+}
+
 dfsch_object_t* dfsch_pcre_match_substrings(pcre* pattern,
                                             char* string, size_t len,
                                             int options,
@@ -109,24 +136,11 @@ dfsch_object_t* dfsch_pcre_match_substrings(pcre* pattern,
 
   res = dfsch_make_vector(count, NULL);
   for (i = 0; i < count; i++){
-    dfsch_object_t* ss;
-
-    if (vec[i * 2] < 0){
-      continue;
-    }
-
-    if (share_buf){
-      ss = dfsch_make_byte_vector_nocopy(string + vec[i * 2],
-                                         vec[i * 2 + 1] - vec[i * 2]);      
-    } else if (comp_options & PCRE_UTF8){
-      ss = dfsch_make_string_buf(string + vec[i * 2],
-                                 vec[i * 2 + 1] - vec[i * 2]);
-    } else {
-      ss = dfsch_make_byte_vector(string + vec[i * 2],
-                                  vec[i * 2 + 1] - vec[i * 2]);
-    }
-
-    dfsch_vector_set(res, i, ss);
+    dfsch_vector_set(res, i, 
+                     make_substring(string,
+                                    vec, i,
+                                    comp_options, 
+                                    share_buf));
   }
   
   return res;
@@ -135,7 +149,62 @@ dfsch_object_t* dfsch_pcre_match_named_substrings(pcre* pattern,
                                                   char* string, size_t len,
                                                   int options,
                                                   int share_buf){
+  size_t vs;
+  int ssl;
+  int comp_options;
+  int i;
+  int j;
+  dfsch_object_t* res;
+  int count;
+  
+  int namecount;
+  int namesize;
+  char* nametable;
 
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &ssl);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_OPTIONS, &comp_options);
+
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMECOUNT, &namecount);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMEENTRYSIZE, &namesize);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_NAMETABLE, &nametable);
+
+  ssl++;
+  vs = ssl * 3;
+  int vec[vs];
+
+  count = pcre_exec(pattern, NULL, 
+                    string, len, 0, 
+                    options, vec, vs);
+
+  if (match_res(count) == 0){
+    return NULL;
+  }
+
+  res = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  dfsch_hash_set(res,
+                 NULL,
+                 make_substring(string,
+                                vec, 0,
+                                comp_options, 
+                                share_buf));
+
+  for (j = 0; j < namecount; j++){
+    int i;
+    i = nametable[j * namesize + 0] << 8 | nametable[j * namesize + 1];
+
+    if (vec[i * 2] < 0){
+      continue;
+    }
+
+    dfsch_hash_set(res,
+                   dfsch_make_string_cstr(nametable + j * namesize + 2),
+                   make_substring(string,
+                                    vec, i,
+                                    comp_options, 
+                                    share_buf));
+  }
+  
+  return res;
 }
 dfsch_object_t* dfsch_pcre_split(pcre* pattern,
                                  char* string, size_t len,
@@ -143,6 +212,13 @@ dfsch_object_t* dfsch_pcre_split(pcre* pattern,
                                  int share_buf){
 
 }
+
+static void expand_replacement(dfsch_str_list_t* sl,
+                               char* template, size_t tlen,
+                               char* buf, int count, int *vec){
+  
+}
+
 dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
                                    char* string, size_t len,
                                    char* template, size_t tlen,

@@ -56,6 +56,38 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_substrings,
                                      1);
 }
 
+DFSCH_DEFINE_PRIMITIVE(named_substrings,
+                       "Match regular expression against string returning"
+                       " captured substrings as hash"){
+  pcre* pattern;
+  dfsch_strbuf_t* str;
+
+  DFSCH_PCRE_PATTERN_ARG(args, pattern);
+  DFSCH_BUFFER_ARG(args, str);
+
+  return dfsch_pcre_match_named_substrings(pattern, 
+                                     str->ptr, 
+                                     str->len, 
+                                     dfsch_pcre_parse_options(args),
+                                     0);
+}
+DFSCH_DEFINE_PRIMITIVE(byte_vector_named_substrings,
+                       "Match regular expression against byte-vector"
+                       " and return captured subvectors that share"
+                       " storage as hash"){
+  pcre* pattern;
+  dfsch_strbuf_t* str;
+
+  DFSCH_PCRE_PATTERN_ARG(args, pattern);
+  DFSCH_BYTE_VECTOR_ARG(args, str);
+
+  return dfsch_pcre_match_named_substrings(pattern, 
+                                     str->ptr, 
+                                     str->len, 
+                                     dfsch_pcre_parse_options(args),
+                                     1);
+}
+
 void dfsch_module_pcre_register(dfsch_object_t* env){
   dfsch_package_t* pcre = dfsch_make_package("pcre");
 
@@ -66,4 +98,10 @@ void dfsch_module_pcre_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(match));
   dfsch_defcanon_pkgcstr(env, pcre, "substrings",
                          DFSCH_PRIMITIVE_REF(substrings));
+  dfsch_defcanon_pkgcstr(env, pcre, "byte-vector-substrings",
+                         DFSCH_PRIMITIVE_REF(substrings));
+  dfsch_defcanon_pkgcstr(env, pcre, "named-substrings",
+                         DFSCH_PRIMITIVE_REF(named_substrings));
+  dfsch_defcanon_pkgcstr(env, pcre, "byte-vector-named-substrings",
+                         DFSCH_PRIMITIVE_REF(named_substrings));
 }
