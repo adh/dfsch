@@ -22,13 +22,16 @@ int dfsch_pcre_match(pcre* pattern,
                      int options);
 dfsch_object_t* dfsch_pcre_match_substrings(pcre* pattern,
                                             char* string, size_t len,
-                                            int options);
+                                            int options,
+                                            int share_buf);
 dfsch_object_t* dfsch_pcre_match_named_substrings(pcre* pattern,
                                                   char* string, size_t len,
-                                                  int options);
+                                                  int options,
+                                                  int share_buf);
 dfsch_object_t* dfsch_pcre_split(pcre* pattern,
                                  char* string, size_t len,
-                                 int options);
+                                 int options,
+                                 int share_buf);
 dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
                                    char* string, size_t len,
                                    char* template, size_t tlen,

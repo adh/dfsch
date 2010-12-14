@@ -58,7 +58,9 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf);
 
   extern char* dfsch_string_to_cstr(dfsch_object_t* obj);
+  extern char* dfsch_proto_string_to_cstr(dfsch_object_t* obj);
   extern dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj);
+  extern dfsch_strbuf_t* dfsch_byte_vector_to_buf(dfsch_object_t* obj);
   extern char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj);
 
   extern int dfsch_string_cmp(dfsch_strbuf_t* a, dfsch_strbuf_t* b);
@@ -106,6 +108,11 @@ extern "C" {
 #define DFSCH_BUFFER_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_strbuf_t*, dfsch_string_to_buf)
 
+#define DFSCH_BYTE_VECTOR_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, dfsch_strbuf_t*, dfsch_byte_vector_to_buf)
+#define DFSCH_BYTE_VECTOR_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_strbuf_t*, dfsch_byte_vector_to_buf)
+
 
   extern char* dfsch_char_encode(uint32_t c);
   extern uint32_t dfsch_char_downcase(uint32_t c);
@@ -145,7 +152,7 @@ extern "C" {
                                          dfsch_strbuf_t* from,
                                          dfsch_strbuf_t* to);
 
-  extern dfsch_type_t dfsch_proto_string;
+  extern dfsch_type_t dfsch_proto_string_type;
 #define DFSCH_PROTO_STRING_TYPE (&dfsch_proto_string_type)
   extern dfsch_type_t dfsch_string_type;
 #define DFSCH_STRING_TYPE (&dfsch_string_type)
