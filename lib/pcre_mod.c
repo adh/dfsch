@@ -88,6 +88,36 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_named_substrings,
                                      1);
 }
 
+DFSCH_DEFINE_PRIMITIVE(split,
+                       "Split string into parts delimited by pattern"){
+  pcre* pattern;
+  dfsch_strbuf_t* str;
+
+  DFSCH_PCRE_PATTERN_ARG(args, pattern);
+  DFSCH_BUFFER_ARG(args, str);
+
+  return dfsch_pcre_split(pattern, 
+                          str->ptr, 
+                          str->len, 
+                          dfsch_pcre_parse_options(args),
+                          0);
+}
+DFSCH_DEFINE_PRIMITIVE(split_byte_vector,
+                       "Split string into parts delimited by pattern"){
+  pcre* pattern;
+  dfsch_strbuf_t* str;
+
+  DFSCH_PCRE_PATTERN_ARG(args, pattern);
+  DFSCH_BYTE_VECTOR_ARG(args, str);
+
+  return dfsch_pcre_split(pattern, 
+                          str->ptr, 
+                          str->len, 
+                          dfsch_pcre_parse_options(args),
+                          1);
+}
+
+
 void dfsch_module_pcre_register(dfsch_object_t* env){
   dfsch_package_t* pcre = dfsch_make_package("pcre");
 
@@ -104,4 +134,8 @@ void dfsch_module_pcre_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(named_substrings));
   dfsch_defcanon_pkgcstr(env, pcre, "byte-vector-named-substrings",
                          DFSCH_PRIMITIVE_REF(named_substrings));
+  dfsch_defcanon_pkgcstr(env, pcre, "split",
+                         DFSCH_PRIMITIVE_REF(split));
+  dfsch_defcanon_pkgcstr(env, pcre, "split-byte-vector",
+                         DFSCH_PRIMITIVE_REF(split_byte_vector));
 }

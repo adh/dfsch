@@ -88,6 +88,19 @@ int dfsch_pcre_match(pcre* pattern,
                              options, vec, vs));
 }
 
+static dfsch_object_t* make_string(char* ptr, size_t len,
+                                   int comp_options, 
+                                   int share_buf){
+  if (share_buf){
+    return dfsch_make_byte_vector_nocopy(ptr, len);      
+  } else if (comp_options & PCRE_UTF8){
+    return dfsch_make_string_buf(ptr, len);
+  } else {
+    return dfsch_make_byte_vector(ptr, len);
+  }
+
+}
+
 static dfsch_object_t* make_substring(char* string,
                                       int* vec, int i,
                                       int comp_options, 
@@ -95,17 +108,11 @@ static dfsch_object_t* make_substring(char* string,
   if (vec[i * 2] < 0){
     return NULL;
   }
-  
-  if (share_buf){
-    return dfsch_make_byte_vector_nocopy(string + vec[i * 2],
-                                         vec[i * 2 + 1] - vec[i * 2]);      
-  } else if (comp_options & PCRE_UTF8){
-    return dfsch_make_string_buf(string + vec[i * 2],
-                                 vec[i * 2 + 1] - vec[i * 2]);
-  } else {
-    return dfsch_make_byte_vector(string + vec[i * 2],
-                                  vec[i * 2 + 1] - vec[i * 2]);
-  }
+
+  return make_string(string + vec[i * 2],
+                     vec[i * 2 + 1] - vec[i * 2],
+                     comp_options,
+                     share_buf);
 }
 
 dfsch_object_t* dfsch_pcre_match_substrings(pcre* pattern,
@@ -210,7 +217,39 @@ dfsch_object_t* dfsch_pcre_split(pcre* pattern,
                                  char* string, size_t len,
                                  int options,
                                  int share_buf){
+  int res;
+  size_t vs;
+  int backref;
+  int off = 0;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  int comp_options;
 
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_OPTIONS, &comp_options);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_BACKREFMAX, &backref);
+
+  if (backref == 0){
+    backref = 1;
+  }
+
+  vs = backref * 3;
+  int vec[vs];
+
+  while (match_res(pcre_exec(pattern, NULL, 
+                             string, len, off, 
+                             options, vec, vs))){
+    dfsch_list_collect(lc, make_string(string + off,
+                                       vec[0] - off,
+                                       comp_options,
+                                       share_buf));
+    off = vec[1];
+  }
+
+  dfsch_list_collect(lc, make_string(string + off,
+                                     len - off,
+                                     comp_options,
+                                     share_buf));
+
+  return dfsch_collected_list(lc);
 }
 
 static void expand_replacement(dfsch_str_list_t* sl,
