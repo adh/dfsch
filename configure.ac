@@ -120,12 +120,14 @@ AC_ARG_WITH([pcre],
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
-AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
-AC_CHECK_LIB(pcre, pcre_compile, 
-                    [have_pcre=$have_pcre], [have_pcre="0"])
+if test x$"$enable_pcre" == x"yes"; then
+    AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
+    AC_CHECK_LIB(pcre, pcre_compile, 
+                     [], [have_pcre="0"])
 
-if [ have_pcre = "0" ] ; then
-    enable_pcre=no
+    if test x"$have_pcre" == x"0" ; then
+        enable_pcre=no
+    fi
 fi
 
 AM_CONDITIONAL(PCRE, test x"$enable_pcre" == x"yes")
