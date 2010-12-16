@@ -226,7 +226,7 @@ dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
   dfsch_lock_libc();
   if ((h = gethostbyname(hostname)) == NULL){
     dfsch_unlock_libc();
-    dfsch_operating_system_error("gethostbyname");
+    dfsch_error("gethostbyname failed", dfsch_make_string_cstr(hostname));
   }
 
   inet_addr.sin_family=AF_INET;
@@ -251,11 +251,28 @@ dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
                           fd);
 }
 dfsch_object_t* dfsch_socket_port_unix_connect(char* path){
-  socket_port_t* sp = dfsch_make_object(DFSCH_SOCKET_PORT_TYPE);
+  int sock;
+  struct sockaddr_un unix_addr;
 
-  sp->name = dfsch_saprintf("unix %s", path);
+  sock=socket(PF_UNIX,SOCK_STREAM,0);
 
-  return sp;
+  if (sock < 0){
+    perror("socket");
+    return -1;
+  }
+
+  unix_addr.sun_family=AF_UNIX;
+  strcpy(unix_addr.sun_path,path);
+
+  if (connect(sock,(struct sockaddr*)&unix_addr, sizeof(unix_addr)) < 0){
+    int sav = errno;
+    close(sock);
+    dfsch_operating_system_error_saved(sav, "connect");
+  }
+
+
+  return cons_socket_port(dfsch_saprintf("unix %s", path),
+                          sock);
 }
 
 void dfsch_socket_port_close(dfsch_object_t* spo){
@@ -332,7 +349,7 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
            sizeof(inet_addr))==-1){
     int sav = errno;
     close(fd);
-    dfsch_operating_system_error_saved(sav, "connect");
+    dfsch_operating_system_error_saved(sav, "bind");
   }
   
   if (listen(fd, 5) == -1){
@@ -345,7 +362,33 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
                             fd); 
 }
 dfsch_object_t* dfsch_server_socket_unix_bind(char* path){
+  int sock;
+  struct sockaddr_un unix_addr;
 
+  sock=socket(PF_UNIX,SOCK_STREAM,0);
+
+  if (sock < 0){
+    perror("socket");
+    return -1;
+  }
+
+  unix_addr.sun_family=AF_UNIX;
+  strcpy(unix_addr.sun_path,path);
+
+  if (bind(sock,(struct sockaddr*)&unix_addr, sizeof(unix_addr)) < 0){
+    int sav = errno;
+    close(sock);
+    dfsch_operating_system_error_saved(sav, "bind");
+  }
+
+  if (listen(sock, 10) < 0){
+    int sav = errno;
+    close(sock);
+    dfsch_operating_system_error_saved(sav, "listen");
+  }
+
+  return cons_server_socket(dfsch_saprintf("unix %s", path),
+                            sock); 
 }
 void dfsch_server_socket_close(dfsch_object_t* sso){
   server_socket_t* ss = DFSCH_ASSERT_TYPE(sso, DFSCH_SERVER_SOCKET_TYPE);
