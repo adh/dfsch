@@ -460,9 +460,11 @@ void dfsch_load(dfsch_object_t* env, char* name,
   while (DFSCH_PAIR_P(path)){
     dfsch_object_t* pp = DFSCH_FAST_CAR(path);
     if (!dfsch_string_p(pp)){
-      dfsch_apply(pp, dfsch_list(2,
-                                 env,
-                                 dfsch_make_string_cstr(name)));
+      if (dfsch_apply(pp, dfsch_list(2,
+                                     env,
+                                     dfsch_make_string_cstr(name)))){
+        return;
+      }
       path = DFSCH_FAST_CDR(path);
       continue;
     }
