@@ -346,8 +346,9 @@ static void register_core_handlers();
 static dfsch_strhash_t* get_deshandler_map(){
   static dfsch_strhash_t h;
   static init = 0;
+
   if (!init){
-    dfsch_strhash_init(&h);
+    dfsch_strhash_init_sa(&h);
     init = 1;
   }
   return &h;
@@ -586,7 +587,7 @@ char* dfsch_deserialize_stream_symbol(dfsch_deserializer_t* ds){
 
 void dfsch_register_deserializer_handler(char* name,
                                          dfsch_deserializer_handler_t h){
-  dfsch_strhash_set(get_deshandler_map(), name, (void*)h);
+  dfsch_strhash_set_sa(get_deshandler_map(), name, (void*)h);
 }
 
 static dfsch_object_t* back_reference_handler(dfsch_deserializer_t* ds){
@@ -828,7 +829,7 @@ DFSCH_DEFINE_PRIMITIVE(deserialize_bytes,
   DFSCH_DESERIALIZER_ARG(args, deserializer);
   DFSCH_ARG_END(args);
 
-  return dfsch_byte_vector_strbuf(dfsch_deserialize_strbuf(deserializer));
+  return dfsch_make_byte_vector_strbuf(dfsch_deserialize_strbuf(deserializer));
 }
 DFSCH_DEFINE_PRIMITIVE(deserialize_integer,
                        "Read integer from serialized stream"){
@@ -876,5 +877,7 @@ void dfsch__serdes_register(dfsch_object_t* env){
                       DFSCH_PRIMITIVE_REF(deserialize_stream_symbol));
   dfsch_defcanon_cstr(env, "deserialize-integer!",
                       DFSCH_PRIMITIVE_REF(deserialize_integer));
+  dfsch_defcanon_cstr(env, "deserialize-bytes!",
+                      DFSCH_PRIMITIVE_REF(deserialize_bytes));
   
 }
