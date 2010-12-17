@@ -330,7 +330,7 @@ DFSCH_DEFINE_PRIMITIVE(lseek, NULL){
   int w;
 
   DFSCH_LONG_ARG(args, fd);
-  DFSCH_LONG_ARG(args, offset);
+  DFSCH_INT64_ARG(args, offset);
   DFSCH_OBJECT_ARG(args, whence);
   DFSCH_ARG_END(args);
 

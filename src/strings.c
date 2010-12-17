@@ -311,7 +311,7 @@ dfsch_strbuf_t* dfsch_string_to_buf(dfsch_object_t* obj){
   return &(s->buf);  
 }
 dfsch_strbuf_t* dfsch_byte_vector_to_buf(dfsch_object_t* obj){
-  dfsch_string_t* s = DFSCH_ASSERT_TYPE(obj, DFSCH_BYTE_VECTOR_TYPE);
+  dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(obj, DFSCH_BYTE_VECTOR_TYPE);
 
   return &(s->buf);  
 }
