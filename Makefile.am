@@ -73,6 +73,13 @@ nonwin32_libs=\
 	libdfsch-socket-port.la
 endif
 
+if TKGUI
+sqlite_modules=sqlite.la
+else
+sqlite_modules=
+endif
+
+
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-os.la \
 	libdfsch-console.la \
@@ -124,7 +131,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	crypto.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
-	$(pcre_modules)
+	$(pcre_modules)\
+	$(sqlite_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -411,6 +419,10 @@ libdfsch_pcre_la_LDFLAGS = -no-undefined
 pcre_la_SOURCES = lib/pcre_mod.c
 pcre_la_LIBADD = libdfsch.la libdfsch-pcre.la
 pcre_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+sqlite_la_SOURCES = lib/sql/sqlite.c
+sqlite_la_LIBADD = libdfsch.la -lsqlite
+sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 if WIN32

@@ -123,7 +123,7 @@ AC_ARG_WITH([pcre],
 if test x$"$enable_pcre" == x"yes"; then
     AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
     AC_CHECK_LIB(pcre, pcre_compile, 
-                     [], [have_pcre="0"])
+                     [dummy_pcre=], [have_pcre="0"])
 
     if test x"$have_pcre" == x"0" ; then
         enable_pcre=no
@@ -167,6 +167,28 @@ fi
 
 AM_CONDITIONAL(TKGUI, test x"$enable_tk_gui" == x"yes")
 
+enable_sqlite=yes
+
+AC_ARG_ENABLE([sqlite],
+    AS_HELP_STRING([--disable-sqlite], [Disable sqlite module]))
+AC_ARG_WITH([pcre],
+  AC_HELP_STRING([--with-sqlite=PATH], [Path to Sqlite installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_sqlite" == x"yes"; then
+    AC_CHECK_HEADERS(sqlite.h, [have_sqlite="1"], [have_sqlite="0"])
+    AC_CHECK_LIB(sqlite, sqlite_open, 
+                     [dummy_sqlite=], [have_sqlite="0"])
+
+    if test x"$have_sqlite" == x"0" ; then
+        enable_sqlite=no
+    fi
+fi
+
+AM_CONDITIONAL(SQLITE, test x"$enable_sqlite" == x"yes")
+
+
 AC_SYS_LARGEFILE 
 
 case $host in 
@@ -204,6 +226,7 @@ Optional modules:
 readline ........... : $use_readline
 tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
+sqlite ............. : $enable_sqlite
 
 
 EOF

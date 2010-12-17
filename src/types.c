@@ -2611,3 +2611,7 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 }
 
 
+dfsch_type_t dfsch_invalid_object_type = {
+  .type = DFSCH_SPECIAL_TYPE,
+  .name = "invalid-object"
+};

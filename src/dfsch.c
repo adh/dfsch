@@ -75,6 +75,11 @@ object_t* dfsch_make_object(const dfsch_type_t* type){
   return dfsch_make_object_var(type, 0);
 }
 
+void dfsch_invalidate_object(dfsch_object_t* obj){
+  dfsch_type_t* type = DFSCH_TYPE_OF(obj);
+  memset(obj, 0, type->size);
+  obj->type = DFSCH_INVALID_OBJECT_TYPE;
+}
 
 int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   return (a==b);
