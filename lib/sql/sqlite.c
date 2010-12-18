@@ -26,19 +26,62 @@ typedef struct sqlite_result_t {
   dfsch_type_t* type;
   sqlite_database_t* db;
   sqlite_vm* vm;
+  dfsch_object_t* last_res;
   int n_columns;
-  char **values;
-  char **names;
+  char**names;
 } sqlite_result_t;
 
-static dfsch_type_t sqlite_result_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(sqlite_result_t),
-  "sqlite:result",
-  NULL,
-  NULL,
-  NULL
+
+static void finalize_result(sqlite_result_t* res);
+
+static dfsch_object_t* get_row_as_vector(int n_columns, char**values){
+  size_t i;
+  dfsch_object_t* vec = dfsch_make_vector(n_columns, NULL);
+
+  for (i = 0; i < n_columns; i++){
+    dfsch_vector_set(vec, i, dfsch_make_string_cstr(values[i]));
+  }
+
+  return vec;
+}
+
+static dfsch_object_t* result_next(sqlite_result_t* res){
+  
+  char* err;
+  int ret;
+  char**values;
+  ret = sqlite_step(res->vm, &res->n_columns, &values, &res->names);
+
+  if (ret == SQLITE_ROW){
+     res->last_res = get_row_as_vector(res->n_columns, values);
+     return res;
+  } else if (ret == SQLITE_BUSY) {
+    dfsch_error("Database is busy", (dfsch_object_t*)res->db);
+  } else if (ret == SQLITE_ERROR){
+    finalize_result(res);
+    return NULL;
+  } else {
+    return NULL;
+  }
+}
+static dfsch_object_t* result_this(sqlite_result_t* res){
+  return res->last_res;
+}
+
+
+static dfsch_iterator_type_t sqlite_result_type = {
+  .type = {
+    DFSCH_ITERATOR_TYPE_TYPE,
+    DFSCH_ITERATOR_TYPE,
+    sizeof(sqlite_result_t),
+    "sqlite:result",
+    NULL,
+    NULL,
+    NULL,
+    .collection = &dfsch_iterator_collection_methods,
+  },
+  .next = result_next,
+  .this = result_this,
 };
 
 
@@ -163,7 +206,7 @@ DFSCH_DEFINE_PRIMITIVE(query_string,
     dfsch_error("Sqlite error", message);    
   }
   
-  return (dfsch_object_t*)res;
+  return result_next(res);
 }
 
 static void finalize_result(sqlite_result_t* res){
@@ -192,40 +235,7 @@ DFSCH_DEFINE_PRIMITIVE(close_result,
   return NULL;
 }
 
-static dfsch_object_t* get_row_as_vector(sqlite_result_t* res){
-  size_t i;
-  dfsch_object_t* vec = dfsch_make_vector(res->n_columns, NULL);
 
-  for (i = 0; i < res->n_columns; i++){
-    dfsch_vector_set(vec, i, dfsch_make_string_cstr(res->values[i]));
-  }
-
-  return vec;
-}
-
-
-DFSCH_DEFINE_PRIMITIVE(fetch_row,
-                       "Fetch next row from result"){
-  sqlite_result_t* res;
-  char* err;
-  int ret;
-  dfsch_object_t* format;
-
-  SQLITE_RESULT_ARG(args, res);
-  DFSCH_ARG_END(args);
-
-
-  ret = sqlite_step(res->vm, &res->n_columns, &res->values, &res->names);
-
-  if (ret == SQLITE_ROW){
-    return get_row_as_vector(res);
-  } else if (ret == SQLITE_BUSY) {
-    dfsch_error("Database is busy", (dfsch_object_t*)res->db);
-  } else {
-    finalize_result(res);
-    return NULL;
-  } 
-}
 
 DFSCH_DEFINE_PRIMITIVE(column_names,
                        "Return vector of column names"){
@@ -309,9 +319,6 @@ dfsch_object_t* dfsch_module_sqlite_register(dfsch_object_t* env){
   dfsch_define_method_pkgcstr(env, sql, "close-result!",
                               NULL, dfsch_list(1, &sqlite_result_type),
                               DFSCH_PRIMITIVE_REF(close_result));
-  dfsch_define_method_pkgcstr(env, sql, "fetch-row!",
-                              NULL, dfsch_list(1, &sqlite_result_type),
-                              DFSCH_PRIMITIVE_REF(fetch_row));
 
   dfsch_define_method_pkgcstr(env, sql, "column-names",
                               NULL, dfsch_list(1, &sqlite_result_type),
