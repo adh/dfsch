@@ -68,20 +68,21 @@ static dfsch_object_t* result_this(sqlite_result_t* res){
   return res->last_res;
 }
 
-
-static dfsch_iterator_type_t sqlite_result_type = {
-  .type = {
-    DFSCH_ITERATOR_TYPE_TYPE,
-    DFSCH_ITERATOR_TYPE,
-    sizeof(sqlite_result_t),
-    "sqlite:result",
-    NULL,
-    NULL,
-    NULL,
-    .collection = &dfsch_iterator_collection_methods,
-  },
+static dfsch_iterator_methods_t result_iterator = {
   .next = result_next,
   .this = result_this,
+};
+
+static dfsch_type_t sqlite_result_type = {
+  DFSCH_STANDARD_TYPE,
+  NULL,
+  sizeof(sqlite_result_t),
+  "sqlite:result",
+  NULL,
+  NULL,
+  NULL,
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &result_iterator,
 };
 
 
