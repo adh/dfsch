@@ -525,15 +525,6 @@ dfsch_type_t dfsch_meta_type = {
   NULL
 };
 
-dfsch_type_t dfsch_iterator_type_type = {
-  DFSCH_META_TYPE,
-  DFSCH_STANDARD_TYPE,
-  sizeof(dfsch_type_t),
-  "iterator-type",
-  NULL,
-  NULL,
-  NULL
-};
 
 static dfsch_object_t* iterator_get_iterator(dfsch_object_t* i){
   return i;
@@ -543,17 +534,6 @@ dfsch_collection_methods_t dfsch_iterator_collection_methods = {
   .get_iterator = iterator_get_iterator,
 };
 
-dfsch_type_t dfsch_iterator_type = {
-  DFSCH_ABSTRACT_TYPE,
-  NULL,
-  0,
-  "iterator",
-  NULL,
-  NULL,
-  NULL,
-
-  .collection = &dfsch_iterator_collection_methods,
-};
 
 typedef struct {
   dfsch_type_t* type;
@@ -576,16 +556,17 @@ static dfsch_object_t* si_next(sequence_iterator_t* si){
   }
 }
 
-dfsch_iterator_type_t dfsch_sequence_iterator_type = {
-  .type = {
-    .type = DFSCH_ITERATOR_TYPE_TYPE, 
-    .superclass = DFSCH_ITERATOR_TYPE,
-    .name = "sequence-iterator",
-    .size = sizeof(sequence_iterator_t),
-    .collection = &dfsch_iterator_collection_methods,
-  },
+static dfsch_iterator_methods_t si_methods = {
   .next = si_next,
   .this = si_this
+};
+
+dfsch_type_t dfsch_sequence_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE, 
+  .name = "sequence-iterator",
+  .size = sizeof(sequence_iterator_t),
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &si_methods,
 };
 
 dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence){
@@ -752,6 +733,19 @@ static void pair_write(dfsch_object_t*p, dfsch_writer_state_t* state){
 
   dfsch_write_string(state, ")");  
 }
+
+static dfsch_object_t* pair_this(dfsch_object_t* p){
+  return DFSCH_FAST_CAR(p);
+}
+static dfsch_object_t* pair_next(dfsch_object_t* p){
+  return DFSCH_FAST_CDR(p);
+}
+
+static dfsch_iterator_methods_t pair_iterator = {
+  .this = pair_this,
+  .next = pair_next
+};
+
 dfsch_type_t dfsch_pair_type = {
   DFSCH_ABSTRACT_TYPE,
   DFSCH_LIST_TYPE,
@@ -762,7 +756,8 @@ dfsch_type_t dfsch_pair_type = {
   NULL,
   (dfsch_type_hash_t)pair_hash,
   NULL,
-  "Abstract superclass for all pair representations"
+  "Abstract superclass for all pair representations",
+  .iterator = &pair_iterator,
 };
 #define PAIR (&dfsch_pair_type)
 
@@ -921,6 +916,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
     .collection = &list_collection,
     .sequence = &list_sequence,
     .serialize = compact_list_serialize,
+    .iterator = &pair_iterator,
   },
   {
     DFSCH_SPECIAL_TYPE,
@@ -937,6 +933,8 @@ dfsch_type_t dfsch_tagged_types[4] = {
     .collection = &list_collection,
     .sequence = &list_sequence,  
     .serialize = mutable_pair_serialize,
+    .iterator = &pair_iterator,
+
   },
   {
     DFSCH_STANDARD_TYPE,
@@ -967,6 +965,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
     .collection = &list_collection,
     .sequence = &list_sequence,  
     .serialize = immutable_pair_serialize,
+    .iterator = &pair_iterator,
   },
 };
 
