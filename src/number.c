@@ -1293,17 +1293,18 @@ static dfsch_object_t* nsi_next(number_sequence_t* ns){
   return ns;
 }
 
-dfsch_iterator_type_t dfsch_number_sequence_iterator_type = {
-  .type = {
-    .type = DFSCH_ITERATOR_TYPE_TYPE,
-    .superclass = DFSCH_ITERATOR_TYPE,
-    .name = "number-sequence",
-    .size = sizeof(number_sequence_t),
-    .collection = &ns_collection,
-    .sequence = &ns_sequence
-  },
+dfsch_iterator_methods_t nsi_iterator = {
   .next = nsi_next,
   .this = nsi_this
+};
+
+dfsch_type_t dfsch_number_sequence_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "number-sequence",
+  .size = sizeof(number_sequence_t),
+  .collection = &ns_collection,
+  .sequence = &ns_sequence,
+  .iterator = &nsi_iterator,
 };
 
 dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,

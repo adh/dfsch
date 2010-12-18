@@ -35,6 +35,7 @@
 #include <dfsch/weak.h>
 #include <dfsch/backquote.h>
 #include <dfsch/load.h>
+#include <dfsch/specializers.h>
 #include "util.h"
 #include "internal.h"
 
@@ -222,7 +223,7 @@ dfsch_object_t* dfsch_assert_collection(dfsch_object_t* obj){
   while (!DFSCH_COLLECTION_P(o)){
     DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
                                   "Retry with alternate value") {
-      dfsch_type_error(o, NULL, 1); //XXX
+      dfsch_type_error(o, DFSCH_COLLECTION_SPECIALIZER, 1); //XXX
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
   }
   return o;
@@ -232,7 +233,7 @@ dfsch_object_t* dfsch_assert_mapping(dfsch_object_t* obj){
   while (!DFSCH_MAPPING_P(o)){
     DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
                                   "Retry with alternate value") {
-      dfsch_type_error(o, NULL, 1); //XXX
+      dfsch_type_error(o, DFSCH_MAPPING_SPECIALIZER, 1);
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
   }
   return o;
@@ -242,7 +243,7 @@ dfsch_object_t* dfsch_assert_sequence(dfsch_object_t* obj){
   while (!DFSCH_SEQUENCE_P(o)){
     DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
                                   "Retry with alternate value") {
-      dfsch_type_error(o, NULL, 1); //XXX
+      dfsch_type_error(o, DFSCH_SEQUENCE_SPECIALIZER, 1); //XXX
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
   }
   return o;
@@ -257,6 +258,16 @@ size_t dfsch_assert_sequence_index(dfsch_object_t* seq,
     } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
     idx = dfsch_number_to_long(o);
   }
+}
+dfsch_object_t* dfsch_assert_iterator(dfsch_object_t* obj){
+  dfsch_object_t* o = obj;
+  while (!DFSCH_ITERATOR_P(o)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, DFSCH_ITERATOR_SPECIALIZER, 1);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
 }
 
 dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
@@ -286,29 +297,12 @@ size_t dfsch_sequence_length(dfsch_object_t* seq){
 }
 
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
-  if (DFSCH_PAIR_P(iterator)){
-    dfsch_object_t* ret = DFSCH_FAST_CDR(iterator);
-    if (DFSCH_PAIR_P(ret)){
-      return ret;
-    } else if (!ret) {
-      return NULL;
-    } else {
-      dfsch_error("Not a proper list", ret);
-    }
-  }
-  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
-    dfsch_error("Object is not usable as iterator", iterator);
-  }
-  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->next(iterator);
+  dfsch_object_t* it = DFSCH_ASSERT_ITERATOR(iterator);
+  return DFSCH_TYPE_OF(it)->iterator->next(it);
 }
 dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
-  if (DFSCH_PAIR_P(iterator)){
-    return DFSCH_FAST_CAR(iterator);
-  }
-  if (DFSCH_TYPE_OF(DFSCH_TYPE_OF(iterator)) != DFSCH_ITERATOR_TYPE_TYPE){
-    dfsch_error("Object is not usable as iterator", iterator);
-  }
-  return ((dfsch_iterator_type_t*)DFSCH_TYPE_OF(iterator))->this(iterator);
+  dfsch_object_t* it = DFSCH_ASSERT_ITERATOR(iterator);
+  return DFSCH_TYPE_OF(it)->iterator->this(it);
 }
 
 dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
@@ -1644,9 +1638,6 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<vector>", DFSCH_VECTOR_TYPE);
 
   dfsch_defcanon_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
-
-  dfsch_defcanon_cstr(ctx, "<iterator>", DFSCH_ITERATOR_TYPE);
-  dfsch_defcanon_cstr(ctx, "<iterator-type>", DFSCH_ITERATOR_TYPE_TYPE);
 
   dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
   dfsch_defconst_cstr(ctx, "nil", NULL);

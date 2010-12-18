@@ -306,6 +306,14 @@ typedef struct dfsch_mapping_methods_t {
   dfsch_mapping_set_if_not_exists_t set_if_not_exists;
 } dfsch_mapping_methods_t;
 
+typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
+typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
+
+typedef struct dfsch_iterator_methods_t {
+  dfsch_iterator_next_t next;
+  dfsch_iterator_this_t this;
+} dfsch_iterator_methods_t;
+
 
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
@@ -349,6 +357,7 @@ struct dfsch_type_t {
   dfsch_collection_methods_t* collection;
   dfsch_sequence_methods_t* sequence;
   dfsch_mapping_methods_t* mapping;
+  dfsch_iterator_methods_t* iterator;
 
   dfsch_type_serialize_t serialize;
 
@@ -439,23 +448,9 @@ struct dfsch_slot_t {
   {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, 0, NULL}
 
-typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
-typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
-
-typedef struct dfsch_iterator_type_t {
-  dfsch_type_t type;
-  dfsch_iterator_next_t next;
-  dfsch_iterator_this_t this;
-} dfsch_iterator_type_t;
-
 extern dfsch_collection_methods_t dfsch_iterator_collection_methods;
 
-extern dfsch_type_t dfsch_iterator_type_type;
-#define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)
-extern dfsch_type_t dfsch_iterator_type;
-#define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
-
-extern dfsch_iterator_type_t dfsch_sequence_iterator_type;
+extern dfsch_type_t dfsch_sequence_iterator_type;
 #define DFSCH_SEQUENCE_ITERATOR_TYPE \
   ((dfsch_type_t*)&dfsch_sequence_iterator_type)
 
@@ -590,12 +585,19 @@ typedef struct dfsch_pair_t {
 #define DFSCH_SEQUENCE_P(o)                   \
   (DFSCH_TYPE_SEQUENCE_P(DFSCH_TYPE_OF((o))))
 
+#define DFSCH_TYPE_ITERATOR_P(t)                   \
+  (((dfsch_type_t*)(t))->iterator != NULL)
+#define DFSCH_ITERATOR_P(o)                   \
+  (DFSCH_TYPE_ITERATOR_P(DFSCH_TYPE_OF((o))))
+
 #define DFSCH_ASSERT_COLLECTION(o)                                      \
   (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
 #define DFSCH_ASSERT_MAPPING(o)                                 \
   (DFSCH_MAPPING_P((o)) ? (o) : dfsch_assert_mapping((o)))
 #define DFSCH_ASSERT_SEQUENCE(o)                                \
   (DFSCH_SEQUENCE_P((o)) ? (o) : dfsch_assert_sequence((o)))
+#define DFSCH_ASSERT_ITERATOR(o)                                \
+  (DFSCH_ITERATOR_P((o)) ? (o) : dfsch_assert_iterator((o)))
 
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
