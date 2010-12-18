@@ -2136,6 +2136,99 @@ DFSCH_DEFINE_PRIMITIVE(string_starts_with_p,
   return dfsch_bool(memcmp(string->ptr, start->ptr, start->len) == 0);
 }
 
+static char* get_argument(dfsch_object_t* args,
+                          char* name){
+  if (strspn(name, "0123456789") == strlen(name)){
+    size_t idx = atol(name);
+    return dfsch_sequence_ref(args, idx);
+  } else {
+    dfsch_object_t* i = args;
+    while (DFSCH_PAIR_P(i)){
+      dfsch_object_t* keyword;
+      dfsch_object_t* value;
+      DFSCH_OBJECT_ARG(i, keyword);
+      DFSCH_OBJECT_ARG(i, value);
+
+      if (dfsch_compare_keyword(keyword, name)){
+        return value;
+      }
+    }
+    dfsch_error("Key not found", dfsch_make_string_cstr(name));
+  }
+}
+
+static size_t name_end(char* str, char delim){
+  size_t res = 0;
+  while (*str){
+    switch(*str){
+    case ' ':
+    case '\t':
+    case '\n':
+    case ':':
+    case '(':
+    case ')':
+    case '\r':
+    case '\f':
+    case ';':
+      return res;
+    }
+    if (*str == delim){
+      break;
+    }
+    res++;
+    str++;
+  }
+  return res;
+}
+
+DFSCH_DEFINE_PRIMITIVE(construct_string,
+                       "Simple templating mechanism"){
+  char* query;
+  dfsch_object_t* arguments;
+  char* pos;
+  dfsch_str_list_t* sl;
+  char delim = ':';
+  dfsch_object_t* convert_non_string = NULL;
+  DFSCH_STRING_ARG(args, query);
+  DFSCH_OBJECT_ARG(args, arguments);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("escape-character", delim, dfsch_number_to_long);
+  DFSCH_KEYWORD("convert-non-string", convert_non_string);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  sl = dfsch_sl_create();
+
+  while (pos = strchr(query, delim)){
+    dfsch_sl_nappend(sl, query, pos - query);
+    query = pos + 1;
+    if (*query == ':'){
+      dfsch_sl_append(sl, delim);
+      query++;
+    } else {
+      size_t name_len = name_end(query, delim);
+      char* name = dfsch_strancpy(query, name_len);
+      dfsch_object_t* obj = get_argument(arguments, name);
+      dfsch_strbuf_t* sb;
+      query += name_len;
+      if (*query == delim){
+        query++;
+      }
+
+      if (convert_non_string && 
+          !DFSCH_INSTANCE_P(obj, DFSCH_PROTO_STRING_TYPE)){
+        obj = dfsch_apply(convert_non_string, dfsch_list(1, obj));
+      }
+
+      sb = dfsch_string_to_buf(obj);
+
+      dfsch_sl_nappend(sl, sb->ptr, sb->len);
+    }
+  }
+  dfsch_sl_append(sl, query);
+  return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
+}
+
+
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
   dfsch_defcanon_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
@@ -2270,5 +2363,7 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "string-starts-with?", 
 		   DFSCH_PRIMITIVE_REF(string_starts_with_p));
+  dfsch_defcanon_cstr(ctx, "construct-string", 
+		   DFSCH_PRIMITIVE_REF(construct_string));
 
 }
