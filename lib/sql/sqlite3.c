@@ -298,9 +298,12 @@ static dfsch_object_t* native_sqlite3_last_insert_rowid(void *baton,
   return dfsch_make_number_from_long(sqlite3_last_insert_rowid(db->db));
 }
 
-dfsch_object_t* dfsch_module_sqlite3_register(dfsch_object_t* env){
+void dfsch_module_sqlite3_register(dfsch_object_t* env){
   dfsch_package_t* sql = dfsch_make_package("sql");
   dfsch_package_t* sqlite3 = dfsch_make_package("sqlite3");
+
+  dfsch_require(env, "sql", NULL);
+  dfsch_provide(env, "sqlite3");
 
   dfsch_define_pkgcstr(env, sqlite3, "<database>", &sqlite3_database_type);
   dfsch_define_pkgcstr(env, sqlite3, "<result>", &sqlite3_result_type);
@@ -328,14 +331,10 @@ dfsch_object_t* dfsch_module_sqlite3_register(dfsch_object_t* env){
                               DFSCH_PRIMITIVE_REF(column_names));
 
 
-  /* sqite specific functions */
+  /* sqlite specific functions */
   dfsch_define_pkgcstr(env, sqlite3, "changes", 
                        dfsch_make_primitive(native_sqlite3_changes, NULL));
   dfsch_define_pkgcstr(env, sqlite3, "last-insert-rowid", 
                        dfsch_make_primitive(native_sqlite3_last_insert_rowid, 
                                          NULL));
-
-
-  dfsch_provide(env, "sqlite3");
-  return NULL;
 }

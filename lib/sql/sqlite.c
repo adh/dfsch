@@ -321,9 +321,11 @@ static dfsch_object_t* native_sqlite_last_insert_rowid(void *baton,
   return dfsch_make_number_from_long(sqlite_last_insert_rowid(db->db));
 }
 
-dfsch_object_t* dfsch_module_sqlite_register(dfsch_object_t* env){
+void dfsch_module_sqlite_register(dfsch_object_t* env){
   dfsch_package_t* sql = dfsch_make_package("sql");
   dfsch_package_t* sqlite = dfsch_make_package("sqlite");
+  dfsch_require(env, "sql", NULL);
+  dfsch_provide(env, "sqlite");
 
   dfsch_define_pkgcstr(env, sqlite, "<database>", &sqlite_database_type);
   dfsch_define_pkgcstr(env, sqlite, "<result>", &sqlite_result_type);
@@ -356,14 +358,10 @@ dfsch_object_t* dfsch_module_sqlite_register(dfsch_object_t* env){
   
 
 
-  /* sqite specific functions */
+  /* sqlite specific functions */
   dfsch_define_pkgcstr(env, sqlite, "changes", 
                        dfsch_make_primitive(native_sqlite_changes, NULL));
   dfsch_define_pkgcstr(env, sqlite, "last-insert-rowid", 
                        dfsch_make_primitive(native_sqlite_last_insert_rowid, 
                                          NULL));
-
-
-  dfsch_provide(env, "sqlite");
-  return NULL;
 }

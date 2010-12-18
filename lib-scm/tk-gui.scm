@@ -1,6 +1,6 @@
 ;;; dfsch - Scheme-like Lisp dialect
 ;;;   Highlevel wrapper for Tk
-;;; Copyright (c) 2009 Ales Hakl
+;;; Copyright (c) 2010 Ales Hakl
 ;;;
 ;;; Permission is hereby granted, free of charge, to any person obtaining
 ;;; a copy of this software and associated documentation files (the
@@ -21,6 +21,7 @@
 ;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+(provide :tk-gui)
 (require :tk-gui-interface)
 (define-package :tk-gui 
   :uses '(:dfsch :tk-gui%interface))

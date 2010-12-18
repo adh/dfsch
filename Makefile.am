@@ -146,7 +146,8 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 	lib-scm/simple-tests.scm \
 	lib-scm/os-utils.scm \
 	lib-scm/tk-gui.scm \
-	lib-scm/http-server.scm
+	lib-scm/http-server.scm \
+	lib-scm/sql.scm
 
 man_MANS = doc/dfsch-repl.1
 
