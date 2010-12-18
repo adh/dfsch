@@ -256,10 +256,12 @@ static void expand_replacement(dfsch_str_list_t* sl,
   char* pos;
   while (pos = memchr(template, '\\', tlen)){
     dfsch_sl_nappend(sl, template, pos - template);
-    template = pos +1;
-    tlen -= pos - template + 1;
+    template = pos + 1;
+    tlen -= (pos - template) + 2;
     if (*template == '\\'){
       dfsch_sl_append(sl, "\\");
+      template++;
+      tlen--;
     } else {
       int idx;
       
@@ -269,7 +271,9 @@ static void expand_replacement(dfsch_str_list_t* sl,
       }
 
       idx = *template - '0';
-      if (idx < count){
+      template++;
+      tlen--;
+      if (idx >= count){
         dfsch_error("Invalid reference index in template", 
                     DFSCH_MAKE_FIXNUM(idx));
       }
@@ -305,7 +309,7 @@ dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
                                      string, len, off, 
                                      options, vec, vs))){
     dfsch_sl_nappend(sl, string + off, vec[0] - off);
-    expand_replacement(sl, template, tlen, string, count, vec);
+    expand_replacement(sl, template, tlen, string, count + 1, vec);
     off = vec[1];
   }
 
