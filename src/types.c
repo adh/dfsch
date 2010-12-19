@@ -150,16 +150,16 @@ dfsch_slot_type_t dfsch_string_slot_type = {
 };
 
 static dfsch_object_t* buffer_accessor_ref(void* ptr){
-  return dfsch_make_bytevector_nocopy((*((dfsch_strbuf_t**)ptr))->ptr,
-                                      (*((dfsch_strbuf_t**)ptr))->len);
+  return dfsch_make_byte_vector_nocopy((*((dfsch_strbuf_t**)ptr))->ptr,
+                                       (*((dfsch_strbuf_t**)ptr))->len);
 }
 static void buffer_accessor_set(void* ptr, dfsch_object_t* obj){
   *((dfsch_strbuf_t**)ptr) = dfsch_string_to_buf(obj);
 }
 dfsch_slot_type_t dfsch_buffer_slot_type = {
   DFSCH_SLOT_TYPE_HEAD("buffer-slot", "Slot holding byte-vector as strbuf_t*"),
-  string_accessor_ref,
-  string_accessor_set,
+  buffer_accessor_ref,
+  buffer_accessor_set,
   sizeof(char*),
   sizeof(char*)
 };

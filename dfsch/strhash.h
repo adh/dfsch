@@ -25,4 +25,9 @@ void dfsch_strhash_set(dfsch_strhash_t* sh,
 void* dfsch_strhash_ref(dfsch_strhash_t* sh,
                         char* key);
 
+void dfsch_strhash_init_sa(dfsch_strhash_t* h);
+void dfsch_strhash_set_sa(dfsch_strhash_t* sh,
+                          char* key, void* value);
+
+
 #endif

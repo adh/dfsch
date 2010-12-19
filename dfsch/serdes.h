@@ -83,7 +83,7 @@ void dfsch_register_deserializer_handler(char* name,
 
 #define DFSCH_DEFINE_DESERIALIZATION_HANDLER(name, cname)\
   static dfsch_object_t* deshandler_##cname(dfsch_deserializer_t* ds);  \
-  static void __attribute__((constructor)) dhcons__##cname(){           \
+  static void __attribute__((constructor)) dhcons__##cname(){       \
     dfsch_register_deserializer_handler(name, deshandler_##cname);      \
   }                                                                     \
   static dfsch_object_t* deshandler_##cname(dfsch_deserializer_t* ds)
