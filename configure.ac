@@ -124,7 +124,7 @@ AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
 AC_CHECK_LIB(pcre, pcre_compile, 
                     [have_pcre=$have_pcre], [have_pcre="0"])
 
-if [ have_pcre = "0" ] ; then
+if [ "$have_pcre" == "0" ] ; then
     enable_pcre=no
 fi
 
@@ -165,6 +165,26 @@ fi
 
 AM_CONDITIONAL(TKGUI, test x"$enable_tk_gui" == x"yes")
 
+enable_tokyo_cabinet=yes
+
+AC_ARG_ENABLE([tokyo-cabinet],
+    AS_HELP_STRING([--disable-tokyo-cabinet], [Disable tokyocabinet module]))
+AC_ARG_WITH([tokyo-cabinet],
+  AC_HELP_STRING([--with-tokyo-cabinet=PATH], [Path to TOKYOCABINET installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+AC_CHECK_HEADERS(tchdb.h, [have_tokyocabinet="1"], [have_tokyocabinet="0"])
+AC_CHECK_LIB(tokyocabinet, tcadbget, 
+             [have_tokyocabinet=$have_tokyocabinet], [have_tokyocabinet="0"])
+
+if test x"$have_tokyocabinet" == x"0" ; then
+    enable_tokyo_cabinet=no
+fi
+
+AM_CONDITIONAL(TOKYO_CABINET, test x"$enable_tokyo_cabinet" == x"yes")
+
+
 AC_SYS_LARGEFILE 
 
 case $host in 
@@ -202,6 +222,7 @@ Optional modules:
 readline ........... : $use_readline
 tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
+tokyo-cabinet ...... : $enable_tokyo_cabinet
 
 
 EOF
