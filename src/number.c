@@ -499,6 +499,10 @@ static char* int_to_str(long i, int base){
     dfsch_error("Invalid base", NULL);
   }
 
+  if (i == 0){
+    return "0";
+  }
+
   n = labs(i);
 
   while (n > 0){
