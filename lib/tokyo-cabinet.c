@@ -104,3 +104,26 @@ void dfsch_tokyo_cabinet_db_close(dfsch_object_t*dbo){
   db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
   tcadbclose(db->adb);
 }
+
+dfsch_object_t* dfsch_tokyo_cabinet_prefix_search(dfsch_object_t* dbo,
+                                                  char* buf, size_t len,
+                                                  int limit){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  TCLIST* tcr;
+  int i;
+  int count;
+  dfsch_object_t* it = NULL;
+  
+  tcr = tcadbfwmkeys(db->adb, buf, len, limit);
+  if (!tcr){
+    dfsch_error("tcadbfwmkeys returned null", NULL);
+  }
+  count = tclistnum(tcr);
+  for (i = 0; i < count; i++){
+    int len;
+    char* res = tclistval(tcr, i, &len);
+    it = dfsch_cons(dfsch_make_byte_vector(res, len),
+                    it);
+  }
+  return it;
+}

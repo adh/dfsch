@@ -9,6 +9,9 @@ extern dfsch_type_t dfsch_tokyo_cabinet_db_type;
 
 dfsch_object_t* dfsch_tokyo_cabinet_db_open(char* name);
 void dfsch_tokyo_cabinet_db_close(dfsch_object_t*db);
+dfsch_object_t* dfsch_tokyo_cabinet_prefix_search(dfsch_object_t* dbo,
+                                                  char* buf, size_t len,
+                                                  int limit);
 
 
 #endif
