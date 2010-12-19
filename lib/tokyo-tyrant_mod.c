@@ -2,7 +2,7 @@
 #include <dfsch/dfsch.h>
 #include <dfsch/load.h>
 
-DFSCH_DEFINE_PRIMITIVE(open, "Open Tokyo Cabinet database"){
+DFSCH_DEFINE_PRIMITIVE(open, "Open Tokyo Tyrant database"){
   char* name;
   DFSCH_STRING_ARG(args, name);
   DFSCH_ARG_END(args);
@@ -10,7 +10,7 @@ DFSCH_DEFINE_PRIMITIVE(open, "Open Tokyo Cabinet database"){
   return dfsch_tokyo_tyrant_db_open(name);
 }
 
-DFSCH_DEFINE_PRIMITIVE(close, "Close Tokyo Cabinet database"){
+DFSCH_DEFINE_PRIMITIVE(close, "Close Tokyo Tyrant database"){
   dfsch_object_t* db;
   DFSCH_OBJECT_ARG(args, db);
   DFSCH_ARG_END(args);
@@ -39,7 +39,7 @@ void dfsch_module_tokyo_tyrant_register(dfsch_object_t* env){
   dfsch_provide(env, "tokyo-tyrant");
   dfsch_require(env, "tokyo-cabinet", NULL);
 
-  dfsch_defcanon_pkgcstr(env, tc_pkg, "open", DFSCH_PRIMITIVE_REF(open));
+  dfsch_defcanon_pkgcstr(env, tt_pkg, "open", DFSCH_PRIMITIVE_REF(open));
   dfsch_define_method_pkgcstr_1(env, tc_pkg, "close!", 
                                 DFSCH_TOKYO_TYRANT_DB_TYPE,
                                 DFSCH_PRIMITIVE_REF(close));

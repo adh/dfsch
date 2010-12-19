@@ -75,11 +75,11 @@ tc_modules=
 endif
 
 if TOKYO_TYRANT
-tc_libs=libdfsch-tokyo-tyrant.la
-tc_modules=tokyo-tyrant.la
+tt_libs=libdfsch-tokyo-tyrant.la
+tt_modules=tokyo-tyrant.la
 else
-tc_libs=
-tc_modules=
+tt_libs=
+tt_modules=
 endif
 
 
