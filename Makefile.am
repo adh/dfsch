@@ -21,6 +21,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/pcre.h \
 	dfsch/lib/crypto.h \
 	dfsch/lib/tokyo-cabinet.h \
+	dfsch/lib/tokyo-tyrant.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -73,6 +74,14 @@ tc_libs=
 tc_modules=
 endif
 
+if TOKYO_TYRANT
+tc_libs=libdfsch-tokyo-tyrant.la
+tc_modules=tokyo-tyrant.la
+else
+tc_libs=
+tc_modules=
+endif
+
 
 if WIN32
 nonwin32_libs=
@@ -103,7 +112,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)\
 	$(pcre_libs)\
-	$(tc_libs)
+	$(tc_libs) \
+	$(tt_libs)
 
 
 
@@ -137,7 +147,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
-	$(tc_modules)
+	$(tc_modules)\
+	$(tt_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -432,6 +443,14 @@ libdfsch_tokyo_cabinet_la_LDFLAGS = -no-undefined
 tokyo_cabinet_la_SOURCES = lib/tokyo-cabinet_mod.c
 tokyo_cabinet_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la
 tokyo_cabinet_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant.c
+libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la -ltokyocabinet -ltokyotyrant
+libdfsch_tokyo_tyrant_la_LDFLAGS = -no-undefined
+
+tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant_mod.c
+tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-tyrant.la
+tokyo_tyrant_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 if WIN32
