@@ -143,6 +143,11 @@ void dfsch_define_method_pkgcstr(dfsch_object_t* env,
                                  dfsch_object_t* qualifiers,
                                  dfsch_object_t* specializers,
                                  dfsch_object_t* function);
+void dfsch_define_method_pkgcstr_1(dfsch_object_t* env,
+                                   dfsch_package_t* pkg,
+                                   char* name,
+                                   dfsch_object_t* specializer,
+                                   dfsch_object_t* function);
 
 
 void dfsch_add_method_proc(dfsch_object_t* gfunc,

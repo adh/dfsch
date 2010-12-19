@@ -36,10 +36,12 @@ void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
   dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet");
   dfsch_provide(env, "tokyo-cabinet");
 
-  dfsch_define_pkgcstr(env, tc_pkg, "open", DFSCH_PRIMITIVE_REF(open));
-  dfsch_define_pkgcstr(env, tc_pkg, "close!", 
-                       DFSCH_PRIMITIVE_REF(close));
-  dfsch_define_pkgcstr(env, tc_pkg, "prefix-search", 
-                       DFSCH_PRIMITIVE_REF(prefix_search));
-  dfsch_define_pkgcstr(env, tc_pkg, "<db>", DFSCH_TOKYO_CABINET_DB_TYPE);
+  dfsch_defcanon_pkgcstr(env, tc_pkg, "open", DFSCH_PRIMITIVE_REF(open));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "close!", 
+                                DFSCH_TOKYO_CABINET_DB_TYPE,
+                                DFSCH_PRIMITIVE_REF(close));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "prefix-search", 
+                                DFSCH_TOKYO_CABINET_DB_TYPE,
+                                DFSCH_PRIMITIVE_REF(prefix_search));
+  dfsch_defcanon_pkgcstr(env, tc_pkg, "<db>", DFSCH_TOKYO_CABINET_DB_TYPE);
 }
