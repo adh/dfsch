@@ -32,7 +32,11 @@
              :column-names
              :column-types
              :exec!
-             :query))
+             :query
+             :begin-transaction!
+             :commit-transaction!
+             :rollback-transaction!
+             :with-transaction))
 (in-package :sql)
 
 ;;; Fallback implementation (for sqlite3)
@@ -64,3 +68,21 @@
    (string-join (map convert-sql-value value) ", ")
    ")"))
                                   
+(define-method (begin-transaction! db)
+  (exec-string! db "BEGIN"))
+(define-method (commit-transaction! db)
+  (exec-string! db "COMMIT"))
+(define-method (rollback-transaction! db)
+  (exec-string! db "ROLLBACK"))
+
+(define-macro (with-transaction database &body body)
+  (with-gensyms (db commited?)
+                `(let ((,db ,database) (,commited? ()))
+                   (unwind-protect
+                    (begin
+                      (begin-transaction! ,db)
+                      ,@body
+                      (commit-transaction! ,db)
+                      (set! ,commited? #t))
+                    (unless ,commited?
+                            (rollback-transaction! ,db))))))
