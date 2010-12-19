@@ -125,5 +125,25 @@ dfsch_object_t* dfsch_tokyo_cabinet_prefix_search(dfsch_object_t* dbo,
     it = dfsch_cons(dfsch_make_byte_vector(res, len),
                     it);
   }
+  tclistdel(tcr);
   return it;
+}
+
+void dfsch_tokyo_cabinet_begin_transaction(dfsch_object_t* dbo){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  if (!tcadbtranbegin(db->adb)){
+    dfsch_error("tcadbtranbegin failed", NULL);
+  }
+}
+void dfsch_tokyo_cabinet_commit_transaction(dfsch_object_t* dbo){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  if (!tcadbtrancommit(db->adb)){
+    dfsch_error("Transaction commit failed", NULL);
+  }
+}
+void dfsch_tokyo_cabinet_abort_transaction(dfsch_object_t* dbo){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  if (!tcadbtranabort(db->adb)){
+    dfsch_error("Transaction abort failed", NULL);
+  }
 }
