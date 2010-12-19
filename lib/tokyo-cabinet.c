@@ -20,11 +20,11 @@ static int db_ref(db_t* db,
   dfsch_object_t* value;
   
   if (res){
-    value = dfsch_make_string_buf(res, len);
+    value = dfsch_make_byte_vector(res, len);
     free(res);
     return value;
   } else {
-    return DFSCH_INVALID_OBJECT;
+    return NULL;
   }
 }
 
@@ -52,6 +52,27 @@ static dfsch_mapping_methods_t db_mapping = {
   .unset = db_unset,
 };
 
+static dfsch_object_t* db_get_iterator(db_t* db){
+  int len;
+  char* res;
+  dfsch_object_t* it = NULL;
+  if (!tcadbiterinit(db->adb)){
+    dfsch_error("Error in interinit", db);
+  }
+
+  while (res = tcadbiternext(db->adb, &len)){
+    it = dfsch_cons(dfsch_make_byte_vector(res, len),
+                    it);
+    free(res);
+  }
+
+  return it;
+}
+
+static dfsch_collection_methods_t db_collection = {
+  .get_iterator = db_get_iterator,
+};
+
 dfsch_type_t dfsch_tokyo_cabinet_db_type = {
   .type = DFSCH_STANDARD_TYPE,
   //  .superclass = DFSCH_HASH_BASETYPE,
@@ -59,6 +80,7 @@ dfsch_type_t dfsch_tokyo_cabinet_db_type = {
   .size = sizeof(db_t),
   
   .mapping = &db_mapping,
+  .collection = &db_collection,
 };
 
 static void db_finalizer(db_t* db, void* discard){
@@ -79,6 +101,6 @@ dfsch_object_t* dfsch_tokyo_cabinet_db_open(char* name){
   return db;
 }
 void dfsch_tokyo_cabinet_db_close(dfsch_object_t*dbo){
-  db_t* db = DFSCH_ASSERT_INSTANCE(db, DFSCH_TOKYO_CABINET_DB_TYPE);
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
   tcadbclose(db->adb);
 }
