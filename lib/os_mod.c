@@ -33,6 +33,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -43,40 +44,103 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef __WIN32__
+#include <windows.h>
+#endif
+
 typedef struct signal_name_t {
   char * name;
   int signal;
 } signal_name_t;
 
 static signal_name_t signals[] = {
-  {"abrt", SIGABRT},
-  {"alrm", SIGALRM},
-  {"bus", SIGBUS},
-  {"chld", SIGCHLD},
-  {"cont", SIGCONT},
-  {"fpe", SIGFPE},
-  {"hup", SIGHUP},
-  {"ill", SIGILL},
+#ifdef SIGINT
   {"int", SIGINT},
-  {"kill", SIGKILL},
-  {"pipe", SIGPIPE},
-  {"quit", SIGQUIT},
+#endif
+#ifdef SIGILL
+  {"ill", SIGILL},
+#endif
+#ifdef SIGABRT
+  {"abrt", SIGABRT},
+#endif
+#ifdef SIGFPE
+  {"fpe", SIGFPE},
+#endif
+#ifdef SIGSEGV
   {"segv", SIGSEGV},
+#endif
+#ifdef SIGBREAK
+  {"break", SIGBREAK},
+#endif
+#ifdef SIGALRM
+  {"alrm", SIGALRM},
+#endif
+#ifdef SIGBUS
+  {"bus", SIGBUS},
+#endif
+#ifdef SIGCHLD
+  {"chld", SIGCHLD},
+#endif
+#ifdef SIGCONT
+  {"cont", SIGCONT},
+#endif
+#ifdef SIGHUP
+  {"hup", SIGHUP},
+#endif
+#ifdef SIGKILL
+  {"kill", SIGKILL},
+#endif
+#ifdef SIGPIPE
+  {"pipe", SIGPIPE},
+#endif
+#ifdef SIGQUIT
+  {"quit", SIGQUIT},
+#endif
+#ifdef SIGSTOP
   {"stop", SIGSTOP},
+#endif
+#ifdef SIGTERM
   {"term", SIGTERM},
+#endif
+#ifdef SIGTSTP
   {"tstp", SIGTSTP},
+#endif
+#ifdef SIGTTIN
   {"ttin", SIGTTIN},
+#endif
+#ifdef SIGTTOU
   {"ttou", SIGTTOU},
+#endif
+#ifdef SIGUSR1
   {"usr1", SIGUSR1},
+#endif
+#ifdef SIGUSR2
   {"usr2", SIGUSR2},
+#endif
+#ifdef SIGPOLL
   {"poll", SIGPOLL},
+#endif
+#ifdef SIGPROF
   {"prof", SIGPROF},
+#endif
+#ifdef SIGSYS
   {"sys", SIGSYS},
+#endif
+#ifdef SIGTRAP
   {"trap", SIGTRAP},
+#endif
+#ifdef SIGURG
   {"urg", SIGURG},
+#endif
+#ifdef SIGVTALRM
   {"vtalrm", SIGVTALRM},
+#endif
+#ifdef SIGXCPU
   {"xcpu", SIGXCPU},
+#endif
+#ifdef SIGXFSZ
   {"xfsz", SIGXFSZ}
+#endif
 };
 
 DFSCH_DEFINE_PRIMITIVE(sig, NULL){
@@ -99,28 +163,66 @@ DFSCH_DEFINE_PRIMITIVE(mode, NULL){
   mode_t mode = 0;
   
   DFSCH_FLAG_PARSER_BEGIN(args);
+#ifdef S_ISUID
   DFSCH_FLAG_SET("suid", S_ISUID, mode);
+#endif
+#ifdef S_ISGID
   DFSCH_FLAG_SET("sgid", S_ISGID, mode);
+#endif
   DFSCH_FLAG_SET("svtx", 01000, mode); // XXX
   DFSCH_FLAG_SET("sticky", 01000, mode);
+#ifdef S_IRUSR, mode);
   DFSCH_FLAG_SET("rusr", S_IRUSR, mode);
+#endif
+#ifdef S_IRUSR, mode);
   DFSCH_FLAG_SET("ur", S_IRUSR, mode);
+#endif
+#ifdef S_IWUSR, mode);
   DFSCH_FLAG_SET("wusr", S_IWUSR, mode);
+#endif
+#ifdef S_IWUSR, mode);
   DFSCH_FLAG_SET("uw", S_IWUSR, mode);
+#endif
+#ifdef S_IXUSR, mode);
   DFSCH_FLAG_SET("xusr", S_IXUSR, mode);
+#endif
+#ifdef S_IXUSR, mode);
   DFSCH_FLAG_SET("ux", S_IXUSR, mode);
+#endif
+#ifdef S_IRGRP, mode);
   DFSCH_FLAG_SET("rgrp", S_IRGRP, mode);
+#endif
+#ifdef S_IRGRP, mode);
   DFSCH_FLAG_SET("gr", S_IRGRP, mode);
+#endif
+#ifdef S_IWGRP, mode);
   DFSCH_FLAG_SET("wgrp", S_IWGRP, mode);
+#endif
+#ifdef S_IWGRP, mode);
   DFSCH_FLAG_SET("gw", S_IWGRP, mode);
+#endif
+#ifdef S_IXGRP, mode);
   DFSCH_FLAG_SET("xgrp", S_IXGRP, mode);
+#endif
+#ifdef S_IXGRP, mode);
   DFSCH_FLAG_SET("gx", S_IXGRP, mode);
+#endif
+#ifdef S_IROTH, mode);
   DFSCH_FLAG_SET("roth", S_IROTH, mode);
+#endif
+#ifdef S_IROTH, mode);
   DFSCH_FLAG_SET("or", S_IROTH, mode);
+#endif
+#ifdef S_IWOTH, mode);
   DFSCH_FLAG_SET("woth", S_IWOTH, mode);
+#endif
+#ifdef S_IWOTH, mode);
   DFSCH_FLAG_SET("ow", S_IWOTH, mode);
+#endif
+#ifdef S_IXOTH, mode);
   DFSCH_FLAG_SET("xoth", S_IXOTH, mode);
   DFSCH_FLAG_SET("ox", S_IXOTH, mode);
+#endif
   DFSCH_FLAG_PARSER_END(args);
 
   return dfsch_make_number_from_long(mode);
@@ -330,7 +432,7 @@ DFSCH_DEFINE_PRIMITIVE(lseek, NULL){
   int w;
 
   DFSCH_LONG_ARG(args, fd);
-  DFSCH_LONG_ARG(args, offset);
+  DFSCH_INT64_ARG(args, offset);
   DFSCH_OBJECT_ARG(args, whence);
   DFSCH_ARG_END(args);
 

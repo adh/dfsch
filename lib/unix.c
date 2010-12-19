@@ -43,6 +43,7 @@
 #include <dirent.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/mman.h>
 
 
 DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
@@ -419,6 +420,49 @@ DFSCH_DEFINE_PRIMITIVE(waitpid, NULL){
   }
 }
 
+static void mmap_region_finalizer(dfsch_string_t* obj,
+                                  void* cd){
+  if (munmap(obj->buf.ptr, obj->buf.len) == -1){
+    perror(";; mmap-region-finalizer error");
+  }
+}
+
+DFSCH_DEFINE_PRIMITIVE(mmap, "Map file into memory"){
+  int flags = 0;
+  int fd;
+  size_t length;
+  off_t offset;
+  char* ptr;
+  dfsch_object_t* obj;
+  struct stat st;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, flags);
+  DFSCH_FLAG_SET("shared", MAP_SHARED, flags);
+  DFSCH_FLAG_SET("private", MAP_PRIVATE, flags);
+  DFSCH_FLAG_PARSER_END(args);
+  DFSCH_LONG_ARG(args, fd);
+  DFSCH_INT64_ARG_OPT(args, offset, 0);
+
+  if (fstat(fd, &st) == -1){
+    dfsch_operating_system_error("mmap");
+  }
+
+  if (length + offset > st.st_size){
+    length = st.st_size - offset;
+  }
+
+  ptr = mmap(NULL, length, PROT_READ | PROT_WRITE, flags, fd, offset);
+  if (!ptr){
+    dfsch_operating_system_error("mmap");
+  }
+  
+  obj = dfsch_make_byte_vector_nocopy(ptr, length);
+  GC_REGISTER_FINALIZER(obj, (GC_finalization_proc)mmap_region_finalizer,
+                        NULL, NULL, NULL);
+  return obj;
+}
+
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix");
 
@@ -490,6 +534,9 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(wait));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "waitpid", 
                     DFSCH_PRIMITIVE_REF(waitpid));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mmap", 
+                    DFSCH_PRIMITIVE_REF(mmap));
   
   dfsch_provide(ctx, "unix");
 

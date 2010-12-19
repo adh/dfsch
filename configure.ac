@@ -120,12 +120,14 @@ AC_ARG_WITH([pcre],
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
-AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
-AC_CHECK_LIB(pcre, pcre_compile, 
-                    [have_pcre=$have_pcre], [have_pcre="0"])
+if test x$"$enable_pcre" == x"yes"; then
+    AC_CHECK_HEADERS(pcre.h, [have_pcre="1"], [have_pcre="0"])
+    AC_CHECK_LIB(pcre, pcre_compile, 
+                     [], [have_pcre="0"])
 
-if [ "$have_pcre" == "0" ] ; then
-    enable_pcre=no
+    if test x"$have_pcre" == x"0" ; then
+        enable_pcre=no
+    fi
 fi
 
 AM_CONDITIONAL(PCRE, test x"$enable_pcre" == x"yes")
@@ -174,12 +176,14 @@ AC_ARG_WITH([tokyo-cabinet],
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
-AC_CHECK_HEADERS(tchdb.h, [have_tokyocabinet="1"], [have_tokyocabinet="0"])
-AC_CHECK_LIB(tokyocabinet, tcadbget, 
-             [have_tokyocabinet=$have_tokyocabinet], [have_tokyocabinet="0"])
+if test x$"$enable_tokyo_cabinet" == x"yes"; then
+   AC_CHECK_HEADERS(tchdb.h, [have_tokyocabinet="1"], [have_tokyocabinet="0"])
+   AC_CHECK_LIB(tokyocabinet, tcadbget, 
+                [have_tokyocabinet=$have_tokyocabinet], [have_tokyocabinet="0"])
 
-if test x"$have_tokyocabinet" == x"0" ; then
-    enable_tokyo_cabinet=no
+   if test x"$have_tokyocabinet" == x"0" ; then
+      enable_tokyo_cabinet=no
+   fi
 fi
 
 AM_CONDITIONAL(TOKYO_CABINET, test x"$enable_tokyo_cabinet" == x"yes")

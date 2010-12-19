@@ -1,7 +1,7 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
  *   I/O ports
- * Copyright (C) 2005-2008 Ales Hakl
+ * Copyright (C) 2005-2010 Ales Hakl
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -1,21 +1,21 @@
 /*
  * dfsch - Scheme-like Lisp dialect
  *   Basic types.
- * Copyright (C) 2005-2008 Ales Hakl
+ * Copyright (C) 2005-2010 Ales Hakl
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -157,6 +157,7 @@ typedef struct dfsch_macro_t {
 
 typedef struct dfsch_form_t dfsch_form_t;
 
+/* methods used by compiler, in different struct for easier expansion */
 typedef struct dfsch_form_methods_t {
   dfsch_object_t* (*constant_fold)(dfsch_form_t* form, 
                                    dfsch_object_t* expr,
@@ -210,6 +211,12 @@ extern dfsch_type_t dfsch_form_type;
   };                                                    \
   DFSCH_FORM_IMPLEMENTATION(name)
 
+/* 
+ * Environment argument passed to forms should not be directly accessed. 
+ * By default, environments are not scavenged by GC, but directly reused 
+ * when they come out of scope, this dfsch_reify_environment() disables 
+ * this behavior.
+ */
 #define DFSCH_FORM_ENVIRONMENT (dfsch_reify_environemnt(env))
 
 #define DFSCH_FORM_REF(name) ((dfsch_object_t*)&form_##name)
@@ -296,6 +303,14 @@ typedef struct dfsch_mapping_methods_t {
   dfsch_mapping_set_if_not_exists_t set_if_not_exists;
 } dfsch_mapping_methods_t;
 
+typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
+typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
+
+typedef struct dfsch_iterator_methods_t {
+  dfsch_iterator_next_t next;
+  dfsch_iterator_this_t this;
+} dfsch_iterator_methods_t;
+
 
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
@@ -339,6 +354,7 @@ struct dfsch_type_t {
   dfsch_collection_methods_t* collection;
   dfsch_sequence_methods_t* sequence;
   dfsch_mapping_methods_t* mapping;
+  dfsch_iterator_methods_t* iterator;
 
   dfsch_type_serialize_t serialize;
 
@@ -429,23 +445,9 @@ struct dfsch_slot_t {
   {DFSCH_LONG_SLOT_TYPE, #name, offsetof(struct, name), access, doc}
 #define DFSCH_SLOT_TERMINATOR {NULL, NULL, 0, 0, NULL}
 
-typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
-typedef dfsch_object_t* (*dfsch_iterator_this_t)(dfsch_object_t*);
-
-typedef struct dfsch_iterator_type_t {
-  dfsch_type_t type;
-  dfsch_iterator_next_t next;
-  dfsch_iterator_this_t this;
-} dfsch_iterator_type_t;
-
 extern dfsch_collection_methods_t dfsch_iterator_collection_methods;
 
-extern dfsch_type_t dfsch_iterator_type_type;
-#define DFSCH_ITERATOR_TYPE_TYPE (&dfsch_iterator_type_type)
-extern dfsch_type_t dfsch_iterator_type;
-#define DFSCH_ITERATOR_TYPE (&dfsch_iterator_type)
-
-extern dfsch_iterator_type_t dfsch_sequence_iterator_type;
+extern dfsch_type_t dfsch_sequence_iterator_type;
 #define DFSCH_SEQUENCE_ITERATOR_TYPE \
   ((dfsch_type_t*)&dfsch_sequence_iterator_type)
 
@@ -580,12 +582,19 @@ typedef struct dfsch_pair_t {
 #define DFSCH_SEQUENCE_P(o)                   \
   (DFSCH_TYPE_SEQUENCE_P(DFSCH_TYPE_OF((o))))
 
+#define DFSCH_TYPE_ITERATOR_P(t)                   \
+  (((dfsch_type_t*)(t))->iterator != NULL)
+#define DFSCH_ITERATOR_P(o)                   \
+  (DFSCH_TYPE_ITERATOR_P(DFSCH_TYPE_OF((o))))
+
 #define DFSCH_ASSERT_COLLECTION(o)                                      \
   (DFSCH_COLLECTION_P((o)) ? (o) : dfsch_assert_collection((o)))
 #define DFSCH_ASSERT_MAPPING(o)                                 \
   (DFSCH_MAPPING_P((o)) ? (o) : dfsch_assert_mapping((o)))
 #define DFSCH_ASSERT_SEQUENCE(o)                                \
   (DFSCH_SEQUENCE_P((o)) ? (o) : dfsch_assert_sequence((o)))
+#define DFSCH_ASSERT_ITERATOR(o)                                \
+  (DFSCH_ITERATOR_P((o)) ? (o) : dfsch_assert_iterator((o)))
 
 #define DFSCH_ASSERT_PAIR(p)                                            \
   (DFSCH_PAIR_P((p)) ? (p) : dfsch_assert_instance((p), DFSCH_PAIR_TYPE))
@@ -610,6 +619,7 @@ typedef struct dfsch__symbol_t{
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch__symbol_t;
 
+/* actual contents of this table is in src/package.c */
 extern dfsch__symbol_t dfsch__static_symbols[];
 #define DFSCH__STATIC_SYMBOL(index)			\
   DFSCH_TAG_ENCODE(dfsch__static_symbols + (index), 2)

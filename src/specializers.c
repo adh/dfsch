@@ -244,6 +244,10 @@ DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_collection_specializer,
                                         "collection"){
   return DFSCH_TYPE_COLLECTION_P(type);
 }
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_iterator_specializer, 
+                                        "iterator"){
+  return DFSCH_TYPE_ITERATOR_P(type);
+}
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_serializable_specializer,
                                         "serializable"){
   return dfsch_type_serializable_p(type);
@@ -297,6 +301,8 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
                       DFSCH_MAPPING_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<sequence>>", 
                       DFSCH_SEQUENCE_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<iterator>>", 
+                      DFSCH_ITERATOR_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<serializable>>", 
                       DFSCH_SERIALIZABLE_SPECIALIZER);
 
