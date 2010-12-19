@@ -22,13 +22,45 @@
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (provide :sql)
+(require :sql-support)
 (define-package :sql
-  :uses '(:dfsch)
+  :uses '(:dfsch :sql-support)
   :exports '(:close-database!
              :exec-string!
              :query-string
              :close-result!
              :column-names
-             :column-types))
+             :column-types
+             :exec!
+             :query))
 (in-package :sql)
 
+;;; Fallback implementation (for sqlite3)
+(define-method (column-types res)
+  (map type-of
+       (iter-this res)))
+
+(define-generic-function convert-sql-value)
+
+(define (build-query string values &optional db)
+  (construct-string string values
+                    :convert-all convert-sql-value
+                    :escape-character #\:))
+
+(define-method (exec! db statement &rest args)
+  (exec-string! db (build-query statement args db)))
+
+(define-method (query db statement &rest args)
+  (query-string db (build-query statement args db)))
+
+
+(define-method (convert-sql-value (value <proto-string>))
+  (sql-support:escape-string value))
+(define-method (convert-sql-value (value <number>))
+  (number->string value))
+(define-method (convert-sql-value (value <<collection>>))
+  (string-append
+   "("
+   (string-join (map convert-sql-value value) ", ")
+   ")"))
+                                  

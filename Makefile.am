@@ -135,6 +135,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	zlib.la \
 	csv.la \
 	crypto.la \
+	sql-support.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
@@ -435,6 +436,10 @@ sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 sqlite3_la_SOURCES = lib/sql/sqlite3.c
 sqlite3_la_LIBADD = libdfsch.la -lsqlite3
 sqlite3_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+sql_support_la_SOURCES = lib/sql/sql-support.c
+sql_support_la_LIBADD = libdfsch.la
+sql_support_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 if WIN32

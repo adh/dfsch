@@ -2189,11 +2189,13 @@ DFSCH_DEFINE_PRIMITIVE(construct_string,
   dfsch_str_list_t* sl;
   char delim = ':';
   dfsch_object_t* convert_non_string = NULL;
+  dfsch_object_t* convert_all = NULL;
   DFSCH_STRING_ARG(args, query);
   DFSCH_OBJECT_ARG(args, arguments);
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD_GENERIC("escape-character", delim, dfsch_number_to_long);
   DFSCH_KEYWORD("convert-non-string", convert_non_string);
+  DFSCH_KEYWORD("convert-all", convert_all);
   DFSCH_KEYWORD_PARSER_END(args);
 
   sl = dfsch_sl_create();
@@ -2214,8 +2216,10 @@ DFSCH_DEFINE_PRIMITIVE(construct_string,
         query++;
       }
 
-      if (convert_non_string && 
-          !DFSCH_INSTANCE_P(obj, DFSCH_PROTO_STRING_TYPE)){
+      if (convert_all){
+        obj = dfsch_apply(convert_all, dfsch_list(1, obj));
+      } else if (convert_non_string && 
+                 !DFSCH_INSTANCE_P(obj, DFSCH_PROTO_STRING_TYPE)){
         obj = dfsch_apply(convert_non_string, dfsch_list(1, obj));
       }
 
@@ -2225,6 +2229,36 @@ DFSCH_DEFINE_PRIMITIVE(construct_string,
     }
   }
   dfsch_sl_append(sl, query);
+  return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
+}
+
+DFSCH_DEFINE_PRIMITIVE(string_join, 
+                       "Join elements of string collection by separator"){
+  dfsch_object_t* collection;
+  dfsch_strbuf_t* separator;
+  dfsch_object_t* i;
+  dfsch_str_list_t* sl;
+  int sep = 0;
+
+  DFSCH_OBJECT_ARG(args, collection);
+  DFSCH_BUFFER_ARG_OPT(args, separator, NULL);
+
+  sl = dfsch_sl_create();
+  i = dfsch_collection_get_iterator(collection);
+  while (i){
+    dfsch_strbuf_t* sb = dfsch_string_to_buf(dfsch_iterator_this(i));
+
+    if (separator){
+      if (sep){
+        dfsch_sl_nappend(sl, separator->ptr, separator->len);        
+      } else {
+        sep = 1;
+      }
+    } 
+
+    dfsch_sl_nappend(sl, sb->ptr, sb->len);
+    i = dfsch_iterator_next(i); 
+  }
   return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
 }
 
@@ -2365,5 +2399,7 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_starts_with_p));
   dfsch_defcanon_cstr(ctx, "construct-string", 
 		   DFSCH_PRIMITIVE_REF(construct_string));
+  dfsch_defcanon_cstr(ctx, "string-join", 
+		   DFSCH_PRIMITIVE_REF(string_join));
 
 }
