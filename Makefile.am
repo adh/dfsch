@@ -73,10 +73,16 @@ nonwin32_libs=\
 	libdfsch-socket-port.la
 endif
 
-if TKGUI
+if SQLITE
 sqlite_modules=sqlite.la
 else
 sqlite_modules=
+endif
+
+if SQLITE3
+sqlite3_modules=sqlite3.la
+else
+sqlite3_modules=
 endif
 
 
@@ -129,17 +135,20 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	zlib.la \
 	csv.la \
 	crypto.la \
+	sql-support.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
-	$(sqlite_modules)
+	$(sqlite_modules)\
+	$(sqlite3_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
 	lib-scm/simple-tests.scm \
 	lib-scm/os-utils.scm \
 	lib-scm/tk-gui.scm \
-	lib-scm/http-server.scm
+	lib-scm/http-server.scm \
+	lib-scm/sql.scm
 
 man_MANS = doc/dfsch-repl.1
 
@@ -423,6 +432,14 @@ pcre_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 sqlite_la_SOURCES = lib/sql/sqlite.c
 sqlite_la_LIBADD = libdfsch.la -lsqlite
 sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+sqlite3_la_SOURCES = lib/sql/sqlite3.c
+sqlite3_la_LIBADD = libdfsch.la -lsqlite3
+sqlite3_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+sql_support_la_SOURCES = lib/sql/sql-support.c
+sql_support_la_LIBADD = libdfsch.la
+sql_support_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 if WIN32

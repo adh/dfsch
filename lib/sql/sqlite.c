@@ -10,6 +10,7 @@
 typedef struct sqlite_database_t {
   dfsch_type_t* type;
   sqlite* db;
+  pthread_mutex_t* mutex;
 } sqlite_database_t;
 
 static dfsch_type_t sqlite_database_type = {
@@ -29,6 +30,7 @@ typedef struct sqlite_result_t {
   dfsch_object_t* last_res;
   int n_columns;
   char**names;
+  pthread_mutex_t* mutex;
 } sqlite_result_t;
 
 
@@ -50,18 +52,23 @@ static dfsch_object_t* result_next(sqlite_result_t* res){
   char* err;
   int ret;
   char**values;
+  pthread_mutex_lock(res->mutex);
   ret = sqlite_step(res->vm, &res->n_columns, &values, &res->names);
 
   if (ret == SQLITE_ROW){
      res->last_res = get_row_as_vector(res->n_columns, values);
+     pthread_mutex_unlock(res->mutex);
      return res;
-  } else if (ret == SQLITE_BUSY) {
-    dfsch_error("Database is busy", (dfsch_object_t*)res->db);
-  } else if (ret == SQLITE_ERROR){
-    finalize_result(res);
-    return NULL;
   } else {
-    return NULL;
+    pthread_mutex_unlock(res->mutex);
+    if (ret == SQLITE_BUSY) {
+      dfsch_error("Database is busy", (dfsch_object_t*)res->db);
+    } else if (ret == SQLITE_ERROR){
+      finalize_result(res);
+      return NULL;
+    } else {
+      return NULL;
+    }
   }
 }
 static dfsch_object_t* result_this(sqlite_result_t* res){
@@ -110,15 +117,17 @@ DFSCH_DEFINE_PRIMITIVE(open_database,
                        "Open sqlite database"){
   char* filename;
   char* err;
-  dfsch_object_t* creator;
+  dfsch_object_t* creator = NULL;
   sqlite_database_t* db;
   int created;
-  int busy_timeout;
+  int busy_timeout = -1;
   struct stat s;
 
   DFSCH_STRING_ARG_OPT(args, filename, ":memory:");
-  DFSCH_LONG_ARG_OPT(args, busy_timeout, -1);
-  DFSCH_OBJECT_ARG_OPT(args, creator, NULL);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("busy-timeout", busy_timeout, dfsch_number_to_long);
+  DFSCH_KEYWORD("creator", creator);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
   db = (sqlite_database_t*)dfsch_make_object(&sqlite_database_type);
@@ -129,6 +138,7 @@ DFSCH_DEFINE_PRIMITIVE(open_database,
   created = (stat(filename, &s)==-1 || !S_ISREG(s.st_mode));
   
   db->db = sqlite_open(filename, 0, &err);
+  db->mutex = dfsch_create_finalized_mutex();
 
   if (!db->db){
     dfsch_object_t* message;
@@ -150,7 +160,9 @@ DFSCH_DEFINE_PRIMITIVE(close_database,
   SQLITE_DATABASE_ARG(args, db);
   DFSCH_ARG_END(args);
 
+  pthread_mutex_lock(db->mutex);
   sqlite_close(db->db);
+  pthread_mutex_unlock(db->mutex);
   dfsch_invalidate_object(db);
 
   return NULL;
@@ -167,7 +179,9 @@ DFSCH_DEFINE_PRIMITIVE(exec_string,
   DFSCH_STRING_ARG(args, sql);
   DFSCH_ARG_END(args);
 
+  pthread_mutex_lock(db->mutex);
   ret = sqlite_exec(db->db, sql, NULL, NULL, &err);
+  pthread_mutex_unlock(db->mutex);
   
   if (ret != SQLITE_OK){
     if (ret == SQLITE_BUSY) {
@@ -195,8 +209,11 @@ DFSCH_DEFINE_PRIMITIVE(query_string,
   DFSCH_ARG_END(args);
   
   res = (sqlite_result_t*)dfsch_make_object(&sqlite_result_type);
+  res->mutex = db->mutex;
 
+  pthread_mutex_lock(db->mutex);
   ret = sqlite_compile(db->db, sql, NULL, &(res->vm), &err);
+  pthread_mutex_unlock(db->mutex);
   if (ret != SQLITE_OK){
     if (ret == SQLITE_BUSY) {
       dfsch_error("Database is busy", (dfsch_object_t*)db);
@@ -214,7 +231,10 @@ static void finalize_result(sqlite_result_t* res){
   char* err;
   int ret;
 
+  pthread_mutex_lock(res->mutex);
   ret = sqlite_finalize(res->vm, &err);
+  pthread_mutex_unlock(res->mutex);
+
   if (ret != SQLITE_OK){
     dfsch_object_t* message;
     message = dfsch_make_string_cstr(err);
@@ -227,11 +247,16 @@ static void finalize_result(sqlite_result_t* res){
 DFSCH_DEFINE_PRIMITIVE(close_result,
                        "Close result object"){
   sqlite_result_t* res;
+  pthread_mutex_t* mtx;
 
   SQLITE_RESULT_ARG(args, res);
   DFSCH_ARG_END(args);
 
+  mtx = res->mutex;
+
+  pthread_mutex_lock(mtx);
   finalize_result(res);
+  pthread_mutex_unlock(mtx);
 
   return NULL;
 }
@@ -296,9 +321,11 @@ static dfsch_object_t* native_sqlite_last_insert_rowid(void *baton,
   return dfsch_make_number_from_long(sqlite_last_insert_rowid(db->db));
 }
 
-dfsch_object_t* dfsch_module_sqlite_register(dfsch_object_t* env){
+void dfsch_module_sqlite_register(dfsch_object_t* env){
   dfsch_package_t* sql = dfsch_make_package("sql");
   dfsch_package_t* sqlite = dfsch_make_package("sqlite");
+  dfsch_require(env, "sql", NULL);
+  dfsch_provide(env, "sqlite");
 
   dfsch_define_pkgcstr(env, sqlite, "<database>", &sqlite_database_type);
   dfsch_define_pkgcstr(env, sqlite, "<result>", &sqlite_result_type);
@@ -331,14 +358,10 @@ dfsch_object_t* dfsch_module_sqlite_register(dfsch_object_t* env){
   
 
 
-  /* sqite specific functions */
+  /* sqlite specific functions */
   dfsch_define_pkgcstr(env, sqlite, "changes", 
                        dfsch_make_primitive(native_sqlite_changes, NULL));
   dfsch_define_pkgcstr(env, sqlite, "last-insert-rowid", 
                        dfsch_make_primitive(native_sqlite_last_insert_rowid, 
                                          NULL));
-
-
-  dfsch_provide(env, "sqlite");
-  return NULL;
 }

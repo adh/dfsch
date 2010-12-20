@@ -171,7 +171,7 @@ enable_sqlite=yes
 
 AC_ARG_ENABLE([sqlite],
     AS_HELP_STRING([--disable-sqlite], [Disable sqlite module]))
-AC_ARG_WITH([pcre],
+AC_ARG_WITH([sqlite],
   AC_HELP_STRING([--with-sqlite=PATH], [Path to Sqlite installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
@@ -187,6 +187,28 @@ if test x$"$enable_sqlite" == x"yes"; then
 fi
 
 AM_CONDITIONAL(SQLITE, test x"$enable_sqlite" == x"yes")
+
+enable_sqlite3=yes
+
+AC_ARG_ENABLE([sqlite3],
+    AS_HELP_STRING([--disable-sqlite3], [Disable sqlite3 module]))
+AC_ARG_WITH([sqlite3],
+  AC_HELP_STRING([--with-sqlite3=PATH], [Path to Sqlite3 installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_sqlite3" == x"yes"; then
+    AC_CHECK_HEADERS(sqlite3.h, [have_sqlite3="1"], [have_sqlite3="0"])
+    AC_CHECK_LIB(sqlite3, sqlite3_open, 
+                     [dummy_sqlite3=], [have_sqlite3="0"])
+
+    if test x"$have_sqlite3" == x"0" ; then
+        enable_sqlite3=no
+    fi
+fi
+
+AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
+
 
 
 AC_SYS_LARGEFILE 
@@ -227,6 +249,7 @@ readline ........... : $use_readline
 tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
+sqlite3 ............ : $enable_sqlite3
 
 
 EOF
