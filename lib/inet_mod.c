@@ -123,7 +123,9 @@ static dfsch_object_t* inet_base64_decode(void* baton,
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
   
-  return dfsch_make_string_nocopy(dfsch_inet_base64_decode(str));
+  str = dfsch_inet_base64_decode(str);
+
+  return dfsch_make_byte_vector_nocopy(str->ptr, str->len);
 }
 static dfsch_object_t* inet_uri_base64_decode(void* baton,
                                               dfsch_object_t* args,
@@ -132,7 +134,9 @@ static dfsch_object_t* inet_uri_base64_decode(void* baton,
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
   
-  return dfsch_make_string_nocopy(dfsch_inet_uri_base64_decode(str));
+  str = dfsch_inet_uri_base64_decode(str);
+
+  return dfsch_make_byte_vector_nocopy(str->ptr, str->len);
 }
 
 static dfsch_object_t* inet_xml_escape(void* baton,

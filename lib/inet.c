@@ -561,7 +561,7 @@ dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf){
 
   switch (str_buf->len - i){
   case 1:
-    tmp = (((unsigned)str_buf->ptr[i]) << 16) & 0xff;
+    tmp = ((((unsigned)str_buf->ptr[i]) & 0xff) << 16);
 
     *out++ = ubase64_chars[(tmp >> 18) & 0x3f];
     *out++ = ubase64_chars[(tmp >> 12) & 0x3f];
