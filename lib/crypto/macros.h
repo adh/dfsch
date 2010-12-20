@@ -109,7 +109,7 @@
 
 /* a simple macro for making hash "process" functions */
 #define HASH_PROCESS(func_name, compress_name, type, block_size)   \
-  int func_name (type* md, const unsigned char *in, unsigned long inlen) \
+  void func_name (type* md, const unsigned char *in, unsigned long inlen) \
   {                                                                     \
     unsigned long n;                                                    \
     int           err;                                                  \

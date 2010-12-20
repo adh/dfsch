@@ -8,21 +8,14 @@
  *
  * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
-#include <dfsch/lib/crypto.h>
-#include "macros.h"
+#include <dfsch/sha256.h>
+#include "lib/crypto/macros.h"
 
 /**
   @file sha256.c
   LTC_SHA256 by Tom St Denis 
 */
 
-
-typedef struct sha256_state {
-  dfsch_crypto_hash_t* algo;
-  ulong64 length;
-  ulong32 state[8], curlen;
-  unsigned char buf[64];
-} sha256_context_t;
 
 /* Various logical functions */
 #define Ch(x,y,z)       (z ^ (x & (y ^ z)))
@@ -35,7 +28,7 @@ typedef struct sha256_state {
 #define Gamma1(x)       (S(x, 17) ^ S(x, 19) ^ R(x, 10))
 
 /* compress 512-bits */
-static int  sha256_compress(sha256_context_t * md, unsigned char *buf)
+void  dfsch_sha256_compress(dfsch_sha256_context_t * md, unsigned char *buf)
 {
     ulong32 S[8], W[64], t0, t1;
     int i;
@@ -134,13 +127,8 @@ static int  sha256_compress(sha256_context_t * md, unsigned char *buf)
     }
 }
 
-static void sha256_setup(sha256_context_t* md,
-                         uint8_t* key, size_t keylen)
+void dfsch_sha256_setup(dfsch_sha256_context_t* md)
 {
-  if (keylen != 0){
-    dfsch_error("SHA-256 is not keyed", NULL);
-  }
-
   md->curlen = 0;
   md->length = 0;
   md->state[0] = 0x6A09E667UL;
@@ -160,7 +148,7 @@ static void sha256_setup(sha256_context_t* md,
    @param inlen  The length of the data (octets)
    @return CRYPT_OK if successful
 */
-HASH_PROCESS(sha256_process, sha256_compress, sha256_context_t, 64)
+HASH_PROCESS(dfsch_sha256_process, dfsch_sha256_compress, dfsch_sha256_context_t, 64)
 
 /**
    Terminate the hash to get the digest
@@ -168,7 +156,7 @@ HASH_PROCESS(sha256_process, sha256_compress, sha256_context_t, 64)
    @param out [out] The destination of the hash (32 bytes)
    @return CRYPT_OK if successful
 */
-int sha256_result(sha256_context_t * md, unsigned char *out)
+void dfsch_sha256_result(dfsch_sha256_context_t * md, unsigned char *out)
 {
     int i;
 
@@ -186,7 +174,7 @@ int sha256_result(sha256_context_t * md, unsigned char *out)
         while (md->curlen < 64) {
             md->buf[md->curlen++] = (unsigned char)0;
         }
-        sha256_compress(md, md->buf);
+        dfsch_sha256_compress(md, md->buf);
         md->curlen = 0;
     }
 
@@ -197,7 +185,7 @@ int sha256_result(sha256_context_t * md, unsigned char *out)
 
     /* store length */
     STORE64H(md->length, md->buf+56);
-    sha256_compress(md, md->buf);
+    dfsch_sha256_compress(md, md->buf);
 
     /* copy output */
     for (i = 0; i < 8; i++) {
@@ -205,19 +193,3 @@ int sha256_result(sha256_context_t * md, unsigned char *out)
     }
 }
 
-dfsch_crypto_hash_t dfsch_crypto_sha256 = {
-  .type = {
-    .type = DFSCH_CRYPTO_HASH_TYPE,
-    .name = "sha-256",
-    .size = sizeof(sha256_context_t),
-  },
-
-  .name = "SHA-256",
-  
-  .block_len = 64,
-  .result_len = 32,
-
-  .setup = sha256_setup,
-  .process = sha256_process,
-  .result = sha256_result
-};

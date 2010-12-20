@@ -46,7 +46,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/backquote.h \
 	dfsch/specializers.h\
 	dfsch/serdes.h \
-	dfsch/strhash.h
+	dfsch/strhash.h \
+	dfsch/sha256.h
 
 if TKGUI
 tkgui_libs=libdfsch-tk-gui.la
@@ -187,6 +188,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/specializers.c dfsch/specializers.h\
 	src/strhash.c dfsch/strhash.h	\
 	src/serdes.c dfsch/serdes.h	\
+	src/sha256.c dfsch/sha256.h	\
 	std-lib.c
 
 
@@ -390,7 +392,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/xtea.c \
 	lib/crypto/blowfish.c \
 	lib/crypto/hmac.c \
-	lib/crypto/sha256.c \
+	lib/crypto/sha256-desc.c \
 	lib/crypto/sha512.c \
 	lib/crypto/sha1.c \
 	lib/crypto/md5.c \
