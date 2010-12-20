@@ -76,6 +76,11 @@ object_t* dfsch_make_object(const dfsch_type_t* type){
   return dfsch_make_object_var(type, 0);
 }
 
+void dfsch_invalidate_object(dfsch_object_t* obj){
+  dfsch_type_t* type = DFSCH_TYPE_OF(obj);
+  memset(obj, 0, type->size);
+  obj->type = DFSCH_INVALID_OBJECT_TYPE;
+}
 
 int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   return (a==b);
@@ -266,7 +271,11 @@ dfsch_object_t* dfsch_assert_iterator(dfsch_object_t* obj){
 }
 
 dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col){
-  dfsch_object_t* c = DFSCH_ASSERT_COLLECTION(col);
+  dfsch_object_t* c;
+  if (DFSCH_PAIR_P(col)){
+    return col;
+  }
+  c = DFSCH_ASSERT_COLLECTION(col);
   return DFSCH_TYPE_OF(c)->collection->get_iterator(c);
 }
 dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
@@ -292,11 +301,23 @@ size_t dfsch_sequence_length(dfsch_object_t* seq){
 }
 
 dfsch_object_t* dfsch_iterator_next(dfsch_object_t* iterator){
-  dfsch_object_t* it = DFSCH_ASSERT_ITERATOR(iterator);
+  dfsch_object_t* it;
+
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CDR(iterator);
+  }
+
+  it = DFSCH_ASSERT_ITERATOR(iterator);
   return DFSCH_TYPE_OF(it)->iterator->next(it);
 }
 dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
-  dfsch_object_t* it = DFSCH_ASSERT_ITERATOR(iterator);
+  dfsch_object_t* it; 
+  
+  if (DFSCH_PAIR_P(iterator)){
+    return DFSCH_FAST_CAR(iterator);
+  }
+
+  it = DFSCH_ASSERT_ITERATOR(iterator);
   return DFSCH_TYPE_OF(it)->iterator->this(it);
 }
 

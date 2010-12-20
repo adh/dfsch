@@ -184,7 +184,6 @@ dfsch_package_t* dfsch_find_package(char* name){
   pkg = find_package(name);
   pthread_mutex_unlock(&symbol_lock);
 
-
   return pkg;
 }
 

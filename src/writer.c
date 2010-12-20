@@ -269,6 +269,7 @@ void dfsch_write_unreadable_start(dfsch_writer_state_t* state,
     dfsch_error("Object has no readable representation", obj);
   }
   dfsch_write_pprint_begin(state);
+
   dfsch_write_string(state,
                      saprintf("#<%s ", DFSCH_TYPE_OF(obj)->name));
   dfsch_write_pprint_indent(state);

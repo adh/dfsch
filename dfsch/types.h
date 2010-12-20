@@ -85,6 +85,9 @@ extern dfsch_type_t dfsch_slot_writer_type;
 extern dfsch_type_t dfsch_package_type;
 #define DFSCH_PACKAGE_TYPE (&dfsch_package_type)
 
+extern dfsch_type_t dfsch_invalid_object_type;
+#define DFSCH_INVALID_OBJECT_TYPE (&dfsch_invalid_object_type)
+
 typedef struct dfsch_primitive_t {
   dfsch_type_t* type;
   dfsch_primitive_impl_t proc;
