@@ -174,52 +174,52 @@ DFSCH_DEFINE_PRIMITIVE(mode, NULL){
 #ifdef S_IRUSR, mode);
   DFSCH_FLAG_SET("rusr", S_IRUSR, mode);
 #endif
-#ifdef S_IRUSR, mode);
+#ifdef S_IRUSR
   DFSCH_FLAG_SET("ur", S_IRUSR, mode);
 #endif
-#ifdef S_IWUSR, mode);
+#ifdef S_IWUSR
   DFSCH_FLAG_SET("wusr", S_IWUSR, mode);
 #endif
-#ifdef S_IWUSR, mode);
+#ifdef S_IWUSR
   DFSCH_FLAG_SET("uw", S_IWUSR, mode);
 #endif
-#ifdef S_IXUSR, mode);
+#ifdef S_IXUSR
   DFSCH_FLAG_SET("xusr", S_IXUSR, mode);
 #endif
-#ifdef S_IXUSR, mode);
+#ifdef S_IXUSR
   DFSCH_FLAG_SET("ux", S_IXUSR, mode);
 #endif
-#ifdef S_IRGRP, mode);
+#ifdef S_IRGRP
   DFSCH_FLAG_SET("rgrp", S_IRGRP, mode);
 #endif
-#ifdef S_IRGRP, mode);
+#ifdef S_IRGRP
   DFSCH_FLAG_SET("gr", S_IRGRP, mode);
 #endif
-#ifdef S_IWGRP, mode);
+#ifdef S_IWGRP
   DFSCH_FLAG_SET("wgrp", S_IWGRP, mode);
 #endif
-#ifdef S_IWGRP, mode);
+#ifdef S_IWGRP
   DFSCH_FLAG_SET("gw", S_IWGRP, mode);
 #endif
-#ifdef S_IXGRP, mode);
+#ifdef S_IXGRP
   DFSCH_FLAG_SET("xgrp", S_IXGRP, mode);
 #endif
-#ifdef S_IXGRP, mode);
+#ifdef S_IXGRP
   DFSCH_FLAG_SET("gx", S_IXGRP, mode);
 #endif
-#ifdef S_IROTH, mode);
+#ifdef S_IROTH
   DFSCH_FLAG_SET("roth", S_IROTH, mode);
 #endif
-#ifdef S_IROTH, mode);
+#ifdef S_IROTH
   DFSCH_FLAG_SET("or", S_IROTH, mode);
 #endif
-#ifdef S_IWOTH, mode);
+#ifdef S_IWOTH
   DFSCH_FLAG_SET("woth", S_IWOTH, mode);
 #endif
-#ifdef S_IWOTH, mode);
+#ifdef S_IWOTH
   DFSCH_FLAG_SET("ow", S_IWOTH, mode);
 #endif
-#ifdef S_IXOTH, mode);
+#ifdef S_IXOTH
   DFSCH_FLAG_SET("xoth", S_IXOTH, mode);
   DFSCH_FLAG_SET("ox", S_IXOTH, mode);
 #endif
