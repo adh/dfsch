@@ -36,4 +36,7 @@ dfsch_object_t* dfsch_random_get_bignum(dfsch_object_t* state,
 
 dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len);
 dfsch_object_t* dfsch_make_file_random_state(char* filename);
+
+void dfsch_get_random_id(char buf[18]);
+
 #endif

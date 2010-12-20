@@ -20,6 +20,7 @@
  */
 
 #include <dfsch/random.h>
+#include <sys/time.h>
 #ifdef unix
 #include <sys/times.h>
 #include <sys/resource.h>
@@ -34,6 +35,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dfsch/sha256.h>
 
 dfsch_type_t dfsch_random_state_type = {
   DFSCH_ABSTRACT_TYPE,
@@ -55,6 +57,7 @@ typedef struct random_init_t {
   time_t time;
   void* sp;
   int mii_chan_constant;
+  struct timeval tv;
 #ifdef unix
   struct tms tms;
   clock_t clock;
@@ -70,32 +73,36 @@ typedef struct random_init_t {
   uint8_t sys_random[16];
 } random_init_t;
 
-static dfsch_object_t* make_default_state(){
-  random_init_t seed;
+static void init_seed(random_init_t* seed){
   int fd;
-  seed.time = time(NULL);
-  seed.sp = &seed;
-  seed.mii_chan_constant = 8; 
+  seed->time = time(NULL);
+  seed->sp = &seed;
+  seed->mii_chan_constant = 8; 
   /* You just come up with some random number, like eight -- Mitsuki  :) */
+  gettimeofday(&(seed->tv), NULL);
 #ifdef unix
-  seed.pid = getpid();
-  seed.clock = times(&seed.tms);
-  getrusage(RUSAGE_SELF, &seed.rusage);
+  seed->pid = getpid();
+  seed->clock = times(&(seed->tms));
+  getrusage(RUSAGE_SELF, &(seed->rusage));
   
   fd = open("/dev/urandom", O_RDONLY | O_NONBLOCK);
   if (fd < 0) {
     fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
   }
   if (fd >= 0){
-    read(fd, &seed.sys_random, 16);
+    read(fd, seed->sys_random, 16);
     close(fd);
   }
 #endif
 #ifdef __WIN32__
-  seed.pid = GetCurrentProcessId();
-  seed.tid = GetCurrentThreadId();
+  seed->pid = GetCurrentProcessId();
+  seed->tid = GetCurrentThreadId();
 #endif
+}
 
+static dfsch_object_t* make_default_state(){
+  random_init_t seed;
+  init_seed(&seed);
   return dfsch_make_default_random_state(&seed, sizeof(random_init_t));
 }
 
@@ -350,6 +357,33 @@ dfsch_object_t* dfsch_make_lcg_random_state(uint32_t seed){
   return lcg;
 }
 
+static pthread_mutex_t id_mutex = PTHREAD_MUTEX_INITIALIZER;
+static random_init_t id_seed;
+static char id_last[32];
+static int id_init = 0;
+
+void dfsch_get_random_id(char buf[16]){
+  uint64_t left;
+  uint64_t right;
+  dfsch_sha256_context_t ctx;
+
+  pthread_mutex_lock(&id_mutex);
+
+  if (!id_init){
+    init_seed(&id_seed);
+  }
+  
+  dfsch_sha256_setup(&ctx);
+  dfsch_sha256_process(&ctx, &id_seed, sizeof(id_seed));
+  dfsch_sha256_process(&ctx, id_last, 32);
+  dfsch_sha256_result(&ctx, id_last);
+  
+  memcpy(buf, id_last, 16);
+
+  pthread_mutex_unlock(&id_mutex);
+}
+
+
 
 DFSCH_DEFINE_PRIMITIVE(random_bytes, 0){
   size_t len;
@@ -361,7 +395,7 @@ DFSCH_DEFINE_PRIMITIVE(random_bytes, 0){
   buf = GC_MALLOC_ATOMIC(len);
   dfsch_random_get_bytes(state, buf, len);
 
-  return dfsch_make_string_buf(buf, len);
+  return dfsch_make_byte_vector(buf, len);
 }
 
 DFSCH_DEFINE_PRIMITIVE(random_flonum, 0){
@@ -409,6 +443,15 @@ DFSCH_DEFINE_PRIMITIVE(make_lcg_random_state, 0){
   return dfsch_make_lcg_random_state(seed);
 }
 
+DFSCH_DEFINE_PRIMITIVE(get_random_id, 0){
+  char buf[16];
+  DFSCH_ARG_END(args);
+
+  dfsch_get_random_id(buf);
+
+  return dfsch_make_byte_vector(buf, 16);
+}
+
 
 void dfsch__random_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
@@ -428,4 +471,7 @@ void dfsch__random_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(make_file_random_state));
   dfsch_defcanon_cstr(ctx, "make-lcg-random-state", 
                     DFSCH_PRIMITIVE_REF(make_lcg_random_state));
+
+  dfsch_defcanon_cstr(ctx, "get-random-id", 
+                    DFSCH_PRIMITIVE_REF(get_random_id));
 }
