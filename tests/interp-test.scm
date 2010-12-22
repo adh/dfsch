@@ -427,7 +427,7 @@
              '(("q" "foo") ("bla" "a b")))
        (test 'base64
              (inet:base64-decode (inet:base64-encode "abcdef\n\r\"01234567890"))
-             "abcdef\n\r\"01234567890"))
+             #"abcdef\n\r\"01234567890"))
 
 (group "Zlib"
        (test 'compress-uncompress
