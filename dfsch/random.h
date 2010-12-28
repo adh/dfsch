@@ -38,5 +38,8 @@ dfsch_object_t* dfsch_make_default_random_state(uint8_t* seed, size_t len);
 dfsch_object_t* dfsch_make_file_random_state(char* filename);
 
 void dfsch_get_random_id(char buf[18]);
+void dfsch_get_random_scoped_id(char buf[20], char scope[16]);
+int dfsch_check_scoped_id(char id[20], char scope[16]);
+
 
 #endif

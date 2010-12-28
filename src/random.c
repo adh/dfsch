@@ -383,6 +383,29 @@ void dfsch_get_random_id(char buf[16]){
   pthread_mutex_unlock(&id_mutex);
 }
 
+void dfsch_get_random_scoped_id(char buf[20], char scope[16]){
+  char sig_buf[32];
+  dfsch_sha256_context_t ctx;
+  dfsch_get_random_id(buf);
+  
+  dfsch_sha256_setup(&ctx);
+  dfsch_sha256_process(&ctx, buf, 16);
+  dfsch_sha256_process(&ctx, scope, 16);
+  dfsch_sha256_result(&ctx, sig_buf);
+  memcpy(buf + 16, sig_buf, 4);
+}
+
+int dfsch_check_scoped_id(char id[20], char scope[16]){
+  char sig_buf[32];
+  dfsch_sha256_context_t ctx;
+  
+  dfsch_sha256_setup(&ctx);
+  dfsch_sha256_process(&ctx, id, 16);
+  dfsch_sha256_process(&ctx, scope, 16);
+  dfsch_sha256_result(&ctx, sig_buf);
+
+  return memcmp(id + 16, sig_buf, 4) == 0;
+}
 
 
 DFSCH_DEFINE_PRIMITIVE(random_bytes, 0){
@@ -452,6 +475,39 @@ DFSCH_DEFINE_PRIMITIVE(get_random_id, 0){
   return dfsch_make_byte_vector(buf, 16);
 }
 
+DFSCH_DEFINE_PRIMITIVE(get_random_scoped_id, 0){
+  char buf[20];
+  dfsch_strbuf_t* scope;
+  DFSCH_BUFFER_ARG(args, scope);
+  DFSCH_ARG_END(args);
+
+  if (scope->len != 16 && scope->len != 20){
+    dfsch_error("ID scope must have 16 or 20 bytes", NULL);
+  }
+
+  dfsch_get_random_scoped_id(buf, scope->ptr);
+
+  return dfsch_make_byte_vector(buf, 20);
+}
+
+DFSCH_DEFINE_PRIMITIVE(check_scoped_id, 0){
+  dfsch_strbuf_t* id;
+  dfsch_strbuf_t* scope;
+  DFSCH_BUFFER_ARG(args, id);
+  DFSCH_BUFFER_ARG(args, scope);
+  DFSCH_ARG_END(args);
+
+  if (id->len != 20){
+    dfsch_error("Scoped ID must have 20 bytes", NULL);
+  }
+  if (scope->len != 16 && scope->len != 20){
+    dfsch_error("ID scope must have 16 or 20 bytes", NULL);
+  }
+
+  return dfsch_bool(dfsch_check_scoped_id(id->ptr, scope->ptr));
+}
+
+
 
 void dfsch__random_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "<random-state>", DFSCH_RANDOM_STATE_TYPE);
@@ -474,4 +530,8 @@ void dfsch__random_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "get-random-id", 
                     DFSCH_PRIMITIVE_REF(get_random_id));
+  dfsch_defcanon_cstr(ctx, "get-random-scoped-id", 
+                    DFSCH_PRIMITIVE_REF(get_random_scoped_id));
+  dfsch_defcanon_cstr(ctx, "check-scoped-id", 
+                    DFSCH_PRIMITIVE_REF(check_scoped_id));
 }
