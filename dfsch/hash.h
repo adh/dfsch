@@ -55,8 +55,7 @@ extern "C" {
   /**
    * Get given entry in hashtable.
    *
-   * Return value is pair, whose CAR is value associated with key
-   * or empty list in case of non-existant key.
+   * returns DFSCH_INVALID_OBJECT when not found.
    */
   extern dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash, 
                                         dfsch_object_t* key);

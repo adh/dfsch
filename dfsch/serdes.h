@@ -101,4 +101,10 @@ dfsch_object_t* dfsch_deserialize(dfsch_strbuf_t* sb,
 #define DFSCH_DESERIALIZER_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, dfsch_deserializer_t*, dfsch_deserializer)
 
+extern dfsch_type_t dfsch_serializing_map_type;
+#define DFSCH_SERIALIZING_MAP_TYPE (&dfsch_serializing_map_type)
+
+dfsch_object_t* dfsch_make_serializing_map(dfsch_object_t* mapping,
+                                           dfsch_object_t* canon_env);
+
 #endif

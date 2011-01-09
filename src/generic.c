@@ -697,6 +697,17 @@ void dfsch_define_method_pkgcstr(dfsch_object_t* env,
                       dfsch_intern_symbol(pkg, name),
                       qualifiers, specializers, function);
 }
+void dfsch_define_method_pkgcstr_1(dfsch_object_t* env,
+                                   dfsch_package_t* pkg,
+                                   char* name,
+                                   dfsch_object_t* specializer,
+                                   dfsch_object_t* function){
+  dfsch_define_method(env,
+                      dfsch_intern_symbol(pkg, name),
+                      NULL, 
+                      dfsch_list(1, specializer), 
+                      function);
+}
 
 void dfsch_add_method_proc(dfsch_object_t* gfunc,
                            dfsch_object_t* qualifiers,

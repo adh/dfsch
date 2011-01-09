@@ -209,6 +209,48 @@ fi
 
 AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
 
+enable_tokyo_cabinet=yes
+
+AC_ARG_ENABLE([tokyo-cabinet],
+    AS_HELP_STRING([--disable-tokyo-cabinet], [Disable tokyocabinet module]))
+AC_ARG_WITH([tokyo-cabinet],
+  AC_HELP_STRING([--with-tokyo-cabinet=PATH], [Path to TOKYOCABINET installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_tokyo_cabinet" == x"yes"; then
+   AC_CHECK_HEADERS(tchdb.h, [have_tokyocabinet="1"], [have_tokyocabinet="0"])
+   AC_CHECK_LIB(tokyocabinet, tcadbget, 
+                [have_tokyocabinet=$have_tokyocabinet], [have_tokyocabinet="0"])
+
+   if test x"$have_tokyocabinet" == x"0" ; then
+      enable_tokyo_cabinet=no
+   fi
+fi
+
+AM_CONDITIONAL(TOKYO_CABINET, test x"$enable_tokyo_cabinet" == x"yes")
+
+enable_tokyo_tyrant=yes
+
+AC_ARG_ENABLE([tokyo-tyrant],
+    AS_HELP_STRING([--disable-tokyo-tyrant], [Disable tokyotyrant module]))
+AC_ARG_WITH([tokyo-tyrant],
+  AC_HELP_STRING([--with-tokyo-tyrant=PATH], [Path to TOKYOTYRANT installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_tokyo_tyrant" == x"yes"; then
+   AC_CHECK_HEADERS(tcrdb.h, [have_tokyotyrant="1"], [have_tokyotyrant="0"])
+   AC_CHECK_LIB(tokyotyrant, tcrdbget, 
+                [have_tokyotyrant=$have_tokyotyrant], [have_tokyotyrant="0"],
+                [-ltokyocabinet])
+
+   if test x"$have_tokyotyrant" == x"0" ; then
+      enable_tokyo_tyrant=no
+   fi
+fi
+
+AM_CONDITIONAL(TOKYO_TYRANT, test x"$enable_tokyo_tyrant" == x"yes")
 
 
 AC_SYS_LARGEFILE 
@@ -250,6 +292,8 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
+tokyo-cabinet ...... : $enable_tokyo_cabinet
+tokyo-tyrant ....... : $enable_tokyo_tyrant
 
 
 EOF
