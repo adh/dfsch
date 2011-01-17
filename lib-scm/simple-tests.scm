@@ -37,19 +37,29 @@
       (os:exit fail-status)))
 
 
+(define (%test-pass id)
+  (print "   Test passed: \033[0;32m" id "\033[0;39m")
+  (set! tests-passed (+ tests-passed 1)))
+(define (%test-fail id fmt &rest args)
+  (print "\033[0;31m!!\033[0;39m Test failed: \033[0;31m" id 
+         "\033[0;39m " 
+         (apply format fmt args))
+  (set! tests-failed (+ tests-failed 1))
+  (when one-test-fail
+        (print "*** Test failed -- ABORTING ***")
+        (exit-func)))
+
 (define (test id exp val)
   (if (equal? exp val)
-      (begin 
-        (print "   Test passed: \033[0;32m" id "\033[0;39m")
-        (set! tests-passed (+ tests-passed 1)))
-      (begin
-        (print "\033[0;31m!!\033[0;39m Test failed: \033[0;31m" id 
-               "\033[0;39m was: " (object->string exp) 
-               " should be: " (object->string val))
-        (set! tests-failed (+ tests-failed 1))
-        (when one-test-fail
-              (print "*** Test failed -- ABORTING ***")
-              (exit-func)))))
+      (%test-pass id)
+      (%test-fail id "was: ~s should be: ~s"
+                  exp val)))
+
+(define-macro (test-error id &body body)
+  `(if (cdr (detect-errors ,@body))
+       (%test-pass ,id)
+       (%test-fail ,id "Should signal error")))
+
 
 (define (group-generator indent separator name statements)
   (define tmp-passed (gensym))
