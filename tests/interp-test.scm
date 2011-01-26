@@ -87,6 +87,9 @@
                   (test 'arith7 (/ 3 4 5) (/ 3 20))
                   (test 'arith-int-div (/i 8 3) 2)
                   (test 'arith-mod-inv (mod-inv 3 11) 4))
+       (sub-group zero-div
+                  (test-error 'integer
+                              (/ 4 0)))
        (sub-group overflow
                   (test 'int-add (< 0 (+ most-positive-fixnum 1)) #t)
                   (test 'int-sub (> 0 (- most-negative-fixnum 1)) #t))
