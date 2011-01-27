@@ -287,24 +287,23 @@ static weak_hash_entry_t* find_entry(weak_hash_entry_t** head,
   return res;
 }
 
-typedef struct weak_key_hash_t {
+typedef struct weak_hash_t {
   dfsch_type_t* type;
-  dfsch_rwlock_t* lock;
+  pthread_mutex_t* lock;
   size_t mask;
   size_t count;
   weak_hash_entry_t** buckets;
-} weak_key_hash_t;
+} weak_hash_t;
 
 #define DEFAULT_WEAK_KEY_HASH_SIZE 128
 
 dfsch_object_t* dfsch_make_weak_key_hash(){
-  weak_key_hash_t* h = 
-    (weak_key_hash_t*)dfsch_make_object(DFSCH_WEAK_KEY_HASH_TYPE);
+  weak_hash_t* h = (weak_hash_t*)dfsch_make_object(DFSCH_WEAK_KEY_HASH_TYPE);
 
   h->mask = DEFAULT_WEAK_KEY_HASH_SIZE - 1;
   h->buckets = GC_MALLOC(DEFAULT_WEAK_KEY_HASH_SIZE*sizeof(weak_hash_entry_t*));
   h->count = 0;
-  h->lock = DFSCH_CREATE_RWLOCK();
+  h->lock = dfsch_create_finalized_mutex();
 
   return (dfsch_object_t*)h;
 }
@@ -331,7 +330,7 @@ static size_t ptr_hash(dfsch_object_t* ptr){
   
   return b ^ a;
 }
-static dfsch_object_t* weak_key_hash_ref(weak_key_hash_t* h,
+static dfsch_object_t* weak_key_hash_ref(weak_hash_t* h,
                                          dfsch_object_t* key){
   weak_hash_entry_t* e;
   dfsch_object_t* res;
@@ -345,27 +344,27 @@ static dfsch_object_t* weak_key_hash_ref(weak_key_hash_t* h,
    * this in some meaningful manner (with doing nothing being pretty 
    * reasonable).
    */
-  DFSCH_RWLOCK_RDLOCK(h->lock);
+  pthread_mutex_lock(h->lock);
 
   e = find_entry(&h->buckets[hash & h->mask], HIDE_OBJECT(key), &h->count);
 
   if (!e){
-    DFSCH_RWLOCK_UNLOCK(h->lock);
+    pthread_mutex_unlock(h->lock);
     return DFSCH_INVALID_OBJECT;
   }
 
   
   res = e->value;
-  DFSCH_RWLOCK_UNLOCK(h->lock);
+  pthread_mutex_unlock(h->lock);
   return res;
 }
-static void weak_key_hash_set(weak_key_hash_t* h,
-                             dfsch_object_t* key,
-                             dfsch_object_t* value){
+static void weak_key_hash_set(weak_hash_t* h,
+                              dfsch_object_t* key,
+                              dfsch_object_t* value){
   uint32_t hash = ptr_hash(key);
   weak_hash_entry_t* e;
   
-  DFSCH_RWLOCK_WRLOCK(h->lock);
+  pthread_mutex_lock(h->lock);
 
   e = find_entry(&h->buckets[hash & h->mask], HIDE_OBJECT(key), &h->count);
   
@@ -379,7 +378,7 @@ static void weak_key_hash_set(weak_key_hash_t* h,
                             h->buckets[hash & h->mask]); 
   }
 
-  DFSCH_RWLOCK_UNLOCK(h->lock);
+  pthread_mutex_unlock(h->lock);
 }
 
 static dfsch_mapping_methods_t weak_key_hash_map = {
@@ -389,8 +388,8 @@ static dfsch_mapping_methods_t weak_key_hash_map = {
 
 dfsch_type_t dfsch_weak_key_hash_type = {
   DFSCH_STANDARD_TYPE,
-  NULL, //DFSCH_MAPPING_TYPE,
-  sizeof(weak_key_hash_t),
+  NULL,
+  sizeof(weak_hash_t),
   "weak-key-hash",
   NULL,
   NULL,
@@ -513,7 +512,7 @@ DFSCH_PRIMITIVE_HEAD(attach_parasite){
   dfsch_object_t* object;
   dfsch_object_t* name;
   dfsch_object_t* value;
-  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  weak_hash_t* parasite_table = (weak_hash_t*)baton;
   dfsch_object_t* obj_table;
 
   DFSCH_OBJECT_ARG(args, object);
@@ -535,7 +534,7 @@ DFSCH_PRIMITIVE_HEAD(attach_parasite){
 DFSCH_PRIMITIVE_HEAD(retrieve_parasite){
   dfsch_object_t* object;
   dfsch_object_t* name;
-  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  weak_hash_t* parasite_table = (weak_hash_t*)baton;
   dfsch_object_t* obj_table;
   dfsch_object_t* res;
   dfsch_object_t* def;
@@ -561,7 +560,7 @@ DFSCH_PRIMITIVE_HEAD(retrieve_parasite){
 DFSCH_PRIMITIVE_HEAD(detach_parasite){
   dfsch_object_t* object;
   dfsch_object_t* name;
-  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  weak_hash_t* parasite_table = (weak_hash_t*)baton;
   dfsch_object_t* obj_table;
 
   DFSCH_OBJECT_ARG(args, object);
@@ -580,7 +579,7 @@ DFSCH_PRIMITIVE_HEAD(detach_parasite){
 
 
 void dfsch__weak_native_register(dfsch_object_t *ctx){
-  weak_key_hash_t* parasite_table = dfsch_make_weak_key_hash();
+  weak_hash_t* parasite_table = dfsch_make_weak_key_hash();
 
   dfsch_defcanon_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);
   dfsch_defcanon_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
