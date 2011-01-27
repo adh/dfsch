@@ -86,7 +86,8 @@ DFSCH_DEFINE_PRIMITIVE(run_http_server, "Run server loop (for one connection)"){
 
 
 void dfsch_module_http_register(dfsch_object_t* env){
-  dfsch_package_t* http = dfsch_make_package("http");
+  dfsch_package_t* http = dfsch_make_package("http",
+                                             "Low-level HTTP handling");
   dfsch_provide(env, "http");
 
   dfsch_defcanon_pkgcstr(env, http, "make-request",

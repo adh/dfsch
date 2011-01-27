@@ -80,7 +80,8 @@ DFSCH_DEFINE_PRIMITIVE(bitvector_length, NULL){
 }
 
 void dfsch_module_collections_register(dfsch_object_t* env){
-  dfsch_package_t* collections = dfsch_make_package("collections");
+  dfsch_package_t* collections = dfsch_make_package("collections",
+                                                    "Advanced collections");
   dfsch_provide(env, "collections");
 
   dfsch_defcanon_pkgcstr(env, collections, "<priority-queue>",

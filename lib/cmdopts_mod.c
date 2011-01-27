@@ -96,7 +96,8 @@ DFSCH_DEFINE_PRIMITIVE(parse_list, "Parse command line from list"){
 }
 
 dfsch_object_t* dfsch_module_cmdopts_register(dfsch_object_t* env){
-  dfsch_package_t* cmdopts_pkg = dfsch_make_package("cmdopts");
+  dfsch_package_t* cmdopts_pkg = dfsch_make_package("cmdopts",
+                                                    "Command line parsing");
 
   dfsch_provide(env, "cmdopts");
 

@@ -34,8 +34,10 @@ DFSCH_DEFINE_PRIMITIVE(prefix_search,
 
 
 void dfsch_module_tokyo_tyrant_register(dfsch_object_t* env){
-  dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet");
-  dfsch_package_t* tt_pkg = dfsch_make_package("tokyo-cabinet");
+  dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet", NULL);
+  dfsch_package_t* tt_pkg = dfsch_make_package("tokyo-tyrant",
+                                               "Tokyo Tyrant remote database "
+                                               "support");
   dfsch_provide(env, "tokyo-tyrant");
   dfsch_require(env, "tokyo-cabinet", NULL);
 

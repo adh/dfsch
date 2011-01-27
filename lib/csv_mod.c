@@ -21,7 +21,8 @@ DFSCH_DEFINE_PRIMITIVE(read_file,
 }
 
 void dfsch_module_csv_register(dfsch_object_t* env){
-  dfsch_package_t* csv = dfsch_make_package("csv");
+  dfsch_package_t* csv = dfsch_make_package("csv",
+                                            "CSV parser");
   dfsch_provide(env, "csv");
   
   dfsch_defcanon_pkgcstr(env, csv, "read-line",

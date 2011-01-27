@@ -613,7 +613,8 @@ static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){
   dfsch_object_t* sym;
   dfsch_object_t* obj;
   if (package && name){
-    sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+    sym = dfsch_intern_symbol(dfsch_make_package(package, NULL), 
+                              name);
   } else {
     dfsch_error("Invalid serialized stream: dereferencing gensym", NULL);
   }

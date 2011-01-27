@@ -350,7 +350,8 @@ extern "C" {
                                   char* name);
   /** Return package object matching given name */
   extern dfsch_package_t* dfsch_find_package(char* name);
-  extern dfsch_object_t* dfsch_make_package(char* name);
+  extern dfsch_object_t* dfsch_make_package(char* name,
+                                            char* documentation);
   extern dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj);
   /** Retrun current default package (as in CL's *package*) */
   extern dfsch_package_t* dfsch_get_current_package();

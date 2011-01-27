@@ -72,7 +72,8 @@ DFSCH_DEFINE_PRIMITIVE(emit_port,
 
 
 void dfsch_module_json_register(dfsch_object_t* env){
-  dfsch_package_t* json_pkg = dfsch_make_package("json");
+  dfsch_package_t* json_pkg = dfsch_make_package("json",
+                                                 "JSON input and output");
   dfsch_provide(env, "json");
   dfsch_defcanon_pkgcstr(env, json_pkg, "<parser>", DFSCH_JSON_PARSER_TYPE);
 

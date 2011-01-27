@@ -120,7 +120,8 @@ static dfsch_object_t* native_regex_substrings_once(void *baton,
 
 
 dfsch_object_t* dfsch_module_posix_regex_register(dfsch_object_t *ctx){
-  dfsch_package_t* posix_regex = dfsch_make_package("posix-regex");
+  dfsch_package_t* posix_regex = dfsch_make_package("posix-regex",
+                                                    "POSIX libc regex(3)");
   dfsch_defcanon_pkgcstr(ctx, posix_regex, "compile", 
                    dfsch_make_primitive(&native_regex_compile,NULL));
   dfsch_defcanon_pkgcstr(ctx, posix_regex, "match?", 

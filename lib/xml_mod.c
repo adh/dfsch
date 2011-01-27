@@ -106,7 +106,8 @@ DFSCH_DEFINE_PRIMITIVE(parse_port, 0){
 
 
 void dfsch_module_xml_register(dfsch_object_t* env){
-  dfsch_package_t* xml_pkg = dfsch_make_package("xml");
+  dfsch_package_t* xml_pkg = dfsch_make_package("xml",
+                                                "XML support");
   dfsch_provide(env, "xml");
 
   dfsch_defcanon_pkgcstr(env, xml_pkg, "<parser>", DFSCH_XML_PARSER_TYPE);

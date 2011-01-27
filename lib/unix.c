@@ -464,7 +464,9 @@ DFSCH_DEFINE_PRIMITIVE(mmap, "Map file into memory"){
 }
 
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
-  dfsch_package_t* unix_pkg = dfsch_make_package("unix");
+  dfsch_package_t* unix_pkg = dfsch_make_package("unix",
+                                                 "UNIX-specific system "
+                                                 "interfaces");
 
   dfsch_require(ctx, "os", NULL);
 

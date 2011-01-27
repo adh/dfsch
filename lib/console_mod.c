@@ -18,7 +18,8 @@ DFSCH_DEFINE_PRIMITIVE(read_object, 0){
 }
 
 dfsch_object_t* dfsch_module_console_register(dfsch_object_t* env){
-  dfsch_package_t* console = dfsch_make_package("console");
+  dfsch_package_t* console = dfsch_make_package("console",
+                                                "Console UI support");
   dfsch_provide(env, "console");
 
   dfsch_defcanon_pkgcstr(env, console, "read-line", 

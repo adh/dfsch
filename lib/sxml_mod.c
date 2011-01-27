@@ -68,7 +68,8 @@ DFSCH_DEFINE_PRIMITIVE(emit_port, 0){
 }
 
 void dfsch_module_sxml_register(dfsch_object_t* env){
-  dfsch_package_t* xml_pkg = dfsch_make_package("xml");
+  dfsch_package_t* xml_pkg = dfsch_make_package("xml",
+                                                "XML support");
   dfsch_provide(env, "sxml");
   dfsch_defcanon_pkgcstr(env, xml_pkg, "sxml-parse-string", 
                        DFSCH_PRIMITIVE_REF(parse_string));

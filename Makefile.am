@@ -223,7 +223,8 @@ udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 
 stdlib_sources = \
 	$(srcdir)/core-lib/std-lib.scm\
-	$(srcdir)/core-lib/conditions.scm
+	$(srcdir)/core-lib/conditions.scm\
+	$(srcdir)/core-lib/objects.scm
 
 std-lib.c: $(stdlib_sources) boot-source-tool$(EXEEXT)
 	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \

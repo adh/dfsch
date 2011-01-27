@@ -57,7 +57,8 @@ DFSCH_DEFINE_PRIMITIVE(extref_ref, 0){
 }
 
 dfsch_object_t* dfsch_module_extref_register(dfsch_object_t* env){
-  dfsch_package_t* extref = dfsch_make_package("extref");
+  dfsch_package_t* extref = dfsch_make_package("extref",
+                                               "Externalized reference support");
   dfsch_provide(env, "extref");
 
   dfsch_defcanon_pkgcstr(env, extref, "make-extref", 

@@ -173,7 +173,8 @@ DFSCH_DEFINE_PRIMITIVE(headers_2_map,
 
 
 dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
-  dfsch_package_t* inet_pkg = dfsch_make_package("inet");  
+  dfsch_package_t* inet_pkg = dfsch_make_package("inet",
+                                                 "Internet data handling");  
   dfsch_provide(env, "inet");
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-split-query",

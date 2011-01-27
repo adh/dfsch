@@ -117,7 +117,8 @@ DFSCH_DEFINE_PRIMITIVE(table_abort_transaction, "Abort atomic transaction"){
 
 
 void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
-  dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet");
+  dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet",
+                                               "Tokyo Cabinet interface");
   dfsch_provide(env, "tokyo-cabinet");
 
   dfsch_defcanon_pkgcstr(env, tc_pkg, "<db>", DFSCH_TOKYO_CABINET_DB_TYPE);
