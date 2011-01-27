@@ -2291,38 +2291,40 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "list->string", 
 		   DFSCH_PRIMITIVE_REF(list_2_string));
 
+#define STRING_REL(name, fun, doc)                                      \
+  dfsch_defcanon_cstr(ctx, name,                                        \
+                      dfsch_make_primitive(name,                        \
+                                           &p_string_cmp_p_impl,        \
+                                           fun,                         \
+                                           doc,                         \
+                                           0))         
 
-  dfsch_defcanon_cstr(ctx, "string=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_eq_p));
-  dfsch_defcanon_cstr(ctx, "string<?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_lt_p));
-  dfsch_defcanon_cstr(ctx, "string>?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_gt_p));
-  dfsch_defcanon_cstr(ctx, "string<=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_lte_p));
-  dfsch_defcanon_cstr(ctx, "string>=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_gte_p));
+  STRING_REL("string=?", dfsch_string_eq_p, 
+             "Are given strings equal?");
+  STRING_REL("string<?", dfsch_string_lt_p, 
+             "Are arguments in strictly lexicographically ascending order?");
+  STRING_REL("string>?", dfsch_string_gt_p, 
+             "Are arguments in strictly lexicographically decending order?");
+  STRING_REL("string<=?", dfsch_string_lte_p, 
+             "Are arguments in lexicographically ascending order?");
+  STRING_REL("string>=?", dfsch_string_gte_p, 
+             "Are arguments in lexicographically decending order?");
 
-  dfsch_defcanon_cstr(ctx, "string-ci=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_ci_eq_p));
-  dfsch_defcanon_cstr(ctx, "string-ci<?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_ci_lt_p));
-  dfsch_defcanon_cstr(ctx, "string-ci>?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_ci_gt_p));
-  dfsch_defcanon_cstr(ctx, "string-ci<=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_ci_lte_p));
-  dfsch_defcanon_cstr(ctx, "string-ci>=?", 
-		   dfsch_make_primitive(&p_string_cmp_p_impl,
-                                        &dfsch_string_ci_gte_p));
+  STRING_REL("string-ci=?", dfsch_string_ci_eq_p, 
+             "Are given strings eqivalent without regard to casing?");
+  STRING_REL("string-ci<?", dfsch_string_ci_lt_p, 
+             "Are arguments in strictly lexicographically ascending order "
+             "(without regard to case)?");
+  STRING_REL("string-ci>?", dfsch_string_ci_gt_p, 
+             "Are arguments in strictly lexicographically decending order "
+             "(without regard to case)?");
+  STRING_REL("string-ci<=?", dfsch_string_ci_lte_p, 
+             "Are arguments in lexicographically ascending order "
+             "(without regard to case)?");
+  STRING_REL("string-ci>=?", dfsch_string_ci_gte_p, 
+             "Are arguments in lexicographically decending order "
+             "(without regard to case)?");
+
 
   dfsch_defcanon_cstr(ctx, "char-upcase", 
 		   DFSCH_PRIMITIVE_REF(char_upcase));

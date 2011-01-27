@@ -509,6 +509,9 @@ DFSCH_DEFINE_PRIMITIVE(make_weak_key_hash, 0){
 
 /****************************************************************/
 
+DFSCH_PRIMITIVE_HEAD(set_parasite){
+  
+}
 
 void dfsch__weak_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);

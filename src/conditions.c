@@ -408,11 +408,11 @@ static dfsch_object_t* throw_proc(dfsch_object_t* tag,
 }
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag){
-  return dfsch_make_primitive(throw_proc, catch_tag);
+  return dfsch_make_primitive("%throw-proc", throw_proc, catch_tag, NULL, 0);
 }
 static dfsch_object_t* throw_proc_arg(dfsch_object_t* tag,
-                                  dfsch_object_t* args,
-                                  dfsch_tail_escape_t* esc){
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc){
   dfsch_object_t* arg;
   DFSCH_OBJECT_ARG(args, arg);
   DFSCH_ARG_END(args);
@@ -420,7 +420,7 @@ static dfsch_object_t* throw_proc_arg(dfsch_object_t* tag,
 }
 
 dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag){
-  return dfsch_make_primitive(throw_proc_arg, catch_tag);
+  return dfsch_make_primitive("%throw-proc", throw_proc_arg, catch_tag, NULL, 0);
 }
 
 void dfsch_type_error(dfsch_object_t* datum, dfsch_type_t* type, 

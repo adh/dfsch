@@ -57,24 +57,6 @@ static void sigint_handler_break(int sig){
 
 dfsch_parser_ctx_t *parser;
 
-static dfsch_object_t* command_exit(void*baton, dfsch_object_t* args,
-                                    dfsch_tail_escape_t* esc){
-  switch (dfsch_list_length_check(args)){
-  case 0:
-    exit(0);
-  case 1:
-    if (dfsch_integer_p(dfsch_car(args))){
-      exit((int)dfsch_number_to_long(dfsch_car(args)));
-    }
-  default:
-    fputs(dfsch_object_2_string(args,100,DFSCH_PRINT),stderr);
-    fputs("\n",stderr);
-    fflush(stderr);
-    exit(1);
-  }
-}
-
-
 void interactive_repl(dfsch_object_t* ctx){
   char* homedir = getenv("HOME");
   printf("  /\\___/\\    dfsch version %s\n", 
@@ -135,7 +117,12 @@ static void load_scm(dfsch_object_t* env, char* fname){
   dfsch_load_scm(env, fname, 0);
   c->fname = fname;
   c->env = env;
-  dfsch_defcanon_cstr(env, "reload", dfsch_make_primitive(p_reload_impl, c));
+  dfsch_defcanon_cstr(env, "reload", 
+                      dfsch_make_primitive("reload", 
+                                           p_reload_impl, 
+                                           c,
+                                           "Reload file loaded by -l option",
+                                           0));
 }
 
 
@@ -162,15 +149,7 @@ int main(int argc, char**argv){
   ctx = dfsch_make_top_level_environment();
 
   dfsch_set_standard_io_ports();
-  dfsch_cinspect_set_as_inspector();
-
-  dfsch_restart_bind(dfsch_make_restart(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE,
-                                                            "quit"),
-                                        dfsch_make_primitive(command_exit,
-                                                             NULL),
-                                        "Exit interpreter",
-                                        NULL));
-                                        
+  dfsch_cinspect_set_as_inspector();                                        
 
   while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdtTD:")) != -1){
     switch (c){

@@ -389,7 +389,8 @@ static effective_method_t* make_effective_method(dfsch_object_t* methods,
                         NULL,
                         NULL,
                         DFSCH_PRIMITIVE_REF_MAKE(around_method_stub_proc,
-                                                 em));
+                                                 em,
+                                                 "Stub method for :around methods"));
     i = em->around_methods;
     while (DFSCH_PAIR_P(DFSCH_FAST_CDR(i))){
       i = DFSCH_FAST_CDR(i);

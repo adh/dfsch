@@ -135,8 +135,8 @@ extern dfsch_type_t dfsch_primitive_type;
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
-#define DFSCH_PRIMITIVE_REF_MAKE(name, baton)\
-  dfsch_make_primitive(p_##name##_impl, (baton))
+#define DFSCH_PRIMITIVE_REF_MAKE(name, baton, doc)                      \
+  dfsch_make_primitive(#name, p_##name##_impl, (baton), doc, 0)
 
 typedef struct dfsch_macro_t {
   dfsch_type_t* type;

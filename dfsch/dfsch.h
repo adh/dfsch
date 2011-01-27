@@ -402,13 +402,12 @@ extern "C" {
 
 
   /** Create native function object */
-  extern dfsch_object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim,
-					      void *baton);
+  extern dfsch_object_t* dfsch_make_primitive(char* name, 
+                                              dfsch_primitive_impl_t prim, 
+                                              void *baton, 
+                                              char* documentation,
+                                              int flags);
 
-  /** Create native function object */
-  extern dfsch_object_t* dfsch_make_primitive_flags(dfsch_primitive_impl_t prim,
-                                                    void *baton,
-                                                    int flags);
 
 
   // vectors

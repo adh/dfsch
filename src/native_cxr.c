@@ -1,4 +1,5 @@
 #include <dfsch/dfsch.h>
+#include "util.h"
 #include "internal.h"
 
 static char *cxr_table[][2] = {
@@ -54,12 +55,34 @@ DFSCH_PRIMITIVE_HEAD(cxr){
   return pair;
 }
 
+static char* build_doc(char* name){
+  str_list_t* sl = sl_create();
+  name++;
+  sl_append(sl, "Return ");
+
+  while (*name){
+    switch (*name){
+    case 'a':
+      sl_append(sl, "car of ");
+      break;
+    case 'd':
+      sl_append(sl, "cdr of ");
+      break;
+    }
+    name++;
+  }
+  sl_append(sl, "argument");
+
+  return sl_value(sl);
+}
+
 void dfsch__native_cxr_register(dfsch_object_t *ctx){
   int i;
 
   for (i=0; i < (sizeof(cxr_table)/sizeof(cxr_table[0])); i++){
     dfsch_defcanon_cstr(ctx, cxr_table[i][0],
-                     DFSCH_PRIMITIVE_REF_MAKE(cxr,cxr_table[i][1]));
+                        DFSCH_PRIMITIVE_REF_MAKE(cxr, cxr_table[i][1], 
+                                                 build_doc(cxr_table[i][0])));
 
   }
 

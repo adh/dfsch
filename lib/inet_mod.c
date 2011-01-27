@@ -25,9 +25,7 @@
 #include <dfsch/hash.h>
 #include <string.h>
 
-static dfsch_object_t* http_split_query(void* baton,
-                                        dfsch_object_t* args,
-                                        dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(http_split_query, NULL){
   char* pos;
   char* uri;
   DFSCH_STRING_ARG(args, uri);
@@ -45,9 +43,7 @@ static dfsch_object_t* http_split_query(void* baton,
   }
 }
 
-static dfsch_object_t* http_split_path(void* baton,
-                                       dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(http_split_path, NULL){
   char* path;
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
@@ -55,36 +51,28 @@ static dfsch_object_t* http_split_path(void* baton,
   return dfsch_http_split_path(path);
 }
 
-static dfsch_object_t* http_query_2_alist(void* baton,
-                                          dfsch_object_t* args,
-                                          dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(http_query_2_alist, NULL){
   char* query;
   DFSCH_STRING_ARG(args, query);
   DFSCH_ARG_END(args);
 
   return dfsch_http_query_2_alist(query);
 }
-static dfsch_object_t* http_query_2_hash(void* baton,
-                                         dfsch_object_t* args,
-                                         dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(http_query_2_hash, NULL){
   char* query;
   DFSCH_STRING_ARG(args, query);
   DFSCH_ARG_END(args);
 
   return dfsch_http_query_2_hash(query);
 }
-static dfsch_object_t* inet_urldecode(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_urldecode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
   
   return dfsch_make_string_nocopy(dfsch_inet_urldecode(str));
 }
-static dfsch_object_t* inet_urlencode(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_urlencode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
@@ -92,9 +80,7 @@ static dfsch_object_t* inet_urlencode(void* baton,
   return dfsch_make_string_nocopy(dfsch_inet_urlencode(str));
 }
 
-static dfsch_object_t* inet_base64_encode(void* baton,
-                                      dfsch_object_t* args,
-                                      dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_base64_encode, NULL){
   dfsch_strbuf_t* str;
   dfsch_object_t* wrap;
   dfsch_object_t* pad;
@@ -107,18 +93,14 @@ static dfsch_object_t* inet_base64_encode(void* baton,
                                                            wrap!=NULL, 
                                                            pad!=NULL));
 }
-static dfsch_object_t* inet_uri_base64_encode(void* baton,
-                                              dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_uri_base64_encode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
   
   return dfsch_make_string_nocopy(dfsch_inet_uri_base64_encode(str));
 }
-static dfsch_object_t* inet_base64_decode(void* baton,
-                                          dfsch_object_t* args,
-                                          dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_base64_decode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
@@ -127,9 +109,7 @@ static dfsch_object_t* inet_base64_decode(void* baton,
 
   return dfsch_make_byte_vector_nocopy(str->ptr, str->len);
 }
-static dfsch_object_t* inet_uri_base64_decode(void* baton,
-                                              dfsch_object_t* args,
-                                              dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_uri_base64_decode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
   DFSCH_ARG_END(args);
@@ -139,9 +119,7 @@ static dfsch_object_t* inet_uri_base64_decode(void* baton,
   return dfsch_make_byte_vector_nocopy(str->ptr, str->len);
 }
 
-static dfsch_object_t* inet_xml_escape(void* baton,
-                                       dfsch_object_t* args,
-                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(inet_xml_escape, NULL){
   char* str;
   DFSCH_STRING_ARG(args, str);
   DFSCH_ARG_END(args);
@@ -177,30 +155,30 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
   dfsch_provide(env, "inet");
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-split-query",
-                    dfsch_make_primitive(http_split_query, NULL));
+                    DFSCH_PRIMITIVE_REF(http_split_query));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-split-path",
-                    dfsch_make_primitive(http_split_path, NULL));
+                    DFSCH_PRIMITIVE_REF(http_split_path));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-query->alist",
-                    dfsch_make_primitive(http_query_2_alist, NULL));
+                    DFSCH_PRIMITIVE_REF(http_query_2_alist));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-query->hash",
-                    dfsch_make_primitive(http_query_2_hash, NULL));
+                    DFSCH_PRIMITIVE_REF(http_query_2_hash));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "urldecode",
-                    dfsch_make_primitive(inet_urldecode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_urldecode));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "urlencode",
-                    dfsch_make_primitive(inet_urlencode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_urlencode));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "base64-encode",
-                    dfsch_make_primitive(inet_base64_encode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_base64_encode));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "uri-base64-encode",
-                    dfsch_make_primitive(inet_uri_base64_encode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_uri_base64_encode));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "base64-decode",
-                    dfsch_make_primitive(inet_base64_decode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_base64_decode));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "uri-base64-decode",
-                    dfsch_make_primitive(inet_uri_base64_decode, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_uri_base64_decode));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "xml-escape",
-                    dfsch_make_primitive(inet_xml_escape, NULL));
+                    DFSCH_PRIMITIVE_REF(inet_xml_escape));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "headers->list",
                        DFSCH_PRIMITIVE_REF(headers_2_list));

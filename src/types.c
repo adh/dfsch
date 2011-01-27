@@ -2469,23 +2469,24 @@ dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
 }
 
 // native code
-object_t* dfsch_make_primitive(dfsch_primitive_impl_t prim, void *baton){
-  return dfsch_make_primitive_flags(prim, baton, 0);
-}
-
-object_t* dfsch_make_primitive_flags(dfsch_primitive_impl_t prim, 
-                                     void *baton, 
-                                     int flags){
+object_t* dfsch_make_primitive(char* name, 
+                               dfsch_primitive_impl_t prim, 
+                               void *baton, 
+                               char* documentation,
+                               int flags){
   primitive_t* p = (primitive_t*)dfsch_make_object(PRIMITIVE);
   if (!p)
     return NULL;
 
+  p->name = name;
   p->proc = prim;
   p->baton = baton;
   p->flags = 0;
+  p->documentation = documentation;
   
   return (object_t*)p;
 }
+
 
 // macros
 
