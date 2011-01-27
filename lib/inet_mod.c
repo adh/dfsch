@@ -65,6 +65,15 @@ DFSCH_DEFINE_PRIMITIVE(http_query_2_hash, NULL){
 
   return dfsch_http_query_2_hash(query);
 }
+
+DFSCH_DEFINE_PRIMITIVE(http_avpairs_2_alist, NULL){
+  char* avpairs;
+  DFSCH_STRING_ARG(args, avpairs);
+  DFSCH_ARG_END(args);
+
+  return dfsch_http_avpairs_2_alist(avpairs);
+}
+
 DFSCH_DEFINE_PRIMITIVE(inet_urldecode, NULL){
   dfsch_strbuf_t* str;
   DFSCH_BUFFER_ARG(args, str);
@@ -163,6 +172,8 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(http_query_2_alist));
   dfsch_defcanon_pkgcstr(env, inet_pkg, "http-query->hash",
                     DFSCH_PRIMITIVE_REF(http_query_2_hash));
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "http-avpairs->alist",
+                    DFSCH_PRIMITIVE_REF(http_avpairs_2_alist));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "urldecode",
                     DFSCH_PRIMITIVE_REF(inet_urldecode));

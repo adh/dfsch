@@ -153,6 +153,53 @@ dfsch_object_t* dfsch_http_query_2_alist(char* query){
   return head;
 }
 
+
+dfsch_object_t* dfsch_http_avpairs_2_alist(char* avps){
+  char* str = avps;
+  size_t delim;
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+
+  while (*str){
+    value = NULL;
+    str += strspn(str, " \t");
+    delim = strcspn(str, ";= \t");
+    name = dfsch_make_string_buf(str, delim);
+    str += delim;
+    while (*str == ' ' || *str == '\t'){
+      str++;
+    }
+    if (*str == '='){
+      str++;
+      str += strspn(str, " \t");
+      if (*str == '"'){
+        dfsch_error("Not implemented", NULL);
+      } else {
+        delim = strcspn(str, ";");
+        value = dfsch_make_string_buf(str, delim);
+        str += delim;
+      }
+    } else if (*str != ';' && *str != '\0') {
+      dfsch_error("Syntax error parsing HTTP AV pairs",
+                  dfsch_make_string_cstr(avps));
+    }
+
+    if (value){
+      dfsch_list_collect(lc, dfsch_list(2, name, value));
+    } else {
+      dfsch_list_collect(lc, dfsch_list(1, name));
+    }
+
+    if (*str == ';'){
+      str++;
+    }
+  }
+
+  return dfsch_collected_list(lc);
+}
+
+
 static int xdigit_to_num(char digit){
   switch(digit){
   case '0':
