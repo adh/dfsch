@@ -175,14 +175,6 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 
 man_MANS = doc/dfsch-repl.1
 
-EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
-	doc/dfsch-repl.1\
-	src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc tools/docgen.scm \
-	make-version-h.sh git-make-stamp.sh src/std-lib.scm \
-	$(dfschlibscm_DATA) \
-	examples/tk-gui-demo.scm \
-	examples/http-server-demo.scm
-
 libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
 	src/parse.c dfsch/parse.h 	\
@@ -238,6 +230,16 @@ udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c
 boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
 	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
 	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
+
+EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
+	doc/dfsch-repl.1\
+	src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc tools/docgen.scm \
+	make-version-h.sh git-make-stamp.sh \
+	$(dfschlibscm_DATA) \
+	examples/tk-gui-demo.scm \
+	examples/http-server-demo.scm \
+	$(stdlib_sources)
+
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32
