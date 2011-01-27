@@ -279,18 +279,14 @@ DFSCH_DEFINE_PRIMITIVE(column_names,
   return vec;
 }
 
-static dfsch_object_t* native_sqlite3_changes(void *baton, 
-                                             dfsch_object_t* args, 
-                                             dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sqlite3_changes, NULL){
   sqlite3_database_t* db;
   SQLITE3_DATABASE_ARG(args, db);
   DFSCH_ARG_END(args);
 
   return dfsch_make_number_from_long(sqlite3_changes(db->db));
 }
-static dfsch_object_t* native_sqlite3_last_insert_rowid(void *baton, 
-                                                       dfsch_object_t* args, 
-                                                       dfsch_tail_escape_t* esc){
+DFSCH_DEFINE_PRIMITIVE(sqlite3_last_insert_rowid, NULL){
   sqlite3_database_t* db;
   SQLITE3_DATABASE_ARG(args, db);
   DFSCH_ARG_END(args);
@@ -334,8 +330,7 @@ void dfsch_module_sqlite3_register(dfsch_object_t* env){
 
   /* sqlite specific functions */
   dfsch_define_pkgcstr(env, sqlite3, "changes", 
-                       dfsch_make_primitive(native_sqlite3_changes, NULL));
+                       DFSCH_PRIMITIVE_REF(sqlite3_changes));
   dfsch_define_pkgcstr(env, sqlite3, "last-insert-rowid", 
-                       dfsch_make_primitive(native_sqlite3_last_insert_rowid, 
-                                         NULL));
+                       DFSCH_PRIMITIVE_REF(sqlite3_last_insert_rowid));
 }
