@@ -169,7 +169,7 @@ static int socket_port_batch_read(socket_port_t* sp){
     ch = sp->buf[0];
     sp->buf = sp->buf;
     sp->bufhead = sp->buf + 1;
-    sp->buflen = ret;
+    sp->buflen = ret - 1;
     return ch;
   }
 }
