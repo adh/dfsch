@@ -509,11 +509,79 @@ DFSCH_DEFINE_PRIMITIVE(make_weak_key_hash, 0){
 
 /****************************************************************/
 
-DFSCH_PRIMITIVE_HEAD(set_parasite){
-  
+DFSCH_PRIMITIVE_HEAD(attach_parasite){
+  dfsch_object_t* object;
+  dfsch_object_t* name;
+  dfsch_object_t* value;
+  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  dfsch_object_t* obj_table;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  obj_table = weak_key_hash_ref(parasite_table, object);
+  if (obj_table == DFSCH_INVALID_OBJECT){
+    obj_table = dfsch_hash_make(DFSCH_HASH_EQ);
+    weak_key_hash_set(parasite_table, object, obj_table);
+  }
+
+  dfsch_hash_set(obj_table, name, value);
+
+  return NULL;
 }
 
+DFSCH_PRIMITIVE_HEAD(retrieve_parasite){
+  dfsch_object_t* object;
+  dfsch_object_t* name;
+  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  dfsch_object_t* obj_table;
+  dfsch_object_t* res;
+  dfsch_object_t* def;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG_OPT(args, def, NULL);
+  DFSCH_ARG_END(args);
+
+  obj_table = weak_key_hash_ref(parasite_table, object);
+  if (obj_table == DFSCH_INVALID_OBJECT){
+    return def;
+  }
+
+  res = dfsch_hash_ref(obj_table, name);
+
+  if (res == DFSCH_INVALID_OBJECT){
+    return def;
+  }
+
+  return res;
+}
+DFSCH_PRIMITIVE_HEAD(detach_parasite){
+  dfsch_object_t* object;
+  dfsch_object_t* name;
+  weak_key_hash_t* parasite_table = (weak_key_hash_t*)baton;
+  dfsch_object_t* obj_table;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  obj_table = weak_key_hash_ref(parasite_table, object);
+  if (obj_table == DFSCH_INVALID_OBJECT){
+    return NULL;
+  }
+
+  dfsch_hash_unset(obj_table, name);
+
+  return NULL;
+}
+
+
 void dfsch__weak_native_register(dfsch_object_t *ctx){
+  weak_key_hash_t* parasite_table = dfsch_make_weak_key_hash();
+
   dfsch_defcanon_cstr(ctx, "<weak-reference>", DFSCH_WEAK_REFERENCE_TYPE);
   dfsch_defcanon_cstr(ctx, "<weak-vector>", DFSCH_WEAK_VECTOR_TYPE);
   dfsch_defcanon_cstr(ctx, "<weak-key-hash>", DFSCH_WEAK_KEY_HASH_TYPE);
@@ -542,6 +610,19 @@ void dfsch__weak_native_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "make-weak-key-hash", 
                     DFSCH_PRIMITIVE_REF(make_weak_key_hash));
+
+  dfsch_defcanon_cstr(ctx, "attach-parasite!", 
+                      DFSCH_PRIMITIVE_REF_MAKE(attach_parasite,
+                                               parasite_table,
+                                               "Attach arbitrary named value to arbitrary object"));
+  dfsch_defcanon_cstr(ctx, "retrieve-parasite", 
+                      DFSCH_PRIMITIVE_REF_MAKE(retrieve_parasite,
+                                               parasite_table,
+                                               "Read previosly attached parasite value or NIL"));
+  dfsch_defcanon_cstr(ctx, "detach-parasite!", 
+                      DFSCH_PRIMITIVE_REF_MAKE(detach_parasite,
+                                               parasite_table,
+                                               "Remove previously attached parasite"));
 
 }
 
