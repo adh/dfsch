@@ -200,6 +200,10 @@ int dfsch_string_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == STRING;
 }
 
+int dfsch_proto_string_p(dfsch_object_t* obj){
+  return DFSCH_INSTANCE_P(obj, STRING);
+}
+
 dfsch_strbuf_t* dfsch_strbuf_create(char* ptr, size_t len){
   dfsch_strbuf_t *sb = GC_NEW(dfsch_strbuf_t);
 

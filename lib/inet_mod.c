@@ -53,14 +53,14 @@ DFSCH_DEFINE_PRIMITIVE(http_split_path, NULL){
 
 DFSCH_DEFINE_PRIMITIVE(http_query_2_alist, NULL){
   char* query;
-  DFSCH_STRING_ARG(args, query);
+  DFSCH_PROTO_STRING_ARG(args, query);
   DFSCH_ARG_END(args);
 
   return dfsch_http_query_2_alist(query);
 }
 DFSCH_DEFINE_PRIMITIVE(http_query_2_hash, NULL){
   char* query;
-  DFSCH_STRING_ARG(args, query);
+  DFSCH_PROTO_STRING_ARG(args, query);
   DFSCH_ARG_END(args);
 
   return dfsch_http_query_2_hash(query);

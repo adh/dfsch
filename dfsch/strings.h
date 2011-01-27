@@ -95,6 +95,8 @@ extern "C" {
 
 #define DFSCH_STRING_ARG(al, name) \
   DFSCH_GENERIC_ARG(al, name, char*, dfsch_string_to_cstr)
+#define DFSCH_PROTO_STRING_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, char*, dfsch_proto_string_to_cstr)
 #define DFSCH_STRING_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, char*, dfsch_string_to_cstr)
 

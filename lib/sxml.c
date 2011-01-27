@@ -305,7 +305,11 @@ static void emit_attrs(emitter_t* e, dfsch_object_t* attrs){
     case 2:
       name = dfsch_string_or_symbol_to_cstr(DFSCH_FAST_CAR(a));
       a = DFSCH_FAST_CDR(a);
-      value = dfsch_string_to_cstr(DFSCH_FAST_CAR(a));
+      if (dfsch_string_p(DFSCH_FAST_CAR(a))){
+        value = dfsch_string_to_cstr(DFSCH_FAST_CAR(a));
+      } else {
+        value = dfsch_object_2_string(DFSCH_FAST_CAR(a), 1, DFSCH_PRINT);
+      }
       e->write(e->target, dfsch_saprintf(" %s=\"%s\"", name, 
                                          dfsch_inet_xml_escape(value)));
       break;

@@ -35,9 +35,16 @@
              :remove-handler! 
              :handler-matches? 
              :get-request-header
-             :set-response-header
+             :set-response-header!
+             :append-response-header!
+             :transaction-path
+             :form-data
+             :response-port
+             :response-status
              :run-server
-             :run-server-in-background))
+             :run-server-in-background
+             :get-cookie
+             :set-cookie!))
 (in-package :http-server)
 
 (define-class <server> ()
@@ -75,11 +82,14 @@
 
 (define-class <transaction> ()
   ((request :reader request-object)
-   (path :reader path)
+   (path :reader transaction-path)
    (form-data :reader form-data)
+   (request-cookies :reader request-cookies)
    (response-headers :accessor response-headers)
    (response-status :accessor response-status)
    (response-port :reader response-port)))
+
+;;; Headers
 
 (define-method (get-request-header (txn <transaction>) name)
   (let ((hdr (assoc name (request-headers (request-object txn)))))
@@ -91,11 +101,34 @@
   (let ((hdr (assoc name (response-headers txn))))
     (if hdr
         (set-car! (cdr hdr) value)
-        (slot-set! txn :response-headers
-                   (cons (list name value)
-                         (response-headers txn))))))
+        (append-response-header! txn name value))))
 
-(define-method (initialize-instance (txn <transaction>) req :key vhosts?)
+(define-method (append-response-header! (txn <transaction>) name value)
+  (slot-set! txn :response-headers
+             (cons (list name value)
+                   (response-headers txn))))
+
+;;; Cookie handling
+
+(define-method (get-cookie (txn <transaction>) name)
+  (let ((cookie (assoc name (request-cookies txn))))
+    (if cookie
+        (cadr cookie)
+        ())))
+
+(define-method (set-cookie! (txn <transaction>) name value 
+                           &key expires secure? http-only?)
+  (append-response-header! txn "Set-Cookie" 
+                           (format "~a=~a" name value)))
+  
+
+(define (parse-cookies! txn)
+  (let ((hdr (get-request-header txn "Cookie")))
+    (when hdr
+          (slot-set! txn :request-cookies
+                     (http-avpairs->alist hdr)))))
+
+(define-method (initialize-instance (txn <transaction>) req &key vhosts?)
   (slot-set! txn :request req)
   (slot-set! txn :path
              (if vhosts?
@@ -107,7 +140,8 @@
   (slot-set! txn :response-headers (list (list "Content-Type" 
                                                "text/html; charset=utf-8")))
   (slot-set! txn :response-status 200)
-  (slot-set! txn :response-port (string-output-port)))
+  (slot-set! txn :response-port (string-output-port))
+  (parse-cookies! txn))
 
 (define-method (parse-form-data (txn <transaction>))
   (let ((data
@@ -135,7 +169,7 @@
 (define-method (serve-client (server <server>) request)
   (letrec ((txn (make-instance <transaction> request 
                                :vhosts? (server-vhosts? server)))
-           (handler (find-handler server (path txn))))
+           (handler (find-handler server (transaction-path txn))))
     (if handler
         (begin
           (handler txn)
