@@ -220,9 +220,14 @@ udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
 udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
-std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
+
+stdlib_sources = \
+	$(srcdir)/core-lib/std-lib.scm\
+	$(srcdir)/core-lib/conditions.scm
+
+std-lib.c: $(stdlib_sources) boot-source-tool$(EXEEXT)
 	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
-	$(srcdir)/src/std-lib.scm -o std-lib.c
+	$(stdlib_sources) -o std-lib.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT)
 
