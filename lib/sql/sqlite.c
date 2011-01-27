@@ -318,8 +318,9 @@ DFSCH_DEFINE_PRIMITIVE(sqlite_last_insert_rowid, NULL){
 }
 
 void dfsch_module_sqlite_register(dfsch_object_t* env){
-  dfsch_package_t* sql = dfsch_make_package("sql");
-  dfsch_package_t* sqlite = dfsch_make_package("sqlite");
+  dfsch_package_t* sql = dfsch_make_package("sql", NULL);
+  dfsch_package_t* sqlite = dfsch_make_package("sqlite", 
+                                               "Sqlite driver");
   dfsch_require(env, "sql", NULL);
   dfsch_provide(env, "sqlite");
 

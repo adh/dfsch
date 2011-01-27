@@ -153,7 +153,9 @@ DFSCH_DEFINE_PRIMITIVE(replace_byte_vector,
 
 
 void dfsch_module_pcre_register(dfsch_object_t* env){
-  dfsch_package_t* pcre = dfsch_make_package("pcre");
+  dfsch_package_t* pcre = dfsch_make_package("pcre",
+                                             "Perl-compatible regular "
+                                             "expressions");
 
   dfsch_provide(env, "pcre");
   dfsch_defcanon_pkgcstr(env, pcre, "compile",

@@ -196,9 +196,9 @@ dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash_obj,
   dfsch_object_t* res;
 
   if (dfsch_hash_ref_fast(hash_obj, key, &res)){
-    return dfsch_list(1, res);
+    return res;
   } else {
-    return NULL;
+    return DFSCH_INVALID_OBJECT;
   }
 }
 
@@ -460,11 +460,17 @@ DFSCH_DEFINE_PRIMITIVE(hash_p, NULL){
 DFSCH_DEFINE_PRIMITIVE(hash_ref, NULL){
   dfsch_object_t* hash;
   dfsch_object_t* key;
+  dfsch_object_t* val;
   DFSCH_OBJECT_ARG(args, hash);
   DFSCH_OBJECT_ARG(args, key);
   DFSCH_ARG_END(args);
 
-  return dfsch_hash_ref(hash, key);
+  val = dfsch_hash_ref(hash, key);
+  if (val == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } else {
+    return dfsch_cons(val, NULL);
+  }
 }
 DFSCH_DEFINE_PRIMITIVE(hash_unset, NULL){
   dfsch_object_t* hash;

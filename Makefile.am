@@ -20,6 +20,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/tk-gui.h \
 	dfsch/lib/pcre.h \
 	dfsch/lib/crypto.h \
+	dfsch/lib/tokyo-cabinet.h \
+	dfsch/lib/tokyo-tyrant.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -65,6 +67,23 @@ pcre_libs=
 pcre_modules=
 endif
 
+if TOKYO_CABINET
+tc_libs=libdfsch-tokyo-cabinet.la
+tc_modules=tokyo-cabinet.la
+else
+tc_libs=
+tc_modules=
+endif
+
+if TOKYO_TYRANT
+tt_libs=libdfsch-tokyo-tyrant.la
+tt_modules=tokyo-tyrant.la
+else
+tt_libs=
+tt_modules=
+endif
+
+
 if WIN32
 nonwin32_libs=
 else
@@ -86,7 +105,6 @@ else
 sqlite3_modules=
 endif
 
-
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-os.la \
 	libdfsch-console.la \
@@ -105,7 +123,9 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-crypto.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)\
-	$(pcre_libs)
+	$(pcre_libs)\
+	$(tc_libs) \
+	$(tt_libs)
 
 
 
@@ -141,7 +161,9 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(tkgui_modules)\
 	$(pcre_modules)\
 	$(sqlite_modules)\
-	$(sqlite3_modules)
+	$(sqlite3_modules)\
+	$(tc_modules)\
+	$(tt_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -198,9 +220,15 @@ udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
 udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
-std-lib.c: $(srcdir)/src/std-lib.scm boot-source-tool$(EXEEXT)
+
+stdlib_sources = \
+	$(srcdir)/core-lib/std-lib.scm\
+	$(srcdir)/core-lib/conditions.scm\
+	$(srcdir)/core-lib/objects.scm
+
+std-lib.c: $(stdlib_sources) boot-source-tool$(EXEEXT)
 	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
-	$(srcdir)/src/std-lib.scm -o std-lib.c
+	$(stdlib_sources) -o std-lib.c
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT)
 
@@ -443,6 +471,21 @@ sql_support_la_SOURCES = lib/sql/sql-support.c
 sql_support_la_LIBADD = libdfsch.la
 sql_support_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
+libdfsch_tokyo_cabinet_la_SOURCES = lib/tokyo-cabinet.c
+libdfsch_tokyo_cabinet_la_LIBADD = libdfsch.la -ltokyocabinet
+libdfsch_tokyo_cabinet_la_LDFLAGS = -no-undefined
+
+tokyo_cabinet_la_SOURCES = lib/tokyo-cabinet_mod.c
+tokyo_cabinet_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la
+tokyo_cabinet_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant.c
+libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la -ltokyocabinet -ltokyotyrant
+libdfsch_tokyo_tyrant_la_LDFLAGS = -no-undefined
+
+tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant_mod.c
+tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-tyrant.la
+tokyo_tyrant_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 if WIN32
 gui_flags = -mwindows

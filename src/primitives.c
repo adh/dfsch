@@ -1315,6 +1315,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
 
   dfsch_defcanon_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
+  dfsch_defcanon_cstr(ctx, "map-ref-list", DFSCH_PRIMITIVE_REF(map_ref_list));
   dfsch_defcanon_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
   dfsch_defcanon_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
   dfsch_defcanon_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));

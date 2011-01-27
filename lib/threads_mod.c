@@ -158,7 +158,8 @@ DFSCH_DEFINE_PRIMITIVE(channel_write, "Write object into channel"){
 
 
 dfsch_object_t* dfsch_module_threads_register(dfsch_object_t *ctx){
-  dfsch_package_t* threads = dfsch_make_package("threads");
+  dfsch_package_t* threads = dfsch_make_package("threads",
+                                                "Multithreading support");
   dfsch_provide(ctx, "threads");
 
   dfsch_defcanon_pkgcstr(ctx, threads, "thread-create", 

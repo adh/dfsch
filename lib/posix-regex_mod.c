@@ -109,8 +109,10 @@ DFSCH_DEFINE_PRIMITIVE(regex_substrings_once, NULL){
 }
 
 
-void dfsch_module_posix_regex_register(dfsch_object_t *ctx){
-  dfsch_package_t* posix_regex = dfsch_make_package("posix-regex");
+
+dfsch_object_t* dfsch_module_posix_regex_register(dfsch_object_t *ctx){
+  dfsch_package_t* posix_regex = dfsch_make_package("posix-regex",
+                                                    "POSIX libc regex(3)");
   dfsch_provide(ctx, "posix-regex");
 
   dfsch_defcanon_pkgcstr(ctx, posix_regex, "compile", 

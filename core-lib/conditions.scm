@@ -1,6 +1,6 @@
 ;;; dfsch - Scheme-like Lisp dialect
-;;;   Standard macros
-;;; Copyright (c) 2010 Ales Hakl
+;;;   Standard macros - condition system related
+;;; Copyright (c) 2010, 2011 Ales Hakl
 ;;;
 ;;; Permission is hereby granted, free of charge, to any person obtaining
 ;;; a copy of this software and associated documentation files (the
@@ -20,16 +20,6 @@
 ;;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 ;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-(dfsch:define-package :dfsch%implementation 
-                      :uses '(:dfsch :dfsch%internal)
-                      :exports '())
-
-(dfsch:in-package :dfsch%implementation)
-
-(define-macro (dfsch:with-gensyms gensyms &rest body)
-  `(let ,(map (lambda (name) `(,name (gensym))) gensyms)
-     ,@body))
 
 (define-macro (dfsch:ignore-errors &rest forms)
   (with-gensyms (tag)
@@ -102,78 +92,3 @@
                 restarts)
          (else ,result)))))
 
-
-
-(define-macro (dfsch:loop &rest exprs)
-  (with-gensyms (tag)
-    `(catch ',tag
-       (let ()
-         (define (break value) (throw ',tag value))
-         (%loop ,@exprs)))))
-
-(define (dfsch:make-instance class &rest init-args)
-  (let ((inst (allocate-instance class)))
-    (apply initialize-instance inst init-args)
-    inst))
-
-(define (dfsch:make-simple-method-combination operator)
-  (lambda (methods function)
-    (lambda args
-      (operator (map (lambda (meth)
-                       (call-method meth () args))
-                     (get-primary-methods methods))))))
-
-(define-macro (dfsch:define-custom-specializer name args &body code)
-  `(%define-canonical-constant ,name
-                               (make-type-specializer (%lambda ,name ,args ,@code))))
-
-(define-macro (dfsch:define-has-slot-specializer name slot)
-  `(define-custom-specializer ,name (type)
-     (ignore-errors (find-slot type ',slot) #t)))
-
-(define-has-slot-specializer dfsch:<<documented>> :documentation)
-
-(define-macro (dfsch:define-class name superclass slots &rest class-opts)
-  (let ((class-slots (map 
-                      (lambda (desc)
-                        (letrec ((name (if (pair? desc) (car desc) desc))
-                                 (opts (if (pair? desc) (cdr desc) ()))
-                                 (opt-expr (plist-remove-keys opts 
-                                                              '(:accessor 
-                                                                :reader 
-                                                                :writer
-                                                                :initform)))
-                                 (init-form (plist-get opts :initform)))
-                          `(list ',name ,@opt-expr 
-                                 ,@(when init-form
-                                     `(:initfunc 
-                                       (lambda () 
-                                         "slot initializer" 
-                                         ,(car init-form)))))))
-                      slots)))
-    `(begin 
-       (%define-canonical-constant ,name (make-class ',name 
-                                                     ,superclass 
-                                                     (list ,@class-slots)
-                                                     ,@class-opts))
-       ,@(mapcan 
-          (lambda (desc)
-            (letrec ((sname (if (pair? desc) (car desc) desc))
-                     (opts (if (pair? desc) (cdr desc) ()))
-                     (accessor (plist-get opts :accessor))
-                     (writer (plist-get opts :writer))
-                     (reader (plist-get opts :reader)))
-              (append 
-               (when accessor
-                 `((%define-canonical-constant ,(car accessor)
-                                               (make-slot-accessor ,name 
-                                                                   ',sname))))
-               (when writer
-                 `((%define-canonical-constant ,(car writer)
-                                               (make-slot-writer ,name 
-                                                                   ',sname))))
-               (when reader
-                 `((%define-canonical-constant ,(car reader)
-                                               (make-slot-reader ,name 
-                                                                 ',sname)))))))
-              slots))))

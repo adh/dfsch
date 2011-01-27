@@ -72,6 +72,7 @@ struct dfsch_package_t {
   dfsch_type_t* type;
   dfsch_package_t* next;
   char* name;
+  char* documentation;
   dfsch_object_t* use_list;
 
   size_t sym_count;
@@ -89,7 +90,10 @@ static pkg_hash_entry_t dfsch_keyword_entries[INITIAL_PACKAGE_SIZE];
 dfsch_package_t dfsch_dfsch_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = DFSCH_KEYWORD_PACKAGE,
+
   .name = "dfsch",
+  .documentation = "Standard dfsch library",
+
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_entries,
@@ -97,7 +101,10 @@ dfsch_package_t dfsch_dfsch_package = {
 dfsch_package_t dfsch_dfsch_user_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = DFSCH_DFSCH_INTERNAL_PACKAGE,
+
   .name = "dfsch-user",
+  .documentation = "Default user package",
+
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_user_entries,
@@ -105,7 +112,10 @@ dfsch_package_t dfsch_dfsch_user_package = {
 dfsch_package_t dfsch_dfsch_internal_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = DFSCH_DFSCH_PACKAGE,
+
   .name = "dfsch%internal",
+  .documentation = "Special primitives for self-hosted standard library code",
+
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_internal_entries,
@@ -113,7 +123,11 @@ dfsch_package_t dfsch_dfsch_internal_package = {
 dfsch_package_t dfsch_keyword_package = {
   .type = DFSCH_PACKAGE_TYPE,
   .next = NULL,
+
   .name = "keyword",
+  .documentation = ("Keyword package: all symbols in this package evaluate "
+                    "to themselves when not defined"),
+
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_keyword_entries,
@@ -123,12 +137,22 @@ static void package_write(dfsch_package_t* package, dfsch_writer_state_t* state)
   dfsch_write_unreadable(state, (dfsch_object_t*)package, "%s %d", 
                          package->name, package->sym_count);
 }
+
+static dfsch_slot_t package_slots[] = {
+  DFSCH_STRING_SLOT(dfsch_package_t, name, DFSCH_SLOT_ACCESS_RO, 
+                    "Name of package"),
+  DFSCH_STRING_SLOT(dfsch_package_t, documentation, DFSCH_SLOT_ACCESS_RO, 
+                    "Package documentation string"),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_t dfsch_package_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "package",
   .size = sizeof(dfsch_package_t),
   .write = (dfsch_type_write_t)package_write,
+  .slots = package_slots,
 };
 
 static pthread_mutex_t symbol_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -187,7 +211,8 @@ dfsch_package_t* dfsch_find_package(char* name){
   return pkg;
 }
 
-dfsch_object_t* dfsch_make_package(char* name){
+dfsch_object_t* dfsch_make_package(char* name,
+                                   char* documentation){
   dfsch_package_t* pkg;
   int i;
 
@@ -207,6 +232,11 @@ dfsch_object_t* dfsch_make_package(char* name){
     }
     packages = pkg;
   }
+
+  if (pkg->documentation == NULL && documentation != NULL){
+    pkg->documentation = dfsch_stracpy(documentation);
+  }
+
   pthread_mutex_unlock(&symbol_lock);
 
   return (dfsch_object_t*)pkg;
@@ -795,14 +825,16 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
   dfsch_object_t* imports;
   dfsch_object_t* exports;
   dfsch_object_t* pkg;
+  char* documentation = NULL;
 
   DFSCH_STRING_OR_SYMBOL_ARG(args, name);
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("uses", imports);
   DFSCH_KEYWORD("exports", exports);
+  DFSCH_KEYWORD_GENERIC("documentation", documentation, dfsch_string_to_cstr);
   DFSCH_KEYWORD_PARSER_END(args);
 
-  pkg = dfsch_make_package(name);
+  pkg = dfsch_make_package(name, documentation);
 
   while (DFSCH_PAIR_P(exports)){
     dfsch_export_symbol

@@ -809,7 +809,8 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("symbol", symbol){
   char* name = dfsch_deserialize_strbuf(ds)->ptr;
   dfsch_object_t* sym;
   if (package && name[0]){
-    sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+    sym = dfsch_intern_symbol(dfsch_make_package(package, NULL), 
+                              name);
   } else {
     sym = dfsch_gensym();
   }

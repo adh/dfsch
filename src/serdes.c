@@ -613,7 +613,8 @@ static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){
   dfsch_object_t* sym;
   dfsch_object_t* obj;
   if (package && name){
-    sym = dfsch_intern_symbol(dfsch_make_package(package), name);
+    sym = dfsch_intern_symbol(dfsch_make_package(package, NULL), 
+                              name);
   } else {
     dfsch_error("Invalid serialized stream: dereferencing gensym", NULL);
   }
@@ -661,6 +662,62 @@ dfsch_object_t* dfsch_deserialize(dfsch_strbuf_t* sb,
   return dfsch_deserialize_object(ds);
 }
 
+typedef struct smap_t {
+  dfsch_type_t* type;
+  dfsch_object_t* mapping;
+  dfsch_object_t* canon_env;
+} smap_t;
+
+static dfsch_object_t* smap_ref(smap_t* sm, 
+                                dfsch_object_t* key){
+  dfsch_object_t* val = dfsch_mapping_ref(sm->mapping,
+                                          key);
+  if (val == DFSCH_INVALID_OBJECT){
+    return DFSCH_INVALID_OBJECT;
+  }
+  return dfsch_deserialize(dfsch_string_to_buf(val),
+                           sm->canon_env);
+}
+static void smap_set(smap_t* sm, 
+                     dfsch_object_t* key,
+                     dfsch_object_t* value){
+  dfsch_strbuf_t* sb = dfsch_serialize(value,
+                                       sm->canon_env);
+  dfsch_mapping_set(sm->mapping,
+                    key,
+                    dfsch_make_byte_vector_nocopy(sb->ptr, sb->len));
+}
+
+static void smap_get_iterator(smap_t* sm){
+  return dfsch_collection_get_iterator(sm->mapping);
+}
+
+
+static dfsch_mapping_methods_t smap_mapping = {
+  .ref = smap_ref,
+  .set = smap_set,
+};
+
+static dfsch_collection_methods_t smap_collection = {
+  .get_iterator = smap_get_iterator,
+};
+
+dfsch_type_t dfsch_serializing_map_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .size = sizeof(smap_t),
+  .name = "serializing-map",
+  .collection = &smap_collection,
+  .mapping = &smap_mapping,
+};
+
+dfsch_object_t* dfsch_make_serializing_map(dfsch_object_t* mapping,
+                                           dfsch_object_t* canon_env){
+  smap_t* sm = dfsch_make_object(DFSCH_SERIALIZING_MAP_TYPE);
+  sm->mapping = mapping;
+  sm->canon_env = canon_env;
+  return sm;
+}
+
 
 
 DFSCH_DEFINE_PRIMITIVE(serialize,
@@ -684,6 +741,19 @@ DFSCH_DEFINE_PRIMITIVE(deserialize,
 
   return dfsch_deserialize(string, canon_env);
 }
+
+DFSCH_DEFINE_PRIMITIVE(make_serializing_map,
+                       "Make mapping objects that transparently serializes "
+                       "it's values"){
+  dfsch_object_t* mapping;
+  dfsch_object_t* canon_env;
+  DFSCH_OBJECT_ARG(args, mapping);
+  DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_serializing_map(mapping, canon_env);
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(make_serializer,
                        "Creates new serializer object writing into supplied "
@@ -841,10 +911,16 @@ DFSCH_DEFINE_PRIMITIVE(deserialize_integer,
 }
 
 void dfsch__serdes_register(dfsch_object_t* env){
+  dfsch_defcanon_cstr(env, "<serializer>", DFSCH_SERIALIZER_TYPE);
+  dfsch_defcanon_cstr(env, "<deserializer>", DFSCH_DESERIALIZER_TYPE);
+  
+
   dfsch_defcanon_cstr(env, "serialize",
                       DFSCH_PRIMITIVE_REF(serialize));
   dfsch_defcanon_cstr(env, "deserialize",
                       DFSCH_PRIMITIVE_REF(deserialize));
+  dfsch_defcanon_cstr(env, "make-serializing-map",
+                      DFSCH_PRIMITIVE_REF(make_serializing_map));
 
   dfsch_defcanon_cstr(env, "make-serializer",
                       DFSCH_PRIMITIVE_REF(make_serializer));

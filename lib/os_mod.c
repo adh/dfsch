@@ -634,7 +634,9 @@ DFSCH_DEFINE_PRIMITIVE(unlink, NULL){
 
 
 dfsch_object_t* dfsch_module_os_register(dfsch_object_t* ctx){
-  dfsch_package_t* os_pkg = dfsch_make_package("os");
+  dfsch_package_t* os_pkg = dfsch_make_package("os",
+                                               "Portable operating system "
+                                               "facilities");
 
   dfsch_defcanon_pkgcstr(ctx, os_pkg, "mode", 
                     DFSCH_PRIMITIVE_REF(mode));

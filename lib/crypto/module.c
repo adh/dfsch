@@ -380,7 +380,8 @@ DFSCH_DEFINE_PRIMITIVE(prng_state,
 static const uint8_t curve25519_basepoint[32] = {9};
 
 void dfsch_module_crypto_register(dfsch_object_t* env){
-  dfsch_package_t* crypto = dfsch_make_package("crypto");
+  dfsch_package_t* crypto = dfsch_make_package("crypto",
+                                               "Cryptographic algorithms");
   dfsch_provide(env, "crypto");
 
   dfsch_crypto_put_entropy(&crypto, sizeof(dfsch_package_t*));

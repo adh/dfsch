@@ -152,7 +152,8 @@ DFSCH_DEFINE_PRIMITIVE(split_list, ""){
 }
 
 void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
-  dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface");
+  dfsch_package_t* tk_gui = dfsch_make_package("tk-gui%interface",
+                                               "Low-level Tcl/Tk bridge");
   dfsch_provide(env, "tk-gui-interface");
 
   dfsch_defcanon_pkgcstr(env, tk_gui, "<interpreter>", 

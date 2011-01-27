@@ -37,7 +37,9 @@ DFSCH_DEFINE_PRIMITIVE(escape_string,
 }
 
 void dfsch_module_sql_support_register(dfsch_object_t* env){
-  dfsch_package_t* sql_support = dfsch_make_package("sql-support");
+  dfsch_package_t* sql_support = dfsch_make_package("sql-support",
+                                                    "Native code for SQL "
+                                                    "support");
   dfsch_provide(env, "sql-support");
   dfsch_defcanon_pkgcstr(env, sql_support, "escape-string",
                          DFSCH_PRIMITIVE_REF(escape_string));
