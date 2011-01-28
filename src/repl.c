@@ -174,7 +174,7 @@ int main(int argc, char**argv){
     case 'E':
       {
         puts(dfsch_object_2_string(dfsch_eval_proc(dfsch_string_2_object_list(optarg), ctx),
-                                   100, DFSCH_STRICT_WRITE));
+                                   100, DFSCH_WRITE));
         interactive = 0;
 
         break;
