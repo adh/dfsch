@@ -73,6 +73,9 @@
                        (not (equal? (car hr) path)))
                      (server-handler-map server))))
 
+(define-method (remove-all-handlers! (server <server>))
+  (slot-set! server :handler-map ()))
+
 (define-method (find-handler (server <server>) path)
   (catch 'found
          (for-each (lambda (hr)
