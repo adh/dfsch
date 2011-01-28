@@ -327,6 +327,7 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
                                              int port){
   struct sockaddr_in inet_addr;
   int fd;
+  int val = 1;
   struct hostent* h;
 
   dfsch_lock_libc();
@@ -344,6 +345,8 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
   if (fd == -1){
     dfsch_operating_system_error("socket");
   }
+
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
   
   if (bind(fd,(struct sockaddr*)&inet_addr,
            sizeof(inet_addr))==-1){

@@ -147,7 +147,8 @@ dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, c
 
 
 void dfsch_http_run_server(dfsch_object_t* port,
-                           dfsch_object_t* callback){
+                           dfsch_object_t* callback,
+                           int keep_alive_count){
   dfsch_http_request_t* request;
   dfsch_http_response_t* response;
   int count = 0;
@@ -155,14 +156,15 @@ void dfsch_http_run_server(dfsch_object_t* port,
   while (request = dfsch_http_read_request(port)) {
     response = dfsch_apply(callback, dfsch_list(1, request));
     response->protocol = request->protocol;
-    dfsch_http_write_response(port, response);
+    count++;
+
+    dfsch_http_write_response(port, response, count > keep_alive_count);
 
     if (request->protocol == NULL || 
         strcmp(request->protocol, "HTTP/1.0") == 0 ||
-        count > 10){
+        count > keep_alive_count){
       break;
     }
-    count++;
   }
 }
 
@@ -170,7 +172,7 @@ static long long my_strtoll(char* str){
   char* eptr;
   long long value = strtoll(str, &eptr, 10);
   if (*eptr){
-    dfsch_error("Syntax error in deciaml number", dfsch_make_string_cstr(str));
+    dfsch_error("Syntax error in decimal number", dfsch_make_string_cstr(str));
   }
   return value;
 }
@@ -234,7 +236,8 @@ dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port){
 }
 
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_http_request_t* request){
+                              dfsch_http_request_t* request,
+                              int close){
   dfsch_str_list_t* sl = dfsch_sl_create();
   dfsch_strbuf_t* head;
 
@@ -274,6 +277,9 @@ void dfsch_http_write_request(dfsch_object_t* port,
     if (request->body){
       dfsch_sl_append(sl, dfsch_saprintf("Content-Length: %d\r\n",
                                          request->body->len));
+    }
+    if (close){
+      dfsch_sl_append(sl, "Connection: close\r\n");
     }
 
     dfsch_sl_append(sl, "\r\n");    
@@ -325,7 +331,8 @@ dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
   return resp;
 }
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_http_response_t* response){
+                              dfsch_http_response_t* response,
+                              int close){
   dfsch_str_list_t* sl = dfsch_sl_create();
   dfsch_strbuf_t* head;
 
@@ -357,6 +364,9 @@ int dfsch_http_write_response(dfsch_object_t* port,
       if (response->body){
         dfsch_sl_append(sl, dfsch_saprintf("Content-Length: %d\r\n",
                                            response->body->len));
+      }
+      if (close){
+        dfsch_sl_append(sl, "Connection: close\r\n");
       }
       
       dfsch_sl_append(sl, "\r\n");    

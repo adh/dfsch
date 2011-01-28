@@ -29,11 +29,13 @@ DFSCH_DEFINE_PRIMITIVE(read_request, "Read HTTP request from port"){
 DFSCH_DEFINE_PRIMITIVE(write_request, "Read HTTP request from port"){
   dfsch_object_t* port;
   dfsch_http_request_t* request;
+  dfsch_object_t* close;
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_HTTP_REQUEST_ARG(args, request);
+  DFSCH_OBJECT_ARG_OPT(args, close, NULL);
   DFSCH_ARG_END(args);
-
-  dfsch_http_write_request(port, request);
+  
+  dfsch_http_write_request(port, request, close != NULL);
   return NULL;
 }
 
@@ -64,22 +66,26 @@ DFSCH_DEFINE_PRIMITIVE(read_response, "Read HTTP response from port"){
 DFSCH_DEFINE_PRIMITIVE(write_response, "Read HTTP response from port"){
   dfsch_object_t* port;
   dfsch_http_response_t* response;
+  dfsch_object_t* close;
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_HTTP_RESPONSE_ARG(args, response);
+  DFSCH_OBJECT_ARG_OPT(args, close, NULL)
   DFSCH_ARG_END(args);
 
-  dfsch_http_write_response(port, response);
+  dfsch_http_write_response(port, response, close != NULL);
   return NULL;
 }
 
 DFSCH_DEFINE_PRIMITIVE(run_http_server, "Run server loop (for one connection)"){
   dfsch_object_t* port;
   dfsch_object_t* handler;
+  int keep_alive_count = 0;
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_OBJECT_ARG(args, handler);
+  DFSCH_LONG_ARG_OPT(args, keep_alive_count, 0);
   DFSCH_ARG_END(args);
   
-  dfsch_http_run_server(port, handler);
+  dfsch_http_run_server(port, handler, keep_alive_count);
 
   return NULL;
 }

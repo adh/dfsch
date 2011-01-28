@@ -54,6 +54,9 @@
    (port :reader server-port
          :initarg :port
          :initform 8080)
+   (keep-alive-count :reader server-keep-alive-count
+                     :initarg :keep-alive-count
+                     :initform 0)
    (handler-map :reader server-handler-map
                 :initform ())
    (vhosts? :reader server-vhosts?
@@ -180,13 +183,15 @@
            
 
 (define-method (run-server (server <server>))
-  (server-socket-run-accept-loop (tcp-bind (server-hostname server)
-                                           (server-port server))
-                                 (lambda (sock)
-                                   (run-http-server sock 
-                                                    (lambda (req)
-                                                      (serve-client server
-                                                                    req))))))
+  (server-socket-run-accept-loop 
+   (tcp-bind (server-hostname server)
+             (server-port server))
+   (lambda (sock)
+     (run-http-server sock 
+                      (lambda (req)
+                        (serve-client server
+                                      req))
+                      (server-keep-alive-count server)))))
 
 (define-method (run-server-in-background (server <server>))
   (threads:thread-detach (threads:thread-create run-server (list server))))

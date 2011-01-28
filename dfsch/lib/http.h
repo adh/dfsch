@@ -97,12 +97,15 @@ dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, c
                                               dfsch_object_t* headers,
                                               dfsch_strbuf_t* body);
 void dfsch_http_run_server(dfsch_object_t* port,
-                           dfsch_object_t* callback);
+                           dfsch_object_t* callback,
+                           int keep_alive_count);
 dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port);
 void dfsch_http_write_request(dfsch_object_t* port,
-                              dfsch_http_request_t* request);
+                              dfsch_http_request_t* request,
+                              int close);
 dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port);
 int dfsch_http_write_response(dfsch_object_t* port,
-                              dfsch_http_response_t* response);
+                              dfsch_http_response_t* response,
+                              int close);
 
 #endif
