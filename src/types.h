@@ -63,6 +63,7 @@ typedef struct closure_t{
   object_t* orig_code;
   lambda_list_t* orig_args;
   object_t* documentation;
+  int compiled;
 } closure_t;
 
 struct dfsch__stack_frame_t {

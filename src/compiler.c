@@ -191,6 +191,7 @@ void dfsch_compile_function(dfsch_object_t* function){
 
   func->code = dfsch_constant_fold_expression_list(func->orig_code,
                                                    func->env);
+  func->compiled = 1;
 }
 
 DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){

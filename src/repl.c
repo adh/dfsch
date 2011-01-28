@@ -151,7 +151,7 @@ int main(int argc, char**argv){
   dfsch_set_standard_io_ports();
   dfsch_cinspect_set_as_inspector();                                        
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdtTD:")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdtTD:X:")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
@@ -161,6 +161,9 @@ int main(int argc, char**argv){
       break;
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
+      break;
+    case 'X':
+      dfsch_set_vm_parameter_stanza(optarg);
       break;
     case 'e':
       {
@@ -206,6 +209,9 @@ int main(int argc, char**argv){
       puts("  -L <directory>    Append directory to load:path");
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
+      puts("  -X <name>=<value> Set VM parameter");
+      puts("     +<name>         to 1");
+      puts("     -<name>         to 0");
       puts("  -i                Force interactive mode");
       puts("  -d                Enable cdebug debugger early");
       puts("  -D <depth>        Set initial depth of trace buffer");

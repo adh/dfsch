@@ -936,6 +936,11 @@ extern "C" {
   DFSCH_GENERIC_ARG_OPT(al, name, default, dfsch_package_t*,    \
                         dfsch_package_designator)
 
+  extern void dfsch_set_vm_parameter(char* name, char* value);
+  extern void dfsch_set_vm_parameter_stanza(char* stanza);
+  extern char* dfsch_get_vm_parameter(char* name, char* value);
+  extern dfsch_object_t* dfsch_get_vm_parameters();
+
 #ifdef __cplusplus
 }
 #endif

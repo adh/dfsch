@@ -1522,6 +1522,9 @@ struct dfsch_tail_escape_t {
   environment_t* reuse_frame;
 };
 
+static DEFINE_VM_PARAM(compile_on_apply, 1,
+                       "Compile all closures on their first execution");
+
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
 
@@ -1576,6 +1579,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       env = maybe_reuse_frame(myesc.reuse_frame, ((closure_t*) proc)->env, context, ti);
     } else {
       env = new_frame_impl(((closure_t*) proc)->env, context, ti);
+    }
+
+    if (compile_on_apply){
+      if (!((closure_t*)proc)->compiled){
+        dfsch_compile_function(proc);
+      }
     }
 
     myesc.reuse_frame = env;
@@ -1792,4 +1801,69 @@ void dfsch_lock_libc(){
 }
 void dfsch_unlock_libc(){
   pthread_mutex_unlock(&libc_mutex);
+}
+typedef struct vm_param_t vm_param_t;
+struct vm_param_t {
+  int* var;
+  char* name;
+  char* desc;
+  vm_param_t* next;
+};
+
+static vm_param_t* vm_params = NULL;
+
+void dfsch__register_vm_param(int* var, char* name, char* desc){
+  vm_param_t* vmp = malloc(sizeof(vm_param_t));
+  
+  vmp->var = var;
+  vmp->name = name;
+  vmp->desc = desc;
+
+  vmp->next = vm_params;
+  vm_params = vmp;
+}
+
+void dfsch_set_vm_parameter(char* name, char* value){
+  int val = atoi(value);
+  vm_param_t* i = vm_params;
+
+  while (i){
+    if (strcmp(i->name, name) == 0){
+      *(i->var) = val;
+      return;
+    }
+
+    i = i->next;
+  }
+
+  dfsch_error("No such VM parameter", dfsch_make_string_cstr(name));
+}
+void dfsch_set_vm_parameter_stanza(char* stanza){
+  char* value;
+  switch (*stanza){
+  case '+':
+    dfsch_set_vm_parameter(stanza+1, "1");
+    break;
+  case '-':
+    dfsch_set_vm_parameter(stanza+1, "0");
+    break;
+  }
+
+  
+}
+char* dfsch_get_vm_parameter(char* name, char* value){
+  vm_param_t* i = vm_params;
+
+  while (i){
+    if (strcmp(i->name, name) == 0){
+      return dfsch_saprintf("%d", *(i->var));
+    }
+
+    i = i->next;
+  }
+
+  dfsch_error("No such VM parameter", dfsch_make_string_cstr(name));
+}
+dfsch_object_t* dfsch_get_vm_parameters(){
+  
 }

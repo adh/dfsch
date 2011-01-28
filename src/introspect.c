@@ -50,11 +50,18 @@ char* dfsch_format_trace(dfsch_object_t* trace){
                   dfsch_object_2_string(expr, 10, DFSCH_WRITE),
                   dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
-        while (DFSCH_PAIR_P(annot) && 
-               DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
-          sl_printf(sl, "    <- %s\n", 
-                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
-                                          DFSCH_WRITE));
+        while (DFSCH_PAIR_P(annot)){
+          if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
+            sl_printf(sl, "    <- %s\n", 
+                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
+                                            DFSCH_WRITE));
+          } else if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_COMPILED_FROM) {
+            sl_printf(sl, "    <= %s\n", 
+                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
+                                            DFSCH_WRITE));
+          } else {
+            break;
+          }
           annot = dfsch_get_list_annotation(DFSCH_FAST_CDR(annot));
         }
         if (annot){

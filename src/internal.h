@@ -52,5 +52,12 @@ dfsch_object_t* dfsch__make_slot_reader_for_slot(dfsch_type_t* type,
 dfsch_object_t* dfsch__make_slot_writer_for_slot(dfsch_type_t* type,
                                                  dfsch_slot_t* slot);
 
+void dfsch__register_vm_param(int* var, char* name, char* desc);
+#define DEFINE_VM_PARAM(name, default, desc)                     \
+  int name = default;                                            \
+  static void __attribute__((constructor)) vmp__init_##name(){   \
+    dfsch__register_vm_param(&name, #name, desc);                \
+  }
+
 
 #endif

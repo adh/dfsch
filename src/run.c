@@ -81,6 +81,9 @@ int main(int argc, char**argv){
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
       break;
+    case 'X':
+      dfsch_set_vm_parameter_stanza(optarg);
+      break;
     case 'z':
       program_is_dsz = 1;
       break;
@@ -102,6 +105,13 @@ int main(int argc, char**argv){
       printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
       puts("Options:");
       puts("  -L <directory>    Append directory to load:path");
+      puts("  -X <name>=<value> Set VM parameter");
+      puts("     +<name>          to 1");
+      puts("     -<name>          to 0");
+#ifdef __WIN32__
+      puts("  -c                Allocate Win32 console");
+#endif
+      puts("  -z                Load compressed input");
       puts("");
       puts("First non-option argument is treated as filename of program to run");
       puts("Run without non-option arguments to start in interactive mode");
