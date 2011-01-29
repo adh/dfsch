@@ -369,6 +369,10 @@ static void parse_string(dfsch_json_parser_t *jp, char *data){
 
 static void parse_atom(dfsch_json_parser_t *jp, char *data){
   char* e;
+
+  if (*data == '\0'){
+    dfsch_error("Syntax error", NULL);
+  }
   
   if (strcmp(data, "false") == 0){
     parse_object(jp, NULL);
