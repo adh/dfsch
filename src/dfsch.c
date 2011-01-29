@@ -1839,6 +1839,7 @@ void dfsch_set_vm_parameter(char* name, char* value){
   dfsch_error("No such VM parameter", dfsch_make_string_cstr(name));
 }
 void dfsch_set_vm_parameter_stanza(char* stanza){
+  char* name;
   char* value;
   switch (*stanza){
   case '+':
@@ -1849,7 +1850,16 @@ void dfsch_set_vm_parameter_stanza(char* stanza){
     break;
   }
 
-  
+  name = dfsch_stracpy(stanza);
+  value = strchr(name, '=');
+  if (value){
+    *value = '\0';
+    value++;
+  } else {
+    value = "1";
+  }
+
+  dfsch_set_vm_parameter(name, value);
 }
 char* dfsch_get_vm_parameter(char* name, char* value){
   vm_param_t* i = vm_params;
