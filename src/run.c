@@ -96,7 +96,7 @@ int main(int argc, char**argv){
 
     case 'v':
       printf("dfsch version %s\n\n", PACKAGE_VERSION);
-      puts("Copyright (C) 2005-2010 Ales Hakl");
+      puts("Copyright (C) 2005-2011 Ales Hakl");
       puts("dfsch comes with ABSOLUTELY NO WARRANTY");
       puts("This is free software, and you are welcome to redistribute it");
       puts("under certain conditions; see file COPYING for details.");
