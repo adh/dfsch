@@ -60,11 +60,17 @@ extern dfsch_type_t dfsch_http_response_type;
 #define DFSCH_HTTP_RESPONSE_TYPE (&dfsch_http_response_type)
 extern dfsch_type_t dfsch_http_request_type;
 #define DFSCH_HTTP_REQUEST_TYPE (&dfsch_http_request_type)
+extern dfsch_type_t dfsch_http_read_limits_type;
+#define DFSCH_HTTP_READ_LIMITS_TYPE (&dfsch_http_read_limits_type)
 
 #define DFSCH_HTTP_REQUEST_ARG(al, name)                                \
   DFSCH_INSTANCE_ARG(al, name, dfsch_http_request_t*, DFSCH_HTTP_REQUEST_TYPE)
 #define DFSCH_HTTP_RESPONSE_ARG(al, name)                                \
   DFSCH_INSTANCE_ARG(al, name, dfsch_http_response_t*, DFSCH_HTTP_RESPONSE_TYPE)
+#define DFSCH_HTTP_READ_LIMITS_ARG(al, name)                                \
+  DFSCH_INSTANCE_ARG(al, name,                                          \
+                     dfsch_http_read_limits_t*,                         \
+                     DFSCH_HTTP_READ_LIMITS_TYPE)
 
 
 typedef struct dfsch_http_response_t {
@@ -118,5 +124,7 @@ dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
 int dfsch_http_write_response(dfsch_object_t* port,
                               dfsch_http_response_t* response,
                               int close);
+
+dfsch_http_read_limits_t* dfsch_make_http_read_limits(dfsch_object_t* args);
 
 #endif

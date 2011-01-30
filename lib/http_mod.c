@@ -90,6 +90,10 @@ DFSCH_DEFINE_PRIMITIVE(run_http_server, "Run server loop (for one connection)"){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_read_limits, 
+                       "Create structure describing HTTP message size limits"){
+  return dfsch_make_http_read_limits(args);
+}
 
 void dfsch_module_http_register(dfsch_object_t* env){
   dfsch_package_t* http = dfsch_make_package("http",
@@ -129,5 +133,16 @@ void dfsch_module_http_register(dfsch_object_t* env){
   dfsch_define_slot_accessor(env, http, "response-protocol",
                              DFSCH_HTTP_RESPONSE_TYPE, "body");
 
-
+  dfsch_define_slot_accessor(env, http, "limit-request-line-lenght",
+                             DFSCH_HTTP_READ_LIMITS_TYPE, 
+                             "request_line_length");
+  dfsch_define_slot_accessor(env, http, "limit-header-length",
+                             DFSCH_HTTP_READ_LIMITS_TYPE, 
+                             "header_length");
+  dfsch_define_slot_accessor(env, http, "limit-header-count",
+                             DFSCH_HTTP_READ_LIMITS_TYPE, 
+                             "header_count");
+  dfsch_define_slot_accessor(env, http, "limit-entity-length",
+                             DFSCH_HTTP_READ_LIMITS_TYPE, 
+                             "entity_length");
 }

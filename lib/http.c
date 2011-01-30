@@ -118,6 +118,28 @@ dfsch_type_t dfsch_http_request_type = {
   .slots = &request_slots,
 };
 
+static dfsch_slot_t limits_slots[] = {
+  DFSCH_SIZE_T_SLOT(dfsch_http_read_limits_t, request_line_length, 
+                    DFSCH_SLOT_ACCESS_RW,
+                    "Maximum length of request/response line"),
+  DFSCH_SIZE_T_SLOT(dfsch_http_read_limits_t, header_length, 
+                    DFSCH_SLOT_ACCESS_RW,
+                    "Maximum length of one header line"),
+  DFSCH_INT_SLOT(dfsch_http_read_limits_t, header_count, 
+                 DFSCH_SLOT_ACCESS_RW,
+                 "Maximum number of headers"),
+  DFSCH_SIZE_T_SLOT(dfsch_http_read_limits_t, entity_length, 
+                    DFSCH_SLOT_ACCESS_RW,
+                    "Maximum length of request/response entity content"),
+};
+
+dfsch_type_t dfsch_http_read_limits_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "http:read-limits",
+  .size = sizeof(dfsch_http_read_limits_t),
+  .slots = &limits_slots,  
+};
+
 dfsch_http_response_t* dfsch_make_http_response(int status,
                                                 char* protocol,
                                                 dfsch_object_t* headers,
@@ -398,4 +420,22 @@ int dfsch_http_write_response(dfsch_object_t* port,
     dfsch_port_write_buf(port, response->body->ptr, response->body->len);    
   }
     
+}
+
+
+dfsch_http_read_limits_t* dfsch_make_http_read_limits(dfsch_object_t* args){
+  dfsch_http_read_limits_t* rl = dfsch_make_object(DFSCH_HTTP_READ_LIMITS_TYPE);
+
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("request-line-length", rl->request_line_length, 
+                        dfsch_number_to_int64);
+  DFSCH_KEYWORD_GENERIC("header-length", rl->request_line_length, 
+                        dfsch_number_to_int64);
+  DFSCH_KEYWORD_GENERIC("header-count", rl->header_count, 
+                        dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("entity-length", rl->entity_length, 
+                        dfsch_number_to_int64);
+  DFSCH_KEYWORD_PARSER_END(args);
+  
+  return rl;
 }
