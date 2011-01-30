@@ -51,11 +51,17 @@ typedef void (*dfsch_inet_header_cb_t)(void* baton,
 
 void dfsch_inet_read_822_headers(dfsch_object_t* port,
                                  dfsch_inet_header_cb_t cb,
-                                 void* baton);
+                                 void* baton,
+                                 size_t max_len,
+                                 int max_count);
 
-dfsch_object_t* dfsch_inet_read_822_headers_list(dfsch_object_t* port);
+dfsch_object_t* dfsch_inet_read_822_headers_list(dfsch_object_t* port,
+                                                 size_t max_len,
+                                                 int max_count);
 dfsch_object_t* dfsch_inet_read_822_headers_map(dfsch_object_t* port,
-                                                dfsch_object_t* map);
+                                                dfsch_object_t* map,
+                                                size_t max_len,
+                                                int max_count);
 
 
 #endif

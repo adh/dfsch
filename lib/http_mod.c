@@ -23,7 +23,7 @@ DFSCH_DEFINE_PRIMITIVE(read_request, "Read HTTP request from port"){
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_ARG_END(args);
 
-  return dfsch_http_read_request(port);
+  return dfsch_http_read_request(port, NULL);
 }
 
 DFSCH_DEFINE_PRIMITIVE(write_request, "Read HTTP request from port"){
@@ -60,7 +60,7 @@ DFSCH_DEFINE_PRIMITIVE(read_response, "Read HTTP response from port"){
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_ARG_END(args);
 
-  return dfsch_http_read_response(port);
+  return dfsch_http_read_response(port, NULL);
 }
 
 DFSCH_DEFINE_PRIMITIVE(write_response, "Read HTTP response from port"){
@@ -85,7 +85,7 @@ DFSCH_DEFINE_PRIMITIVE(run_http_server, "Run server loop (for one connection)"){
   DFSCH_LONG_ARG_OPT(args, keep_alive_count, 0);
   DFSCH_ARG_END(args);
   
-  dfsch_http_run_server(port, handler, keep_alive_count);
+  dfsch_http_run_server(port, handler, keep_alive_count, NULL);
 
   return NULL;
 }

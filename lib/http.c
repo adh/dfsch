@@ -1,4 +1,5 @@
 #include <dfsch/lib/http.h>
+#include <dfsch/lib/inet.h>
 #include <dfsch/magic.h>
 #include <dfsch/util.h>
 #include <ctype.h>
@@ -148,12 +149,13 @@ dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, c
 
 void dfsch_http_run_server(dfsch_object_t* port,
                            dfsch_object_t* callback,
-                           int keep_alive_count){
+                           int keep_alive_count,
+                           dfsch_http_read_limits_t* lims){
   dfsch_http_request_t* request;
   dfsch_http_response_t* response;
   int count = 0;
 
-  while (request = dfsch_http_read_request(port)) {
+  while (request = dfsch_http_read_request(port, lims)) {
     response = dfsch_apply(callback, dfsch_list(1, request));
     response->protocol = request->protocol;
     count++;
@@ -188,8 +190,12 @@ static size_t get_content_length(dfsch_object_t* headers){
   return my_strtoll(dfsch_string_to_cstr(dfsch_list_item(hdr, 1)));
 }
 
-dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port){
-  dfsch_strbuf_t* lb = dfsch_port_readline(port);
+static dfsch_http_read_limits_t no_limits = {0, 0, 0, 0};
+
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
+                                              dfsch_http_read_limits_t* lims){
+  dfsch_http_read_limits_t* rl = lims ? lims : &no_limits;
+  dfsch_strbuf_t* lb = dfsch_port_readline_len(port, rl->request_line_length);
   char* line;
   size_t len;
   dfsch_http_request_t* req = dfsch_make_object(DFSCH_HTTP_REQUEST_TYPE);
@@ -217,13 +223,18 @@ dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port){
 
   if (len){
     req->protocol = dfsch_strancpy(line, len);
-    req->headers = dfsch_inet_read_822_headers_list(port, NULL);
+    req->headers = dfsch_inet_read_822_headers_list(port, 
+                                                    rl->header_length,
+                                                    rl->header_count);
   } else {
     req->protocol = NULL; /* HTTP/0.9 */
   }
   
   len = get_content_length(req->headers);
   if (len){
+    if (rl->entity_length && len > rl->entity_length){
+      dfsch_error("Request entity too large", NULL);
+    }
     req->body = dfsch_alloc_strbuf(len);
     if (dfsch_port_read_buf(port, req->body->ptr, len) != len){
       dfsch_error("Unexpected EOF reading request content", NULL);
@@ -293,8 +304,10 @@ void dfsch_http_write_request(dfsch_object_t* port,
   }
 }
 
-dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
-  dfsch_strbuf_t* lb = dfsch_port_readline(port);
+dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
+                                                dfsch_http_read_limits_t* lims){
+  dfsch_http_read_limits_t* rl = lims ? lims : &no_limits;
+  dfsch_strbuf_t* lb = dfsch_port_readline_len(port, rl->request_line_length);
   char* line;
   size_t len;
   dfsch_http_response_t* resp = dfsch_make_object(DFSCH_HTTP_RESPONSE_TYPE);
@@ -316,10 +329,15 @@ dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port){
 
   resp->status = my_strtoll(dfsch_strancpy(line, len));
 
-  resp->headers = dfsch_inet_read_822_headers_list(port, NULL);
+  resp->headers = dfsch_inet_read_822_headers_list(port, 
+                                                   rl->header_length,
+                                                   rl->header_count);
   
   len = get_content_length(resp->headers);
   if (len){
+    if (rl->entity_length && len > rl->entity_length){
+      dfsch_error("Response entity too large", NULL);
+    }
     resp->body = dfsch_alloc_strbuf(len);
     if (dfsch_port_read_buf(port, resp->body->ptr, len) != len){
       dfsch_error("Unexpected EOF reading response content", NULL);

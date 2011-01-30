@@ -139,21 +139,29 @@ DFSCH_DEFINE_PRIMITIVE(inet_xml_escape, NULL){
 DFSCH_DEFINE_PRIMITIVE(headers_2_list, 
                        "Read email style headers from port into new list"){
   dfsch_object_t* port;
+  size_t max_len;
+  int max_count;
   DFSCH_OBJECT_ARG(args, port);
+  DFSCH_LONG_ARG_OPT(args, max_len, 0);
+  DFSCH_LONG_ARG_OPT(args, max_count, 0);
   DFSCH_ARG_END(args);
  
-  return dfsch_inet_read_822_headers_list(port);
+  return dfsch_inet_read_822_headers_list(port, max_len, max_count);
 }
 
 DFSCH_DEFINE_PRIMITIVE(headers_2_map, 
                        "Read email style headers from port into mapping object"){
   dfsch_object_t* map = NULL;
+  size_t max_len;
+  int max_count;
   dfsch_object_t* port;
   DFSCH_OBJECT_ARG(args, port);
   DFSCH_OBJECT_ARG_OPT(args, map, NULL);
+  DFSCH_LONG_ARG_OPT(args, max_len, 0);
+  DFSCH_LONG_ARG_OPT(args, max_count, 0);
   DFSCH_ARG_END(args);
   
-  return dfsch_inet_read_822_headers_map(port, map);
+  return dfsch_inet_read_822_headers_map(port, map, max_len, max_count);
 }
 
 

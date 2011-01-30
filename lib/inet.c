@@ -756,13 +756,18 @@ static void header_name_inplace(char* name){
 
 void dfsch_inet_read_822_headers(dfsch_object_t* port,
                                  dfsch_inet_header_cb_t cb,
-                                 void* baton){
+                                 void* baton,
+                                 size_t max_len,
+                                 int max_count){
   dfsch_strbuf_t* line;
   char* name = NULL;
   char* value;
+  int count;
+  int valid;
 
+  count == 0;
   for (;;){
-    line = dfsch_port_readline(port);
+    line = dfsch_port_readline_len(port, max_len);
 
     if (!line){
       if (name){
@@ -771,10 +776,15 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
       return;
     }
 
+    valid = 0;
     while (line->len && (line->ptr[line->len - 1] == '\n' ||
                          line->ptr[line->len - 1] == '\r' )){
       line->len --;
       line->ptr[line->len] = '\0';
+      valid = 1;
+    }
+    if (!valid){
+      dfsch_error("Header line too long", NULL);
     }
     
     if (line->len == 0){
@@ -811,6 +821,10 @@ void dfsch_inet_read_822_headers(dfsch_object_t* port,
         value++;
       }
     }
+    count++;
+    if (count == max_count){
+      dfsch_error("Too many headers", NULL);
+    }
   }
 }
 
@@ -823,10 +837,12 @@ static void headers_list_cb(dfsch_object_t** list,
                      *list);
 }
 
-dfsch_object_t* dfsch_inet_read_822_headers_list(dfsch_object_t* port){
+dfsch_object_t* dfsch_inet_read_822_headers_list(dfsch_object_t* port,
+                                                 size_t max_len,
+                                                 int max_count){
   dfsch_object_t* list = NULL;
 
-  dfsch_inet_read_822_headers(port, headers_list_cb, &list);
+  dfsch_inet_read_822_headers(port, headers_list_cb, &list, max_len, max_count);
 
   return list;
 }
@@ -853,12 +869,15 @@ static void headers_hash_cb_list(dfsch_object_t* hash,
 }
 
 dfsch_object_t* dfsch_inet_read_822_headers_map(dfsch_object_t* port,
-                                                dfsch_object_t* map){
+                                                dfsch_object_t* map,
+                                                size_t max_len,
+                                                int max_count){
   if (!map){
     map = dfsch_hash_make(DFSCH_HASH_EQUAL);
   }
 
-  dfsch_inet_read_822_headers(port, headers_hash_cb_list, map);
+  dfsch_inet_read_822_headers(port, headers_hash_cb_list, map, 
+                              max_len, max_count);
 
   return map;
 }

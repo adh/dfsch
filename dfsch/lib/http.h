@@ -88,6 +88,14 @@ typedef struct dfsch_http_request_t {
   dfsch_object_t* headers;
 } dfsch_http_request_t;
 
+typedef struct dfsch_http_read_limits_t {
+  dfsch_type_t type;
+  size_t request_line_length;
+  size_t header_length;
+  int header_count;
+  size_t entity_length;
+} dfsch_http_read_limits_t;
+
 
 dfsch_http_response_t* dfsch_make_http_response(int status,
                                                 char* protocol,
@@ -98,12 +106,15 @@ dfsch_http_request_t* dfsch_make_http_request(char* method, char* request_uri, c
                                               dfsch_strbuf_t* body);
 void dfsch_http_run_server(dfsch_object_t* port,
                            dfsch_object_t* callback,
-                           int keep_alive_count);
-dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port);
+                           int keep_alive_count,
+                           dfsch_http_read_limits_t* lims);
+dfsch_http_request_t* dfsch_http_read_request(dfsch_object_t* port,
+                                              dfsch_http_read_limits_t* lims);
 void dfsch_http_write_request(dfsch_object_t* port,
                               dfsch_http_request_t* request,
                               int close);
-dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port);
+dfsch_http_response_t* dfsch_http_read_response(dfsch_object_t* port,
+                                                dfsch_http_read_limits_t* lims);
 int dfsch_http_write_response(dfsch_object_t* port,
                               dfsch_http_response_t* response,
                               int close);
