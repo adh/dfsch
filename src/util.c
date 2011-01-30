@@ -345,7 +345,11 @@ char* dfsch_realpath(char* path){
   }
 #else
   char* rp = realpath(path, NULL);
-  char* res = dfsch_stracpy(rp);
+  char* res;
+  if (!rp) {
+    dfsch_operating_system_error("realpath");
+  }
+  res = dfsch_stracpy(rp);
   free(rp);
   return res;
 #endif

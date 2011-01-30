@@ -1844,10 +1844,10 @@ void dfsch_set_vm_parameter_stanza(char* stanza){
   switch (*stanza){
   case '+':
     dfsch_set_vm_parameter(stanza+1, "1");
-    break;
+    return;
   case '-':
     dfsch_set_vm_parameter(stanza+1, "0");
-    break;
+    return;
   }
 
   name = dfsch_stracpy(stanza);
