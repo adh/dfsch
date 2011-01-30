@@ -141,6 +141,8 @@ extern "C" {
   int dfsch_port_batch_read(dfsch_object_t* port);
   
   dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port);
+  dfsch_strbuf_t* dfsch_port_readline_len(dfsch_object_t* port,
+                                          size_t max_len);
 
   dfsch_object_t* dfsch_null_port();
   

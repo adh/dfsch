@@ -168,6 +168,10 @@ int dfsch_port_batch_read(dfsch_object_t* port){
 }
 
 dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
+  return dfsch_port_readline_len(port, 0);
+}
+dfsch_strbuf_t* dfsch_port_readline_len(dfsch_object_t* port,
+                                        size_t max_len){
   int ch;
   char* buf;
   size_t buflen;
@@ -194,7 +198,7 @@ dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
       buf[len] = ch;
       len++;
 
-      if (ch == '\n'){
+      if (ch == '\n' || (max_len && len == max_len)){
         break;
       }
     }
