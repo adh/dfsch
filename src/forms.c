@@ -409,7 +409,8 @@ DFSCH_DEFINE_FORM(declare, "Add declaration specifier to given symbol", {}){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM(set, "Change value of variable", {}){
+DFSCH_DEFINE_FORM(set, "Change value of variable", 
+                  {DFSCH_FORM_COMPILE(define)}){
   object_t* name;
   object_t* value;
 
@@ -534,7 +535,7 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
   DFSCH_OBJECT_ARG(args, bindings);
   DFSCH_ARG_REST(args, code);
 
-  DFSCH_SAVE_HANDLERS;
+  DFSCH_SAVE_RESTARTS;
 
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* name;
@@ -559,7 +560,7 @@ DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
 
   ret = dfsch_eval_proc(code, env);
 
-  DFSCH_RESTORE_HANDLERS;
+  DFSCH_RESTORE_RESTARTS;
   return ret;
 }
 
