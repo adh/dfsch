@@ -117,8 +117,7 @@ DFSCH_DEFINE_FORM(begin, "Evaluate list of expressions and return last result",
   return dfsch_eval_proc_tr(args, env, esc);
 }
 dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
-  return dfsch_cons(DFSCH_FORM_REF(begin), 
-                    exps);
+  return dfsch_immutable_list_cdr(exps, 1, DFSCH_FORM_REF(begin));
 }
 
 DFSCH_DEFINE_FORM(internal_loop, "Inifinite loop", 
@@ -307,10 +306,11 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
                                       dfsch_object_t* lambda_list,
                                       dfsch_object_t* body){
-  return dfsch_cons(DFSCH_FORM_REF(internal_lambda),
-                    dfsch_cons(name, 
-                               dfsch_cons(lambda_list, body)));
-
+  return dfsch_immutable_list_cdr(body, 
+                                  3, 
+                                  DFSCH_FORM_REF(internal_lambda),
+                                  name,
+                                  lambda_list);
 }
 
 DFSCH_FORM_METHOD_COMPILE(define){

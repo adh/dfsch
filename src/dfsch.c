@@ -953,6 +953,12 @@ dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                            dfsch__get_thread_info());
 }
 
+dfsch_object_t* dfsch_macro_expand_expr(dfsch_object_t* macro,
+                                   dfsch_object_t* expr){
+  return macro_expand_impl(macro, expr, 
+                           dfsch__get_thread_info());
+}
+
 
 // Evaluator
 

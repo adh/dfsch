@@ -143,7 +143,7 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
 }
 
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
-                                               dfsch_object_t* env){
+                                         dfsch_object_t* env){
   if (DFSCH_PAIR_P(expression)){
     dfsch_object_t* operator = DFSCH_FAST_CAR(expression);
     dfsch_object_t* operator_value;
@@ -157,23 +157,32 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
         dfsch_form_t* form = ((dfsch_form_t*)operator_value);
         if (form->methods.compile){
           return form->methods.compile(operator_value, expression, env);
+        } else {
+          if (operator != operator_value){ 
+            return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
+                                           expression,
+                                           args,
+                                           0);
+          } else {
+            return expression;
+          }
         }
       }
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
-        return dfsch_compile_expression(dfsch_macro_expand(operator_value,
-                                                           args),
+        return dfsch_compile_expression(dfsch_macro_expand_expr(operator_value,
+                                                                expression),
                                         env);
       }
 
       return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
                                      expression, 
                                      dfsch_compile_expression_list(args,
-                                                                         env),
+                                                                   env),
                                      0);
     }
     return dfsch_cons_ast_node_cdr(operator, expression, 
                                    dfsch_compile_expression_list(args,
-                                                                       env),
+                                                                 env),
                                    0);
     
 
