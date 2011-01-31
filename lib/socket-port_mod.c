@@ -2,24 +2,24 @@
 
 DFSCH_DEFINE_PRIMITIVE(tcp_connect, NULL){
   char* hostname;
-  int port;
+  char* service;
 
   DFSCH_STRING_ARG(args, hostname);
-  DFSCH_LONG_ARG(args, port);
+  DFSCH_STRING_ARG(args, service);
   DFSCH_ARG_END(args);
 
-  return dfsch_socket_port_tcp_connect(hostname, port);
+  return dfsch_socket_port_tcp_connect(hostname, service);
 }
 
 DFSCH_DEFINE_PRIMITIVE(tcp_bind, NULL){
   char* hostname;
-  int port;
+  char* service;
 
   DFSCH_STRING_ARG(args, hostname);
-  DFSCH_LONG_ARG(args, port);
+  DFSCH_STRING_ARG(args, service);
   DFSCH_ARG_END(args);
 
-  return dfsch_server_socket_tcp_bind(hostname, port);
+  return dfsch_server_socket_tcp_bind(hostname, service);
 }
 
 DFSCH_DEFINE_PRIMITIVE(unix_connect, NULL){

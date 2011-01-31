@@ -29,12 +29,12 @@
 (use-package :http-server)
 (use-package :xml)
 
-(define port 2080)
+(define port "2080")
 (define hostname "localhost")
 (let ((p (cmdopts:make-parser)))
   (cmdopts:add-option p 
                       (lambda (p v) 
-                        (set! port (string->object v)))
+                        (set! port v))
                       :long-option "port"
                       :has-argument #t)
   (cmdopts:add-option p 

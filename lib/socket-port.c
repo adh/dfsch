@@ -217,38 +217,81 @@ static dfsch_object_t* cons_socket_port(char* name,
   return sp;
 }
 
+dfsch_type_t dfsch_socket_port_error_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_RUNTIME_ERROR_TYPE, 
+                            "socket-port:error");
+static void gai_error(int e, char* hostname, char* service){
+  dfsch_object_t* c = 
+    dfsch_make_condition(DFSCH_SOCKET_PORT_ERROR_TYPE);
+  char* m = gai_strerror(e);
+
+  dfsch_condition_put_field_cstr(c, "error-code", DFSCH_MAKE_FIXNUM(e));
+  if (hostname){
+    dfsch_condition_put_field_cstr(c, "hostname", 
+                                   dfsch_make_string_cstr(hostname));
+  }
+  if (service) {
+    dfsch_condition_put_field_cstr(c, "service", 
+                                   dfsch_make_string_cstr(service));
+  }
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);
+}
+static void socket_error(char* m, char* hostname, char* service){
+  dfsch_object_t* c = 
+    dfsch_make_condition(DFSCH_SOCKET_PORT_ERROR_TYPE);
+
+  if (hostname){
+    dfsch_condition_put_field_cstr(c, "hostname", 
+                                   dfsch_make_string_cstr(hostname));
+  }
+  if (service) {
+    dfsch_condition_put_field_cstr(c, "service", 
+                                   dfsch_make_string_cstr(service));
+  }
+  dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
+  dfsch_signal(c);
+}
+
+
+
+
 dfsch_object_t* dfsch_socket_port_tcp_connect(char* hostname,
-                                              int port){
-  struct sockaddr_in inet_addr;
-  struct hostent* h;
+                                              char* service){
+  struct addrinfo hints;
+  struct addrinfo* res;
+  struct addrinfo* i;
+  int ret;
   int fd;
 
-  dfsch_lock_libc();
-  if ((h = gethostbyname(hostname)) == NULL){
-    dfsch_unlock_libc();
-    dfsch_error("gethostbyname failed", dfsch_make_string_cstr(hostname));
+
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+  hints.ai_protocol = 0;
+
+  ret = getaddrinfo(hostname, service, &hints, &res);
+  if (ret != 0){
+    gai_error(ret, hostname, service);
   }
 
-  inet_addr.sin_family=AF_INET;
-  inet_addr.sin_port=htons(port);
-  memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
-  dfsch_unlock_libc();
-
-  fd = socket(PF_INET, SOCK_STREAM, 0);
-  if (fd == -1){
-    dfsch_operating_system_error("socket");
-    return NULL;
-  }
-  
-  if (connect(fd,(struct sockaddr*)&inet_addr,
-	      sizeof(inet_addr))==-1){
-    int sav = errno;
+  for (i = res; i != NULL; i = i ->ai_next){
+    fd = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
+    if (fd == -1){
+      continue;
+    }
+    
+    if (connect(fd, i->ai_addr, i->ai_addrlen) != -1){
+      freeaddrinfo(res);
+      return cons_socket_port(dfsch_saprintf("inet %s:%s", hostname, service),
+                              fd);
+    }
     close(fd);
-    dfsch_operating_system_error_saved(sav, "connect");
   }
-  
-  return cons_socket_port(dfsch_saprintf("inet %s:%d", hostname, port),
-                          fd);
+  freeaddrinfo(res);
+  socket_error("No usable addresses", hostname, service);
 }
 dfsch_object_t* dfsch_socket_port_unix_connect(char* path){
   int sock;
@@ -324,45 +367,51 @@ static dfsch_object_t* cons_server_socket(char* name,
 }
 
 dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
-                                             int port){
-  struct sockaddr_in inet_addr;
-  int fd;
+                                             char* service){
+  struct addrinfo hints;
+  struct addrinfo* res;
+  struct addrinfo* i;
   int val = 1;
-  struct hostent* h;
+  int ret;
+  int fd;
 
-  dfsch_lock_libc();
-  if ((h = gethostbyname(hostname)) == NULL){ 
-    dfsch_unlock_libc();
-    dfsch_operating_system_error("gethostbyname");
+
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_PASSIVE;
+  hints.ai_protocol = 0;
+
+  ret = getaddrinfo(hostname, service, &hints, &res);
+  if (ret != 0){
+    gai_error(ret, hostname, service);
   }
 
-  inet_addr.sin_family=AF_INET;
-  inet_addr.sin_port=htons(port);
-  memcpy(&(inet_addr.sin_addr), h->h_addr, h->h_length);
-  dfsch_unlock_libc();
+  for (i = res; i != NULL; i = i ->ai_next){
+    fd = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
+    if (fd == -1){
+      continue;
+    }
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+    
+    if (bind(fd, i->ai_addr, i->ai_addrlen) != -1){
+      freeaddrinfo(res);
 
-  fd = socket(PF_INET, SOCK_STREAM, 0);
-  if (fd == -1){
-    dfsch_operating_system_error("socket");
-  }
+      if (listen(fd, 5) == -1){
+        int sav = errno;
+        close(fd);
+        dfsch_operating_system_error_saved(sav, "listen");
+      }
+      
+      return cons_server_socket(dfsch_saprintf("inet %s:%s", hostname, service),
+                                fd);
+    }
 
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-  
-  if (bind(fd,(struct sockaddr*)&inet_addr,
-           sizeof(inet_addr))==-1){
-    int sav = errno;
     close(fd);
-    dfsch_operating_system_error_saved(sav, "bind");
   }
-  
-  if (listen(fd, 5) == -1){
-    int sav = errno;
-    close(fd);
-    dfsch_operating_system_error_saved(sav, "listen");
-  }
-
-  return cons_server_socket(dfsch_saprintf("inet %s:%d", hostname, port),
-                            fd); 
+  freeaddrinfo(res);
+  socket_error("No usable addresses", hostname, service);
 }
 dfsch_object_t* dfsch_server_socket_unix_bind(char* path){
   int sock;
