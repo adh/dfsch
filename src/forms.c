@@ -493,12 +493,37 @@ dfsch_object_t* dfsch_generate_current_environment(){
   return dfsch_cons(DFSCH_FORM_REF(current_environment), NULL);
 }
 
-/*
- * This is generally non-sufficient interface, but rest could be implemented 
- * as macros.
- */
+DFSCH_FORM_METHOD_COMPILE(condition_system_bind){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  object_t *bindings;
+  object_t* o_bindings; 
+  object_t *code;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
 
-DFSCH_DEFINE_FORM(handler_bind, NULL, {}){
+  DFSCH_OBJECT_ARG(args, bindings);
+  DFSCH_ARG_REST(args, code);
+
+  o_bindings = bindings;
+  while (DFSCH_PAIR_P(bindings)){
+    dfsch_object_t* clause = DFSCH_FAST_CAR(bindings);
+
+    dfsch_list_collect(lc,
+                       dfsch_compile_expression_list(clause,
+                                                     env));
+    bindings = DFSCH_FAST_CDR(bindings);
+  }
+
+  return dfsch_cons_ast_node_cdr(form,
+                                 expr,
+                                 dfsch_compile_expression_list(code, env),
+                                 1,
+                                 dfsch_list_annotate(dfsch_collected_list(lc),
+                                                     DFSCH_SYM_COMPILED_FROM,
+                                                     o_bindings));
+}
+
+DFSCH_DEFINE_FORM(handler_bind, NULL, 
+                  {DFSCH_FORM_COMPILE(condition_system_bind)}){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;
@@ -528,7 +553,8 @@ DFSCH_DEFINE_FORM(handler_bind, NULL, {}){
   return ret;
 }
 
-DFSCH_DEFINE_FORM(restart_bind, NULL, {}){
+DFSCH_DEFINE_FORM(restart_bind, NULL, 
+                  {DFSCH_FORM_COMPILE(condition_system_bind)}){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;
