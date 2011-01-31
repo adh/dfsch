@@ -162,7 +162,7 @@ typedef struct dfsch_form_t dfsch_form_t;
 
 /* methods used by compiler, in different struct for easier expansion */
 typedef struct dfsch_form_methods_t {
-  dfsch_object_t* (*constant_fold)(dfsch_form_t* form, 
+  dfsch_object_t* (*compile)(dfsch_form_t* form, 
                                    dfsch_object_t* expr,
                                    dfsch_object_t* env);
 } dfsch_form_methods_t;
@@ -193,14 +193,14 @@ extern dfsch_type_t dfsch_form_type;
                                             dfsch_object_t* args,       \
                                             dfsch_tail_escape_t* esc)
 
-#define DFSCH_FORM_METHOD_CONSTANT_FOLD(name)   \
-  static dfsch_object_t* form_##name##_constant_fold                    \
+#define DFSCH_FORM_METHOD_COMPILE(name)   \
+  static dfsch_object_t* form_##name##_compile                    \
   (dfsch_form_t* form,                                                  \
    dfsch_object_t* expr,                                                \
    dfsch_object_t* env)
 
-#define DFSCH_FORM_CONSTANT_FOLD(name)                  \
-  .constant_fold = form_##name##_constant_fold
+#define DFSCH_FORM_COMPILE(name)                  \
+  .compile = form_##name##_compile
 
 #define DFSCH_DEFINE_FORM(name, documentation, methods) \
   DFSCH_FORM_IMPLEMENTATION(name);                      \

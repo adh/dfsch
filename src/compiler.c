@@ -113,7 +113,7 @@ dfsch_object_t* dfsch_make_constant_ast_node(dfsch_object_t* value){
   }
 }
 
-dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
+dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
                                                     dfsch_object_t* env){
   dfsch_object_t *head; 
   dfsch_object_t *tail;
@@ -123,7 +123,7 @@ dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
 
   while(DFSCH_PAIR_P(i)){
     dfsch_object_t* tmp = 
-      dfsch_cons(dfsch_constant_fold_expression(DFSCH_FAST_CAR(i), env),
+      dfsch_cons(dfsch_compile_expression(DFSCH_FAST_CAR(i), env),
                  NULL);
     if (head){
       DFSCH_FAST_CDR_MUT(tail) = tmp;
@@ -142,37 +142,37 @@ dfsch_object_t* dfsch_constant_fold_expression_list(dfsch_object_t* list,
   
 }
 
-dfsch_object_t* dfsch_constant_fold_expression(dfsch_object_t* expression,
+dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                                dfsch_object_t* env){
   if (DFSCH_PAIR_P(expression)){
     dfsch_object_t* operator = DFSCH_FAST_CAR(expression);
     dfsch_object_t* operator_value;
     dfsch_object_t* args = DFSCH_FAST_CDR(expression);
 
-    operator = dfsch_constant_fold_expression(operator, env);
+    operator = dfsch_compile_expression(operator, env);
     operator_value = dfsch_constant_expression_value(operator, env);
     
     if (operator_value != DFSCH_INVALID_OBJECT){
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_FORM_TYPE){
         dfsch_form_t* form = ((dfsch_form_t*)operator_value);
-        if (form->methods.constant_fold){
-          return form->methods.constant_fold(operator_value, expression, env);
+        if (form->methods.compile){
+          return form->methods.compile(operator_value, expression, env);
         }
       }
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
-        return dfsch_constant_fold_expression(dfsch_macro_expand(operator_value,
-                                                                 args),
-                                              env);
+        return dfsch_compile_expression(dfsch_macro_expand(operator_value,
+                                                           args),
+                                        env);
       }
 
       return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
                                      expression, 
-                                     dfsch_constant_fold_expression_list(args,
+                                     dfsch_compile_expression_list(args,
                                                                          env),
                                      0);
     }
     return dfsch_cons_ast_node_cdr(operator, expression, 
-                                   dfsch_constant_fold_expression_list(args,
+                                   dfsch_compile_expression_list(args,
                                                                        env),
                                    0);
     
@@ -189,12 +189,12 @@ void dfsch_compile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
-  func->code = dfsch_constant_fold_expression_list(func->orig_code,
+  func->code = dfsch_compile_expression_list(func->orig_code,
                                                    func->env);
   func->compiled = 1;
 }
 
-DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){
+DFSCH_DEFINE_PRIMITIVE(compile_expression, NULL){
   dfsch_object_t* expr;
   dfsch_object_t* env;
 
@@ -202,7 +202,7 @@ DFSCH_DEFINE_PRIMITIVE(constant_fold_expression, NULL){
   DFSCH_OBJECT_ARG(args, env);
   DFSCH_ARG_END(args);
 
-  return dfsch_constant_fold_expression(expr, env);
+  return dfsch_compile_expression(expr, env);
 }
 
 DFSCH_DEFINE_PRIMITIVE(compile_function, NULL){
@@ -219,7 +219,7 @@ DFSCH_DEFINE_PRIMITIVE(compile_function, NULL){
 void dfsch__compiler_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
                          "constant-fold-expression", 
-                         DFSCH_PRIMITIVE_REF(constant_fold_expression));  
+                         DFSCH_PRIMITIVE_REF(compile_expression));  
   dfsch_defcanon_cstr(ctx, "compile-function!",
                       DFSCH_PRIMITIVE_REF(compile_function));
 }

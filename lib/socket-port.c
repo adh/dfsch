@@ -380,7 +380,7 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
 
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_PASSIVE;
+  hints.ai_flags = AI_ADDRCONFIG | AI_PASSIVE;
   hints.ai_protocol = 0;
 
   ret = getaddrinfo(hostname, service, &hints, &res);
