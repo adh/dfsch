@@ -67,10 +67,10 @@ extern dfsch_type_t dfsch_http_read_limits_type;
   DFSCH_INSTANCE_ARG(al, name, dfsch_http_request_t*, DFSCH_HTTP_REQUEST_TYPE)
 #define DFSCH_HTTP_RESPONSE_ARG(al, name)                                \
   DFSCH_INSTANCE_ARG(al, name, dfsch_http_response_t*, DFSCH_HTTP_RESPONSE_TYPE)
-#define DFSCH_HTTP_READ_LIMITS_ARG(al, name)                                \
-  DFSCH_INSTANCE_ARG(al, name,                                          \
-                     dfsch_http_read_limits_t*,                         \
-                     DFSCH_HTTP_READ_LIMITS_TYPE)
+#define DFSCH_HTTP_READ_LIMITS_ARG_OPT(al, name, default)               \
+  DFSCH_INSTANCE_ARG_OPT(al, name, default,                             \
+                         dfsch_http_read_limits_t*,                     \
+                         DFSCH_HTTP_READ_LIMITS_TYPE)
 
 
 typedef struct dfsch_http_response_t {
