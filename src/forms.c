@@ -111,6 +111,7 @@ DFSCH_FORM_METHOD_COMPILE(begin_like){
 }
 
 
+
 DFSCH_DEFINE_FORM(begin, "Evaluate list of expressions and return last result",
                   {DFSCH_FORM_COMPILE(begin_like)}){
   return dfsch_eval_proc_tr(args, env, esc);
@@ -233,7 +234,8 @@ DFSCH_DEFINE_FORM(unwind_protect, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
   return ret;
 }
 
-DFSCH_DEFINE_FORM(catch, NULL, {}){
+
+DFSCH_DEFINE_FORM(catch, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
   object_t* tag;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, tag);
@@ -249,7 +251,22 @@ DFSCH_DEFINE_FORM(catch, NULL, {}){
   return ret;
 }
 
-DFSCH_DEFINE_FORM(destructuring_bind, NULL, {}){
+DFSCH_FORM_METHOD_COMPILE(destructuring_bind){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  dfsch_object_t* lambda_list;
+  DFSCH_OBJECT_ARG(args, lambda_list);
+  return dfsch_cons_ast_node_cdr(form,
+                                 expr,
+                                 dfsch_compile_expression_list(args, env),
+                                 1,
+                                 lambda_list);
+}
+
+DFSCH_DEFINE_FORM(destructuring_bind, 
+                  "Bind variables as if function with formal parameters "
+                  "given by first argument was called with arguments "
+                  "resulting from evaluation of second argument", 
+                  {DFSCH_FORM_COMPILE(destructuring_bind)}){
   dfsch_object_t *arglist;
   dfsch_object_t *list;
   dfsch_object_t *code;
@@ -296,7 +313,27 @@ dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
 
 }
 
-DFSCH_DEFINE_FORM(internal_define_variable, "Define variable", {}){
+DFSCH_FORM_METHOD_COMPILE(define){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  object_t* name;
+  object_t* value;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_compile_expression(value, env);
+
+  return dfsch_cons_ast_node(form,
+                             expr,
+                             2,
+                             name,
+                             value);
+}
+
+
+DFSCH_DEFINE_FORM(internal_define_variable, "Define variable", 
+                  {DFSCH_FORM_COMPILE(define)}){
 
   object_t* name;
   object_t* value;
@@ -313,7 +350,8 @@ dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
                                                dfsch_object_t* value){
   return dfsch_list(3, DFSCH_FORM_REF(internal_define_variable), name, value);
 }
-DFSCH_DEFINE_FORM(internal_define_constant, "Define constant", {}){
+DFSCH_DEFINE_FORM(internal_define_constant, "Define constant", 
+                  {DFSCH_FORM_COMPILE(define)}){
 
   object_t* name;
   object_t* value;
@@ -333,7 +371,9 @@ dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
                               name, value);
 }
 
-DFSCH_DEFINE_FORM(internal_define_canonical_constant, "Define constant", {}){
+DFSCH_DEFINE_FORM(internal_define_canonical_constant, 
+                  "Define canonical constant (seen by serializer)", 
+                  {DFSCH_FORM_COMPILE(define)}){
 
   object_t* name;
   object_t* value;
