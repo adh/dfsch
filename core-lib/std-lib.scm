@@ -36,13 +36,13 @@
 ;; core functionality in scheme code
 
 (define-macro (dfsch:with-gensyms gensyms &rest body)
-  `(let ,(map (lambda (name) `(,name (gensym))) gensyms)
-     ,@body))
+  `@(let ,(map (lambda (name) `(,name (gensym))) gensyms)
+      ,@body))
 
 (define-macro (dfsch:loop &rest exprs)
   (with-gensyms (tag)
-    `(catch ',tag
-       (let ()
-         (define (dfsch:break value) (throw ',tag value))
-         (%loop ,@exprs)))))
+    `@(catch ',tag
+             (let ()
+               (define (dfsch:break value) (throw ',tag value))
+               (%loop ,@exprs)))))
 

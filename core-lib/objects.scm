@@ -34,13 +34,13 @@
                      (get-primary-methods methods))))))
 
 (define-macro (dfsch:define-custom-specializer name args &body code)
-  `(%define-canonical-constant ,name
-                               (make-type-specializer (%lambda ,name ,args 
-                                                               ,@code))))
+  `@(%define-canonical-constant ,name
+                                (make-type-specializer (%lambda ,name ,args 
+                                                                ,@code))))
 
 (define-macro (dfsch:define-has-slot-specializer name slot)
-  `(define-custom-specializer ,name (type)
-     (ignore-errors (find-slot type ',slot) #t)))
+  `@(define-custom-specializer ,name (type)
+      (ignore-errors (find-slot type ',slot) #t)))
 
 (define-has-slot-specializer dfsch:<<documented>> :documentation)
 
@@ -55,14 +55,14 @@
                                                                 :writer
                                                                 :initform)))
                                  (init-form (plist-get opts :initform)))
-                          `(list ',name ,@opt-expr 
+                          `@(list ',name ,@opt-expr 
                                  ,@(when init-form
                                      `(:initfunc 
                                        (lambda () 
                                          "slot initializer" 
                                          ,(car init-form)))))))
                       slots)))
-    `(begin 
+    `@(begin 
        (%define-canonical-constant ,name (make-class ',name 
                                                      ,superclass 
                                                      (list ,@class-slots)
@@ -76,16 +76,16 @@
                      (reader (plist-get opts :reader)))
               (append 
                (when accessor
-                 `((%define-canonical-constant ,(car accessor)
-                                               (make-slot-accessor ,name 
-                                                                   ',sname))))
+                     `@((%define-canonical-constant ,(car accessor)
+                                                    (make-slot-accessor ,name 
+                                                                        ',sname))))
                (when writer
-                 `((%define-canonical-constant ,(car writer)
-                                               (make-slot-writer ,name 
-                                                                 ',sname))))
+                     `@((%define-canonical-constant ,(car writer)
+                                                    (make-slot-writer ,name 
+                                                                      ',sname))))
                (when reader
-                 `((%define-canonical-constant ,(car reader)
-                                               (make-slot-reader ,name 
-                                                                 ',sname)))))))
+                     `@((%define-canonical-constant ,(car reader)
+                                                    (make-slot-reader ,name 
+                                                                      ',sname)))))))
               slots))))
 
