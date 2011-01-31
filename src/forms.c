@@ -48,6 +48,7 @@ DFSCH_FORM_METHOD_COMPILE(if){
   DFSCH_OBJECT_ARG(args,test);
   DFSCH_OBJECT_ARG(args,consequent);
   DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
+  DFSCH_ARG_END(args);
   
   test = dfsch_compile_expression(test, env);
   consequent = dfsch_compile_expression(consequent, env);
@@ -70,6 +71,7 @@ DFSCH_DEFINE_FORM(if, "Conditional operator",
   DFSCH_OBJECT_ARG(args,test);
   DFSCH_OBJECT_ARG(args,consequent);
   DFSCH_OBJECT_ARG_OPT(args,alternate, NULL);
+  DFSCH_ARG_END(args);
 
   test = dfsch_eval(test, env);
 
@@ -100,8 +102,17 @@ int dfsch_quote_expression_p(dfsch_object_t* expr){
   return DFSCH_PAIR_P(expr) && DFSCH_FAST_CAR(expr) == DFSCH_FORM_REF(quote);
 }
 
+DFSCH_FORM_METHOD_COMPILE(begin_like){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  return dfsch_cons_ast_node_cdr(form,
+                                 expr,
+                                 dfsch_compile_expression_list(args, env),
+                                 0);
+}
 
-DFSCH_DEFINE_FORM(begin, NULL, {}){
+
+DFSCH_DEFINE_FORM(begin, "Evaluate list of expressions and return last result",
+                  {DFSCH_FORM_COMPILE(begin_like)}){
   return dfsch_eval_proc_tr(args, env, esc);
 }
 dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
@@ -109,7 +120,8 @@ dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
                     exps);
 }
 
-DFSCH_DEFINE_FORM(internal_loop, "Inifinite loop", {}){
+DFSCH_DEFINE_FORM(internal_loop, "Inifinite loop", 
+                  {DFSCH_FORM_COMPILE(begin_like)}){
   dfsch_object_t* res;
   DFSCH_CATCH_BEGIN(DFSCH_SYM_BREAK) {
     for(;;){
@@ -126,8 +138,45 @@ dfsch_object_t* dfsch_generate_loop(dfsch_object_t* exps){
                     exps);
 }
 
+DFSCH_FORM_METHOD_COMPILE(internal_let){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  object_t *vars;
+  object_t* o_vars; 
+  object_t *code;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
 
-DFSCH_DEFINE_FORM(internal_let, NULL, {}){
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
+
+  o_vars = vars;
+  while (DFSCH_PAIR_P(vars)){
+    dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+    object_t* var;
+    object_t* val;
+
+    DFSCH_OBJECT_ARG(clause, var);
+    DFSCH_OBJECT_ARG(clause, val);
+    DFSCH_ARG_END(clause);
+
+    dfsch_list_collect(lc,
+                       dfsch_cons_ast_node(var,
+                                           clause,
+                                           1,
+                                           dfsch_compile_expression(val,
+                                                                    env)));
+    vars = DFSCH_FAST_CDR(vars);
+  }
+
+  return dfsch_cons_ast_node_cdr(form,
+                                 expr,
+                                 dfsch_compile_expression_list(code, env),
+                                 1,
+                                 dfsch_list_annotate(dfsch_collected_list(lc),
+                                                     DFSCH_SYM_COMPILED_FROM,
+                                                     o_vars));
+}
+
+DFSCH_DEFINE_FORM(internal_let, NULL, {DFSCH_FORM_COMPILE(internal_let)}){
   object_t *vars;
   object_t *code;
 
@@ -170,7 +219,7 @@ dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM(unwind_protect, NULL, {}){
+DFSCH_DEFINE_FORM(unwind_protect, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
   object_t* protect;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, protect);
