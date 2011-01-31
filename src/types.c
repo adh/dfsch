@@ -1750,6 +1750,7 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   size_t len;
   object_t** data;
   int proper;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
 
   if (list == NULL){
     return NULL;
@@ -1776,8 +1777,13 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   data[i] = DFSCH_INVALID_OBJECT;
   i++;
   data[i] = j;
-  data[i+1] = NULL;
-  data[i+2] = NULL;
+  if (ti->macroexpanded_expr){
+    data[i+1] = DFSCH_SYM_MACRO_EXPANDED_FROM;
+    data[i+2] = ti->macroexpanded_expr;
+  } else {
+    data[i+1] = NULL;
+    data[i+2] = NULL;
+  }
 
   return DFSCH_MAKE_CLIST(data);
 }

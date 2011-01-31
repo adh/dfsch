@@ -255,6 +255,32 @@ dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
                     exps);
 }
 
+DFSCH_DEFINE_PRIMITIVE(list_immutable, NULL){
+  return dfsch_list_copy_immutable(args);
+}
+dfsch_object_t* dfsch_generate_list_immutable(dfsch_object_t* exps){
+  return dfsch_cons(DFSCH_PRIMITIVE_REF(list_immutable), 
+                    exps);
+}
+
+DFSCH_DEFINE_PRIMITIVE(copy_list, NULL){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_list_copy(list);
+}
+DFSCH_DEFINE_PRIMITIVE(copy_list_immutable, NULL){
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
+  return dfsch_list_copy_immutable(list);
+}
+dfsch_object_t* dfsch_generate_copy_list_immutable(dfsch_object_t* list){
+  return dfsch_immutable_list(2,
+                              DFSCH_PRIMITIVE_REF(copy_list_immutable), 
+                              list);
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(length, NULL){
   long len;
@@ -1193,8 +1219,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
   dfsch_defcanon_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
-  dfsch_defcanon_cstr(ctx, "cons-immutable", DFSCH_PRIMITIVE_REF(cons_immutable));
+  dfsch_defcanon_cstr(ctx, "cons-immutable", 
+                      DFSCH_PRIMITIVE_REF(cons_immutable));
   dfsch_defcanon_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
+  dfsch_defcanon_cstr(ctx, "list-immutable", 
+                      DFSCH_PRIMITIVE_REF(list_immutable));
+  dfsch_defcanon_cstr(ctx, "copy-list", DFSCH_PRIMITIVE_REF(copy_list));
+  dfsch_defcanon_cstr(ctx, "copy-list-immutable", 
+                      DFSCH_PRIMITIVE_REF(copy_list_immutable));
   dfsch_defcanon_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
   dfsch_defcanon_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
   dfsch_defcanon_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));
