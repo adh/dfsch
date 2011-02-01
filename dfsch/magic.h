@@ -60,20 +60,13 @@ extern "C" {
     dfsch__handler_list_t* next;
   };
 
-#define DFSCH_TRACEPOINT_KIND_INVALID          0
-#define DFSCH_TRACEPOINT_KIND_APPLY            1
-#define DFSCH_TRACEPOINT_KIND_EVAL             2
-#define DFSCH_TRACEPOINT_KIND_ANON             3
+#define DFSCH_STACK_TRACE_KIND_APPLY            1
+#define DFSCH_STACK_TRACE_KIND_EVAL             2
 
-#define DFSCH_TRACEPOINT_FLAG_APPLY_TAIL       256
-#define DFSCH_TRACEPOINT_FLAG_APPLY_LAZY       512
+#define DFSCH_STACK_TRACE_FLAG_APPLY_TAIL       256
 
-#define DFSCH_TRACEPOINT_FLAG_ANON_STRING_DATA 256
-
-#define DFSCH_TRACEPOINT_FLAG_MACROEXPAND      65536
-
-
-  typedef struct dfsch__tracepoint_t {
+  typedef struct dfsch__stack_trace_frame_t dfsch__stack_trace_frame_t;
+  struct dfsch__stack_trace_frame_t {
     int flags;
     union {
       struct {
@@ -84,51 +77,15 @@ extern "C" {
         dfsch_object_t* proc;
         dfsch_object_t* args;
       } apply;
-      struct {
-        char* location;
-        void* data;
-      } anon;
     } data;
-  } dfsch__tracepoint_t;
-
-  
-#define DFSCH__TRACEPOINT(ti)                   \
-  ((ti)->trace_buffer[(ti)->trace_ptr])
-
-#define DFSCH__TRACEPOINT_SHIFT(ti)                                     \
-  (ti)->trace_ptr = ((ti)->trace_ptr + 1) & (ti)->trace_depth;          \
-  DFSCH__TRACEPOINT(ti).flags = (ti)->trace_flags 
-
-#define DFSCH__TRACEPOINT_NOTIFY(ti)                             \
-  if (DFSCH_UNLIKELY((ti)->trace_listener)){                     \
-    (ti)->trace_listener((ti));                                  \
-  }                                                              \
-
-#define DFSCH__TRACEPOINT_ANON_HELPER1(x) #x
-#define DFSCH__TRACEPOINT_ANON_HELPER2(x) \
-  DFSCH__TRACEPOINT_ANON_HELPER1(x)
-#define DFSCH__TRACEPOINT_ANON(ti, d, fl)                            \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                      \
-  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_ANON | (fl);  \
-  DFSCH__TRACEPOINT(ti).data.anon.location = __FILE__ ":"           \
-    DFSCH__TRACEPOINT_ANON_HELPER2(__LINE__);                       \
-  DFSCH__TRACEPOINT(ti).data.anon.data = (d);                       \
-  DFSCH__TRACEPOINT_NOTIFY(ti)
-
-#define DFSCH_TRACEPOINT(d, fl)                                 \
-  DFSCH__TRACEPOINT_ANON(dfsch__get_thread_info(), (d), (fl))
-
-  typedef void (*dfsch__tracepoint_listener_t)(dfsch__thread_info_t*);
+    dfsch__stack_trace_frame_t* next;
+  };
 
   struct dfsch__thread_info_t {
     dfsch_object_t* async_apply;
 
-    dfsch__tracepoint_t* trace_buffer;
-    dfsch__tracepoint_listener_t trace_listener;    
-    short trace_ptr;
-    short trace_depth;
-    int trace_flags;
-
+    dfsch__stack_trace_frame_t* stack_trace;
+    
     dfsch_object_t* macroexpanded_expr;
 
     void* env_freelist;
@@ -175,11 +132,13 @@ extern "C" {
   dfsch__catch_list_t* dfsch___old_catch;                       \
   dfsch__handler_list_t* dfsch___old_handlers;                  \
   dfsch__restart_list_t* dfsch___old_restarts;                  \
+  dfsch__stack_trace_frame_t* dfsch___old_stack_trace;          \
                                                                 \
   dfsch___old_ret = dfsch___ei->throw_ret;                      \
   dfsch___old_catch = dfsch___ei->catch_list;                   \
   dfsch___old_handlers = dfsch___ei->handler_list;              \
   dfsch___old_restarts = dfsch___ei->restart_list;              \
+  dfsch___old_stack_trace = dfsch___ei->stack_trace;            \
   dfsch___ei->throw_ret = &dfsch___tmpbuf;                      \
                                                                 \
   if(setjmp(*dfsch___ei->throw_ret) != 1){
@@ -189,11 +148,13 @@ extern "C" {
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
+  dfsch___ei->stack_trace = dfsch___old_stack_trace;            \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
+  dfsch___ei->stack_trace = dfsch___old_stack_trace;            \
   {
 
 #define DFSCH_CATCH_TAG (dfsch___ei->throw_tag)

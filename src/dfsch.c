@@ -391,65 +391,19 @@ static void thread_key_alloc(){
   pthread_key_create(&thread_key, thread_info_destroy);
 }
 
-static int default_trace_depth = 3;
-
-static dfsch__tracepoint_t* alloc_trace_buffer(dfsch__thread_info_t* ti,
-                                               int depth){
-  size_t size;
-  depth = depth % (8 * sizeof(short));
-  size = 1 << depth;
-  ti->trace_depth = size - 1;
-  ti->trace_ptr = 0;
-  ti->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * size);
-}
-
-void dfsch_set_trace_depth(int depth){
-  alloc_trace_buffer(dfsch__get_thread_info(), depth);
-}
-void dfsch_set_default_trace_depth(int depth){
-  default_trace_depth = depth;
-  dfsch_set_trace_depth(depth);
-}
-
-struct dfsch_saved_trace_t {
-  dfsch__tracepoint_t* trace_buffer;
-  short trace_ptr;
-  short trace_depth;
-};
-dfsch_saved_trace_t* dfsch_save_trace_buffer(){
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-  dfsch_saved_trace_t* st = GC_NEW(dfsch_saved_trace_t);
-  
-  st->trace_buffer = GC_MALLOC(sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
-  memcpy(st->trace_buffer, ti->trace_buffer, 
-         sizeof(dfsch__tracepoint_t) * (ti->trace_depth + 1));
-  st->trace_depth = ti->trace_depth;
-  st->trace_ptr = ti->trace_ptr;
-
-  return st;
-}
-void dfsch_restore_trace_buffer(dfsch_saved_trace_t* st){
-  dfsch__thread_info_t *ti = dfsch__get_thread_info();
-
-  ti->trace_buffer = st->trace_buffer;
-  ti->trace_ptr = st->trace_ptr;
-  ti->trace_depth = st->trace_depth;
-}
-
-
 dfsch__thread_info_t* dfsch__get_thread_info(){
   dfsch__thread_info_t *ei;
   pthread_once(&thread_once, thread_key_alloc);
   ei = pthread_getspecific(thread_key);
   if (DFSCH_UNLIKELY(!ei)){
     ei = GC_MALLOC_UNCOLLECTABLE(sizeof(dfsch__thread_info_t)); 
+    GC_MALLOC(16); /* XXX: to initialize collector */
     ei->throw_ret = NULL;
     ei->async_apply = NULL;
     ei->restart_list = dfsch__get_default_restart_list();
 #ifdef DFSCH_GC_MALLOC_MANY_PREALLOC
     ei->env_freelist = GC_malloc_many(sizeof(environment_t));
 #endif
-    alloc_trace_buffer(ei, default_trace_depth);
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -932,16 +886,12 @@ static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
   
   DFSCH_UNWIND {
     old_expr = ti->macroexpanded_expr;
-    old_flags = ti->trace_flags;
     ti->macroexpanded_expr = expr;
-    ti->trace_flags |= 
-      ti->macroexpanded_expr ? DFSCH_TRACEPOINT_FLAG_MACROEXPAND : 0;
     new_expr = dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
                                                         DFSCH_MACRO_TYPE))->proc, 
                            DFSCH_FAST_CDR(expr));
   } DFSCH_PROTECT {
     ti->macroexpanded_expr = old_expr;    
-    ti->trace_flags = old_flags;
   } DFSCH_PROTECT_END;
 
   return new_expr;
@@ -1096,38 +1046,29 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   return dfsch_apply_impl(proc, args, context, esc, ti);
 }
 
-#define DFSCH__TRACEPOINT_APPLY(ti, p, al, fl)                        \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                        \
-  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_APPLY | (fl);  \
-  DFSCH__TRACEPOINT(ti).data.apply.proc = (p);                        \
-  DFSCH__TRACEPOINT(ti).data.apply.args = (al);                       \
-  DFSCH__TRACEPOINT_NOTIFY(ti)
-#define DFSCH__TRACEPOINT_EVAL(ti, ex, en)                              \
-  DFSCH__TRACEPOINT_SHIFT(ti);                                          \
-  DFSCH__TRACEPOINT(ti).flags |= DFSCH_TRACEPOINT_KIND_EVAL;            \
-  DFSCH__TRACEPOINT(ti).flags |= (en)->flags & EFRAME_SERIAL_MASK;      \
-  DFSCH__TRACEPOINT(ti).data.eval.expr = (ex);                          \
-  DFSCH__TRACEPOINT(ti).data.eval.env = (en);                           \
-  DFSCH__TRACEPOINT_NOTIFY(ti)
-
-
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
-
   if (!exp) 
     return NULL;
 
   if(DFSCH_SYMBOL_P(exp)){
-    DFSCH__TRACEPOINT_EVAL(ti, exp, env);
     return lookup_impl(exp, env, ti);
   }
 
   if(DFSCH_PAIR_P(exp)){
+    dfsch__stack_trace_frame_t sframe;
+    dfsch_object_t* r;
     object_t *f = DFSCH_FAST_CAR(exp);
 
-    DFSCH__TRACEPOINT_EVAL(ti, exp, env);
+    sframe.flags = DFSCH_STACK_TRACE_KIND_EVAL;
+    sframe.data.eval.expr = exp;
+    sframe.data.eval.env = env;
+    sframe.next = ti->stack_trace;
+    ti->stack_trace = &sframe;
+
+
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
     } else {
@@ -1135,20 +1076,20 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     }
     
     if (DFSCH_TYPE_OF(f) == DFSCH_FORM_TYPE){
-      return ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
-                                      (dfsch_object_t*)env, 
-                                      DFSCH_FAST_CDR(exp), 
-                                      esc);
+      r = ((dfsch_form_t*)f)->impl(((dfsch_form_t*)f), 
+                                   (dfsch_object_t*)env, 
+                                   DFSCH_FAST_CDR(exp), 
+                                   esc);
+    } else if (DFSCH_TYPE_OF(f) == DFSCH_MACRO_TYPE){
+      r = dfsch_eval_impl(macro_expand_impl(f, exp, ti),
+                          env,
+                          esc,
+                          ti);
+    } else {
+      r =  eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
     }
-
-    if (DFSCH_TYPE_OF(f) == DFSCH_MACRO_TYPE){
-      return dfsch_eval_impl(macro_expand_impl(f, exp, ti),
-			     env,
- 			     esc,
-			     ti);
-    }
-
-    return eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
+    ti->stack_trace = sframe.next;
+    return r;
   }
   
   return exp;
@@ -1541,7 +1482,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                         dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   dfsch_object_t* r;
   tail_escape_t myesc;
+  dfsch__stack_trace_frame_t sframe;
 
+  sframe.next = ti->stack_trace;
 
 #ifndef DFSCH_NO_TCO
   if (DFSCH_UNLIKELY(esc)){
@@ -1551,22 +1494,26 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     longjmp(esc->ret,1);
   }
 
-
   myesc.reuse_frame = NULL;
   if (setjmp(myesc.ret)){  
     proc = myesc.proc;
     args = myesc.args;
     context = myesc.context;
-    DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 
-                           DFSCH_TRACEPOINT_FLAG_APPLY_TAIL);
+    sframe.flags = (DFSCH_STACK_TRACE_KIND_APPLY |
+                    DFSCH_STACK_TRACE_FLAG_APPLY_TAIL);
   } else {
-    DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 0);
+    sframe.flags = (DFSCH_STACK_TRACE_KIND_APPLY);
   }
 #else
-  DFSCH__TRACEPOINT_APPLY(ti, proc, NULL, 0);
+  sframe.flags = DFSCH_STACK_TRACE_KIND_APPLY;
 #endif
 
+  sframe.data.apply.proc = proc;
+  sframe.data.apply.args = args;
+  ti->stack_trace = &sframe;
+
   async_apply_check(ti);
+
 
   /*
    * Two most common cases are written here explicitly (for historical
@@ -1574,15 +1521,19 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
    */
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
-      return ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                        &myesc, context);
+    r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
+                                   &myesc, context);
+    ti->stack_trace = sframe.next;
+    return r;
   }
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_STANDARD_FUNCTION_TYPE){
     environment_t* env;
-    dfsch_object_t* r;
     if (myesc.reuse_frame){
-      env = maybe_reuse_frame(myesc.reuse_frame, ((closure_t*) proc)->env, context, ti);
+      env = maybe_reuse_frame(myesc.reuse_frame, 
+                              ((closure_t*) proc)->env, 
+                              context, 
+                              ti);
     } else {
       env = new_frame_impl(((closure_t*) proc)->env, context, ti);
     }
@@ -1600,11 +1551,14 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                              &myesc,
                              ti);
     free_environment(env, ti);
+    ti->stack_trace = sframe.next;
     return r;
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
-    return DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
+    r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
+    ti->stack_trace = sframe.next;
+    return r;
   }
 
   dfsch_error("Not a procedure", proc);

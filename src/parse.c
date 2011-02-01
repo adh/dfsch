@@ -1220,11 +1220,11 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
 int dfsch_parser_feed(dfsch_parser_ctx_t *ctx, char* data){
   ctx->error = 0;
   DFSCH_UNWIND{
-  feed_queue(ctx->q, data);
+    feed_queue(ctx->q, data);
 
-  tokenizer_process(ctx, get_queue(ctx->q));
+    tokenizer_process(ctx, get_queue(ctx->q));
   }DFSCH_PROTECT{
-    
+
   }DFSCH_UNWIND_DETECT{
     parser_reset(ctx);
   }DFSCH_PROTECT_END;

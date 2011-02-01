@@ -90,106 +90,73 @@ char* dfsch_format_trace(dfsch_object_t* trace){
 }
 
 void dfsch_print_trace_buffer(){
-  int i;
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__stack_trace_frame_t* i = ti->stack_trace;
 
-  for (i = 0; i <= ti->trace_depth; i++){
-    if (i == ti->trace_ptr){
-      fprintf(stderr, "> ");
-    } else {
-      fprintf(stderr, "  ");
-    }
-    switch (ti->trace_buffer[i].flags & 0xff){
-    case DFSCH_TRACEPOINT_KIND_INVALID:
-      fprintf(stderr, "0x00000000\n");
-      break;
-    case DFSCH_TRACEPOINT_KIND_APPLY:
+  while (i){
+    fprintf(stderr, "  ");
+    switch (i->flags & 0xff){
+    case DFSCH_STACK_TRACE_KIND_APPLY:
       fprintf(stderr, "0x%08x %p (%s)\n", 
-              ti->trace_buffer[i].flags,
-              ti->trace_buffer[i].data.apply.proc,
-              DFSCH_TYPE_OF(ti->trace_buffer[i].data.apply.proc)->name);
+              i->flags,
+              i->data.apply.proc,
+              DFSCH_TYPE_OF(i->data.apply.proc)->name);
       break;
-    case DFSCH_TRACEPOINT_KIND_EVAL:
+    case DFSCH_STACK_TRACE_KIND_EVAL:
       fprintf(stderr, "0x%08x %p (%s) %p\n", 
-              ti->trace_buffer[i].flags,
-              ti->trace_buffer[i].data.eval.expr,
-              DFSCH_TYPE_OF(ti->trace_buffer[i].data.eval.expr)->name,
-              ti->trace_buffer[i].data.eval.env);
+              i->flags,
+              i->data.eval.expr,
+              DFSCH_TYPE_OF(i->data.eval.expr)->name,
+              i->data.eval.env);
       break;
-    case DFSCH_TRACEPOINT_KIND_ANON:
-      fprintf(stderr, "0x%08x %s %p\n", 
-              ti->trace_buffer[i].flags,
-              ti->trace_buffer[i].data.anon.location,
-              ti->trace_buffer[i].data.anon.data);
-      break;
-    }
-  }
-}
+    default:
+      fprintf(stderr, "0x%08x\n", 
+              i->flags);
 
-static dfsch_object_t* reachable_env(environment_t* env, int flags){
-  if (env->type != DFSCH_ENVIRONMENT_TYPE) {
-    return NULL;
+    }
+    i = i->next;
   }
-  if (env->flags & EFRAME_SERIAL_MASK != flags & EFRAME_SERIAL_MASK){
-    return NULL;
-  }
-  
-  return dfsch_reify_environment(env);
 }
 
 dfsch_object_t* dfsch_get_trace(){
-  int i;
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
   dfsch_object_t* list = NULL;
   dfsch_object_t* record;
   dfsch_object_t* flags;
-  i = ti->trace_ptr;
+  dfsch__stack_trace_frame_t* i = ti->stack_trace;
 
-  do {
-    if ((ti->trace_buffer[i].flags & 0xff) == DFSCH_TRACEPOINT_KIND_INVALID){
-      break;
-    }
-
+  while (i) {
     flags = NULL;
 
-    if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_MACROEXPAND) {
-      flags = dfsch_cons_immutable(dfsch_make_keyword("macro-expansion"), 
-                                   flags);
-    }
-    
-    switch (ti->trace_buffer[i].flags & 0xff){
-    case DFSCH_TRACEPOINT_KIND_APPLY:
+    switch (i->flags & 0xff){
+    case DFSCH_STACK_TRACE_KIND_APPLY:
 
-      if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_TAIL) {
+      if (i->flags & DFSCH_STACK_TRACE_FLAG_APPLY_TAIL) {
         flags = dfsch_cons_immutable(dfsch_make_keyword("tail"), flags);
-      }
-      if (ti->trace_buffer[i].flags & DFSCH_TRACEPOINT_FLAG_APPLY_LAZY) {
-        flags = dfsch_cons_immutable(dfsch_make_keyword("lazy"), flags);
       }
 
       record = dfsch_vector(3,
                             dfsch_make_keyword("apply"),
-                            ti->trace_buffer[i].data.apply.proc,
+                            i->data.apply.proc,
                             flags);
       break;
-    case DFSCH_TRACEPOINT_KIND_EVAL:
+    case DFSCH_STACK_TRACE_KIND_EVAL:
       record = dfsch_vector(4,
                             dfsch_make_keyword("eval"),
-                            ti->trace_buffer[i].data.eval.expr,
-                            reachable_env(ti->trace_buffer[i].data.eval.env,
-                                          ti->trace_buffer[i].flags),
+                            i->data.eval.expr,
+                            dfsch_reify_environment(i->data.eval.env),
                             flags);
       break;
         
     default:
-      record = DFSCH_MAKE_FIXNUM(ti->trace_buffer[i].flags);
+      record = DFSCH_MAKE_FIXNUM(i->flags);
       break;
     }
 
     list = dfsch_cons_immutable(record, list);
 
-    i = (i - 1) & ti->trace_depth;
-  } while (i != ti->trace_ptr);
+    i = i->next;
+  };
   
   return list;
 }

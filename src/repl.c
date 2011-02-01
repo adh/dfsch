@@ -151,7 +151,7 @@ int main(int argc, char**argv){
   dfsch_set_standard_io_ports();
   dfsch_cinspect_set_as_inspector();                                        
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdtTD:X:")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdX:")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
@@ -182,17 +182,8 @@ int main(int argc, char**argv){
     case 'd':
       dfsch_cdebug_set_as_debugger();
       break;
-    case 'D':
-      dfsch_set_default_trace_depth(atoi(optarg));
-      break;
     case 'i':
       force_interactive = 1;
-      break;
-    case 't':
-      dfsch_enable_console_trace(0);
-      break;
-    case 'T':
-      dfsch_enable_console_trace(1);
       break;
     case 'v':
       printf("dfsch version %s\n\n", PACKAGE_VERSION);
@@ -214,7 +205,6 @@ int main(int argc, char**argv){
       puts("     -<name>         to 0");
       puts("  -i                Force interactive mode");
       puts("  -d                Enable cdebug debugger early");
-      puts("  -D <depth>        Set initial depth of trace buffer");
       puts("");
       puts("First non-option argument is treated as filename of program to run");
       puts("Run without non-option arguments to start in interactive mode");

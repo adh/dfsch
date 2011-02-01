@@ -289,7 +289,6 @@ void dfsch_load_source(dfsch_object_t* env,
   load_thread_info_t* lti = get_load_ti();
   load_operation_t this_op;
   dfsch_package_t* saved_package = dfsch_get_current_package();
-  dfsch_saved_trace_t* st = dfsch_save_trace_buffer();
 
   dfsch_parser_callback(parser, load_source_callback, env);
   dfsch_parser_set_source(parser, dfsch_make_string_cstr(fname));
@@ -302,8 +301,6 @@ void dfsch_load_source(dfsch_object_t* env,
     lti->operation = &this_op;
 
     dfsch_parser_feed(parser, source);    
-    dfsch_restore_trace_buffer(st); 
-    /* do not restore trace buffer on unwind */
   } DFSCH_PROTECT {
     lti->operation = this_op.next;
     dfsch_set_current_package(saved_package);
