@@ -198,7 +198,6 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/mkhash.c dfsch/mkhash.h	\
 	src/compiler.c dfsch/compiler.h	\
 	src/backquote.c dfsch/backquote.h \
-	src/trace.c dfsch/trace.h	\
 	src/specializers.c dfsch/specializers.h\
 	src/strhash.c dfsch/strhash.h	\
 	src/serdes.c dfsch/serdes.h	\

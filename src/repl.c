@@ -32,7 +32,6 @@
 #include <dfsch/ports.h>
 #include <dfsch/magic.h>
 #include <dfsch/util.h>
-#include <dfsch/trace.h>
 #include <dfsch/lib/cdebug.h>
 #include <dfsch/lib/cinspect.h>
 #include <dfsch/lib/cmdopts.h>
