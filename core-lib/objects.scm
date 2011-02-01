@@ -56,36 +56,36 @@
                                                                 :initform)))
                                  (init-form (plist-get opts :initform)))
                           `@(list ',name ,@opt-expr 
-                                 ,@(when init-form
-                                     `(:initfunc 
-                                       (lambda () 
-                                         "slot initializer" 
-                                         ,(car init-form)))))))
+                                  ,@(when init-form
+                                      `(:initfunc 
+                                        (lambda () 
+                                          "slot initializer" 
+                                          ,(car init-form)))))))
                       slots)))
     `@(begin 
-       (%define-canonical-constant ,name (make-class ',name 
-                                                     ,superclass 
-                                                     (list ,@class-slots)
-                                                     ,@class-opts))
-       ,@(mapcan 
-          (lambda (desc)
-            (letrec ((sname (if (pair? desc) (car desc) desc))
-                     (opts (if (pair? desc) (cdr desc) ()))
-                     (accessor (plist-get opts :accessor))
-                     (writer (plist-get opts :writer))
-                     (reader (plist-get opts :reader)))
-              (append 
-               (when accessor
-                     `@((%define-canonical-constant ,(car accessor)
-                                                    (make-slot-accessor ,name 
-                                                                        ',sname))))
-               (when writer
-                     `@((%define-canonical-constant ,(car writer)
-                                                    (make-slot-writer ,name 
-                                                                      ',sname))))
-               (when reader
-                     `@((%define-canonical-constant ,(car reader)
-                                                    (make-slot-reader ,name 
-                                                                      ',sname)))))))
-              slots))))
+        (%define-canonical-constant ,name (make-class ',name 
+                                                      ,superclass 
+                                                      (list ,@class-slots)
+                                                      ,@class-opts))
+        ,@(mapcan 
+           (lambda (desc)
+             (letrec ((sname (if (pair? desc) (car desc) desc))
+                      (opts (if (pair? desc) (cdr desc) ()))
+                      (accessor (plist-get opts :accessor))
+                      (writer (plist-get opts :writer))
+                      (reader (plist-get opts :reader)))
+               (append 
+                (when accessor
+                  `((%define-canonical-constant ,(car accessor)
+                                                (make-slot-accessor ,name 
+                                                                    ',sname))))
+                (when writer
+                  `((%define-canonical-constant ,(car writer)
+                                                (make-slot-writer ,name 
+                                                                  ',sname))))
+                (when reader
+                  `((%define-canonical-constant ,(car reader)
+                                                (make-slot-reader ,name 
+                                                                  ',sname)))))))
+           slots))))
 
