@@ -293,7 +293,7 @@ DFSCH_DEFINE_PRIMITIVE(append_immutable, NULL){
     }
 
     if (i){
-      dfsch_error("Improper list as argument to append immutable", NULL);
+      dfsch_error("Improper list as argument to %append-immutable", NULL);
     }
     args = DFSCH_FAST_CDR(args);
   }
