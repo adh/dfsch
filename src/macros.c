@@ -388,6 +388,15 @@ DFSCH_DEFINE_MACRO(quasiquote, NULL){
   return dfsch_backquote_expand(arg);
 }
 
+DFSCH_DEFINE_MACRO(immutable_quasiquote, NULL){ 
+  dfsch_object_t* arg;
+  DFSCH_OBJECT_ARG(args, arg);
+  DFSCH_ARG_END(args);
+
+  return dfsch_backquote_expand_immutable(arg);
+}
+
+
 void dfsch__macros_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "and", DFSCH_MACRO_REF(and));
   dfsch_defcanon_cstr(ctx, "or",DFSCH_MACRO_REF(or));
@@ -408,6 +417,7 @@ void dfsch__macros_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "do", DFSCH_MACRO_REF(do));
 
   dfsch_defcanon_cstr(ctx, "quasiquote", DFSCH_MACRO_REF(quasiquote));
-  dfsch_defcanon_cstr(ctx, "immutable-quasiquote", DFSCH_MACRO_REF(quasiquote));
+  dfsch_defcanon_cstr(ctx, "immutable-quasiquote",
+                      DFSCH_MACRO_REF(immutable_quasiquote));
 
 }

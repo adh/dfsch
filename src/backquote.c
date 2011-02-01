@@ -81,3 +81,59 @@ dfsch_object_t* dfsch_backquote_expand(dfsch_object_t* arg){
     return arg;
   }
 }
+
+static dfsch_object_t* bqi_process_list(dfsch_object_t* l){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  while (DFSCH_PAIR_P(l)){
+    dfsch_object_t* el = DFSCH_FAST_CAR(l);
+
+    if (el == DFSCH_SYM_UNQUOTE){
+      l = DFSCH_FAST_CDR(l);
+      if (!DFSCH_PAIR_P(l)){
+        dfsch_error("Unquote without value", NULL);
+      }
+      dfsch_list_collect(lc, DFSCH_FAST_CAR(l));
+      if (DFSCH_FAST_CDR(l)){
+        dfsch_error("Too many expressions after CDR-positioned unquote", NULL);
+      }
+      break;
+    }
+
+    if (DFSCH_PAIR_P(el)){
+      dfsch_object_t* car = DFSCH_FAST_CAR(el);
+      if (car == DFSCH_SYM_UNQUOTE_SPLICING ||
+          car == DFSCH_SYM_UNQUOTE_NCONCING){
+        dfsch_list_collect(lc, dfsch_car(DFSCH_FAST_CDR(el)));
+        l = DFSCH_FAST_CDR(l);
+        continue;
+      }
+    }
+    dfsch_list_collect(lc, 
+                       dfsch_generate_cons(dfsch_backquote_expand_immutable(el), NULL));
+
+    l = DFSCH_FAST_CDR(l);
+  }
+
+  return dfsch_generate_append_immutable(dfsch_list_copy_immutable(dfsch_collected_list(lc)));
+}
+
+dfsch_object_t* dfsch_backquote_expand_immutable(dfsch_object_t* arg){
+  if (DFSCH_PAIR_P(arg)){
+    dfsch_object_t* car = DFSCH_FAST_CAR(arg);
+    dfsch_object_t* cdr = DFSCH_FAST_CDR(arg);
+    
+    if (car == DFSCH_SYM_UNQUOTE) {
+      return dfsch_car(cdr);
+    } else if (car == DFSCH_SYM_QUASIQUOTE ||
+               car == DFSCH_SYM_IMMUTABLE_QUASIQUOTE){
+      return backquote_nested(arg);
+    }
+    
+    return bqi_process_list(arg);
+  } else if (DFSCH_SYMBOL_P(arg)){
+    return dfsch_generate_quote(arg);
+  } else {
+    return arg;
+  }
+}

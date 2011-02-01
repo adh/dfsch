@@ -22,3 +22,4 @@
 #include <dfsch/dfsch.h>
 
 dfsch_object_t* dfsch_backquote_expand(dfsch_object_t* arg);
+dfsch_object_t* dfsch_backquote_expand_immutable(dfsch_object_t* arg);

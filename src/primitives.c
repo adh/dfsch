@@ -281,6 +281,34 @@ dfsch_object_t* dfsch_generate_copy_list_immutable(dfsch_object_t* list){
                               list);
 }
 
+DFSCH_DEFINE_PRIMITIVE(append_immutable, NULL){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* i = DFSCH_FAST_CAR(args);
+
+    while (DFSCH_PAIR_P(i)){
+      dfsch_list_collect(lc, DFSCH_FAST_CAR(i));
+      i = DFSCH_FAST_CDR(i);
+    }
+
+    if (i){
+      dfsch_error("Improper list as argument to append immutable", NULL);
+    }
+    args = DFSCH_FAST_CDR(args);
+  }
+  
+  if (args){
+    dfsch_error("Improper argument list", NULL);
+  }
+
+  return dfsch_list_copy_immutable(dfsch_collected_list(lc));
+}
+dfsch_object_t* dfsch_generate_append_immutable(dfsch_object_t* list){
+  return dfsch_immutable_list_cdr(list, 1,
+                                  DFSCH_PRIMITIVE_REF(append_immutable));
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(length, NULL){
   long len;
@@ -1227,6 +1255,9 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "copy-list", DFSCH_PRIMITIVE_REF(copy_list));
   dfsch_defcanon_cstr(ctx, "copy-list-immutable", 
                       DFSCH_PRIMITIVE_REF(copy_list_immutable));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+                         "%append-immutable", 
+                         DFSCH_PRIMITIVE_REF(append_immutable));
   dfsch_defcanon_cstr(ctx, "car", DFSCH_PRIMITIVE_REF(car));
   dfsch_defcanon_cstr(ctx, "cdr", DFSCH_PRIMITIVE_REF(cdr));
   dfsch_defcanon_cstr(ctx, "set-car!", DFSCH_PRIMITIVE_REF(set_car));

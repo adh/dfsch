@@ -37,6 +37,7 @@ dfsch_object_t* dfsch_get_nconc_primitive();
 dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps);
 dfsch_object_t* dfsch_generate_list_immutable(dfsch_object_t* exps);
 dfsch_object_t* dfsch_generate_copy_list_immutable(dfsch_object_t* list);
+dfsch_object_t* dfsch_generate_append_immutable(dfsch_object_t* list);
 
 
 
