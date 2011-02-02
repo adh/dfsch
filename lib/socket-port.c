@@ -393,8 +393,18 @@ dfsch_object_t* dfsch_server_socket_tcp_bind(char* hostname,
     if (fd == -1){
       continue;
     }
+    val = 1;
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-    
+
+#ifdef IPV6_V6ONLY
+    if (i->ai_family == AF_INET6){
+      /* Assume we want both v6 _AND_ v4 clients, on many systems this
+       * is disabled by default */
+      val = 0;
+      setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof(val));
+    }
+#endif    
+
     if (bind(fd, i->ai_addr, i->ai_addrlen) != -1){
       freeaddrinfo(res);
 
