@@ -1447,6 +1447,75 @@ static dfsch_object_t* pathname_extension(dfsch_object_t* s){
   }
 }
 
+/*
+ * "Filenames should be construed from portable filename character set"
+ *
+ * This set consists of upper and lower case ASCII letters, numbers and
+ * dot, hypen and underscore. As some filesystems are not case sensitive
+ * or even case preserving, and dot has special meaning on some systems,
+ * only lowercase letters, numbers and hypen are passed thru unchanged.
+ * Underscore is used as escape character (with assumption that, in lisp
+ * world, hypens are used more frequently than underscores).
+ *
+ * Primary motivation of this encoding is to be both unique and easily 
+ * reversable.
+ *
+ * Empty names are converted to single underscore.
+ */
+
+char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
+  size_t res_len = 0;
+  char* res;
+  char* r;
+  char* i = buf->ptr;
+  size_t len = buf->len;
+  
+  if (len == 0){
+    return "_";
+  }
+
+  while (len){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+      res_len++;
+    } else if (*i == '_'){
+      res_len += 2;
+    } else {
+      res_len += 3;
+    }
+    i++;
+    len--;
+  }
+
+  r = res = GC_MALLOC_ATOMIC(res_len + 1);
+  i = buf->ptr;
+  len = buf->len;
+  
+  while (len){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+      *r = *i;
+      r++;
+    } else if (*i == '_'){
+      *r = '_';
+      r++;
+      *r = '_';
+      r++;
+    } else {
+      *r = '_';
+      r++;
+      *r = hex_table[(*i >> 4) & 0xf];
+      r++;
+      *r = hex_table[*i & 0xf];
+      r++;
+    }
+    i++;
+    len--;
+  }
+
+  *r = '\0';
+
+  return res;
+}
+
 /********************* Byte vectors **************/
 
 int byte_vector_equal_p(dfsch_string_t* a, dfsch_string_t* b){
@@ -2266,6 +2335,17 @@ DFSCH_DEFINE_PRIMITIVE(string_join,
   return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
 }
 
+DFSCH_DEFINE_PRIMITIVE(proto_string_2_safe_filename, 
+                       "Split string into parts separated by "
+                       "bytes from separator set"){
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string));
+}
+
+
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
@@ -2407,5 +2487,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(construct_string));
   dfsch_defcanon_cstr(ctx, "string-join", 
 		   DFSCH_PRIMITIVE_REF(string_join));
+
+  dfsch_defcanon_cstr(ctx, "proto-string->safe-filename", 
+		   DFSCH_PRIMITIVE_REF(proto_string_2_safe_filename));
 
 }

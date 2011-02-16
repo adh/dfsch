@@ -177,6 +177,9 @@ extern "C" {
   dfsch_object_t* dfsch_string_assoc(dfsch_object_t* alist,
                                      char* string);
 
+  char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf);
+
+
 #ifdef __cplusplus
 }
 #endif
