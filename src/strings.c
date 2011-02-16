@@ -1486,6 +1486,11 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
     len--;
   }
 
+  if (res_len > 255){
+    dfsch_error("String too long to be converted to safe filename", 
+                dfsch_make_string_strbuf(buf));
+  }
+
   r = res = GC_MALLOC_ATOMIC(res_len + 1);
   i = buf->ptr;
   len = buf->len;
