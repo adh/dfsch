@@ -1521,6 +1521,68 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
   return res;
 }
 
+char* dfsch_strbuf_2_hexstring(dfsch_strbuf_t* buf){
+  size_t len = buf->len;
+  char* res = GC_MALLOC(buf->len * 2 + 1);
+  char* r = res;
+  char* i = buf->ptr;
+
+  while (len){
+    *r = hex_table[(*i >> 4) & 0xf];
+    r++;
+    *r = hex_table[*i & 0xf];
+    r++;
+    len--;
+    i++;
+  }
+  
+  *r = '\0';
+  return res;
+}
+
+dfsch_object_t* dfsch_hexstring_2_strbuf(char* str){
+  size_t len = strlen(str);
+  char* i = str;
+  char* r;
+  dfsch_strbuf_t* res;
+  char tmp;
+  int j;
+
+  if (len % 2 != 0){
+    dfsch_error("Length of hexadecimal string is not even",
+                dfsch_make_string_cstr(str));
+  }
+
+  len /= 2;
+  r = GC_MALLOC(len + 1);
+  
+  res = dfsch_strbuf_create(r, len);
+
+  while (len){
+    tmp = 0;
+    for (j = 0; j < 2; j++){
+      tmp <<= 4;
+      if (*i >= '0' && *i <= '9'){
+        tmp |= *i - '0';
+      } else if (*i >= 'a' && *i <= 'f'){
+        tmp |= 10 + *i - 'a';
+      } else if (*i >= 'A' && *i <= 'F'){
+        tmp |= 10 + *i - 'a';
+      } else {
+        dfsch_error("Invalid hexadecimal character",
+                    DFSCH_MAKE_FIXNUM(*i));
+      }
+      i++;
+    }
+    *r = tmp;
+    r++;
+    len--;
+  }
+
+  *r = '\0';
+  return res;
+}
+
 /********************* Byte vectors **************/
 
 int byte_vector_equal_p(dfsch_string_t* a, dfsch_string_t* b){
@@ -2340,9 +2402,8 @@ DFSCH_DEFINE_PRIMITIVE(string_join,
   return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
 }
 
-DFSCH_DEFINE_PRIMITIVE(proto_string_2_safe_filename, 
-                       "Split string into parts separated by "
-                       "bytes from separator set"){
+DFSCH_DEFINE_PRIMITIVE(string_2_safe_filename, 
+                       NULL){
   dfsch_strbuf_t* string;
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
@@ -2350,6 +2411,28 @@ DFSCH_DEFINE_PRIMITIVE(proto_string_2_safe_filename,
   return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string));
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_2_hexstring, 
+                       NULL){
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_strbuf_2_hexstring(string));
+}
+DFSCH_DEFINE_PRIMITIVE(hexstring_2_string, NULL){
+  char* hex;
+  DFSCH_STRING_ARG(args, hex);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_nocopy(dfsch_hexstring_2_strbuf(hex));
+}
+DFSCH_DEFINE_PRIMITIVE(hexstring_2_byte_vector, NULL){
+  char* hex;
+  DFSCH_STRING_ARG(args, hex);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_byte_vector_strbuf(dfsch_hexstring_2_strbuf(hex));
+}
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -2493,7 +2576,14 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "string-join", 
 		   DFSCH_PRIMITIVE_REF(string_join));
 
-  dfsch_defcanon_cstr(ctx, "proto-string->safe-filename", 
-		   DFSCH_PRIMITIVE_REF(proto_string_2_safe_filename));
+  dfsch_defcanon_cstr(ctx, "string->safe-filename", 
+		   DFSCH_PRIMITIVE_REF(string_2_safe_filename));
+
+  dfsch_defcanon_cstr(ctx, "string->hexstring", 
+		   DFSCH_PRIMITIVE_REF(string_2_hexstring));
+  dfsch_defcanon_cstr(ctx, "hexstring->string", 
+		   DFSCH_PRIMITIVE_REF(hexstring_2_string));
+  dfsch_defcanon_cstr(ctx, "hexstring->byte-vector", 
+		   DFSCH_PRIMITIVE_REF(hexstring_2_byte_vector));
 
 }
