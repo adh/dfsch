@@ -12,6 +12,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/console.h \
 	dfsch/lib/xml.h \
 	dfsch/lib/sxml.h \
+	dfsch/lib/shtml.h \
 	dfsch/lib/json.h \
         dfsch/lib/socket-port.h \
         dfsch/lib/http.h \
@@ -117,6 +118,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-process.la \
 	libdfsch-cmdopts.la \
 	libdfsch-xml.la libdfsch-sxml.la \
+	libdfsch-shtml.la \
 	libdfsch-json.la \
 	libdfsch-zlib.la \
 	libdfsch-csv.la \
@@ -151,6 +153,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	cmdopts.la \
 	xml.la \
 	sxml.la \
+	shtml.la \
 	json.la \
 	os.la \
 	zlib.la \
@@ -369,6 +372,14 @@ xml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 sxml_la_SOURCES = lib/sxml_mod.c
 sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
 sxml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_shtml_la_SOURCES = lib/shtml.c
+libdfsch_shtml_la_LIBADD = libdfsch.la libdfsch-inet.la
+libdfsch_shtml_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+
+shtml_la_SOURCES = lib/shtml_mod.c
+shtml_la_LIBADD = libdfsch.la libdfsch-shtml.la
+shtml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_json_la_SOURCES = lib/json.c
 libdfsch_json_la_LIBADD = libdfsch.la libdfsch-inet.la
