@@ -127,6 +127,11 @@ static void emit_element(emitter_t* e, char* name, dfsch_object_t* children){
   e->write(e->target, name);
   emit_attrs(e, attrs);
   e->write(e->target, ">");    
+
+  if (dfsch_ascii_strcasecmp(name, "textarea") == 0 ||
+      dfsch_ascii_strcasecmp(name, "pre") == 0){
+    e->write(e->target, "\n");    
+  }
   
   switch (dfsch_shtml_get_element_type(name)){
   case ELEM_VOID:
