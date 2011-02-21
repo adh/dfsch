@@ -68,12 +68,21 @@ typedef struct pkg_hash_entry_t {
   dfsch__symbol_t* symbol;
 } pkg_hash_entry_t;
 
+typedef struct alias_list_t alias_list_t;
+
+struct alias_list_t {
+  alias_list_t* next;
+  char* alias;
+  dfsch_package_t* package;
+};
+
 struct dfsch_package_t {
   dfsch_type_t* type;
   dfsch_package_t* next;
   char* name;
   char* documentation;
   dfsch_object_t* use_list;
+  alias_list_t* alias_list;
 
   size_t sym_count;
   size_t mask;
@@ -247,6 +256,17 @@ void dfsch_use_package(dfsch_package_t* in,
   if (!dfsch_member((dfsch_object_t*)pkg, in->use_list)){
     in->use_list = dfsch_cons((dfsch_object_t*)pkg, in->use_list);
   }
+  pthread_mutex_unlock(&symbol_lock);
+}
+void dfsch_use_package_as(dfsch_package_t* in,
+                       dfsch_package_t* pkg,
+                       char* name){
+  alias_list_t* e = GC_NEW(alias_list_t);
+  pthread_mutex_lock(&symbol_lock);
+  e->package = pkg;
+  e->alias = dfsch_stracpy(name);
+  e->next = in->alias_list;
+  in->alias_list = e;
   pthread_mutex_unlock(&symbol_lock);
 }
 
@@ -529,6 +549,18 @@ static void parse_symbol(char* symbol,
   
 }
 
+static dfsch_package_t* find_package_by_alias(dfsch_package_t* in,
+                                              char* name){
+  alias_list_t* i = in->alias_list;
+  while (i){
+    if (strcmp(i->alias, name) == 0){
+      return i->package;
+    }
+    i = i->next;
+  }
+  return NULL;
+}
+
 dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
                                     char* name){
   symbol_t *s;
@@ -543,9 +575,12 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
 
   if (package_name){
     if (*package_name){
-      package = dfsch_find_package(package_name);
+      package = find_package_by_alias(package, package_name);
       if (!package){
-        dfsch_error("No such package", dfsch_make_string_cstr(name));
+        package = dfsch_find_package(package_name);
+        if (!package){
+          dfsch_error("No such package", dfsch_make_string_cstr(name));
+        }
       }
     } else {
       package = DFSCH_KEYWORD_PACKAGE;
@@ -879,6 +914,24 @@ DFSCH_DEFINE_PRIMITIVE(use_package,
 
   return (dfsch_object_t*)NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(use_package_as, 
+                       "Add package to list of packages used by "
+                       "current package. Current package can be "
+                       "overriden by optional second argument"){
+  dfsch_package_t* package;
+  char* alias;
+  dfsch_package_t* in;
+
+  DFSCH_PACKAGE_ARG(args, package);
+  DFSCH_STRING_OR_SYMBOL_ARG(args, alias);
+  DFSCH_PACKAGE_ARG_OPT(args, in, dfsch_get_current_package());
+  DFSCH_ARG_END(args);
+
+  dfsch_use_package_as(in, package, alias);
+
+  return (dfsch_object_t*)NULL;
+}
+
 DFSCH_DEFINE_PRIMITIVE(export_symbol,
                        "Export symbol from package"){
   dfsch_package_t* package;
@@ -945,6 +998,8 @@ void dfsch__package_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(in_package));
   dfsch_defcanon_cstr(ctx, "use-package",
                       DFSCH_PRIMITIVE_REF(use_package));
+  dfsch_defcanon_cstr(ctx, "use-package-as",
+                      DFSCH_PRIMITIVE_REF(use_package_as));
 
   dfsch_defcanon_cstr(ctx, "unintern",
                       DFSCH_PRIMITIVE_REF(unintern));
