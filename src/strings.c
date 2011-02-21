@@ -1447,6 +1447,142 @@ static dfsch_object_t* pathname_extension(dfsch_object_t* s){
   }
 }
 
+/*
+ * "Filenames should be construed from portable filename character set"
+ *
+ * This set consists of upper and lower case ASCII letters, numbers and
+ * dot, hypen and underscore. As some filesystems are not case sensitive
+ * or even case preserving, and dot has special meaning on some systems,
+ * only lowercase letters, numbers and hypen are passed thru unchanged.
+ * Underscore is used as escape character (with assumption that, in lisp
+ * world, hypens are used more frequently than underscores).
+ *
+ * Primary motivation of this encoding is to be both unique and easily 
+ * reversable.
+ *
+ * Empty names are converted to single underscore.
+ */
+
+char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
+  size_t res_len = 0;
+  char* res;
+  char* r;
+  char* i = buf->ptr;
+  size_t len = buf->len;
+  
+  if (len == 0){
+    return "_";
+  }
+
+  while (len){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+      res_len++;
+    } else if (*i == '_'){
+      res_len += 2;
+    } else {
+      res_len += 3;
+    }
+    i++;
+    len--;
+  }
+
+  if (res_len > 255){
+    dfsch_error("String too long to be converted to safe filename", 
+                dfsch_make_string_strbuf(buf));
+  }
+
+  r = res = GC_MALLOC_ATOMIC(res_len + 1);
+  i = buf->ptr;
+  len = buf->len;
+  
+  while (len){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+      *r = *i;
+      r++;
+    } else if (*i == '_'){
+      *r = '_';
+      r++;
+      *r = '_';
+      r++;
+    } else {
+      *r = '_';
+      r++;
+      *r = hex_table[(*i >> 4) & 0xf];
+      r++;
+      *r = hex_table[*i & 0xf];
+      r++;
+    }
+    i++;
+    len--;
+  }
+
+  *r = '\0';
+
+  return res;
+}
+
+char* dfsch_strbuf_2_hexstring(dfsch_strbuf_t* buf){
+  size_t len = buf->len;
+  char* res = GC_MALLOC(buf->len * 2 + 1);
+  char* r = res;
+  char* i = buf->ptr;
+
+  while (len){
+    *r = hex_table[(*i >> 4) & 0xf];
+    r++;
+    *r = hex_table[*i & 0xf];
+    r++;
+    len--;
+    i++;
+  }
+  
+  *r = '\0';
+  return res;
+}
+
+dfsch_object_t* dfsch_hexstring_2_strbuf(char* str){
+  size_t len = strlen(str);
+  char* i = str;
+  char* r;
+  dfsch_strbuf_t* res;
+  char tmp;
+  int j;
+
+  if (len % 2 != 0){
+    dfsch_error("Length of hexadecimal string is not even",
+                dfsch_make_string_cstr(str));
+  }
+
+  len /= 2;
+  r = GC_MALLOC(len + 1);
+  
+  res = dfsch_strbuf_create(r, len);
+
+  while (len){
+    tmp = 0;
+    for (j = 0; j < 2; j++){
+      tmp <<= 4;
+      if (*i >= '0' && *i <= '9'){
+        tmp |= *i - '0';
+      } else if (*i >= 'a' && *i <= 'f'){
+        tmp |= 10 + *i - 'a';
+      } else if (*i >= 'A' && *i <= 'F'){
+        tmp |= 10 + *i - 'a';
+      } else {
+        dfsch_error("Invalid hexadecimal character",
+                    DFSCH_MAKE_FIXNUM(*i));
+      }
+      i++;
+    }
+    *r = tmp;
+    r++;
+    len--;
+  }
+
+  *r = '\0';
+  return res;
+}
+
 /********************* Byte vectors **************/
 
 int byte_vector_equal_p(dfsch_string_t* a, dfsch_string_t* b){
@@ -2266,6 +2402,38 @@ DFSCH_DEFINE_PRIMITIVE(string_join,
   return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sl));
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_2_safe_filename, 
+                       NULL){
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string));
+}
+
+DFSCH_DEFINE_PRIMITIVE(string_2_hexstring, 
+                       NULL){
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_strbuf_2_hexstring(string));
+}
+DFSCH_DEFINE_PRIMITIVE(hexstring_2_string, NULL){
+  char* hex;
+  DFSCH_STRING_ARG(args, hex);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_nocopy(dfsch_hexstring_2_strbuf(hex));
+}
+DFSCH_DEFINE_PRIMITIVE(hexstring_2_byte_vector, NULL){
+  char* hex;
+  DFSCH_STRING_ARG(args, hex);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_byte_vector_strbuf(dfsch_hexstring_2_strbuf(hex));
+}
+
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
@@ -2407,5 +2575,15 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(construct_string));
   dfsch_defcanon_cstr(ctx, "string-join", 
 		   DFSCH_PRIMITIVE_REF(string_join));
+
+  dfsch_defcanon_cstr(ctx, "string->safe-filename", 
+		   DFSCH_PRIMITIVE_REF(string_2_safe_filename));
+
+  dfsch_defcanon_cstr(ctx, "string->hexstring", 
+		   DFSCH_PRIMITIVE_REF(string_2_hexstring));
+  dfsch_defcanon_cstr(ctx, "hexstring->string", 
+		   DFSCH_PRIMITIVE_REF(hexstring_2_string));
+  dfsch_defcanon_cstr(ctx, "hexstring->byte-vector", 
+		   DFSCH_PRIMITIVE_REF(hexstring_2_byte_vector));
 
 }

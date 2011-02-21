@@ -31,7 +31,7 @@ static XML_Memory_Handling_Suite gc_suite = {
 };
 
 DFSCH_LOCAL_SYMBOL_CACHE(":attributes", at_symbol);
-DFSCH_LOCAL_SYMBOL_CACHE(":literal-xml", literal_symbol);
+DFSCH_LOCAL_SYMBOL_CACHE(":literal-output", literal_symbol);
 
 static void sxml_push(parser_ctx_t* c, dfsch_object_t* tag){
   sxml_stack_t* s = GC_NEW(sxml_stack_t);
