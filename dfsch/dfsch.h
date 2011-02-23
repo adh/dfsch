@@ -329,6 +329,9 @@ extern "C" {
 
   extern void dfsch_use_package(dfsch_package_t* in,
                                 dfsch_package_t* pkg);
+  extern void dfsch_use_package_as(dfsch_package_t* in,
+                                   dfsch_package_t* pkg,
+                                   char* alias);
   extern void dfsch_export_symbol(dfsch_package_t* pkg,
                                   dfsch_object_t* sym);
 

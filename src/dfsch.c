@@ -753,6 +753,10 @@ dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
     i = i->parent;
   }
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  if (DFSCH_SYMBOL_P(name) && 
+      ((dfsch__symbol_t*)DFSCH_TAG_REF(name))->package == DFSCH_KEYWORD_PACKAGE){
+    return name; /* keywords are self-evaluating when not redefined */
+  }
   return DFSCH_INVALID_OBJECT;
 }
 
