@@ -427,6 +427,7 @@ tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK
 tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
+	lib/crypto/internal.h \
 	lib/crypto/modes.c \
 	lib/crypto/aes.c lib/crypto/aes_tab.h \
 	lib/crypto/xtea.c \
@@ -442,7 +443,11 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/rsa-pad.c \
 	lib/crypto/salsa20.c \
 	lib/crypto/prng.c \
-	lib/crypto/macros.h
+	lib/crypto/macros.h \
+	lib/crypto/fe25519.h lib/crypto/fe25519.c \
+	lib/crypto/ge25519.h lib/crypto/ge25519.c \
+	lib/crypto/sc25519.h lib/crypto/sc25519.c \
+	lib/crypto/ecdsa25519.c
 
 if WIN32
 prng_libadd = -lrpcrt4

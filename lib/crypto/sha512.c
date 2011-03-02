@@ -10,14 +10,7 @@
  */
 #include <dfsch/lib/crypto.h>
 #include "macros.h"
-
-typedef struct sha512_context_t {
-  dfsch_crypto_hash_t* algo;
-  ulong64  length, state[8];
-  unsigned long curlen;
-  unsigned char buf[128];
-} sha512_context_t;
-
+#include "internal.h"
 
 /**
    @param sha512.c
@@ -128,8 +121,8 @@ static int  sha512_compress(sha512_context_t * md, unsigned char *buf)
    @param md   The hash state you wish to initialize
    @return CRYPT_OK if successful
 */
-int sha512_setup(sha512_context_t * md, 
-                 uint8_t* key, size_t keylen)
+void dfsch_sha512_setup(sha512_context_t * md, 
+                        uint8_t* key, size_t keylen)
 {
   if (keylen != 0){
     dfsch_error("SHA-512 is not keyed", NULL);
@@ -153,7 +146,7 @@ int sha512_setup(sha512_context_t * md,
    @param inlen  The length of the data (octets)
    @return CRYPT_OK if successful
 */
-HASH_PROCESS(sha512_process, sha512_compress, sha512_context_t, 128)
+HASH_PROCESS(dfsch_sha512_process, sha512_compress, sha512_context_t, 128)
 
 /**
    Terminate the hash to get the digest
@@ -161,7 +154,7 @@ HASH_PROCESS(sha512_process, sha512_compress, sha512_context_t, 128)
    @param out [out] The destination of the hash (64 bytes)
    @return CRYPT_OK if successful
 */
-int sha512_result(sha512_context_t * md, unsigned char *out)
+void dfsch_sha512_result(sha512_context_t * md, unsigned char *out)
 {
     int i;
 
@@ -213,7 +206,7 @@ dfsch_crypto_hash_t dfsch_crypto_sha512 = {
   .block_len = 128,
   .result_len = 64,
 
-  .setup = sha512_setup,
-  .process = sha512_process,
-  .result = sha512_result
+  .setup = dfsch_sha512_setup,
+  .process = dfsch_sha512_process,
+  .result = dfsch_sha512_result
 };

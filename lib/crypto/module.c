@@ -379,6 +379,54 @@ DFSCH_DEFINE_PRIMITIVE(prng_state,
 
 static const uint8_t curve25519_basepoint[32] = {9};
 
+DFSCH_DEFINE_PRIMITIVE(ecdsa25519_generate_key, 
+                       "Generate new ECDSA25519 private key"){
+  dfsch_object_t* random_source;
+  DFSCH_OBJECT_ARG(args, random_source);
+  DFSCH_ARG_END(args);
+
+  return dfsch_ecdsa25519_generate_key(random_source);
+}
+
+DFSCH_DEFINE_PRIMITIVE(ecdsa25519_get_public_key, 
+                       "Return public key matching given private key"){
+  dfsch_ecdsa25519_private_key_t* private;
+  DFSCH_ECDSA25519_PRIVATE_KEY_ARG(args, private);
+  DFSCH_ARG_END(args);
+
+  return dfsch_ecdsa25519_get_public_key(private);
+}
+
+DFSCH_DEFINE_PRIMITIVE(ecdsa25519_sign,
+                       "Sign message with given private key"){
+  dfsch_ecdsa25519_private_key_t* key;
+  dfsch_strbuf_t* message;
+  dfsch_strbuf_t* signature;
+  DFSCH_ECDSA25519_PRIVATE_KEY_ARG(args, key);
+  DFSCH_BUFFER_ARG(args, message);
+  DFSCH_ARG_END(args);
+
+  signature = dfsch_ecdsa25519_sign(key, message->ptr, message->len);
+
+  return dfsch_make_byte_vector_nocopy(signature->ptr, signature->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(ecdsa25519_verify,
+                       "Verify message signature"){
+  dfsch_ecdsa25519_public_key_t* key;
+  dfsch_strbuf_t* message;
+  dfsch_strbuf_t* signature;
+  DFSCH_ECDSA25519_PUBLIC_KEY_ARG(args, key);
+  DFSCH_BUFFER_ARG(args, signature);
+  DFSCH_BUFFER_ARG(args, message);
+  DFSCH_ARG_END(args);
+
+
+  return dfsch_bool(dfsch_ecdsa25519_verify(key, 
+                                            message->ptr, message->len, 
+                                            signature->ptr, signature->len));
+}
+
 void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_package_t* crypto = dfsch_make_package("crypto",
                                                "Cryptographic algorithms");
@@ -498,4 +546,14 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
 
   dfsch_defconst_pkgcstr(env, crypto, "prng-state",
                          DFSCH_PRIMITIVE_REF(prng_state));
+
+  dfsch_defconst_pkgcstr(env, crypto, "ecdsa25519-generate-key",
+                         DFSCH_PRIMITIVE_REF(ecdsa25519_generate_key));
+  dfsch_defconst_pkgcstr(env, crypto, "ecdsa25519-get-public-key",
+                         DFSCH_PRIMITIVE_REF(ecdsa25519_get_public_key));
+  dfsch_defconst_pkgcstr(env, crypto, "ecdsa25519-sign",
+                         DFSCH_PRIMITIVE_REF(ecdsa25519_sign));
+  dfsch_defconst_pkgcstr(env, crypto, "ecdsa25519-verify",
+                         DFSCH_PRIMITIVE_REF(ecdsa25519_verify));
+
 }
