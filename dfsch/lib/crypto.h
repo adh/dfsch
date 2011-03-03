@@ -268,29 +268,29 @@ void dfsch_salsa20_get_keystream_block(dfsch_salsa20_state_t* state,
                                        uint8_t output[64]);
 void dfsch_salsa20_seek(dfsch_salsa20_state_t* state, uint64_t offset);
 
-typedef struct dfsch_ecdsa25519_public_key_t dfsch_ecdsa25519_public_key_t;
-typedef struct dfsch_ecdsa25519_private_key_t dfsch_ecdsa25519_private_key_t;
+typedef struct dfsch_sign25519_public_key_t dfsch_sign25519_public_key_t;
+typedef struct dfsch_sign25519_private_key_t dfsch_sign25519_private_key_t;
 
-extern dfsch_type_t dfsch_ecdsa25519_public_key_type;
-#define DFSCH_ECDSA25519_PUBLIC_KEY_TYPE (&dfsch_ecdsa25519_public_key_type) 
-extern dfsch_type_t dfsch_ecdsa25519_private_key_type;
-#define DFSCH_ECDSA25519_PRIVATE_KEY_TYPE (&dfsch_ecdsa25519_private_key_type) 
+extern dfsch_type_t dfsch_sign25519_public_key_type;
+#define DFSCH_SIGN25519_PUBLIC_KEY_TYPE (&dfsch_sign25519_public_key_type) 
+extern dfsch_type_t dfsch_sign25519_private_key_type;
+#define DFSCH_SIGN25519_PRIVATE_KEY_TYPE (&dfsch_sign25519_private_key_type) 
 
-#define DFSCH_ECDSA25519_PUBLIC_KEY_ARG(al, name)                       \
-  DFSCH_TYPED_ARG(al, name, dfsch_ecdsa25519_public_key_t*,             \
-                  DFSCH_ECDSA25519_PUBLIC_KEY_TYPE)
-#define DFSCH_ECDSA25519_PRIVATE_KEY_ARG(al, name)             \
-  DFSCH_TYPED_ARG(al, name, dfsch_ecdsa25519_private_key_t*,   \
-                  DFSCH_ECDSA25519_PRIVATE_KEY_TYPE)
+#define DFSCH_SIGN25519_PUBLIC_KEY_ARG(al, name)                       \
+  DFSCH_TYPED_ARG(al, name, dfsch_sign25519_public_key_t*,             \
+                  DFSCH_SIGN25519_PUBLIC_KEY_TYPE)
+#define DFSCH_SIGN25519_PRIVATE_KEY_ARG(al, name)             \
+  DFSCH_TYPED_ARG(al, name, dfsch_sign25519_private_key_t*,   \
+                  DFSCH_SIGN25519_PRIVATE_KEY_TYPE)
 
-dfsch_ecdsa25519_private_key_t* 
-dfsch_ecdsa25519_generate_key(dfsch_object_t* random_source);
-dfsch_ecdsa25519_public_key_t* 
-dfsch_ecdsa25519_get_public_key(dfsch_ecdsa25519_private_key_t* pk);
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_generate_key(dfsch_object_t* random_source);
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk);
 
-dfsch_strbuf_t* dfsch_ecdsa25519_sign(dfsch_ecdsa25519_private_key_t* key,
+dfsch_strbuf_t* dfsch_sign25519_sign(dfsch_sign25519_private_key_t* key,
                                       char* m, size_t len);
-int dfsch_ecdsa25519_verify(dfsch_ecdsa25519_public_key_t* key,
+int dfsch_sign25519_verify(dfsch_sign25519_public_key_t* key,
                             char* m, size_t len,
                             char* s, size_t slen);
 

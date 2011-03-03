@@ -3,18 +3,18 @@
 
 #include "ge25519.h"
 
-struct dfsch_ecdsa25519_private_key_t {
+struct dfsch_sign25519_private_key_t {
   dfsch_type_t* type;
   uint8_t private[64];
 };
 
-struct dfsch_ecdsa25519_public_key_t {
+struct dfsch_sign25519_public_key_t {
   dfsch_type_t* type;
   uint8_t public[32];
 };
 
-dfsch_type_t dfsch_ecdsa25519_public_key_type = {};
-dfsch_type_t dfsch_ecdsa25519_private_key_type = {};
+dfsch_type_t dfsch_sign25519_public_key_type = {};
+dfsch_type_t dfsch_sign25519_private_key_type = {};
 
 
 static void hexdump(char* label, unsigned char*data, size_t len){
@@ -28,13 +28,13 @@ static void hexdump(char* label, unsigned char*data, size_t len){
 }
 
 
-dfsch_ecdsa25519_private_key_t* 
-dfsch_ecdsa25519_generate_key(dfsch_object_t* random_source){
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_generate_key(dfsch_object_t* random_source){
   sha512_context_t sha;
-  dfsch_ecdsa25519_private_key_t* 
-    k = GC_NEW_ATOMIC(dfsch_ecdsa25519_private_key_t);
+  dfsch_sign25519_private_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
 
-  k->type = DFSCH_ECDSA25519_PRIVATE_KEY_TYPE;
+  k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
 
   dfsch_random_get_bytes(random_source, k->private, 64);
 
@@ -50,14 +50,14 @@ dfsch_ecdsa25519_generate_key(dfsch_object_t* random_source){
   return k;
 }
 
-dfsch_ecdsa25519_public_key_t* 
-dfsch_ecdsa25519_get_public_key(dfsch_ecdsa25519_private_key_t* pk){
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk){
   sc25519 scsk;
   ge25519 gepk;
-  dfsch_ecdsa25519_public_key_t* 
-    k = GC_NEW_ATOMIC(dfsch_ecdsa25519_public_key_t);
+  dfsch_sign25519_public_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_public_key_t);
 
-  k->type = DFSCH_ECDSA25519_PUBLIC_KEY_TYPE;
+  k->type = DFSCH_SIGN25519_PUBLIC_KEY_TYPE;
 
   sc25519_from32bytes(&scsk, pk->private);  
   ge25519_scalarmult_base(&gepk, &scsk);
@@ -70,7 +70,7 @@ dfsch_ecdsa25519_get_public_key(dfsch_ecdsa25519_private_key_t* pk){
 /* dfsch_crypto_sign25519(unsigned char *sm,unsigned long long *smlen,
                            const unsigned char *m,unsigned long long mlen,
                            const unsigned char *sk)**/
-dfsch_strbuf_t* dfsch_ecdsa25519_sign(dfsch_ecdsa25519_private_key_t* key,
+dfsch_strbuf_t* dfsch_sign25519_sign(dfsch_sign25519_private_key_t* key,
                                       char* m, size_t len){
   sc25519 sck, scs, scsk;
   ge25519 ger;
@@ -112,7 +112,7 @@ dfsch_strbuf_t* dfsch_ecdsa25519_sign(dfsch_ecdsa25519_private_key_t* key,
   return res;
 }
 
-int dfsch_ecdsa25519_verify(dfsch_ecdsa25519_public_key_t* key,
+int dfsch_sign25519_verify(dfsch_sign25519_public_key_t* key,
                             char* m, size_t len,
                             char* s, size_t slen){
   int i;
@@ -123,7 +123,7 @@ int dfsch_ecdsa25519_verify(dfsch_ecdsa25519_public_key_t* key,
   sha512_context_t sha;
 
   if (slen != 64){
-    dfsch_error("Invalid length of ECDSA25519 signature", NULL);
+    dfsch_error("Invalid length of SIGN25519 signature", NULL);
   }
 
   if (ge25519_unpack_vartime(&get1, s)){

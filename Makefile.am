@@ -447,7 +447,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/fe25519.h lib/crypto/fe25519.c \
 	lib/crypto/ge25519.h lib/crypto/ge25519.c \
 	lib/crypto/sc25519.h lib/crypto/sc25519.c \
-	lib/crypto/ecdsa25519.c
+	lib/crypto/sign25519.c
 
 if WIN32
 prng_libadd = -lrpcrt4
