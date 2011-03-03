@@ -382,10 +382,12 @@ static const uint8_t curve25519_basepoint[32] = {9};
 DFSCH_DEFINE_PRIMITIVE(sign25519_generate_key, 
                        "Generate new SIGN25519 private key"){
   dfsch_object_t* random_source;
+  int version;
   DFSCH_OBJECT_ARG(args, random_source);
+  DFSCH_LONG_ARG_OPT(args, version, DFSCH_SIGN25519_CURRENT_VERSION);
   DFSCH_ARG_END(args);
 
-  return dfsch_sign25519_generate_key(random_source);
+  return dfsch_sign25519_generate_key(random_source, version);
 }
 
 DFSCH_DEFINE_PRIMITIVE(sign25519_get_public_key, 
@@ -547,6 +549,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "prng-state",
                          DFSCH_PRIMITIVE_REF(prng_state));
 
+  dfsch_defconst_pkgcstr(env, crypto, "*sign25519-version-256-sha512*",
+                         DFSCH_MAKE_FIXNUM(DFSCH_SIGN25519_VERSION_256_SHA512));
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-generate-key",
                          DFSCH_PRIMITIVE_REF(sign25519_generate_key));
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-get-public-key",

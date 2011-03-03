@@ -283,16 +283,21 @@ extern dfsch_type_t dfsch_sign25519_private_key_type;
   DFSCH_TYPED_ARG(al, name, dfsch_sign25519_private_key_t*,   \
                   DFSCH_SIGN25519_PRIVATE_KEY_TYPE)
 
+#define DFSCH_SIGN25519_VERSION_256_SHA512   0
+
+#define DFSCH_SIGN25519_CURRENT_VERSION DFSCH_SIGN25519_VERSION_256_SHA512
+
 dfsch_sign25519_private_key_t* 
-dfsch_sign25519_generate_key(dfsch_object_t* random_source);
+dfsch_sign25519_generate_key(dfsch_object_t* random_source,
+                             int version);
 dfsch_sign25519_public_key_t* 
 dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk);
 
 dfsch_strbuf_t* dfsch_sign25519_sign(dfsch_sign25519_private_key_t* key,
-                                      char* m, size_t len);
+                                     char* m, size_t len);
 int dfsch_sign25519_verify(dfsch_sign25519_public_key_t* key,
-                            char* m, size_t len,
-                            char* s, size_t slen);
+                           char* m, size_t len,
+                           char* s, size_t slen);
 
 
 #endif

@@ -5,11 +5,13 @@
 
 struct dfsch_sign25519_private_key_t {
   dfsch_type_t* type;
+  int version;
   uint8_t private[64];
 };
 
 struct dfsch_sign25519_public_key_t {
   dfsch_type_t* type;
+  int version;
   uint8_t public[32];
 };
 
@@ -29,10 +31,16 @@ static void hexdump(char* label, unsigned char*data, size_t len){
 
 
 dfsch_sign25519_private_key_t* 
-dfsch_sign25519_generate_key(dfsch_object_t* random_source){
+dfsch_sign25519_generate_key(dfsch_object_t* random_source,
+                             int version){
   sha512_context_t sha;
   dfsch_sign25519_private_key_t* 
     k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
+
+  if (version != DFSCH_SIGN25519_VERSION_256_SHA512){
+    dfsch_error("Unsupported SIGN25519 key version", 
+                DFSCH_MAKE_FIXNUM(version));
+  }
 
   k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
 
@@ -58,6 +66,7 @@ dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk){
     k = GC_NEW_ATOMIC(dfsch_sign25519_public_key_t);
 
   k->type = DFSCH_SIGN25519_PUBLIC_KEY_TYPE;
+  k->version = pk->version;
 
   sc25519_from32bytes(&scsk, pk->private);  
   ge25519_scalarmult_base(&gepk, &scsk);
