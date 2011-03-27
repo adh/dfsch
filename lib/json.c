@@ -182,7 +182,7 @@ static void object_start(dfsch_json_parser_t* jp){
   }
 
   parser_push(jp, S_OBJECT_KEY);
-  jp->state->object = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  jp->state->object = dfsch_make_hash();
 }
 static void object_end(dfsch_json_parser_t* jp){
   if (!jp->state || (jp->state->state != S_OBJECT_COMMA &&

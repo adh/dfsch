@@ -416,7 +416,7 @@
                      (lambda (a b)
                        (string<? (car a) (car b)))))
        (define (hash->canonical-alist h)
-         (canonical-alist (hash->alist h)))
+         (canonical-alist (collection->reversed-list h)))
 
        (define *json-test-data* (alist->hash '(("foo" (1 2 3))
                                                ("bar" ("a" "b" (3.14))))))

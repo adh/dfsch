@@ -825,7 +825,7 @@ void dfsch_unset(object_t* name, object_t* env){
   DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   while (i){
     if (i->decls){
-      dfsch_hash_unset(i->decls, name);
+      dfsch_idhash_unset(i->decls, name);
     }
     if(dfsch_eqhash_unset(&i->values, name)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -872,13 +872,16 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 
   if (!e->decls){
-    e->decls = dfsch_hash_make(DFSCH_HASH_EQ);
+    e->decls = dfsch_make_idhash();
   } else {
-    dfsch_hash_ref_fast(e->decls, variable, &old);
+    old = dfsch_idhash_ref(e->decls, variable);
+    if (old == DFSCH_INVALID_OBJECT){
+      old = NULL;
+    }
   }
   
-  dfsch_hash_set(e->decls, variable, 
-                 dfsch_cons(declaration, old));  
+  dfsch_idhash_set(e->decls, variable, 
+                   dfsch_cons(declaration, old));  
 
   if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);

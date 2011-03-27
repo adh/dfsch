@@ -522,11 +522,11 @@ DFSCH_PRIMITIVE_HEAD(attach_parasite){
 
   obj_table = weak_key_hash_ref(parasite_table, object);
   if (obj_table == DFSCH_INVALID_OBJECT){
-    obj_table = dfsch_hash_make(DFSCH_HASH_EQ);
+    obj_table = dfsch_make_idhash();
     weak_key_hash_set(parasite_table, object, obj_table);
   }
 
-  dfsch_hash_set(obj_table, name, value);
+  dfsch_idhash_set(obj_table, name, value);
 
   return NULL;
 }
@@ -549,7 +549,7 @@ DFSCH_PRIMITIVE_HEAD(retrieve_parasite){
     return def;
   }
 
-  res = dfsch_hash_ref(obj_table, name);
+  res = dfsch_idhash_ref(obj_table, name);
 
   if (res == DFSCH_INVALID_OBJECT){
     return def;
@@ -572,7 +572,7 @@ DFSCH_PRIMITIVE_HEAD(detach_parasite){
     return NULL;
   }
 
-  dfsch_hash_unset(obj_table, name);
+  dfsch_idhash_unset(obj_table, name);
 
   return NULL;
 }
