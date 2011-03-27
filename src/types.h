@@ -36,7 +36,7 @@ typedef struct vector_t {
 
 typedef dfsch_macro_t macro_t;
 
-#define ENV_CONSTANT_FLAG 1
+//#define ENV_CONSTANT_FLAG 1
 
 typedef struct environment_t environment_t;
 

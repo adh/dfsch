@@ -628,12 +628,61 @@ dfsch_type_t dfsch_special_type = {
   "Metaclass of types with special in-memory representation"
 };
 
+dfsch_type_t dfsch_collection_constructor_type_type = {
+  .type = DFSCH_META_TYPE,
+  .superclass = NULL,
+  .name = "collection-constructor-type",
+  .size = sizeof(dfsch_collection_constructor_type_t),
+};
+
+
 static dfsch_object_t* list_get_iterator(dfsch_object_t* l){
   return l;
 }
 
+struct dfsch_list_collector_t {
+  dfsch_collection_constructor_type_t* type;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+};
+static dfsch_list_collector_t* make_list_constructor(dfsch_type_t* type){
+  dfsch_list_collector_t* col = dfsch_make_object(type);
+
+  col->head = col->tail = NULL;
+
+  return col;
+}
+dfsch_list_collector_t* dfsch_make_list_collector(){
+  return make_list_constructor(DFSCH_MUTABLE_LIST_CONSTRUCTOR_TYPE);
+}
+void dfsch_list_collect(dfsch_list_collector_t* col,
+                        dfsch_object_t* item){
+  dfsch_object_t* tp = dfsch_cons(item, NULL);
+
+  if (col->head){
+    DFSCH_FAST_CDR_MUT(col->tail) = tp;
+  } else {
+    col->head = tp;
+  }
+  col->tail = tp;
+}
+dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
+  return col->head;
+}
+
+dfsch_collection_constructor_type_t dfsch_mutable_list_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .name = "mutable-list-constructor",
+    .size = sizeof(dfsch_list_collector_t),
+  },
+  .add = dfsch_list_collect,
+  .done = dfsch_collected_list
+};
+
 static dfsch_collection_methods_t list_collection = {
   .get_iterator = list_get_iterator,
+  .make_constructor = dfsch_make_list_collector,
 };
 
 static dfsch_sequence_methods_t list_sequence = {
@@ -1222,6 +1271,50 @@ static dfsch_object_t* vector_describe(vector_t* v){
                     dfsch_collected_list(lc));
 }
 
+typedef struct vector_constructor_t {
+  dfsch_collection_constructor_type_t* type;
+  vector_t* vector;
+  size_t allocd;
+} vector_constructor_t;
+
+static dfsch_object_t* make_vector_constructor(dfsch_type_t* discard){
+  vector_constructor_t* vc = dfsch_make_object(DFSCH_VECTOR_CONSTRUCTOR_TYPE);
+  vc->allocd = 4;
+  vc->vector = GC_MALLOC(sizeof(vector_t) + vc->allocd * sizeof(object_t*));
+  vc->vector->type = DFSCH_VECTOR_TYPE;
+  vc->vector->length = 0;
+  return vc;
+}
+
+static void vector_constructor_add(vector_constructor_t* vc,
+                                   dfsch_object_t* element){
+  if (vc->vector->length == vc->allocd){
+    vc->allocd *= 2;
+    vc->vector = GC_REALLOC(vc->vector, 
+                            sizeof(vector_t) + vc->allocd * sizeof(object_t*));
+  }
+  vc->vector->data[vc->vector->length] = element;
+  vc->vector->length++;
+}
+static dfsch_object_t* vector_constructor_done(vector_constructor_t* vc){
+  return vc->vector;
+}
+
+dfsch_collection_constructor_type_t dfsch_vector_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .name = "vector-constructor",
+    .size = sizeof(vector_constructor_t)
+  },
+  .add = vector_constructor_add,
+  .done = vector_constructor_done,
+};
+
+static dfsch_collection_methods_t vector_collection = {
+  .get_iterator = dfsch_make_sequence_iterator,
+  .make_constructor = make_vector_constructor,
+};
+
 dfsch_type_t dfsch_vector_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -1232,7 +1325,7 @@ dfsch_type_t dfsch_vector_type = {
   NULL,
   (dfsch_type_hash_t)vector_hash,
   .describe = (dfsch_type_describe_t)vector_describe,
-  .collection = DFSCH_COLLECTION_AS_SEQUENCE,
+  .collection = &vector_collection,
   .sequence = &vector_sequence,
   .serialize = vector_serialize,
 };
@@ -1644,32 +1737,6 @@ long dfsch_list_length_check(object_t* list){
   if (len < 0)
     dfsch_type_error(list, DFSCH_LIST_TYPE, 1);
   return len;
-}
-
-struct dfsch_list_collector_t {
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
-};
-dfsch_list_collector_t* dfsch_make_list_collector(){
-  dfsch_list_collector_t* col = GC_NEW(dfsch_list_collector_t);
-
-  col->head = col->tail = NULL;
-
-  return col;
-}
-void dfsch_list_collect(dfsch_list_collector_t* col,
-                        dfsch_object_t* item){
-  dfsch_object_t* tp = dfsch_cons(item, NULL);
-
-  if (col->head){
-    DFSCH_FAST_CDR_MUT(col->tail) = tp;
-  } else {
-    col->head = tp;
-  }
-  col->tail = tp;
-}
-dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
-  return col->head;
 }
 
 
@@ -2403,7 +2470,7 @@ dfsch_object_t* dfsch_plist_remove_keys(dfsch_object_t* plist,
     dfsch_object_t* value;
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(i)){
-      dfsch_error("Invlaid plist", plist);
+      dfsch_error("Invalid plist", plist);
     }
     value = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);
@@ -2427,7 +2494,7 @@ dfsch_object_t* dfsch_plist_filter_keys(dfsch_object_t* plist,
     dfsch_object_t* value;
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(i)){
-      dfsch_error("Invlaid plist", plist);
+      dfsch_error("Invalid plist", plist);
     }
     value = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);

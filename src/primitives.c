@@ -579,34 +579,28 @@ DFSCH_DEFINE_PRIMITIVE(mapcan, 0){
 DFSCH_DEFINE_PRIMITIVE(filter, 0){
   object_t* func;
   object_t* list;
-  object_t* head = NULL;
-  object_t* tail;
+  dfsch_type_t* result_type;
+  object_t* c;
 
   DFSCH_OBJECT_ARG(args, func);
   DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
   DFSCH_ARG_END(args);
 
   list = dfsch_collection_get_iterator(list);
-
+  c = dfsch_make_collection_constructor(result_type);
   while (list){
     object_t* item =  dfsch_iterator_this(list);
     object_t* t;
 
     if (dfsch_apply(func, 
                     dfsch_list(1, item))){
-      t = dfsch_cons(item, NULL);
-
-      if (!head){
-        head = tail = t;
-      }else{
-        dfsch_set_cdr(tail, t);
-        tail = t;
-      }
+      dfsch_collection_constructor_add(c, item);
     }
     list = dfsch_iterator_next(list);
   }
   
-  return head;
+  return dfsch_collection_constructor_done(c);
 }
 DFSCH_DEFINE_PRIMITIVE(reduce, 0){
   object_t* func;

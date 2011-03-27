@@ -376,6 +376,31 @@ int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
   }
 }
 
+dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct){
+  if (!ct->collection){
+    dfsch_error("Not a collection type", ct);
+  }
+  if (ct->collection->make_constructor) {
+    return ct->collection->make_constructor(ct);
+  } else {
+    return dfsch_make_list_collector(); /* fallback to mutable list */
+  }
+
+}
+void dfsch_collection_constructor_add(dfsch_object_t* constructor,
+                                      dfsch_object_t* element){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(constructor,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  ((dfsch_collection_constructor_type_t*)con->type)->add(con, element);
+}
+dfsch_object_t* dfsch_collection_constructor_done(dfsch_object_t* c){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(c,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  return ((dfsch_collection_constructor_type_t*)con->type)->done(con);
+}
+
 
 
 

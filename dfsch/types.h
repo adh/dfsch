@@ -265,8 +265,11 @@ typedef void (*dfsch_type_serialize_t)(dfsch_object_t* obj,
 
 typedef dfsch_object_t* (*dfsch_collection_get_iterator_t)(dfsch_object_t* c);
 
+typedef dfsch_object_t* (*dfsch_collection_make_constructor_t)(dfsch_type_t* t);
+
 typedef struct dfsch_collection_methods_t {
   dfsch_collection_get_iterator_t get_iterator;
+  dfsch_collection_make_constructor_t make_constructor;
 } dfsch_collection_methods_t;
 
 
@@ -297,6 +300,9 @@ typedef int (*dfsch_mapping_set_if_not_exists_t)(dfsch_object_t* hash,
                                                  dfsch_object_t* key,
                                                  dfsch_object_t* value);
 
+typedef dfsch_object_t* (*dfsch_mapping_get_keys_t)(dfsch_object_t* map);
+typedef dfsch_object_t* (*dfsch_mapping_get_values_t)(dfsch_object_t* map);
+
 
 typedef struct dfsch_mapping_methods_t {
   dfsch_mapping_ref_t ref;
@@ -304,6 +310,9 @@ typedef struct dfsch_mapping_methods_t {
   dfsch_mapping_unset_t unset;
   dfsch_mapping_set_if_exists_t set_if_exists;
   dfsch_mapping_set_if_not_exists_t set_if_not_exists;
+
+  dfsch_mapping_get_keys_t get_keys;
+  dfsch_mapping_get_values_t get_values;
 } dfsch_mapping_methods_t;
 
 typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);
@@ -313,7 +322,6 @@ typedef struct dfsch_iterator_methods_t {
   dfsch_iterator_next_t next;
   dfsch_iterator_this_t this;
 } dfsch_iterator_methods_t;
-
 
 typedef struct dfsch_slot_t dfsch_slot_t;
 struct dfsch_type_t {
@@ -458,6 +466,27 @@ dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence);
 
 extern dfsch_collection_methods_t dfsch_sequence_collection_methods;
 #define DFSCH_COLLECTION_AS_SEQUENCE (&dfsch_sequence_collection_methods)
+
+typedef void (*dfsch_collection_constructor_add_t)(dfsch_object_t* constructor,
+                                                   dfsch_object_t* element);
+typedef dfsch_object_t* (*dfsch_collection_constructor_done_t)(dfsch_object_t* c);
+
+typedef struct dfsch_collection_constructor_type_t {
+  dfsch_type_t type;
+  dfsch_collection_constructor_add_t add;
+  dfsch_collection_constructor_done_t done;
+} dfsch_collection_constructor_type_t;
+
+extern dfsch_type_t dfsch_collection_constructor_type_type;
+#define DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE \
+  (&dfsch_collection_constructor_type_type)
+
+extern dfsch_collection_constructor_type_t dfsch_mutable_list_constructor_type;
+#define DFSCH_MUTABLE_LIST_CONSTRUCTOR_TYPE \
+  (&dfsch_mutable_list_constructor_type)
+extern dfsch_collection_constructor_type_t dfsch_vector_constructor_type;
+#define DFSCH_VECTOR_CONSTRUCTOR_TYPE (&dfsch_vector_constructor_type)
+
 
 /*
  * Objects should be always 8-byte aligned in memory, even on 32b platforms.

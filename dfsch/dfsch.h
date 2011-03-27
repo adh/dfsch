@@ -244,6 +244,11 @@ extern "C" {
                                  dfsch_object_t* item);
   extern dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col);
 
+  extern dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct);
+  extern void dfsch_collection_constructor_add(dfsch_object_t* constructor,
+                                               dfsch_object_t* element);
+  extern dfsch_object_t* dfsch_collection_constructor_done(dfsch_object_t* c);
+
   /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, size_t index);
   extern void dfsch_set_list_item(dfsch_object_t* list, 
