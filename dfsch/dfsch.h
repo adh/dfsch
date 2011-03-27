@@ -626,6 +626,9 @@ extern "C" {
   size_t dfsch_assert_sequence_index(dfsch_object_t* seq, size_t idx, size_t len);  
 
   dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col);
+  dfsch_object_t* dfsch_coerce_collection(dfsch_object_t* col,
+                                          dfsch_type_t* type);
+
   dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
                                      size_t k);
   void dfsch_sequence_set(dfsch_object_t* seq,

@@ -1068,6 +1068,18 @@ DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection")
 
   return dfsch_collection_get_iterator(obj);
 }
+
+DFSCH_DEFINE_PRIMITIVE(coerce_collection, 
+                       "Ensure that collection is of specified collection type"){
+  dfsch_object_t* collection;
+  dfsch_type_t* result_type;
+  DFSCH_OBJECT_ARG(args, collection);
+  DFSCH_TYPE_ARG(args, result_type);
+  DFSCH_ARG_END(args);
+
+  return dfsch_coerce_collection(collection, result_type);
+}
+
 DFSCH_DEFINE_PRIMITIVE(collection_2_list, 
                        "Convert arbitrary collection to list"){
   object_t* col;
@@ -1373,6 +1385,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defcanon_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
+  dfsch_defcanon_cstr(ctx, "coerce-collection", 
+                      DFSCH_PRIMITIVE_REF(coerce_collection));
   dfsch_defcanon_cstr(ctx, "collection->list", 
                       DFSCH_PRIMITIVE_REF(collection_2_list));
   dfsch_defcanon_cstr(ctx, "collection->reversed-list", 

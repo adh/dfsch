@@ -321,6 +321,23 @@ dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
   return DFSCH_TYPE_OF(it)->iterator->this(it);
 }
 
+dfsch_object_t* dfsch_coerce_collection(dfsch_object_t* seq,
+                                        dfsch_type_t* type){
+  dfsch_object_t* it;
+  dfsch_object_t* cs;
+  if (dfsch_superclass_p(DFSCH_TYPE_OF(seq), type)){
+    return seq;
+  }
+  it = dfsch_collection_get_iterator(seq);
+  cs = dfsch_make_collection_constructor(type);
+  while (it){
+    dfsch_collection_constructor_add(cs, 
+                                     dfsch_iterator_this(it));
+    it = dfsch_iterator_next(it);
+  }
+  return dfsch_collection_constructor_done(cs);
+}
+
 dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
                                   dfsch_object_t* key){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
