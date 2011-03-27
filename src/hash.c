@@ -532,6 +532,10 @@ dfsch_object_t* dfsch_hash_2_alist(dfsch_hash_t* hash){
 }
 
 static void alist_2_hash_core(dfsch_object_t* alist, dfsch_hash_t* hash){
+}
+
+dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist){
+  dfsch_hash_t* hash = dfsch_make_hash();
   dfsch_object_t* i = alist;
   
   while (dfsch_pair_p(i)){
@@ -544,16 +548,22 @@ static void alist_2_hash_core(dfsch_object_t* alist, dfsch_hash_t* hash){
     i = dfsch_cdr(i);
   }
 
-}
-
-dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist){
-  dfsch_hash_t* hash = dfsch_make_hash();
-  alist_2_hash_core(alist, hash);
   return hash;
 }
 dfsch_object_t* dfsch_alist_2_idhash(dfsch_object_t* alist){
-  dfsch_hash_t* hash = dfsch_make_idhash();
-  alist_2_hash_core(alist, hash);
+  dfsch_hash_t* hash = dfsch_make_hash();
+  dfsch_object_t* i = alist;
+  
+  while (dfsch_pair_p(i)){
+    dfsch_object_t* item = dfsch_car(i);
+    dfsch_object_t* name = dfsch_list_item(item, 0);
+    dfsch_object_t* value = dfsch_list_item(item, 1);
+
+    dfsch_idhash_set(hash, name, value);
+
+    i = dfsch_cdr(i);
+  }
+
   return hash;
 }
 
@@ -598,6 +608,28 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_idhash, NULL){
   return dfsch_alist_2_idhash(alist);
 }
 
+DFSCH_DEFINE_PRIMITIVE(hash, NULL){
+  dfsch_hash_t* hash = dfsch_make_hash();
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* key;
+    dfsch_object_t* value;
+    DFSCH_OBJECT_ARG(args, key);
+    DFSCH_OBJECT_ARG(args, value);
+    dfsch_hash_set(hash, key, value);
+  }
+  return hash;
+}
+DFSCH_DEFINE_PRIMITIVE(idhash, NULL){
+  dfsch_hash_t* hash = dfsch_make_idhash();
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* key;
+    dfsch_object_t* value;
+    DFSCH_OBJECT_ARG(args, key);
+    DFSCH_OBJECT_ARG(args, value);
+    dfsch_idhash_set(hash, key, value);
+  }
+  return hash;
+}
 
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
@@ -613,5 +645,9 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(make_idhash));
   dfsch_defcanon_cstr(ctx, "alist->identity-hash", 
                     DFSCH_PRIMITIVE_REF(alist_2_idhash));
+  dfsch_defcanon_cstr(ctx, "hash", 
+                    DFSCH_PRIMITIVE_REF(hash));
+  dfsch_defcanon_cstr(ctx, "identity-hash", 
+                    DFSCH_PRIMITIVE_REF(idhash));
 
 }
