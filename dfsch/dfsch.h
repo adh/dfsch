@@ -913,6 +913,22 @@ extern "C" {
   }                                                                     \
   dfsch___value = DFSCH_FAST_CAR((args));                               \
   (args) = DFSCH_FAST_CDR((args));
+
+#define DFSCH_KEYWORD_PARSER_BEGIN_KWONLY(args)                         \
+  while (DFSCH_PAIR_P((args))){                                         \
+  dfsch_object_t* dfsch___keyword;                                      \
+  dfsch_object_t* dfsch___value;                                        \
+  dfsch___keyword = DFSCH_FAST_CAR((args));                             \
+  if (!dfsch_keyword_p(dfsch___keyword)) {                              \
+    break;                                                              \
+  }                                                                     \
+  (args) = DFSCH_FAST_CDR((args));                                      \
+  if (!DFSCH_PAIR_P((args))){                                           \
+    dfsch_error("Keyword without argument", dfsch___keyword); \
+  }                                                                     \
+  dfsch___value = DFSCH_FAST_CAR((args));                               \
+  (args) = DFSCH_FAST_CDR((args));
+
   
 #define DFSCH_KEYWORD(name, variable)                   \
   if (dfsch_compare_keyword(dfsch___keyword, (name))){  \

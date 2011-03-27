@@ -497,29 +497,43 @@ DFSCH_DEFINE_PRIMITIVE(map, 0){
   int i;
   object_t** its;
   dfsch_list_collector_t* al;
-  dfsch_list_collector_t* rl = dfsch_make_list_collector();
-
+  dfsch_type_t* result_type = NULL;
+  dfsch_object_t* rc;
+  
   DFSCH_OBJECT_ARG(args, func);
+  DFSCH_KEYWORD_PARSER_BEGIN_KWONLY(args);
+  DFSCH_KEYWORD_GENERIC("result-type", result_type, dfsch_object_as_type);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  if (DFSCH_PAIR_P(args) && !result_type){
+    result_type = DFSCH_TYPE_OF(DFSCH_FAST_CAR(args));
+  }
+  if (!result_type){
+    result_type = DFSCH_LIST_TYPE;
+  }
+
+  rc = dfsch_make_collection_constructor(result_type);
+  
   its = dfsch_list_as_array(args, &len);
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
     if (!its[i]){
-      return NULL;
+      return dfsch_collection_constructor_done(rc);
     }
   }
-
 
   while (1){
     al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
       dfsch_list_collect(al, dfsch_iterator_this(its[i]));
     }
-    dfsch_list_collect(rl,
-                       dfsch_apply(func, dfsch_collected_list(al)));
+    dfsch_collection_constructor_add(rc,
+                                     dfsch_apply(func, 
+                                                 dfsch_collected_list(al)));
     for (i = 0; i < len; i++){
       its[i] = dfsch_iterator_next(its[i]);
       if (!its[i]){
-        return dfsch_collected_list(rl);
+        return dfsch_collection_constructor_done(rc);
       }
     }
   }
