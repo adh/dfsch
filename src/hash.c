@@ -55,8 +55,13 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
+static dfsch_object_t* hash_make_constructor(dfsch_type_t* discard){
+  return dfsch_make_mapping_constructor(dfsch_hash_make(DFSCH_HASH_EQUAL));
+}
+
 static dfsch_collection_methods_t hash_table_col = {
-  .get_iterator = dfsch_hash_2_alist
+  .get_iterator = dfsch_hash_2_alist,
+  .make_constructor = hash_make_constructor,
 };
 static dfsch_mapping_methods_t hash_table_map = {
   .ref = dfsch_hash_ref,

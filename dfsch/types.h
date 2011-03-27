@@ -463,6 +463,7 @@ extern dfsch_type_t dfsch_sequence_iterator_type;
   ((dfsch_type_t*)&dfsch_sequence_iterator_type)
 
 dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence);
+dfsch_object_t* dfsch_make_mapping_constructor(dfsch_object_t* map);
 
 extern dfsch_collection_methods_t dfsch_sequence_collection_methods;
 #define DFSCH_COLLECTION_AS_SEQUENCE (&dfsch_sequence_collection_methods)
@@ -486,6 +487,9 @@ extern dfsch_collection_constructor_type_t dfsch_mutable_list_constructor_type;
   (&dfsch_mutable_list_constructor_type)
 extern dfsch_collection_constructor_type_t dfsch_vector_constructor_type;
 #define DFSCH_VECTOR_CONSTRUCTOR_TYPE (&dfsch_vector_constructor_type)
+
+extern dfsch_collection_constructor_type_t dfsch_mapping_constructor_type;
+#define DFSCH_MAPPING_CONSTRUCTOR_TYPE (&dfsch_mapping_constructor_type)
 
 
 /*

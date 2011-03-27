@@ -2689,3 +2689,47 @@ dfsch_type_t dfsch_invalid_object_type = {
   .type = DFSCH_SPECIAL_TYPE,
   .name = "invalid-object"
 };
+
+
+typedef struct map_constructor_t {
+  dfsch_collection_constructor_type_t* type;
+  dfsch_object_t* map;
+} map_constructor_t;
+
+static void map_constructor_add(map_constructor_t* mc,
+                                dfsch_object_t* element){
+  dfsch_object_t* elt = DFSCH_ASSERT_SEQUENCE(element); /* ensure ordered */
+  dfsch_object_t* ei = dfsch_collection_get_iterator(elt);
+  dfsch_object_t* key;
+  dfsch_object_t* value;
+  if (!ei){
+    dfsch_error("Adding empty item into mapping", elt);
+  }
+  key = dfsch_iterator_this(ei);
+  ei = dfsch_iterator_next(ei);
+  if (!ei){
+    dfsch_error("Value expected", elt);
+  }
+  value = dfsch_iterator_this(ei);
+  dfsch_mapping_set(mc->map, key, value);
+}
+
+static dfsch_object_t* map_constructor_done(map_constructor_t* mc){
+  return mc->map;
+}
+
+dfsch_collection_constructor_type_t dfsch_mapping_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .name = "mapping-constructor",
+    .size = sizeof(map_constructor_t),
+  },
+  .add = map_constructor_add,
+  .done = map_constructor_done,
+};
+
+dfsch_object_t* dfsch_make_mapping_constructor(dfsch_object_t* map){
+  map_constructor_t* mc = dfsch_make_object(DFSCH_MAPPING_CONSTRUCTOR_TYPE);
+  mc->map = map;
+  return mc;
+}
