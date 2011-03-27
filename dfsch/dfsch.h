@@ -943,7 +943,7 @@ extern "C" {
   
 
 #define DFSCH_KEYWORD_PARSER_END(args)                          \
-  dfsch_error("exception:unknown-keyword", dfsch___keyword);    \
+  dfsch_error("Unknown keyword", dfsch___keyword);              \
 }
 #define DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(args)              \
 }
