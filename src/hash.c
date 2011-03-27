@@ -649,5 +649,4 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(hash));
   dfsch_defcanon_cstr(ctx, "identity-hash", 
                     DFSCH_PRIMITIVE_REF(idhash));
-
 }
