@@ -50,12 +50,104 @@ struct hash_entry_t {
   hash_entry_t* next;
 };
 
+typedef struct hash_iterator_t {
+  dfsch_type_t* type;
+  dfsch_hash_t* hash;
+  size_t bucket;
+  hash_entry_t* entry;
+} hash_iterator_t;
+
+static hash_iterator_t* hash_iterator_next(hash_iterator_t* it){
+  DFSCH_RWLOCK_RDLOCK(&it->hash->lock);
+  if (!it->entry || !it->entry->next){
+    if (it->entry){
+      it->bucket++;
+    }
+    it->entry = NULL;
+    for (; it->bucket <= it->hash->mask; it->bucket++){
+      if (it->hash->vector[it->bucket]){
+        it->entry = it->hash->vector[it->bucket];
+        break;
+      }
+    }
+    if (!it->entry){
+      DFSCH_RWLOCK_UNLOCK(&it->hash->lock);
+      return NULL;
+    }
+  } else {
+    it->entry = it->entry->next;
+  }
+  DFSCH_RWLOCK_UNLOCK(&it->hash->lock);
+  return it;
+}
+static dfsch_object_t* hash_iterator_this_item(hash_iterator_t* it){
+  return dfsch_list(2, it->entry->key, it->entry->value);
+}
+static dfsch_object_t* hash_iterator_this_key(hash_iterator_t* it){
+  return it->entry->key;
+}
+static dfsch_object_t* hash_iterator_this_value(hash_iterator_t* it){
+  return it->entry->value;
+}
+
+static dfsch_iterator_methods_t hash_item_it_methods = {
+  .next = hash_iterator_next,
+  .this = hash_iterator_this_item,
+};
+dfsch_type_t dfsch_hash_items_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE, 
+  .name = "hash-items-iterator",
+  .size = sizeof(hash_iterator_t),
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &hash_item_it_methods,
+};
+
+static dfsch_iterator_methods_t hash_key_it_methods = {
+  .next = hash_iterator_next,
+  .this = hash_iterator_this_key,
+};
+dfsch_type_t dfsch_hash_keys_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE, 
+  .name = "hash-keys-iterator",
+  .size = sizeof(hash_iterator_t),
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &hash_key_it_methods,
+};
+
+static dfsch_iterator_methods_t hash_value_it_methods = {
+  .next = hash_iterator_next,
+  .this = hash_iterator_this_value,
+};
+dfsch_type_t dfsch_hash_values_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE, 
+  .name = "hash-values-iterator",
+  .size = sizeof(hash_iterator_t),
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &hash_value_it_methods,
+};
+
+static dfsch_object_t* get_hash_iterator(dfsch_hash_t* h, dfsch_type_t* type){
+  hash_iterator_t* it = dfsch_make_object(type);
+  it->hash = h;
+  return hash_iterator_next(it);
+}
+
+static dfsch_object_t* get_hash_items_iterator(dfsch_hash_t* h){
+  return get_hash_iterator(h, DFSCH_HASH_ITEMS_ITERATOR_TYPE);
+}
+static dfsch_object_t* get_hash_keys_iterator(dfsch_hash_t* h){
+  return get_hash_iterator(h, DFSCH_HASH_KEYS_ITERATOR_TYPE);
+}
+static dfsch_object_t* get_hash_values_iterator(dfsch_hash_t* h){
+  return get_hash_iterator(h, DFSCH_HASH_VALUES_ITERATOR_TYPE);
+}
+
 static dfsch_object_t* hash_make_constructor(dfsch_type_t* discard){
   return dfsch_make_mapping_constructor(dfsch_make_hash());
 }
 
 static dfsch_collection_methods_t hash_table_col = {
-  .get_iterator = dfsch_hash_2_alist,
+  .get_iterator = get_hash_items_iterator,
   .make_constructor = hash_make_constructor,
 };
 static dfsch_mapping_methods_t hash_table_map = {
@@ -63,7 +155,9 @@ static dfsch_mapping_methods_t hash_table_map = {
   .set = dfsch_hash_set,
   .unset = dfsch_hash_unset,
   .set_if_exists = dfsch_hash_set_if_exists,
-  //.set_if_not_exists = dfsch_hash_set_if_not_exists,
+
+  .get_keys_iterator = get_hash_keys_iterator,
+  .get_values_iterator = get_hash_values_iterator,
 };
 
 static void hash_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
@@ -116,7 +210,7 @@ static dfsch_object_t* idhash_make_constructor(dfsch_type_t* discard){
 }
 
 static dfsch_collection_methods_t idhash_table_col = {
-  .get_iterator = dfsch_hash_2_alist,
+  .get_iterator = get_hash_items_iterator,
   .make_constructor = idhash_make_constructor,
 };
 static dfsch_mapping_methods_t idhash_table_map = {

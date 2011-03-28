@@ -300,8 +300,8 @@ typedef int (*dfsch_mapping_set_if_not_exists_t)(dfsch_object_t* hash,
                                                  dfsch_object_t* key,
                                                  dfsch_object_t* value);
 
-typedef dfsch_object_t* (*dfsch_mapping_get_keys_t)(dfsch_object_t* map);
-typedef dfsch_object_t* (*dfsch_mapping_get_values_t)(dfsch_object_t* map);
+typedef dfsch_object_t* (*dfsch_mapping_get_keys_iterator_t)(dfsch_object_t* map);
+typedef dfsch_object_t* (*dfsch_mapping_get_values_iterator_t)(dfsch_object_t* map);
 
 
 typedef struct dfsch_mapping_methods_t {
@@ -311,8 +311,8 @@ typedef struct dfsch_mapping_methods_t {
   dfsch_mapping_set_if_exists_t set_if_exists;
   dfsch_mapping_set_if_not_exists_t set_if_not_exists;
 
-  dfsch_mapping_get_keys_t get_keys;
-  dfsch_mapping_get_values_t get_values;
+  dfsch_mapping_get_keys_iterator_t get_keys_iterator;
+  dfsch_mapping_get_values_iterator_t get_values_iterator;
 } dfsch_mapping_methods_t;
 
 typedef dfsch_object_t* (*dfsch_iterator_next_t)(dfsch_object_t*);

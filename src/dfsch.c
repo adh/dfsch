@@ -393,6 +393,22 @@ int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
   }
 }
 
+dfsch_object_t* dfsch_mapping_get_keys_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_keys_iterator){
+    dfsch_error("Mapping does not support iteration over keys", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_keys_iterator(m);  
+}
+dfsch_object_t* dfsch_mapping_get_values_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_values_iterator){
+    dfsch_error("Mapping does not support iteration over values", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_values_iterator(m);  
+}
+
+
 dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct){
   if (!ct->collection){
     dfsch_error("Not a collection type", ct);

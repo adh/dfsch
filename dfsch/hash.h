@@ -110,6 +110,13 @@ extern "C" {
 #define DFSCH_IDENTITY_HASH_TABLE_TYPE (&dfsch_identity_hash_table_type)
 
 
+  extern dfsch_type_t dfsch_hash_items_iterator_type;
+#define DFSCH_HASH_ITEMS_ITERATOR_TYPE (&dfsch_hash_items_iterator_type)
+  extern dfsch_type_t dfsch_hash_keys_iterator_type;
+#define DFSCH_HASH_KEYS_ITERATOR_TYPE (&dfsch_hash_keys_iterator_type)
+  extern dfsch_type_t dfsch_hash_values_iterator_type;
+#define DFSCH_HASH_VALUES_ITERATOR_TYPE (&dfsch_hash_values_iterator_type)
+
 
 #ifdef __cplusplus
 }

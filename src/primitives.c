@@ -1238,6 +1238,24 @@ DFSCH_DEFINE_PRIMITIVE(map_set_if_not_exists,
   dfsch_mapping_set_if_not_exists(obj, key, value);
   return obj;
 }
+DFSCH_DEFINE_PRIMITIVE(map_keys, 
+                       "Return iterator iterating over mapping keys"){
+  dfsch_object_t* obj;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_mapping_get_keys_iterator(obj);
+}
+DFSCH_DEFINE_PRIMITIVE(map_values, 
+                       "Return iterator iterating over mapping values"){
+  dfsch_object_t* obj;
+
+  DFSCH_OBJECT_ARG(args, obj);
+  DFSCH_ARG_END(args);
+
+  return dfsch_mapping_get_values_iterator(obj);
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1406,6 +1424,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));
   dfsch_defcanon_cstr(ctx, "map-set-if-not-exists!", 
                       DFSCH_PRIMITIVE_REF(map_set_if_not_exists));
+  dfsch_defcanon_cstr(ctx, "map-keys", DFSCH_PRIMITIVE_REF(map_keys));
+  dfsch_defcanon_cstr(ctx, "map-values", DFSCH_PRIMITIVE_REF(map_values));
 
 
 }

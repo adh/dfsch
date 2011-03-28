@@ -658,6 +658,8 @@ extern "C" {
                                       dfsch_object_t* key,
                                       dfsch_object_t* value);
 
+  dfsch_object_t* dfsch_mapping_get_keys_iterator(dfsch_object_t* map);
+  dfsch_object_t* dfsch_mapping_get_values_iterator(dfsch_object_t* map);
 
 
   /** @} */
