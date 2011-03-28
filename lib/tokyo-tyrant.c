@@ -46,13 +46,7 @@ static void db_unset(db_t* db,
   return tcrdbout(db->adb, k->ptr, k->len);
 }
 
-static dfsch_mapping_methods_t db_mapping = {
-  .ref = db_ref,
-  .set = db_set,
-  .unset = db_unset,
-};
-
-static dfsch_object_t* db_get_iterator(db_t* db){
+static dfsch_object_t* db_get_keys_iterator(db_t* db){
   int len;
   char* res;
   dfsch_object_t* it = NULL;
@@ -68,6 +62,37 @@ static dfsch_object_t* db_get_iterator(db_t* db){
 
   return it;
 }
+
+static dfsch_mapping_methods_t db_mapping = {
+  .ref = db_ref,
+  .set = db_set,
+  .unset = db_unset,
+  .get_keys_iterator = db_get_keys_iterator,
+};
+
+static dfsch_object_t* db_get_iterator(db_t* db){
+  int len;
+  char* res;
+  int klen;
+  char* kres;
+  dfsch_object_t* it = NULL;
+  if (!tcrdbiterinit(db->adb)){
+    dfsch_error("Error in interinit", db);
+  }
+
+  while (kres = tcrdbiternext(db->adb, &klen)){
+    res = tcrdbget(db->adb, kres, klen, &len);
+    it = dfsch_cons(dfsch_list(2, 
+                               dfsch_make_byte_vector(kres, klen),
+                               dfsch_make_byte_vector(res, len)),
+                    it);
+    free(res);
+    free(kres);
+  }
+
+  return it;
+}
+
 
 static dfsch_collection_methods_t db_collection = {
   .get_iterator = db_get_iterator,
