@@ -173,7 +173,7 @@ struct dfsch_parser_ctx_t {
 
   dfsch_object_t* env;
   dfsch_object_t* source;
-  dfsch_object_t* tag_map;
+  dfsch_hash_t* tag_map;
 };
 
 static void parser_reset(dfsch_parser_ctx_t *ctx){
@@ -184,7 +184,7 @@ static void parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->line = 1;
   ctx->column = 1;
   ctx->error = 0;
-  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
+  ctx->tag_map = dfsch_make_idhash();
 }
 
 static void parser_abort(dfsch_parser_ctx_t *ctx, char* symbol){
@@ -224,7 +224,7 @@ dfsch_parser_ctx_t* dfsch_parser_create(){
   ctx->error = 0;
 
   ctx->env = NULL;
-  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
+  ctx->tag_map = dfsch_make_idhash();
 
   return ctx;
 }
@@ -359,8 +359,8 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
         dfsch_object_t* tag = ctx->parser->tag;
         dfsch_object_t* pho;
         parser_pop(ctx);
-        dfsch_hash_ref_fast(ctx->tag_map, tag, &pho);
-        dfsch_hash_set(ctx->tag_map, tag, obj);
+        pho = dfsch_idhash_ref(ctx->tag_map, tag);
+        dfsch_idhash_set(ctx->tag_map, tag, obj);
         resolve_circular_references(obj, pho);
         parse_object(ctx, obj);
         return;
@@ -370,7 +370,7 @@ void dfsch_parser_parse_object(dfsch_parser_ctx_t *ctx, dfsch_object_t* obj){
       parser_abort(ctx, "Unexpected object");
     }
   } else {
-    ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
+    ctx->tag_map = dfsch_make_idhash();
     if (!(*ctx->callback)(obj,ctx->baton)){
       ctx->error = 1;
     }
@@ -438,26 +438,21 @@ static void parse_eval(dfsch_parser_ctx_t *ctx){
   ctx->parser->last = NULL;
   ctx->parser->front = NULL;
 }
+
 static void parse_tag_definition(dfsch_parser_ctx_t* ctx){
   parser_push(ctx);
   ctx->parser->state = P_TAG_DEFINITION;
   ctx->parser->tag = dfsch_make_number_from_long(ctx->hash_arg);
-  dfsch_hash_set(ctx->tag_map, ctx->parser->tag, DFSCH_INVALID_OBJECT);
+  dfsch_idhash_set(ctx->tag_map, ctx->parser->tag, dfsch_gensym());
 }
 static void parse_tag_reference(dfsch_parser_ctx_t* ctx){
   dfsch_object_t* val;
   dfsch_object_t* tag = dfsch_make_number_from_long(ctx->hash_arg);
-  if (!dfsch_hash_ref_fast(ctx->tag_map, 
-                           tag,
-                           &val)){
+  val = dfsch_idhash_ref(ctx->tag_map, tag);
+  if (val == DFSCH_INVALID_OBJECT){
     parser_abort(ctx, "Reference to undefined tag");
   }
   
-  if (val == DFSCH_INVALID_OBJECT){
-    val = dfsch_gensym();
-    dfsch_hash_set(ctx->tag_map, tag, val);
-  }
-
   parse_object(ctx, val);
 }
 
@@ -1258,7 +1253,7 @@ void dfsch_parser_reset(dfsch_parser_ctx_t *ctx){
   ctx->parser = NULL;
   ctx->level = 0 ;
   ctx->error = 0;
-  ctx->tag_map = dfsch_hash_make(DFSCH_HASH_EQ);
+  ctx->tag_map = dfsch_make_idhash();
 }
 
 void dfsch_parser_set_source(dfsch_parser_ctx_t* ctx, dfsch_object_t* source){

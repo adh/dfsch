@@ -38,93 +38,84 @@ extern "C" {
 #define DFSCH_HASH_EQV 1
 #define DFSCH_HASH_EQUAL 2
 
+  typedef struct dfsch_hash_t dfsch_hash_t;
+
   /**
    * Create new hash table object
    */
-  extern dfsch_object_t* dfsch_hash_make(int mode);
-
-  /**
-   * Check whenever given object is hashtable
-   */
-  extern int dfsch_hash_p(dfsch_object_t* obj);
-
-  extern int dfsch_hash_ref_fast(dfsch_object_t* hash_obj,
-                                 dfsch_object_t* key,
-                                 dfsch_object_t** res);
+  extern dfsch_object_t* dfsch_make_hash();
+  extern dfsch_object_t* dfsch_make_idhash();
 
   /**
    * Get given entry in hashtable.
    *
    * returns DFSCH_INVALID_OBJECT when not found.
    */
-  extern dfsch_object_t* dfsch_hash_ref(dfsch_object_t* hash, 
+  extern dfsch_object_t* dfsch_hash_ref(dfsch_hash_t* hash, 
                                         dfsch_object_t* key);
+  extern dfsch_object_t* dfsch_idhash_ref(dfsch_hash_t* hash, 
+                                          dfsch_object_t* key);
 
   /**
    * Associate value with key
    */
-  extern void dfsch_hash_set(dfsch_object_t* hash,
+  extern void dfsch_hash_set(dfsch_hash_t* hash,
                              dfsch_object_t* key,
                              dfsch_object_t* value);
+  extern void dfsch_idhash_set(dfsch_hash_t* hash,
+                               dfsch_object_t* key,
+                               dfsch_object_t* value);
 
-  /**
-   * Associate value with key
-   */
-  extern void dfsch_hash_put(dfsch_object_t* hash,
-                             dfsch_object_t* key,
-                             dfsch_object_t* value);
-  
   /**
    * Delete given key.
    */
-  extern int dfsch_hash_unset(dfsch_object_t* hash,
+  extern int dfsch_hash_unset(dfsch_hash_t* hash,
                               dfsch_object_t* key);
+  extern int dfsch_idhash_unset(dfsch_hash_t* hash,
+                                dfsch_object_t* key);
   
   /**
    * Set value associated with given key only when there is already such 
    * key.
    */
-  extern int dfsch_hash_set_if_exists(dfsch_object_t* hash,
+  extern int dfsch_hash_set_if_exists(dfsch_hash_t* hash,
                                       dfsch_object_t* key,
                                       dfsch_object_t* value);
+  extern int dfsch_idhash_set_if_exists(dfsch_hash_t* hash,
+                                        dfsch_object_t* key,
+                                        dfsch_object_t* value);
+
+  extern int dfsch_hash_set_if_not_exists(dfsch_hash_t* hash,
+                                          dfsch_object_t* key,
+                                          dfsch_object_t* value);
+  extern int dfsch_idhash_set_if_not_exists(dfsch_hash_t* hash,
+                                            dfsch_object_t* key,
+                                            dfsch_object_t* value);
   
   /**
    * Convert hash table to list of associations.
    */
-  extern dfsch_object_t* dfsch_hash_2_alist(dfsch_object_t* hash_obj);
+  extern dfsch_object_t* dfsch_hash_2_alist(dfsch_hash_t* hash);
 
   /**
    * Convert list of associations to hash table.
    */
-  extern dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist,
-                                            int mode);
+  extern dfsch_object_t* dfsch_alist_2_hash(dfsch_object_t* alist);
+  extern dfsch_object_t* dfsch_alist_2_idhash(dfsch_object_t* alist);
   
-  typedef int (*dfsch_custom_hash_ref_t)(dfsch_object_t* hash, 
-                                         dfsch_object_t* key,
-                                         dfsch_object_t** res);
-  typedef void (*dfsch_custom_hash_set_t)(dfsch_object_t* hash, 
-                                          dfsch_object_t* key,
-                                          dfsch_object_t* value);
-  typedef int (*dfsch_custom_hash_unset_t)(dfsch_object_t* hash, 
-                                           dfsch_object_t* key);
-  typedef int (*dfsch_custom_hash_set_if_exists_t)(dfsch_object_t* hash, 
-                                                   dfsch_object_t* key,
-                                                   dfsch_object_t* value);
-  typedef dfsch_object_t* (*dfsch_custom_hash_2_alist)(dfsch_object_t* hash);
-
-  typedef struct dfsch_custom_hash_type_t {
-    dfsch_type_t parent;
-    
-    dfsch_custom_hash_ref_t ref;
-    dfsch_custom_hash_set_t set;
-    dfsch_custom_hash_unset_t unset;
-    dfsch_custom_hash_set_if_exists_t set_if_exists;
-    dfsch_custom_hash_2_alist hash_2_alist;
-  } dfsch_custom_hash_type_t;
 
   extern dfsch_type_t dfsch_hash_table_type;
 #define DFSCH_HASH_TABLE_TYPE (&dfsch_hash_table_type)
+  extern dfsch_type_t dfsch_identity_hash_table_type;
+#define DFSCH_IDENTITY_HASH_TABLE_TYPE (&dfsch_identity_hash_table_type)
 
+
+  extern dfsch_type_t dfsch_hash_items_iterator_type;
+#define DFSCH_HASH_ITEMS_ITERATOR_TYPE (&dfsch_hash_items_iterator_type)
+  extern dfsch_type_t dfsch_hash_keys_iterator_type;
+#define DFSCH_HASH_KEYS_ITERATOR_TYPE (&dfsch_hash_keys_iterator_type)
+  extern dfsch_type_t dfsch_hash_values_iterator_type;
+#define DFSCH_HASH_VALUES_ITERATOR_TYPE (&dfsch_hash_values_iterator_type)
 
 
 #ifdef __cplusplus

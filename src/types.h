@@ -3,6 +3,7 @@
 
 #include <dfsch/magic.h>
 #include <dfsch/eqhash.h>
+#include <dfsch/hash.h>
 
 typedef dfsch_object_t object_t;
 
@@ -36,7 +37,7 @@ typedef struct vector_t {
 
 typedef dfsch_macro_t macro_t;
 
-#define ENV_CONSTANT_FLAG 1
+//#define ENV_CONSTANT_FLAG 1
 
 typedef struct environment_t environment_t;
 
@@ -49,7 +50,7 @@ struct environment_t {
   environment_t* parent; 
   dfsch__thread_info_t* owner;
   dfsch_eqhash_t values;
-  dfsch_object_t* decls;
+  dfsch_hash_t* decls;
   dfsch_object_t* context;
   int flags;
 };

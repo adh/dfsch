@@ -321,6 +321,23 @@ dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
   return DFSCH_TYPE_OF(it)->iterator->this(it);
 }
 
+dfsch_object_t* dfsch_coerce_collection(dfsch_object_t* seq,
+                                        dfsch_type_t* type){
+  dfsch_object_t* it;
+  dfsch_object_t* cs;
+  if (dfsch_superclass_p(DFSCH_TYPE_OF(seq), type)){
+    return seq;
+  }
+  it = dfsch_collection_get_iterator(seq);
+  cs = dfsch_make_collection_constructor(type);
+  while (it){
+    dfsch_collection_constructor_add(cs, 
+                                     dfsch_iterator_this(it));
+    it = dfsch_iterator_next(it);
+  }
+  return dfsch_collection_constructor_done(cs);
+}
+
 dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
                                   dfsch_object_t* key){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
@@ -374,6 +391,47 @@ int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
   } else {
     return DFSCH_TYPE_OF(m)->mapping->set_if_not_exists(m, key, value);  
   }
+}
+
+dfsch_object_t* dfsch_mapping_get_keys_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_keys_iterator){
+    dfsch_error("Mapping does not support iteration over keys", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_keys_iterator(m);  
+}
+dfsch_object_t* dfsch_mapping_get_values_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_values_iterator){
+    dfsch_error("Mapping does not support iteration over values", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_values_iterator(m);  
+}
+
+
+dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct){
+  if (!ct->collection){
+    dfsch_error("Not a collection type", ct);
+  }
+  if (ct->collection->make_constructor) {
+    return ct->collection->make_constructor(ct);
+  } else {
+    return dfsch_make_list_collector(); /* fallback to mutable list */
+  }
+
+}
+void dfsch_collection_constructor_add(dfsch_object_t* constructor,
+                                      dfsch_object_t* element){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(constructor,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  ((dfsch_collection_constructor_type_t*)con->type)->add(con, element);
+}
+dfsch_object_t* dfsch_collection_constructor_done(dfsch_object_t* c){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(c,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  return ((dfsch_collection_constructor_type_t*)con->type)->done(con);
 }
 
 
@@ -800,7 +858,7 @@ void dfsch_unset(object_t* name, object_t* env){
   DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   while (i){
     if (i->decls){
-      dfsch_hash_unset(i->decls, name);
+      dfsch_idhash_unset(i->decls, name);
     }
     if(dfsch_eqhash_unset(&i->values, name)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -847,13 +905,16 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 
   if (!e->decls){
-    e->decls = dfsch_hash_make(DFSCH_HASH_EQ);
+    e->decls = dfsch_make_idhash();
   } else {
-    dfsch_hash_ref_fast(e->decls, variable, &old);
+    old = dfsch_idhash_ref(e->decls, variable);
+    if (old == DFSCH_INVALID_OBJECT){
+      old = NULL;
+    }
   }
   
-  dfsch_hash_set(e->decls, variable, 
-                 dfsch_cons(declaration, old));  
+  dfsch_idhash_set(e->decls, variable, 
+                   dfsch_cons(declaration, old));  
 
   if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
