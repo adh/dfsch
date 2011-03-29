@@ -1386,26 +1386,9 @@ DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"){
   value = dfsch_mapping_ref(obj, key);
 
   if (value == DFSCH_INVALID_OBJECT){
-    value = def;
-  }
-
-  return value;
-}
-DFSCH_DEFINE_PRIMITIVE(map_ref_list, "Get value of mapping, return list of matches (0 or 1)"){
-  dfsch_object_t* obj;
-  dfsch_object_t* key;
-  dfsch_object_t* value;
-
-  DFSCH_OBJECT_ARG(args, obj);
-  DFSCH_OBJECT_ARG(args, key);
-  DFSCH_ARG_END(args);
-  
-  value = dfsch_mapping_ref(obj, key);
-
-  if (value == DFSCH_INVALID_OBJECT){
-    return NULL;
+    return dfsch_values(2, def, NULL);
   } else {
-    return dfsch_cons(value, NULL);
+    return dfsch_values(2, value, DFSCH_SYM_TRUE);
   }
 }
 DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"){
@@ -1660,7 +1643,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
 
   dfsch_defcanon_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
-  dfsch_defcanon_cstr(ctx, "map-ref-list", DFSCH_PRIMITIVE_REF(map_ref_list));
   dfsch_defcanon_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));
   dfsch_defcanon_cstr(ctx, "map-unset!", DFSCH_PRIMITIVE_REF(map_unset));
   dfsch_defcanon_cstr(ctx, "map-set-if-exists!", DFSCH_PRIMITIVE_REF(map_set_if_exists));

@@ -1681,6 +1681,7 @@ dfsch_object_t* dfsch_values(int count, ...){
     ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * count);
   }
   
+  count--;
   for(i = 0; i < count; ++i){
     ti->values[i] = va_arg(al, dfsch_object_t*);
   }
