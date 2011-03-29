@@ -99,8 +99,9 @@ extern "C" {
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
 
-    dfsch_object_t* arg_scratch_pad[16];
+    dfsch_object_t* scratch_pad[16];
     int error_policy;
+    dfsch_object_t** values;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

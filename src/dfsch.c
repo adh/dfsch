@@ -1104,8 +1104,8 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
     /* We have to copy arguments from stack to scratchpad instead of
        building directly in scratchpad, because scratchpad might be
        used by recursive invocations*/
-    memcpy(ti->arg_scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
-    args = DFSCH_MAKE_CLIST(ti->arg_scratch_pad);
+    memcpy(ti->scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
+    args = DFSCH_MAKE_CLIST(ti->scratch_pad);
   }
 
   return dfsch_apply_impl(proc, args, context, esc, ti);
@@ -1577,6 +1577,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   sframe.data.apply.args = args;
   ti->stack_trace = &sframe;
 
+  ti->values = NULL;
   async_apply_check(ti);
 
 
