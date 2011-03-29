@@ -1259,21 +1259,6 @@ DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   return dfsch_apply_tr(func, arglist, esc);
 }
 
-DFSCH_DEFINE_PRIMITIVE(throw, 0){
-  dfsch_object_t* tag;
-  dfsch_object_t* value;
-  DFSCH_OBJECT_ARG(args, tag);
-  DFSCH_OBJECT_ARG(args, value);
-  
-  dfsch_throw(tag, value);
-  return NULL;
-}
-dfsch_object_t* dfsch_generate_throw(dfsch_object_t* tag,
-                                     dfsch_object_t* value){
-  return dfsch_immutable_list(3, DFSCH_PRIMITIVE_REF(throw), tag, value);
-}
-
-
 DFSCH_DEFINE_PRIMITIVE(make_macro, 
 		       "Allocate new macro object implemented by function"){
   NEED_ARGS(args,1);  
@@ -1620,8 +1605,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(make_slot_reader));
   dfsch_defcanon_cstr(ctx, "make-slot-writer", 
                       DFSCH_PRIMITIVE_REF(make_slot_writer));
-
-  dfsch_defcanon_cstr(ctx, "throw", DFSCH_PRIMITIVE_REF(throw));
 
   dfsch_defcanon_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defcanon_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));

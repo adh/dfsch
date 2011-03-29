@@ -95,6 +95,7 @@ extern "C" {
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
+    dfsch_object_t** throw_values;
 
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
@@ -160,6 +161,9 @@ extern "C" {
 
 #define DFSCH_CATCH_TAG (dfsch___ei->throw_tag)
 #define DFSCH_CATCH_VALUE (dfsch___ei->throw_value)
+#define DFSCH_CATCH_RESTORE_VALUES \
+  dfsch___ei->values = dfsch___ei->throw_values;\
+  dfsch___ei->throw_values = NULL;
   
 #define DFSCH_SCATCH_END                        \
   }}}

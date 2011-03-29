@@ -245,10 +245,29 @@ DFSCH_DEFINE_FORM(catch, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
     ret = dfsch_eval_proc(args, env);
   } DFSCH_CATCH {
     ret = DFSCH_CATCH_VALUE;
+    DFSCH_CATCH_RESTORE_VALUES;
   } DFSCH_CATCH_END;
 
   return ret;
 }
+
+DFSCH_DEFINE_FORM(throw, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
+  dfsch_object_t* tag;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, tag);
+  DFSCH_OBJECT_ARG(args, value);
+  
+  tag = dfsch_eval(tag, env);
+  value = dfsch_eval(value, env);
+
+  dfsch_throw(tag, value);
+  return NULL;
+}
+dfsch_object_t* dfsch_generate_throw(dfsch_object_t* tag,
+                                     dfsch_object_t* value){
+  return dfsch_immutable_list(3, DFSCH_FORM_REF(throw), tag, value);
+}
+
 
 DFSCH_FORM_METHOD_COMPILE(destructuring_bind){
   dfsch_object_t* args = DFSCH_FAST_CDR(expr);
@@ -598,6 +617,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "unwind-protect", DFSCH_FORM_REF(unwind_protect));
   dfsch_defcanon_cstr(ctx, "catch", DFSCH_FORM_REF(catch));
+  dfsch_defcanon_cstr(ctx, "throw", DFSCH_FORM_REF(throw));
 
 
   dfsch_defcanon_cstr(ctx, "destructuring-bind", 
