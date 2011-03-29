@@ -670,7 +670,11 @@ extern "C" {
 
   extern void dfsch_lock_libc();
   extern void dfsch_unlock_libc();
-  
+
+  dfsch_object_t* dfsch_values(int count, ...);
+  dfsch_object_t* dfsch_values_list(dfsch_object_t* list);
+  dfsch_object_t** dfsch_get_values(dfsch_object_t* ret);
+  dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret);
   
 #include <dfsch/strings.h>
 

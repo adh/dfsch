@@ -1663,6 +1663,7 @@ dfsch_object_t* dfsch_values(int count, ...){
   va_start(al,count);
 
   if (count == 0){
+    ti->values = DFSCH_INVALID_OBJECT;
     return NULL;
   }
 
@@ -1697,6 +1698,7 @@ dfsch_object_t* dfsch_values_list(dfsch_object_t* list){
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
 
   if (!DFSCH_PAIR_P(list)){
+    ti->values = DFSCH_INVALID_OBJECT;
     return NULL;
   }
   res = DFSCH_FAST_CAR(list);
@@ -1720,6 +1722,56 @@ dfsch_object_t* dfsch_values_list(dfsch_object_t* list){
     ti->values[i] = DFSCH_INVALID_OBJECT;
   }
   return res;
+}
+
+dfsch_object_t** dfsch_get_values(dfsch_object_t* ret){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  int count;
+  dfsch_object_t** res;
+  static dfsch_object_t* empty_values[] = {DFSCH_INVALID_OBJECT};
+
+  if (ti->values == DFSCH_INVALID_OBJECT){
+    return empty_values;
+  } 
+
+  if (!ti->values){
+    res = GC_MALLOC(sizeof(dfsch_object_t*)*2);
+    res[0] = ret;
+    res[1] = DFSCH_INVALID_OBJECT;
+    return res;
+  } 
+  
+  count = 0;
+  while (ti->values[count] != DFSCH_INVALID_OBJECT){
+    count++;
+  }
+
+  res = GC_MALLOC(sizeof(dfsch_object_t*) * (count + 2));
+  res[0] = ret;
+  memcpy(res + 1, ti->values, sizeof(dfsch_object_t*) * count);
+  res[count + 1] = DFSCH_INVALID_OBJECT;
+  return res;
+}
+dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch_list_collector_t* lc;
+  int i;
+  if (ti->values == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } 
+
+  if (!ti->values){
+    return dfsch_cons(ret, NULL);
+  } 
+
+  lc = dfsch_make_list_collector();
+
+  dfsch_list_collect(lc, ret);
+  for (i = 0; ti->values[i] != DFSCH_INVALID_OBJECT; i++){
+    dfsch_list_collect(lc, ti->values[i]);
+  }
+  
+  return dfsch_collected_list(lc);
 }
 
 
