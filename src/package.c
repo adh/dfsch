@@ -652,10 +652,15 @@ int dfsch_interned_symbol_p(dfsch_object_t* sym){
 }
 
 dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj){
+  dfsch_package_t* res;
   if (DFSCH_INSTANCE_P(obj, DFSCH_PACKAGE_TYPE)){
     return (dfsch_package_t*)obj;
   }
-  return dfsch_find_package(dfsch_string_or_symbol_to_cstr(obj));
+  res = dfsch_find_package(dfsch_string_or_symbol_to_cstr(obj));
+  if (!res){
+    dfsch_error("No such package", obj);
+  }
+  res;
 }
 
 static int package_inherited(dfsch_package_t* to,
