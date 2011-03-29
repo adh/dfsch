@@ -283,6 +283,12 @@ DFSCH_DEFINE_FORM(destructuring_bind,
 			    esc);
 }
 
+DFSCH_DEFINE_FORM(internal_get_values, 
+                  "Evaluate list of expressions and return all values of last form",
+                  {DFSCH_FORM_COMPILE(begin_like)}){
+  return dfsch_get_values_list(dfsch_eval_proc_tr(args, env, NULL));
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Basic special forms
@@ -450,15 +456,6 @@ dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name){
                               name);
 }
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Conditional short-hand macros
-//
-/////////////////////////////////////////////////////////////////////////////
-
-
-
 DFSCH_DEFINE_FORM(case, NULL, {}){
   object_t* val;
   DFSCH_OBJECT_ARG(args, val);
@@ -482,8 +479,6 @@ DFSCH_DEFINE_FORM(case, NULL, {}){
   return NULL;
   
 }
-
-
 
 DFSCH_DEFINE_FORM(current_environment, 
                   "Return lexically-enclosing environment", {}){
@@ -607,6 +602,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "destructuring-bind", 
                       DFSCH_FORM_REF(destructuring_bind));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE,
+                         "%get-values", DFSCH_FORM_REF(internal_get_values));
 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
                          DFSCH_FORM_REF(internal_lambda));

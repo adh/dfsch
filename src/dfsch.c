@@ -1750,6 +1750,7 @@ dfsch_object_t** dfsch_get_values(dfsch_object_t* ret){
   res[0] = ret;
   memcpy(res + 1, ti->values, sizeof(dfsch_object_t*) * count);
   res[count + 1] = DFSCH_INVALID_OBJECT;
+  ti->values = NULL;
   return res;
 }
 dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret){
@@ -1771,9 +1772,9 @@ dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret){
     dfsch_list_collect(lc, ti->values[i]);
   }
   
+  ti->values = NULL;
   return dfsch_collected_list(lc);
 }
-
 
 
 extern char dfsch__std_lib[];
