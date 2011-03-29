@@ -1480,6 +1480,19 @@ DFSCH_DEFINE_PRIMITIVE(map_values,
 }
 
 
+DFSCH_DEFINE_PRIMITIVE(values, 
+                       "Return multiple values"){
+  return dfsch_values_list(args);
+}
+DFSCH_DEFINE_PRIMITIVE(values_list, 
+                       "Return multiple values from list argument"){
+  dfsch_object_t* values;
+  DFSCH_OBJECT_ARG(args, values);
+  DFSCH_ARG_END(args);
+  return dfsch_values_list(values);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -1656,5 +1669,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "map-keys", DFSCH_PRIMITIVE_REF(map_keys));
   dfsch_defcanon_cstr(ctx, "map-values", DFSCH_PRIMITIVE_REF(map_values));
 
+  dfsch_defcanon_cstr(ctx, "values", DFSCH_PRIMITIVE_REF(values));
+  dfsch_defcanon_cstr(ctx, "values-list", DFSCH_PRIMITIVE_REF(values_list));
 
 }
