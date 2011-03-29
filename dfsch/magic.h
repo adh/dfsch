@@ -85,6 +85,7 @@ extern "C" {
     dfsch_object_t* async_apply;
 
     dfsch__stack_trace_frame_t* stack_trace;
+    dfsch_object_t** values;
     
     dfsch_object_t* macroexpanded_expr;
 
@@ -101,7 +102,6 @@ extern "C" {
 
     dfsch_object_t* scratch_pad[16];
     int error_policy;
-    dfsch_object_t** values;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

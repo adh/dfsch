@@ -1115,6 +1115,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
+  ti->values = NULL;
+
   if (!exp) 
     return NULL;
 
@@ -1151,7 +1153,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                           esc,
                           ti);
     } else {
-      r =  eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
+      r = eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
     }
     ti->stack_trace = sframe.next;
     return r;
