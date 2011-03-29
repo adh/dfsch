@@ -590,6 +590,85 @@ DFSCH_DEFINE_PRIMITIVE(mapcan, 0){
   }
 }
 
+DFSCH_DEFINE_PRIMITIVE(every, 
+                       "Returns true if all elements of sequence match predicate"){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_object_t* res = NULL;
+  dfsch_object_t* last = NULL;
+  dfsch_object_t* rl;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return DFSCH_SYM_TRUE;
+    }
+  }
+
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    if (!dfsch_apply(func, dfsch_collected_list(al))){
+      return NULL;
+    }
+   
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return DFSCH_SYM_TRUE;
+      }
+    }
+  }
+}
+
+DFSCH_DEFINE_PRIMITIVE(some, 
+                       "Returns true if at least one element of sequence matches predicate"){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  dfsch_list_collector_t* al;
+  dfsch_object_t* res = NULL;
+  dfsch_object_t* last = NULL;
+  dfsch_object_t* rl;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
+  }
+
+
+  while (1){
+    al = dfsch_make_list_collector();
+    for (i = 0; i < len; i++){
+      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+    }
+    if (dfsch_apply(func, dfsch_collected_list(al))){
+      return DFSCH_SYM_TRUE;
+    }
+   
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return NULL;
+      }
+    }
+  }
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(filter, 0){
   object_t* func;
   object_t* list;
@@ -1308,6 +1387,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "for-each", DFSCH_PRIMITIVE_REF(for_each));
   dfsch_defcanon_cstr(ctx, "map", DFSCH_PRIMITIVE_REF(map));
   dfsch_defcanon_cstr(ctx, "mapcan", DFSCH_PRIMITIVE_REF(mapcan));
+  dfsch_defcanon_cstr(ctx, "every", DFSCH_PRIMITIVE_REF(every));
+  dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
   dfsch_defcanon_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
   dfsch_defcanon_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
