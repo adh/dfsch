@@ -770,6 +770,73 @@ DFSCH_DEFINE_PRIMITIVE(find_if,
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(concatenate,
+                       "Return new collection containing concatenation "
+                       "of supplied collections"){
+  object_t* func;
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+
+  DFSCH_TYPE_ARG(args, result_type);
+
+  c = dfsch_make_collection_constructor(result_type);
+  while (DFSCH_PAIR_P(args)){
+    list = dfsch_collection_get_iterator(DFSCH_FAST_CAR(args));
+    while (list){
+      object_t* item =  dfsch_iterator_this(list);
+      object_t* t;
+      
+      dfsch_collection_constructor_add(c, item);
+      list = dfsch_iterator_next(list);
+    }
+    args = DFSCH_FAST_CDR(args);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+DFSCH_DEFINE_PRIMITIVE(merge,
+                       "Merge two sequences according to predicate"){
+  object_t* predicate;
+  object_t* seq1;
+  object_t* seq2;
+  dfsch_type_t* result_type;
+  dfsch_object_t* c;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, seq1);
+  DFSCH_OBJECT_ARG(args, seq2);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(seq1));
+  DFSCH_ARG_END(args);
+
+  seq1 = dfsch_collection_get_iterator(seq1);
+  seq2 = dfsch_collection_get_iterator(seq2);
+  c = dfsch_make_collection_constructor(result_type);
+  while (seq1 && seq2){
+    object_t* item1 =  dfsch_iterator_this(seq1);
+    object_t* item2 =  dfsch_iterator_this(seq2);
+
+    if (dfsch_apply(predicate, 
+                    dfsch_list(2, item1, item2))){
+      dfsch_collection_constructor_add(c, item1);
+      seq1 = dfsch_iterator_next(seq1);
+    } else {
+      dfsch_collection_constructor_add(c, item2);
+      seq2 = dfsch_iterator_next(seq2);
+    }
+  }
+  if (seq2){
+    seq1 = seq2;
+  }
+  while (seq1){
+    dfsch_collection_constructor_add(c, dfsch_iterator_this(seq1));
+    seq1 = dfsch_iterator_next(seq1);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+
 
 DFSCH_DEFINE_PRIMITIVE(reduce, 0){
   object_t* func;
@@ -1468,7 +1535,10 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
   dfsch_defcanon_cstr(ctx, "find-if", DFSCH_PRIMITIVE_REF(find_if));
+  dfsch_defcanon_cstr(ctx, "concatenate", DFSCH_PRIMITIVE_REF(concatenate));
+  dfsch_defcanon_cstr(ctx, "merge", DFSCH_PRIMITIVE_REF(merge));
   dfsch_defcanon_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
+
   dfsch_defcanon_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
   dfsch_defcanon_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
   dfsch_defcanon_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
