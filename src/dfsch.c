@@ -1654,6 +1654,76 @@ dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   return dfsch_eval(dfsch_backquote_expand(arg), env);
 }
 
+dfsch_object_t* dfsch_values(int count, ...){
+  dfsch_object_t* res;
+  size_t i;
+  va_list al;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  va_start(al,count);
+
+  if (count == 0){
+    return NULL;
+  }
+
+  res = va_arg(al, dfsch_object_t*);
+
+  if (count == 1){
+    ti->values = NULL;
+    va_end(al);
+    return res;
+  }
+
+  if (count < 16){
+    ti->values = ti->scratch_pad;
+  } else {
+    ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * count);
+  }
+  
+  for(i = 0; i < count; ++i){
+    ti->values[i] = va_arg(al, dfsch_object_t*);
+  }
+  ti->values[i] = DFSCH_INVALID_OBJECT;
+
+  va_end(al);
+  return res;
+}
+
+dfsch_object_t* dfsch_values_list(dfsch_object_t* list){
+  dfsch_object_t* res;
+  int count;
+  size_t i;
+  va_list al;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  if (!DFSCH_PAIR_P(list)){
+    return NULL;
+  }
+  res = DFSCH_FAST_CAR(list);
+
+  if (list == DFSCH_MAKE_CLIST(ti->scratch_pad)){
+    ti->values = ti->scratch_pad + 1; /* Fast path */
+  } else {
+    list = DFSCH_FAST_CDR(list);
+    count = dfsch_list_length_fast_bounded(list);
+
+    if (count < 15){
+      ti->values = ti->scratch_pad;
+    } else {
+      ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * (count + 1));
+    }
+  
+    for(i = 0; i < count; ++i){
+      ti->values[i] = DFSCH_FAST_CAR(list);
+      list = DFSCH_FAST_CDR(list);
+    }
+    ti->values[i] = DFSCH_INVALID_OBJECT;
+  }
+  return res;
+}
+
+
+
 extern char dfsch__std_lib[];
 
 void dfsch_core_language_register(dfsch_object_t* ctx){
