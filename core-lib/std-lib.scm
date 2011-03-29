@@ -35,14 +35,18 @@
 ;; dfsch%internal presents low level functionality required to implement some
 ;; core functionality in scheme code
 
-(define-macro (dfsch:with-gensyms gensyms &rest body)
+(define-macro (dfsch:with-gensyms gensyms &body body)
   `@(let ,(map (lambda (name) `(,name (gensym))) gensyms)
       ,@body))
 
-(define-macro (dfsch:loop &rest exprs)
+(define-macro (dfsch:loop &body exprs)
   (with-gensyms (tag)
     `@(catch ',tag
              (let ()
                (define (dfsch:break value) (throw ',tag value))
                (%loop ,@exprs)))))
 
+(define-macro (dfsch:multiple-value-bind variables values-form &body body)
+  `(destructuring-bind (&optional ,@variables &rest ,(gensym))
+                       (%get-values ,values-form)
+                       ,@body))
