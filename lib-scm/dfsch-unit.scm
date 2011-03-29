@@ -1,3 +1,26 @@
+;;; dfsch - Scheme-like Lisp dialect
+;;;   Unit testing library
+;;; Copyright (c) 2011 Ales Hakl
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining
+;;; a copy of this software and associated documentation files (the
+;;; "Software"), to deal in the Software without restriction, including
+;;; without limitation the rights to use, copy, modify, merge, publish,
+;;; distribute, sublicense, and/or sell copies of the Software, and to
+;;; permit persons to whom the Software is furnished to do so, subject to
+;;; the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be
+;;; included in all copies or substantial portions of the Software.
+;;; 
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+;;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 (provide :dfsch-unit)
 (require :cmdopts)
 (require :os)
@@ -5,7 +28,10 @@
 (define-package :dfsch-unit
   :uses '(:dfsch :cmdopts)
   :exports '(:<test>
+             :<failing-test>
              :define-test
+             :define-failing-test
+             :test-expander
              :run-test
              :assert-equal
              :assert-true
@@ -29,8 +55,9 @@
    (:categories :reader test-categories 
                 :initarg :categories)
    (:proc :reader test-procedure 
-          :initarg :proc)
-   (:mayfail? :reader test-mayfail?)))
+          :initarg :proc)))
+
+(define-class <failing-test> <test> ())
 
 (define-method ((initialize-instance :after) (test <test>) &rest args)
   (set! *tests* (cons test *tests*))
@@ -39,10 +66,10 @@
                         (cons test (map-ref *test-categories* category ()))))
             (test-categories test)))
 
-(define-macro (define-test name categories &rest body)
+(define (test-expander class name categories body)
   `(define ,name
      (letrec ((+this-test+ 
-               (make-instance <test> 
+               (make-instance ',class
                               :name ',name
                               :categories ',categories
                               :proc (lambda () 
@@ -51,6 +78,14 @@
                                               (+pass-count+ 0))
                                           ,@body
                                           (test-epilog))))))))))
+
+
+(define-macro (define-test name categories &rest body)
+  (test-expander <test> name categories body))
+
+(define-macro (define-failing-test name categories &rest body)
+  (test-expander <failing-test> name categories body))
+
 (define-macro (test-print &rest args)
   `(print (test-name +this-test+) ": " ,@args))
 
@@ -95,17 +130,16 @@
                      ',expr))))
 
 
+(define-method (test-failed (test <failing-test>))
+  (print (test-name test) ": \033[0;33mMAYFAIL\033[0;39m")
+  :mayfail)
+
 (define-method (test-failed (test <test>))
-  (if (test-mayfail? test)
-      (begin
-        (print (test-name test) ": \033[0;33mMAYFAIL\033[0;39m")
-        :mayfail)
-      (begin
-        (print (test-name test) ": \033[0;31mFAILED\033[0;39m")
-        :fail)))
+  (print (test-name test) ": \033[0;31mFAIL\033[0;39m")
+  :fail)
 
 (define-method (test-passed (test <test>))
-  (print (test-name test) ": \033[0;32mPASSED\033[0;39m")
+  (print (test-name test) ": \033[0;32mPASS\033[0;39m")
   :pass)
 
 (define-method (run-test (test <test>))
@@ -114,18 +148,27 @@
     ((:fail) (test-failed test))
     ((:pass) (test-passed test))))
 
-(define (run-tests list &key one-fail?)
-  (let ((passed 0) (failed 0) (mayfail 0))
+(define (run-tests list &key one-fail? trap-errors?)
+  (let ((passed 0) (failed 0) (mayfail 0) (errors 0))
     (catch 'fail
       (for-each (lambda (test)
-                  (case (run-test test)
-                    ((:fail) 
-                     (incr failed)
-                     (when one-fail? (throw 'fail)))
-                    ((:mayfail)
-                     (incr mayfail))
-                    ((:pass)
-                     (incr passed))))
+                  (multiple-value-bind (result err) 
+                      (if trap-errors? 
+                          (run-test test)
+                          (ignore-errors (run-test test)))
+                    (case result
+                      ((:fail) 
+                       (incr failed)
+                       (when one-fail? (throw 'fail)))
+                      ((())
+                       (print (test-name test) ": \033[0;31mERROR\033[0;39m: " err)
+                       (incr failed)
+                       (incr errors)
+                       (when one-fail? (throw 'fail)))
+                      ((:mayfail)
+                       (incr mayfail))
+                      ((:pass)
+                       (incr passed)))))
                 list))
     (print "  ***** Test suite run complete *****")
     (print "Tests passed:            " passed)
@@ -140,3 +183,4 @@
 
 (define (run-all-tests)
   (run-tests *tests*))
+
