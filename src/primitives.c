@@ -648,9 +648,6 @@ DFSCH_DEFINE_PRIMITIVE(every,
   int i;
   object_t** its;
   dfsch_list_collector_t* al;
-  dfsch_object_t* res = NULL;
-  dfsch_object_t* last = NULL;
-  dfsch_object_t* rl;
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
@@ -687,9 +684,7 @@ DFSCH_DEFINE_PRIMITIVE(some,
   int i;
   object_t** its;
   dfsch_list_collector_t* al;
-  dfsch_object_t* res = NULL;
-  dfsch_object_t* last = NULL;
-  dfsch_object_t* rl;
+  dfsch_object_t* t;
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
@@ -706,8 +701,9 @@ DFSCH_DEFINE_PRIMITIVE(some,
     for (i = 0; i < len; i++){
       dfsch_list_collect(al, dfsch_iterator_this(its[i]));
     }
-    if (dfsch_apply(func, dfsch_collected_list(al))){
-      return DFSCH_SYM_TRUE;
+    t = dfsch_apply(func, dfsch_collected_list(al));
+    if (t){
+      return t;
     }
    
     for (i = 0; i < len; i++){
