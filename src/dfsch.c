@@ -506,11 +506,15 @@ void dfsch_throw(dfsch_object_t* tag,
     if (i->tag == tag){
       ti->throw_tag = tag;
       ti->throw_value = value;
-      if (ti->values){
+      if (ti->values == DFSCH_INVALID_OBJECT){
+        ti->throw_values = DFSCH_INVALID_OBJECT;
+      } else if (ti->values){
         int i;
         for (i = 0; ti->values[i] != DFSCH_INVALID_OBJECT; i++);
         ti->throw_values = GC_MALLOC(sizeof(dfsch_object_t*) * (i + 1));
         memcpy(ti->throw_values, ti->values, sizeof(dfsch_object_t*) * (i + 1));
+      } else {
+        ti->throw_values = NULL;
       }
       ti->values = NULL;
       dfsch__continue_unwind(ti);
