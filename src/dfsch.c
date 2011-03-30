@@ -626,7 +626,13 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   ti->env_freelist = GC_NEXT(ti->env_freelist);
   ti->env_fl_depth--;
 #else
-  e = GC_NEW(environment_t);
+  if (ti->env_freelist){
+    e = ti->env_freelist;
+    ti->env_freelist = GC_NEXT(ti->env_freelist);
+    ti->env_fl_depth--;
+  } else {
+    e = GC_NEW(environment_t);
+  }
 #endif
 
   ((dfsch_object_t*)e)->type = DFSCH_ENVIRONMENT_TYPE;
