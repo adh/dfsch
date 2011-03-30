@@ -174,7 +174,8 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 	lib-scm/os-utils.scm \
 	lib-scm/tk-gui.scm \
 	lib-scm/http-server.scm \
-	lib-scm/sql.scm
+	lib-scm/sql.scm \
+	lib-scm/dfsch-unit.scm
 
 man_MANS = doc/dfsch-repl.1
 
@@ -240,7 +241,10 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	$(dfschlibscm_DATA) \
 	examples/tk-gui-demo.scm \
 	examples/http-server-demo.scm \
-	$(stdlib_sources)
+	$(stdlib_sources) \
+	tests/main.scm \
+	tests/language-tests.scm \
+	tests/r5rs-tests.scm
 
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
