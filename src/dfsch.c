@@ -1625,6 +1625,11 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
     if (compile_on_apply){
       if (!((closure_t*)proc)->compiled){
+        if (myesc.reuse_frame){ /* tail call */
+          args = dfsch_list_copy_immutable(args);
+          /* On tail calls, arguments are in many cases in global scratchpad 
+           * area, compilation can clobber them */
+        }
         dfsch_compile_function(proc);
       }
     }
