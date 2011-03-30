@@ -512,17 +512,7 @@ dfsch_run_LDFLAGS = $(gui_flags)
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
 
-check_PROGRAMS = platform-test c-api-test json-parser-test
-
-platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
-platform_test_LDADD =  -lgc $(pthread_libadd) -lm libdfsch-cmdopts.la
-c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
-c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
-
-json_parser_test_SOURCES = tests/json-parser-test.c
-json_parser_test_LDADD = libdfsch.la libdfsch-json.la
-
-TESTS = tests/scm-test.sh platform-test c-api-test
+TESTS = tests/scm-test.sh
 
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp

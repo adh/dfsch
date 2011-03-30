@@ -1502,7 +1502,8 @@ int dfsch_pair_p(dfsch_object_t* obj){
   return DFSCH_PAIR_P(obj);
 }
 int dfsch_list_p(dfsch_object_t* obj){
-  return DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE);
+  return DFSCH_INSTANCE_P(obj, DFSCH_LIST_TYPE) 
+    && dfsch_list_length(obj, NULL) >= 0;
 }
 int dfsch_atom_p(dfsch_object_t* obj){
   return !DFSCH_PAIR_P(obj);

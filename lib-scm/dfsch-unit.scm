@@ -36,6 +36,7 @@
              :assert-equal
              :assert-true
              :assert-false
+             :assert-error
              :fail
              :run-tests
              :all-tests
@@ -131,6 +132,18 @@
        (pass)
        (fail (format "~s is not false"
                      ',expr))))
+
+(define-macro (assert-error class expr)
+  (with-gensyms (cls)
+    `(let ((,cls ,class))
+       (multiple-value-bind (value condition) (ignore-errors ,expr)
+         (if (instance? condition ,cls)
+             (pass)
+             (if condition
+                 (fail (format "~s signaled ~s which is not instance of ~s"
+                               ',expr condition ,cls))
+                 (fail (format "~s should have signaled an error of type ~s"
+                               ',expr ,cls))))))))
 
 
 (define-method (test-failed (test <failing-test>))

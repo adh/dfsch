@@ -982,6 +982,9 @@ dfsch_object_t* dfsch_number_gcd(dfsch_object_t* a,
                                  dfsch_object_t* b){
   dfsch_object_t* t;
   
+  a = dfsch_number_abs(a);
+  b = dfsch_number_abs(b);
+
   if (dfsch_number_lt(a, b)){
     t = a;
     a = b;
@@ -1032,7 +1035,7 @@ dfsch_object_t* dfsch_number_mod_inv(dfsch_object_t* n,
 
 dfsch_object_t* dfsch_number_lcm(dfsch_object_t* a,
                                  dfsch_object_t* b){
-  return dfsch_number_div_i(dfsch_number_mul(a, b),
+  return dfsch_number_div_i(dfsch_number_abs(dfsch_number_mul(a, b)),
                             dfsch_number_gcd(a, b));
 }
 
@@ -1866,12 +1869,17 @@ DFSCH_DEFINE_PRIMITIVE(gcd, NULL){
   object_t* a;
   object_t* b;
 
+  if (!DFSCH_PAIR_P(args)){
+    return DFSCH_MAKE_FIXNUM(0);
+  }
   DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-  DFSCH_ARG_END(args);
 
+  while (DFSCH_PAIR_P(args)){
+    DFSCH_OBJECT_ARG(args, b);
+    a = dfsch_number_gcd(a, b);
+  }
 
-  return dfsch_number_gcd(a, b);
+  return a;
 }
 DFSCH_DEFINE_PRIMITIVE(mod_inv, NULL){
   object_t* a;
@@ -1885,15 +1893,15 @@ DFSCH_DEFINE_PRIMITIVE(mod_inv, NULL){
   return dfsch_number_mod_inv(a, b);
 }
 DFSCH_DEFINE_PRIMITIVE(lcm, NULL){
-  object_t* a;
+  object_t* a = DFSCH_MAKE_FIXNUM(1);
   object_t* b;
 
-  DFSCH_OBJECT_ARG(args, a);
-  DFSCH_OBJECT_ARG(args, b);
-  DFSCH_ARG_END(args);
+  while (DFSCH_PAIR_P(args)){
+    DFSCH_OBJECT_ARG(args, b);
+    a = dfsch_number_lcm(a, b);
+  }
 
-
-  return dfsch_number_lcm(a, b);
+  return a;
 }
 
 DFSCH_DEFINE_PRIMITIVE(lsb, NULL){

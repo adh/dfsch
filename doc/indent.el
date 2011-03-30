@@ -6,7 +6,7 @@
 (put 'restart-case 'scheme-indent-function 1)
 (put 'restart-bind 'scheme-indent-function 1)
 (put 'with-gensyms 'scheme-indent-function 1)
-(put 'multiple-values-bind 'scheme-indent-function 2)
+(put 'multiple-value-bind 'scheme-indent-function 2)
 
 (put 'catch 'scheme-indent-function 1)
 (put 'loop 'scheme-indent-function 0)
