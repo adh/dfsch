@@ -38,7 +38,10 @@
              :assert-false
              :fail
              :run-tests
-             :run-all-tests))
+             :all-tests
+             :run-all-tests
+             :tests-in-category
+             :test-toplevel))
 
 (in-package :dfsch-unit)
 
@@ -159,12 +162,12 @@
                     (case result
                       ((:fail) 
                        (incr failed)
-                       (when one-fail? (throw 'fail)))
+                       (when one-fail? (throw 'fail ())))
                       ((())
                        (print (test-name test) ": \033[0;31mERROR\033[0;39m: " err)
                        (incr failed)
                        (incr errors)
-                       (when one-fail? (throw 'fail)))
+                       (when one-fail? (throw 'fail ())))
                       ((:mayfail)
                        (incr mayfail))
                       ((:pass)
@@ -181,6 +184,30 @@
         :fail
         :pass)))
 
-(define (run-all-tests)
-  (run-tests *tests*))
+(define (all-tests)
+  (reverse *tests*))
 
+(define (run-all-tests &key one-fail? trap-errors?)
+  (run-tests (all-tests) :one-fail? one-fail? :trap-errors? trap-errors?))
+
+(define (tests-in-category name)
+  (let ((tests (map-ref *test-categories* name)))
+    (unless tests
+      (error "No such category" :name name))
+    tests))
+
+(define-macro (test-toplevel)
+  '(when-toplevel
+    (let ((one-fail? ())
+          (trap-errors? ()))
+      (let ((parser (cmdopts:make-parser)))
+        (cmdopts:add-option parser  
+                            (lambda (p v) 
+                              (set! one-fail? #t))
+                            :long-option "one-test-fail")
+        (cmdopts:add-option parser  
+                            (lambda (p v) 
+                              (set! trap-errors? #t))
+                            :long-option "trap-errors")
+        (parse-list parser (cdr *posix-argv*)))
+      (run-all-tests :one-fail? one-fail? :trap-errors? trap-errors?))))
