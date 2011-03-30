@@ -182,6 +182,7 @@
 
 (define (run-tests list &key one-fail? trap-errors?)
   (let ((passed 0) (failed 0) (mayfail 0) (errors 0))
+    (measure
     (catch 'fail
       (for-each (lambda (test)
                   (multiple-value-bind (result err) 
@@ -201,7 +202,7 @@
                        (incr mayfail))
                       ((:pass)
                        (incr passed)))))
-                list))
+                list)))
     (print)
     (print "  ***** Test suite run complete *****")
     (print "Tests passed:            " passed)
