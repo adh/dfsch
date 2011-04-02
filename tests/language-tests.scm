@@ -51,4 +51,16 @@
   (assert-equal (>> 3523532227357930030104576 54) 
                 195595330))
 
+(define-test nonlocal-exits (:language :control)
+  (assert-true (catch 'foo
+                      (catch 'bar
+                             (throw 'foo #t)
+                             #f)
+                      #f))
+  (assert-true (let ((x #f))
+                 (catch 'foo 
+                        (unwind-protect 
+                         (throw 'foo 1) 
+                         (set! x #t)))
+                 x)))
 
