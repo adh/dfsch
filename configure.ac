@@ -253,6 +253,29 @@ fi
 AM_CONDITIONAL(TOKYO_TYRANT, test x"$enable_tokyo_tyrant" == x"yes")
 
 
+enable_libgd=yes
+
+AC_ARG_ENABLE([libgd],
+    AS_HELP_STRING([--disable-libgd], [Disable libgd module]))
+AC_ARG_WITH([libgd],
+  AC_HELP_STRING([--with-libgd=PATH], [Path to Libgd installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_libgd" == x"yes"; then
+    AC_CHECK_HEADERS(gd.h, [have_libgd="1"], [have_libgd="0"])
+    AC_CHECK_LIB(gd, gdImageCreate, 
+                     [dummy_libgd=], [have_libgd="0"])
+
+    if test x"$have_libgd" == x"0" ; then
+        enable_libgd=no
+    fi
+fi
+
+AM_CONDITIONAL(LIBGD, test x"$enable_libgd" == x"yes")
+
+
+
 AC_SYS_LARGEFILE 
 
 case $host in 
@@ -292,6 +315,7 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
+libgd .............. : $enable_libgd
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 
