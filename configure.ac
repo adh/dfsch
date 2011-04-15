@@ -253,26 +253,26 @@ fi
 AM_CONDITIONAL(TOKYO_TYRANT, test x"$enable_tokyo_tyrant" == x"yes")
 
 
-enable_libgd=yes
+enable_gd=yes
 
-AC_ARG_ENABLE([libgd],
-    AS_HELP_STRING([--disable-libgd], [Disable libgd module]))
-AC_ARG_WITH([libgd],
-  AC_HELP_STRING([--with-libgd=PATH], [Path to Libgd installation]),
+AC_ARG_ENABLE([gd],
+    AS_HELP_STRING([--disable-gd], [Disable gd module]))
+AC_ARG_WITH([gd],
+  AC_HELP_STRING([--with-gd=PATH], [Path to Gd installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
-if test x$"$enable_libgd" == x"yes"; then
-    AC_CHECK_HEADERS(gd.h, [have_libgd="1"], [have_libgd="0"])
+if test x$"$enable_gd" == x"yes"; then
+    AC_CHECK_HEADERS(gd.h, [have_gd="1"], [have_gd="0"])
     AC_CHECK_LIB(gd, gdImageCreate, 
-                     [dummy_libgd=], [have_libgd="0"])
+                     [dummy_gd=], [have_gd="0"])
 
-    if test x"$have_libgd" == x"0" ; then
-        enable_libgd=no
+    if test x"$have_gd" == x"0" ; then
+        enable_gd=no
     fi
 fi
 
-AM_CONDITIONAL(LIBGD, test x"$enable_libgd" == x"yes")
+AM_CONDITIONAL(GD, test x"$enable_gd" == x"yes")
 
 
 
@@ -315,7 +315,7 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
-libgd .............. : $enable_libgd
+gd ................. : $enable_gd
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 
