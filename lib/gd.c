@@ -36,6 +36,9 @@ static image_finalizer(gd_image_t* img, void* discard){
 
 dfsch_object_t* dfsch_gd_cons_image(gdImagePtr img){
   gd_image_t* i = dfsch_make_object(DFSCH_GD_IMAGE_TYPE);
+  if (!img){
+    dfsch_error("Error creating GD image", NULL);
+  }
   i->img = img;
   GC_REGISTER_FINALIZER(i, (GC_finalization_proc)image_finalizer,
                         NULL, NULL, NULL);
