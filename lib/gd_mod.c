@@ -226,7 +226,7 @@ DFSCH_DEFINE_PRIMITIVE(filled_rectangle,
 }
 
 DFSCH_DEFINE_PRIMITIVE(arc, 
-                       "Draw an axis aligned eliptical arc"){
+                       "Draw an axis aligned elliptical arc"){
   gdImagePtr image;
   int x;
   int y;
@@ -252,7 +252,7 @@ DFSCH_DEFINE_PRIMITIVE(arc,
 }
 
 DFSCH_DEFINE_PRIMITIVE(filled_arc, 
-                       "Draw an axis aligned filled eliptical arc"){
+                       "Draw an axis aligned filled elliptical arc"){
   gdImagePtr image;
   int x;
   int y;
@@ -284,6 +284,145 @@ DFSCH_DEFINE_PRIMITIVE(filled_arc,
 
   return NULL;
 }
+
+DFSCH_DEFINE_PRIMITIVE(ellipse, 
+                       "Draw an axis aligned ellipse outline"){
+  gdImagePtr image;
+  int x;
+  int y;
+  int w;
+  int h;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, w);
+  DFSCH_LONG_ARG(args, h);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageArc(image, x, y, w, h, 0, 360, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(filled_ellipse, 
+                       "Draw an axis aligned filled ellipse"){
+  gdImagePtr image;
+  int x;
+  int y;
+  int w;
+  int h;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, w);
+  DFSCH_LONG_ARG(args, h);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageFilledEllipse(image, x, y, w, h, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(fill, 
+                       "Flood-fill region of same color"){
+  gdImagePtr image;
+  int x;
+  int y;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageFill(image, x, y, color);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(fill_to_border, 
+                       "Flood-fill region bounded by given color"){
+  gdImagePtr image;
+  int x;
+  int y;
+  int border;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, border);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageFillToBorder(image, x, y, border, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(set_antialiased, 
+                       "Set actual color used for antialiased drawing"){
+  gdImagePtr image;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageSetAntialiased(image, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(set_thickness, 
+                       "Set thickness of drawn lines"){
+  gdImagePtr image;
+  int thickness;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_LONG_ARG(args, thickness);
+  DFSCH_ARG_END(args);
+  
+  gdImageSetThickness(image, thickness);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(set_alpha_blending, 
+                       "Set whetever alpha channel value is used when "
+                       "drawing instead of simply copied into image"){
+  gdImagePtr image;
+  int blending;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_BOOLEAN_ARG(args, blending);
+  DFSCH_ARG_END(args);
+  
+  gdImageAlphaBlending(image, blending);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(set_alpha_blending, 
+                       "Set whetever alpha channel channel should be stored "
+                       "in output PNG images"){
+  gdImagePtr image;
+  int save;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_BOOLEAN_ARG(args, save);
+  DFSCH_ARG_END(args);
+  
+  gdImageSaveAlpha(image, save);
+
+  return NULL;
+}
+
 
 
 void dfsch_module_gd_register(dfsch_object_t* env){
@@ -322,9 +461,26 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(rectangle));
   dfsch_defcanon_pkgcstr(env, gd, "filled-rectangle",
                          DFSCH_PRIMITIVE_REF(filled_rectangle));
-  dfsch_defcanon_pkgcstr(env, gd, "rectangle",
+  dfsch_defcanon_pkgcstr(env, gd, "arc",
                          DFSCH_PRIMITIVE_REF(arc));
-  dfsch_defcanon_pkgcstr(env, gd, "filled-rectangle",
+  dfsch_defcanon_pkgcstr(env, gd, "filled-arc",
                          DFSCH_PRIMITIVE_REF(filled_arc));
-  
+  dfsch_defcanon_pkgcstr(env, gd, "ellipse",
+                         DFSCH_PRIMITIVE_REF(ellipse));
+  dfsch_defcanon_pkgcstr(env, gd, "filled-ellipse",
+                         DFSCH_PRIMITIVE_REF(filled_ellipse));
+  dfsch_defcanon_pkgcstr(env, gd, "fill",
+                         DFSCH_PRIMITIVE_REF(fill));
+  dfsch_defcanon_pkgcstr(env, gd, "fill-to-border",
+                         DFSCH_PRIMITIVE_REF(fill_to_border));
+
+  dfsch_defcanon_pkgcstr(env, gd, "set-antialiased!",
+                         DFSCH_PRIMITIVE_REF(set_antialiased));
+  dfsch_defcanon_pkgcstr(env, gd, "set-thickness!",
+                         DFSCH_PRIMITIVE_REF(set_thickness));
+  dfsch_defcanon_pkgcstr(env, gd, "set-alpha-blending!",
+                         DFSCH_PRIMITIVE_REF(set_alpha_blending));
+  dfsch_defcanon_pkgcstr(env, gd, "set-save-alpha!",
+                         DFSCH_PRIMITIVE_REF(set_save_alpha));
+
 }
