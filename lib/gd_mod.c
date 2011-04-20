@@ -408,7 +408,7 @@ DFSCH_DEFINE_PRIMITIVE(set_alpha_blending,
 
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(set_alpha_blending, 
+DFSCH_DEFINE_PRIMITIVE(set_save_alpha, 
                        "Set whetever alpha channel channel should be stored "
                        "in output PNG images"){
   gdImagePtr image;
@@ -429,6 +429,11 @@ void dfsch_module_gd_register(dfsch_object_t* env){
   dfsch_package_t* gd = dfsch_make_package("gd",
                                            "GD bitmap graphics library");
   dfsch_provide(env, "libgd");
+
+  dfsch_defcanon_pkgcstr(env, gd, "<image>",
+                         DFSCH_GD_IMAGE_TYPE);
+  dfsch_defcanon_pkgcstr(env, gd, "<font>",
+                         DFSCH_GD_FONT_TYPE);
 
   dfsch_defcanon_pkgcstr(env, gd, "make-image",
                          DFSCH_PRIMITIVE_REF(make_image));
