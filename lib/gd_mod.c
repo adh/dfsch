@@ -1,6 +1,12 @@
 #include <dfsch/lib/gd.h>
 #include <dfsch/load.h>
 
+#include <gdfonts.h>
+#include <gdfontl.h>
+#include <gdfontmb.h>
+#include <gdfontg.h>
+#include <gdfontt.h>
+
 DFSCH_DEFINE_PRIMITIVE(make_image,
                        "Create new pallete-based image"){
   long width;
@@ -375,7 +381,7 @@ DFSCH_DEFINE_PRIMITIVE(set_antialiased,
   DFSCH_LONG_ARG(args, color);
   DFSCH_ARG_END(args);
   
-  gdImageSetAntialiased(image, color);
+  gdImageSetAntiAliased(image, color);
 
   return NULL;
 }
@@ -398,13 +404,13 @@ DFSCH_DEFINE_PRIMITIVE(set_alpha_blending,
                        "Set whetever alpha channel value is used when "
                        "drawing instead of simply copied into image"){
   gdImagePtr image;
-  int blending;
+  dfsch_object_t* blending;
 
   DFSCH_GD_IMAGE_ARG(args, image);
-  DFSCH_BOOLEAN_ARG(args, blending);
+  DFSCH_OBJECT_ARG(args, blending);
   DFSCH_ARG_END(args);
   
-  gdImageAlphaBlending(image, blending);
+  gdImageAlphaBlending(image, blending != NULL);
 
   return NULL;
 }
@@ -412,13 +418,13 @@ DFSCH_DEFINE_PRIMITIVE(set_save_alpha,
                        "Set whetever alpha channel channel should be stored "
                        "in output PNG images"){
   gdImagePtr image;
-  int save;
+  dfsch_object_t* save;
 
   DFSCH_GD_IMAGE_ARG(args, image);
-  DFSCH_BOOLEAN_ARG(args, save);
+  DFSCH_OBJECT_ARG(args, save);
   DFSCH_ARG_END(args);
   
-  gdImageSaveAlpha(image, save);
+  gdImageSaveAlpha(image, save != NULL);
 
   return NULL;
 }
@@ -514,6 +520,28 @@ DFSCH_DEFINE_PRIMITIVE(filled_polygon,
 }
 
 
+DFSCH_DEFINE_PRIMITIVE(char, 
+                       "Draw one character of bitmap font"){
+  gdImagePtr image;
+  gdFontPtr font;
+  int x;
+  int y;
+  int ch;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_GD_FONT_ARG(args, font);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, ch);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageChar(image, font, x, y, ch, color);
+
+  return NULL;
+}
+
 
 void dfsch_module_gd_register(dfsch_object_t* env){
   dfsch_package_t* gd = dfsch_make_package("gd",
@@ -524,6 +552,9 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_GD_IMAGE_TYPE);
   dfsch_defcanon_pkgcstr(env, gd, "<font>",
                          DFSCH_GD_FONT_TYPE);
+
+  dfsch_defcanon_pkgcstr(env, gd, "*font-small*",
+                         dfsch_gd_cons_font(gdFontGetSmall()));
 
   dfsch_defcanon_pkgcstr(env, gd, "make-image",
                          DFSCH_PRIMITIVE_REF(make_image));
@@ -584,5 +615,8 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(polyline));
   dfsch_defcanon_pkgcstr(env, gd, "filled-polygon",
                          DFSCH_PRIMITIVE_REF(filled_polygon));
+
+  dfsch_defcanon_pkgcstr(env, gd, "char",
+                         DFSCH_PRIMITIVE_REF(char));
 
 }
