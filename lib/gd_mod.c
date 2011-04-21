@@ -542,6 +542,73 @@ DFSCH_DEFINE_PRIMITIVE(char,
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(string, 
+                       "Draw string with bitmap font"){
+  gdImagePtr image;
+  gdFontPtr font;
+  int x;
+  int y;
+  char* str;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_GD_FONT_ARG(args, font);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_STRING_ARG(args, str);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageString(image, font, x, y, str, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(char_up, 
+                       "Draw one character of bitmap font vertically"){
+  gdImagePtr image;
+  gdFontPtr font;
+  int x;
+  int y;
+  int ch;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_GD_FONT_ARG(args, font);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_LONG_ARG(args, ch);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageCharUp(image, font, x, y, ch, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(string_up, 
+                       "Draw string with bitmap font vertically"){
+  gdImagePtr image;
+  gdFontPtr font;
+  int x;
+  int y;
+  char* str;
+  int color;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_GD_FONT_ARG(args, font);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_STRING_ARG(args, str);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  gdImageStringUp(image, font, x, y, str, color);
+
+  return NULL;
+}
+
+
 
 void dfsch_module_gd_register(dfsch_object_t* env){
   dfsch_package_t* gd = dfsch_make_package("gd",
@@ -555,6 +622,14 @@ void dfsch_module_gd_register(dfsch_object_t* env){
 
   dfsch_defcanon_pkgcstr(env, gd, "*font-small*",
                          dfsch_gd_cons_font(gdFontGetSmall()));
+  dfsch_defcanon_pkgcstr(env, gd, "*font-large*",
+                         dfsch_gd_cons_font(gdFontGetLarge()));
+  dfsch_defcanon_pkgcstr(env, gd, "*font-medium-bold*",
+                         dfsch_gd_cons_font(gdFontGetMediumBold()));
+  dfsch_defcanon_pkgcstr(env, gd, "*font-giant*",
+                         dfsch_gd_cons_font(gdFontGetGiant()));
+  dfsch_defcanon_pkgcstr(env, gd, "*font-tiny*",
+                         dfsch_gd_cons_font(gdFontGetTiny()));
 
   dfsch_defcanon_pkgcstr(env, gd, "make-image",
                          DFSCH_PRIMITIVE_REF(make_image));
@@ -618,5 +693,11 @@ void dfsch_module_gd_register(dfsch_object_t* env){
 
   dfsch_defcanon_pkgcstr(env, gd, "char",
                          DFSCH_PRIMITIVE_REF(char));
+  dfsch_defcanon_pkgcstr(env, gd, "string",
+                         DFSCH_PRIMITIVE_REF(string));
+  dfsch_defcanon_pkgcstr(env, gd, "char-up",
+                         DFSCH_PRIMITIVE_REF(char_up));
+  dfsch_defcanon_pkgcstr(env, gd, "string-up",
+                         DFSCH_PRIMITIVE_REF(string_up));
 
 }
