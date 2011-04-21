@@ -423,6 +423,96 @@ DFSCH_DEFINE_PRIMITIVE(set_save_alpha,
   return NULL;
 }
 
+static void parse_points(dfsch_object_t* points, gdPointPtr* pp, int* pc){
+  int count = 0;
+  int size = 16;
+  dfsch_object_t* it = dfsch_collection_get_iterator(points);
+  int x;
+  int y;
+  dfsch_object_t* it2;
+  gdPointPtr res = GC_MALLOC_ATOMIC(sizeof(gdPoint) * 16);
+  
+  while (it){
+    if (count >= size){
+      size *= 2;
+      res = GC_MALLOC_ATOMIC(sizeof(gdPoint) * size);
+    }
+    it2 = dfsch_collection_get_iterator(dfsch_iterator_this(it));
+    res[count].x = dfsch_number_to_long(dfsch_iterator_this(it2));
+    it2 = dfsch_iterator_next(it2);
+    res[count].y = dfsch_number_to_long(dfsch_iterator_this(it2));
+    it2 = dfsch_iterator_next(it2);
+    if (it2){
+      dfsch_error("Point has excess elements", dfsch_iterator_this(it));
+    }
+    count++;
+    it = dfsch_iterator_next(it);
+  }
+
+  *pp = res;
+  *pc = count;
+}
+
+DFSCH_DEFINE_PRIMITIVE(polygon, 
+                       "Draw a polygon"){
+  gdImagePtr image;
+  int color;
+  dfsch_object_t* point_list;
+  gdPointPtr points;
+  int count;
+  
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_OBJECT_ARG(args, point_list);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  parse_points(point_list, &points, &count);
+  
+  gdImagePolygon(image, points, count, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(polyline,
+                       "Draw a polyline (an open polygon)"){
+  gdImagePtr image;
+  int color;
+  dfsch_object_t* point_list;
+  gdPointPtr points;
+  int count;
+  
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_OBJECT_ARG(args, point_list);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  parse_points(point_list, &points, &count);
+  
+  gdImageOpenPolygon(image, points, count, color);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(filled_polygon, 
+                       "Draw a filled polygon"){
+  gdImagePtr image;
+  int color;
+  dfsch_object_t* point_list;
+  gdPointPtr points;
+  int count;
+  
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_OBJECT_ARG(args, point_list);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_ARG_END(args);
+  
+  parse_points(point_list, &points, &count);
+  
+  gdImageFilledPolygon(image, points, count, color);
+
+  return NULL;
+}
+
 
 
 void dfsch_module_gd_register(dfsch_object_t* env){
@@ -487,5 +577,12 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(set_alpha_blending));
   dfsch_defcanon_pkgcstr(env, gd, "set-save-alpha!",
                          DFSCH_PRIMITIVE_REF(set_save_alpha));
+
+  dfsch_defcanon_pkgcstr(env, gd, "polygon",
+                         DFSCH_PRIMITIVE_REF(polygon));
+  dfsch_defcanon_pkgcstr(env, gd, "polyline",
+                         DFSCH_PRIMITIVE_REF(polyline));
+  dfsch_defcanon_pkgcstr(env, gd, "filled-polygon",
+                         DFSCH_PRIMITIVE_REF(filled_polygon));
 
 }
