@@ -106,8 +106,7 @@
   (assert-equal (string-length "ěšč") 3)
   (assert-equal (string-ref "ab©" 2) 169)
   (assert-equal (string->list "ab©") '(97 98 169))
-  (assert-equal (list->string '(0x3042 0x3044 0x3046 
-                                       0x3048 0x304a))
+  (assert-equal (list->string '(0x3042 0x3044 0x3046 0x3048 0x304a))
                 "あいうえお")
   (assert-equal (char-upcase 97) 65)
   (assert-equal (string-titlecase "foo bar") "Foo Bar")
