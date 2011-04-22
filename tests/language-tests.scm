@@ -64,8 +64,25 @@
                          (set! x #t)))
                  x)))
 
-(define-evaluation-test write->read (:language :reader :writer)
+(define-test write->read (:language :reader :writer)
   (define bn (random-bignum 1024))
   (define string (random-bytes 512))
   (assert-equal (string->object (object->string bn)) bn)
   (assert-equal (string->object (object->string string))  string))
+
+(define-test lambda-keywords (:language :functions)
+  (define (opt-arg-fun &optional a (b 2) (c 3 c-supplied))
+    (list a b c c-supplied))
+  (assert-equal (opt-arg-fun ) '(() 2 3 ()))
+  (assert-equal (opt-arg-fun 'a) '(a 2 3 ()))
+  (assert-equal (opt-arg-fun 'a 'b) '(a b 3 ()))
+  (assert-equal (opt-arg-fun 'a 'b 'c) '(a b c true))
+  
+  (define (key-arg-fun &key a (b 2) (c 3 c-supplied))
+    (list a b c c-supplied))
+  (assert-equal (key-arg-fun ) '(() 2 3 ()))
+  (assert-equal (key-arg-fun :c 9) '(() 2 9 true))
+  
+  (define (key-rest-arg-fun &rest r &key a (b 2) (c 3 c-supplied))
+    (list r a b c c-supplied))
+  (assert-equal (key-rest-arg-fun :c 9) '((:c 9) () 2 9 true)))
