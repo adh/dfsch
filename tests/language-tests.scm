@@ -64,3 +64,8 @@
                          (set! x #t)))
                  x)))
 
+(define-evaluation-test write->read (:language :reader :writer)
+  (define bn (random-bignum 1024))
+  (define string (random-bytes 512))
+  (assert-equal (string->object (object->string bn)) bn)
+  (assert-equal (string->object (object->string string))  string))
