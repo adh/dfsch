@@ -109,7 +109,7 @@
   (assert-equal (string-split-on-character "a©cæ©b" "©")
                 '("a" "cæ" "b")))
 
-(define-test text-format (:language :format)
+(define-test format (:language :format)
   (assert-equal (format "~~") "~")
   (assert-equal (format "~2r ~:* ~8r ~:* ~10r ~:* ~16r" 123)
                 "1111011  173  123  7b")
