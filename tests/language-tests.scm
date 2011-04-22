@@ -118,4 +118,38 @@
   (assert-equal (format "~10,5f" pi) "   3.14159"))
 
 
+(define-class <test-class> () 
+  ((test-slot :accessor test-slot 
+              :initform :test-slot-init-value
+              :initarg :test-slot-initarg)))
+(define-class <test-subclass> <test-class> ())
 
+(define-test classes (:language :oop)
+  (assert-equal (type-of (make-instance <test-class>))
+                <test-class>)
+  (assert-equal (test-slot (make-instance <test-class>))
+                :test-slot-init-value)
+  (assert-equal (test-slot (make-instance <test-subclass>))
+                :test-slot-init-value)
+  (assert-equal (test-slot (make-instance <test-class> 
+                                          :test-slot-initarg :foo))
+                :foo))
+
+(define-test methods (:language :oop)
+  (define-method (test-fun foo)
+    'default)
+  (define-method (test-fun (foo <test-class>))
+    'test-class)
+
+  (assert-equal (test-fun 't) 'default)
+  (assert-equal (test-fun (make-instance <test-class>))
+                'test-class)
+
+  (assert-equal (test-slot (make-instance <test-subclass>))
+                :test-slot-init-value)
+
+  (define-method ((test-fun :around) (foo <test-subclass>))
+    (cons 'subclass (call-next-method)))
+
+  (assert-equal (test-fun (make-instance <test-subclass>))
+                '(subclass . test-class)))
