@@ -64,6 +64,11 @@
                          (set! x #t)))
                  x)))
 
+(define-test destructuring-bind (:language)
+  (assert-equal (destructuring-bind (a b c) '(1 2 3)
+                                    b)
+                2))  
+
 (define-test write->read (:language :reader :writer)
   (define bn (random-bignum 1024))
   (define string (random-bytes 512))
