@@ -153,3 +153,7 @@
 
   (assert-equal (test-fun (make-instance <test-subclass>))
                 '(subclass . test-class)))
+
+(define-test serialization-roundtrip (:language :serialization)
+  (assert-equal (deserialize (serialize '(1 2 3 #(a b c) 3.1415 "foo")))
+                '(1 2 3 #(a b c) 3.1415 "foo")))
