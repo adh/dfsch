@@ -27,3 +27,4 @@ External modules and libraries:
 * CURL
 * GD
 * RRDtool
+* libupskirt based markdown (probably render into tree)
