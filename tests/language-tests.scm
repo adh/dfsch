@@ -87,6 +87,13 @@
     (list r a b c c-supplied))
   (assert-equal (key-rest-arg-fun :c 9) '((:c 9) () 2 9 true)))
 
+(define-test vectors (:language :vectors)
+  (define v (make-vector 5))
+  (vector-set! v 0 'foo)
+  (assert-equal (vector-ref v 0) 'foo)
+  (assert-equal (vector-ref '#(0 1 2 3) 1) 1))
+  
+
 (define-test string-handling (:language :strings)
   (assert-equal (string-append "abc" "def") "abcdef")
   (assert-equal (substring "abcdef" 2 4) "cd")
