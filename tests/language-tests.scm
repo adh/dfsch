@@ -86,3 +86,29 @@
   (define (key-rest-arg-fun &rest r &key a (b 2) (c 3 c-supplied))
     (list r a b c c-supplied))
   (assert-equal (key-rest-arg-fun :c 9) '((:c 9) () 2 9 true)))
+
+(define-test string-handling (:language :strings)
+  (assert-equal (string-append "abc" "def") "abcdef")
+  (assert-equal (substring "abcdef" 2 4) "cd")
+  (assert-equal (string-search "def" "abcdefgh") 3)
+  (assert-equal (string-split-on-byte "a b,,c" ", ")
+        '("a" "b" "c"))
+  (assert-equal (string->byte-list "æ©") '(195 166 194 169)))
+
+(define-test string-utf8 (:language :strings :utf8)
+  (assert-equal (string-length "ěšč") 3)
+  (assert-equal (string-ref "ab©" 2) 169)
+  (assert-equal (string->list "ab©") '(97 98 169))
+  (assert-equal (list->string '(0x3042 0x3044 0x3046 
+                                       0x3048 0x304a))
+                "あいうえお")
+  (assert-equal (char-upcase 97) 65)
+  (assert-equal (string-titlecase "foo bar") "Foo Bar")
+  (assert-equal (string-search "def" "abčdefgh") 3)
+  (assert-equal (string-search-ci "děf" "abcDĚFgh") 3)
+  (assert-equal (string-split-on-character "a©cæ©b" "©")
+                '("a" "cæ" "b")))
+
+
+
+  
