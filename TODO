@@ -26,3 +26,5 @@ External modules and libraries:
 * DOM-like API on top of SXML
 * CURL
 * GD
+* RRDtool
+* libupskirt based markdown (probably render into tree)

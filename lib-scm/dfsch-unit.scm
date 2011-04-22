@@ -83,13 +83,12 @@
            :pass))))
 
 (define (test-expander class name categories body)
-  `(define ,name
-     (letrec ((+this-test+ 
-               (make-instance ',class
-                              :name ',name
-                              :categories ',categories
-                              :proc (lambda () 
-                                      ,@(test-body-expander body))))))))
+  `(letrec ((+this-test+ 
+             (make-instance ',class
+                            :name ',name
+                            :categories ',categories
+                            :proc (lambda () 
+                                    ,@(test-body-expander body)))))))
 
 
 (define-macro (define-test name categories &rest body)

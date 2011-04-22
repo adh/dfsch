@@ -255,7 +255,8 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	$(stdlib_sources) \
 	tests/main.scm \
 	tests/language-tests.scm \
-	tests/r5rs-tests.scm
+	tests/r5rs-tests.scm \
+	tests/fix-regression-test.scm
 
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
