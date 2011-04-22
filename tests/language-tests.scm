@@ -92,7 +92,7 @@
   (assert-equal (substring "abcdef" 2 4) "cd")
   (assert-equal (string-search "def" "abcdefgh") 3)
   (assert-equal (string-split-on-byte "a b,,c" ", ")
-        '("a" "b" "c"))
+                '("a" "b" "c"))
   (assert-equal (string->byte-list "æ©") '(195 166 194 169)))
 
 (define-test string-utf8 (:language :strings :utf8)
@@ -109,6 +109,13 @@
   (assert-equal (string-split-on-character "a©cæ©b" "©")
                 '("a" "cæ" "b")))
 
+(define-test text-format (:language :format)
+  (assert-equal (format "~~") "~")
+  (assert-equal (format "~2r ~:* ~8r ~:* ~10r ~:* ~16r" 123)
+                "1111011  173  123  7b")
+  (assert-equal (format "~c" 0x3042) "あ")
+  (assert-equal (format "~15f" '(1 2 3 4)) "      (1 2 3 4)")
+  (assert-equal (format "~10,5f" pi) "   3.14159"))
 
 
-  
+
