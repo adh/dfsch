@@ -92,7 +92,7 @@
     (list r a b c c-supplied))
   (assert-equal (key-rest-arg-fun :c 9) '((:c 9) () 2 9 true)))
 
-(define-test vectors (:language :vectors)
+(define-test vectors (:language :vectors :collections)
   (define v (make-vector 5))
   (vector-set! v 0 'foo)
   (assert-equal (vector-ref v 0) 'foo)
@@ -168,3 +168,13 @@
 (define-test serialization-roundtrip (:language :serialization)
   (assert-equal (deserialize (serialize '(1 2 3 #(a b c) 3.1415 "foo")))
                 '(1 2 3 #(a b c) 3.1415 "foo")))
+
+(define-test sequences (:language :collections)
+  (define l (list   'a 'b 'c 'd 'e 'f))
+  (define v (vector 'a 'b 'c 'd 'e 'f))
+
+  (assert-equal (seq-ref l 2) 'c)
+  (assert-equal (seq-ref v 3) 'd)
+
+  (seq-set! l 3 'dd)
+  (assert-equal (seq-ref l 3) 'dd))
