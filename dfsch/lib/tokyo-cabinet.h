@@ -17,6 +17,8 @@ void dfsch_tokyo_cabinet_begin_transaction(dfsch_object_t* dbo);
 void dfsch_tokyo_cabinet_commit_transaction(dfsch_object_t* dbo);
 void dfsch_tokyo_cabinet_abort_transaction(dfsch_object_t* dbo);
 
+void dfscgh_tokyo_cabinet_db_sync(dfsch_object_t* dbo);
+
 extern dfsch_type_t dfsch_tokyo_cabinet_table_type;
 #define DFSCH_TOKYO_CABINET_TABLE_TYPE (&dfsch_tokyo_cabinet_table_type)
 
@@ -29,6 +31,7 @@ void dfsch_tokyo_cabinet_table_begin_transaction(dfsch_object_t* dbo);
 void dfsch_tokyo_cabinet_table_commit_transaction(dfsch_object_t* dbo);
 void dfsch_tokyo_cabinet_table_abort_transaction(dfsch_object_t* dbo);
 
+void dfscgh_tokyo_cabinet_table_sync(dfsch_object_t* dbo);
 
 dfsch_object_t* dfsch_tokyo_cabinet_list_2_object(TCLIST* list);
 TCMAP* dfsch_tokyo_cabinet_object_2_map(dfsch_object_t* obj);

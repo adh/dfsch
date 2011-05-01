@@ -57,6 +57,15 @@ DFSCH_DEFINE_PRIMITIVE(abort_transaction, "Abort atomic transaction"){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(db_sync, "Write changed records to disk"){
+  dfsch_object_t* db;
+  DFSCH_OBJECT_ARG(args, db);
+  DFSCH_ARG_END(args);
+
+  dfsch_tokyo_cabinet_db_sync(db);
+  return NULL;  
+}
+
 DFSCH_DEFINE_PRIMITIVE(open_table, "Open Tokyo Cabinet table database"){
   char* name;
   DFSCH_STRING_ARG(args, name);
@@ -114,6 +123,15 @@ DFSCH_DEFINE_PRIMITIVE(table_abort_transaction, "Abort atomic transaction"){
   dfsch_tokyo_cabinet_table_abort_transaction(db);
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(table_sync, "Write changed records to disk"){
+  dfsch_object_t* db;
+  DFSCH_OBJECT_ARG(args, db);
+  DFSCH_ARG_END(args);
+
+  dfsch_tokyo_cabinet_table_sync(db);
+  return NULL;
+  
+}
 
 
 void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
@@ -143,6 +161,9 @@ void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
   dfsch_define_method_pkgcstr_1(env, tc_pkg, "abort-transaction!", 
                                 DFSCH_TOKYO_CABINET_DB_TYPE,
                                 DFSCH_PRIMITIVE_REF(abort_transaction));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "sync!", 
+                                DFSCH_TOKYO_CABINET_DB_TYPE,
+                                DFSCH_PRIMITIVE_REF(db_sync));
 
   dfsch_defcanon_pkgcstr(env, tc_pkg, "open-table", 
                          DFSCH_PRIMITIVE_REF(open_table));
@@ -162,5 +183,8 @@ void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
   dfsch_define_method_pkgcstr_1(env, tc_pkg, "abort-transaction!", 
                                 DFSCH_TOKYO_CABINET_TABLE_TYPE,
                                 DFSCH_PRIMITIVE_REF(table_abort_transaction));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "sync!", 
+                                DFSCH_TOKYO_CABINET_TABLE_TYPE,
+                                DFSCH_PRIMITIVE_REF(table_sync));
 
 }

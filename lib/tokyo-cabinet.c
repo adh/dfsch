@@ -3,6 +3,7 @@
 
 #include <tcutil.h>
 #include <tcadb.h>
+#include <tctdb.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -166,6 +167,12 @@ void dfsch_tokyo_cabinet_abort_transaction(dfsch_object_t* dbo){
   }
 }
 
+void dfscgh_tokyo_cabinet_db_sync(dfsch_object_t* dbo){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  tcadbsync(db->adb);
+}
+
+
 typedef struct table_t {
   dfsch_type_t* type;
   TCTDB* tdb;
@@ -302,6 +309,10 @@ void dfsch_tokyo_cabinet_table_abort_transaction(dfsch_object_t* dbo){
     dfsch_error("Transaction abort failed", NULL);
   }
 }
+void dfscgh_tokyo_cabinet_table_sync(dfsch_object_t* dbo){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_TABLE_TYPE);
+  tctdbsync(db->tdb);
+}
 
 
 dfsch_object_t* dfsch_tokyo_cabinet_list_2_object(TCLIST* list){
@@ -350,7 +361,7 @@ dfsch_object_t* dfsch_tokyo_cabinet_map_2_object(TCMAP* map){
     vptr = tcmapget(map, kptr, klen, &vlen);
 
     if (!vptr){
-      dfsch_error("TCMAP key had disappeared", NULL);
+      dfsch_error("TCMAP key has disappeared", NULL);
     }
 
     dfsch_hash_set(res,
