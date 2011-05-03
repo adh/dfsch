@@ -28,3 +28,5 @@ External modules and libraries:
 * GD
 * RRDtool
 * libupskirt based markdown (probably render into tree)
+* Table support for tyrant
+
