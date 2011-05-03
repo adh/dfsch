@@ -218,13 +218,7 @@ static void table_unset(table_t* db,
   return tctdbout(db->tdb, k->ptr, k->len);
 }
 
-static dfsch_mapping_methods_t table_mapping = {
-  .ref = table_ref,
-  .set = table_set,
-  .unset = table_unset,
-};
-
-static dfsch_object_t* table_get_iterator(table_t* db){
+static dfsch_object_t* table_get_keys_iterator(table_t* db){
   int len;
   char* res;
   dfsch_object_t* it = NULL;
@@ -239,6 +233,33 @@ static dfsch_object_t* table_get_iterator(table_t* db){
   }
 
   return it;
+}
+
+
+static dfsch_mapping_methods_t table_mapping = {
+  .ref = table_ref,
+  .set = table_set,
+  .unset = table_unset,
+
+  .get_keys_iterator = table_get_keys_iterator,
+};
+
+static dfsch_object_t* tcidl_2_entries(table_t* db, dfsch_object_t* idl){
+  dfsch_object_t* res = NULL;
+
+  while (DFSCH_PAIR_P(idl)){
+    dfsch_object_t* k = DFSCH_FAST_CAR(idl);
+    dfsch_object_t* v = table_ref(db, k);
+
+    res = dfsch_cons(dfsch_list(2, k, v), res);
+
+    idl = DFSCH_FAST_CDR(idl);
+  }
+  return res;
+}
+
+static dfsch_object_t* table_get_iterator(table_t* db){
+  return tcidl_2_entries(db, table_get_keys_iterator(db));
 }
 
 static dfsch_collection_methods_t table_collection = {
