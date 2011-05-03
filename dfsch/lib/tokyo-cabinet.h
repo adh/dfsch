@@ -60,4 +60,7 @@ void dfsch_tokyo_cabinet_set_query_limit(dfsch_object_t* qo,
                                          int count,
                                          int skip);
 
+dfsch_object_t* dfsch_tokyo_cabinet_query_search(dfsch_object_t* qo);
+dfsch_object_t* dfsch_tokyo_cabinet_query_get_records(dfsch_object_t* qo);
+
 #endif

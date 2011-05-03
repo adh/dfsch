@@ -359,6 +359,28 @@ dfsch_object_t* dfsch_tokyo_cabinet_list_2_object(TCLIST* list){
   return it;
 }
 
+static dfsch_object_t* tct_list_2_kvs(table_t* db, TCLIST* list){
+  int i;
+  int count;
+  dfsch_object_t* it = NULL;
+  count = tclistnum(list);
+  for (i = 0; i < count; i++){
+    int len;
+    char* res = tclistval(list, count - i - 1, &len);
+    TCMAP* rr = tctdbget(db->tdb, res, len);
+
+    if (rr){
+      it = dfsch_cons(dfsch_list(2,
+                                 dfsch_make_byte_vector(res, len),
+                                 dfsch_tokyo_cabinet_map_2_object(rr)),
+                      it);
+      tcmapdel(rr);
+    }
+  }    
+  return it;
+}
+
+
 TCMAP* dfsch_tokyo_cabinet_object_2_map(dfsch_object_t* obj){
   TCMAP* map = tcmapnew2(31);
   dfsch_object_t* i = dfsch_collection_get_iterator(obj);
@@ -593,6 +615,20 @@ dfsch_object_t* dfsch_tokyo_cabinet_query_search(dfsch_object_t* qo){
     dfsch_error("Query search failed", q);
   }
   res = dfsch_tokyo_cabinet_list_2_object(tcr);
+  tclistdel(tcr);
+  return res;
+}
+
+dfsch_object_t* dfsch_tokyo_cabinet_query_get_records(dfsch_object_t* qo){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tctdbqrysearch(q->qry);
+  if (!tcr){
+    dfsch_error("Query search failed", q);
+  }
+  res = tct_list_2_kvs(q->db, tcr);
   tclistdel(tcr);
   return res;
 }

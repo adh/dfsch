@@ -200,6 +200,15 @@ DFSCH_DEFINE_PRIMITIVE(query_search, "Execute query and return list of "
   return dfsch_tokyo_cabinet_query_search(query);
 }
 
+DFSCH_DEFINE_PRIMITIVE(query_get_records, "Execute query and return list of "
+                       "matching records"){
+  dfsch_object_t* query;
+  DFSCH_OBJECT_ARG(args, query);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_tokyo_cabinet_query_get_records(query);
+}
+
 void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
   dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet",
                                                "Tokyo Cabinet interface");
@@ -273,5 +282,8 @@ void dfsch_module_tokyo_cabinet_register(dfsch_object_t* env){
   dfsch_define_method_pkgcstr_1(env, tc_pkg, "query-search", 
                                 DFSCH_TOKYO_CABINET_QUERY_TYPE,
                                 DFSCH_PRIMITIVE_REF(query_search));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "query-get-records", 
+                                DFSCH_TOKYO_CABINET_QUERY_TYPE,
+                                DFSCH_PRIMITIVE_REF(query_get_records));
 
 }
