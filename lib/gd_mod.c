@@ -608,6 +608,38 @@ DFSCH_DEFINE_PRIMITIVE(string_up,
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_ft, 
+                       "Draw string with FreeType/TrueType font"){
+  gdImagePtr image;
+  char* fontname;
+  int x;
+  int y;
+  char* str;
+  int color;
+  int brect[4];
+  double ptsize;
+  double angle;
+  char* res;
+
+  DFSCH_GD_IMAGE_ARG(args, image);
+  DFSCH_STRING_ARG(args, fontname);
+  DFSCH_DOUBLE_ARG(args, ptsize);
+  DFSCH_LONG_ARG(args, x);
+  DFSCH_LONG_ARG(args, y);
+  DFSCH_STRING_ARG(args, str);
+  DFSCH_LONG_ARG(args, color);
+  DFSCH_DOUBLE_ARG_OPT(args, angle, 0);
+  DFSCH_ARG_END(args);
+  
+  res = gdImageStringFT(image, &brect, color, fontname, ptsize, angle, x, y, str);
+
+  if (res){
+    dfsch_error("Error drawing string",
+                dfsch_make_string_cstr(res));
+  }
+
+  return NULL;
+}
 
 
 void dfsch_module_gd_register(dfsch_object_t* env){
@@ -699,5 +731,7 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(char_up));
   dfsch_defcanon_pkgcstr(env, gd, "string-up",
                          DFSCH_PRIMITIVE_REF(string_up));
+  dfsch_defcanon_pkgcstr(env, gd, "string-ft",
+                         DFSCH_PRIMITIVE_REF(string_ft));
 
 }
