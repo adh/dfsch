@@ -128,7 +128,7 @@ DFSCH_DEFINE_PRIMITIVE(color,
   return dfsch_make_number_from_long(color);
 }
 DFSCH_DEFINE_PRIMITIVE(color_alpha, 
-                       "Allocate color with given RGB values"){
+                       "Allocate color with given RGBA values"){
   gdImagePtr image;
   int r;
   int g;
@@ -616,10 +616,11 @@ DFSCH_DEFINE_PRIMITIVE(string_ft,
   int y;
   char* str;
   int color;
-  int brect[4];
+  int brect[8];
   double ptsize;
   double angle;
   char* res;
+  int i;
 
   DFSCH_GD_IMAGE_ARG(args, image);
   DFSCH_STRING_ARG(args, fontname);
@@ -631,14 +632,26 @@ DFSCH_DEFINE_PRIMITIVE(string_ft,
   DFSCH_DOUBLE_ARG_OPT(args, angle, 0);
   DFSCH_ARG_END(args);
   
-  res = gdImageStringFT(image, &brect, color, fontname, ptsize, angle, x, y, str);
+  res = gdImageStringFT(image, brect, color, fontname, ptsize, angle, x, y, str);
 
   if (res){
     dfsch_error("Error drawing string",
                 dfsch_make_string_cstr(res));
   }
 
-  return NULL;
+  return dfsch_vector(4,
+                      dfsch_vector(2,
+                                   DFSCH_MAKE_FIXNUM(brect[0]),
+                                   DFSCH_MAKE_FIXNUM(brect[1])),
+                      dfsch_vector(2,
+                                   DFSCH_MAKE_FIXNUM(brect[2]),
+                                   DFSCH_MAKE_FIXNUM(brect[3])),
+                      dfsch_vector(2,
+                                   DFSCH_MAKE_FIXNUM(brect[4]),
+                                   DFSCH_MAKE_FIXNUM(brect[5])),
+                      dfsch_vector(2,
+                                   DFSCH_MAKE_FIXNUM(brect[6]),
+                                   DFSCH_MAKE_FIXNUM(brect[7])));
 }
 
 
