@@ -1165,9 +1165,13 @@ parse_atxheader(struct buf *ob, struct render *rndr,
 	skip = end;
 	while (end && data[end - 1] == '#') end -= 1;
 	while (end && (data[end - 1] == ' ' || data[end - 1] == '\t')) end -= 1;
-	work.size = end - i;
-	if (rndr->make.header)
-		rndr->make.header(ob, &work, level, rndr->make.opaque);
+        if (i < end){
+          work.size = end - i;
+        } else {
+          work.size = 0;
+        }
+        if (rndr->make.header)
+          rndr->make.header(ob, &work, level, rndr->make.opaque);
 	return skip; }
 
 

@@ -170,6 +170,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	csv.la \
 	crypto.la \
 	sql-support.la \
+	markdown.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
@@ -522,6 +523,16 @@ libdfsch_gd_la_LDFLAGS = -no-undefined
 gd_la_SOURCES = lib/gd_mod.c
 gd_la_LIBADD = libdfsch-gd.la libdfsch.la
 gd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+
+markdown_la_SOURCES = lib/markdown_mod.c \
+	ext/upskirt/markdown.c \
+	ext/upskirt/array.c \
+	ext/upskirt/buffer.c \
+	ext/upskirt/renderers.c
+markdown_la_LIBADD = libdfsch.la
+markdown_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 if WIN32
 gui_flags = -mwindows

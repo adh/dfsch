@@ -69,20 +69,20 @@ static void
 rndr_blockcode(struct buf *ob, struct buf *text, void *opaque) {
 	if (ob->size) bufputc(ob, '\n');
 	BUFPUTSL(ob, "<pre><code>");
-	if (text) lus_attr_escape(ob, text->data, text->size);
+	if (text && text->size > 0) lus_attr_escape(ob, text->data, text->size);
 	BUFPUTSL(ob, "</code></pre>\n"); }
 
 static void
 rndr_blockquote(struct buf *ob, struct buf *text, void *opaque) {
 	if (ob->size) bufputc(ob, '\n');
 	BUFPUTSL(ob, "<blockquote>\n");
-	if (text) bufput(ob, text->data, text->size);
+	if (text && text->size > 0) bufput(ob, text->data, text->size);
 	BUFPUTSL(ob, "</blockquote>\n"); }
 
 static int
 rndr_codespan(struct buf *ob, struct buf *text, void *opaque) {
 	BUFPUTSL(ob, "<code>");
-	if (text) lus_attr_escape(ob, text->data, text->size);
+	if (text && text->size > 0) lus_attr_escape(ob, text->data, text->size);
 	BUFPUTSL(ob, "</code>");
 	return 1; }
 
@@ -98,7 +98,7 @@ static int
 rndr_emphasis(struct buf *ob, struct buf *text, char c, void *opaque) {
 	if (!text || !text->size) return 0;
 	BUFPUTSL(ob, "<em>");
-	if (text) bufput(ob, text->data, text->size);
+	if (text && text->size > 0) bufput(ob, text->data, text->size);
 	BUFPUTSL(ob, "</em>");
 	return 1; }
 
@@ -106,7 +106,7 @@ static void
 rndr_header(struct buf *ob, struct buf *text, int level, void *opaque) {
 	if (ob->size) bufputc(ob, '\n');
 	bufprintf(ob, "<h%d>", level);
-	if (text) bufput(ob, text->data, text->size);
+	if (text && text->size > 0) bufput(ob, text->data, text->size);
 	bufprintf(ob, "</h%d>\n", level); }
 
 static int
@@ -126,13 +126,13 @@ static void
 rndr_list(struct buf *ob, struct buf *text, int flags, void *opaque) {
 	if (ob->size) bufputc(ob, '\n');
 	bufput(ob, flags & MKD_LIST_ORDERED ? "<ol>\n" : "<ul>\n", 5);
-	if (text) bufput(ob, text->data, text->size);
+	if (text && text->size > 0) bufput(ob, text->data, text->size);
 	bufput(ob, flags & MKD_LIST_ORDERED ? "</ol>\n" : "</ul>\n", 6); }
 
 static void
 rndr_listitem(struct buf *ob, struct buf *text, int flags, void *opaque) {
 	BUFPUTSL(ob, "<li>");
-	if (text) {
+	if (text && text->size > 0) {
 		while (text->size && text->data[text->size - 1] == '\n')
 			text->size -= 1;
 		bufput(ob, text->data, text->size); }
@@ -140,19 +140,19 @@ rndr_listitem(struct buf *ob, struct buf *text, int flags, void *opaque) {
 
 static void
 rndr_normal_text(struct buf *ob, struct buf *text, void *opaque) {
-	if (text) lus_attr_escape(ob, text->data, text->size); }
+	if (text && text->size > 0) lus_attr_escape(ob, text->data, text->size); }
 
 static void
 rndr_paragraph(struct buf *ob, struct buf *text, void *opaque) {
 	if (ob->size) bufputc(ob, '\n');
 	BUFPUTSL(ob, "<p>");
-	if (text) bufput(ob, text->data, text->size);
+	if (text && text->size > 0) bufput(ob, text->data, text->size);
 	BUFPUTSL(ob, "</p>\n"); }
 
 static void
 rndr_raw_block(struct buf *ob, struct buf *text, void *opaque) {
 	size_t org, sz;
-	if (!text) return;
+	if (!text || text->size <= 0) return;
 	sz = text->size;
 	while (sz > 0 && text->data[sz - 1] == '\n') sz -= 1;
 	org = 0;
