@@ -117,7 +117,7 @@ DFSCH_DEFINE_PRIMITIVE(split_byte_vector,
                           1);
 }
 DFSCH_DEFINE_PRIMITIVE(replace,
-                       "Split string into parts delimited by pattern"){
+                       "Replace occurences of pattern"){
   pcre* pattern;
   dfsch_strbuf_t* str;
   dfsch_strbuf_t* template;
@@ -134,7 +134,7 @@ DFSCH_DEFINE_PRIMITIVE(replace,
                                                      dfsch_pcre_parse_options(args)));
 }
 DFSCH_DEFINE_PRIMITIVE(replace_byte_vector,
-                       "Split string into parts delimited by pattern"){
+                       "Replace occurrences of pattern"){
   pcre* pattern;
   dfsch_strbuf_t* str;
   dfsch_strbuf_t* template;
@@ -148,6 +148,22 @@ DFSCH_DEFINE_PRIMITIVE(replace_byte_vector,
                                                           str->len,
                                                           template->ptr,
                                                           template->len,
+                                                          dfsch_pcre_parse_options(args)));
+}
+DFSCH_DEFINE_PRIMITIVE(replace_func,
+                       "Split string into parts delimited by pattern"){
+  pcre* pattern;
+  dfsch_strbuf_t* str;
+  dfsch_object_t* expander_proc;
+
+  DFSCH_PCRE_PATTERN_ARG(args, pattern);
+  DFSCH_OBJECT_ARG(args, expander_proc);
+  DFSCH_BUFFER_ARG(args, str);
+
+  return dfsch_make_string_nocopy(dfsch_pcre_replace_func(pattern, 
+                                                          str->ptr, 
+                                                          str->len,
+                                                          expander_proc,
                                                           dfsch_pcre_parse_options(args)));
 }
 
@@ -178,4 +194,6 @@ void dfsch_module_pcre_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(replace));
   dfsch_defcanon_pkgcstr(env, pcre, "replace-byte-vector",
                          DFSCH_PRIMITIVE_REF(replace_byte_vector));
+  dfsch_defcanon_pkgcstr(env, pcre, "replace-func",
+                         DFSCH_PRIMITIVE_REF(replace_func));
 }
