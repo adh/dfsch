@@ -36,5 +36,9 @@ dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
                                    char* string, size_t len,
                                    char* template, size_t tlen,
                                    int options);
+dfsch_strbuf_t* dfsch_pcre_replace_func(pcre* pattern,
+                                        char* string, size_t len,
+                                        dfsch_object_t* exp,
+                                        int options);
 
 #endif

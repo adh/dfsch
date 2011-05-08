@@ -317,3 +317,50 @@ dfsch_strbuf_t* dfsch_pcre_replace(pcre* pattern,
 
   return dfsch_sl_value_strbuf(sl); 
 }
+
+dfsch_strbuf_t* dfsch_pcre_replace_func(pcre* pattern,
+                                        char* string, size_t len,
+                                        dfsch_object_t* exp,
+                                        int options){
+  int res;
+  size_t vs;
+  int ssl;
+  int off = 0;
+  dfsch_str_list_t* sl = dfsch_sl_create();
+  int comp_options;
+  int count;
+  dfsch_strbuf_t* repl;
+  int i;
+  dfsch_object_t* v;
+
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_OPTIONS, &comp_options);
+  pcre_fullinfo(pattern, NULL, PCRE_INFO_CAPTURECOUNT, &ssl);
+
+  ssl++;
+  vs = ssl * 3;
+  int vec[vs];
+
+  while (count = match_res(pcre_exec(pattern, NULL, 
+                                     string, len, off, 
+                                     options, vec, vs))){
+    dfsch_sl_nappend(sl, string + off, vec[0] - off);
+
+    v = dfsch_make_vector(count, NULL);
+    for (i = 0; i < count; i++){
+      dfsch_vector_set(v, i, 
+                       make_substring(string,
+                                      v, i,
+                                      comp_options, 
+                                      0));
+    }
+
+    repl = dfsch_string_to_buf(dfsch_apply(exp, dfsch_list(1, vec)));
+
+    dfsch_sl_nappend(sl, repl->ptr, repl->len);
+    off = vec[1];
+  }
+
+  dfsch_sl_nappend(sl, string + off, len - off);
+
+  return dfsch_sl_value_strbuf(sl); 
+}
