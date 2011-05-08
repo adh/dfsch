@@ -23,7 +23,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/crypto.h \
 	dfsch/lib/tokyo-cabinet.h \
 	dfsch/lib/tokyo-tyrant.h \
-	dfsch/lib/gd.h
+	dfsch/lib/gd.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
