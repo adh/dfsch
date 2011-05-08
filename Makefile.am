@@ -247,7 +247,7 @@ boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
 
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
-	src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc tools/docgen.scm \
+	src/udata-gen.c src/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
 	$(dfschlibscm_DATA) \
 	examples/tk-gui-demo.scm \
@@ -256,7 +256,7 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/main.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
-	tests/fix-regression-test.scm
+	tests/fix-regression-tests.scm
 
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
