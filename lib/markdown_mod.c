@@ -28,6 +28,8 @@ static struct mkd_renderer* find_renderer(char* name){
 
 typedef struct callbacks_t {
   dfsch_object_t* html_block;
+  dfsch_object_t* code_block;
+  dfsch_object_t* blockquote;
   dfsch_object_t* link;
   dfsch_object_t* autolink;
   dfsch_object_t* html_tag;
@@ -61,6 +63,8 @@ typedef struct callbacks_t {
   }
 
 SIMPLE_STUB(html_block)
+SIMPLE_STUB(blockquote)
+SIMPLE_STUB(code_block)
 SIMPLE_STUB_INT(html_tag)
 
 static void stub_link(struct buf* ob, struct buf* link, struct buf* title, 
@@ -100,6 +104,8 @@ static void stub_autolink(struct buf* ob, struct buf* link,
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   char* base_renderer_name;
   dfsch_object_t* html_block = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* code_block = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* blockquote = DFSCH_INVALID_OBJECT;
   dfsch_object_t* link = DFSCH_INVALID_OBJECT;
   dfsch_object_t* autolink = DFSCH_INVALID_OBJECT;
   dfsch_object_t* html_tag = DFSCH_INVALID_OBJECT;
@@ -115,6 +121,8 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
 
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("html-block", html_block);
+  DFSCH_KEYWORD("code-block", code_block);
+  DFSCH_KEYWORD("blockquote", blockquote);
   DFSCH_KEYWORD("html-tag", html_tag);
   DFSCH_KEYWORD("link", link);
   DFSCH_KEYWORD("autolink", autolink);
@@ -135,7 +143,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
     }                                            \
   }
 
+  OVERRIDE(code_block, blockcode);
   OVERRIDE(html_block, blockhtml);
+  OVERRIDE(blockquote, blockquote);
   OVERRIDE(link, link);
   OVERRIDE(autolink, autolink);
 
