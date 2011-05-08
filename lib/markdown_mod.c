@@ -26,11 +26,120 @@ static struct mkd_renderer* find_renderer(char* name){
   dfsch_error("No such renderer", dfsch_make_string_cstr(name));
 }
 
+typedef struct callbacks_t {
+  dfsch_object_t* html_block;
+  dfsch_object_t* link;
+  dfsch_object_t* autolink;
+  dfsch_object_t* html_tag;
+} callbacks_t;
+
+#define SIMPLE_STUB(name)                                               \
+  static void stub_##name(struct buf* ob, struct buf* ib, callbacks_t* cb){ \
+    dfsch_object_t* res = dfsch_apply(cb->name,                         \
+                                      dfsch_list(1,                     \
+                                                 dfsch_make_string_buf(ib->data, \
+                                                                       ib->size))); \
+    if (res) {                                                          \
+      dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
+      bufput(ob, buf->ptr, buf->len);                                   \
+    }                                                                   \
+  }
+
+#define SIMPLE_STUB_INT(name)                                           \
+  static int stub_##name(struct buf* ob, struct buf* ib, callbacks_t* cb){ \
+    dfsch_object_t* res = dfsch_apply(cb->name,                         \
+                                      dfsch_list(1,                     \
+                                                 dfsch_make_string_buf(ib->data, \
+                                                                       ib->size))); \
+    if (res) {                                                          \
+      dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
+      bufput(ob, buf->ptr, buf->len);                                   \
+      return 1;                                                         \
+    } else {                                                            \
+      return 0;                                                         \
+    }                                                                   \
+  }
+
+SIMPLE_STUB(html_block)
+SIMPLE_STUB_INT(html_tag)
+
+static void stub_link(struct buf* ob, struct buf* link, struct buf* title, 
+                      struct buf* content, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->link,                         
+                                    dfsch_list(3,                     
+                                               dfsch_make_string_buf(link->data, 
+                                                                     link->size), 
+                                               dfsch_make_string_buf(title->data, 
+                                                                     title->size), 
+                                               dfsch_make_string_buf(content->data, 
+                                                                     content->size)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+    return 1;
+  } else {
+    return 0;
+  }                                                                   
+}
+static void stub_autolink(struct buf* ob, struct buf* link,
+                          enum mkd_autolink type, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->link,                         
+                                    dfsch_list(1,                     
+                                               dfsch_make_string_buf(link->data, 
+                                                                     link->size)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+    return 1;
+  } else {
+    return 0;
+  }                                                                   
+}
+
+
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
-  char* name;
-  DFSCH_STRING_OR_SYMBOL_ARG_OPT(args, name, "html");
+  char* base_renderer_name;
+  dfsch_object_t* html_block = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* link = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* autolink = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* html_tag = DFSCH_INVALID_OBJECT;
+  struct mkd_renderer* base;
+  struct mkd_renderer* res;
+  callbacks_t* cb = GC_NEW(callbacks_t);
+
+  DFSCH_STRING_OR_SYMBOL_ARG_OPT(args, base_renderer_name, "html");
+  base = find_renderer(base_renderer_name);
+  if (!args){
+    return base;
+  }
+
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("html-block", html_block);
+  DFSCH_KEYWORD("html-tag", html_tag);
+  DFSCH_KEYWORD("link", link);
+  DFSCH_KEYWORD("autolink", autolink);
+  DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
-  return find_renderer(name);
+
+  res = GC_NEW(struct mkd_renderer);
+  memcpy(res, base, sizeof(struct mkd_renderer));
+  res->opaque = cb;
+
+#define OVERRIDE(varname, methname)              \
+  if (varname != DFSCH_INVALID_OBJECT){          \
+    if (varname) {                               \
+      cb->varname = varname;                     \
+      res->methname = stub_##varname;            \
+    } else {                                     \
+      res->methname = NULL;                      \
+    }                                            \
+  }
+
+  OVERRIDE(html_block, blockhtml);
+  OVERRIDE(link, link);
+  OVERRIDE(autolink, autolink);
+
+  return res;
 }
 
 DFSCH_DEFINE_PRIMITIVE(markdown, "Transform text"){
@@ -49,7 +158,7 @@ DFSCH_DEFINE_PRIMITIVE(markdown, "Transform text"){
 
 
   ob = bufnew(128);
-  markdown(ob, &ib, &mkd_html);
+  markdown(ob, &ib, rndr);
   res = dfsch_make_string_buf(ob->data, ob->size);
   bufrelease(ob);
 
