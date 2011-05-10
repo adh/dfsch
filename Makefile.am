@@ -508,7 +508,8 @@ tokyo_cabinet_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la
 tokyo_cabinet_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant.c
-libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la -ltokyocabinet -ltokyotyrant
+libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la \
+	-ltokyocabinet -ltokyotyrant
 libdfsch_tokyo_tyrant_la_LDFLAGS = -no-undefined
 
 tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant_mod.c

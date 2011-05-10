@@ -3,9 +3,13 @@
 
 #include <dfsch/dfsch.h>
 #include <dfsch/hash.h>
+#include <dfsch/lib/tokyo-cabinet.h>
 
 extern dfsch_type_t dfsch_tokyo_tyrant_db_type;
 #define DFSCH_TOKYO_TYRANT_DB_TYPE (&dfsch_tokyo_tyrant_db_type)
+
+extern dfsch_type_t dfsch_tokyo_tyrant_table_type;
+#define DFSCH_TOKYO_TYRANT_TABLE_TYPE (&dfsch_tokyo_tyrant_table_type)
 
 dfsch_object_t* dfsch_tokyo_tyrant_db_open(char* name);
 void dfsch_tokyo_tyrant_db_close(dfsch_object_t*db);

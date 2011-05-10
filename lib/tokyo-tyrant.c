@@ -154,3 +154,146 @@ dfsch_object_t* dfsch_tokyo_tyrant_prefix_search(dfsch_object_t* dbo,
   return it;
 }
 
+typedef struct table_t {
+  dfsch_type_t* type;
+  TCRDB* tdb;
+} table_t;
+
+static dfsch_object_t* table_ref(table_t* db,
+                                 dfsch_object_t* key){
+  dfsch_strbuf_t* k = dfsch_string_to_buf(key);
+  TCMAP* res = tcrdbtblget(db->tdb, k->ptr, k->len);
+  dfsch_object_t* value;
+  
+  if (res){
+    value = dfsch_tokyo_cabinet_map_2_object(res);
+    tcmapdel(res);
+    return value;
+  } else {
+    return NULL;
+  }
+}
+
+static void table_set(table_t* db,
+                      dfsch_object_t* key,
+                      dfsch_object_t* value){
+  dfsch_strbuf_t* k = dfsch_string_to_buf(key);
+  TCMAP* v = dfsch_tokyo_cabinet_object_2_map(value);
+
+  if (!tcrdbtblput(db->tdb, k->ptr, k->len, v)){
+    tcmapdel(v);
+    dfsch_error("Error writing to database", db);
+  }
+  tcmapdel(v);
+}
+
+static void table_unset(table_t* db,
+                        dfsch_object_t* key){
+  dfsch_strbuf_t* k = dfsch_string_to_buf(key);
+
+  return tcrdbtblout(db->tdb, k->ptr, k->len);
+}
+
+static dfsch_object_t* table_get_keys_iterator(table_t* db){
+  int len;
+  char* res;
+  dfsch_object_t* it = NULL;
+  if (!tcrdbiterinit(db->tdb)){
+    dfsch_error("Error in interinit", db);
+  }
+
+  while (res = tctdbiternext(db->tdb, &len)){
+    it = dfsch_cons(dfsch_make_byte_vector(res, len),
+                    it);
+    free(res);
+  }
+
+  return it;
+}
+
+
+static dfsch_mapping_methods_t table_mapping = {
+  .ref = table_ref,
+  .set = table_set,
+  .unset = table_unset,
+
+  .get_keys_iterator = table_get_keys_iterator,
+};
+
+static dfsch_object_t* tcidl_2_entries(table_t* db, dfsch_object_t* idl){
+  dfsch_object_t* res = NULL;
+
+  while (DFSCH_PAIR_P(idl)){
+    dfsch_object_t* k = DFSCH_FAST_CAR(idl);
+    dfsch_object_t* v = table_ref(db, k);
+
+    res = dfsch_cons(dfsch_list(2, k, v), res);
+
+    idl = DFSCH_FAST_CDR(idl);
+  }
+  return res;
+}
+
+static dfsch_object_t* table_get_iterator(table_t* db){
+  return tcidl_2_entries(db, table_get_keys_iterator(db));
+}
+
+static dfsch_collection_methods_t table_collection = {
+  .get_iterator = table_get_iterator,
+};
+
+dfsch_type_t dfsch_tokyo_tyrant_table_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  //  .superclass = DFSCH_HASH_BASETYPE,
+  .name = "tokyo-tyrant:table",
+  .size = sizeof(table_t),
+  
+  .mapping = &table_mapping,
+  .collection = &table_collection,
+};
+
+static void table_finalizer(table_t* db, void* discard){
+  if (db->type == DFSCH_TOKYO_TYRANT_TABLE_TYPE){
+    tcrdbdel(db->tdb);
+  }
+}
+
+
+dfsch_object_t* dfsch_tokyo_tyrant_table_open(char* name){
+  TCRDB* tdb = tcrdbnew();
+  table_t* db = dfsch_make_object(DFSCH_TOKYO_TYRANT_TABLE_TYPE);
+
+
+
+  if (!tcrdbopen2(tdb, name)){
+    tcrdbdel(tdb);
+    dfsch_error("Cannot open database", dfsch_make_string_cstr(name));
+  }
+
+  db->tdb = tdb;
+  
+  return db;
+}
+void dfsch_tokyo_tyrant_table_close(dfsch_object_t*dbo){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_TYRANT_TABLE_TYPE);
+  tcrdbclose(db->tdb);
+  tcrdbdel(db->tdb);
+  dfsch_invalidate_object(db);
+}
+
+dfsch_object_t* dfsch_tokyo_tyrant_table_prefix_search(dfsch_object_t* dbo,
+                                                        char* buf, size_t len,
+                                                        int limit){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_TYRANT_TABLE_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tcrdbfwmkeys(db->tdb, buf, len, limit);
+  if (!tcr){
+    dfsch_error("tctdbfwmkeys returned null", NULL);
+  }
+  res = dfsch_tokyo_cabinet_list_2_object(tcr);
+  tclistdel(tcr);
+  return res;
+}
+
