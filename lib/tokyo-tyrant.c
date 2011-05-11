@@ -297,3 +297,193 @@ dfsch_object_t* dfsch_tokyo_tyrant_table_prefix_search(dfsch_object_t* dbo,
   return res;
 }
 
+void dfsch_tokyo_tyrant_table_set_index(dfsch_object_t* dbo,
+                                        char* name,
+                                        int type){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_TYRANT_TABLE_TYPE);
+  int tcr;
+
+  tcr = tcrdbtblsetindex(db->tdb, name, type);
+  if (!tcr && !(type & TDBITKEEP)){
+    dfsch_error("Error modifying table index", db);
+  }
+}
+
+int dfsch_tokyo_tyrant_parse_index_type(dfsch_object_t* args){
+  int type = RDBITKEEP;
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, type);
+  DFSCH_FLAG_SET("lexical", RDBITLEXICAL, type);
+  DFSCH_FLAG_SET("decimal", RDBITDECIMAL, type);
+  DFSCH_FLAG_SET("token", RDBITTOKEN, type);
+  DFSCH_FLAG_SET("full-text", RDBITTOKEN, type);
+  DFSCH_FLAG_SET("q-gram", RDBITQGRAM, type);
+  DFSCH_FLAG_PARSER_END(args);
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, type);
+  DFSCH_FLAG_UNSET("rebuild", RDBITKEEP, type);
+  DFSCH_FLAG_SET("optimize", RDBITOPT, type);
+  DFSCH_FLAG_SET("remove", RDBITVOID, type);
+  DFSCH_FLAG_PARSER_END(args);
+
+  return type;
+}
+
+typedef struct query_t {
+  dfsch_type_t* type;
+  RDBQRY* qry;
+  table_t* db;
+} query_t;
+
+dfsch_type_t dfsch_tokyo_tyrant_query_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "tokyo-tyrant:query",
+  .size = sizeof(query_t),
+};
+
+static void query_finalizer(query_t* q, void* discard){
+  if (q->type == DFSCH_TOKYO_TYRANT_QUERY_TYPE){
+    tcrdbqrydel(q->qry);
+  }
+}
+
+dfsch_object_t* dfsch_tokyo_tyrant_make_query(dfsch_object_t* dbo){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_TYRANT_TABLE_TYPE);
+  query_t* q = dfsch_make_object(DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  
+  q->db = db; /* for GC visibility */
+  q->qry = tcrdbqrynew(db->tdb);
+
+  GC_REGISTER_FINALIZER(q, (GC_finalization_proc)query_finalizer,
+                        NULL, NULL, NULL);
+
+  return q;
+}
+
+void dfsch_tokyo_tyrant_add_query_condition(dfsch_object_t* qo,
+                                             char* col_name,
+                                             dfsch_object_t* args){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  char* expr;
+
+  int op = 0;
+
+  if (DFSCH_PAIR_P(args) && 
+      dfsch_compare_keyword(DFSCH_FAST_CAR(args), "not")){
+    op |= RDBQCNEGATE;
+    args = DFSCH_FAST_CDR(args);
+  }
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, op);
+  DFSCH_FLAG_SET("equal", RDBQCSTREQ, op);
+  DFSCH_FLAG_SET("includes", RDBQCSTRINC, op);
+  DFSCH_FLAG_SET("begins-with", RDBQCSTRBW, op);
+  DFSCH_FLAG_SET("ends-with", RDBQCSTREW, op);
+  DFSCH_FLAG_SET("includes-all", RDBQCSTRAND, op);
+  DFSCH_FLAG_SET("includes-some", RDBQCSTROR, op);
+  DFSCH_FLAG_SET("one-of", RDBQCSTROREQ, op);
+  DFSCH_FLAG_SET("regex", RDBQCSTRRX, op);
+
+  DFSCH_FLAG_SET("=", RDBQCNUMEQ, op);
+  DFSCH_FLAG_SET(">", RDBQCNUMGT, op);
+  DFSCH_FLAG_SET(">=", RDBQCNUMGE, op);
+  DFSCH_FLAG_SET("<", RDBQCNUMLT, op);
+  DFSCH_FLAG_SET("<=", RDBQCNUMLE, op);
+  DFSCH_FLAG_SET("between", RDBQCNUMBT, op);
+  DFSCH_FLAG_SET("numerically-one-of", RDBQCNUMOREQ, op);
+  
+  DFSCH_FLAG_SET("ft-phrase", RDBQCFTSPH, op);
+  DFSCH_FLAG_SET("ft-all", RDBQCFTSAND, op);
+  DFSCH_FLAG_SET("ft-some", RDBQCFTSOR, op);
+  DFSCH_FLAG_SET("ft-compound", RDBQCFTSEX, op);
+  DFSCH_FLAG_PARSER_END(args);
+
+  if (DFSCH_PAIR_P(args) && 
+      dfsch_keyword_p(DFSCH_FAST_CAR(args)) &&
+      dfsch_compare_keyword(DFSCH_FAST_CAR(args), "no-index")){
+    op |= RDBQCNOIDX;
+    args = DFSCH_FAST_CDR(args);
+  }
+
+  tcrdbqryaddcond(q->qry, col_name, op, 
+                  dfsch_tokyo_cabinet_build_expression(args));
+}
+
+void dfsch_tokyo_tyrant_set_query_order(dfsch_object_t* qo,
+                                         char* colname,
+                                         int type){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  
+  tcrdbqrysetorder(q->qry, colname, type);
+}
+int dfsch_tokyo_tyrant_parse_order_type(dfsch_object_t* type){
+  if (dfsch_compare_keyword(type, "ascending")) {
+    return RDBQOSTRASC;
+  }
+  if (dfsch_compare_keyword(type, "descending")) {
+    return RDBQOSTRDESC;
+  }
+  if (dfsch_compare_keyword(type, "ascending-value")) {
+    return RDBQONUMASC;
+  }
+  if (dfsch_compare_keyword(type, "descending-value")) {
+    return RDBQONUMDESC;
+  }
+}
+
+void dfsch_tokyo_tyrant_set_query_limit(dfsch_object_t* qo,
+                                         int count,
+                                         int skip){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  
+  tcrdbqrysetlimit(q->qry, count, skip);
+}
+dfsch_object_t* dfsch_tokyo_tyrant_query_search(dfsch_object_t* qo){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tcrdbqrysearch(q->qry);
+  if (!tcr){
+    dfsch_error("Query search failed", q);
+  }
+  res = dfsch_tokyo_tyrant_list_2_object(tcr);
+  tclistdel(tcr);
+  return res;
+}
+
+static dfsch_object_t* tcr_list_2_kvs(table_t* db, TCLIST* list){
+  int i;
+  int count;
+  dfsch_object_t* it = NULL;
+  count = tclistnum(list);
+  for (i = 0; i < count; i++){
+    int len;
+    char* res = tclistval(list, count - i - 1, &len);
+    TCMAP* rr = tcrdbtblget(db->tdb, res, len);
+
+    if (rr){
+      it = dfsch_cons(dfsch_list(2,
+                                 dfsch_make_byte_vector(res, len),
+                                 dfsch_tokyo_cabinet_map_2_object(rr)),
+                      it);
+      tcmapdel(rr);
+    }
+  }    
+  return it;
+}
+
+
+dfsch_object_t* dfsch_tokyo_tyrant_query_get_records(dfsch_object_t* qo){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_TYRANT_QUERY_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tcrdbqrysearch(q->qry);
+  if (!tcr){
+    dfsch_error("Query search failed", q);
+  }
+  res = tcr_list_2_kvs(q->db, tcr);
+  tclistdel(tcr);
+  return res;
+}
