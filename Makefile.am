@@ -389,11 +389,24 @@ sxml_la_SOURCES = lib/sxml_mod.c
 sxml_la_LIBADD = libdfsch.la -lexpat libdfsch-sxml.la
 sxml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
-libdfsch_shtml_la_SOURCES = lib/shtml.c
-libdfsch_shtml_la_LIBADD = libdfsch.la libdfsch-inet.la
+if HUBBUB
+hubbub_libadd = -lhubbub
+hubbub_srcadd = lib/shtml-parser.c
+shtml_flags = -DHTML5_PARSER
+else
+hubbub_libadd = 
+hubbub_srcadd =
+shtml_flags =
+endif
+
+libdfsch_shtml_la_SOURCES = lib/shtml.c $(hubbub_srcadd)
+libdfsch_shtml_la_CFLAGS = $(shtml_flags)
+libdfsch_shtml_la_LIBADD = libdfsch.la libdfsch-inet.la $(hubbub_libadd)
 libdfsch_shtml_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 
+
 shtml_la_SOURCES = lib/shtml_mod.c
+shtml_la_CFLAGS = $(shtml_flags)
 shtml_la_LIBADD = libdfsch.la libdfsch-shtml.la
 shtml_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
@@ -523,6 +536,7 @@ libdfsch_gd_la_LDFLAGS = -no-undefined
 gd_la_SOURCES = lib/gd_mod.c
 gd_la_LIBADD = libdfsch-gd.la libdfsch.la
 gd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 if WIN32
 gui_flags = -mwindows

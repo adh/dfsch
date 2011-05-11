@@ -275,6 +275,28 @@ fi
 AM_CONDITIONAL(GD, test x"$enable_gd" == x"yes")
 
 
+enable_hubbub=yes
+
+AC_ARG_ENABLE([hubbub],
+    AS_HELP_STRING([--disable-hubbub], [Disable hubbub support (HTML5 parser)]))
+AC_ARG_WITH([hubbub],
+  AC_HELP_STRING([--with-hubbub=PATH], [Path to Hubbub installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_hubbub" == x"yes"; then
+    AC_CHECK_HEADERS(hubbub/parser.h, [have_hubbub="1"], [have_hubbub="0"])
+    AC_CHECK_LIB(hubbub, hubbub_parser_create, 
+                     [dummy_hubbub=], [have_hubbub="0"])
+
+    if test x"$have_hubbub" == x"0" ; then
+        enable_hubbub=no
+    fi
+fi
+
+AM_CONDITIONAL(HUBBUB, test x"$enable_hubbub" == x"yes")
+
+
 
 AC_SYS_LARGEFILE 
 
@@ -316,6 +338,7 @@ pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
 gd ................. : $enable_gd
+hubbub ............. : $enable_hubbub
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 
