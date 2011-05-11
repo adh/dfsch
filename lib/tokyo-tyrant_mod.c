@@ -32,6 +32,23 @@ DFSCH_DEFINE_PRIMITIVE(prefix_search,
   return dfsch_tokyo_tyrant_prefix_search(db, prefix->ptr, prefix->len, limit);
 }
 
+DFSCH_DEFINE_PRIMITIVE(open_table, "Open Tokyo Tyrant table database"){
+  char* name;
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  return dfsch_tokyo_tyrant_table_open(name);
+}
+
+DFSCH_DEFINE_PRIMITIVE(close_table, "Close Tokyo Tyrant table database"){
+  dfsch_object_t* db;
+  DFSCH_OBJECT_ARG(args, db);
+  DFSCH_ARG_END(args);
+
+  dfsch_tokyo_tyrant_table_close(db);
+  return NULL;
+}
+
 
 void dfsch_module_tokyo_tyrant_register(dfsch_object_t* env){
   dfsch_package_t* tc_pkg = dfsch_make_package("tokyo-cabinet", NULL);
@@ -49,5 +66,12 @@ void dfsch_module_tokyo_tyrant_register(dfsch_object_t* env){
                                 DFSCH_TOKYO_TYRANT_DB_TYPE,
                                 DFSCH_PRIMITIVE_REF(prefix_search));
   dfsch_defcanon_pkgcstr(env, tc_pkg, "<db>", DFSCH_TOKYO_TYRANT_DB_TYPE);
+
+  dfsch_defcanon_pkgcstr(env, tt_pkg, "open-table", 
+                         DFSCH_PRIMITIVE_REF(open_table));
+  dfsch_define_method_pkgcstr_1(env, tc_pkg, "close!", 
+                                DFSCH_TOKYO_TYRANT_TABLE_TYPE,
+                                DFSCH_PRIMITIVE_REF(close_table));
+
 
 }
