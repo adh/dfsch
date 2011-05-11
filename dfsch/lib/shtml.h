@@ -27,4 +27,6 @@ void dfsch_shtml_emit_port(dfsch_object_t* infoset, dfsch_object_t* port,
 void dfsch_shtml_emit_file(dfsch_object_t* infoset, char* filename,
                           dfsch_shtml_emitter_params_t* params);
 
+dfsch_object_t* dfsch_shtml_parse_buf(char* buf, size_t len, char* encoding);
+
 #endif

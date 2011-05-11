@@ -38,6 +38,17 @@ DFSCH_DEFINE_PRIMITIVE(emit_port, 0){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(parse_string, "Parse HTML5 document from string"){
+  dfsch_strbuf_t* document;
+  char* encoding;
+
+  DFSCH_BUFFER_ARG(args, document);
+  DFSCH_STRING_ARG_OPT(args, encoding, NULL);
+  DFSCH_ARG_END(args);
+
+  return dfsch_shtml_parse_buf(document->ptr, document->len, encoding);
+}
+
 void dfsch_module_shtml_register(dfsch_object_t* env){
   dfsch_package_t* xml_pkg = dfsch_make_package("shtml",
                                                 "HTML5 output support");
@@ -48,4 +59,7 @@ void dfsch_module_shtml_register(dfsch_object_t* env){
                        DFSCH_PRIMITIVE_REF(emit_file));
   dfsch_defcanon_pkgcstr(env, xml_pkg, "emit-port", 
                        DFSCH_PRIMITIVE_REF(emit_port));
+
+  dfsch_defcanon_pkgcstr(env, xml_pkg, "parse-string", 
+                       DFSCH_PRIMITIVE_REF(parse_string));
 }

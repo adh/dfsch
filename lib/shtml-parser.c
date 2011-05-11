@@ -64,7 +64,7 @@ DFSCH_LOCAL_SYMBOL_CACHE(":literal-output", literal_symbol);
 
 typedef struct context_t {
   dfsch_object_t* document_element;
-  dfsch_object_t* parent_map;
+  dfsch_hash_t* parent_map;
 } context_t;
 
 /**
@@ -161,7 +161,7 @@ hubbub_error ref_node(void *ctx, void *node){
  * parent, and it is not the document node, then it is destroyed.
  */
 hubbub_error unref_node(void *ctx, void *node){
-	return HUBBUB_OK;
+  return HUBBUB_OK;
 }
 
 /**
@@ -401,4 +401,43 @@ hubbub_error set_quirks_mode(void *ctx, hubbub_quirks_mode mode)
  */
 hubbub_error change_encoding(void *ctx, const char *charset){
   return HUBBUB_OK;
+}
+
+static void* hb_realloc(void* ptr, size_t len, void* discard){
+  puts("mnau!");
+  return GC_REALLOC(ptr, len);
+}
+
+dfsch_object_t* dfsch_shtml_parse_buf(char* buf, size_t len, char* encoding){
+  hubbub_error ret;
+  hubbub_parser* parser;
+  hubbub_tree_handler handler = tree_handler;
+  hubbub_parser_optparams params;
+  context_t context;
+
+  ret = hubbub_parser_create(encoding, 1, hb_realloc, NULL, &parser);
+  if (ret != HUBBUB_OK){
+    if (ret == HUBBUB_BADENCODING){
+      dfsch_error("Invalid encoding specified", 
+                  encoding ? dfsch_make_string_cstr(encoding) : NULL);
+    } else {
+      dfsch_error("Unable to create parser", NULL);
+    }
+  }
+
+  context.parent_map = dfsch_make_idhash();
+  context.document_element = dfsch_cons(NULL,
+                                        NULL);
+  
+  tree_handler.ctx = &context;
+  params.tree_handler = &tree_handler;
+  hubbub_parser_setopt(parser, HUBBUB_PARSER_TREE_HANDLER, &params);
+  
+  params.document_node = context.document_element;
+  hubbub_parser_setopt(parser, HUBBUB_PARSER_DOCUMENT_NODE, &params);
+
+  hubbub_parser_parse_chunk(parser, buf, len);
+  hubbub_parser_completed(parser);
+
+  return context.document_element;
 }
