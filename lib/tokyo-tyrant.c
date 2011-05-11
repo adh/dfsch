@@ -447,7 +447,7 @@ dfsch_object_t* dfsch_tokyo_tyrant_query_search(dfsch_object_t* qo){
   if (!tcr){
     dfsch_error("Query search failed", q);
   }
-  res = dfsch_tokyo_tyrant_list_2_object(tcr);
+  res = dfsch_tokyo_cabinet_list_2_object(tcr);
   tclistdel(tcr);
   return res;
 }
