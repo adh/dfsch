@@ -30,7 +30,8 @@ typedef struct callbacks_t {
   dfsch_object_t* html_block;
   dfsch_object_t* code_block;
   dfsch_object_t* blockquote;
-  dfsch_object_t* link;
+  dfsch_object_t* link; 
+  dfsch_object_t* image;
   dfsch_object_t* autolink;
   dfsch_object_t* html_tag;
   dfsch_object_t* code_span;
@@ -75,24 +76,29 @@ SIMPLE_STUB(normal_text)
 SIMPLE_STUB_INT(code_span)
 SIMPLE_STUB_INT(html_tag)
 
-static void stub_link(struct buf* ob, struct buf* link, struct buf* title, 
-                      struct buf* content, callbacks_t* cb){  
-  dfsch_object_t* res = dfsch_apply(cb->link,                         
-                                    dfsch_list(3,                     
-                                               dfsch_make_string_buf(link->data, 
-                                                                     link->size), 
-                                               dfsch_make_string_buf(title->data, 
-                                                                     title->size), 
-                                               dfsch_make_string_buf(content->data, 
-                                                                     content->size)));
-  if (res) {                                                          
-    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
-    bufput(ob, buf->ptr, buf->len);                                   
-    return 1;
-  } else {
-    return 0;
-  }                                                                   
-}
+#define STUB_LINK_IMG(name) \
+  static void stub_##name(struct buf* ob, struct buf* link, struct buf* title, \
+                          struct buf* content, callbacks_t* cb){        \
+    dfsch_object_t* res = dfsch_apply(cb->link,                         \
+                                      dfsch_list(3,                     \
+                                                 dfsch_make_string_buf(link->data, \
+                                                                       link->size), \
+                                                 dfsch_make_string_buf(title->data, \
+                                                                       title->size), \
+                                                 dfsch_make_string_buf(content->data, \
+                                                                       content->size))); \
+    if (res) {                                                          \
+      dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
+      bufput(ob, buf->ptr, buf->len);                                   \
+      return 1;                                                         \
+    } else {                                                            \
+      return 0;                                                         \
+    }                                                                   \
+  }
+
+STUB_LINK_IMG(link)
+STUB_LINK_IMG(image)
+
 static void stub_autolink(struct buf* ob, struct buf* link,
                           enum mkd_autolink type, callbacks_t* cb){  
   dfsch_object_t* res = dfsch_apply(cb->link,                         
@@ -115,6 +121,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* code_block = DFSCH_INVALID_OBJECT;
   dfsch_object_t* blockquote = DFSCH_INVALID_OBJECT;
   dfsch_object_t* link = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* image = DFSCH_INVALID_OBJECT;
   dfsch_object_t* autolink = DFSCH_INVALID_OBJECT;
   dfsch_object_t* html_tag = DFSCH_INVALID_OBJECT;
   dfsch_object_t* code_span = DFSCH_INVALID_OBJECT;
@@ -136,6 +143,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("blockquote", blockquote);
   DFSCH_KEYWORD("html-tag", html_tag);
   DFSCH_KEYWORD("link", link);
+  DFSCH_KEYWORD("image", image);
   DFSCH_KEYWORD("autolink", autolink);
   DFSCH_KEYWORD("code-span", code_span);
   DFSCH_KEYWORD("entity", entity);
@@ -161,6 +169,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(html_block, blockhtml);
   OVERRIDE(blockquote, blockquote);
   OVERRIDE(link, link);
+  OVERRIDE(image, image);
   OVERRIDE(autolink, autolink);
   OVERRIDE(code_span, codespan);
   OVERRIDE(entity, entity);
