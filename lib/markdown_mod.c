@@ -33,6 +33,9 @@ typedef struct callbacks_t {
   dfsch_object_t* link;
   dfsch_object_t* autolink;
   dfsch_object_t* html_tag;
+  dfsch_object_t* code_span;
+  dfsch_object_t* entity;
+  dfsch_object_t* normal_text;
 } callbacks_t;
 
 #define SIMPLE_STUB(name)                                               \
@@ -65,6 +68,11 @@ typedef struct callbacks_t {
 SIMPLE_STUB(html_block)
 SIMPLE_STUB(blockquote)
 SIMPLE_STUB(code_block)
+
+SIMPLE_STUB(entity)
+SIMPLE_STUB(normal_text)
+
+SIMPLE_STUB_INT(code_span)
 SIMPLE_STUB_INT(html_tag)
 
 static void stub_link(struct buf* ob, struct buf* link, struct buf* title, 
@@ -109,6 +117,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* link = DFSCH_INVALID_OBJECT;
   dfsch_object_t* autolink = DFSCH_INVALID_OBJECT;
   dfsch_object_t* html_tag = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* code_span = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* entity = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* normal_text = DFSCH_INVALID_OBJECT;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -126,6 +137,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("html-tag", html_tag);
   DFSCH_KEYWORD("link", link);
   DFSCH_KEYWORD("autolink", autolink);
+  DFSCH_KEYWORD("code-span", code_span);
+  DFSCH_KEYWORD("entity", entity);
+  DFSCH_KEYWORD("normal_text", normal_text);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -148,6 +162,10 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(blockquote, blockquote);
   OVERRIDE(link, link);
   OVERRIDE(autolink, autolink);
+  OVERRIDE(code_span, codespan);
+  OVERRIDE(entity, entity);
+  OVERRIDE(normal_text, normal_text);
+
 
   return res;
 }
