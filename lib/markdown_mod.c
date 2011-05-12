@@ -37,6 +37,11 @@ typedef struct callbacks_t {
   dfsch_object_t* code_span;
   dfsch_object_t* entity;
   dfsch_object_t* normal_text;
+  dfsch_object_t* header;
+  dfsch_object_t* hrule;
+  dfsch_object_t* list;
+  dfsch_object_t* list_item;
+
 } callbacks_t;
 
 #define SIMPLE_STUB(name)                                               \
@@ -79,7 +84,7 @@ SIMPLE_STUB_INT(html_tag)
 #define STUB_LINK_IMG(name) \
   static void stub_##name(struct buf* ob, struct buf* link, struct buf* title, \
                           struct buf* content, callbacks_t* cb){        \
-    dfsch_object_t* res = dfsch_apply(cb->link,                         \
+    dfsch_object_t* res = dfsch_apply(cb->name,                         \
                                       dfsch_list(3,                     \
                                                  dfsch_make_string_buf(link->data, \
                                                                        link->size), \
@@ -114,6 +119,53 @@ static void stub_autolink(struct buf* ob, struct buf* link,
   }                                                                   
 }
 
+static void stub_header(struct buf* ob, struct buf* h,
+                        int level, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->header,                         
+                                    dfsch_list(2,                     
+                                               dfsch_make_string_buf(h->data, 
+                                                                     h->size),
+                                               DFSCH_MAKE_FIXNUM(level)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
+static void stub_hrule(struct buf* ob, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->hrule, NULL);
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
+static void stub_list(struct buf* ob, struct buf* l,
+                      int flags, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->list,                         
+                                    dfsch_list(2,                     
+                                               dfsch_make_string_buf(l->data, 
+                                                                     l->size),
+                                               dfsch_bool(flags & MKD_LIST_ORDERED)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
+static void stub_list_item(struct buf* ob, struct buf* l,
+                          int flags, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->list_item,                         
+                                    dfsch_list(2,                     
+                                               dfsch_make_string_buf(l->data, 
+                                                                     l->size),
+                                               dfsch_bool(flags & MKD_LI_BLOCK)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
 
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   char* base_renderer_name;
@@ -127,6 +179,10 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* code_span = DFSCH_INVALID_OBJECT;
   dfsch_object_t* entity = DFSCH_INVALID_OBJECT;
   dfsch_object_t* normal_text = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* header = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* hrule = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* list = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* list_item = DFSCH_INVALID_OBJECT;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -148,6 +204,10 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("code-span", code_span);
   DFSCH_KEYWORD("entity", entity);
   DFSCH_KEYWORD("normal_text", normal_text);
+  DFSCH_KEYWORD("header", header);
+  DFSCH_KEYWORD("hrule", hrule);
+  DFSCH_KEYWORD("list", list);
+  DFSCH_KEYWORD("list-item", list_item);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -174,6 +234,10 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(code_span, codespan);
   OVERRIDE(entity, entity);
   OVERRIDE(normal_text, normal_text);
+  OVERRIDE(header, header);
+  OVERRIDE(hrule, hrule);
+  OVERRIDE(list, list);
+  OVERRIDE(list_item, listitem);
 
 
   return res;
