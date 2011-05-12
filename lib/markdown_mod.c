@@ -30,6 +30,7 @@ typedef struct callbacks_t {
   dfsch_object_t* html_block;
   dfsch_object_t* code_block;
   dfsch_object_t* blockquote;
+  dfsch_object_t* paragraph;
   dfsch_object_t* link; 
   dfsch_object_t* image;
   dfsch_object_t* autolink;
@@ -74,6 +75,7 @@ typedef struct callbacks_t {
 SIMPLE_STUB(html_block)
 SIMPLE_STUB(blockquote)
 SIMPLE_STUB(code_block)
+SIMPLE_STUB(paragraph)
 
 SIMPLE_STUB(entity)
 SIMPLE_STUB(normal_text)
@@ -172,6 +174,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* html_block = DFSCH_INVALID_OBJECT;
   dfsch_object_t* code_block = DFSCH_INVALID_OBJECT;
   dfsch_object_t* blockquote = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* paragraph = DFSCH_INVALID_OBJECT;
   dfsch_object_t* link = DFSCH_INVALID_OBJECT;
   dfsch_object_t* image = DFSCH_INVALID_OBJECT;
   dfsch_object_t* autolink = DFSCH_INVALID_OBJECT;
@@ -197,6 +200,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("html-block", html_block);
   DFSCH_KEYWORD("code-block", code_block);
   DFSCH_KEYWORD("blockquote", blockquote);
+  DFSCH_KEYWORD("paragraph", paragraph);
   DFSCH_KEYWORD("html-tag", html_tag);
   DFSCH_KEYWORD("link", link);
   DFSCH_KEYWORD("image", image);
@@ -228,6 +232,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(code_block, blockcode);
   OVERRIDE(html_block, blockhtml);
   OVERRIDE(blockquote, blockquote);
+  OVERRIDE(paragraph, paragraph);
   OVERRIDE(link, link);
   OVERRIDE(image, image);
   OVERRIDE(autolink, autolink);
