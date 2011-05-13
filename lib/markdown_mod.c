@@ -43,15 +43,18 @@ typedef struct callbacks_t {
   dfsch_object_t* list;
   dfsch_object_t* list_item;
   dfsch_object_t* line_break;
-
+  dfsch_object_t* emphasis;
+  dfsch_object_t* double_emphasis;
+  dfsch_object_t* triple_emphasis;
 } callbacks_t;
 
 #define SIMPLE_STUB(name)                                               \
   static void stub_##name(struct buf* ob, struct buf* ib, callbacks_t* cb){ \
-    dfsch_object_t* res = dfsch_apply(cb->name,                         \
-                                      dfsch_list(1,                     \
-                                                 dfsch_make_string_buf(ib->data, \
-                                                                       ib->size))); \
+    dfsch_object_t* res =                                               \
+      dfsch_apply(cb->name,                                             \
+                  dfsch_list(1,                                         \
+                             dfsch_make_string_buf(ib->data,            \
+                                                   ib->size)));         \
     if (res) {                                                          \
       dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
       bufput(ob, buf->ptr, buf->len);                                   \
@@ -60,10 +63,11 @@ typedef struct callbacks_t {
 
 #define SIMPLE_STUB_INT(name)                                           \
   static int stub_##name(struct buf* ob, struct buf* ib, callbacks_t* cb){ \
-    dfsch_object_t* res = dfsch_apply(cb->name,                         \
-                                      dfsch_list(1,                     \
-                                                 dfsch_make_string_buf(ib->data, \
-                                                                       ib->size))); \
+    dfsch_object_t* res =                                               \
+      dfsch_apply(cb->name,                                             \
+                  dfsch_list(1,                                         \
+                             dfsch_make_string_buf(ib->data,            \
+                                                   ib->size)));         \
     if (res) {                                                          \
       dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
       bufput(ob, buf->ptr, buf->len);                                   \
@@ -85,16 +89,17 @@ SIMPLE_STUB_INT(code_span)
 SIMPLE_STUB_INT(html_tag)
 
 #define STUB_LINK_IMG(name) \
-  static void stub_##name(struct buf* ob, struct buf* link, struct buf* title, \
-                          struct buf* content, callbacks_t* cb){        \
-    dfsch_object_t* res = dfsch_apply(cb->name,                         \
-                                      dfsch_list(3,                     \
-                                                 dfsch_make_string_buf(link->data, \
-                                                                       link->size), \
-                                                 dfsch_make_string_buf(title->data, \
-                                                                       title->size), \
-                                                 dfsch_make_string_buf(content->data, \
-                                                                       content->size))); \
+  static int stub_##name(struct buf* ob, struct buf* link, struct buf* title, \
+                         struct buf* content, callbacks_t* cb){         \
+    dfsch_object_t* res =                                               \
+      dfsch_apply(cb->name,                                             \
+                  dfsch_list(3,                                         \
+                             dfsch_make_string_buf(link->data,          \
+                                                   link->size),         \
+                             dfsch_make_string_buf(title->data,         \
+                                                   title->size),        \
+                             dfsch_make_string_buf(content->data,       \
+                                                   content->size)));    \
     if (res) {                                                          \
       dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
       bufput(ob, buf->ptr, buf->len);                                   \
@@ -107,12 +112,13 @@ SIMPLE_STUB_INT(html_tag)
 STUB_LINK_IMG(link)
 STUB_LINK_IMG(image)
 
-static void stub_autolink(struct buf* ob, struct buf* link,
-                          enum mkd_autolink type, callbacks_t* cb){  
-  dfsch_object_t* res = dfsch_apply(cb->link,                         
-                                    dfsch_list(1,                     
-                                               dfsch_make_string_buf(link->data, 
-                                                                     link->size)));
+static int stub_autolink(struct buf* ob, struct buf* link,
+                         enum mkd_autolink type, callbacks_t* cb){  
+  dfsch_object_t* res = 
+    dfsch_apply(cb->link,                         
+                dfsch_list(1,                     
+                           dfsch_make_string_buf(link->data, 
+                                                 link->size)));
   if (res) {                                                          
     dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
     bufput(ob, buf->ptr, buf->len);                                   
@@ -124,11 +130,12 @@ static void stub_autolink(struct buf* ob, struct buf* link,
 
 static void stub_header(struct buf* ob, struct buf* h,
                         int level, callbacks_t* cb){  
-  dfsch_object_t* res = dfsch_apply(cb->header,                         
-                                    dfsch_list(2,                     
-                                               dfsch_make_string_buf(h->data, 
-                                                                     h->size),
-                                               DFSCH_MAKE_FIXNUM(level)));
+  dfsch_object_t* res = 
+    dfsch_apply(cb->header,                         
+                dfsch_list(2,                     
+                           dfsch_make_string_buf(h->data, 
+                                                 h->size),
+                           DFSCH_MAKE_FIXNUM(level)));
   if (res) {                                                          
     dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
     bufput(ob, buf->ptr, buf->len);                                   
@@ -145,11 +152,12 @@ static void stub_hrule(struct buf* ob, callbacks_t* cb){
 
 static void stub_list(struct buf* ob, struct buf* l,
                       int flags, callbacks_t* cb){  
-  dfsch_object_t* res = dfsch_apply(cb->list,                         
-                                    dfsch_list(2,                     
-                                               dfsch_make_string_buf(l->data, 
-                                                                     l->size),
-                                               dfsch_bool(flags & MKD_LIST_ORDERED)));
+  dfsch_object_t* res = 
+    dfsch_apply(cb->list,                         
+                dfsch_list(2,                     
+                           dfsch_make_string_buf(l->data, 
+                                                 l->size),
+                           dfsch_bool(flags & MKD_LIST_ORDERED)));
   if (res) {                                                          
     dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
     bufput(ob, buf->ptr, buf->len);                                   
@@ -158,11 +166,12 @@ static void stub_list(struct buf* ob, struct buf* l,
 
 static void stub_list_item(struct buf* ob, struct buf* l,
                           int flags, callbacks_t* cb){  
-  dfsch_object_t* res = dfsch_apply(cb->list_item,                         
-                                    dfsch_list(2,                     
-                                               dfsch_make_string_buf(l->data, 
-                                                                     l->size),
-                                               dfsch_bool(flags & MKD_LI_BLOCK)));
+  dfsch_object_t* res = 
+    dfsch_apply(cb->list_item,                         
+                dfsch_list(2,                     
+                           dfsch_make_string_buf(l->data, 
+                                                 l->size),
+                           dfsch_bool(flags & MKD_LI_BLOCK)));
   if (res) {                                                          
     dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
     bufput(ob, buf->ptr, buf->len);                                   
@@ -179,6 +188,28 @@ static int stub_line_break(struct buf* ob, callbacks_t* cb){
     return 0;
   }                                                                   
 }
+
+#define STUB_EMPH(name)                                                 \
+  static int stub_##name(struct buf* ob, struct buf* t,                 \
+                         char ch, callbacks_t* cb){                     \
+    dfsch_object_t* res =                                               \
+      dfsch_apply(cb->name,                                             \
+                  dfsch_list(2,                                         \
+                             dfsch_make_string_buf(t->data,             \
+                                                   t->size),            \
+                             DFSCH_MAKE_FIXNUM(ch)));                   \
+    if (res) {                                                          \
+      dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
+      bufput(ob, buf->ptr, buf->len);                                   \
+      return 1;                                                         \
+    } else {                                                            \
+      return 0;                                                         \
+    }                                                                   \
+  }
+
+STUB_EMPH(emphasis)
+STUB_EMPH(double_emphasis)
+STUB_EMPH(triple_emphasis)
 
 
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
@@ -199,6 +230,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* list = DFSCH_INVALID_OBJECT;
   dfsch_object_t* list_item = DFSCH_INVALID_OBJECT;
   dfsch_object_t* line_break = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* emphasis = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* double_emphasis = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* triple_emphasis = DFSCH_INVALID_OBJECT;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -226,6 +260,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("list", list);
   DFSCH_KEYWORD("list-item", list_item);
   DFSCH_KEYWORD("line-break", line_break);
+  DFSCH_KEYWORD("emphasis", emphasis);
+  DFSCH_KEYWORD("double-emphasis", double_emphasis);
+  DFSCH_KEYWORD("triple-emphasis", triple_emphasis);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -258,7 +295,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(list, list);
   OVERRIDE(list_item, listitem);
   OVERRIDE(line_break, linebreak);
-
+  OVERRIDE(emphasis, emphasis)
+  OVERRIDE(double_emphasis, double_emphasis);
+  OVERRIDE(triple_emphasis, triple_emphasis);
 
   return res;
 }
