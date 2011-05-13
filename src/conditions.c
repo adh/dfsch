@@ -537,8 +537,10 @@ static int segv_handler(){
   print_stderr("\nNative stack trace:\n");
   count = backtrace(tracebuf, 128);
   backtrace_symbols_fd(tracebuf, count, 2);
+#ifdef SEGV_MEMORY_MAP
   print_stderr("\nMemory map:\n");
   print_maps();
+#endif
 }
 
 void dfsch_activate_segv_handler(){
