@@ -37,6 +37,28 @@ static void* get_handle(dfsch_object_t* lib){
   return l->handle;
 }
 
+typedef struct pointer_t {
+  dfsch_type_t* type;
+  void* ptr;
+} pointer_t;
+
+dfsch_type_t dfsch_ffi_pointer_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "ffi:pointer",
+  .size = sizeof(pointer_t)
+};
+
+dfsch_object_t* dfsch_ffi_wrap_pointer(void* ptr){
+  pointer_t* p = dfsch_make_object(DFSCH_FFI_POINTER_TYPE);
+  p->ptr = ptr;
+  return p;
+}
+void* dfsch_ffi_unwrap_pointer(dfsch_object_t* obj){
+  pointer_t* p = DFSCH_ASSERT_INSTANCE(obj, DFSCH_FFI_POINTER_TYPE);
+  return p->ptr;
+}
+
+
 typedef struct internal_type_t {
   char* name;
   dfsch_object_t* (*to_object)(void* data);
@@ -78,7 +100,7 @@ static dfsch_object_t* void_null(void* discard){
 
 static void* string_from_object(dfsch_object_t* obj){
   char* n = dfsch_string_to_cstr(obj);
-  char** res = GC_NEW_ATOMIC(char*);
+  char** res = GC_NEW(char*);
   *res = n;
   return res;
 }
@@ -87,11 +109,24 @@ static dfsch_object_t* string_to_object(void* data){
   return dfsch_make_string_cstr(*d);
 }
 
+static void* pointer_from_object(dfsch_object_t* obj){
+  void* n = dfsch_ffi_unwrap_pointer(obj);
+  void** res = GC_NEW(void*);
+  *res = n;
+  return res;
+}
+static dfsch_object_t* pointer_to_object(void* data){
+  void** d = (void**)data;
+  return dfsch_ffi_wrap_pointer(*d);
+}
+
+
 static internal_type_t internal_types[] = {
   {"void", void_null, NULL, &ffi_type_void, 0},
   SIMPLE_TYPE(int, int, ffi_type_sint),
   SIMPLE_TYPE(double, double, ffi_type_double),
   SIMPLE_TYPE(char*, string, ffi_type_pointer),
+  SIMPLE_TYPE(void*, pointer, ffi_type_pointer),
 
   SIMPLE_TYPE(char, schar, ffi_type_schar),
   SIMPLE_TYPE(char, char, ffi_type_uchar),
@@ -128,6 +163,16 @@ dfsch_object_t* dfsch_ffi_make_function(dfsch_object_t* lib,
   
 }
 
+static internal_type_t* find_type(dfsch_object_t* name){
+  int i;
+  for (i = 0; i < sizeof(internal_types) / sizeof(internal_type_t); i++){
+    if (dfsch_compare_keyword(name, internal_types[i].name)){
+      return &(internal_types[i]);
+    }
+  }
+  dfsch_error("No such type", name);
+}
+
 static internal_type_t* get_object_type(dfsch_object_t* obj){
   if (dfsch_string_p(obj)){
     return &(internal_types[3]);
@@ -137,6 +182,9 @@ static internal_type_t* get_object_type(dfsch_object_t* obj){
   }
   if (dfsch_real_p(obj)){
     return &(internal_types[2]);
+  }
+  if (DFSCH_INSTANCE_P(obj, DFSCH_FFI_POINTER_TYPE)){
+    return &(internal_types[4]);
   }
   dfsch_error("No automatic conversion for this object", obj);
 }
@@ -149,7 +197,9 @@ dfsch_object_t* dfsch_ffi_call(dfsch_object_t* lib,
   ffi_cif cif;
   ffi_type **argtypes = GC_MALLOC(sizeof(ffi_type*) * 8);
   void** values = GC_MALLOC(sizeof(void*) * 8);
-  int ret;
+  int int_ret;
+  void* ret = &int_ret;
+  internal_type_t* return_type = internal_types + 1; /* int */
   size_t argcount = 0;
   size_t argalloc = 8;
   internal_type_t* type = NULL;
@@ -163,6 +213,26 @@ dfsch_object_t* dfsch_ffi_call(dfsch_object_t* lib,
 
   while (DFSCH_PAIR_P(args)){
     dfsch_object_t* a = DFSCH_FAST_CAR(args);
+    args = DFSCH_FAST_CDR(args);
+
+    if (dfsch_keyword_p(a)){
+      if (dfsch_compare_keyword(a, "return-type")){
+        dfsch_object_t* type;
+        DFSCH_OBJECT_ARG(args, type);
+        return_type = find_type(type);
+        ret = GC_MALLOC(return_type->size);
+        if (!return_type->to_object){
+          dfsch_error("Type not supported for return values", type);
+        }
+        continue;
+      }
+      
+      type = find_type(a);
+      if (!type->to_object){
+        dfsch_error("Type not supported for function arguments", a);
+      }
+    }
+
     if (argcount >= argalloc){
       argalloc *= 2;
       argtypes = GC_REALLOC(argtypes, sizeof(ffi_type*) * argalloc);
@@ -177,14 +247,14 @@ dfsch_object_t* dfsch_ffi_call(dfsch_object_t* lib,
     values[argcount] = type->from_object(a);
     type = NULL;
     argcount++;
-    args = DFSCH_FAST_CDR(args);
   }
 
   if (args){
     dfsch_error("Invalid argument list", NULL);
   }
 
-  fr = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argcount, &ffi_type_uint, argtypes);
+  fr = ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argcount, 
+                    return_type->type, argtypes);
   if (fr != FFI_OK){
     switch (fr){
     case FFI_BAD_TYPEDEF:
@@ -194,7 +264,7 @@ dfsch_object_t* dfsch_ffi_call(dfsch_object_t* lib,
     }
   }
 
-  ffi_call(&cif, fn, &ret, values);
-  return DFSCH_MAKE_FIXNUM(ret);
+  ffi_call(&cif, fn, ret, values);
+  return return_type->to_object(ret);
 }
 
