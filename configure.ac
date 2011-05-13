@@ -170,7 +170,7 @@ AM_CONDITIONAL(TKGUI, test x"$enable_tk_gui" == x"yes")
 enable_sqlite=yes
 
 AC_ARG_ENABLE([sqlite],
-    AS_HELP_STRING([--disable-sqlite], [Disable sqlite module]))
+    AC_HELP_STRING([--disable-sqlite], [Disable sqlite module]))
 AC_ARG_WITH([sqlite],
   AC_HELP_STRING([--with-sqlite=PATH], [Path to Sqlite installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
@@ -191,7 +191,7 @@ AM_CONDITIONAL(SQLITE, test x"$enable_sqlite" == x"yes")
 enable_sqlite3=yes
 
 AC_ARG_ENABLE([sqlite3],
-    AS_HELP_STRING([--disable-sqlite3], [Disable sqlite3 module]))
+    AC_HELP_STRING([--disable-sqlite3], [Disable sqlite3 module]))
 AC_ARG_WITH([sqlite3],
   AC_HELP_STRING([--with-sqlite3=PATH], [Path to Sqlite3 installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
@@ -212,7 +212,7 @@ AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
 enable_tokyo_cabinet=yes
 
 AC_ARG_ENABLE([tokyo-cabinet],
-    AS_HELP_STRING([--disable-tokyo-cabinet], [Disable tokyocabinet module]))
+    AC_HELP_STRING([--disable-tokyo-cabinet], [Disable tokyocabinet module]))
 AC_ARG_WITH([tokyo-cabinet],
   AC_HELP_STRING([--with-tokyo-cabinet=PATH], [Path to TOKYOCABINET installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
@@ -233,7 +233,7 @@ AM_CONDITIONAL(TOKYO_CABINET, test x"$enable_tokyo_cabinet" == x"yes")
 enable_tokyo_tyrant=yes
 
 AC_ARG_ENABLE([tokyo-tyrant],
-    AS_HELP_STRING([--disable-tokyo-tyrant], [Disable tokyotyrant module]))
+    AC_HELP_STRING([--disable-tokyo-tyrant], [Disable tokyotyrant module]))
 AC_ARG_WITH([tokyo-tyrant],
   AC_HELP_STRING([--with-tokyo-tyrant=PATH], [Path to TOKYOTYRANT installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
@@ -256,7 +256,7 @@ AM_CONDITIONAL(TOKYO_TYRANT, test x"$enable_tokyo_tyrant" == x"yes")
 enable_gd=yes
 
 AC_ARG_ENABLE([gd],
-    AS_HELP_STRING([--disable-gd], [Disable gd module]))
+    AC_HELP_STRING([--disable-gd], [Disable gd module]))
 AC_ARG_WITH([gd],
   AC_HELP_STRING([--with-gd=PATH], [Path to Gd installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
@@ -273,6 +273,27 @@ if test x$"$enable_gd" == x"yes"; then
 fi
 
 AM_CONDITIONAL(GD, test x"$enable_gd" == x"yes")
+
+enable_ffi=yes
+
+AC_ARG_ENABLE([ffi],
+    AC_HELP_STRING([--disable-ffi], [Disable foreign function interface]))
+AC_ARG_WITH([ffi],
+  AC_HELP_STRING([--with-libffi=PATH], [Path to libffi installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_ffi" == x"yes"; then
+    AC_CHECK_HEADERS(ffi.h, [have_ffi="1"], [have_ffi="0"])
+    AC_CHECK_LIB(ffi, ffi_call, 
+                     [dummy_ffi=], [have_ffi="0"])
+
+    if test x"$have_ffi" == x"0" ; then
+        enable_ffi=no
+    fi
+fi
+
+AM_CONDITIONAL(FFI, test x"$enable_ffi" == x"yes")
 
 
 
@@ -307,17 +328,22 @@ dnl create makefiles
 AC_OUTPUT(Makefile)
 
 cat <<EOF
+================================================
+
 dfsch $VERSION configuration:
 
-Optional modules:
+Optional features:
 readline ........... : $use_readline
+
+Optional modules:
 tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
-gd ................. : $enable_gd
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
+gd ................. : $enable_gd
+FFI ................ : $enable_ffi
 
 
 EOF

@@ -342,6 +342,14 @@ dfsch_object_t* dfsch_make_number_from_int64(int64_t num){
 
   return DFSCH_MAKE_FIXNUM(num);
 }
+dfsch_object_t* dfsch_make_number_from_uint64(uint64_t num){
+  if (num > DFSCH_FIXNUM_MAX){
+    return (dfsch_object_t*)dfsch_make_bignum_uint64(num);
+  }
+
+  return DFSCH_MAKE_FIXNUM(num);
+}
+
 
 static int dig_val[256] = {
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
@@ -486,6 +494,21 @@ int64_t dfsch_number_to_int64(dfsch_object_t *n){
   }
   dfsch_error("Not an integer", n);
 }
+uint64_t dfsch_number_to_uint64(dfsch_object_t *n){
+  uint64_t r;
+
+  if (DFSCH_TYPE_OF(n)==DFSCH_FIXNUM_TYPE){
+    return DFSCH_FIXNUM_REF(n);
+  } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
+    if (!dfsch_bignum_to_uint64((dfsch_bignum_t*)n, &r)){
+      dfsch_error("Value too large", NULL);
+    }
+
+    return r;
+  }
+  dfsch_error("Not an integer", n);
+}
+
 
 static char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 

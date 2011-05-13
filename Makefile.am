@@ -93,6 +93,15 @@ gd_libs=
 gd_modules=
 endif
 
+if FFI
+ffi_libs=libdfsch-ffi.la
+ffi_modules=ffi.la
+else
+ffi_libs=
+ffi_modules=
+endif
+
+
 
 if WIN32
 nonwin32_libs=
@@ -137,7 +146,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	$(pcre_libs)\
 	$(tc_libs) \
 	$(tt_libs) \
-	$(gd_libs)
+	$(gd_libs) \
+	$(ffi_libs)
 
 
 
@@ -178,7 +188,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(sqlite3_modules)\
 	$(tc_modules)\
 	$(tt_modules)\
-	$(gd_modules)
+	$(gd_modules)\
+	$(ffi_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -523,6 +534,14 @@ libdfsch_gd_la_LDFLAGS = -no-undefined
 gd_la_SOURCES = lib/gd_mod.c
 gd_la_LIBADD = libdfsch-gd.la libdfsch.la
 gd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_ffi_la_SOURCES = lib/ffi.c
+libdfsch_ffi_la_LIBADD = libdfsch.la -lffi
+libdfsch_ffi_la_LDFLAGS = -no-undefined
+
+ffi_la_SOURCES = lib/ffi_mod.c
+ffi_la_LIBADD = libdfsch-ffi.la libdfsch.la
+ffi_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 markdown_la_SOURCES = lib/markdown_mod.c \
