@@ -29,4 +29,6 @@ void dfsch_module_ffi_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(load_library));
   dfsch_defcanon_pkgcstr(env, ffi, "call",
                          DFSCH_PRIMITIVE_REF(call));
+  dfsch_defconst_pkgcstr(env, ffi, "*null*",
+                         dfsch_ffi_wrap_pointer(NULL));
 }
