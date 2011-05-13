@@ -42,10 +42,26 @@ typedef struct pointer_t {
   void* ptr;
 } pointer_t;
 
+static int pointer_equal_p(pointer_t* a, pointer_t* b){
+  return a->ptr == b->ptr;
+}
+static size_t pointer_hash(pointer_t* p){
+  return ((size_t)p->ptr) ^ (((size_t)p->ptr) >> 7);
+}
+static void pointer_write(pointer_t* p, dfsch_writer_state_t* state){
+  dfsch_write_unreadable(state, (dfsch_object_t*)p, 
+                         "%p", 
+                         p->ptr);
+}
+
+
 dfsch_type_t dfsch_ffi_pointer_type = {
   .type = DFSCH_STANDARD_TYPE,
   .name = "ffi:pointer",
-  .size = sizeof(pointer_t)
+  .size = sizeof(pointer_t),
+  .equal_p = pointer_equal_p,
+  .write = pointer_write,
+  .hash = pointer_hash
 };
 
 dfsch_object_t* dfsch_ffi_wrap_pointer(void* ptr){
