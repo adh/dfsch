@@ -42,6 +42,7 @@ typedef struct callbacks_t {
   dfsch_object_t* hrule;
   dfsch_object_t* list;
   dfsch_object_t* list_item;
+  dfsch_object_t* line_break;
 
 } callbacks_t;
 
@@ -168,6 +169,17 @@ static void stub_list_item(struct buf* ob, struct buf* l,
   }
 }
 
+static int stub_line_break(struct buf* ob, callbacks_t* cb){  
+  dfsch_object_t* res = dfsch_apply(cb->line_break, NULL);
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+    return 1;
+  } else {
+    return 0;
+  }                                                                   
+}
+
 
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   char* base_renderer_name;
@@ -186,6 +198,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* hrule = DFSCH_INVALID_OBJECT;
   dfsch_object_t* list = DFSCH_INVALID_OBJECT;
   dfsch_object_t* list_item = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* line_break = DFSCH_INVALID_OBJECT;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -212,6 +225,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("hrule", hrule);
   DFSCH_KEYWORD("list", list);
   DFSCH_KEYWORD("list-item", list_item);
+  DFSCH_KEYWORD("line-break", line_break);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -243,6 +257,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(hrule, hrule);
   OVERRIDE(list, list);
   OVERRIDE(list_item, listitem);
+  OVERRIDE(line_break, linebreak);
 
 
   return res;
