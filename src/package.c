@@ -39,6 +39,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "types.h"
 
@@ -282,11 +283,11 @@ void dfsch_export_symbol(dfsch_package_t* pkg,
 
 
 dfsch_package_t* dfsch_get_current_package(){
-  return current_package;
+  return dfsch__get_thread_info()->current_package;
 }
 
 void dfsch_set_current_package(dfsch_package_t* package){
-  current_package = package;
+  dfsch__get_thread_info()->current_package = package;
 }
 
 static size_t symbol_hash(char* string){
@@ -660,7 +661,7 @@ dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj){
   if (!res){
     dfsch_error("No such package", obj);
   }
-  res;
+  return res;
 }
 
 static int package_inherited(dfsch_package_t* to,
@@ -899,6 +900,8 @@ DFSCH_DEFINE_PRIMITIVE(in_package,
 
   DFSCH_PACKAGE_ARG(args, package);
   DFSCH_ARG_END(args);
+
+  assert(package);
 
   dfsch_set_current_package(package);
 

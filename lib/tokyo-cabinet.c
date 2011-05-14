@@ -278,7 +278,7 @@ dfsch_type_t dfsch_tokyo_cabinet_table_type = {
 
 static void table_finalizer(table_t* db, void* discard){
   if (db->type == DFSCH_TOKYO_CABINET_TABLE_TYPE){
-    tcadbdel(db->tdb);
+    tcrdbdel(db->tdb);
   }
 }
 

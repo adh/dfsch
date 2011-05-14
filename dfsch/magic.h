@@ -103,6 +103,7 @@ extern "C" {
 
     dfsch_object_t* scratch_pad[16];
     int error_policy;
+    dfsch_package_t* current_package;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

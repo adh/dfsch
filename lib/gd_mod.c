@@ -654,6 +654,92 @@ DFSCH_DEFINE_PRIMITIVE(string_ft,
                                    DFSCH_MAKE_FIXNUM(brect[7])));
 }
 
+DFSCH_DEFINE_PRIMITIVE(copy_rectangle, 
+                       "Copy region between images"){
+  gdImagePtr src;
+  gdImagePtr dst;
+  int dst_x;
+  int dst_y;
+  int src_x;
+  int src_y;
+  int w;
+  int h;
+  
+  DFSCH_GD_IMAGE_ARG(args, dst);
+  DFSCH_LONG_ARG(args, dst_x);
+  DFSCH_LONG_ARG(args, dst_y);
+  DFSCH_GD_IMAGE_ARG(args, src);
+  DFSCH_LONG_ARG(args, src_x);
+  DFSCH_LONG_ARG(args, src_y);
+  DFSCH_LONG_ARG(args, w);
+  DFSCH_LONG_ARG(args, h);
+  DFSCH_ARG_END(args);
+  
+  gdImageCopy(dst, src, dst_x, dst_y, src_x, src_y, w, h);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(copy_rectangle_resize, 
+                       "Copy region between images resizing it"){
+  gdImagePtr src;
+  gdImagePtr dst;
+  int dst_x;
+  int dst_y;
+  int dst_w;
+  int dst_h;
+  int src_x;
+  int src_y;
+  int src_w;
+  int src_h;
+  
+  DFSCH_GD_IMAGE_ARG(args, dst);
+  DFSCH_LONG_ARG(args, dst_x);
+  DFSCH_LONG_ARG(args, dst_y);
+  DFSCH_LONG_ARG(args, dst_w);
+  DFSCH_LONG_ARG(args, dst_h);
+  DFSCH_GD_IMAGE_ARG(args, src);
+  DFSCH_LONG_ARG(args, src_x);
+  DFSCH_LONG_ARG(args, src_y);
+  DFSCH_LONG_ARG(args, src_w);
+  DFSCH_LONG_ARG(args, src_h);
+  DFSCH_ARG_END(args);
+  
+  gdImageCopyResized(dst, src, dst_x, dst_y, src_x, src_y, dst_w, dst_h, src_w, src_h);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(copy_rectangle_resample, 
+                       "Copy region between images resizing it and interpolating pixel values"){
+  gdImagePtr src;
+  gdImagePtr dst;
+  int dst_x;
+  int dst_y;
+  int dst_w;
+  int dst_h;
+  int src_x;
+  int src_y;
+  int src_w;
+  int src_h;
+  
+  DFSCH_GD_IMAGE_ARG(args, dst);
+  DFSCH_LONG_ARG(args, dst_x);
+  DFSCH_LONG_ARG(args, dst_y);
+  DFSCH_LONG_ARG(args, dst_w);
+  DFSCH_LONG_ARG(args, dst_h);
+  DFSCH_GD_IMAGE_ARG(args, src);
+  DFSCH_LONG_ARG(args, src_x);
+  DFSCH_LONG_ARG(args, src_y);
+  DFSCH_LONG_ARG(args, src_w);
+  DFSCH_LONG_ARG(args, src_h);
+  DFSCH_ARG_END(args);
+  
+  gdImageCopyResampled(dst, src, dst_x, dst_y, src_x, src_y, dst_w, dst_h, src_w, src_h);
+
+  return NULL;
+}
+
 
 void dfsch_module_gd_register(dfsch_object_t* env){
   dfsch_package_t* gd = dfsch_make_package("gd",
@@ -746,5 +832,12 @@ void dfsch_module_gd_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(string_up));
   dfsch_defcanon_pkgcstr(env, gd, "string-ft",
                          DFSCH_PRIMITIVE_REF(string_ft));
+
+  dfsch_defcanon_pkgcstr(env, gd, "copy-rectangle",
+                         DFSCH_PRIMITIVE_REF(copy_rectangle));
+  dfsch_defcanon_pkgcstr(env, gd, "copy-rectangle-resize",
+                         DFSCH_PRIMITIVE_REF(copy_rectangle_resize));
+  dfsch_defcanon_pkgcstr(env, gd, "copy-rectangle-resample",
+                         DFSCH_PRIMITIVE_REF(copy_rectangle_resample));
 
 }

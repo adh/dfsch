@@ -323,7 +323,7 @@ posix_regex_la_LIBADD =  libdfsch.la libdfsch-posix-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-unix_la_LIBADD =  libdfsch.la libdfsch-os.la
+unix_la_LIBADD =  libdfsch.la libdfsch-os.la -lcrypt
 
 libdfsch_os_la_SOURCES = lib/os.c dfsch/lib/os.h
 libdfsch_os_la_LDFLAGS = -version-info 1:0:0 -no-undefined
@@ -520,7 +520,8 @@ tokyo_cabinet_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la
 tokyo_cabinet_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant.c
-libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la -ltokyocabinet -ltokyotyrant
+libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la \
+	-ltokyocabinet -ltokyotyrant
 libdfsch_tokyo_tyrant_la_LDFLAGS = -no-undefined
 
 tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant_mod.c

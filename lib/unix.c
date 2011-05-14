@@ -28,6 +28,7 @@
 #include <dfsch/number.h>
 #include <dfsch/load.h>
 #include <dfsch/conditions.h>
+#include <dfsch/random.h>
 
 #include "src/util.h"
 
@@ -45,7 +46,53 @@
 #include <time.h>
 #include <sys/mman.h>
 
+static void gen_salt(unsigned char* buf, size_t len){
+  static char* b64 = 
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
+  dfsch_random_get_bytes(NULL, buf, len);
+  while (len){
+    *buf = b64[(*buf) & 0x3f];
+    buf++;
+    len--;
+  }
+}
 
+DFSCH_DEFINE_PRIMITIVE(crypt, NULL){
+  char* key;
+  char* salt;
+  dfsch_object_t* ret;
+  DFSCH_STRING_ARG(args, key);
+  DFSCH_STRING_ARG_OPT(args, salt, NULL);
+  DFSCH_ARG_END(args);
+
+  if (salt == NULL){
+#ifdef __GLIBC__
+    salt = GC_MALLOC_ATOMIC(27);
+    salt[0] = '$';
+    salt[1] = '1';
+    salt[2] = '$';
+    gen_salt(salt + 3, 22);
+    salt[25] = '$';
+    salt[26] = 0;
+#else
+    salt = GC_MALLOC_ATOMIC(3);
+    gen_salt(salt, 2);
+    salt[2] = 0;    
+#endif
+  }
+
+  dfsch_lock_libc();
+  salt = crypt(key, salt);
+  
+  if (!salt){
+    dfsch_operating_system_error("crypt");
+  }
+
+  ret = dfsch_make_string_cstr(salt);
+  dfsch_unlock_libc();
+
+  return ret;
+}
 DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
   int dir;
   DFSCH_LONG_ARG(args, dir);
@@ -56,9 +103,6 @@ DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
   }
   return NULL;
 }
-
-
-
 DFSCH_DEFINE_PRIMITIVE(chmod, NULL){
   char* fname;
   mode_t mode;
@@ -470,6 +514,8 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_require(ctx, "os", NULL);
 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "crypt", 
+                    DFSCH_PRIMITIVE_REF(crypt));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchdir", 
                     DFSCH_PRIMITIVE_REF(fchdir));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chmod", 
