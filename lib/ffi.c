@@ -107,6 +107,16 @@ NUM_CONV(unsigned long, ulong, uint64)
 NUM_CONV(float, float, double)
 NUM_CONV(double, double, double)
 
+NUM_CONV(uint8_t, uint8, long)
+NUM_CONV(int8_t, int8, long)
+NUM_CONV(uint16_t, uint16, long)
+NUM_CONV(int16_t, int16, long)
+NUM_CONV(uint32_t, uint32, uint64)
+NUM_CONV(int32_t, int32, long)
+NUM_CONV(uint64_t, uint64, uint64)
+NUM_CONV(int64_t, int64, int64)
+
+
 #define SIMPLE_TYPE(type, name, ftype) \
   {#name, name##_to_object, name##_from_object, &ftype, sizeof(type)}
 
@@ -153,6 +163,15 @@ static internal_type_t internal_types[] = {
   SIMPLE_TYPE(unsigned int, uint, ffi_type_uint),
   SIMPLE_TYPE(unsigned long, ulong, ffi_type_ulong),
   SIMPLE_TYPE(float, float, ffi_type_float),
+
+  SIMPLE_TYPE(int8_t, int8, ffi_type_sint8),
+  SIMPLE_TYPE(uint8_t, uint8, ffi_type_uint8),
+  SIMPLE_TYPE(int16_t, int16, ffi_type_sint16),
+  SIMPLE_TYPE(uint16_t, uint16, ffi_type_uint16),
+  SIMPLE_TYPE(int32_t, int32, ffi_type_sint32),
+  SIMPLE_TYPE(uint32_t, uint32, ffi_type_uint32),
+  SIMPLE_TYPE(int64_t, int64, ffi_type_sint64),
+  SIMPLE_TYPE(uint64_t, uint64, ffi_type_uint64),
   
 };
 
