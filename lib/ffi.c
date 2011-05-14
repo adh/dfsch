@@ -146,6 +146,16 @@ static dfsch_object_t* pointer_to_object(void* data){
   return dfsch_ffi_wrap_pointer(*d);
 }
 
+static void* object_from_object(dfsch_object_t* obj){
+  dfsch_object_t** res = GC_NEW(void*);
+  *res = obj;
+  return res;
+}
+static dfsch_object_t* object_to_object(void* data){
+  dfsch_object_t** d = (dfsch_object_t**)data;
+  return *d;
+}
+
 
 static internal_type_t internal_types[] = {
   {"void", void_null, NULL, &ffi_type_void, 0},
@@ -172,6 +182,8 @@ static internal_type_t internal_types[] = {
   SIMPLE_TYPE(uint32_t, uint32, ffi_type_uint32),
   SIMPLE_TYPE(int64_t, int64, ffi_type_sint64),
   SIMPLE_TYPE(uint64_t, uint64, ffi_type_uint64),
+
+  SIMPLE_TYPE(dfsch_object_t*, object, ffi_type_pointer),
   
 };
 
