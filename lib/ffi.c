@@ -156,6 +156,16 @@ static dfsch_object_t* object_to_object(void* data){
   return *d;
 }
 
+static void* boolean_from_object(dfsch_object_t* obj){
+  int* res = GC_NEW(int);
+  *res = obj != NULL;
+  return res;
+}
+static dfsch_object_t* boolean_to_object(void* data){
+  int* d = (int*)data;
+  return dfsch_bool(*d);
+}
+
 
 static internal_type_t internal_types[] = {
   {"void", void_null, NULL, &ffi_type_void, 0},
@@ -184,6 +194,7 @@ static internal_type_t internal_types[] = {
   SIMPLE_TYPE(uint64_t, uint64, ffi_type_uint64),
 
   SIMPLE_TYPE(dfsch_object_t*, object, ffi_type_pointer),
+  SIMPLE_TYPE(int, boolean, ffi_type_sint),
   
 };
 
