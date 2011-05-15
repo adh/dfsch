@@ -24,6 +24,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/tokyo-cabinet.h \
 	dfsch/lib/tokyo-tyrant.h \
 	dfsch/lib/gd.h \
+	dfsch/lib/ffi.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -547,8 +548,12 @@ ffi_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 markdown_la_SOURCES = lib/markdown_mod.c \
 	ext/upskirt/markdown.c \
+	ext/upskirt/markdown.h \
 	ext/upskirt/array.c \
 	ext/upskirt/buffer.c \
+	ext/upskirt/array.h \
+	ext/upskirt/buffer.h \
+	ext/upskirt/renderers.h \
 	ext/upskirt/renderers.c
 markdown_la_LIBADD = libdfsch.la
 markdown_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
