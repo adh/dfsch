@@ -462,6 +462,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
 #ifdef DFSCH_GC_MALLOC_MANY_PREALLOC
     ei->env_freelist = GC_malloc_many(sizeof(environment_t));
 #endif
+    ei->current_package = DFSCH_DFSCH_USER_PACKAGE;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
