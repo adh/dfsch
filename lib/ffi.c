@@ -203,23 +203,38 @@ typedef struct function_t {
   dfsch_type_t* type;
   void* code;
   int num_args;
-  
+
+  internal_type_t* ret_type;
+  internal_type_t** arg_types;
   ffi_cif cif;
 } function_t;
 
+static dfsch_object_t* apply_function(function_t* fun, 
+                                      dfsch_object_t* args,
+                                      dfsch_tail_escape_t* esc, 
+                                      dfsch_object_t* ctx){
+  int i;
+  void** arguments = GC_MALLOC(sizeof(void*) * fun->num_args);
+  void* ret = GC_MALLOC(fun->ret_type->size);
+
+  for (i = 0; i < fun->num_args; i++){
+    dfsch_object_t* arg;
+    DFSCH_OBJECT_ARG(args, arg);
+    arguments[i] = fun->arg_types[i]->from_object(arg);
+  }
+
+  ffi_call(&(fun->cif), fun->code, ret, arguments);
+
+  return fun->ret_type->to_object(ret);
+}
+
 dfsch_type_t dfsch_ffi_function_type = {
   .type = DFSCH_STANDARD_TYPE,
+  .superclass = DFSCH_FUNCTION_TYPE,
   .name = "ffi:function",
-  .size = sizeof(function_t)
+  .size = sizeof(function_t),
+  .apply = apply_function
 };
-
-
-dfsch_object_t* dfsch_ffi_make_function(dfsch_object_t* lib,
-                                        char* fun_name,
-                                        dfsch_object_t* ret_type,
-                                        dfsch_object_t* arg_types){
-  
-}
 
 static internal_type_t* find_type(dfsch_object_t* name){
   int i;
@@ -230,6 +245,63 @@ static internal_type_t* find_type(dfsch_object_t* name){
   }
   dfsch_error("No such type", name);
 }
+
+dfsch_object_t* dfsch_ffi_make_function(dfsch_object_t* lib,
+                                        char* fun_name,
+                                        dfsch_object_t* ret_type,
+                                        dfsch_object_t* arg_types){
+  function_t* fun = dfsch_make_object(DFSCH_FFI_FUNCTION_TYPE);
+  void* h = get_handle(lib);
+  ffi_type** ftypes;
+  ffi_status fr;
+  int i;
+
+  fun->code = dlsym(h, fun_name);
+  if (!fun->code){
+    dfsch_error("Unable to find function",
+                dfsch_make_string_cstr(dlerror()));
+  }
+
+  fun->ret_type = find_type(ret_type);
+  if (!fun->ret_type->to_object){
+    dfsch_error("Type is not suitable for return values", ret_type);
+  }
+
+  fun->num_args = dfsch_list_length_check(arg_types);
+  fun->arg_types = GC_MALLOC(sizeof(internal_type_t*) * fun->num_args);
+  ftypes = GC_MALLOC(sizeof(ffi_type*) * fun->num_args);
+
+  i = 0;
+  while (DFSCH_PAIR_P(arg_types)){
+    if (i >= fun->num_args) {
+      dfsch_error("Internal inconsistency", NULL);
+    }
+
+    fun->arg_types[i] = find_type(DFSCH_FAST_CAR(arg_types));
+    if (!fun->arg_types[i]->from_object){
+      dfsch_error("Type is not suitable for function arguments",
+                  DFSCH_FAST_CAR(arg_types));
+    }
+    ftypes[i] = fun->arg_types[i]->type;
+    
+    arg_types = DFSCH_FAST_CDR(arg_types);
+    i++;
+  }
+  
+  fr = ffi_prep_cif(&(fun->cif), FFI_DEFAULT_ABI, fun->num_args, 
+                    fun->ret_type->type, ftypes);
+  if (fr != FFI_OK){
+    switch (fr){
+    case FFI_BAD_TYPEDEF:
+      dfsch_error("Incorect type passed to prepare_cif", NULL);
+    case FFI_BAD_ABI:
+      dfsch_error("Unknown ABI", NULL);
+    }
+  }
+  
+  return fun;
+}
+
 
 static internal_type_t* get_object_type(dfsch_object_t* obj){
   if (dfsch_string_p(obj)){
