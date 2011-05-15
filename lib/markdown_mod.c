@@ -46,6 +46,9 @@ typedef struct callbacks_t {
   dfsch_object_t* emphasis;
   dfsch_object_t* double_emphasis;
   dfsch_object_t* triple_emphasis;
+  dfsch_object_t* table;
+  dfsch_object_t* table_row;
+  dfsch_object_t* table_cell;
 } callbacks_t;
 
 #define SIMPLE_STUB(name)                                               \
@@ -211,6 +214,65 @@ STUB_EMPH(emphasis)
 STUB_EMPH(double_emphasis)
 STUB_EMPH(triple_emphasis)
 
+static void stub_table(struct buf* ob, struct buf* head_row,
+                       struct buf* rows, callbacks_t* cb){
+  dfsch_object_t* res = 
+    dfsch_apply(cb->table,                         
+                dfsch_list(2,                     
+                           dfsch_make_string_buf(head_row->data, 
+                                                 head_row->size),
+                           dfsch_make_string_buf(rows->data, 
+                                                 rows->size)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+static void stub_table_row(struct buf* ob, struct buf* cells,
+                           int flags, callbacks_t* cb){
+  dfsch_object_t* res = 
+    dfsch_apply(cb->table_row,                         
+                dfsch_list(1,
+                           dfsch_make_string_buf(cells->data, 
+                                                 cells->size)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
+static dfsch_object_t* cell_align(int flags){
+  flags &= MKD_CELL_ALIGN_MASK;
+  switch (flags){
+  case MKD_CELL_ALIGN_DEFAULT:
+    return dfsch_intern_symbol(DFSCH_KEYWORD_PACKAGE, "default");
+  case MKD_CELL_ALIGN_LEFT:
+    return dfsch_intern_symbol(DFSCH_KEYWORD_PACKAGE, "left");
+  case MKD_CELL_ALIGN_RIGHT:
+    return dfsch_intern_symbol(DFSCH_KEYWORD_PACKAGE, "right");
+  case MKD_CELL_ALIGN_CENTER:
+    return dfsch_intern_symbol(DFSCH_KEYWORD_PACKAGE, "center");
+  default:
+    dfsch_error("Unsupported table cell alignment", DFSCH_MAKE_FIXNUM(flags));
+  }
+}
+
+static void stub_table_cell(struct buf* ob, struct buf* cell,
+                            int flags, callbacks_t* cb){
+  dfsch_object_t* res = 
+    dfsch_apply(cb->table_cell,                         
+                dfsch_list(3,
+                           dfsch_make_string_buf(cell->data, 
+                                                 cell->size),
+                           dfsch_bool(flags & MKD_CELL_HEAD),
+                           cell_align(flags)));
+  if (res) {                                                          
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   
+    bufput(ob, buf->ptr, buf->len);                                   
+  }
+}
+
+
 
 static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   char* base_renderer_name;
@@ -233,6 +295,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* emphasis = DFSCH_INVALID_OBJECT;
   dfsch_object_t* double_emphasis = DFSCH_INVALID_OBJECT;
   dfsch_object_t* triple_emphasis = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* table = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* table_row = DFSCH_INVALID_OBJECT;
+  dfsch_object_t* table_cell = DFSCH_INVALID_OBJECT;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -263,6 +328,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("emphasis", emphasis);
   DFSCH_KEYWORD("double-emphasis", double_emphasis);
   DFSCH_KEYWORD("triple-emphasis", triple_emphasis);
+  DFSCH_KEYWORD("table", table);
+  DFSCH_KEYWORD("table-row", table_row);
+  DFSCH_KEYWORD("table-cell", table_cell);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -298,6 +366,9 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   OVERRIDE(emphasis, emphasis)
   OVERRIDE(double_emphasis, double_emphasis);
   OVERRIDE(triple_emphasis, triple_emphasis);
+  OVERRIDE(table, table);
+  OVERRIDE(table_row, table_row);
+  OVERRIDE(table_cell, table_cell);
 
   return res;
 }
