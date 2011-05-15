@@ -41,7 +41,7 @@
  *  - length
  *  - symbol name bytes (*length)
  *
- */                                                                     
+ */
 
 struct dfsch_serializer_t {
   dfsch_type_t* type;
@@ -61,6 +61,7 @@ struct dfsch_serializer_t {
   void* uh_baton;
 
   dfsch_object_t* canon_env;
+  int compress;
 };
 
 dfsch_type_t dfsch_serializer_type = {
@@ -81,6 +82,7 @@ dfsch_serializer_t* dfsch_make_serializer(dfsch_output_proc_t op,
   s->sym_idx = 0;
   dfsch_eqhash_init(&s->obj_map, 1);
   s->obj_idx = 0;
+  s->compress = 0;
 
   return s;
 }
@@ -104,6 +106,10 @@ void dfsch_serializer_set_canonical_environment(dfsch_serializer_t* s,
                                                 dfsch_object_t* env){
   s->canon_env = env;
 }
+void dfsch_serializer_set_compress(dfsch_serializer_t* s,
+                                   int compress){
+  s->compress = compress;
+}
 
 
 static void serialize_bytes(dfsch_serializer_t* s,
@@ -121,8 +127,9 @@ static void serialize_back_reference(dfsch_serializer_t* s,
 
 #define DSS_MAGIC            "dSs0"
 #define DSS_FLAG_CANON       1
+#define DSS_FLAG_COMPRESSED  2
 
-#define DSS_UNKNOWN_FLAGS    (~1)
+#define DSS_UNKNOWN_FLAGS    (~3)
 
 void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
                                           char* format){
@@ -130,6 +137,9 @@ void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
   serialize_bytes(s, DSS_MAGIC, 4);
   if (s->canon_env){
     flags |= DSS_FLAG_CANON;
+  }
+  if (s->compress){
+    flags |= DSS_FLAG_COMPRESSED;
   }
   dfsch_serialize_integer(s, flags);
   if (format){
