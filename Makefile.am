@@ -182,6 +182,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	crypto.la \
 	sql-support.la \
 	markdown.la \
+	fastlz.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
@@ -348,6 +349,10 @@ libdfsch_zlib_la_LIBADD =  libdfsch.la -lz
 zlib_la_SOURCES = lib/zlib_mod.c
 zlib_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 zlib_la_LIBADD =  libdfsch.la libdfsch-zlib.la -lz
+
+fastlz_la_SOURCES = lib/fastlz_mod.c
+fastlz_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+fastlz_la_LIBADD =  libdfsch.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
