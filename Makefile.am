@@ -230,6 +230,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/strhash.c dfsch/strhash.h	\
 	src/serdes.c dfsch/serdes.h	\
 	src/sha256.c dfsch/sha256.h	\
+	ext/fastlz/fastlz.c ext/fastlz/fastlz.h \
 	std-lib.c
 
 
@@ -259,7 +260,7 @@ boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
 	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
 fastlz_files = 	ext/fastlz/LICENSE \
-	ext/fastlz/README \
+	ext/fastlz/README.TXT \
 	ext/fastlz/6pack.c \
 	ext/fastlz/6unpack.c
 

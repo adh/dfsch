@@ -131,6 +131,8 @@ static void serialize_back_reference(dfsch_serializer_t* s,
 
 #define DSS_UNKNOWN_FLAGS    (~3)
 
+#define COMPRESS_CUTOFF      512
+
 void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
                                           char* format){
   int flags = 0;
@@ -286,6 +288,18 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
 }
 void dfsch_serialize_string(dfsch_serializer_t* s,
                             char* str, size_t len){
+  if (s->compress && len > COMPRESS_CUTOFF){
+    char* compressed_buffer = GC_MALLOC_ATOMIC(len + (len / 19));
+    int compressed = dfsch__fastlz_compress(str, len, compressed_buffer);
+
+    if ((compressed + 8) < len){
+      dfsch_serialize_integer(s, -len);
+      dfsch_serialize_integer(s, compressed);
+      serialize_bytes(s, compressed_buffer, compressed);
+      return;
+    }
+  }
+
   dfsch_serialize_integer(s, len);
   serialize_bytes(s, str, len);
 }
@@ -576,12 +590,33 @@ int64_t dfsch_deserialize_integer(dfsch_deserializer_t* ds){
 }
 dfsch_strbuf_t* dfsch_deserialize_strbuf(dfsch_deserializer_t* ds){
   dfsch_strbuf_t* s = GC_NEW(dfsch_strbuf_t);
+  long len;
+  int ret;
 
-  s->len = dfsch_deserialize_integer(ds);
-  s->ptr = GC_MALLOC_ATOMIC(s->len + 1);
-  deserialize_bytes(ds, s->ptr, s->len);
+  len = dfsch_deserialize_integer(ds);
+  if (len < 0){
+    char* buf;
+    s->len = -len;
+    s->ptr = GC_MALLOC_ATOMIC(s->len + 1);
+    
+    len = dfsch_deserialize_integer(ds);
+    buf = GC_MALLOC_ATOMIC(len);
+    
+    deserialize_bytes(ds, buf, len);
+    
+    ret = dfsch__fastlz_decompress(buf, len, s->ptr, s->len);
+    if (ret != s->len){
+      dfsch_error("Invalid serialized stream: decompression error", ds);
+    }
+  } else {
+    s->len = len;
+    s->ptr = GC_MALLOC_ATOMIC(s->len + 1);
+
+    deserialize_bytes(ds, s->ptr, s->len);
+  }
+
   s->ptr[s->len] = 0;
-  
+
   return s;
 }
 
@@ -651,13 +686,18 @@ static void __attribute__((constructor)) register_core_handlers(){
 }
 
 dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj, 
-                                dfsch_object_t* canon_env){
+                                dfsch_object_t* canon_env,
+                                int flags){
   dfsch_serializer_t* ser;
   str_list_t* sl = sl_create();
   ser = dfsch_make_serializer(sl_nappend, sl);
   if (canon_env){
     dfsch_serializer_set_canonical_environment(ser, canon_env);
   }
+  if (flags | DFSCH_SERIALIZE_COMPRESS){
+    dfsch_serializer_set_compress(ser, 1);
+  }
+
   dfsch_serialize_object(ser, obj);
   return dfsch_sl_value_strbuf(sl);
 }
@@ -692,7 +732,8 @@ static void smap_set(smap_t* sm,
                      dfsch_object_t* key,
                      dfsch_object_t* value){
   dfsch_strbuf_t* sb = dfsch_serialize(value,
-                                       sm->canon_env);
+                                       sm->canon_env,
+                                       0);
   dfsch_mapping_set(sm->mapping,
                     key,
                     dfsch_make_byte_vector_nocopy(sb->ptr, sb->len));
@@ -734,11 +775,15 @@ DFSCH_DEFINE_PRIMITIVE(serialize,
                        "Serializes one object into byte_vector"){
   dfsch_object_t* obj;
   dfsch_object_t* canon_env;
+  int flags = 0;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("compress", DFSCH_SERIALIZE_COMPRESS, flags);
+  DFSCH_FLAG_PARSER_END(args);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_byte_vector_strbuf(dfsch_serialize(obj, canon_env));
+  return dfsch_make_byte_vector_strbuf(dfsch_serialize(obj, canon_env, flags));
 }
 
 DFSCH_DEFINE_PRIMITIVE(deserialize,
