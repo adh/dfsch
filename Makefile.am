@@ -258,6 +258,12 @@ boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
 	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
 	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
+fastlz_files = 	ext/fastlz/LICENSE \
+	ext/fastlz/README \
+	ext/fastlz/6pack.c \
+	ext/fastlz/6unpack.c
+
+
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
 	src/udata-gen.c src/UnicodeData.txt tools/docgen.scm \
@@ -269,8 +275,8 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/main.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
-	tests/fix-regression-tests.scm
-
+	tests/fix-regression-tests.scm \
+	$(fastlz_files)
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32
