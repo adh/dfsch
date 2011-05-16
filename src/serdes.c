@@ -716,6 +716,7 @@ typedef struct smap_t {
   dfsch_type_t* type;
   dfsch_object_t* mapping;
   dfsch_object_t* canon_env;
+  int flags;
 } smap_t;
 
 static dfsch_object_t* smap_ref(smap_t* sm, 
@@ -733,7 +734,7 @@ static void smap_set(smap_t* sm,
                      dfsch_object_t* value){
   dfsch_strbuf_t* sb = dfsch_serialize(value,
                                        sm->canon_env,
-                                       0);
+                                       sm->flags);
   dfsch_mapping_set(sm->mapping,
                     key,
                     dfsch_make_byte_vector_nocopy(sb->ptr, sb->len));
@@ -762,10 +763,12 @@ dfsch_type_t dfsch_serializing_map_type = {
 };
 
 dfsch_object_t* dfsch_make_serializing_map(dfsch_object_t* mapping,
-                                           dfsch_object_t* canon_env){
+                                           dfsch_object_t* canon_env,
+                                           int flags){
   smap_t* sm = dfsch_make_object(DFSCH_SERIALIZING_MAP_TYPE);
   sm->mapping = mapping;
   sm->canon_env = canon_env;
+  sm->flags = flags;
   return sm;
 }
 
@@ -802,11 +805,14 @@ DFSCH_DEFINE_PRIMITIVE(make_serializing_map,
                        "it's values"){
   dfsch_object_t* mapping;
   dfsch_object_t* canon_env;
+  int flags = 0;
   DFSCH_OBJECT_ARG(args, mapping);
   DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
-  DFSCH_ARG_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("compress", DFSCH_SERIALIZE_COMPRESS, flags);
+  DFSCH_FLAG_PARSER_END(args);
 
-  return dfsch_make_serializing_map(mapping, canon_env);
+  return dfsch_make_serializing_map(mapping, canon_env, flags);
 }
 
 

@@ -110,6 +110,7 @@ extern dfsch_type_t dfsch_serializing_map_type;
 #define DFSCH_SERIALIZING_MAP_TYPE (&dfsch_serializing_map_type)
 
 dfsch_object_t* dfsch_make_serializing_map(dfsch_object_t* mapping,
-                                           dfsch_object_t* canon_env);
+                                           dfsch_object_t* canon_env,
+                                           int flags);
 
 #endif
