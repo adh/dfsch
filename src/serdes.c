@@ -694,7 +694,7 @@ dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj,
   if (canon_env){
     dfsch_serializer_set_canonical_environment(ser, canon_env);
   }
-  if (flags | DFSCH_SERIALIZE_COMPRESS){
+  if (flags & DFSCH_SERIALIZE_COMPRESS){
     dfsch_serializer_set_compress(ser, 1);
   }
 
