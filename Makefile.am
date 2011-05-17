@@ -265,6 +265,15 @@ fastlz_files = 	ext/fastlz/LICENSE \
 	ext/fastlz/6pack.c \
 	ext/fastlz/6unpack.c
 
+upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
+	ext/upskirt/array.h		  ext/upskirt/lace.c \
+	ext/upskirt/benchmark.c		  ext/upskirt/LICENSE \
+	ext/upskirt/BSDmakefile		  ext/upskirt/markdown.c \
+	ext/upskirt/buffer.c		  ext/upskirt/markdown.h \
+	ext/upskirt/buffer.h		  ext/upskirt/README \
+	ext/upskirt/expanded_markdown.sh  ext/upskirt/renderers.c \
+	ext/upskirt/GNUmakefile		  ext/upskirt/renderers.h
+
 
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
@@ -278,7 +287,9 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
 	tests/fix-regression-tests.scm \
-	$(fastlz_files)
+	$(fastlz_files) \
+	$(upskirt_files)
+
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
 if WIN32
