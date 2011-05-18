@@ -36,8 +36,6 @@
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 
-typedef dfsch_object_t object_t;
-
 #define NEED_ARGS(args,count)                                   \
   if (dfsch_list_length_check(args)!=(count))                   \
     dfsch_error("Wrong number of argument",(args));

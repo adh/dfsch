@@ -38,8 +38,6 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-typedef dfsch_object_t object_t;
-
 typedef struct flonum_t {
   dfsch_type_t *type;
   double flonum;

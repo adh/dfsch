@@ -1,5 +1,5 @@
-#ifndef H__dfsch__object__
-#define H__dfsch__object__
+#ifndef H__dfsch__types__2__
+#define H__dfsch__types__2__
 
 #include <dfsch/magic.h>
 #include <dfsch/eqhash.h>
@@ -43,7 +43,7 @@ typedef struct environment_t environment_t;
 
 #define EFRAME_RETAIN 1
 #define EFRAME_SERIAL_MASK 0x7ff0000
-#define EFRAME_SERIAL_INCR 0x00100000
+#define EFRAME_SERIAL_INCR 0x0010000
 
 struct environment_t {
   dfsch_type_t* type;

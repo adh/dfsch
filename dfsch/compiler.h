@@ -19,5 +19,6 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
 
 
 void dfsch_compile_function(dfsch_object_t* function);
+void dfsch_precompile_function(dfsch_object_t* function);
 
 #endif

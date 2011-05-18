@@ -37,8 +37,6 @@
 #include <dfsch/generate.h>
 #include <dfsch/compiler.h>
 
-typedef dfsch_object_t object_t;
-
 DFSCH_FORM_METHOD_COMPILE(if){
   dfsch_object_t* args = DFSCH_FAST_CDR(expr);
   object_t* test;
@@ -315,14 +313,43 @@ DFSCH_DEFINE_FORM(internal_get_values,
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
+DFSCH_DEFINE_FORM(internal_reclose_closure, NULL,
+                  {}){
+  dfsch_object_t* closure;
+  DFSCH_OBJECT_ARG(args, closure);
+  DFSCH_ARG_END(args);
+  return dfsch__reclose_closure(closure, dfsch_reify_environment(env));
+}
+
+DFSCH_FORM_METHOD_COMPILE(lambda){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+
+  dfsch_object_t* name;
+  dfsch_object_t* lambda_list;
+  dfsch_object_t* body;
+  dfsch_object_t* c;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, lambda_list);
+  DFSCH_ARG_REST(args, body);
+
+  c = dfsch_named_lambda(env, lambda_list, body, name);
+  dfsch_precompile_function(c);
+  
+  return dfsch_immutable_list(2,
+                              DFSCH_FORM_REF(internal_reclose_closure),
+                              c);
+}
+
+DFSCH_DEFINE_FORM(internal_lambda, "Create new function", 
+                  {DFSCH_FORM_COMPILE(lambda)}){
   dfsch_object_t* name;
   dfsch_object_t* lambda_list;
   dfsch_object_t* body;
 
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, lambda_list);
-  DFSCH_OBJECT_ARG(args, body);
+  DFSCH_ARG_REST(args, body);
 
   return dfsch_named_lambda(dfsch_reify_environment(env), 
                             lambda_list, body, name);
@@ -331,11 +358,11 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
                                       dfsch_object_t* lambda_list,
                                       dfsch_object_t* body){
-  return dfsch_immutable_list(4, 
-                              DFSCH_FORM_REF(internal_lambda),
-                              name,
-                              lambda_list,
-                              body);
+  return dfsch_immutable_list_cdr(body, 
+                                  3, 
+                                  DFSCH_FORM_REF(internal_lambda),
+                                  name,
+                                  lambda_list);
 }
 
 DFSCH_FORM_METHOD_COMPILE(define){

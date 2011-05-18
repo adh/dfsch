@@ -2536,6 +2536,15 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   return (object_t*)c;
 }
 
+dfsch_object_t* dfsch__reclose_closure(dfsch_object_t* closure,
+                                       environment_t* env){
+  closure_t* orig = DFSCH_ASSERT_TYPE(closure, DFSCH_STANDARD_FUNCTION_TYPE);
+  closure_t *c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
+  memcpy(c, orig, sizeof(closure_t));
+  c->env = env;
+  return c;
+}
+
 dfsch_object_t* dfsch_lambda(dfsch_object_t* env,
                              dfsch_object_t* args,
                              dfsch_object_t* code){
