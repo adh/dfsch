@@ -654,6 +654,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%lambda", 
                          DFSCH_FORM_REF(internal_lambda));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%reclose-closure", 
+                         DFSCH_FORM_REF(internal_reclose_closure));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
                          DFSCH_FORM_REF(internal_let));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
