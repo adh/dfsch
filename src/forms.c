@@ -336,9 +336,9 @@ DFSCH_FORM_METHOD_COMPILE(lambda){
   c = dfsch_named_lambda(env, lambda_list, body, name);
   dfsch_precompile_function(c);
   
-  return dfsch_immutable_list(2,
-                              DFSCH_FORM_REF(internal_reclose_closure),
-                              c);
+  return dfsch_cons_ast_node(DFSCH_FORM_REF(internal_reclose_closure),
+                             expr,
+                             1, c);
 }
 
 DFSCH_DEFINE_FORM(internal_lambda, "Create new function", 
