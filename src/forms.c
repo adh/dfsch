@@ -322,7 +322,7 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
 
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, lambda_list);
-  DFSCH_ARG_REST(args, body);
+  DFSCH_OBJECT_ARG(args, body);
 
   return dfsch_named_lambda(dfsch_reify_environment(env), 
                             lambda_list, body, name);
@@ -331,11 +331,11 @@ DFSCH_DEFINE_FORM(internal_lambda, "Create new function", {}){
 dfsch_object_t* dfsch_generate_lambda(dfsch_object_t* name,
                                       dfsch_object_t* lambda_list,
                                       dfsch_object_t* body){
-  return dfsch_immutable_list_cdr(body, 
-                                  3, 
-                                  DFSCH_FORM_REF(internal_lambda),
-                                  name,
-                                  lambda_list);
+  return dfsch_immutable_list(4, 
+                              DFSCH_FORM_REF(internal_lambda),
+                              name,
+                              lambda_list,
+                              body);
 }
 
 DFSCH_FORM_METHOD_COMPILE(define){

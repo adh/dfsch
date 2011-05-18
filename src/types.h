@@ -65,6 +65,7 @@ typedef struct closure_t{
   lambda_list_t* orig_args;
   object_t* documentation;
   int compiled;
+  int call_count;
 } closure_t;
 
 struct dfsch__stack_frame_t {
