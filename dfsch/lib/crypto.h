@@ -183,6 +183,9 @@ extern dfsch_crypto_hash_t dfsch_crypto_md5;
 extern dfsch_crypto_hash_t dfsch_crypto_md4;
 #define DFSCH_CRYPTO_MD4 (&dfsch_crypto_md4)
 
+dfsch_strbuf_t* dfsch_crypto_hash_buffer(dfsch_crypto_hash_t* hash,
+                                         char* buf, size_t len,
+                                         char* key, size_t key_len);
 
 dfsch_crypto_hash_t* dfsch_crypto_make_hmac(dfsch_crypto_hash_t* hash);
 extern dfsch_type_t dfsch_crypto_hmac_type;

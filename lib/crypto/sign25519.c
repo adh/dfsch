@@ -15,8 +15,16 @@ struct dfsch_sign25519_public_key_t {
   uint8_t public[32];
 };
 
-dfsch_type_t dfsch_sign25519_public_key_type = {};
-dfsch_type_t dfsch_sign25519_private_key_type = {};
+dfsch_type_t dfsch_sign25519_public_key_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "crypto:sign25519-private-key",
+  .size = sizeof(dfsch_sign25519_private_key_t)
+};
+dfsch_type_t dfsch_sign25519_private_key_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "crypto:sign25519-public-key",
+  .size = sizeof(dfsch_sign25519_public_key_t)
+};
 
 
 static void hexdump(char* label, unsigned char*data, size_t len){

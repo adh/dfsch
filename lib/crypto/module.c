@@ -1,4 +1,5 @@
 #include <dfsch/lib/crypto.h>
+#include <dfsch/bignum.h>
 
 DFSCH_DEFINE_PRIMITIVE(setup_block_cipher,
                        "Create new block cipher context (expanded key)"){
@@ -452,6 +453,9 @@ DFSCH_DEFINE_PRIMITIVE(rsa_pss_sign,
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
   
+  message = dfsch_crypto_hash_buffer(hash, message->ptr, message->len,
+                                     NULL, 0);
+
   if (!random_source){
     random_source = dfsch_crypto_get_fast_prng_state();
   }
@@ -463,7 +467,35 @@ DFSCH_DEFINE_PRIMITIVE(rsa_pss_sign,
 
   m = dfsch_rsa_decrypt(key, m);
   
-  return dfsch_make_byte_vector_strbuf(dfsch_bignum_to_bytes(dfsch_number_to_bignum(m)));
+  return dfsch_make_byte_vector_strbuf(dfsch_bignum_to_bytes(dfsch_bignum_from_number(m)));
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_pss_verify,
+                       "Verify RSA-PSS signature"){
+  dfsch_rsa_public_key_t* key;
+  dfsch_strbuf_t* signature;
+  dfsch_strbuf_t* message;
+  dfsch_object_t* s;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
+
+  DFSCH_RSA_PUBLIC_KEY_ARG(args, key);
+  DFSCH_BUFFER_ARG(args, signature);
+  DFSCH_BUFFER_ARG(args, message);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_PARSER_END(args);
+  DFSCH_ARG_END(args);
+
+  message = dfsch_crypto_hash_buffer(hash, message->ptr, message->len,
+                                     NULL, 0);
+
+  s = dfsch_bignum_from_bytes(signature->ptr, signature->len, 0);
+  s = dfsch_rsa_encrypt(key, s);
+  
+  return dfsch_bool(dfsch_crypto_pss_verify(hash, 
+                                            dfsch_rsa_public_key_length(key), 
+                                            s,
+                                            message->ptr, message->len));
 }
 
 void dfsch_module_crypto_register(dfsch_object_t* env){
@@ -597,5 +629,19 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-verify",
                          DFSCH_PRIMITIVE_REF(sign25519_verify));
 
+  dfsch_define_method_pkgcstr_1(env, crypto, "sign-message",
+                              DFSCH_RSA_PRIVATE_KEY_TYPE,
+                              DFSCH_PRIMITIVE_REF(rsa_pss_sign));
+  dfsch_define_method_pkgcstr_1(env, crypto, "sign-message",
+                              DFSCH_SIGN25519_PRIVATE_KEY_TYPE,
+                              DFSCH_PRIMITIVE_REF(sign25519_sign));
+
+  dfsch_define_method_pkgcstr(env, crypto, "verify-message",
+                              NULL, dfsch_list(1, DFSCH_RSA_PUBLIC_KEY_TYPE),
+                              DFSCH_PRIMITIVE_REF(rsa_pss_verify));
+  dfsch_define_method_pkgcstr(env, crypto, "verify-message",
+                              NULL, 
+                              dfsch_list(1, DFSCH_SIGN25519_PUBLIC_KEY_TYPE),
+                              DFSCH_PRIMITIVE_REF(sign25519_verify));
 
 }

@@ -110,3 +110,14 @@ dfsch_crypto_hash_context_t* dfsch_crypto_hash_context(dfsch_object_t* obj){
   }
   return (dfsch_crypto_hash_context_t*)o;  
 }
+
+dfsch_strbuf_t* dfsch_crypto_hash_buffer(dfsch_crypto_hash_t* hash,
+                                         char* buf, size_t len,
+                                         char* key, size_t klen){
+  dfsch_crypto_hash_context_t* ctx = dfsch_crypto_hash_setup(hash, key, klen);
+  dfsch_strbuf_t* res = dfsch_alloc_strbuf(hash->result_len);
+
+  ctx->algo->process(ctx, buf, len);
+  ctx->algo->result(ctx, res->ptr);
+  return res;
+}
