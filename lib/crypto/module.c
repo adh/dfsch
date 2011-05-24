@@ -285,7 +285,7 @@ DFSCH_DEFINE_PRIMITIVE(rsa_decrypt_number,
 
 DFSCH_DEFINE_PRIMITIVE(oaep_encode,
                        "Encode message using OAEP scheme"){
-  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
   dfsch_object_t* random_source = NULL;
   dfsch_strbuf_t* message;
   dfsch_strbuf_t* label = DFSCH_EMPTY_STRBUF;
@@ -299,6 +299,10 @@ DFSCH_DEFINE_PRIMITIVE(oaep_encode,
   DFSCH_KEYWORD_GENERIC("label", label, dfsch_string_to_buf);
   DFSCH_KEYWORD_PARSER_END(args);
 
+  if (!random_source){
+    random_source = dfsch_crypto_get_fast_prng_state();
+  }
+
   return dfsch_crypto_oaep_encode(hash, random_source, length,
                                   message->ptr, message->len,
                                   label->ptr, label->len);
@@ -306,8 +310,7 @@ DFSCH_DEFINE_PRIMITIVE(oaep_encode,
 
 DFSCH_DEFINE_PRIMITIVE(oaep_decode,
                        "Encode message using OAEP scheme"){
-  dfsch_crypto_hash_t* hash = NULL;
-  dfsch_object_t* random_source = NULL;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
   dfsch_object_t* message;
   dfsch_strbuf_t* label = DFSCH_EMPTY_STRBUF;
   size_t length;
@@ -327,7 +330,7 @@ DFSCH_DEFINE_PRIMITIVE(oaep_decode,
 
 DFSCH_DEFINE_PRIMITIVE(pss_encode,
                        "Encode signature using PSS"){
-  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
   dfsch_object_t* random_source = NULL;
   dfsch_strbuf_t* mh;
   size_t length;
@@ -339,13 +342,17 @@ DFSCH_DEFINE_PRIMITIVE(pss_encode,
   DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
   DFSCH_KEYWORD_PARSER_END(args);
 
+  if (!random_source){
+    random_source = dfsch_crypto_get_fast_prng_state();
+  }
+
   return dfsch_crypto_pss_encode(hash, random_source, length,
                                  mh->ptr, mh->len);
 }
 
 DFSCH_DEFINE_PRIMITIVE(pss_verify,
                        "Verify signature encoded using PSS"){
-  dfsch_crypto_hash_t* hash = NULL;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
   dfsch_object_t* signature;
   dfsch_strbuf_t* mh;
   size_t length;
@@ -427,6 +434,36 @@ DFSCH_DEFINE_PRIMITIVE(sign25519_verify,
   return dfsch_bool(dfsch_sign25519_verify(key, 
                                             message->ptr, message->len, 
                                             signature->ptr, signature->len));
+}
+
+DFSCH_DEFINE_PRIMITIVE(rsa_pss_sign,
+                       "Sign message with RSA-PSS"){
+  dfsch_rsa_private_key_t* key;
+  dfsch_strbuf_t* message;
+  dfsch_object_t* m;
+  dfsch_crypto_hash_t* hash = DFSCH_CRYPTO_SHA256;
+  dfsch_object_t* random_source = NULL;
+
+  DFSCH_RSA_PRIVATE_KEY_ARG(args, key);
+  DFSCH_BUFFER_ARG(args, message);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("random-source", random_source);
+  DFSCH_KEYWORD_GENERIC("hash", hash, dfsch_crypto_hash);
+  DFSCH_KEYWORD_PARSER_END(args);
+  DFSCH_ARG_END(args);
+  
+  if (!random_source){
+    random_source = dfsch_crypto_get_fast_prng_state();
+  }
+
+  m = dfsch_crypto_pss_encode(hash, 
+                              random_source, 
+                              dfsch_rsa_private_key_length(key),
+                              message->ptr, message->len);
+
+  m = dfsch_rsa_decrypt(key, m);
+  
+  return dfsch_make_byte_vector_strbuf(dfsch_bignum_to_bytes(dfsch_number_to_bignum(m)));
 }
 
 void dfsch_module_crypto_register(dfsch_object_t* env){
@@ -559,5 +596,6 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(sign25519_sign));
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-verify",
                          DFSCH_PRIMITIVE_REF(sign25519_verify));
+
 
 }

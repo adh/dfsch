@@ -209,6 +209,13 @@ dfsch_rsa_private_key_t* dfsch_rsa_private_key_from_list(dfsch_object_t* list){
   return prk;
 }
 
+size_t dfsch_rsa_public_key_length(dfsch_rsa_public_key_t* key){
+  return dfsch_bignum_msb(dfsch_bignum_to_number(key->modulus));
+}
+size_t dfsch_rsa_private_key_length(dfsch_rsa_private_key_t* key){
+  return dfsch_bignum_msb(dfsch_bignum_to_number(key->modulus));
+}
+
 
 dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
                                   dfsch_object_t* mn){

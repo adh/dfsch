@@ -1181,7 +1181,7 @@ DFSCH_DEFINE_PRIMITIVE(bignum_2_bytes, 0){
   DFSCH_BIGNUM_ARG(args, a);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_string_strbuf(dfsch_bignum_to_bytes(a));
+  return dfsch_make_byte_vector_strbuf(dfsch_bignum_to_bytes(a));
 }
 DFSCH_DEFINE_PRIMITIVE(bytes_2_bignum, 0){
   dfsch_strbuf_t* bytes;
