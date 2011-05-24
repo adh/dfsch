@@ -321,6 +321,23 @@ dfsch_object_t* dfsch_iterator_this(dfsch_object_t* iterator){
   return DFSCH_TYPE_OF(it)->iterator->this(it);
 }
 
+dfsch_object_t* dfsch_coerce_collection(dfsch_object_t* seq,
+                                        dfsch_type_t* type){
+  dfsch_object_t* it;
+  dfsch_object_t* cs;
+  if (dfsch_superclass_p(DFSCH_TYPE_OF(seq), type)){
+    return seq;
+  }
+  it = dfsch_collection_get_iterator(seq);
+  cs = dfsch_make_collection_constructor(type);
+  while (it){
+    dfsch_collection_constructor_add(cs, 
+                                     dfsch_iterator_this(it));
+    it = dfsch_iterator_next(it);
+  }
+  return dfsch_collection_constructor_done(cs);
+}
+
 dfsch_object_t* dfsch_mapping_ref(dfsch_object_t* map,
                                   dfsch_object_t* key){
   dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
@@ -376,6 +393,47 @@ int dfsch_mapping_set_if_not_exists(dfsch_object_t* map,
   }
 }
 
+dfsch_object_t* dfsch_mapping_get_keys_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_keys_iterator){
+    dfsch_error("Mapping does not support iteration over keys", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_keys_iterator(m);  
+}
+dfsch_object_t* dfsch_mapping_get_values_iterator(dfsch_object_t* map){
+  dfsch_object_t* m = DFSCH_ASSERT_MAPPING(map);
+  if (!DFSCH_TYPE_OF(m)->mapping->get_values_iterator){
+    dfsch_error("Mapping does not support iteration over values", m);
+  }
+  return DFSCH_TYPE_OF(m)->mapping->get_values_iterator(m);  
+}
+
+
+dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct){
+  if (!ct->collection){
+    dfsch_error("Not a collection type", ct);
+  }
+  if (ct->collection->make_constructor) {
+    return ct->collection->make_constructor(ct);
+  } else {
+    return dfsch_make_list_collector(); /* fallback to mutable list */
+  }
+
+}
+void dfsch_collection_constructor_add(dfsch_object_t* constructor,
+                                      dfsch_object_t* element){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(constructor,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  ((dfsch_collection_constructor_type_t*)con->type)->add(con, element);
+}
+dfsch_object_t* dfsch_collection_constructor_done(dfsch_object_t* c){
+  dfsch_object_t* con 
+    = DFSCH_ASSERT_METACLASS_INSTANCE(c,
+                                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE);
+  return ((dfsch_collection_constructor_type_t*)con->type)->done(con);
+}
+
 
 
 
@@ -404,6 +462,7 @@ dfsch__thread_info_t* dfsch__get_thread_info(){
 #ifdef DFSCH_GC_MALLOC_MANY_PREALLOC
     ei->env_freelist = GC_malloc_many(sizeof(environment_t));
 #endif
+    ei->current_package = DFSCH_DFSCH_USER_PACKAGE;
     pthread_setspecific(thread_key, ei);
   }
   return ei;
@@ -448,6 +507,17 @@ void dfsch_throw(dfsch_object_t* tag,
     if (i->tag == tag){
       ti->throw_tag = tag;
       ti->throw_value = value;
+      if (ti->values == DFSCH_INVALID_OBJECT){
+        ti->throw_values = DFSCH_INVALID_OBJECT;
+      } else if (ti->values){
+        int i;
+        for (i = 0; ti->values[i] != DFSCH_INVALID_OBJECT; i++);
+        ti->throw_values = GC_MALLOC(sizeof(dfsch_object_t*) * (i + 1));
+        memcpy(ti->throw_values, ti->values, sizeof(dfsch_object_t*) * (i + 1));
+      } else {
+        ti->throw_values = NULL;
+      }
+      ti->values = NULL;
       dfsch__continue_unwind(ti);
     }
     i = i->next;
@@ -557,7 +627,13 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   ti->env_freelist = GC_NEXT(ti->env_freelist);
   ti->env_fl_depth--;
 #else
-  e = GC_NEW(environment_t);
+  if (ti->env_freelist){
+    e = ti->env_freelist;
+    ti->env_freelist = GC_NEXT(ti->env_freelist);
+    ti->env_fl_depth--;
+  } else {
+    e = GC_NEW(environment_t);
+  }
 #endif
 
   ((dfsch_object_t*)e)->type = DFSCH_ENVIRONMENT_TYPE;
@@ -800,7 +876,7 @@ void dfsch_unset(object_t* name, object_t* env){
   DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
   while (i){
     if (i->decls){
-      dfsch_hash_unset(i->decls, name);
+      dfsch_idhash_unset(i->decls, name);
     }
     if(dfsch_eqhash_unset(&i->values, name)){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -847,13 +923,16 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
 
 
   if (!e->decls){
-    e->decls = dfsch_hash_make(DFSCH_HASH_EQ);
+    e->decls = dfsch_make_idhash();
   } else {
-    dfsch_hash_ref_fast(e->decls, variable, &old);
+    old = dfsch_idhash_ref(e->decls, variable);
+    if (old == DFSCH_INVALID_OBJECT){
+      old = NULL;
+    }
   }
   
-  dfsch_hash_set(e->decls, variable, 
-                 dfsch_cons(declaration, old));  
+  dfsch_idhash_set(e->decls, variable, 
+                   dfsch_cons(declaration, old));  
 
   if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
@@ -1043,8 +1122,8 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
     /* We have to copy arguments from stack to scratchpad instead of
        building directly in scratchpad, because scratchpad might be
        used by recursive invocations*/
-    memcpy(ti->arg_scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
-    args = DFSCH_MAKE_CLIST(ti->arg_scratch_pad);
+    memcpy(ti->scratch_pad, res, sizeof(dfsch_object_t*)*(l+4));
+    args = DFSCH_MAKE_CLIST(ti->scratch_pad);
   }
 
   return dfsch_apply_impl(proc, args, context, esc, ti);
@@ -1054,6 +1133,8 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
                                        dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
+  ti->values = NULL;
+
   if (!exp) 
     return NULL;
 
@@ -1090,7 +1171,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                           esc,
                           ti);
     } else {
-      r =  eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
+      r = eval_args_and_apply(f, DFSCH_FAST_CDR(exp), NULL, env, esc, ti);
     }
     ti->stack_trace = sframe.next;
     return r;
@@ -1516,6 +1597,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   sframe.data.apply.args = args;
   ti->stack_trace = &sframe;
 
+  ti->values = NULL;
   async_apply_check(ti);
 
 
@@ -1544,7 +1626,16 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
     if (compile_on_apply){
       if (!((closure_t*)proc)->compiled){
-        dfsch_compile_function(proc);
+        if (((closure_t*)proc)->call_count == 0){
+          if (myesc.reuse_frame){ /* tail call */
+            args = dfsch_list_copy_immutable(args);
+            /* On tail calls, arguments are in many cases in global scratchpad 
+             * area, compilation can clobber them */
+          }
+          dfsch_compile_function(proc);
+        } else {
+          ((closure_t*)proc)->call_count--;
+        }
       }
     }
 
@@ -1589,6 +1680,130 @@ dfsch_object_t* dfsch_apply_with_context(dfsch_object_t* proc,
 dfsch_object_t* dfsch_quasiquote(dfsch_object_t* env, dfsch_object_t* arg){
   return dfsch_eval(dfsch_backquote_expand(arg), env);
 }
+
+dfsch_object_t* dfsch_values(int count, ...){
+  dfsch_object_t* res;
+  size_t i;
+  va_list al;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  va_start(al,count);
+
+  if (count == 0){
+    ti->values = DFSCH_INVALID_OBJECT;
+    return NULL;
+  }
+
+  res = va_arg(al, dfsch_object_t*);
+
+  if (count == 1){
+    ti->values = NULL;
+    va_end(al);
+    return res;
+  }
+
+  if (count < 16){
+    ti->values = ti->scratch_pad;
+  } else {
+    ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * count);
+  }
+  
+  count--;
+  for(i = 0; i < count; ++i){
+    ti->values[i] = va_arg(al, dfsch_object_t*);
+  }
+  ti->values[i] = DFSCH_INVALID_OBJECT;
+
+  va_end(al);
+  return res;
+}
+
+dfsch_object_t* dfsch_values_list(dfsch_object_t* list){
+  dfsch_object_t* res;
+  int count;
+  size_t i;
+  va_list al;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  if (!DFSCH_PAIR_P(list)){
+    ti->values = DFSCH_INVALID_OBJECT;
+    return NULL;
+  }
+  res = DFSCH_FAST_CAR(list);
+
+  if (list == DFSCH_MAKE_CLIST(ti->scratch_pad)){
+    ti->values = ti->scratch_pad + 1; /* Fast path */
+  } else {
+    list = DFSCH_FAST_CDR(list);
+    count = dfsch_list_length_fast_bounded(list);
+
+    if (count < 15){
+      ti->values = ti->scratch_pad;
+    } else {
+      ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * (count + 1));
+    }
+  
+    for(i = 0; i < count; ++i){
+      ti->values[i] = DFSCH_FAST_CAR(list);
+      list = DFSCH_FAST_CDR(list);
+    }
+    ti->values[i] = DFSCH_INVALID_OBJECT;
+  }
+  return res;
+}
+
+dfsch_object_t** dfsch_get_values(dfsch_object_t* ret){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  int count;
+  dfsch_object_t** res;
+  static dfsch_object_t* empty_values[] = {DFSCH_INVALID_OBJECT};
+
+  if (ti->values == DFSCH_INVALID_OBJECT){
+    return empty_values;
+  } 
+
+  if (!ti->values){
+    res = GC_MALLOC(sizeof(dfsch_object_t*)*2);
+    res[0] = ret;
+    res[1] = DFSCH_INVALID_OBJECT;
+    return res;
+  } 
+  
+  count = 0;
+  while (ti->values[count] != DFSCH_INVALID_OBJECT){
+    count++;
+  }
+
+  res = GC_MALLOC(sizeof(dfsch_object_t*) * (count + 2));
+  res[0] = ret;
+  memcpy(res + 1, ti->values, sizeof(dfsch_object_t*) * count);
+  res[count + 1] = DFSCH_INVALID_OBJECT;
+  ti->values = NULL;
+  return res;
+}
+dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch_list_collector_t* lc;
+  int i;
+  if (ti->values == DFSCH_INVALID_OBJECT){
+    return NULL;
+  } 
+
+  if (!ti->values){
+    return dfsch_cons(ret, NULL);
+  } 
+
+  lc = dfsch_make_list_collector();
+
+  dfsch_list_collect(lc, ret);
+  for (i = 0; ti->values[i] != DFSCH_INVALID_OBJECT; i++){
+    dfsch_list_collect(lc, ti->values[i]);
+  }
+  
+  ti->values = NULL;
+  return dfsch_collected_list(lc);
+}
+
 
 extern char dfsch__std_lib[];
 

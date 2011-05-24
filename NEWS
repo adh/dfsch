@@ -15,6 +15,10 @@ version 0.4.0?               YYYY-MM-DD
         * Cryptographic module
         * Tcl/Tk GUI module
         * HTTP low-level processing module and HTTP server
+        * SQL support (sqlite2, sqlite3)
+        * FFI
+        * libGD
+        * libupskirt based markdown parser
 
 -----------------------------------------------------------------------------
 version 0.3.0                2009-07-03              

@@ -23,6 +23,8 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/crypto.h \
 	dfsch/lib/tokyo-cabinet.h \
 	dfsch/lib/tokyo-tyrant.h \
+	dfsch/lib/gd.h \
+	dfsch/lib/ffi.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -84,6 +86,23 @@ tt_libs=
 tt_modules=
 endif
 
+if GD
+gd_libs=libdfsch-gd.la
+gd_modules=gd.la
+else
+gd_libs=
+gd_modules=
+endif
+
+if FFI
+ffi_libs=libdfsch-ffi.la
+ffi_modules=ffi.la
+else
+ffi_libs=
+ffi_modules=
+endif
+
+
 
 if WIN32
 nonwin32_libs=
@@ -127,7 +146,9 @@ lib_LTLIBRARIES = libdfsch.la \
 	$(tkgui_libs)\
 	$(pcre_libs)\
 	$(tc_libs) \
-	$(tt_libs)
+	$(tt_libs) \
+	$(gd_libs) \
+	$(ffi_libs)
 
 
 
@@ -160,13 +181,17 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	csv.la \
 	crypto.la \
 	sql-support.la \
+	markdown.la \
+	fastlz.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
 	$(sqlite_modules)\
 	$(sqlite3_modules)\
 	$(tc_modules)\
-	$(tt_modules)
+	$(tt_modules)\
+	$(gd_modules)\
+	$(ffi_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -174,7 +199,8 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 	lib-scm/os-utils.scm \
 	lib-scm/tk-gui.scm \
 	lib-scm/http-server.scm \
-	lib-scm/sql.scm
+	lib-scm/sql.scm \
+	lib-scm/dfsch-unit.scm
 
 man_MANS = doc/dfsch-repl.1
 
@@ -205,6 +231,7 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/strhash.c dfsch/strhash.h	\
 	src/serdes.c dfsch/serdes.h	\
 	src/sha256.c dfsch/sha256.h	\
+	ext/fastlz/fastlz.c ext/fastlz/fastlz.h \
 	std-lib.c
 
 
@@ -233,14 +260,35 @@ boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
 	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
 	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
 
+fastlz_files = 	ext/fastlz/LICENSE \
+	ext/fastlz/README.TXT \
+	ext/fastlz/6pack.c \
+	ext/fastlz/6unpack.c
+
+upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
+	ext/upskirt/array.h		  ext/upskirt/lace.c \
+	ext/upskirt/benchmark.c		  ext/upskirt/LICENSE \
+	ext/upskirt/BSDmakefile		  ext/upskirt/markdown.c \
+	ext/upskirt/buffer.c		  ext/upskirt/markdown.h \
+	ext/upskirt/buffer.h		  ext/upskirt/README \
+	ext/upskirt/expanded_markdown.sh  ext/upskirt/renderers.c \
+	ext/upskirt/GNUmakefile		  ext/upskirt/renderers.h
+
+
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
-	src/udata-gen.c src/UnicodeData.txt doc/dfsch.doc tools/docgen.scm \
+	src/udata-gen.c src/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
 	$(dfschlibscm_DATA) \
 	examples/tk-gui-demo.scm \
 	examples/http-server-demo.scm \
-	$(stdlib_sources)
+	$(stdlib_sources) \
+	tests/main.scm \
+	tests/language-tests.scm \
+	tests/r5rs-tests.scm \
+	tests/fix-regression-tests.scm \
+	$(fastlz_files) \
+	$(upskirt_files)
 
 
 libdfsch_la_LDFLAGS = -version-info 5:0:0 -no-undefined
@@ -295,7 +343,7 @@ posix_regex_la_LIBADD =  libdfsch.la libdfsch-posix-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-unix_la_LIBADD =  libdfsch.la libdfsch-os.la
+unix_la_LIBADD =  libdfsch.la libdfsch-os.la -lcrypt
 
 libdfsch_os_la_SOURCES = lib/os.c dfsch/lib/os.h
 libdfsch_os_la_LDFLAGS = -version-info 1:0:0 -no-undefined
@@ -312,6 +360,10 @@ libdfsch_zlib_la_LIBADD =  libdfsch.la -lz
 zlib_la_SOURCES = lib/zlib_mod.c
 zlib_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 zlib_la_LIBADD =  libdfsch.la libdfsch-zlib.la -lz
+
+fastlz_la_SOURCES = lib/fastlz_mod.c
+fastlz_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+fastlz_la_LIBADD =  libdfsch.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
@@ -497,12 +549,43 @@ tokyo_cabinet_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la
 tokyo_cabinet_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant.c
-libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la -ltokyocabinet -ltokyotyrant
+libdfsch_tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-cabinet.la \
+	-ltokyocabinet -ltokyotyrant
 libdfsch_tokyo_tyrant_la_LDFLAGS = -no-undefined
 
 tokyo_tyrant_la_SOURCES = lib/tokyo-tyrant_mod.c
 tokyo_tyrant_la_LIBADD = libdfsch.la libdfsch-tokyo-tyrant.la
 tokyo_tyrant_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_gd_la_SOURCES = lib/gd.c
+libdfsch_gd_la_LIBADD = libdfsch.la -lgd
+libdfsch_gd_la_LDFLAGS = -no-undefined
+
+gd_la_SOURCES = lib/gd_mod.c
+gd_la_LIBADD = libdfsch-gd.la libdfsch.la
+gd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_ffi_la_SOURCES = lib/ffi.c
+libdfsch_ffi_la_LIBADD = libdfsch.la -lffi
+libdfsch_ffi_la_LDFLAGS = -no-undefined
+
+ffi_la_SOURCES = lib/ffi_mod.c
+ffi_la_LIBADD = libdfsch-ffi.la libdfsch.la
+ffi_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+
+markdown_la_SOURCES = lib/markdown_mod.c \
+	ext/upskirt/markdown.c \
+	ext/upskirt/markdown.h \
+	ext/upskirt/array.c \
+	ext/upskirt/buffer.c \
+	ext/upskirt/array.h \
+	ext/upskirt/buffer.h \
+	ext/upskirt/renderers.h \
+	ext/upskirt/renderers.c
+markdown_la_LIBADD = libdfsch.la
+markdown_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 if WIN32
 gui_flags = -mwindows
@@ -517,17 +600,7 @@ dfsch_run_LDFLAGS = $(gui_flags)
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
 
-check_PROGRAMS = platform-test c-api-test json-parser-test
-
-platform_test_SOURCES = tests/platform-test.c tests/test-macros.h
-platform_test_LDADD =  -lgc $(pthread_libadd) -lm libdfsch-cmdopts.la
-c_api_test_SOURCES = tests/c-api-test.c tests/test-macros.h
-c_api_test_LDADD = libdfsch.la libdfsch-cmdopts.la
-
-json_parser_test_SOURCES = tests/json-parser-test.c
-json_parser_test_LDADD = libdfsch.la libdfsch-json.la
-
-TESTS = tests/scm-test.sh platform-test c-api-test
+TESTS = tests/scm-test.sh
 
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp

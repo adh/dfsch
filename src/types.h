@@ -1,8 +1,9 @@
-#ifndef H__dfsch__object__
-#define H__dfsch__object__
+#ifndef H__dfsch__types__2__
+#define H__dfsch__types__2__
 
 #include <dfsch/magic.h>
 #include <dfsch/eqhash.h>
+#include <dfsch/hash.h>
 
 typedef dfsch_object_t object_t;
 
@@ -36,20 +37,20 @@ typedef struct vector_t {
 
 typedef dfsch_macro_t macro_t;
 
-#define ENV_CONSTANT_FLAG 1
+//#define ENV_CONSTANT_FLAG 1
 
 typedef struct environment_t environment_t;
 
 #define EFRAME_RETAIN 1
 #define EFRAME_SERIAL_MASK 0x7ff0000
-#define EFRAME_SERIAL_INCR 0x00100000
+#define EFRAME_SERIAL_INCR 0x0010000
 
 struct environment_t {
   dfsch_type_t* type;
   environment_t* parent; 
   dfsch__thread_info_t* owner;
   dfsch_eqhash_t values;
-  dfsch_object_t* decls;
+  dfsch_hash_t* decls;
   dfsch_object_t* context;
   int flags;
 };
@@ -64,6 +65,7 @@ typedef struct closure_t{
   lambda_list_t* orig_args;
   object_t* documentation;
   int compiled;
+  int call_count;
 } closure_t;
 
 struct dfsch__stack_frame_t {

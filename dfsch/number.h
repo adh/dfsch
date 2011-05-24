@@ -66,6 +66,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_number_from_long(long n);
   /** Makes number object from int64_t */
   extern dfsch_object_t* dfsch_make_number_from_int64(int64_t n);
+  /** Makes number object from int64_t */
+  extern dfsch_object_t* dfsch_make_number_from_uint64(uint64_t n);
   
   /** Returns value of given number as double. */
   extern double dfsch_number_to_double(dfsch_object_t *n);
@@ -73,6 +75,7 @@ extern "C" {
   extern long dfsch_number_to_long(dfsch_object_t *n);
   /** Returns value of given number as int64_t. */
   extern int64_t dfsch_number_to_int64(dfsch_object_t *n);
+  extern uint64_t dfsch_number_to_uint64(dfsch_object_t *n);
   extern char* dfsch_number_to_string(dfsch_object_t *n, int base);
   extern char* dfsch_number_format(dfsch_object_t* n, int width, int digits);
   extern dfsch_object_t* dfsch_number_to_inexact(dfsch_object_t* n);

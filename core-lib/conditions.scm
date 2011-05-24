@@ -25,7 +25,7 @@
   (with-gensyms (tag)
     `@(catch ',tag
              (handler-bind ((<error> (lambda (err)
-                                       (throw ',tag ()))))
+                                       (throw ',tag (values () err)))))
                            ,@forms))))
 
 (define-macro (dfsch:detect-errors &rest forms)

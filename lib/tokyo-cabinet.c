@@ -1,8 +1,10 @@
 #include "dfsch/lib/tokyo-cabinet.h"
 #include <dfsch/hash.h>
+#include <dfsch/util.h>
 
 #include <tcutil.h>
 #include <tcadb.h>
+#include <tctdb.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -47,13 +49,7 @@ static void db_unset(db_t* db,
   return tcadbout(db->adb, k->ptr, k->len);
 }
 
-static dfsch_mapping_methods_t db_mapping = {
-  .ref = db_ref,
-  .set = db_set,
-  .unset = db_unset,
-};
-
-static dfsch_object_t* db_get_iterator(db_t* db){
+static dfsch_object_t* db_get_keys_iterator(db_t* db){
   int len;
   char* res;
   dfsch_object_t* it = NULL;
@@ -70,6 +66,37 @@ static dfsch_object_t* db_get_iterator(db_t* db){
   return it;
 }
 
+static dfsch_mapping_methods_t db_mapping = {
+  .ref = db_ref,
+  .set = db_set,
+  .unset = db_unset,
+  .get_keys_iterator = db_get_keys_iterator,
+};
+
+static dfsch_object_t* db_get_iterator(db_t* db){
+  int len;
+  char* res;
+  int klen;
+  char* kres;
+  dfsch_object_t* it = NULL;
+  if (!tcadbiterinit(db->adb)){
+    dfsch_error("Error in interinit", db);
+  }
+
+  while (kres = tcadbiternext(db->adb, &klen)){
+    res = tcadbget(db->adb, kres, klen, &len);
+    it = dfsch_cons(dfsch_list(2, 
+                               dfsch_make_byte_vector(kres, klen),
+                               dfsch_make_byte_vector(res, len)),
+                    it);
+    free(res);
+    free(kres);
+  }
+
+  return it;
+}
+
+
 static dfsch_collection_methods_t db_collection = {
   .get_iterator = db_get_iterator,
 };
@@ -85,7 +112,9 @@ dfsch_type_t dfsch_tokyo_cabinet_db_type = {
 };
 
 static void db_finalizer(db_t* db, void* discard){
-  tcadbdel(db->adb);
+  if (db->type == DFSCH_TOKYO_CABINET_DB_TYPE){
+    tcadbdel(db->adb);
+  }
 }
 
 dfsch_object_t* dfsch_tokyo_cabinet_db_open(char* name){
@@ -104,6 +133,8 @@ dfsch_object_t* dfsch_tokyo_cabinet_db_open(char* name){
 void dfsch_tokyo_cabinet_db_close(dfsch_object_t*dbo){
   db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
   tcadbclose(db->adb);
+  tcadbdel(db->adb);
+  dfsch_invalidate_object(db);
 }
 
 dfsch_object_t* dfsch_tokyo_cabinet_prefix_search(dfsch_object_t* dbo,
@@ -140,6 +171,12 @@ void dfsch_tokyo_cabinet_abort_transaction(dfsch_object_t* dbo){
     dfsch_error("Transaction abort failed", NULL);
   }
 }
+
+void dfsch_tokyo_cabinet_db_sync(dfsch_object_t* dbo){
+  db_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_DB_TYPE);
+  tcadbsync(db->adb);
+}
+
 
 typedef struct table_t {
   dfsch_type_t* type;
@@ -181,13 +218,7 @@ static void table_unset(table_t* db,
   return tctdbout(db->tdb, k->ptr, k->len);
 }
 
-static dfsch_mapping_methods_t table_mapping = {
-  .ref = table_ref,
-  .set = table_set,
-  .unset = table_unset,
-};
-
-static dfsch_object_t* table_get_iterator(table_t* db){
+static dfsch_object_t* table_get_keys_iterator(table_t* db){
   int len;
   char* res;
   dfsch_object_t* it = NULL;
@@ -202,6 +233,33 @@ static dfsch_object_t* table_get_iterator(table_t* db){
   }
 
   return it;
+}
+
+
+static dfsch_mapping_methods_t table_mapping = {
+  .ref = table_ref,
+  .set = table_set,
+  .unset = table_unset,
+
+  .get_keys_iterator = table_get_keys_iterator,
+};
+
+static dfsch_object_t* tcidl_2_entries(table_t* db, dfsch_object_t* idl){
+  dfsch_object_t* res = NULL;
+
+  while (DFSCH_PAIR_P(idl)){
+    dfsch_object_t* k = DFSCH_FAST_CAR(idl);
+    dfsch_object_t* v = table_ref(db, k);
+
+    res = dfsch_cons(dfsch_list(2, k, v), res);
+
+    idl = DFSCH_FAST_CDR(idl);
+  }
+  return res;
+}
+
+static dfsch_object_t* table_get_iterator(table_t* db){
+  return tcidl_2_entries(db, table_get_keys_iterator(db));
 }
 
 static dfsch_collection_methods_t table_collection = {
@@ -219,7 +277,9 @@ dfsch_type_t dfsch_tokyo_cabinet_table_type = {
 };
 
 static void table_finalizer(table_t* db, void* discard){
-  tctdbdel(db->tdb);
+  if (db->type == DFSCH_TOKYO_CABINET_TABLE_TYPE){
+    tcrdbdel(db->tdb);
+  }
 }
 
 
@@ -241,6 +301,8 @@ dfsch_object_t* dfsch_tokyo_cabinet_table_open(char* name){
 void dfsch_tokyo_cabinet_table_close(dfsch_object_t*dbo){
   table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_TABLE_TYPE);
   tctdbclose(db->tdb);
+  tctdbdel(db->tdb);
+  dfsch_invalidate_object(db);
 }
 
 dfsch_object_t* dfsch_tokyo_cabinet_table_prefix_search(dfsch_object_t* dbo,
@@ -277,6 +339,10 @@ void dfsch_tokyo_cabinet_table_abort_transaction(dfsch_object_t* dbo){
     dfsch_error("Transaction abort failed", NULL);
   }
 }
+void dfsch_tokyo_cabinet_table_sync(dfsch_object_t* dbo){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_TABLE_TYPE);
+  tctdbsync(db->tdb);
+}
 
 
 dfsch_object_t* dfsch_tokyo_cabinet_list_2_object(TCLIST* list){
@@ -292,6 +358,28 @@ dfsch_object_t* dfsch_tokyo_cabinet_list_2_object(TCLIST* list){
   }    
   return it;
 }
+
+static dfsch_object_t* tct_list_2_kvs(table_t* db, TCLIST* list){
+  int i;
+  int count;
+  dfsch_object_t* it = NULL;
+  count = tclistnum(list);
+  for (i = 0; i < count; i++){
+    int len;
+    char* res = tclistval(list, count - i - 1, &len);
+    TCMAP* rr = tctdbget(db->tdb, res, len);
+
+    if (rr){
+      it = dfsch_cons(dfsch_list(2,
+                                 dfsch_make_byte_vector(res, len),
+                                 dfsch_tokyo_cabinet_map_2_object(rr)),
+                      it);
+      tcmapdel(rr);
+    }
+  }    
+  return it;
+}
+
 
 TCMAP* dfsch_tokyo_cabinet_object_2_map(dfsch_object_t* obj){
   TCMAP* map = tcmapnew2(31);
@@ -313,7 +401,7 @@ TCMAP* dfsch_tokyo_cabinet_object_2_map(dfsch_object_t* obj){
   return map;
 }
 dfsch_object_t* dfsch_tokyo_cabinet_map_2_object(TCMAP* map){
-  dfsch_object_t* res = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  dfsch_object_t* res = dfsch_make_hash();
   char* kptr;
   int klen;
   char* vptr;
@@ -325,7 +413,7 @@ dfsch_object_t* dfsch_tokyo_cabinet_map_2_object(TCMAP* map){
     vptr = tcmapget(map, kptr, klen, &vlen);
 
     if (!vptr){
-      dfsch_error("TCMAP key had disappeared", NULL);
+      dfsch_error("TCMAP key has disappeared", NULL);
     }
 
     dfsch_hash_set(res,
@@ -336,3 +424,211 @@ dfsch_object_t* dfsch_tokyo_cabinet_map_2_object(TCMAP* map){
   return res;
 }
 
+void dfsch_tokyo_cabinet_table_set_index(dfsch_object_t* dbo,
+                                        char* name,
+                                        int type){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_TABLE_TYPE);
+  int tcr;
+
+  tcr = tctdbsetindex(db->tdb, name, type);
+  if (!tcr && !(type & TDBITKEEP)){
+    dfsch_error("Error modifying table index", db);
+  }
+}
+
+int dfsch_tokyo_cabinet_parse_index_type(dfsch_object_t* args){
+  int type = TDBITKEEP;
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, type);
+  DFSCH_FLAG_SET("lexical", TDBITLEXICAL, type);
+  DFSCH_FLAG_SET("decimal", TDBITDECIMAL, type);
+  DFSCH_FLAG_SET("token", TDBITTOKEN, type);
+  DFSCH_FLAG_SET("full-text", TDBITTOKEN, type);
+  DFSCH_FLAG_SET("q-gram", TDBITQGRAM, type);
+  DFSCH_FLAG_PARSER_END(args);
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, type);
+  DFSCH_FLAG_UNSET("rebuild", TDBITKEEP, type);
+  DFSCH_FLAG_SET("optimize", TDBITOPT, type);
+  DFSCH_FLAG_SET("remove", TDBITVOID, type);
+  DFSCH_FLAG_PARSER_END(args);
+
+  return type;
+}
+
+
+typedef struct query_t {
+  dfsch_type_t* type;
+  TDBQRY* qry;
+  table_t* db;
+} query_t;
+
+dfsch_type_t dfsch_tokyo_cabinet_query_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "tokyo-cabinet:query",
+  .size = sizeof(query_t),
+};
+
+static void query_finalizer(query_t* q, void* discard){
+  if (q->type == DFSCH_TOKYO_CABINET_QUERY_TYPE){
+    tctdbqrydel(q->qry);
+  }
+}
+
+dfsch_object_t* dfsch_tokyo_cabinet_make_query(dfsch_object_t* dbo){
+  table_t* db = DFSCH_ASSERT_INSTANCE(dbo, DFSCH_TOKYO_CABINET_TABLE_TYPE);
+  query_t* q = dfsch_make_object(DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  
+  q->db = db; /* for GC visibility */
+  q->qry = tctdbqrynew(db->tdb);
+
+  GC_REGISTER_FINALIZER(q, (GC_finalization_proc)query_finalizer,
+                        NULL, NULL, NULL);
+
+  return q;
+}
+
+
+static char* convert_value(dfsch_object_t* val){
+  if (dfsch_proto_string_p(val)){
+    return dfsch_proto_string_to_cstr(val);
+  } else {
+    return dfsch_object_2_string(val, 10, DFSCH_WRITE);    
+  }
+}
+
+char* dfsch_tokyo_cabinet_build_expression(dfsch_object_t* args){
+  dfsch_object_t* obj;
+  char* str;
+  dfsch_str_list_t* sl;
+
+  if (!DFSCH_PAIR_P(args)){
+    dfsch_error("Expression is empty" , args);
+  }
+  
+  obj = DFSCH_FAST_CAR(args);
+  args = DFSCH_FAST_CDR(args);
+
+  str = convert_value(obj);
+
+  if (!DFSCH_PAIR_P(args)){
+    return str;
+  }
+
+  sl = dfsch_sl_create();
+  dfsch_sl_append(sl, str);
+
+  while (DFSCH_PAIR_P(args)){
+    dfsch_sl_append(sl, " ");
+    dfsch_sl_append(sl, convert_value(DFSCH_FAST_CAR(args)));
+    args = DFSCH_FAST_CDR(args);
+  }
+
+  return dfsch_sl_value(sl);
+}
+
+void dfsch_tokyo_cabinet_add_query_condition(dfsch_object_t* qo,
+                                             char* col_name,
+                                             dfsch_object_t* args){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  char* expr;
+
+  int op = 0;
+
+  if (DFSCH_PAIR_P(args) && 
+      dfsch_compare_keyword(DFSCH_FAST_CAR(args), "not")){
+    op |= TDBQCNEGATE;
+    args = DFSCH_FAST_CDR(args);
+  }
+
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, op);
+  DFSCH_FLAG_SET("equal", TDBQCSTREQ, op);
+  DFSCH_FLAG_SET("includes", TDBQCSTRINC, op);
+  DFSCH_FLAG_SET("begins-with", TDBQCSTRBW, op);
+  DFSCH_FLAG_SET("ends-with", TDBQCSTREW, op);
+  DFSCH_FLAG_SET("includes-all", TDBQCSTRAND, op);
+  DFSCH_FLAG_SET("includes-some", TDBQCSTROR, op);
+  DFSCH_FLAG_SET("one-of", TDBQCSTROREQ, op);
+  DFSCH_FLAG_SET("regex", TDBQCSTRRX, op);
+
+  DFSCH_FLAG_SET("=", TDBQCNUMEQ, op);
+  DFSCH_FLAG_SET(">", TDBQCNUMGT, op);
+  DFSCH_FLAG_SET(">=", TDBQCNUMGE, op);
+  DFSCH_FLAG_SET("<", TDBQCNUMLT, op);
+  DFSCH_FLAG_SET("<=", TDBQCNUMLE, op);
+  DFSCH_FLAG_SET("between", TDBQCNUMBT, op);
+  DFSCH_FLAG_SET("numerically-one-of", TDBQCNUMOREQ, op);
+  
+  DFSCH_FLAG_SET("ft-phrase", TDBQCFTSPH, op);
+  DFSCH_FLAG_SET("ft-all", TDBQCFTSAND, op);
+  DFSCH_FLAG_SET("ft-some", TDBQCFTSOR, op);
+  DFSCH_FLAG_SET("ft-compound", TDBQCFTSEX, op);
+  DFSCH_FLAG_PARSER_END(args);
+
+  if (DFSCH_PAIR_P(args) && 
+      dfsch_keyword_p(DFSCH_FAST_CAR(args)) &&
+      dfsch_compare_keyword(DFSCH_FAST_CAR(args), "no-index")){
+    op |= TDBQCNOIDX;
+    args = DFSCH_FAST_CDR(args);
+  }
+
+  tctdbqryaddcond(q->qry, col_name, op, 
+                  dfsch_tokyo_cabinet_build_expression(args));
+}
+
+void dfsch_tokyo_cabinet_set_query_order(dfsch_object_t* qo,
+                                         char* colname,
+                                         int type){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  
+  tctdbqrysetorder(q->qry, colname, type);
+}
+int dfsch_tokyo_cabinet_parse_order_type(dfsch_object_t* type){
+  if (dfsch_compare_keyword(type, "ascending")) {
+    return TDBQOSTRASC;
+  }
+  if (dfsch_compare_keyword(type, "descending")) {
+    return TDBQOSTRDESC;
+  }
+  if (dfsch_compare_keyword(type, "ascending-value")) {
+    return TDBQONUMASC;
+  }
+  if (dfsch_compare_keyword(type, "descending-value")) {
+    return TDBQONUMDESC;
+  }
+}
+
+void dfsch_tokyo_cabinet_set_query_limit(dfsch_object_t* qo,
+                                         int count,
+                                         int skip){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  
+  tctdbqrysetlimit(q->qry, count, skip);
+}
+dfsch_object_t* dfsch_tokyo_cabinet_query_search(dfsch_object_t* qo){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tctdbqrysearch(q->qry);
+  if (!tcr){
+    dfsch_error("Query search failed", q);
+  }
+  res = dfsch_tokyo_cabinet_list_2_object(tcr);
+  tclistdel(tcr);
+  return res;
+}
+
+dfsch_object_t* dfsch_tokyo_cabinet_query_get_records(dfsch_object_t* qo){
+  query_t* q = DFSCH_ASSERT_TYPE(qo, DFSCH_TOKYO_CABINET_QUERY_TYPE);
+  TCLIST* tcr;
+  dfsch_object_t* res;
+  
+  tcr = tctdbqrysearch(q->qry);
+  if (!tcr){
+    dfsch_error("Query search failed", q);
+  }
+  res = tct_list_2_kvs(q->db, tcr);
+  tclistdel(tcr);
+  return res;
+}

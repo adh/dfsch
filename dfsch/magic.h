@@ -85,6 +85,7 @@ extern "C" {
     dfsch_object_t* async_apply;
 
     dfsch__stack_trace_frame_t* stack_trace;
+    dfsch_object_t** values;
     
     dfsch_object_t* macroexpanded_expr;
 
@@ -94,13 +95,15 @@ extern "C" {
     jmp_buf* throw_ret;
     dfsch_object_t* throw_tag;
     dfsch_object_t* throw_value;
+    dfsch_object_t** throw_values;
 
     dfsch__catch_list_t* catch_list;
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
 
-    dfsch_object_t* arg_scratch_pad[16];
+    dfsch_object_t* scratch_pad[16];
     int error_policy;
+    dfsch_package_t* current_package;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();
@@ -159,6 +162,9 @@ extern "C" {
 
 #define DFSCH_CATCH_TAG (dfsch___ei->throw_tag)
 #define DFSCH_CATCH_VALUE (dfsch___ei->throw_value)
+#define DFSCH_CATCH_RESTORE_VALUES \
+  dfsch___ei->values = dfsch___ei->throw_values;\
+  dfsch___ei->throw_values = NULL;
   
 #define DFSCH_SCATCH_END                        \
   }}}

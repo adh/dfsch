@@ -476,10 +476,12 @@ typedef struct repl_context_t {
 } repl_context_t;
 
 static int repl_callback(dfsch_object_t *obj, repl_context_t* ctx){
-  dfsch_object_t* ret;
-  ret = ctx->evalfun(obj, ctx->baton);
-  ctx->last_result = ret;
-  puts(dfsch_object_2_string(ret,ctx->print_depth,1));
+  dfsch_object_t** ret;
+  ret = dfsch_get_values(ctx->last_result = ctx->evalfun(obj, ctx->baton));
+  while (*ret != DFSCH_INVALID_OBJECT){
+    puts(dfsch_object_2_string(*ret,ctx->print_depth,1));
+    ret++;
+  }
   return 1;
 }
 

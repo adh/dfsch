@@ -244,6 +244,11 @@ extern "C" {
                                  dfsch_object_t* item);
   extern dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col);
 
+  extern dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct);
+  extern void dfsch_collection_constructor_add(dfsch_object_t* constructor,
+                                               dfsch_object_t* element);
+  extern dfsch_object_t* dfsch_collection_constructor_done(dfsch_object_t* c);
+
   /** Returns given item of list. */
   extern dfsch_object_t* dfsch_list_item(dfsch_object_t* list, size_t index);
   extern void dfsch_set_list_item(dfsch_object_t* list, 
@@ -621,6 +626,9 @@ extern "C" {
   size_t dfsch_assert_sequence_index(dfsch_object_t* seq, size_t idx, size_t len);  
 
   dfsch_object_t* dfsch_collection_get_iterator(dfsch_object_t* col);
+  dfsch_object_t* dfsch_coerce_collection(dfsch_object_t* col,
+                                          dfsch_type_t* type);
+
   dfsch_object_t* dfsch_sequence_ref(dfsch_object_t* seq,
                                      size_t k);
   void dfsch_sequence_set(dfsch_object_t* seq,
@@ -650,6 +658,8 @@ extern "C" {
                                       dfsch_object_t* key,
                                       dfsch_object_t* value);
 
+  dfsch_object_t* dfsch_mapping_get_keys_iterator(dfsch_object_t* map);
+  dfsch_object_t* dfsch_mapping_get_values_iterator(dfsch_object_t* map);
 
 
   /** @} */
@@ -660,7 +670,11 @@ extern "C" {
 
   extern void dfsch_lock_libc();
   extern void dfsch_unlock_libc();
-  
+
+  dfsch_object_t* dfsch_values(int count, ...);
+  dfsch_object_t* dfsch_values_list(dfsch_object_t* list);
+  dfsch_object_t** dfsch_get_values(dfsch_object_t* ret);
+  dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret);
   
 #include <dfsch/strings.h>
 
@@ -908,6 +922,22 @@ extern "C" {
   }                                                                     \
   dfsch___value = DFSCH_FAST_CAR((args));                               \
   (args) = DFSCH_FAST_CDR((args));
+
+#define DFSCH_KEYWORD_PARSER_BEGIN_KWONLY(args)                         \
+  while (DFSCH_PAIR_P((args))){                                         \
+  dfsch_object_t* dfsch___keyword;                                      \
+  dfsch_object_t* dfsch___value;                                        \
+  dfsch___keyword = DFSCH_FAST_CAR((args));                             \
+  if (!dfsch_keyword_p(dfsch___keyword)) {                              \
+    break;                                                              \
+  }                                                                     \
+  (args) = DFSCH_FAST_CDR((args));                                      \
+  if (!DFSCH_PAIR_P((args))){                                           \
+    dfsch_error("Keyword without argument", dfsch___keyword); \
+  }                                                                     \
+  dfsch___value = DFSCH_FAST_CAR((args));                               \
+  (args) = DFSCH_FAST_CDR((args));
+
   
 #define DFSCH_KEYWORD(name, variable)                   \
   if (dfsch_compare_keyword(dfsch___keyword, (name))){  \
@@ -922,7 +952,7 @@ extern "C" {
   
 
 #define DFSCH_KEYWORD_PARSER_END(args)                          \
-  dfsch_error("exception:unknown-keyword", dfsch___keyword);    \
+  dfsch_error("Unknown keyword", dfsch___keyword);              \
 }
 #define DFSCH_KEYWORD_PARSER_END_ALLOW_OTHER(args)              \
 }

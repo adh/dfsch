@@ -22,6 +22,7 @@
 #include <dfsch/generate.h>
 #include <dfsch/magic.h>
 #include "types.h"
+#include "internal.h"
 
 dfsch_object_t* dfsch_cons_ast_node(dfsch_object_t* head,
                                     dfsch_object_t* orig_expr,
@@ -199,8 +200,26 @@ void dfsch_compile_function(dfsch_object_t* function){
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
   func->code = dfsch_compile_expression_list(func->orig_code,
-                                                   func->env);
+                                             func->env);
   func->compiled = 1;
+}
+
+static DEFINE_VM_PARAM(recompile_precompiled, 8,
+                       "Number of calls to precompiled closure to trigger "
+                       "it's recompilation");
+
+void dfsch_precompile_function(dfsch_object_t* function){
+  closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
+                                          DFSCH_STANDARD_FUNCTION_TYPE);
+
+  func->code = dfsch_compile_expression_list(func->orig_code,
+                                             func->env);
+  func->env = NULL;
+  if (recompile_precompiled >= 0){
+    func->call_count = recompile_precompiled;
+  } else {
+    func->compiled = 1;
+  }
 }
 
 DFSCH_DEFINE_PRIMITIVE(compile_expression, NULL){

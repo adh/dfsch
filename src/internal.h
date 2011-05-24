@@ -22,6 +22,7 @@
 #define H__dfsch___internal__
 
 #include <dfsch/dfsch.h>
+#include "types.h"
 
 extern void dfsch__primitives_register(dfsch_object_t *ctx);
 extern void dfsch__forms_register(dfsch_object_t *ctx);
@@ -58,6 +59,9 @@ void dfsch__register_vm_param(int* var, char* name, char* desc);
   static void __attribute__((constructor)) vmp__init_##name(){   \
     dfsch__register_vm_param(&name, #name, desc);                \
   }
+
+dfsch_object_t* dfsch__reclose_closure(dfsch_object_t* closure,
+                                       environment_t* env);
 
 
 #endif

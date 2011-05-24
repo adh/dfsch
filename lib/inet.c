@@ -91,7 +91,7 @@ dfsch_object_t* dfsch_http_query_2_hash(char* query){
   char* value;
   dfsch_object_t* hash;
 
-  hash = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  hash = dfsch_make_hash();
 
   while (*query){
     query += strspn(query, "&;");
@@ -853,7 +853,9 @@ static void headers_hash_cb_list(dfsch_object_t* hash,
   dfsch_object_t* ns = dfsch_make_string_cstr(name);
   dfsch_object_t* old;
 
-  if (dfsch_hash_ref_fast(hash, ns, &old)){
+  old = dfsch_hash_ref(hash, ns);
+
+  if (old != DFSCH_INVALID_OBJECT){
     if (!DFSCH_PAIR_P(old)){
       old = dfsch_cons(old, NULL);
       dfsch_hash_set(hash, ns, old);
@@ -873,7 +875,7 @@ dfsch_object_t* dfsch_inet_read_822_headers_map(dfsch_object_t* port,
                                                 size_t max_len,
                                                 int max_count){
   if (!map){
-    map = dfsch_hash_make(DFSCH_HASH_EQUAL);
+    map = dfsch_make_hash();
   }
 
   dfsch_inet_read_822_headers(port, headers_hash_cb_list, map, 
