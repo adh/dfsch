@@ -298,6 +298,7 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   dfsch_object_t* table = DFSCH_INVALID_OBJECT;
   dfsch_object_t* table_row = DFSCH_INVALID_OBJECT;
   dfsch_object_t* table_cell = DFSCH_INVALID_OBJECT;
+  char* emphasis_chars = NULL;
   struct mkd_renderer* base;
   struct mkd_renderer* res;
   callbacks_t* cb = GC_NEW(callbacks_t);
@@ -331,12 +332,18 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("table", table);
   DFSCH_KEYWORD("table-row", table_row);
   DFSCH_KEYWORD("table-cell", table_cell);
+  DFSCH_KEYWORD_PARSER_GENERIC("emphasis-chars", emphasis_chars, 
+                               dfsch_string_to_cstr);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
   res = GC_NEW(struct mkd_renderer);
   memcpy(res, base, sizeof(struct mkd_renderer));
   res->opaque = cb;
+
+  if (emphasis_chars){
+    res->emph_chars = emphasis_chars;
+  }
 
 #define OVERRIDE(varname, methname)              \
   if (varname != DFSCH_INVALID_OBJECT){          \
