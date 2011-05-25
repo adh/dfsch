@@ -183,6 +183,9 @@ extern dfsch_crypto_hash_t dfsch_crypto_md5;
 extern dfsch_crypto_hash_t dfsch_crypto_md4;
 #define DFSCH_CRYPTO_MD4 (&dfsch_crypto_md4)
 
+dfsch_strbuf_t* dfsch_crypto_hash_buffer(dfsch_crypto_hash_t* hash,
+                                         char* buf, size_t len,
+                                         char* key, size_t key_len);
 
 dfsch_crypto_hash_t* dfsch_crypto_make_hmac(dfsch_crypto_hash_t* hash);
 extern dfsch_type_t dfsch_crypto_hmac_type;
@@ -216,6 +219,9 @@ dfsch_object_t* dfsch_rsa_public_key_2_list(dfsch_rsa_public_key_t* puk);
 dfsch_object_t* dfsch_rsa_private_key_2_list(dfsch_rsa_private_key_t* prk);
 dfsch_rsa_public_key_t* dfsch_rsa_public_key_from_list(dfsch_object_t* list);
 dfsch_rsa_private_key_t* dfsch_rsa_private_key_from_list(dfsch_object_t* list);
+
+size_t dfsch_rsa_public_key_length(dfsch_rsa_public_key_t* key);
+size_t dfsch_rsa_private_key_length(dfsch_rsa_private_key_t* key);
 
 dfsch_object_t* dfsch_rsa_encrypt(dfsch_rsa_public_key_t* puk,
                                   dfsch_object_t* mn);
@@ -267,5 +273,48 @@ void dfsch_salsa20_setiv(dfsch_salsa20_state_t* state, uint64_t iv);
 void dfsch_salsa20_get_keystream_block(dfsch_salsa20_state_t* state, 
                                        uint8_t output[64]);
 void dfsch_salsa20_seek(dfsch_salsa20_state_t* state, uint64_t offset);
+
+typedef struct dfsch_sign25519_public_key_t dfsch_sign25519_public_key_t;
+typedef struct dfsch_sign25519_private_key_t dfsch_sign25519_private_key_t;
+
+extern dfsch_type_t dfsch_sign25519_public_key_type;
+#define DFSCH_SIGN25519_PUBLIC_KEY_TYPE (&dfsch_sign25519_public_key_type) 
+extern dfsch_type_t dfsch_sign25519_private_key_type;
+#define DFSCH_SIGN25519_PRIVATE_KEY_TYPE (&dfsch_sign25519_private_key_type) 
+
+#define DFSCH_SIGN25519_PUBLIC_KEY_ARG(al, name)                       \
+  DFSCH_TYPED_ARG(al, name, dfsch_sign25519_public_key_t*,             \
+                  DFSCH_SIGN25519_PUBLIC_KEY_TYPE)
+#define DFSCH_SIGN25519_PRIVATE_KEY_ARG(al, name)             \
+  DFSCH_TYPED_ARG(al, name, dfsch_sign25519_private_key_t*,   \
+                  DFSCH_SIGN25519_PRIVATE_KEY_TYPE)
+
+#define DFSCH_SIGN25519_VERSION_256_SHA512   0
+
+#define DFSCH_SIGN25519_CURRENT_VERSION DFSCH_SIGN25519_VERSION_256_SHA512
+
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_generate_key(dfsch_object_t* random_source,
+                             int version);
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk);
+
+dfsch_strbuf_t* dfsch_sign25519_sign(dfsch_sign25519_private_key_t* key,
+                                     char* m, size_t len);
+int dfsch_sign25519_verify(dfsch_sign25519_public_key_t* key,
+                           char* m, size_t len,
+                           char* s, size_t slen);
+
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_make_private_key(uint8_t data[64]);
+
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_make_public_key(uint8_t data[32]);
+
+void dfsch_sign25519_export_private_key(dfsch_sign25519_private_key_t* key,
+                                        uint8_t data[64]);
+void dfsch_sign25519_export_public_key(dfsch_sign25519_public_key_t* key,
+                                       uint8_t data[64]);
+
 
 #endif

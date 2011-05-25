@@ -8,10 +8,10 @@ static void ecb_setup(dfsch_block_cipher_mode_context_t* cipher,
   }
 }
 
-void ecb_encrypt(dfsch_block_cipher_mode_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void ecb_encrypt(dfsch_block_cipher_mode_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->cipher->cipher->block_size;
   int i;
 
@@ -21,10 +21,10 @@ void ecb_encrypt(dfsch_block_cipher_mode_context_t* context,
   }
 }
 
-void ecb_decrypt(dfsch_block_cipher_mode_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void ecb_decrypt(dfsch_block_cipher_mode_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->cipher->cipher->block_size;
   int i;
 
@@ -73,10 +73,10 @@ static void cbc_setup(cbc_context_t* context,
   memcpy(context->iv, iv, iv_len);
 }
 
-void cbc_encrypt(cbc_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void cbc_encrypt(cbc_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
 
@@ -89,10 +89,10 @@ void cbc_encrypt(cbc_context_t* context,
   }
 }
 
-void cbc_decrypt(cbc_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void cbc_decrypt(cbc_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
   uint8_t tmp[bsize];
@@ -137,10 +137,10 @@ static void cfb_setup(cfb_context_t* context,
   memcpy(context->iv, iv, iv_len);
 }
 
-void cfb_encrypt(cfb_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void cfb_encrypt(cfb_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
 
@@ -153,10 +153,10 @@ void cfb_encrypt(cfb_context_t* context,
   }
 }
 
-void cfb_decrypt(cfb_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void cfb_decrypt(cfb_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
   uint8_t tmp[bsize];
@@ -202,10 +202,10 @@ static void ofb_setup(ofb_context_t* context,
   memcpy(context->iv, iv, iv_len);
 }
 
-void ofb_operate(ofb_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void ofb_operate(ofb_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
 
@@ -255,10 +255,10 @@ static void ctr_setup(ctr_context_t* context,
   memcpy(context->ctr, iv, iv_len);
 }
 
-void ctr_operate(ctr_context_t* context,
-                 uint8_t* in,
-                 uint8_t* out,
-                 size_t blocks){
+static void ctr_operate(ctr_context_t* context,
+                        uint8_t* in,
+                        uint8_t* out,
+                        size_t blocks){
   size_t bsize = context->parent.cipher->cipher->block_size;
   int i;
   int j;

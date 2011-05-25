@@ -877,7 +877,7 @@ extern "C" {
   
 #define DFSCH_FLAG_PARSER_BEGIN_ONE(args, name)                         \
   if (!DFSCH_PAIR_P((args))){                                           \
-    dfsch_error("Required argument missing", #name);                    \
+    dfsch_error("Required argument missing", dfsch_make_string_cstr(#name)); \
   }                                                                     \
   {                                                                     \
   dfsch_object_t* dfsch___flag;                                         \

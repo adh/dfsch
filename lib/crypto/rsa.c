@@ -119,7 +119,8 @@ dfsch_type_t dfsch_rsa_private_key_type = {
   .superclass = NULL,
   .name = "rsa-private-key",
   .size = sizeof(dfsch_rsa_private_key_t),
-  .slots = &private_slots
+  .slots = &private_slots,
+  .serialize = rsa_private_key_serialize,
 };
 
 static dfsch_object_t* get_random_prime(dfsch_object_t* random_source,
@@ -207,6 +208,13 @@ dfsch_rsa_private_key_t* dfsch_rsa_private_key_from_list(dfsch_object_t* list){
   DFSCH_OBJECT_ARG(list, prk->coefficient);
   DFSCH_ARG_END(list);
   return prk;
+}
+
+size_t dfsch_rsa_public_key_length(dfsch_rsa_public_key_t* key){
+  return dfsch_bignum_msb(dfsch_bignum_to_number(key->modulus));
+}
+size_t dfsch_rsa_private_key_length(dfsch_rsa_private_key_t* key){
+  return dfsch_bignum_msb(dfsch_bignum_to_number(key->modulus));
 }
 
 
