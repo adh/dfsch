@@ -1,29 +1,80 @@
 #include <dfsch/lib/crypto.h>
+#include <dfsch/serdes.h>
 #include "internal.h"
 
 #include "ge25519.h"
 
 struct dfsch_sign25519_private_key_t {
   dfsch_type_t* type;
-  int version;
   uint8_t private[64];
 };
 
 struct dfsch_sign25519_public_key_t {
   dfsch_type_t* type;
-  int version;
   uint8_t public[32];
 };
+
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:sign25519-private-key",
+                                     sign25519_private_key){
+  dfsch_sign25519_private_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
+  int version = dfsch_deserialize_integer(ds);
+  dfsch_strbuf_t* data = dfsch_deserialize_strbuf(ds);
+
+  k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
+
+  dfsch_deserializer_put_partial_object(ds, k);
+  
+  if (data->len != 64){
+    dfsch_error("Invalid SIGN25519 key length", DFSCH_MAKE_FIXNUM(data->len));
+  }
+  memcpy(k->private, data->ptr, 64);
+  return k;
+}
+
+static void private_serialize(dfsch_sign25519_private_key_t* k, 
+                              dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "crypto:sign25519-private-key");
+  dfsch_serialize_string(se, k->private, 64);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("crypto:sign25519-public-key",
+                                     sign25519_public_key){
+  dfsch_sign25519_public_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_public_key_t);
+  int version = dfsch_deserialize_integer(ds);
+  dfsch_strbuf_t* data = dfsch_deserialize_strbuf(ds);
+
+  k->type = DFSCH_SIGN25519_PUBLIC_KEY_TYPE;
+
+  dfsch_deserializer_put_partial_object(ds, k);
+  
+  if (data->len != 64){
+    dfsch_error("Invalid SIGN25519 key length", DFSCH_MAKE_FIXNUM(data->len));
+  }
+  memcpy(k->public, data->ptr, 32);
+  return k;
+}
+
+static void public_serialize(dfsch_sign25519_public_key_t* k, 
+                              dfsch_serializer_t* se){
+  dfsch_serialize_stream_symbol(se, "crypto:sign25519-public-key");
+  dfsch_serialize_string(se, k->public, 32);
+}
+
 
 dfsch_type_t dfsch_sign25519_public_key_type = {
   .type = DFSCH_STANDARD_TYPE,
   .name = "crypto:sign25519-private-key",
-  .size = sizeof(dfsch_sign25519_private_key_t)
+  .size = sizeof(dfsch_sign25519_private_key_t),
+  .serialize = public_serialize
 };
 dfsch_type_t dfsch_sign25519_private_key_type = {
   .type = DFSCH_STANDARD_TYPE,
   .name = "crypto:sign25519-public-key",
-  .size = sizeof(dfsch_sign25519_public_key_t)
+  .size = sizeof(dfsch_sign25519_public_key_t),
+  .serialize = private_serialize
 };
 
 
@@ -45,10 +96,6 @@ dfsch_sign25519_generate_key(dfsch_object_t* random_source,
   dfsch_sign25519_private_key_t* 
     k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
 
-  if (version != DFSCH_SIGN25519_VERSION_256_SHA512){
-    dfsch_error("Unsupported SIGN25519 key version", 
-                DFSCH_MAKE_FIXNUM(version));
-  }
 
   k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
 
@@ -74,7 +121,6 @@ dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk){
     k = GC_NEW_ATOMIC(dfsch_sign25519_public_key_t);
 
   k->type = DFSCH_SIGN25519_PUBLIC_KEY_TYPE;
-  k->version = pk->version;
 
   sc25519_from32bytes(&scsk, pk->private);  
   ge25519_scalarmult_base(&gepk, &scsk);

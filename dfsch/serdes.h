@@ -22,6 +22,12 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
                              int64_t i);
 void dfsch_serialize_strbuf(dfsch_serializer_t* s,
                             dfsch_strbuf_t* sb);
+void dfsch_serialize_cstr(dfsch_serializer_t* s,
+                          char* str);
+
+void dfsch_serialize_string(dfsch_serializer_t* s,
+                            char* str, size_t len);
+
 void dfsch_serialize_stream_symbol(dfsch_serializer_t* s,
                                    char* sym);
 
