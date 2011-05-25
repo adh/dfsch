@@ -595,8 +595,6 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "<hash>",
                          DFSCH_CRYPTO_HASH_TYPE);
 
-
-
   dfsch_defconst_pkgcstr(env, crypto, "setup-block-cipher",
                          DFSCH_PRIMITIVE_REF(setup_block_cipher));
   dfsch_defconst_pkgcstr(env, crypto, "encrypt-block",
@@ -660,6 +658,11 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(pss_encode));
   dfsch_defconst_pkgcstr(env, crypto, "pss-verify",
                          DFSCH_PRIMITIVE_REF(pss_verify));
+
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-pss-sign",
+                         DFSCH_PRIMITIVE_REF(rsa_pss_sign));
+  dfsch_defconst_pkgcstr(env, crypto, "rsa-pss-verify",
+                         DFSCH_PRIMITIVE_REF(rsa_pss_verify));
 
   dfsch_defconst_pkgcstr(env, crypto, "prng-state",
                          DFSCH_PRIMITIVE_REF(prng_state));
