@@ -305,5 +305,16 @@ int dfsch_sign25519_verify(dfsch_sign25519_public_key_t* key,
                            char* m, size_t len,
                            char* s, size_t slen);
 
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_make_private_key(uint8_t data[64]);
+
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_make_public_key(uint8_t data[32]);
+
+void dfsch_sign25519_export_private_key(dfsch_sign25519_private_key_t* key,
+                                        uint8_t data[64]);
+void dfsch_sign25519_export_public_key(dfsch_sign25519_public_key_t* key,
+                                       uint8_t data[64]);
+
 
 #endif

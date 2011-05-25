@@ -437,6 +437,52 @@ DFSCH_DEFINE_PRIMITIVE(sign25519_verify,
                                             signature->ptr, signature->len));
 }
 
+DFSCH_DEFINE_PRIMITIVE(sign25519_private_key_2_byte_vector,
+                       "Return key data as byte vector (64 bytes)"){
+  dfsch_sign25519_private_key_t* key;
+  dfsch_strbuf_t* res = dfsch_alloc_strbuf(64);
+  DFSCH_SIGN25519_PRIVATE_KEY_ARG(args, key);
+  DFSCH_ARG_END(args);
+  
+  dfsch_sign25519_export_private_key(key, res->ptr);
+  return dfsch_make_byte_vector_nocopy(res->ptr, res->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(sign25519_public_key_2_byte_vector,
+                       "Return key data as byte vector (32 bytes)"){
+  dfsch_sign25519_public_key_t* key;
+  dfsch_strbuf_t* res = dfsch_alloc_strbuf(32);
+  DFSCH_SIGN25519_PUBLIC_KEY_ARG(args, key);
+  DFSCH_ARG_END(args);
+  
+  dfsch_sign25519_export_public_key(key, res->ptr);
+  return dfsch_make_byte_vector_nocopy(res->ptr, res->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(sign25519_make_private_key,
+                       "Create private key from raw key bytes"){
+  dfsch_strbuf_t* key_data;
+  DFSCH_BUFFER_ARG(args, key_data);
+  DFSCH_ARG_END(args);
+  if (key_data->len != 64){
+    dfsch_error("Invalid length of passed key data", NULL);
+  }
+
+  return dfsch_sign25519_make_private_key(key_data->ptr);
+}
+DFSCH_DEFINE_PRIMITIVE(sign25519_make_public_key,
+                       "Create public key from raw key bytes"){
+  dfsch_strbuf_t* key_data;
+  DFSCH_BUFFER_ARG(args, key_data);
+  DFSCH_ARG_END(args);
+  if (key_data->len != 32){
+    dfsch_error("Invalid length of passed key data", NULL);
+  }
+
+  return dfsch_sign25519_make_public_key(key_data->ptr);
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(rsa_pss_sign,
                        "Sign message with RSA-PSS"){
   dfsch_rsa_private_key_t* key;
@@ -618,8 +664,10 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "prng-state",
                          DFSCH_PRIMITIVE_REF(prng_state));
 
-  dfsch_defconst_pkgcstr(env, crypto, "*sign25519-version-256-sha512*",
-                         DFSCH_MAKE_FIXNUM(DFSCH_SIGN25519_VERSION_256_SHA512));
+  dfsch_defconst_pkgcstr(env, crypto, "<sign25519-public-key>",
+                         DFSCH_SIGN25519_PUBLIC_KEY_TYPE);
+  dfsch_defconst_pkgcstr(env, crypto, "<sign25519-private-key>",
+                         DFSCH_SIGN25519_PRIVATE_KEY_TYPE);
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-generate-key",
                          DFSCH_PRIMITIVE_REF(sign25519_generate_key));
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-get-public-key",
@@ -628,6 +676,17 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(sign25519_sign));
   dfsch_defconst_pkgcstr(env, crypto, "sign25519-verify",
                          DFSCH_PRIMITIVE_REF(sign25519_verify));
+
+  dfsch_defconst_pkgcstr(env, crypto, "sign25519-private-key->byte-vector",
+                         DFSCH_PRIMITIVE_REF(sign25519_private_key_2_byte_vector));
+  dfsch_defconst_pkgcstr(env, crypto, "sign25519-public-key->byte-vector",
+                         DFSCH_PRIMITIVE_REF(sign25519_public_key_2_byte_vector));
+  dfsch_defconst_pkgcstr(env, crypto, "sign25519-make-private-key",
+                         DFSCH_PRIMITIVE_REF(sign25519_make_private_key));
+  dfsch_defconst_pkgcstr(env, crypto, "sign25519-make-public-key",
+                         DFSCH_PRIMITIVE_REF(sign25519_make_public_key));
+
+
 
   dfsch_define_method_pkgcstr_1(env, crypto, "sign-message",
                               DFSCH_RSA_PRIVATE_KEY_TYPE,
@@ -643,5 +702,12 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                               NULL, 
                               dfsch_list(1, DFSCH_SIGN25519_PUBLIC_KEY_TYPE),
                               DFSCH_PRIMITIVE_REF(sign25519_verify));
+
+  dfsch_define_method_pkgcstr_1(env, crypto, "get-public-key",
+                              DFSCH_RSA_PRIVATE_KEY_TYPE,
+                              DFSCH_PRIMITIVE_REF(rsa_get_public_key));
+  dfsch_define_method_pkgcstr_1(env, crypto, "get-public-key",
+                              DFSCH_SIGN25519_PRIVATE_KEY_TYPE,
+                              DFSCH_PRIMITIVE_REF(sign25519_get_public_key));
 
 }

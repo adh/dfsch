@@ -96,7 +96,6 @@ dfsch_sign25519_generate_key(dfsch_object_t* random_source,
   dfsch_sign25519_private_key_t* 
     k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
 
-
   k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
 
   dfsch_random_get_bytes(random_source, k->private, 64);
@@ -129,10 +128,34 @@ dfsch_sign25519_get_public_key(dfsch_sign25519_private_key_t* pk){
   return k;  
 }
 
+dfsch_sign25519_private_key_t* 
+dfsch_sign25519_make_private_key(uint8_t data[64]){
+  dfsch_sign25519_private_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_private_key_t);
 
-/* dfsch_crypto_sign25519(unsigned char *sm,unsigned long long *smlen,
-                           const unsigned char *m,unsigned long long mlen,
-                           const unsigned char *sk)**/
+  k->type = DFSCH_SIGN25519_PRIVATE_KEY_TYPE;
+  memcpy(k->private, data, 64);
+}
+
+dfsch_sign25519_public_key_t* 
+dfsch_sign25519_make_public_key(uint8_t data[32]){
+  dfsch_sign25519_public_key_t* 
+    k = GC_NEW_ATOMIC(dfsch_sign25519_public_key_t);
+
+  k->type = DFSCH_SIGN25519_PUBLIC_KEY_TYPE;
+  memcpy(k->public, data, 32);
+}
+
+void dfsch_sign25519_export_private_key(dfsch_sign25519_private_key_t* key,
+                                        uint8_t data[64]){
+  memcpy(data, key->private, 64);
+}
+void dfsch_sign25519_export_public_key(dfsch_sign25519_public_key_t* key,
+                                       uint8_t data[64]){
+  memcpy(data, key->public, 64);
+}
+
+
 dfsch_strbuf_t* dfsch_sign25519_sign(dfsch_sign25519_private_key_t* key,
                                       char* m, size_t len){
   sc25519 sck, scs, scsk;
