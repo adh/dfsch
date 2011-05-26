@@ -296,6 +296,29 @@ fi
 AM_CONDITIONAL(FFI, test x"$enable_ffi" == x"yes")
 
 
+enable_curl=yes
+
+AC_ARG_ENABLE([curl],
+    AC_HELP_STRING([--disable-curl], [Disable curl module]))
+AC_ARG_WITH([curl],
+  AC_HELP_STRING([--with-libcurl=PATH], [Path to libcurl installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_curl" == x"yes"; then
+    AC_CHECK_HEADERS(curl/curl.h, [have_curl="1"], [have_curl="0"])
+    AC_CHECK_LIB(curl, curl_easy_perform, 
+                     [dummy_curl=], [have_curl="0"])
+
+    if test x"$have_curl" == x"0" ; then
+        enable_curl=no
+    fi
+fi
+
+AM_CONDITIONAL(CURL, test x"$enable_curl" == x"yes")
+
+
+
 
 AC_SYS_LARGEFILE 
 
@@ -344,6 +367,7 @@ tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 gd ................. : $enable_gd
 FFI ................ : $enable_ffi
+CURL ............... : $enable_curl
 
 
 EOF
