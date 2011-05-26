@@ -25,6 +25,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
 	dfsch/lib/tokyo-tyrant.h \
 	dfsch/lib/gd.h \
 	dfsch/lib/ffi.h \
+	dfsch/lib/curl.h \
 	dfsch/strings.h \
 	dfsch/defines.h \
 	dfsch/parse.h \
@@ -102,6 +103,13 @@ ffi_libs=
 ffi_modules=
 endif
 
+if CURL
+curl_libs=libdfsch-curl.la
+curl_modules=curl.la
+else
+curl_libs=
+curl_modules=
+endif
 
 
 if WIN32
@@ -148,7 +156,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	$(tc_libs) \
 	$(tt_libs) \
 	$(gd_libs) \
-	$(ffi_libs)
+	$(ffi_libs) \
+	$(curl_libs)
 
 
 
@@ -191,7 +200,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(tc_modules)\
 	$(tt_modules)\
 	$(gd_modules)\
-	$(ffi_modules)
+	$(ffi_modules)\
+	$(curl_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -585,6 +595,14 @@ markdown_la_SOURCES = lib/markdown_mod.c \
 	ext/upskirt/renderers.c
 markdown_la_LIBADD = libdfsch.la
 markdown_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_curl_la_SOURCES = lib/curl.c
+libdfsch_curl_la_LIBADD = libdfsch.la -lcurl
+libdfsch_curl_la_LDFLAGS = -no-undefined
+
+curl_la_SOURCES = lib/curl_mod.c
+curl_la_LIBADD = libdfsch-curl.la libdfsch.la
+curl_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 if WIN32
