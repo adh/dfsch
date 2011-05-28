@@ -225,15 +225,12 @@ dfsch_strbuf_t* dfsch_copy_strbuf(dfsch_strbuf_t* sb){
 ssize_t dfsch_strbuf_inputproc(dfsch_strbuf_t* strbuf, 
                                char* buf, size_t len){
   if (len > strbuf->len){
-    memcpy(buf, strbuf->ptr, strbuf->len);
-    strbuf->len = 0;
-    return strbuf->len;
-  } else {
-    memcpy(buf, strbuf->ptr, len);
-    strbuf->len -= len;
-    strbuf->ptr += len;
-    return len;
+    len = strbuf->len;
   }
+  memcpy(buf, strbuf->ptr, len);
+  strbuf->len -= len;
+  strbuf->ptr += len;
+  return len;
 }
 
 
