@@ -34,19 +34,43 @@ void dfsch_curl_set_upload(CURL* handle,
   curl_easy_setopt(handle, CURLOPT_INFILESIZE_LARGE, (curl_off_t)len);
 }
 
+void dfsch_curl_set_post(CURL* handle,
+                         char* data, size_t len,
+                         dfsch_curl_options_context_t* ctx){
+  curl_easy_setopt(handle, CURLOPT_POST, 1);
+  curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len);
+  curl_easy_setopt(handle, CURLOPT_COPYPOSTFIELDS, data);
+}
+
 void dfsch_curl_setopt(CURL* handle,
                        dfsch_object_t* name,
                        dfsch_object_t* value,
                        dfsch_curl_options_context_t* ctx){
+
   if (dfsch_compare_keyword(name, "url")){
     curl_easy_setopt(handle, CURLOPT_URL, 
                      dfsch_string_to_cstr(value));
+
   } else if (dfsch_compare_keyword(name, "upload")){
     dfsch_strbuf_t* buf = dfsch_string_to_buf(value);
     dfsch_curl_set_upload(handle, buf->ptr, buf->len, ctx);
+
+  } else if (dfsch_compare_keyword(name, "post")){
+    dfsch_strbuf_t* buf = dfsch_string_to_buf(value);
+    dfsch_curl_set_post(handle, buf->ptr, buf->len, ctx);
+
   } else if (dfsch_compare_keyword(name, "follow-redirects")){
     curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION,
                      value != NULL);
+
+  } else if (dfsch_compare_keyword(name, "username")){
+    curl_easy_setopt(handle, CURLOPT_USERNAME, 
+                     dfsch_string_to_cstr(value));
+
+  } else if (dfsch_compare_keyword(name, "password")){
+    curl_easy_setopt(handle, CURLOPT_PASSWORD, 
+                     dfsch_string_to_cstr(value));
+
   } else {
     dfsch_error("Unknown keyword", name);
   }
