@@ -28,7 +28,7 @@
 
 (define (dfsch:make-simple-method-combination operator)
   (lambda (methods function)
-    (lambda args
+    (lambda (&rest args)
       (operator (map (lambda (meth)
                        (call-method meth () args))
                      (get-primary-methods methods))))))
