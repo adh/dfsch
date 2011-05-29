@@ -26,7 +26,7 @@ void dfsch_curl_set_http_headers(CURL* handle,
   dfsch_object_t* it = dfsch_collection_get_iterator(headers);
 
   while (it){
-    dfsch_object_t* elem = dfsch_collection_this(it);
+    dfsch_object_t* elem = dfsch_iterator_this(it);
     list = curl_slist_append(list, dfsch_string_to_cstr(elem));
     it = dfsch_iterator_next(it);
   }
@@ -34,7 +34,7 @@ void dfsch_curl_set_http_headers(CURL* handle,
   if (ctx){
     ctx->headers = list;
   }
-  curl_easy_xetopt(handle, CURLOPT_HTTPHEADER, list);
+  curl_easy_setopt(handle, CURLOPT_HTTPHEADER, list);
 }
 
 static size_t read_function(void* buf, size_t nmemb, size_t size, 
