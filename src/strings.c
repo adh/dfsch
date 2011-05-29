@@ -1460,7 +1460,8 @@ static dfsch_object_t* pathname_extension(dfsch_object_t* s){
  * Empty names are converted to single underscore.
  */
 
-char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
+char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
+                                   int preserve_uppercase){
   size_t res_len = 0;
   char* res;
   char* r;
@@ -1472,7 +1473,8 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
   }
 
   while (len){
-    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-') ||
+        (preserve_uppercase && (*i >= 'A' && *i <= 'Z'))){
       res_len++;
     } else if (*i == '_'){
       res_len += 2;
@@ -1493,7 +1495,8 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf){
   len = buf->len;
   
   while (len){
-    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-')){
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-') ||
+        (preserve_uppercase && (*i >= 'A' && *i <= 'Z'))){
       *r = *i;
       r++;
     } else if (*i == '_'){
@@ -2402,10 +2405,13 @@ DFSCH_DEFINE_PRIMITIVE(string_join,
 DFSCH_DEFINE_PRIMITIVE(string_2_safe_filename, 
                        NULL){
   dfsch_strbuf_t* string;
+  dfsch_object_t* preserve_uppercase;
   DFSCH_BUFFER_ARG(args, string);
+  DFSCH_OBJECT_ARG_OPT(args, preserve_uppercase, NULL);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string));
+  return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string,
+                                                             preserve_uppercase != NULL));
 }
 
 DFSCH_DEFINE_PRIMITIVE(string_2_hexstring, 
