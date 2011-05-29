@@ -1,11 +1,37 @@
 #!/usr/bin/env dfsch-repl
-                                        ; documentation generator for dfsch
+;;;; Documentation generator for dfsch
+;;;
+;;; Copyright (c) 2008 - 2011 Ales Hakl
+;;;
+;;; Permission is hereby granted, free of charge, to any person obtaining
+;;; a copy of this software and associated documentation files (the
+;;; "Software"), to deal in the Software without restriction, including
+;;; without limitation the rights to use, copy, modify, merge, publish,
+;;; distribute, sublicense, and/or sell copies of the Software, and to
+;;; permit persons to whom the Software is furnished to do so, subject to
+;;; the following conditions:
+;;;
+;;; The above copyright notice and this permission notice shall be
+;;; included in all copies or substantial portions of the Software.
+;;; 
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+;;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+;;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 (require :introspect)
-(require :sxml)
+(require :shtml)
 (require :inet)
 (require :cmdopts)
 (require :os)
+(require :markdown)
+
+(define-package :docgen
+  :uses '(:dfsch :markdown :os :shtml)
+  :exports '())
 
 (define (directory? path)
   (let ((stat (os:stat path)))
@@ -19,8 +45,15 @@
 
 (define *clean-toplevel* (make-top-level-environment))
 
+(define (sort-by-names! lyst)
+  (sort-list! lyst
+              (lambda (x y)
+                (string<? (symbol-name (car x))
+                          (symbol-name (car y))))))
+
+
 (define (get-toplevel-variables)
-  (get-variables *clean-toplevel*))
+  (sort-by-names! (get-variables *clean-toplevel*)))
 
 (define (get-module-variables module)
   (letrec ((toplevel (make-top-level-environment))
@@ -30,220 +63,140 @@
                 (let ((name (car x)))
                   (unset-from-environment! name toplevel)))
               start-state)
-    (get-variables toplevel)))
+    (sort-by-names! (get-variables toplevel))))
 
-(define-generic get-object-documentation
-  :method-combination (make-simple-method-combination list))
+(define (convert-documentation-block string)
+  (markdown:markdown string :html))
 
+(define-generic-function get-object-documentation
+  :method-combination 
+  (make-simple-method-combination (lambda (res)
+                                    (apply nconc (reverse res)))))
 
-(define (get-object-documentation object)
-  (cond
-   ((instance? object <function>)
-    (slot-ref object :documentation))
-   ((instance? object <form>)
-    (slot-ref object :documentation))
-   ((instance? object <standard-type>)
-    `(p
-      ,(or (slot-ref object :documentation) "")
-      (h3 "Slots:")
-      (ul ,@(map (lambda (slot) 
-                   `(li ,(slot-ref slot :name) ": " 
+(define-method (get-object-documentation (object <<documented>>))
+  `((:literal-output ,(convert-documentation-block (or (slot-ref object
+                                                                 :documentation)
+                                                      "")))))
+                                         
+(define-method (get-object-documentation (object <macro>))
+  (get-object-documentation (slot-ref object :proc)))
+
+(define-method (get-object-documentation (object <standard-type>))
+  `((:h3 "Slots:")
+    (:ul ,@(map (lambda (slot) 
+                  `(:li ,(slot-ref slot :name) ": " 
                         ,(slot-ref slot :documentation)))
-                 (get-slots object)))))
-   ((instance? object <macro>)
-    (get-object-documentation (slot-ref object :proc)))
-   (else ())))
+                (get-slots object)))))
 
-(define (make-counter)
-  (let ((count 0))
-    (lambda ()
-      (set! count (+ 1 count))
-      count)))
+(define-method (get-object-documentation object)
+  `((:pre ,(format "~y" object))))
 
-(define *id-counter* (make-counter))
+(define-generic-function get-object-name)
 
-(define (make-entry name typename documentation object)
-  (vector name 
-          typename 
-          documentation 
-          (format "~y" object)))
-(define (entry-name entry)
-  (vector-ref entry 0))
-(define (entry-type-name entry)
-  (vector-ref entry 1))
-(define (entry-id entry)
-  (format "it~x" (id entry)))
-(define (entry-documentation entry)
-  (vector-ref entry 2))
-(define (entry-documentation-string entry)
-  (or (entry-documentation entry)
-      ""))
-(define (entry-value entry)
-  (vector-ref entry 3))
+(define-method (get-object-type-name object)
+  (slot-ref (type-of object) :name))
 
-(define (variables->name+doc lyst)
-  (let ((id-counter (make-counter)))
-    (sort-entries
-     (map 
-      (lambda (x) 
-        (let ((name (car x))
-              (value (cadr x)))
-          (make-entry (symbol->string name) 
-                      (type-name (type-of value))
-                      (get-object-documentation value)
-                      value)))
-      lyst))))
+(define-method (get-object-name object name)
+  (string-append (get-object-type-name object) " " 
+                 (symbol-qualified-name name)))
 
-(define (sort-entries lyst)
-  (sort-list! lyst
-              (lambda (x y)
-                (string<? (entry-name x)
-                          (entry-name y)))))
+(define-generic-function get-object-categories
+  :method-combination 
+  (make-simple-method-combination (lambda (res)
+                                    (or (apply nconc (reverse res))
+                                        '("Other objects")))))
 
-(define (documented-only lyst)
-  (filter (lambda (entry) (entry-documentation entry)) lyst))
 
-(define (make-index-list list link-to target)
-  `((ul ,@(map (lambda (item)
-                 (let ((name (entry-name item))
-                       (type-name (entry-type-name item))
-                       (id (entry-id item)))
-                   `(li (a :href ,(string-append link-to "#" id)
-                           ,@(unless (null? target)
-                                     `(:target ,target))
-                           ,name)
-                        " " ,type-name)))
-               list))))
+(define-method (get-object-categories (object <form>))
+  '("Special forms"))
 
-(define (make-documentation-body lyst)
-  (map (lambda (item)
-         (let ((name (entry-name item))
-               (type (entry-type-name item))
-               (id (entry-id item)))
-           `(div :id ,id 
-                 :title ,name
-                 (h2 ,(string-append type " " name))
-                 (pre ,(entry-value item))
-                 (p ,(entry-documentation-string item)))))
-       lyst))
+(define-method (get-object-categories (object <macro>))
+  '("Macros"))
 
-(define (html-frameset title default-all)
-  `(html 
+(define-method (get-object-categories (object <function>))
+  '("Functions"))
+
+(define-method (get-object-categories (object <generic-function>))
+  '("Generic functions"))
+
+(define-method (get-object-categories (object <standard-type>))
+  '("Standard types"))
+
+
+(define (html-boiler-plate title main-title infoset)
+  `(:html 
     :xmlns "http://www.w3.org/1999/xhtml"
-    (head ,@(when (not (null? title))
-                  `((title ,title))))
-    (frameset :cols "250,*"
-              (frame :name "index" 
-                     :src ,(if default-all 
-                               "index-all.html"
-                               "index-doc.html"))
-              (frame :name "body" 
-                     :src ,(if default-all 
-                               "body-all.html"
-                               "body-doc.html")))))
-
-
-(define (html-boiler-plate title infoset)
-  `(html 
-    :xmlns "http://www.w3.org/1999/xhtml"
-    (head ,@(when (not (null? title))
-                  `((title ,title))))
-    (body ,@(when (not (null? title))
-                  `((h1 ,title)))
+    (:head (:title ,(if title
+                        (string-append title " - " main-title)
+                        main-title)))
+    (:body ,@(when (not (null? title))
+                  `((:h1 ,title)))
           ,@infoset
-          (p "Generated by docgen.scm running on dfsch " ,*dfsch-version*
-             " (" ,*dfsch-build-id* ")"))))
+          (:hr)
+          (:p "Generated by docgen.scm running on dfsch " ,*dfsch-version*
+              " (" ,*dfsch-build-id* ")"))))
 
 
-(define (index-menu all?)
-  (if all?
-      '(p "Show: " (strong "all") " " 
-          (a :href "index-doc.html" 
-             "documented"))
-      '(p "Show: " (a :href "index-all.html" 
-                      "all") 
-          " " (strong "documented"))))
+(define (make-one-entry entry)
+  (let ((object (cadr entry)))
+    (get-object-documentation object)))
+
+(define (entry-name entry)
+  (get-object-name (cadr entry)
+                   (car entry)))
+
+(define (entry-filename entry)
+  (string-append (string->safe-filename (symbol-qualified-name (car entry)))
+                 ".html"))
+
+(define (emit-one-entry entry directory title)
+  (shtml:emit-file (html-boiler-plate (entry-name entry)
+                                      title
+                                      (make-one-entry entry))
+                   (string-append directory "/"
+                                  (entry-filename entry))))
+
+(define (make-entry-list lyst)
+  `(:ul :class "entry-list"
+    ,@(map (lambda (entry)
+             `(:li ,(get-object-type-name (cadr entry))
+                   " "
+                   (:a :href ,(entry-filename entry)
+                       ,(symbol-qualified-name (car entry)))))
+           lyst)))
+
+(define (group-by lyst keys)
+  (let ((m (make-hash)))
+    (for-each (lambda (entry)
+                (for-each (lambda (k)
+                            (map-set! m k (cons entry (map-ref m k ()))))
+                          (keys entry)))
+              lyst)
+    (map (lambda (cat)
+           (cons (car cat) (reverse (cadr cat))))
+         (collection->reversed-list m))))
+
+(define (emit-documentation lyst directory title)
+  (ensure-directory directory)
+  (shtml:emit-file (html-boiler-plate () title 
+                                      (list (make-entry-list lyst)))
+                   (string-append directory "/index.html"))
+  (for-each (lambda (entry)
+              (emit-one-entry entry directory title))
+            lyst))
 
 
-
-(define (emit-documentation lyst directory title default-all)
-  (let ((doc-only (documented-only lyst)))
-    (ensure-directory directory)
-    (xml:sxml-emit-file (html-frameset title default-all) 
-                        (string-append directory "/index.html"))
-    (xml:sxml-emit-file (html-boiler-plate 
-                         ()
-                         (cons 
-                          (index-menu #t)
-                          (make-index-list lyst "body-all.html" "body")))
-                        (string-append directory "/index-all.html"))
-    (xml:sxml-emit-file (html-boiler-plate 
-                         ()
-                         (cons 
-                          (index-menu #f)
-                          (make-index-list doc-only "body-doc.html" "body")))
-                        (string-append directory "/index-doc.html"))
-    (xml:sxml-emit-file (html-boiler-plate 
-                         title
-                         (make-documentation-body lyst))
-                        (string-append directory "/body-all.html"))
-    (xml:sxml-emit-file (html-boiler-plate 
-                         title
-                         (make-documentation-body doc-only))
-                        (string-append directory "/body-doc.html"))))
-
-
-(define (emit-core-documentation directory default-all)
+(define (emit-core-documentation directory)
   (emit-documentation 
-   (variables->name+doc (get-toplevel-variables))
+   (get-toplevel-variables)
    directory
-   "Default dfsch top-level environment"
-   default-all))
+   "Default dfsch top-level environment"))
 
-(define (emit-module-documentation directory module default-all)
+(define (emit-module-documentation directory module)
   (emit-documentation 
-   (variables->name+doc (get-module-variables module))
+   (get-module-variables module)
    directory
-   (string-append (object->string module) " module")
-   default-all))
+   (string-append (object->string module) " module")))
 
 
-(define output-directory ())
-(define module-name ())
-(define default-all #f)
-(define indexes ())
-(define output-index ())
-(define url-prefix "")
-
-(let ((parser (cmdopts:make-parser)))
-  (cmdopts:add-option parser "module" 
-                      (lambda (p v)
-                        (set! module-name (string->object v)))
-                      0 #t)
-  (cmdopts:add-option parser "index" 
-                      (lambda (p v)
-                        (set! indexes (cons (load-index v) indexes)))
-                      0 #t)
-  (cmdopts:add-option parser "default-all" 
-                      (lambda (p v)
-                        (set! default-all #t))
-                      0 #f)
-  (cmdopts:add-option parser "output-index"
-                      (lambda (p v)
-                        (set! output-index v))
-                      0 #t)
-  (cmdopts:add-option parser "url-prefix"
-                      (lambda (p v)
-                        (set! output-index v))
-                      0 #t)
-  (cmdopts:add-argument parser 
-                        (lambda (p v)
-                          (set! output-directory v))
-                        :required)
-  (cmdopts:parse-list parser (cdr *posix-argv*)))
-
-(if (null? module-name)
-    (emit-core-documentation output-directory default-all)
-    (emit-module-documentation output-directory module-name default-all))
-
-
+;(emit-core-documentation "out")
