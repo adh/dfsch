@@ -493,7 +493,7 @@ DFSCH_DEFINE_PRIMITIVE(mmap, "Map file into memory"){
     dfsch_operating_system_error("mmap");
   }
 
-  if (length + offset > st.st_size){
+  if (length + offset > st.st_size && S_ISREG(st.st_mode)){
     length = st.st_size - offset;
   }
 
