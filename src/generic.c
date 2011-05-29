@@ -436,11 +436,17 @@ apply_standard_generic_function(standard_generic_function_t* function,
     fprintf(stderr, ";; Cache miss\n");
 #endif
 
+    arguments = dfsch_list_copy_immutable(arguments);
+    /* Both compute-applicable-methods and method-combination logic
+     * can potentially call arbitrary lisp code and thus clobber global
+     * scratchpad by means of tail-call or multiple-values. So copy 
+     * arguments into heap before entering slow-path dispatch code. */
+
     meths = compute_applicable_methods(function, arguments);
       
     if (!meths){
-      dfsch_error("No applicable methods", dfsch_list(2, function, 
-                                                      dfsch_list_copy(arguments)));
+      dfsch_error("No applicable methods", 
+                  dfsch_list(2, function, arguments));
     }
     if (function->method_combination){
       em = dfsch_apply(function->method_combination,
