@@ -45,6 +45,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <sys/mman.h>
+#include <syslog.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -507,6 +508,175 @@ DFSCH_DEFINE_PRIMITIVE(mmap, "Map file into memory"){
   return obj;
 }
 
+DFSCH_DEFINE_PRIMITIVE(openlog, NULL){
+  char* ident;
+  static char* id_set = NULL;
+  int option = 0;
+  int facility = 0;
+  DFSCH_STRING_ARG(args, ident);
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, facility);
+#ifdef LOG_AUTHPRIV
+  DFSCH_FLAG_SET("authpriv", LOG_AUTHPRIV, facility);
+#endif
+#ifdef LOG_CRON
+  DFSCH_FLAG_SET("cron", LOG_CRON, facility);
+#endif
+#ifdef LOG_DAEMON
+  DFSCH_FLAG_SET("daemon", LOG_DAEMON, facility);
+#endif
+#ifdef LOG_FTP
+  DFSCH_FLAG_SET("ftp", LOG_FTP, facility);
+#endif
+#ifdef LOG_KERN
+  DFSCH_FLAG_SET("kern", LOG_KERN, facility);
+#endif
+#ifdef LOG_LOCAL0
+  DFSCH_FLAG_SET("local0", LOG_LOCAL0, facility);
+#endif
+#ifdef LOG_LOCAL1
+  DFSCH_FLAG_SET("local1", LOG_LOCAL1, facility);
+#endif
+#ifdef LOG_LOCAL2
+  DFSCH_FLAG_SET("local2", LOG_LOCAL2, facility);
+#endif
+#ifdef LOG_LOCAL3
+  DFSCH_FLAG_SET("local3", LOG_LOCAL3, facility);
+#endif
+#ifdef LOG_LOCAL4
+  DFSCH_FLAG_SET("local4", LOG_LOCAL4, facility);
+#endif
+#ifdef LOG_LOCAL5
+  DFSCH_FLAG_SET("local5", LOG_LOCAL5, facility);
+#endif
+#ifdef LOG_LOCAL6
+  DFSCH_FLAG_SET("local6", LOG_LOCAL6, facility);
+#endif
+#ifdef LOG_LOCAL7
+  DFSCH_FLAG_SET("local7", LOG_LOCAL7, facility);
+#endif
+#ifdef LOG_LPR
+  DFSCH_FLAG_SET("lpr", LOG_LPR, facility);
+#endif
+#ifdef LOG_MAIL
+  DFSCH_FLAG_SET("mail", LOG_MAIL, facility);
+#endif
+#ifdef LOG_NEWS
+  DFSCH_FLAG_SET("news", LOG_NEWS, facility);
+#endif
+#ifdef LOG_SYSLOG
+  DFSCH_FLAG_SET("syslog", LOG_SYSLOG, facility);
+#endif
+#ifdef LOG_USER
+  DFSCH_FLAG_SET("user", LOG_USER, facility);
+#endif
+#ifdef LOG_UUCP
+  DFSCH_FLAG_SET("uucp", LOG_UUCP, facility);
+#endif
+  DFSCH_FLAG_PARSER_END(args);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("cons", LOG_CONS, option);
+  DFSCH_FLAG_SET("ndelay", LOG_NDELAY, option);
+  DFSCH_FLAG_SET("nowait", LOG_NOWAIT, option);
+  DFSCH_FLAG_SET("odelay", LOG_ODELAY, option);
+  DFSCH_FLAG_SET("pid", LOG_PID, option);
+#ifdef LOG_PERROR
+  DFSCH_FLAG_SET("perror", LOG_PERROR, option);
+#endif
+  DFSCH_FLAG_PARSER_END(args);
+
+  dfsch_lock_libc();
+
+  ident = strdup(ident);
+  openlog(ident, option, facility);
+  if (id_set){
+    free(id_set);
+  }
+  id_set = ident;
+
+  dfsch_unlock_libc;
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(closelog, NULL){
+  DFSCH_ARG_END(args);
+
+  closelog();
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(syslog, NULL){
+  int priority;
+  char* message;
+  DFSCH_FLAG_PARSER_BEGIN_ONE(args, priority);
+#ifdef LOG_EMERG
+  DFSCH_FLAG_SET("emerg", LOG_EMERG, priority);
+#endif
+#ifdef LOG_ALERT
+  DFSCH_FLAG_SET("alert", LOG_ALERT, priority);
+#endif
+#ifdef LOG_CRIT
+  DFSCH_FLAG_SET("crit", LOG_CRIT, priority);
+#endif
+#ifdef LOG_ERR
+  DFSCH_FLAG_SET("err", LOG_ERR, priority);
+#endif
+#ifdef LOG_WARNING
+  DFSCH_FLAG_SET("warning", LOG_WARNING, priority);
+#endif
+#ifdef LOG_NOTICE
+  DFSCH_FLAG_SET("notice", LOG_NOTICE, priority);
+#endif
+#ifdef LOG_INFO
+  DFSCH_FLAG_SET("info", LOG_INFO, priority);
+#endif
+#ifdef LOG_DEBUG
+  DFSCH_FLAG_SET("debug", LOG_DEBUG, priority);
+#endif
+  DFSCH_FLAG_PARSER_END(args);
+  DFSCH_STRING_ARG(args, message);
+  DFSCH_ARG_END(args);
+
+  syslog(priority, "%s", message);
+
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(setlogmask, NULL){
+  int priority;
+  DFSCH_FLAG_PARSER_BEGIN(args);
+#ifdef LOG_EMERG
+  DFSCH_FLAG_SET("emerg", LOG_EMERG, priority);
+#endif
+#ifdef LOG_ALERT
+  DFSCH_FLAG_SET("alert", LOG_ALERT, priority);
+#endif
+#ifdef LOG_CRIT
+  DFSCH_FLAG_SET("crit", LOG_CRIT, priority);
+#endif
+#ifdef LOG_ERR
+  DFSCH_FLAG_SET("err", LOG_ERR, priority);
+#endif
+#ifdef LOG_WARNING
+  DFSCH_FLAG_SET("warning", LOG_WARNING, priority);
+#endif
+#ifdef LOG_NOTICE
+  DFSCH_FLAG_SET("notice", LOG_NOTICE, priority);
+#endif
+#ifdef LOG_INFO
+  DFSCH_FLAG_SET("info", LOG_INFO, priority);
+#endif
+#ifdef LOG_DEBUG
+  DFSCH_FLAG_SET("debug", LOG_DEBUG, priority);
+#endif
+  DFSCH_FLAG_PARSER_END(args);
+
+  setlogmask(priority);
+
+  return NULL;
+}
+
+
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
                                                  "UNIX-specific system "
@@ -585,6 +755,15 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mmap", 
                     DFSCH_PRIMITIVE_REF(mmap));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "openlog", 
+                    DFSCH_PRIMITIVE_REF(openlog));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "closelog", 
+                    DFSCH_PRIMITIVE_REF(closelog));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "syslog", 
+                    DFSCH_PRIMITIVE_REF(syslog));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setlogmask", 
+                    DFSCH_PRIMITIVE_REF(setlogmask));
   
   dfsch_provide(ctx, "unix");
 
