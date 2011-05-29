@@ -1133,4 +1133,27 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "get-qualified-methods",
                       DFSCH_PRIMITIVE_REF(get_qualified_methods));
 
+  dfsch_defcanon_cstr(env, "<generic-function-type>", 
+                      DFSCH_GENERIC_FUNCTION_TYPE_TYPE);
+  dfsch_defcanon_cstr(env, "<generic-function>", 
+                      DFSCH_GENERIC_FUNCTION_TYPE);
+  dfsch_defcanon_cstr(env, "<standard-generic-function>", 
+                      DFSCH_STANDARD_GENERIC_FUNCTION_TYPE);
+  dfsch_defcanon_cstr(env, "<singleton-generic-function>", 
+                      DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE);
+
+  dfsch_defcanon_cstr(env, "<method-context-type>", 
+                      DFSCH_METHOD_CONTEXT_TYPE_TYPE);
+  dfsch_defcanon_cstr(env, "<method-context>", 
+                      DFSCH_METHOD_CONTEXT_TYPE);
+  dfsch_defcanon_cstr(env, "<standard-method-context>", 
+                      DFSCH_STANDARD_METHOD_CONTEXT_TYPE);
+  dfsch_defcanon_cstr(env, "<simple-method-context>", 
+                      DFSCH_SIMPLE_METHOD_CONTEXT_TYPE);
+
+  dfsch_defcanon_cstr(env, "<standard-effective-method>", 
+                      DFSCH_STANDARD_EFFECTIVE_METHOD_TYPE);
+  dfsch_defcanon_cstr(env, "<method>", 
+                      DFSCH_METHOD_TYPE);
+
 }
