@@ -1321,7 +1321,7 @@ static dfsch_object_t* nsi_next(number_sequence_t* ns){
   return ns;
 }
 
-dfsch_iterator_methods_t nsi_iterator = {
+static dfsch_iterator_methods_t nsi_iterator = {
   .next = nsi_next,
   .this = nsi_this
 };
