@@ -746,6 +746,43 @@ void dfsch_close_file_port(dfsch_object_t* port){
   }  
 }
 
+typedef struct line_iterator_t {
+  dfsch_type_t* type;
+  dfsch_object_t* port;
+  dfsch_strbuf_t* this;
+} line_iterator_t;
+
+static dfsch_object_t* li_this(line_iterator_t* li){
+  return dfsch_make_byte_vector_nocopy(li->this->ptr, li->this->len);
+}
+static dfsch_object_t* li_next(line_iterator_t* li){
+  li->this = dfsch_port_readline(li->port);
+  if (!li->this){
+    return NULL;
+  } else {
+    return li;
+  }
+}
+dfsch_iterator_methods_t li_iterator = {
+  .next = li_next,
+  .this = li_this
+};
+
+dfsch_type_t dfsch_port_line_iterator_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .name = "port-line-iterator",
+  .size = sizeof(line_iterator_t),
+  .collection = &dfsch_iterator_collection_methods,
+  .iterator = &li_iterator
+};
+
+dfsch_object_t* dfsch_make_port_line_iterator(dfsch_object_t* port){
+  line_iterator_t* li = dfsch_make_object(DFSCH_PORT_LINE_ITERATOR_TYPE);
+  li->port = port;
+  return li_next(li);
+}
+
+
 /*
  * Scheme interface
  */
@@ -957,6 +994,14 @@ DFSCH_DEFINE_PRIMITIVE(close_file_port, NULL){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_port_line_iterator, NULL){
+  dfsch_object_t* port;
+  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_port_line_iterator(port);
+}
+
 void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<port>", DFSCH_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<null-port>", DFSCH_NULL_PORT_TYPE);
@@ -964,6 +1009,8 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string-input-port>", DFSCH_STRING_INPUT_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<string-output-port>", DFSCH_STRING_OUTPUT_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<eof-object>", DFSCH_EOF_OBJECT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<port-line-iterator>", 
+                      DFSCH_PORT_LINE_ITERATOR_TYPE);
 
   dfsch_defcanon_cstr(ctx, "current-output-port", 
                     DFSCH_PRIMITIVE_REF(current_output_port));
@@ -1011,6 +1058,9 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(set_current_input_port));
   dfsch_defcanon_cstr(ctx, "set-current-error-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_error_port));
+
+  dfsch_defcanon_cstr(ctx, "make-port-line-iterator", 
+                      DFSCH_PRIMITIVE_REF(make_port_line_iterator));
   
   dfsch_defcanon_cstr(ctx, "*standard-input-port*",
                     dfsch_standard_input_port());

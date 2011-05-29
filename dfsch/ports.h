@@ -168,6 +168,11 @@ extern "C" {
   dfsch_object_t* dfsch_open_file_port(char* filename, char* mode);
   void dfsch_close_file_port(dfsch_object_t* port);
 
+  extern dfsch_type_t dfsch_port_line_iterator_type;
+#define DFSCH_PORT_LINE_ITERATOR_TYPE (&dfsch_port_line_iterator_type)
+
+  dfsch_object_t* dfsch_make_port_line_iterator(dfsch_object_t* port);
+
 #ifdef __cplusplus
 }
 #endif
