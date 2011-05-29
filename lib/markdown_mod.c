@@ -332,8 +332,8 @@ static struct mkd_renderer* build_renderer(dfsch_object_t* args){
   DFSCH_KEYWORD("table", table);
   DFSCH_KEYWORD("table-row", table_row);
   DFSCH_KEYWORD("table-cell", table_cell);
-  DFSCH_KEYWORD_PARSER_GENERIC("emphasis-chars", emphasis_chars, 
-                               dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("emphasis-chars", emphasis_chars, 
+                        dfsch_string_to_cstr);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
