@@ -68,7 +68,8 @@ int dfsch_specializer_matches_type_p(dfsch_object_t* specializer,
 }
 
 
-dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
+dfsch_type_specializer_type_t dfsch_metatype_specializer_type = {
+};
 
 
 static void singleton_write(dfsch_singleton_type_specializer_t* s, dfsch_writer_state_t* state){
@@ -78,6 +79,7 @@ static int singleton_matches_p(dfsch_singleton_type_specializer_t* spec,
                               dfsch_type_t* type){
   return spec->matches_p(spec, type);
 }
+
 
 dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type = {
   .type = {
@@ -95,12 +97,20 @@ static int function_matches_p(function_type_specializer_t* spec,
   return dfsch_apply(spec->proc, dfsch_list(1, type)) != NULL;
 }
 
+static dfsch_slot_t fts_slots[] = {
+  DFSCH_OBJECT_SLOT(function_type_specializer_t, proc, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Procedure containing actual matching logic"),
+  DFSCH_SLOT_TERMINATOR
+};
+
 dfsch_type_specializer_type_t dfsch_function_type_specializer_type = {
   .type = {
     .type = DFSCH_TYPE_SPECIALIZER_METATYPE,
     .superclass = DFSCH_TYPE_SPECIALIZER_TYPE,
     .size = sizeof(function_type_specializer_t),
-    .name = "function-type-specializer"
+    .name = "function-type-specializer",
+    .slots = fts_slots,
   },
   .matches_p = function_matches_p
 };
