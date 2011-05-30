@@ -1118,6 +1118,8 @@ static dfsch_slot_t closure_slots[] = {
                     "Primitive name"),
   DFSCH_OBJECT_SLOT(closure_t, orig_code, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "Original expression of closure"),
+  DFSCH_OBJECT_SLOT(closure_t, orig_args, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Original lambda-list"),
   DFSCH_OBJECT_SLOT(closure_t, documentation, DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "Documentation string"),
   DFSCH_SLOT_TERMINATOR
@@ -2525,7 +2527,7 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
   c->orig_code = code;
-  c->orig_args = c->args;
+  c->orig_args = args;
 
   if (DFSCH_PAIR_P(code) && dfsch_string_p(DFSCH_FAST_CAR(code))){
     c->code = DFSCH_FAST_CDR(code);
