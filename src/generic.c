@@ -1015,6 +1015,15 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   
+  if (args){
+    /* XXX: When arguments are present, redefine the function */
+
+    return dfsch_generate_define_canonical_constant(name,
+                                                    dfsch_immutable_list_cdr
+                                              (args, 2,
+                                               DFSCH_PRIMITIVE_REF(make_generic_function),
+                                               dfsch_generate_quote(name)));
+  }
 
   return dfsch_generate_if
     (dfsch_generate_defined_p(name),
