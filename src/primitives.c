@@ -62,7 +62,7 @@ DFSCH_DEFINE_PRIMITIVE(id, "Return object pointer as fixnum"
 
   return dfsch_make_number_from_long((long)object);
 }
-DFSCH_DEFINE_PRIMITIVE(hash, "Calculate object's hash value"
+DFSCH_DEFINE_PRIMITIVE(object_hash, "Calculate object's hash value"
                        DFSCH_DOC_SYNOPSIS("(object)")){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
@@ -1484,7 +1484,7 @@ DFSCH_DEFINE_PRIMITIVE(values_list,
 void dfsch__primitives_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
   dfsch_defcanon_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
-  dfsch_defcanon_cstr(ctx, "hash", DFSCH_PRIMITIVE_REF(hash));
+  dfsch_defcanon_cstr(ctx, "object-hash", DFSCH_PRIMITIVE_REF(object_hash));
   dfsch_defcanon_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
   dfsch_defcanon_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
   dfsch_defcanon_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
