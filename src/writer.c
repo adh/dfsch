@@ -105,6 +105,14 @@ int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state){
   return state->circ_pass == 1;
 }
 
+int dfsch_writer_get_readability(dfsch_writer_state_t* state){
+  return state->readability;
+}
+void dfsch_writer_set_readability(dfsch_writer_state_t* state,
+                                  int readability){
+  state->readability = readability;
+}
+
 void dfsch_write_object(dfsch_writer_state_t* state,
                         dfsch_object_t* object){
   dfsch_type_t* type;

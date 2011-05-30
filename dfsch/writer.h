@@ -22,6 +22,12 @@ extern "C" {
   int dfsch_writer_state_strict_write_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_pprint_p(dfsch_writer_state_t* state);
   int dfsch_writer_state_cmark_p(dfsch_writer_state_t* state);
+
+  int dfsch_writer_get_readability(dfsch_writer_state_t* state);
+  void dfsch_writer_set_readability(dfsch_writer_state_t* state,
+                                    int readability);
+
+
   void dfsch_write_object(dfsch_writer_state_t* state,
                                  dfsch_object_t* object);
   void dfsch_write_string(dfsch_writer_state_t* state,

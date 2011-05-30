@@ -813,19 +813,26 @@ dfsch_type_t dfsch_pair_type = {
 static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
+
+
   if (s->name){
     if (!s->package){
       dfsch_write_string(state, dfsch_saprintf("#<uninterned-symbol %p %s>", 
                                                o, 
                                                s->name)); 
     } else {
-      if (dfsch_writer_state_strict_write_p(state) || 
-          !dfsch_in_current_package(o)) {
+      if (dfsch_writer_state_print_p(state)){
+        if (s->package == DFSCH_KEYWORD_PACKAGE) {
+          dfsch_write_string(state, ":");
+        }
+      } else if (dfsch_writer_state_strict_write_p(state) || 
+                 !dfsch_in_current_package(o)) {
         if (s->package != DFSCH_KEYWORD_PACKAGE) {
           dfsch_write_string(state, dfsch_package_name(s->package));
         }
         dfsch_write_string(state, ":");      
       }
+
       dfsch_write_string(state, s->name);
     }
   } else {
@@ -1085,12 +1092,17 @@ static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
 }
 
 static void function_write(closure_t* c, dfsch_writer_state_t* state){
+  int readability;
   dfsch_write_unreadable_start(state, (dfsch_object_t*)c);
 
   if (c->name){
     dfsch_write_object(state, c->name);
   }
+  
+  readability = dfsch_writer_get_readability(state);
+  dfsch_writer_set_readability(state, DFSCH_PRINT);
   dfsch_write_object(state, c->orig_args);
+  dfsch_writer_set_readability(state, readability);
 
   dfsch_write_unreadable_end(state);
 }

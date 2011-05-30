@@ -145,7 +145,7 @@
 (define-method (get-object-documentation (object <standard-function>) 
                                          &key supress-head &allow-other-keys)
   `(,@(unless supress-head '((:h2 "Arguments")))
-    (:pre ,(format "~y" (slot-ref object :orig_args)))))
+    (:pre ,(format "~a" (slot-ref object :orig_args)))))
 
 
 (define-method (get-method-documentation (meth <method>))
@@ -260,7 +260,6 @@
 
 
 (define (make-one-entry entry)
-  (display entry)(newline)
   (let ((object (cadr entry)))
     (get-object-documentation object)))
 
