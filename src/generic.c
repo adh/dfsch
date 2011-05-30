@@ -1066,6 +1066,7 @@ DFSCH_DEFINE_MACRO(define_method, "Define new method on generic function"
   dfsch_object_t* lambda_list;
   dfsch_object_t* function;
   dfsch_object_t* method;
+  dfsch_object_t* name_tag;
 
   DFSCH_OBJECT_ARG(args, header);
   DFSCH_ARG_REST(args, body);
@@ -1077,6 +1078,8 @@ DFSCH_DEFINE_MACRO(define_method, "Define new method on generic function"
   name = DFSCH_FAST_CAR(header);
   lambda_list = DFSCH_FAST_CDR(header);
   
+  name_tag = name;
+
   if (DFSCH_PAIR_P(name)){
     qualifiers = DFSCH_FAST_CDR(name);
     name = DFSCH_FAST_CAR(name);
@@ -1084,6 +1087,8 @@ DFSCH_DEFINE_MACRO(define_method, "Define new method on generic function"
 
   dfsch_parse_specialized_lambda_list(lambda_list,
                                       &lambda_list, &specializers);
+
+  name_tag = dfsch_cons(name_tag, specializers);
 
   return dfsch_immutable_list
     (3,
@@ -1093,10 +1098,10 @@ DFSCH_DEFINE_MACRO(define_method, "Define new method on generic function"
                           name),
      dfsch_immutable_list(5,
                           DFSCH_PRIMITIVE_REF(make_method),
-                          dfsch_generate_quote(header),
+                          dfsch_generate_quote(name_tag),
                           dfsch_generate_quote(qualifiers),
                           dfsch_generate_eval_list(specializers),
-                          dfsch_generate_lambda(header, lambda_list, body)));
+                          dfsch_generate_lambda(name_tag, lambda_list, body)));
 }
 
 
