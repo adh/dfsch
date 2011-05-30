@@ -306,6 +306,20 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<serializable>>", 
                       DFSCH_SERIALIZABLE_SPECIALIZER);
 
+
+  dfsch_defcanon_cstr(ctx, "<type-specializer>", 
+                      DFSCH_TYPE_SPECIALIZER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<metatype-specializer>", 
+                      DFSCH_METATYPE_SPECIALIZER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<singleton-type-specializer>", 
+                      DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<function-type-specializer>", 
+                      DFSCH_FUNCTION_TYPE_SPECIALIZER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<compound-type-specializer>", 
+                      DFSCH_COMPOUND_TYPE_SPECIALIZER_TYPE);
+  dfsch_defcanon_cstr(ctx, "<complementary-type-specializer>", 
+                      DFSCH_COMPLEMENTARY_TYPE_SPECIALIZER_TYPE);
+
   dfsch_defcanon_cstr(ctx, "make-type-specializer",
                       DFSCH_PRIMITIVE_REF(make_type_specializer));
   dfsch_defcanon_cstr(ctx, "specializer-matches-type?",
