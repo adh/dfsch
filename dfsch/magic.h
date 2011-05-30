@@ -138,12 +138,15 @@ extern "C" {
   dfsch__handler_list_t* dfsch___old_handlers;                  \
   dfsch__restart_list_t* dfsch___old_restarts;                  \
   dfsch__stack_trace_frame_t* dfsch___old_stack_trace;          \
+  dfsch_object_t* dfsch___old_scratch_pad[DFSCH_SCRATCH_PAD_SIZE];      \
                                                                 \
   dfsch___old_ret = dfsch___ei->throw_ret;                      \
   dfsch___old_catch = dfsch___ei->catch_list;                   \
   dfsch___old_handlers = dfsch___ei->handler_list;              \
   dfsch___old_restarts = dfsch___ei->restart_list;              \
   dfsch___old_stack_trace = dfsch___ei->stack_trace;            \
+  memcpy(dfsch___old_scratch_pad, dfsch___ei->scratch_pad,      \
+         sizeof(dfsch_object_t*) * DFSCH_SCRATCH_PAD_SIZE);     \
   dfsch___ei->throw_ret = &dfsch___tmpbuf;                      \
                                                                 \
   if(setjmp(*dfsch___ei->throw_ret) != 1){
@@ -154,12 +157,16 @@ extern "C" {
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
   dfsch___ei->stack_trace = dfsch___old_stack_trace;            \
+  memcpy(dfsch___ei->scratch_pad, dfsch___old_scratch_pad,      \
+         sizeof(dfsch_object_t*) * DFSCH_SCRATCH_PAD_SIZE);     \
 } else {                                                        \
   dfsch___ei->throw_ret = (jmp_buf*)dfsch___old_ret;            \
   dfsch___ei->catch_list = dfsch___old_catch;                   \
   dfsch___ei->handler_list = dfsch___old_handlers;              \
   dfsch___ei->restart_list = dfsch___old_restarts;              \
   dfsch___ei->stack_trace = dfsch___old_stack_trace;            \
+  memcpy(dfsch___ei->scratch_pad, dfsch___old_scratch_pad,      \
+         sizeof(dfsch_object_t*) * DFSCH_SCRATCH_PAD_SIZE);     \
   {
 
 #define DFSCH_CATCH_TAG (dfsch___ei->throw_tag)
