@@ -44,7 +44,11 @@
       ,@(when doc? (list doc))
       (ignore-errors (find-slot type ',slot) #t)))
 
-(define-has-slot-specializer dfsch:<<documented>> :documentation)
+(define-has-slot-specializer dfsch:<<documented>> :documentation
+  "All objects with :documentation slot")
+
+(define-has-slot-specializer dfsch:<<documented-synopsis>> :synopsis
+  "All objects with :synopsis slot")
 
 (define-macro (dfsch:define-class name superclass slots &rest class-opts)
   (let ((class-slots (map 

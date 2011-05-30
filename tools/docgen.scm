@@ -113,6 +113,13 @@
 
 (define-method (get-object-documentation (object <<documented>>) &key supress-head)
   (format-documentation-slot object :supress-head supress-head))
+
+(define-method (get-object-documentation (object <<documented-synopsis>>) 
+                                         &key supress-head)
+  (let ((synopsis (slot-ref object :synopsis)))
+    (when synopsis
+          `(,@(unless supress-head '((:h2 "Synopsis")))
+            (:pre ,synopsis)))))
                                          
 (define-method (get-object-documentation (object <macro>) &key supress-head)
   (format-documentation-slot (slot-ref object :proc) :supress-head supress-head))
