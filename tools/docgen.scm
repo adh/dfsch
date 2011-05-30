@@ -122,7 +122,13 @@
             (:pre ,synopsis)))))
                                          
 (define-method (get-object-documentation (object <macro>) &key supress-head)
-  (format-documentation-slot (slot-ref object :proc) :supress-head supress-head))
+  (format-documentation-slot (slot-ref object :proc) 
+                             :supress-head supress-head))
+
+(define-method (get-object-documentation (object <function-type-specializer>) 
+                                         &key supress-head)
+  (format-documentation-slot (slot-ref object :proc) 
+                             :supress-head supress-head))
 
 (define-method (get-object-documentation (object <standard-type>) &key supress-head)
   `(,@(unless supress-head '((:h2 "Slots")))
@@ -162,7 +168,7 @@
   :method-combination 
   (make-simple-method-combination (lambda (res)
                                     (or (apply append (reverse res))
-                                        '("Other objects")))))
+                                        '("uncategorized")))))
 
 
 (define-method (get-object-categories object)
@@ -182,6 +188,9 @@
 
 (define-method (get-object-categories (object <standard-type>))
   (list "Types"))
+
+(define-method (get-object-categories (object <type-specializer>))
+  (list "Type specializers"))
 
 
 (define (html-boiler-plate title main-title infoset)

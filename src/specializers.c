@@ -317,10 +317,10 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
                       DFSCH_SERIALIZABLE_SPECIALIZER);
 
 
+  dfsch_defcanon_cstr(ctx, "<type-specializer-type>", 
+                      DFSCH_TYPE_SPECIALIZER_METATYPE);
   dfsch_defcanon_cstr(ctx, "<type-specializer>", 
                       DFSCH_TYPE_SPECIALIZER_TYPE);
-  dfsch_defcanon_cstr(ctx, "<metatype-specializer>", 
-                      DFSCH_METATYPE_SPECIALIZER_TYPE);
   dfsch_defcanon_cstr(ctx, "<singleton-type-specializer>", 
                       DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE);
   dfsch_defcanon_cstr(ctx, "<function-type-specializer>", 
