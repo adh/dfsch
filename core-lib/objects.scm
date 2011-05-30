@@ -38,8 +38,10 @@
                                 (make-type-specializer (%lambda ,name ,args 
                                                                 ,@code))))
 
-(define-macro (dfsch:define-has-slot-specializer name slot)
+(define-macro (dfsch:define-has-slot-specializer name slot 
+                                                 &optional (doc () doc?))
   `@(define-custom-specializer ,name (type)
+      ,@(when doc? (list doc))
       (ignore-errors (find-slot type ',slot) #t)))
 
 (define-has-slot-specializer dfsch:<<documented>> :documentation)
