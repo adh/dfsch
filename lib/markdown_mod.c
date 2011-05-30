@@ -1,4 +1,5 @@
 #include <dfsch/dfsch.h>
+#include <dfsch/magic.h>
 #include "ext/upskirt/markdown.h"
 #include "ext/upskirt/renderers.h"
 
@@ -396,9 +397,12 @@ DFSCH_DEFINE_PRIMITIVE(markdown, "Transform text"){
 
 
   ob = bufnew(128);
-  markdown(ob, &ib, rndr);
-  res = dfsch_make_string_buf(ob->data, ob->size);
-  bufrelease(ob);
+  DFSCH_UNWIND {
+    markdown(ob, &ib, rndr);
+    res = dfsch_make_string_buf(ob->data, ob->size);
+  } DFSCH_PROTECT {
+    bufrelease(ob);
+  } DFSCH_PROTECT_END;
 
   return res;
 }
