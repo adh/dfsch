@@ -484,6 +484,8 @@ standard_generic_function_add_method(standard_generic_function_t* function,
     if (dfsch_equal_p(method->specializers, m->specializers) &&
         dfsch_equal_p(method->qualifiers, m->qualifiers)){
       DFSCH_FAST_CAR(i) = method;
+      dfsch_mkhash_reset(function->dispatch_cache, 
+                         function->longest_spec_list, 0);
       return;
     }
 
