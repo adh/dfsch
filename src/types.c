@@ -1039,7 +1039,7 @@ static dfsch_slot_t primitive_slots[] = {
 
 dfsch_type_t dfsch_primitive_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_STANDARD_FUNCTION_TYPE,
+  DFSCH_FUNCTION_TYPE,
   sizeof(primitive_t),
   "primitive",
   NULL,
@@ -1090,9 +1090,7 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   if (c->name){
     dfsch_write_object(state, c->name);
   }
-  dfsch_write_string(state, "(");
-  print_lambda_list(c->orig_args, state);
-  dfsch_write_string(state, ")");
+  dfsch_write_object(state, c->orig_args);
 
   dfsch_write_unreadable_end(state);
 }
@@ -1104,6 +1102,7 @@ static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
   dfsch_serialize_object(ser, c->env);
   dfsch_serialize_object(ser, c->name);
   dfsch_serialize_object(ser, c->orig_code);
+  dfsch_serialize_object(ser, c->orig_args);
   dfsch_serialize_object(ser, c->documentation);
 }
 
@@ -2527,7 +2526,7 @@ dfsch_object_t* dfsch_named_lambda(dfsch_object_t* env,
   c->env = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   c->args = (lambda_list_t*)dfsch_compile_lambda_list(args);
   c->orig_code = code;
-  c->orig_args = args;
+  c->orig_args = dfsch_list_copy_immutable(args);
 
   if (DFSCH_PAIR_P(code) && dfsch_string_p(DFSCH_FAST_CAR(code))){
     c->code = DFSCH_FAST_CDR(code);

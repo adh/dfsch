@@ -142,6 +142,12 @@
                         ,(slot-ref slot :documentation)))
                 (get-slots object)))))
 
+(define-method (get-object-documentation (object <standard-function>) 
+                                         &key supress-head &allow-other-keys)
+  `(,@(unless supress-head '((:h2 "Arguments")))
+    (:pre ,(format "~y" (slot-ref object :orig_args)))))
+
+
 (define-method (get-method-documentation (meth <method>))
   `((:h3 "Specialized on:")
     (:pre ,(format "~y" (slot-ref meth :specializers)))
@@ -254,6 +260,7 @@
 
 
 (define (make-one-entry entry)
+  (display entry)(newline)
   (let ((object (cadr entry)))
     (get-object-documentation object)))
 
