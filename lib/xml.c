@@ -400,7 +400,7 @@ void dfsch_xml_signal_error(XML_Parser parser){
   int row = XML_GetCurrentLineNumber(parser);
   int col = XML_GetCurrentColumnNumber(parser);
 
-  dfsch_error("xml:parse-error",
+  dfsch_error("Error parsing XML",
               dfsch_list(2,
                          dfsch_make_string_cstr(XML_ErrorString(ec)),
                          dfsch_cons(dfsch_make_number_from_long(row),
