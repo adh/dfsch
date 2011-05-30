@@ -54,7 +54,7 @@ DFSCH_DEFINE_PRIMITIVE(gensym, "Allocate new unnamed symbol"
   return dfsch_gensym();
 }
 
-DFSCH_DEFINE_PRIMITIVE(id, "Return object pointer as fixnum"
+DFSCH_DEFINE_PRIMITIVE(object_id, "Return object pointer as fixnum"
                        DFSCH_DOC_SYNOPSIS("(object)")){
   object_t* object;
   DFSCH_OBJECT_ARG(args, object);
@@ -1483,7 +1483,7 @@ DFSCH_DEFINE_PRIMITIVE(values_list,
 
 void dfsch__primitives_register(dfsch_object_t *ctx){ 
   dfsch_defcanon_cstr(ctx, "gensym", DFSCH_PRIMITIVE_REF(gensym));
-  dfsch_defcanon_cstr(ctx, "id", DFSCH_PRIMITIVE_REF(id));
+  dfsch_defcanon_cstr(ctx, "object-id", DFSCH_PRIMITIVE_REF(object_id));
   dfsch_defcanon_cstr(ctx, "object-hash", DFSCH_PRIMITIVE_REF(object_hash));
   dfsch_defcanon_cstr(ctx, "type-of", DFSCH_PRIMITIVE_REF(type_of));
   dfsch_defcanon_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
