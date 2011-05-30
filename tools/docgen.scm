@@ -139,7 +139,7 @@
   `(,@(unless supress-head '((:h2 "Slots")))
     (:ul ,@(map (lambda (slot) 
                   `(:li (:strong ,(slot-ref slot :name)) ": " 
-                        ,(slot-ref slot :documentation)))
+                        ,(or (slot-ref slot :documentation) "")))
                 (get-slots object)))))
 
 (define-method (get-object-documentation (object <standard-function>) 
@@ -352,5 +352,24 @@
    directory
    (string-append (object->string module) " module")))
 
+(when-toplevel
+ (define module-name ())
+ (define directory-name ())
+
+ (let ((parser (cmdopts:make-parser)))
+   (cmdopts:add-option parser 
+                       (lambda (p v)
+                         (set! module-name (string->object v)))
+                       :long-option "module"
+                       :has-argument #t)
+   (cmdopts:add-argument parser
+                         (lambda (p v)
+                           (set! directory-name v))
+                         :required #t)
+   (cmdopts:parse-list parser (cdr *posix-argv*)))
+ 
+ (if module-name
+     (emit-module-documentation directory-name module-name)
+     (emit-core-documentation directory-name)))
 
 ;(emit-core-documentation "out")
