@@ -1095,12 +1095,13 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   int readability;
   dfsch_write_unreadable_start(state, (dfsch_object_t*)c);
 
+  readability = dfsch_writer_get_readability(state);
+  dfsch_writer_set_readability(state, DFSCH_PRINT);
+
   if (c->name){
     dfsch_write_object(state, c->name);
   }
   
-  readability = dfsch_writer_get_readability(state);
-  dfsch_writer_set_readability(state, DFSCH_PRINT);
   dfsch_write_object(state, c->orig_args);
   dfsch_writer_set_readability(state, readability);
 
