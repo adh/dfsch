@@ -1544,7 +1544,7 @@ char* dfsch_strbuf_2_hexstring(dfsch_strbuf_t* buf){
   return res;
 }
 
-dfsch_object_t* dfsch_hexstring_2_strbuf(char* str){
+dfsch_strbuf_t* dfsch_hexstring_2_strbuf(char* str){
   size_t len = strlen(str);
   char* i = str;
   char* r;
