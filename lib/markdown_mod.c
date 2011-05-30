@@ -397,12 +397,9 @@ DFSCH_DEFINE_PRIMITIVE(markdown, "Transform text"){
 
 
   ob = bufnew(128);
-  DFSCH_UNWIND {
-    markdown(ob, &ib, rndr);
-    res = dfsch_make_string_buf(ob->data, ob->size);
-  } DFSCH_PROTECT {
-    bufrelease(ob);
-  } DFSCH_PROTECT_END;
+  markdown(ob, &ib, rndr);
+  res = dfsch_make_string_buf(ob->data, ob->size);
+  bufrelease(ob);
 
   return res;
 }

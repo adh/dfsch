@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gc/gc.h>
 
 
 /********************
@@ -110,7 +111,7 @@ bufdup(const struct buf *src, size_t dupunit) {
 	size_t blocks;
 	struct buf *ret;
 	if (src == 0) return 0;
-	ret = malloc(sizeof (struct buf));
+	ret = GC_MALLOC(sizeof(struct buf));
 	if (ret == 0) return 0;
 	ret->unit = dupunit;
 	ret->size = src->size;
@@ -121,9 +122,9 @@ bufdup(const struct buf *src, size_t dupunit) {
 		return ret; }
 	blocks = (src->size + dupunit - 1) / dupunit;
 	ret->asize = blocks * dupunit;
-	ret->data = malloc(ret->asize);
+	ret->data = GC_MALLOC_ATOMIC(ret->asize);
 	if (ret->data == 0) {
-		free(ret);
+		GC_FREE(ret);
 		return 0; }
 	memcpy(ret->data, src->data, src->size);
 #ifdef BUFFER_STATS
@@ -142,11 +143,13 @@ bufgrow(struct buf *buf, size_t neosz) {
 	if (buf->asize >= neosz) return 1;
 	neoasz = buf->asize + buf->unit;
 	while (neoasz < neosz) neoasz += buf->unit;
-	neodata = realloc(buf->data, neoasz);
+	neodata = GC_MALLOC_ATOMIC(neoasz);
+        memcpy(neodata, buf->data, buf->asize);
 	if (!neodata) return 0;
 #ifdef BUFFER_STATS
 	buffer_stat_alloc_bytes += (neoasz - buf->asize);
 #endif
+        GC_FREE(buf->data);
 	buf->data = neodata;
 	buf->asize = neoasz;
 	return 1; }
@@ -156,7 +159,7 @@ bufgrow(struct buf *buf, size_t neosz) {
 struct buf *
 bufnew(size_t unit) {
 	struct buf *ret;
-	ret = malloc(sizeof (struct buf));
+	ret = GC_MALLOC(sizeof(struct buf));
 	if (ret) {
 #ifdef BUFFER_STATS
 		buffer_stat_nb += 1;
@@ -223,8 +226,8 @@ bufrelease(struct buf *buf) {
 		buffer_stat_nb -= 1;
 		buffer_stat_alloc_bytes -= buf->asize;
 #endif
-		free(buf->data);
-		free(buf); } }
+		GC_FREE(buf->data);
+		GC_FREE(buf); } }
 
 
 /* bufreset • frees internal data of the buffer */
@@ -234,7 +237,7 @@ bufreset(struct buf *buf) {
 #ifdef BUFFER_STATS
 	buffer_stat_alloc_bytes -= buf->asize;
 #endif
-	free(buf->data);
+	GC_FREE(buf->data);
 	buf->data = 0;
 	buf->size = buf->asize = 0; }
 

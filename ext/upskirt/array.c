@@ -19,6 +19,7 @@
 #include "array.h"
 
 #include <string.h>
+#include <gc/gc.h>
 
 
 /***************************
@@ -29,7 +30,7 @@
 static int
 arr_realloc(struct array* arr, int neosz) {
 	void* neo;
-	neo = realloc(arr->base, neosz * arr->unit);
+	neo = GC_REALLOC(arr->base, neosz * arr->unit);
 	if (neo == 0) return 0;
 	arr->base = neo;
 	arr->asize = neosz;
@@ -41,7 +42,7 @@ arr_realloc(struct array* arr, int neosz) {
 static int
 parr_realloc(struct parray* arr, int neosz) {
 	void* neo;
-	neo = realloc(arr->item, neosz * sizeof (void*));
+	neo = GC_REALLOC(arr->item, neosz * sizeof (void*));
 	if (neo == 0) return 0;
 	arr->item = neo;
 	arr->asize = neosz;
@@ -64,7 +65,7 @@ arr_adjust(struct array *arr) {
 void
 arr_free(struct array *arr) {
 	if (!arr) return;
-	free(arr->base);
+	GC_FREE(arr->base);
 	arr->base = 0;
 	arr->size = arr->asize = 0; }
 
@@ -185,7 +186,7 @@ parr_adjust(struct parray* arr) {
 void
 parr_free(struct parray *arr) {
 	if (!arr) return;
-	free (arr->item);
+	GC_FREE (arr->item);
 	arr->item = 0;
 	arr->size = 0;
 	arr->asize = 0; }

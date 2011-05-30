@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <string.h>
 #include <strings.h> /* for strncasecmp */
+#include <gc/gc.h>
 
 #define TEXT_UNIT 64	/* unit for the copy of the input buffer */
 #define WORK_UNIT 64	/* block-level working buffer */
@@ -1458,7 +1459,7 @@ parse_table(struct buf *ob, struct render *rndr, char *data, size_t size) {
 		    MKD_CELL_HEAD);
 
 		/* parse alignments if provided */
-		if (col && (aligns = malloc(align_size * sizeof *aligns)) != 0){
+		if (col && (aligns = GC_MALLOC_ATOMIC(align_size * sizeof *aligns)) != 0){
 			for (i = 0; i < align_size; i += 1)
 				aligns[i] = 0;
 			col = 0;
@@ -1500,7 +1501,7 @@ parse_table(struct buf *ob, struct render *rndr, char *data, size_t size) {
 	/* cleanup */
 	if (head) release_work_buffer(rndr, head);
 	release_work_buffer(rndr, rows);
-	free(aligns);
+	GC_FREE(aligns);
 	return i; }
 
 
