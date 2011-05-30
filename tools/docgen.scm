@@ -111,26 +111,31 @@
           `(,@(unless supress-head '((:h2 "Documentation slot")))
             ,@(format-markdown-docstring str)))))
 
-(define-method (get-object-documentation (object <<documented>>) &key supress-head)
+(define-method (get-object-documentation (object <<documented>>) 
+                                         &key supress-head  &allow-other-keys)
   (format-documentation-slot object :supress-head supress-head))
 
 (define-method (get-object-documentation (object <<documented-synopsis>>) 
-                                         &key supress-head)
+                                         &key supress-head &allow-other-keys)
   (let ((synopsis (slot-ref object :synopsis)))
     (when synopsis
           `(,@(unless supress-head '((:h2 "Synopsis")))
             (:pre ,synopsis)))))
                                          
-(define-method (get-object-documentation (object <macro>) &key supress-head)
-  (format-documentation-slot (slot-ref object :proc) 
-                             :supress-head supress-head))
+(define-method (get-object-documentation (object <macro>) 
+                                         &key supress-head &allow-other-keys)
+  (get-object-documentation (slot-ref object :proc) 
+                            :supress-head supress-head
+                            :supress-value #t))
 
 (define-method (get-object-documentation (object <function-type-specializer>) 
-                                         &key supress-head)
-  (format-documentation-slot (slot-ref object :proc) 
-                             :supress-head supress-head))
+                                         &key supress-head &allow-other-keys)
+  (get-object-documentation (slot-ref object :proc) 
+                            :supress-head supress-head
+                            :supress-value #t))
 
-(define-method (get-object-documentation (object <standard-type>) &key supress-head)
+(define-method (get-object-documentation (object <standard-type>) 
+                                         &key supress-head &allow-other-keys)
   `(,@(unless supress-head '((:h2 "Slots")))
     (:ul ,@(map (lambda (slot) 
                   `(:li (:strong ,(slot-ref slot :name)) ": " 
@@ -150,8 +155,10 @@
                   `(:li ,@(get-method-documentation method)))
                 (generic-function-methods object)))))
   
-(define-method (get-object-documentation object &allow-other-keys)
-  `((:pre ,(format "~y" object))))
+(define-method (get-object-documentation object 
+                                         &key supress-value &allow-other-keys)
+  (unless supress-value
+          `((:pre ,(format "~y" object)))))
 
 
 

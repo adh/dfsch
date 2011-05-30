@@ -206,15 +206,15 @@ extern dfsch_type_t dfsch_form_type;
 #define DFSCH_FORM_COMPILE(name)                  \
   .compile = form_##name##_compile
 
-#define DFSCH_DEFINE_FORM(name, meths, documentation...)        \
+#define DFSCH_DEFINE_FORM(name, meths, doc...)                  \
   DFSCH_FORM_IMPLEMENTATION(name);                              \
   static dfsch_form_t form_##name = {                           \
     DFSCH_FORM_TYPE,                                            \
     form_##name##_impl,                                         \
     NULL,                                                       \
     #name,                                                      \
-    DFSCH_DOC_STRING(documentation),                            \
-    .methods = meths                                            \
+    .methods = meths,                                           \
+    .documentation = DFSCH_DOC_STRING(doc),                     \
   };                                                            \
   DFSCH_FORM_IMPLEMENTATION(name)
 

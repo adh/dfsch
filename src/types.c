@@ -1192,7 +1192,7 @@ static dfsch_slot_t form_slots[] = {
                     "Internal name of special form"),
   DFSCH_STRING_SLOT(dfsch_form_t, documentation, DFSCH_SLOT_ACCESS_RO,
                     "Documentation string"),
-  DFSCH_STRING_SLOT(dfsch_primitive_t, synopsis, DFSCH_SLOT_ACCESS_RO,
+  DFSCH_STRING_SLOT(dfsch_form_t, synopsis, DFSCH_SLOT_ACCESS_RO,
                     "String describing expected arguments"),
   DFSCH_SLOT_TERMINATOR
 };

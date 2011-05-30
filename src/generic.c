@@ -900,7 +900,10 @@ dfsch_object_t* dfsch_make_simple_method_context(dfsch_simple_method_callback_t 
 
 
 
-DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
+DFSCH_DEFINE_PRIMITIVE(make_generic_function, 
+                       "Create new standard generic function"
+                       DFSCH_DOC_SYNOPSIS("(name &key "
+                                          "method-combination documentation")){
   dfsch_object_t* name;
   dfsch_object_t* method_combination = NULL;
   char* documentation = NULL;
@@ -914,7 +917,9 @@ DFSCH_DEFINE_PRIMITIVE(make_generic_function, ""){
 
   return dfsch_make_generic_function(name, method_combination, documentation);
 }
-DFSCH_DEFINE_PRIMITIVE(make_method, ""){
+DFSCH_DEFINE_PRIMITIVE(make_method, "Create new method object"
+                       DFSCH_DOC_SYNOPSIS("(name qualifiers "
+                                          "specializers function)")){
   dfsch_object_t* name;
   dfsch_object_t* qualifiers;
   dfsch_object_t* specializers;
@@ -1004,14 +1009,22 @@ DFSCH_DEFINE_PRIMITIVE(call_next_method, NULL){
   return dfsch_call_next_method(ctx, args, esc);  
 }
 
-DFSCH_DEFINE_MACRO(call_next_method, "Call next less specialized method"){
+DFSCH_DEFINE_MACRO(call_next_method, 
+                   "Call next less specialized method optionally passing "
+                   "different arguments"
+                   DFSCH_DOC_SYNOPSIS("(&rest args)")){
   return dfsch_immutable_list_cdr(args, 2,
                                   DFSCH_PRIMITIVE_REF(call_next_method),
                                   dfsch_generate_current_environment());
 }
 
 
-DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
+DFSCH_DEFINE_MACRO(define_generic_function, 
+                   "Define new generic function. When generic function "
+                   "already exists and no optional arguments are passed "
+                   "it is not modified in any way."
+                   DFSCH_DOC_SYNOPSIS("(name)\n"
+                                      "(name &key method-combination documentation)")){
   dfsch_object_t* name;
   DFSCH_OBJECT_ARG(args, name);
   
@@ -1041,7 +1054,10 @@ DFSCH_DEFINE_MACRO(define_generic_function, "Define new generic function"){
 }
 
 
-DFSCH_DEFINE_MACRO(define_method, "Define new generic function"){
+DFSCH_DEFINE_MACRO(define_method, "Define new method on generic function"
+                   DFSCH_DOC_SYNOPSIS("((function &rest arguments) &body body)\n"
+                                      "((function (argument specilizer)... &rest arguments) &body body)\n"
+                                      "(((function qualifier) ...) ...)")){
   dfsch_object_t* header; 
   dfsch_object_t* body;
   dfsch_object_t* name;
