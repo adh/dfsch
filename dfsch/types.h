@@ -95,15 +95,18 @@ typedef struct dfsch_primitive_t {
   int flags;
   char* name;
   char* documentation;
+  char* synopsis;
 
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
 extern dfsch_type_t dfsch_primitive_type;
 
+#define DFSCH_DOC_SYNOPSIS(list) , .synopsis = list
+
 #define DFSCH_PRIMITIVE_TYPE (&dfsch_primitive_type)
 
-#define DFSCH_DECLARE_PRIMITIVE(name, documentation)    \
+#define DFSCH_DECLARE_PRIMITIVE(name, documentation...) \
   static dfsch_primitive_t p_##name = {                 \
     DFSCH_PRIMITIVE_TYPE,                               \
     p_##name##_impl,                                    \
@@ -177,6 +180,7 @@ struct dfsch_form_t {
   void* baton;
   char* name;
   char* documentation;
+  char* synopsis;
 
   dfsch_form_methods_t methods;
 
@@ -202,16 +206,16 @@ extern dfsch_type_t dfsch_form_type;
 #define DFSCH_FORM_COMPILE(name)                  \
   .compile = form_##name##_compile
 
-#define DFSCH_DEFINE_FORM(name, documentation, methods) \
-  DFSCH_FORM_IMPLEMENTATION(name);                      \
-  static dfsch_form_t form_##name = {                   \
-    DFSCH_FORM_TYPE,                                    \
-    form_##name##_impl,                                 \
-    NULL,                                               \
-    #name,                                              \
-    DFSCH_DOC_STRING(documentation),                    \
-    methods                                             \
-  };                                                    \
+#define DFSCH_DEFINE_FORM(name, meths, documentation...)        \
+  DFSCH_FORM_IMPLEMENTATION(name);                              \
+  static dfsch_form_t form_##name = {                           \
+    DFSCH_FORM_TYPE,                                            \
+    form_##name##_impl,                                         \
+    NULL,                                                       \
+    #name,                                                      \
+    DFSCH_DOC_STRING(documentation),                            \
+    .methods = meths                                            \
+  };                                                            \
   DFSCH_FORM_IMPLEMENTATION(name)
 
 /* 

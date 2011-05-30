@@ -60,8 +60,9 @@ DFSCH_FORM_METHOD_COMPILE(if){
                              alternate);
 }
 
-DFSCH_DEFINE_FORM(if, "Conditional operator", 
-                  {DFSCH_FORM_COMPILE(if)}){
+DFSCH_DEFINE_FORM(if, 
+                  {DFSCH_FORM_COMPILE(if)},
+                  "Conditional operator"){
   object_t* test;
   object_t* consequent;
   object_t* alternate;
@@ -83,7 +84,7 @@ dfsch_object_t* dfsch_generate_if(dfsch_object_t* cond,
 }
 
 
-DFSCH_DEFINE_FORM(quote, NULL, {}){
+DFSCH_DEFINE_FORM(quote, {}, NULL){
   object_t* value;
   
   DFSCH_OBJECT_ARG(args, value);
@@ -110,16 +111,18 @@ DFSCH_FORM_METHOD_COMPILE(begin_like){
 
 
 
-DFSCH_DEFINE_FORM(begin, "Evaluate list of expressions and return last result",
-                  {DFSCH_FORM_COMPILE(begin_like)}){
+DFSCH_DEFINE_FORM(begin, 
+                  {DFSCH_FORM_COMPILE(begin_like)},
+                  "Evaluate list of expressions and return last result"){
   return dfsch_eval_proc_tr(args, env, esc);
 }
 dfsch_object_t* dfsch_generate_begin(dfsch_object_t* exps){
   return dfsch_immutable_list_cdr(exps, 1, DFSCH_FORM_REF(begin));
 }
 
-DFSCH_DEFINE_FORM(internal_loop, "Inifinite loop", 
-                  {DFSCH_FORM_COMPILE(begin_like)}){
+DFSCH_DEFINE_FORM(internal_loop, 
+                  {DFSCH_FORM_COMPILE(begin_like)},
+                  "Inifinite loop"){
   dfsch_object_t* res;
   DFSCH_CATCH_BEGIN(DFSCH_SYM_BREAK) {
     for(;;){
@@ -174,7 +177,8 @@ DFSCH_FORM_METHOD_COMPILE(internal_let){
                                                      o_vars));
 }
 
-DFSCH_DEFINE_FORM(internal_let, NULL, {DFSCH_FORM_COMPILE(internal_let)}){
+DFSCH_DEFINE_FORM(internal_let, {DFSCH_FORM_COMPILE(internal_let)},
+                  NULL){
   object_t *vars;
   object_t *code;
 
@@ -217,7 +221,8 @@ dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_FORM(unwind_protect, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
+DFSCH_DEFINE_FORM(unwind_protect, {DFSCH_FORM_COMPILE(begin_like)},
+                  NULL){
   object_t* protect;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, protect);
@@ -232,7 +237,8 @@ DFSCH_DEFINE_FORM(unwind_protect, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
 }
 
 
-DFSCH_DEFINE_FORM(catch, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
+DFSCH_DEFINE_FORM(catch, {DFSCH_FORM_COMPILE(begin_like)},
+                  NULL){
   object_t* tag;
   object_t* ret;
   DFSCH_OBJECT_ARG(args, tag);
@@ -249,7 +255,8 @@ DFSCH_DEFINE_FORM(catch, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
   return ret;
 }
 
-DFSCH_DEFINE_FORM(throw, NULL, {DFSCH_FORM_COMPILE(begin_like)}){
+DFSCH_DEFINE_FORM(throw, {DFSCH_FORM_COMPILE(begin_like)},
+                  NULL){
   dfsch_object_t* tag;
   dfsch_object_t* value;
   DFSCH_OBJECT_ARG(args, tag);
@@ -279,10 +286,10 @@ DFSCH_FORM_METHOD_COMPILE(destructuring_bind){
 }
 
 DFSCH_DEFINE_FORM(destructuring_bind, 
+                  {DFSCH_FORM_COMPILE(destructuring_bind)},
                   "Bind variables as if function with formal parameters "
                   "given by first argument was called with arguments "
-                  "resulting from evaluation of second argument", 
-                  {DFSCH_FORM_COMPILE(destructuring_bind)}){
+                  "resulting from evaluation of second argument"){
   dfsch_object_t *arglist;
   dfsch_object_t *list;
   dfsch_object_t *code;
@@ -301,8 +308,9 @@ DFSCH_DEFINE_FORM(destructuring_bind,
 }
 
 DFSCH_DEFINE_FORM(internal_get_values, 
-                  "Evaluate list of expressions and return all values of last form",
-                  {DFSCH_FORM_COMPILE(begin_like)}){
+                  {DFSCH_FORM_COMPILE(begin_like)},
+                  "Evaluate list of expressions and return all values of "
+                  "last form"){
   return dfsch_get_values_list(dfsch_eval_proc_tr(args, env, NULL));
 }
 
@@ -313,8 +321,9 @@ DFSCH_DEFINE_FORM(internal_get_values,
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_FORM(internal_reclose_closure, NULL,
-                  {}){
+DFSCH_DEFINE_FORM(internal_reclose_closure,
+                  {},
+                  NULL){
   dfsch_object_t* closure;
   DFSCH_OBJECT_ARG(args, closure);
   DFSCH_ARG_END(args);
@@ -341,8 +350,9 @@ DFSCH_FORM_METHOD_COMPILE(lambda){
                              1, c);
 }
 
-DFSCH_DEFINE_FORM(internal_lambda, "Create new function", 
-                  {DFSCH_FORM_COMPILE(lambda)}){
+DFSCH_DEFINE_FORM(internal_lambda,
+                  {DFSCH_FORM_COMPILE(lambda)},
+                  "Create new function"){
   dfsch_object_t* name;
   dfsch_object_t* lambda_list;
   dfsch_object_t* body;
@@ -384,8 +394,9 @@ DFSCH_FORM_METHOD_COMPILE(define){
 }
 
 
-DFSCH_DEFINE_FORM(internal_define_variable, "Define variable", 
-                  {DFSCH_FORM_COMPILE(define)}){
+DFSCH_DEFINE_FORM(internal_define_variable, 
+                  {DFSCH_FORM_COMPILE(define)},
+                  "Define variable"){
 
   object_t* name;
   object_t* value;
@@ -402,8 +413,9 @@ dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
                                                dfsch_object_t* value){
   return dfsch_list(3, DFSCH_FORM_REF(internal_define_variable), name, value);
 }
-DFSCH_DEFINE_FORM(internal_define_constant, "Define constant", 
-                  {DFSCH_FORM_COMPILE(define)}){
+DFSCH_DEFINE_FORM(internal_define_constant, 
+                  {DFSCH_FORM_COMPILE(define)},
+                   "Define constant"){
 
   object_t* name;
   object_t* value;
@@ -424,8 +436,8 @@ dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
 }
 
 DFSCH_DEFINE_FORM(internal_define_canonical_constant, 
-                  "Define canonical constant (seen by serializer)", 
-                  {DFSCH_FORM_COMPILE(define)}){
+                  {DFSCH_FORM_COMPILE(define)},
+                  "Define canonical constant (seen by serializer)"){
 
   object_t* name;
   object_t* value;
@@ -446,7 +458,8 @@ dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
 }
 
 
-DFSCH_DEFINE_FORM(declare, "Add declaration specifier to given symbol", {}){
+DFSCH_DEFINE_FORM(declare, {},
+                  "Add declaration specifier to given symbol"){
   dfsch_object_t* name;
   dfsch_object_t* decls;
 
@@ -461,8 +474,9 @@ DFSCH_DEFINE_FORM(declare, "Add declaration specifier to given symbol", {}){
   return NULL;
 }
 
-DFSCH_DEFINE_FORM(set, "Change value of variable", 
-                  {DFSCH_FORM_COMPILE(define)}){
+DFSCH_DEFINE_FORM(set, 
+                  {DFSCH_FORM_COMPILE(define)},
+                  "Change value of variable"){
   object_t* name;
   object_t* value;
 
@@ -476,7 +490,8 @@ DFSCH_DEFINE_FORM(set, "Change value of variable",
   return value;
 
 }
-DFSCH_DEFINE_FORM(unset, "Delete variable binding", {}){
+DFSCH_DEFINE_FORM(unset, {},
+                  "Delete variable binding"){
   object_t* name;
 
   DFSCH_OBJECT_ARG(args, name);
@@ -486,9 +501,9 @@ DFSCH_DEFINE_FORM(unset, "Delete variable binding", {}){
 
   return NULL;
 }
-DFSCH_DEFINE_FORM(defined_p, 
-                       "Check if given variable is defined in "
-                       "lexically-enclosing environment", {}){
+DFSCH_DEFINE_FORM(defined_p, {},
+                  "Check if given variable is defined in "
+                  "lexically-enclosing environment"){
   object_t* name;
 
   DFSCH_OBJECT_ARG(args, name);
@@ -502,7 +517,8 @@ dfsch_object_t* dfsch_generate_defined_p(dfsch_object_t* name){
                               name);
 }
 
-DFSCH_DEFINE_FORM(case, NULL, {}){
+DFSCH_DEFINE_FORM(case, {}, 
+                  NULL){
   object_t* val;
   DFSCH_OBJECT_ARG(args, val);
 
@@ -526,8 +542,8 @@ DFSCH_DEFINE_FORM(case, NULL, {}){
   
 }
 
-DFSCH_DEFINE_FORM(current_environment, 
-                  "Return lexically-enclosing environment", {}){
+DFSCH_DEFINE_FORM(current_environment, {},
+                  "Return lexically-enclosing environment"){
   return dfsch_reify_environment(env);
 }
 dfsch_object_t* dfsch_generate_current_environment(){
@@ -563,8 +579,9 @@ DFSCH_FORM_METHOD_COMPILE(condition_system_bind){
                                                      o_bindings));
 }
 
-DFSCH_DEFINE_FORM(handler_bind, NULL, 
-                  {DFSCH_FORM_COMPILE(condition_system_bind)}){
+DFSCH_DEFINE_FORM(handler_bind, 
+                  {DFSCH_FORM_COMPILE(condition_system_bind)},
+                  NULL){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;
@@ -594,8 +611,9 @@ DFSCH_DEFINE_FORM(handler_bind, NULL,
   return ret;
 }
 
-DFSCH_DEFINE_FORM(restart_bind, NULL, 
-                  {DFSCH_FORM_COMPILE(condition_system_bind)}){
+DFSCH_DEFINE_FORM(restart_bind, 
+                  {DFSCH_FORM_COMPILE(condition_system_bind)},
+                  NULL){
   dfsch_object_t* ret;
   dfsch_object_t* bindings;
   dfsch_object_t* code;

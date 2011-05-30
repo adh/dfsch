@@ -34,10 +34,13 @@
 #undef DFSCH_GC_MALLOC_MANY_PREALLOC
 #endif
 
+/* DFSCH_DOC_STRING has multiple arguments as to allow DFSCH_DOC_ARGUMENTS()
+ * like hacks and remove also it's expansions when docstrings are omitted */
+
 #ifdef DFSCH_OMIT_DOCUMENTATION
-#define DFSCH_DOC_STRING(str) NULL
+#define DFSCH_DOC_STRING(str...) NULL
 #else
-#define DFSCH_DOC_STRING(str) (str)
+#define DFSCH_DOC_STRING(str...) str
 #endif
 
 #endif
