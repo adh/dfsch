@@ -81,6 +81,8 @@ extern "C" {
     dfsch__stack_trace_frame_t* next;
   };
 
+#define DFSCH_SCRATCH_PAD_SIZE 16
+
   struct dfsch__thread_info_t {
     dfsch_object_t* async_apply;
 
@@ -101,7 +103,7 @@ extern "C" {
     dfsch__handler_list_t* handler_list;
     dfsch__restart_list_t* restart_list; 
 
-    dfsch_object_t* scratch_pad[16];
+    dfsch_object_t* scratch_pad[DFSCH_SCRATCH_PAD_SIZE];
     int error_policy;
     dfsch_package_t* current_package;
   };

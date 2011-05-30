@@ -1095,7 +1095,7 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   size_t j = 0;
   dfsch_object_t* i = args;
 
-  if (esc && l > 12){
+  if (esc && l > DFSCH_SCRATCH_PAD_SIZE - 4){
     res = GC_MALLOC((l+4)*sizeof(dfsch_object_t*));
   }
 
@@ -1118,7 +1118,7 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
     args = DFSCH_MAKE_CLIST(res);
   }
 
-  if (args && esc && l <= 12){
+  if (args && esc && l <= DFSCH_SCRATCH_PAD_SIZE - 4){
     /* We have to copy arguments from stack to scratchpad instead of
        building directly in scratchpad, because scratchpad might be
        used by recursive invocations*/
@@ -1704,7 +1704,7 @@ dfsch_object_t* dfsch_values(int count, ...){
     return res;
   }
 
-  if (count < 16){
+  if (count < DFSCH_SCRATCH_PAD_SIZE){
     ti->values = ti->scratch_pad;
   } else {
     ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * count);
@@ -1739,7 +1739,7 @@ dfsch_object_t* dfsch_values_list(dfsch_object_t* list){
     list = DFSCH_FAST_CDR(list);
     count = dfsch_list_length_fast_bounded(list);
 
-    if (count < 15){
+    if (count < DFSCH_SCRATCH_PAD_SIZE - 1){
       ti->values = ti->scratch_pad;
     } else {
       ti->values = GC_MALLOC(sizeof(dfsch_object_t*) * (count + 1));
