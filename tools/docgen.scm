@@ -33,6 +33,36 @@
   :uses '(:dfsch :markdown :os :shtml)
   :exports '())
 
+(define *stylesheet*
+  "
+.menu-bar {
+  display: block; 
+  background-color: #abcdef; 
+  border-width: 1px; 
+  border-color: black; 
+  border-style: solid;
+  padding-left: 1em
+}
+.menu-bar li {
+  display: inline; 
+  margin-left: 0.5em; 
+  margin-right: 0.5em
+}
+.char-bar {
+  display: block; 
+  border-width: 1px; 
+  border-color: #abcdef; 
+  border-style: solid;
+  padding-left: 0.2em
+}
+.char-bar li {
+  display: inline; 
+  margin-left: 0.3em; 
+  margin-right: 0.3em
+}
+
+")
+
 (define (directory? path)
   (let ((stat (os:stat path)))
     (if (null? stat)
@@ -73,23 +103,44 @@
   (make-simple-method-combination (lambda (res)
                                     (apply nconc (reverse res)))))
 
-(define-method (get-object-documentation (object <<documented>>))
-  `((:literal-output ,(convert-documentation-block (or (slot-ref object
-                                                                 :documentation)
-                                                      "")))))
-                                         
-(define-method (get-object-documentation (object <macro>))
-  (get-object-documentation (slot-ref object :proc)))
+(define (format-markdown-docstring str)
+  `((:literal-output ,(convert-documentation-block str))))
+(define (format-documentation-slot object &key supress-head)
+  (let ((str (slot-ref object :documentation)))
+    (when str
+          `(,@(unless supress-head '((:h2 "Documentation slot")))
+            ,@(format-markdown-docstring str)))))
 
-(define-method (get-object-documentation (object <standard-type>))
-  `((:h3 "Slots:")
+(define-method (get-object-documentation (object <<documented>>) &key supress-head)
+  (format-documentation-slot object :supress-head supress-head))
+                                         
+(define-method (get-object-documentation (object <macro>) &key supress-head)
+  (format-documentation-slot (slot-ref object :proc) :supress-head supress-head))
+
+(define-method (get-object-documentation (object <standard-type>) &key supress-head)
+  `(,@(unless supress-head '((:h2 "Slots")))
     (:ul ,@(map (lambda (slot) 
                   `(:li ,(slot-ref slot :name) ": " 
                         ,(slot-ref slot :documentation)))
                 (get-slots object)))))
 
-(define-method (get-object-documentation object)
+(define-method (get-method-documentation (meth <method>))
+  `((:h3 "Specialized on:")
+    (:pre ,(format "~y" (slot-ref meth :specializers)))
+    (:h3 "Implementation:")
+    ,@(get-object-documentation (slot-ref meth :function) :supress-head #t)))
+
+
+(define-method (get-object-documentation (object <standard-generic-function>) &key supress-head)
+  `(,@(unless supress-head '((:h2 "Methods")))
+    (:ul ,@(map (lambda (method) 
+                  `(:li ,@(get-method-documentation method)))
+                (generic-function-methods object)))))
+  
+(define-method (get-object-documentation object &allow-other-keys)
   `((:pre ,(format "~y" object))))
+
+
 
 (define-generic-function get-object-name)
 
@@ -131,7 +182,8 @@
     :xmlns "http://www.w3.org/1999/xhtml"
     (:head (:title ,(if title
                         (string-append title " - " main-title)
-                        main-title)))
+                        main-title))
+           (:style ,*stylesheet*))
     (:body (:h1 ,(or title main-title))
           ,@infoset
           (:hr)
@@ -163,6 +215,20 @@
                            ,(category-name cat)))))
            categories)))
 
+(define (char-name ch)
+  (format "idx-~a" (car ch)))
+
+(define (char-bar chars current)
+  `(:ul 
+    :class "char-bar"
+    ,@(map (lambda (ch)
+             (if (eq? ch current)
+                 `(:li (:strong ,(string (car ch))))
+                 `(:li (:a :href ,(string-append "#" (char-name ch))
+                           ,(string (car ch))))))
+           chars)))
+
+
 (define (make-one-entry entry)
   (let ((object (cadr entry)))
     (get-object-documentation object)))
@@ -175,10 +241,11 @@
   (string-append (string->safe-filename (symbol-qualified-name (car entry)))
                  ".html"))
 
-(define (emit-one-entry entry directory title)
+(define (emit-one-entry entry directory title categories)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
                                       title
-                                      (make-one-entry entry))
+                                      `(,(menu-bar categories #t)
+                                        ,@(make-one-entry entry)))
                    (string-append directory "/"
                                   (entry-filename entry))))
 
@@ -205,14 +272,27 @@
 (define (entry-get-categories entry)
   (get-object-categories (cadr entry)))
 
+(define (make-index-list lyst)
+  (let ((chars (sort-list! (group-by lyst 
+                                     (lambda (ent)
+                                       (list (char-upcase (seq-ref (symbol-name (car ent))
+                                                                   0)))))
+                           (lambda (x y)
+                             (< (car x) (car y))))))
+    (mapcan (lambda (ch)
+              `((:a :name ,(char-name ch))
+                ,(char-bar chars ch)
+                ,(make-entry-list (cdr ch))))
+            chars)))
+
 (define (emit-documentation lyst directory title)
   (let ((categories (sort-list! (group-by lyst entry-get-categories)
                                 (lambda (x y)
                                   (string<? (car x) (car y))))))
     (ensure-directory directory)
     (shtml:emit-file (html-boiler-plate () title 
-                                        (list (menu-bar categories ())
-                                              (make-entry-list lyst)))
+                                        `(,(menu-bar categories ())
+                                          ,@(make-index-list lyst)))
                      (string-append directory "/index.html"))
     (for-each (lambda (cat)
                 (shtml:emit-file (html-boiler-plate (category-name cat) 
@@ -226,7 +306,7 @@
               categories)
                 
     (for-each (lambda (entry)
-                (emit-one-entry entry directory title))
+                (emit-one-entry entry directory title categories))
               lyst)))
 
 

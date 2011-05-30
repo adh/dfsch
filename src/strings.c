@@ -169,8 +169,12 @@ static dfsch_collection_methods_t string_collection = {
   .get_iterator = dfsch_string_2_list,
 };
 
+static dfsch_object_t* string_ref(dfsch_object_t* string, int k){
+  return DFSCH_MAKE_FIXNUM(dfsch_string_ref(string, k));
+}
+
 static dfsch_sequence_methods_t string_sequence = {
-  .ref = dfsch_string_ref,
+  .ref = string_ref,
   .length = dfsch_string_length,
 };
 
@@ -1894,6 +1898,9 @@ DFSCH_DEFINE_PRIMITIVE(list_2_string, 0){
 
   return dfsch_list_2_string(list);
 }
+DFSCH_DEFINE_PRIMITIVE(string, 0){
+  return dfsch_list_2_string(args);
+}
 DFSCH_DEFINE_PRIMITIVE(byte_list_2_string, 0){
   object_t* list;
 
@@ -2465,6 +2472,8 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(byte_list_2_string));
   dfsch_defcanon_cstr(ctx, "list->string", 
 		   DFSCH_PRIMITIVE_REF(list_2_string));
+  dfsch_defcanon_cstr(ctx, "string", 
+		   DFSCH_PRIMITIVE_REF(string));
 
 #define STRING_REL(name, fun, doc)                                      \
   dfsch_defcanon_cstr(ctx, name,                                        \
