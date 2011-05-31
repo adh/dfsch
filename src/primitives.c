@@ -553,7 +553,10 @@ DFSCH_DEFINE_PRIMITIVE(map, 0){
   }
 }
 
-DFSCH_DEFINE_PRIMITIVE(map_star, 0){
+DFSCH_DEFINE_PRIMITIVE(map_star, 
+                       "Map contents of collections as in |dfsch:map| "
+                       "but collect only non-nil results in resulting "
+                       "collection"){
   object_t* func;
   size_t len;
   int i;
@@ -1204,7 +1207,8 @@ DFSCH_DEFINE_PRIMITIVE(intern_symbol,
   dfsch_package_t* package;
 
   DFSCH_STRING_ARG(args, string);
-  DFSCH_PACKAGE_ARG_OPT(args, package, NULL);
+  DFSCH_PACKAGE_ARG_OPT(args, package, 
+                        dfsch_get_current_package());
   DFSCH_ARG_END(args);
 
   return dfsch_intern_symbol(package, string);

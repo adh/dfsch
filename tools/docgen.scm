@@ -96,7 +96,11 @@
     (sort-by-names! (get-variables toplevel))))
 
 (define (convert-documentation-block string)
-  (markdown:markdown string :html))
+  (markdown:markdown string :html :emphasis-chars "*_|"
+                     :emphasis (lambda (str ch)
+                                 (if (eq? ch #\|)
+                                     (shtml:emit-string (name-string-link str))
+                                     (string-append "<em>" str "</em>")))))
 
 (define-generic-function get-object-documentation
   :method-combination 
@@ -273,7 +277,8 @@
                    (car entry)))
 
 (define (make-filename name)
-  (string-append (string->safe-filename (symbol-qualified-name name))
+  (string-append "e_"
+                 (string->safe-filename (symbol-qualified-name name))
                  ".html"))
 
 (define (entry-filename entry)
@@ -297,9 +302,9 @@
   (when entry
         (string-append (caddr entry) (make-filename (car entry)))))
 
-(define (index-uri-for-name name)
-  (build-uri (find-if (lambda (entry) (eq? (car entry) name))
-                      *global-index*)))
+(define (index-entry-for-name name)
+  (find-if (lambda (entry) (eq? (car entry) name))
+           *global-index*))
 
 (define (index-entry-for-value value)
   (and value ; ignore nil
@@ -311,6 +316,13 @@
     (when entry
           (symbol-name (car entry)))))
 
+(define (name-string-link name-string &optional name)
+  (let ((entry (index-entry-for-name (ignore-errors 
+                                      (intern-symbol name-string)))))
+    (if entry
+        `(:a :href ,(build-uri entry)
+             ,(symbol-qualified-name (car entry)))
+        (or name `(:code ,name-string)))))
 
 
 (define (value-link value &optional name)
