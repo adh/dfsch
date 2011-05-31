@@ -760,7 +760,7 @@ DFSCH_DEFINE_PRIMITIVE(filter,
 
 
 DFSCH_DEFINE_PRIMITIVE(find_if, 
-                       "Return first element ofsequence that matches predicate, "
+                       "Return first element of sequence that matches predicate, "
                        "empty list when there is no such element"){
   object_t* func;
   object_t* list;

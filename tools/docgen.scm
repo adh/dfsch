@@ -136,7 +136,9 @@
 
 (define-method (get-object-documentation (object <standard-type>) 
                                          &key supress-head &allow-other-keys)
-  `(,@(unless supress-head '((:h2 "Slots")))
+  `(,(if supress-head '(:strong "Superclass:") '(:h2 "Superclass"))
+    ,(value-link (superclass object))
+    ,@(unless supress-head '((:h2 "Slots")))
     (:ul ,@(map (lambda (slot) 
                   `(:li (:strong ,(slot-ref slot :name)) ": " 
                         ,(or (slot-ref slot :documentation) "")))
@@ -238,6 +240,10 @@
               '(:a :href "index.html"
                    "All")
               '(:strong "All")))
+    (:li ,(if (eq? current :hierarchy)
+               '(:strong "Type hierarchy")
+               '(:a :href "hierarchy.html"
+                    "Type hierarchy")))
     ,@(map (lambda (cat)
              (if (eq? cat current)
                  `(:li (:strong ,(category-name cat)))
@@ -258,7 +264,6 @@
                            ,(string (car ch))))))
            chars)))
 
-
 (define (make-one-entry entry)
   (let ((object (cadr entry)))
     (get-object-documentation object)))
@@ -267,9 +272,55 @@
   (get-object-name (cadr entry)
                    (car entry)))
 
-(define (entry-filename entry)
-  (string-append (string->safe-filename (symbol-qualified-name (car entry)))
+(define (make-filename name)
+  (string-append (string->safe-filename (symbol-qualified-name name))
                  ".html"))
+
+(define (entry-filename entry)
+  (make-filename (car entry)))
+
+(define-variable *global-index* ())
+
+(define (index-put uri-base name &optional value)
+  (set! *global-index*
+        (cons (list name value uri-base)
+              *global-index*)))
+(define (index-put-entry uri-base entry)
+  (index-put uri-base (car entry) (and (cdr entry) (cadr entry))))
+
+(define (index-put-all uri-base entries)
+  (for-each (lambda (entry)
+              (index-put-entry uri-base entry))
+            entries))
+
+(define (build-uri entry)
+  (when entry
+        (string-append (caddr entry) (make-filename (car entry)))))
+
+(define (index-uri-for-name name)
+  (build-uri (find-if (lambda (entry) (eq? (car entry) name))
+                      *global-index*)))
+
+(define (index-entry-for-value value)
+  (and value ; ignore nil
+                  (find-if (lambda (entry) (eq? (cadr entry) value))
+                           *global-index*)))
+
+(define (index-name-for-value value)
+  (let ((entry (index-entry-for-value value)))
+    (when entry
+          (symbol-name (car entry)))))
+
+
+
+(define (value-link value &optional name)
+  (let ((entry (index-entry-for-value value)))
+    (if entry
+        `(:a :href ,(build-uri entry)
+             ,(symbol-qualified-name (car entry)))
+        (or name `(:pre ,(format "~y" value))))))
+
+
 
 (define (emit-one-entry entry directory title categories)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
@@ -299,6 +350,45 @@
            (cons (car cat) (reverse (cadr cat))))
          (collection->reversed-list m))))
 
+(define (build-type-hierarchy types)
+  (letrec ((res (list ()))
+           (tm (identity-hash () res)))
+    (define (put-type type)
+      (let ((r (map-ref tm type ())))
+        (if r
+            r
+            (let ((nr (list type))
+                  (pr (put-type (superclass type))))
+              (map-set! tm type nr)
+              (nconc pr (list nr))
+              nr))))
+    (for-each put-type types)
+    res))
+
+(define (compare-objects-by-name x y)
+  (let ((xn (index-name-for-value x))
+        (yn (index-name-for-value y)))
+    (cond ((and xn yn) (string<? xn yn))
+          (xn #t)
+          (yn #f)
+          (else (< (id x) (id y))))))
+
+(define (type-subclass-tree lyst)
+  `(,@(when (car lyst) (list (value-link (car lyst))))
+    (:ul
+     ,@(map (lambda (sub)
+              `(:li
+                ,@(type-subclass-tree sub)))
+            (sort-list! (copy-list (cdr lyst))
+                        (lambda (x y) 
+                          (compare-objects-by-name (car x) (car y))))))))
+
+(define (make-type-hierarchy-page entries)
+  (let ((hier (build-type-hierarchy (filter (lambda (obj)
+                                              (instance? obj <standard-type>))
+                                            (map cadr entries)))))
+    (type-subclass-tree hier)))
+
 (define (entry-get-categories entry)
   (get-object-categories (cadr entry)))
 
@@ -316,6 +406,7 @@
             chars)))
 
 (define (emit-documentation lyst directory title)
+  (index-put-all "" lyst)
   (let ((categories (sort-list! (group-by lyst entry-get-categories)
                                 (lambda (x y)
                                   (string<? (car x) (car y))))))
@@ -324,6 +415,12 @@
                                         `(,(menu-bar categories ())
                                           ,@(make-index-list lyst)))
                      (string-append directory "/index.html"))
+    (shtml:emit-file (html-boiler-plate "Type hierarchy" 
+                                        title 
+                                        `(,(menu-bar categories :hierarchy)
+                                          ,@(make-type-hierarchy-page lyst)))
+                     (string-append directory "/hierarchy.html"))
+
     (for-each (lambda (cat)
                 (shtml:emit-file (html-boiler-plate (category-name cat) 
                                                     title 
