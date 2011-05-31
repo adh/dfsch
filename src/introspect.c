@@ -126,6 +126,7 @@ dfsch_object_t* dfsch_get_trace(){
   dfsch_object_t* record;
   dfsch_object_t* flags;
   dfsch__stack_trace_frame_t* i = ti->stack_trace;
+  dfsch_object_t* args;
 
   while (i) {
     flags = NULL;
@@ -137,10 +138,16 @@ dfsch_object_t* dfsch_get_trace(){
         flags = dfsch_cons_immutable(dfsch_make_keyword("tail"), flags);
       }
 
+      if (i->data.apply.args == DFSCH_MAKE_CLIST(ti->scratch_pad)){
+        args = dfsch_make_keyword("arguments-optimized-out");
+      } else {
+        args = dfsch_list_copy_immutable(i->data.apply.args);
+      }
+
       record = dfsch_vector(4,
                             dfsch_make_keyword("apply"),
                             i->data.apply.proc,
-                            dfsch_list_copy_immutable(i->data.apply.args),
+                            args,
                             flags);
       break;
     case DFSCH_STACK_TRACE_KIND_EVAL:
