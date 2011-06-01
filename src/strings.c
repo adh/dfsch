@@ -1883,7 +1883,19 @@ dfsch_object_t* dfsch_byte_vector_trim(dfsch_strbuf_t* string,
   char* ptr = string->ptr;
   size_t len = string->len;
 
-  
+  if (side >= 0){
+    while (len && memchr(bag->ptr, *ptr, bag->len)){
+      ptr++;
+      len--;
+    }
+  }
+
+  if (side <= 0){
+    while (len && memchr(bag->ptr, ptr[len-1], bag->len)){
+      len--;
+    }
+  }
+
 
   return dfsch_make_byte_vector_nocopy(ptr, len);
 }
@@ -2568,6 +2580,40 @@ DFSCH_DEFINE_PRIMITIVE(string_trim_right,
   return dfsch_string_trim(bag, string, -1);
 }
 
+DFSCH_DEFINE_PRIMITIVE(byte_vector_trim, 
+                       "Remove bytes in bag from edges of byte vector"
+                       DFSCH_DOC_SYNOPSIS("(bag byte-vector)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* byte_vector;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, byte_vector);
+  DFSCH_ARG_END(args);
+
+  return dfsch_byte_vector_trim(bag, byte_vector, 0);
+}
+DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_left, 
+                       "Remove bytes in bag from left edge of byte vector"
+                       DFSCH_DOC_SYNOPSIS("(bag byte-vector)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* byte_vector;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, byte_vector);
+  DFSCH_ARG_END(args);
+
+  return dfsch_byte_vector_trim(bag, byte_vector, 1);
+}
+DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_right, 
+                       "Remove bytes in bag from right edge of byte vector"
+                       DFSCH_DOC_SYNOPSIS("(bag byte-vector)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* byte_vector;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, byte_vector);
+  DFSCH_ARG_END(args);
+
+  return dfsch_byte_vector_trim(bag, byte_vector, -1);
+}
+
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -2729,5 +2775,11 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(string_trim_left));
   dfsch_defcanon_cstr(ctx, "string-trim-right", 
 		   DFSCH_PRIMITIVE_REF(string_trim_right));
+  dfsch_defcanon_cstr(ctx, "byte-vector-trim", 
+		   DFSCH_PRIMITIVE_REF(byte_vector_trim));
+  dfsch_defcanon_cstr(ctx, "byte-vector-trim-left", 
+		   DFSCH_PRIMITIVE_REF(byte_vector_trim_left));
+  dfsch_defcanon_cstr(ctx, "byte-vector-trim-right", 
+		   DFSCH_PRIMITIVE_REF(byte_vector_trim_right));
 
 }
