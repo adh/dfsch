@@ -55,10 +55,21 @@ static int obj_count = 0;
 static int obj_size = 0;
 #endif
 
+#define MAX_OBJECT_SIZE 256*1024*1024
+
 dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
-  object_t* o = GC_MALLOC(type->size + size);
-  if (!o)
-    return NULL;
+  object_t* o;
+  
+  if (type->size + size > MAX_OBJECT_SIZE){
+    dfsch_error("Object too large", 
+                dfsch_make_number_from_long(type->size + size));
+  }
+
+  o = GC_MALLOC(type->size + size);
+  if (!o){
+    abort();
+  }
+    
 
   o->type = (dfsch_type_t*)type;
 
