@@ -406,9 +406,18 @@ size_t dfsch_string_byte_length(dfsch_object_t* string){
   return s->buf.len;
 }
 
-dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, size_t start,
-                                            size_t end){
+dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, 
+                                            ssize_t start,
+                                            ssize_t end){
   dfsch_string_t* s = DFSCH_ASSERT_INSTANCE(string, DFSCH_PROTO_STRING_TYPE);
+
+  if (start < 0){
+    start = s->buf.len + start + 1;
+  }
+  if (end < 0){
+    end = s->buf.len + end + 1;
+  }
+
 
   if (end > s->buf.len)
     dfsch_error("Index out of bounds",
@@ -574,7 +583,7 @@ uint32_t dfsch_string_ref(dfsch_object_t* string, size_t index){
 }
 
 dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
-                                       size_t start, size_t end){
+                                       ssize_t start, ssize_t end){
   dfsch_strbuf_t* buf = dfsch_string_to_buf(string);
   char* i = buf->ptr;
   char* e = buf->ptr + buf->len;
@@ -582,7 +591,17 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
   char* sp = NULL;
   char* ep = NULL;
 
-  if (start > end)
+  if (start < 0 || end < -1){
+    size_t len = dfsch_string_length(string);
+    if (start < 0){
+      start = len + start + 1;
+    }
+    if (end < 0){
+      end = len + end + 1;
+    }
+  }
+
+  if (start > end && end != -1)
     dfsch_error("Index out of bounds",
                 dfsch_make_number_from_long(start));
 
@@ -594,15 +613,34 @@ dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
   while (i){
     if (l == start){
       sp = i;
+      if (end == -1){
+        ep = buf->ptr + buf->len; 
+      }
     }
     if (l == end){
-      ep = i;
+      break;
     }
     l++;
     i = next_char(i, e);
   }
   if (end == l){
-    ep = e;
+    if (i) {
+      ep = i;
+    } else {
+      ep = e;
+    }
+  }
+  if (start == l){
+    sp = ep;
+  }
+
+  if (!sp){
+    dfsch_error("Index out of bounds", 
+                dfsch_make_number_from_long(start));
+  }
+  if (!ep){
+    dfsch_error("Index out of bounds", 
+                dfsch_make_number_from_long(end));
   }
 
   return dfsch_make_string_buf(sp, ep - sp);
@@ -1925,7 +1963,7 @@ DFSCH_DEFINE_PRIMITIVE(byte_substring, 0){
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, start);
-  DFSCH_LONG_ARG(args, end);
+  DFSCH_LONG_ARG_OPT(args, end, -1);
   DFSCH_ARG_END(args);
 
   return dfsch_string_byte_substring(string, start, end);
@@ -1936,7 +1974,7 @@ DFSCH_DEFINE_PRIMITIVE(substring, 0){
 
   DFSCH_OBJECT_ARG(args, string);
   DFSCH_LONG_ARG(args, start);
-  DFSCH_LONG_ARG(args, end);
+  DFSCH_LONG_ARG_OPT(args, end, -1);
   DFSCH_ARG_END(args);
 
   return dfsch_string_substring(string, start, end);

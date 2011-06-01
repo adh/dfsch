@@ -83,12 +83,12 @@ extern "C" {
   extern size_t dfsch_string_length(dfsch_object_t* string);
 
   extern dfsch_object_t* dfsch_string_substring(dfsch_object_t* string, 
-                                                size_t start,
-                                                size_t end);
+                                                ssize_t start,
+                                                ssize_t end);
 
   extern dfsch_object_t* dfsch_string_byte_substring(dfsch_object_t* string, 
-                                                     size_t start,
-                                                     size_t end);
+                                                     ssize_t start,
+                                                     ssize_t end);
 
   extern dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string);
 
