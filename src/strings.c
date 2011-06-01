@@ -2555,7 +2555,7 @@ DFSCH_DEFINE_PRIMITIVE(string_trim,
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_trim(bag, string, 0);
+  return dfsch_string_trim(string, bag, 0);
 }
 DFSCH_DEFINE_PRIMITIVE(string_trim_left, 
                        "Remove characters in bag from left edge of string"
@@ -2566,7 +2566,7 @@ DFSCH_DEFINE_PRIMITIVE(string_trim_left,
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_trim(bag, string, 1);
+  return dfsch_string_trim(string, bag, 1);
 }
 DFSCH_DEFINE_PRIMITIVE(string_trim_right, 
                        "Remove characters in bag from right edge of string"
@@ -2577,7 +2577,7 @@ DFSCH_DEFINE_PRIMITIVE(string_trim_right,
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_ARG_END(args);
 
-  return dfsch_string_trim(bag, string, -1);
+  return dfsch_string_trim(string, bag, -1);
 }
 
 DFSCH_DEFINE_PRIMITIVE(byte_vector_trim, 
@@ -2589,7 +2589,7 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_trim,
   DFSCH_BUFFER_ARG(args, byte_vector);
   DFSCH_ARG_END(args);
 
-  return dfsch_byte_vector_trim(bag, byte_vector, 0);
+  return dfsch_byte_vector_trim(byte_vector, bag, 0);
 }
 DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_left, 
                        "Remove bytes in bag from left edge of byte vector"
@@ -2600,7 +2600,7 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_left,
   DFSCH_BUFFER_ARG(args, byte_vector);
   DFSCH_ARG_END(args);
 
-  return dfsch_byte_vector_trim(bag, byte_vector, 1);
+  return dfsch_byte_vector_trim(byte_vector, bag, 1);
 }
 DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_right, 
                        "Remove bytes in bag from right edge of byte vector"
@@ -2611,7 +2611,7 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_right,
   DFSCH_BUFFER_ARG(args, byte_vector);
   DFSCH_ARG_END(args);
 
-  return dfsch_byte_vector_trim(bag, byte_vector, -1);
+  return dfsch_byte_vector_trim(byte_vector, bag, -1);
 }
 
 
