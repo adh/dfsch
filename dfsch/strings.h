@@ -180,6 +180,13 @@ extern "C" {
   char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
                                      int preserve_uppercase);
 
+  dfsch_object_t* dfsch_string_trim(dfsch_strbuf_t* string,
+                                    dfsch_strbuf_t* bag,
+                                    int side);
+  dfsch_object_t* dfsch_byte_vector_trim(dfsch_strbuf_t* string,
+                                         dfsch_strbuf_t* bag,
+                                         int side);
+
 
 #ifdef __cplusplus
 }

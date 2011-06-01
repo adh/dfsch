@@ -1837,6 +1837,58 @@ dfsch_object_t* dfsch_proto_string_2_byte_vector(dfsch_object_t* ps){
   return dfsch_make_byte_vector_strbuf(dfsch_string_to_buf(ps));
 }
 
+dfsch_object_t* dfsch_string_trim(dfsch_strbuf_t* string,
+                                  dfsch_strbuf_t* bag,
+                                  int side){
+  char* i = string->ptr;
+  char* e = i + string->len;
+  char* sp = NULL;
+  char* ep = NULL;
+
+  if (side == -1){
+    sp = i;
+  }
+
+  while (i){
+    if (side >= 0){
+      if (!contains_char(bag, get_char(i, e))){
+        sp = i;
+        if (side == 1){
+          ep = e;
+          break;
+        }
+        side = -1;
+      }
+    }
+
+    if (side <= 0){
+      if (!contains_char(bag, get_char(i, e))){
+        ep = next_char(i, e);
+        if (!ep){
+          ep = e;
+          break;
+        }
+      }      
+    }
+
+    i = next_char(i, e);
+  }
+
+
+  return dfsch_make_string_buf(sp, ep - sp);
+}
+dfsch_object_t* dfsch_byte_vector_trim(dfsch_strbuf_t* string,
+                                       dfsch_strbuf_t* bag,
+                                       int side){
+  char* ptr = string->ptr;
+  size_t len = string->len;
+
+  
+
+  return dfsch_make_byte_vector_nocopy(ptr, len);
+}
+
+
 /* C utilities */
 
 dfsch_object_t* dfsch_string_assoc(dfsch_object_t* alist,
@@ -2482,6 +2534,41 @@ DFSCH_DEFINE_PRIMITIVE(hexstring_2_byte_vector, NULL){
   return dfsch_make_byte_vector_strbuf(dfsch_hexstring_2_strbuf(hex));
 }
 
+DFSCH_DEFINE_PRIMITIVE(string_trim, 
+                       "Remove characters in bag from edges of string"
+                       DFSCH_DOC_SYNOPSIS("(bag string)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_trim(bag, string, 0);
+}
+DFSCH_DEFINE_PRIMITIVE(string_trim_left, 
+                       "Remove characters in bag from left edge of string"
+                       DFSCH_DOC_SYNOPSIS("(bag string)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_trim(bag, string, 1);
+}
+DFSCH_DEFINE_PRIMITIVE(string_trim_right, 
+                       "Remove characters in bag from right edge of string"
+                       DFSCH_DOC_SYNOPSIS("(bag string)")){
+  dfsch_strbuf_t* bag;
+  dfsch_strbuf_t* string;
+  DFSCH_BUFFER_ARG(args, bag);
+  DFSCH_BUFFER_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_string_trim(bag, string, -1);
+}
+
+
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
@@ -2635,5 +2722,12 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(hexstring_2_string));
   dfsch_defcanon_cstr(ctx, "hexstring->byte-vector", 
 		   DFSCH_PRIMITIVE_REF(hexstring_2_byte_vector));
+
+  dfsch_defcanon_cstr(ctx, "string-trim", 
+		   DFSCH_PRIMITIVE_REF(string_trim));
+  dfsch_defcanon_cstr(ctx, "string-trim-left", 
+		   DFSCH_PRIMITIVE_REF(string_trim_left));
+  dfsch_defcanon_cstr(ctx, "string-trim-right", 
+		   DFSCH_PRIMITIVE_REF(string_trim_right));
 
 }
