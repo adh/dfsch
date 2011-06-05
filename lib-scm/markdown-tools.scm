@@ -28,6 +28,7 @@
   :uses '(:markdown)
   :exports '(:split-file
              :make-outlining-header-renderer))
+(use-package :markdown-tools)
 
 (define (split-file port)
   (letrec ((cur (list () ""))
