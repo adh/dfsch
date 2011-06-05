@@ -2378,7 +2378,7 @@ DFSCH_DEFINE_PRIMITIVE(string_starts_with_p,
   DFSCH_BUFFER_ARG(args, start);
   DFSCH_ARG_END(args);
 
-  if (string->len > start->len){
+  if (string->len < start->len){
     return NULL;
   }
 
