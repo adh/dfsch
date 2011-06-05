@@ -210,7 +210,8 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 	lib-scm/tk-gui.scm \
 	lib-scm/http-server.scm \
 	lib-scm/sql.scm \
-	lib-scm/dfsch-unit.scm
+	lib-scm/dfsch-unit.scm \
+	lib-scm/markdown-tools.scm
 
 man_MANS = doc/dfsch-repl.1
 
