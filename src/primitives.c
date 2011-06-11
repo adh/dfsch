@@ -235,15 +235,21 @@ DFSCH_DEFINE_PRIMITIVE(get_list_annotation,
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(car, NULL){
+DFSCH_DEFINE_PRIMITIVE(car, 
+                       "Get car field of pair (first element of list)"
+                       DFSCH_DOC_SYNOPSIS("(pair)")){
   NEED_ARGS(args,1);  
   return dfsch_car(dfsch_car(args));
 }
-DFSCH_DEFINE_PRIMITIVE(cdr, NULL){
+DFSCH_DEFINE_PRIMITIVE(cdr, 
+                       "Get cdr field of pair (list without it's first element)"
+                       DFSCH_DOC_SYNOPSIS("(pair)")){
   NEED_ARGS(args,1);  
   return dfsch_cdr(dfsch_car(args));
 }
-DFSCH_DEFINE_PRIMITIVE(cons, NULL){
+DFSCH_DEFINE_PRIMITIVE(cons, 
+                       "Allocate new pair"
+                       DFSCH_DOC_SYNOPSIS("(car cdr)")){
   NEED_ARGS(args,2);  
   return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
 }
@@ -252,7 +258,9 @@ dfsch_object_t* dfsch_generate_cons(dfsch_object_t* car, dfsch_object_t* cdr){
                               DFSCH_PRIMITIVE_REF(cons),
                               car, cdr);
 }
-DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
+DFSCH_DEFINE_PRIMITIVE(cons_immutable, 
+                       "Allocate new immutable pair"
+                       DFSCH_DOC_SYNOPSIS("(car cdr)")){
   dfsch_object_t* car;
   dfsch_object_t* cdr;
   DFSCH_OBJECT_ARG(args, car);
@@ -261,7 +269,9 @@ DFSCH_DEFINE_PRIMITIVE(cons_immutable, "Cons new immutable pair"){
   return dfsch_cons_immutable(car, cdr);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list, NULL){
+DFSCH_DEFINE_PRIMITIVE(list, 
+                       "Construct new list with given elements"
+                       DFSCH_DOC_SYNOPSIS("(&rest elements)")){
   return dfsch_list_copy(args);
 }
 dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
@@ -269,7 +279,9 @@ dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
                     exps);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list_immutable, NULL){
+DFSCH_DEFINE_PRIMITIVE(list_immutable, 
+                       "Construct new immutable list with given elements"
+                       DFSCH_DOC_SYNOPSIS("(&rest elements)")){
   return dfsch_list_copy_immutable(args);
 }
 dfsch_object_t* dfsch_generate_list_immutable(dfsch_object_t* exps){
@@ -277,13 +289,17 @@ dfsch_object_t* dfsch_generate_list_immutable(dfsch_object_t* exps){
                     exps);
 }
 
-DFSCH_DEFINE_PRIMITIVE(copy_list, NULL){
+DFSCH_DEFINE_PRIMITIVE(copy_list, 
+                       "Copy elements of list into new list"
+                       DFSCH_DOC_SYNOPSIS("(list)")){
   dfsch_object_t* list;
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
   return dfsch_list_copy(list);
 }
-DFSCH_DEFINE_PRIMITIVE(copy_list_immutable, NULL){
+DFSCH_DEFINE_PRIMITIVE(copy_list_immutable,
+                       "Copy elements of list into new immutable list"
+                       DFSCH_DOC_SYNOPSIS("(list)")){
   dfsch_object_t* list;
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
@@ -295,7 +311,9 @@ dfsch_object_t* dfsch_generate_copy_list_immutable(dfsch_object_t* list){
                               list);
 }
 
-DFSCH_DEFINE_PRIMITIVE(append_immutable, NULL){
+DFSCH_DEFINE_PRIMITIVE(append_immutable, 
+                       "Concatenate lists into immutable list"
+                       DFSCH_DOC_SYNOPSIS("(&rest lists)")){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
 
   while (DFSCH_PAIR_P(args)){
@@ -324,7 +342,9 @@ dfsch_object_t* dfsch_generate_append_immutable(dfsch_object_t* list){
 }
 
 
-DFSCH_DEFINE_PRIMITIVE(length, NULL){
+DFSCH_DEFINE_PRIMITIVE(length, 
+                       "Return length of list"
+                       DFSCH_DOC_SYNOPSIS("(list)")){
   long len;
   NEED_ARGS(args,1);  
 
@@ -340,10 +360,14 @@ DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(append, 0){
+DFSCH_DEFINE_PRIMITIVE(append, 
+                       "Concatenate lists"
+                       DFSCH_DOC_SYNOPSIS("(&rest lists)")){
   return dfsch_append(args);
 }
-DFSCH_DEFINE_PRIMITIVE(nconc, 0){
+DFSCH_DEFINE_PRIMITIVE(nconc, 
+                       "Concatenate lists by modyfing their last pair"
+                       DFSCH_DOC_SYNOPSIS("(&rest lists)")){
   return dfsch_nconc(args);
 }
 dfsch_object_t* dfsch_get_append_primitive(){
@@ -353,7 +377,9 @@ dfsch_object_t* dfsch_get_nconc_primitive(){
   return DFSCH_PRIMITIVE_REF(nconc);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
+DFSCH_DEFINE_PRIMITIVE(list_ref, 
+                       "Get k-th element of list"
+                       DFSCH_DOC_SYNOPSIS("(list k)")){
   int k;
   object_t* list;
 
@@ -363,7 +389,9 @@ DFSCH_DEFINE_PRIMITIVE(list_ref, 0){
 
   return dfsch_list_item(list, k);
 }
-DFSCH_DEFINE_PRIMITIVE(reverse, 0){
+DFSCH_DEFINE_PRIMITIVE(reverse, 
+                       "Reverse list by copying it"
+                       DFSCH_DOC_SYNOPSIS("(list)")){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
