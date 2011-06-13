@@ -1581,7 +1581,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "member", DFSCH_PRIMITIVE_REF(member));
   dfsch_defcanon_cstr(ctx, "memq", DFSCH_PRIMITIVE_REF(memq));
   dfsch_defcanon_cstr(ctx, "memv", DFSCH_PRIMITIVE_REF(memv));
-  dfsch_defcanon_cstr(ctx, "sort-list!", DFSCH_PRIMITIVE_REF(sort_list));
+  dfsch_defcanon_cstr(ctx, "sort-list", DFSCH_PRIMITIVE_REF(sort_list));
   dfsch_defcanon_cstr(ctx, "assoc", DFSCH_PRIMITIVE_REF(assoc));
   dfsch_defcanon_cstr(ctx, "assq", DFSCH_PRIMITIVE_REF(assq));
   dfsch_defcanon_cstr(ctx, "assv", DFSCH_PRIMITIVE_REF(assv));

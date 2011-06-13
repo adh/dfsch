@@ -75,15 +75,15 @@
 
 (define *clean-toplevel* (make-top-level-environment))
 
-(define (sort-by-names! lyst)
-  (sort-list! lyst
-              (lambda (x y)
-                (string<? (symbol-name (car x))
-                          (symbol-name (car y))))))
+(define (sort-by-names lyst)
+  (sort-list lyst
+             (lambda (x y)
+               (string<? (symbol-name (car x))
+                         (symbol-name (car y))))))
 
 
 (define (get-toplevel-variables)
-  (sort-by-names! (get-variables *clean-toplevel*)))
+  (sort-by-names (get-variables *clean-toplevel*)))
 
 (define (get-module-variables module)
   (letrec ((toplevel (make-top-level-environment))
@@ -93,7 +93,7 @@
                 (let ((name (car x)))
                   (unset-from-environment! name toplevel)))
               start-state)
-    (sort-by-names! (get-variables toplevel))))
+    (sort-by-names (get-variables toplevel))))
 
 (define (convert-documentation-block string)
   (markdown:markdown string :html :emphasis-chars "*_|"
@@ -391,9 +391,9 @@
      ,@(map (lambda (sub)
               `(:li
                 ,@(type-subclass-tree sub)))
-            (sort-list! (copy-list (cdr lyst))
-                        (lambda (x y) 
-                          (compare-objects-by-name (car x) (car y))))))))
+            (sort-list (cdr lyst)
+                       (lambda (x y) 
+                         (compare-objects-by-name (car x) (car y))))))))
 
 (define (make-type-hierarchy-page entries)
   (let ((hier (build-type-hierarchy (filter (lambda (obj)
@@ -405,12 +405,12 @@
   (get-object-categories (cadr entry)))
 
 (define (make-index-list lyst)
-  (let ((chars (sort-list! (group-by lyst 
-                                     (lambda (ent)
-                                       (list (char-upcase (seq-ref (symbol-name (car ent))
-                                                                   0)))))
-                           (lambda (x y)
-                             (< (car x) (car y))))))
+  (let ((chars (sort-list (group-by lyst 
+                                    (lambda (ent)
+                                      (list (char-upcase (seq-ref (symbol-name (car ent))
+                                                                  0)))))
+                          (lambda (x y)
+                            (< (car x) (car y))))))
     (mapcan (lambda (ch)
               `((:a :name ,(char-name ch))
                 ,(char-bar chars ch)
@@ -419,9 +419,9 @@
 
 (define (emit-documentation lyst directory title)
   (index-put-all "" lyst)
-  (let ((categories (sort-list! (group-by lyst entry-get-categories)
-                                (lambda (x y)
-                                  (string<? (car x) (car y))))))
+  (let ((categories (sort-list (group-by lyst entry-get-categories)
+                               (lambda (x y)
+                                 (string<? (car x) (car y))))))
     (ensure-directory directory)
     (shtml:emit-file (html-boiler-plate () title 
                                         `(,(menu-bar categories ())
@@ -434,14 +434,15 @@
                      (string-append directory "/hierarchy.html"))
 
     (for-each (lambda (cat)
-                (shtml:emit-file (html-boiler-plate (category-name cat) 
-                                                    title 
-                                                    `(,(menu-bar categories 
-                                                                 cat)
-                                                      ,(make-entry-list 
-                                                        (category-entries cat))))
-                                 (string-append directory "/"
-                                                (category-index-name cat))))
+                (shtml:emit-file 
+                 (html-boiler-plate (category-name cat) 
+                                    title 
+                                    `(,(menu-bar categories 
+                                                 cat)
+                                      ,(make-entry-list 
+                                        (category-entries cat))))
+                 (string-append directory "/"
+                                (category-index-name cat))))
               categories)
                 
     (for-each (lambda (entry)
