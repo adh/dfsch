@@ -352,11 +352,13 @@ DFSCH_DEFINE_PRIMITIVE(length,
 
   return dfsch_make_number_from_long(len);
 }
-DFSCH_DEFINE_PRIMITIVE(set_car, NULL){
+DFSCH_DEFINE_PRIMITIVE(set_car, 
+                       "Change car slot of mutable pair"){
   NEED_ARGS(args,2);  
   return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
-DFSCH_DEFINE_PRIMITIVE(set_cdr, NULL){
+DFSCH_DEFINE_PRIMITIVE(set_cdr, 
+                       "Change cdr slot of mutable pair"){
   NEED_ARGS(args,2);  
   return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
 }
@@ -429,7 +431,9 @@ DFSCH_DEFINE_PRIMITIVE(memq, 0){
 
   return dfsch_memq(key, list);
 }
-DFSCH_DEFINE_PRIMITIVE(sort_list, 0){
+DFSCH_DEFINE_PRIMITIVE(sort_list, 
+                       "Sort list according to comparison function"
+                       DFSCH_DOC_SYNOPSIS("(list comparison)")){
   object_t* list;
   object_t* comp;
 
@@ -470,7 +474,8 @@ DFSCH_DEFINE_PRIMITIVE(assq, 0){
 
   return dfsch_assq(key, alist);
 }
-DFSCH_DEFINE_PRIMITIVE(zip, 0){
+DFSCH_DEFINE_PRIMITIVE(zip, 
+                       "Transpose list of collections"){
   size_t len;
   int i;
   object_t** its;
@@ -500,7 +505,10 @@ DFSCH_DEFINE_PRIMITIVE(zip, 0){
     }
   }
 }
-DFSCH_DEFINE_PRIMITIVE(for_each, 0){
+DFSCH_DEFINE_PRIMITIVE(for_each, 
+                       "Apply function to successive elements of passed "
+                       "collections, discarding results"
+                       DFSCH_DOC_SYNOPSIS("(function &rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -533,7 +541,13 @@ DFSCH_DEFINE_PRIMITIVE(for_each, 0){
 
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(map, 0){
+DFSCH_DEFINE_PRIMITIVE(map,
+                       "Apply function to successive elements of given "
+                       "collections and return collection (of result-type) "
+                       "containing resulting values"
+                       DFSCH_DOC_SYNOPSIS("(function &rest collections)\n"
+                                          "(function :result-type result-type "
+                                          "&rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -635,7 +649,9 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
 }
 
 
-DFSCH_DEFINE_PRIMITIVE(mapcan, 0){
+DFSCH_DEFINE_PRIMITIVE(mapcan, 
+                       "Map contents of collections as in |dfsch:map| "
+                       "but concatenate resulting lists as by |dfsch:nconc|"){
   object_t* func;
   size_t len;
   int i;
@@ -1023,15 +1039,21 @@ DFSCH_DEFINE_PRIMITIVE(form_p, NULL){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(eq_p, NULL){
+DFSCH_DEFINE_PRIMITIVE(eq_p, 
+                       "Are two objects identical?"
+                       DFSCH_DOC_SYNOPSIS("(a b)")){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-DFSCH_DEFINE_PRIMITIVE(eqv_p, NULL){
+DFSCH_DEFINE_PRIMITIVE(eqv_p,
+                       "Are two objects identical or same number?"
+                       DFSCH_DOC_SYNOPSIS("(a b)")){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
-DFSCH_DEFINE_PRIMITIVE(equal_p, NULL){
+DFSCH_DEFINE_PRIMITIVE(equal_p,
+                       "Are two objects same?"
+                       DFSCH_DOC_SYNOPSIS("(a b)")){
   NEED_ARGS(args,2);  
   return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
 }
@@ -1049,7 +1071,10 @@ DFSCH_DEFINE_PRIMITIVE(not, "Logical not - equivalent to null?"){
 //
 /////////////////////////////////////////////////////////////////////////////
 
-DFSCH_DEFINE_PRIMITIVE(make_vector, NULL){
+DFSCH_DEFINE_PRIMITIVE(make_vector, 
+                       "Allocate new vector of given length (with optional "
+                       "default value of it's items)"
+                       DFSCH_DOC_SYNOPSIS("(length &optional fill-value)")){
   size_t length;
   object_t* fill;
 
@@ -1060,10 +1085,14 @@ DFSCH_DEFINE_PRIMITIVE(make_vector, NULL){
   return dfsch_make_vector(length,fill);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector, NULL){
+DFSCH_DEFINE_PRIMITIVE(vector, 
+                       "Allocate vector with given contents"
+                       DFSCH_DOC_SYNOPSIS("(&rest contents)")){
   return dfsch_list_2_vector(args);
 }
-DFSCH_DEFINE_PRIMITIVE(vector_length, NULL){
+DFSCH_DEFINE_PRIMITIVE(vector_length, 
+                       "Return length of given vector"
+                       DFSCH_DOC_SYNOPSIS("(vector)")){
   object_t* vector;
   
   DFSCH_OBJECT_ARG(args,vector);
@@ -1075,7 +1104,9 @@ DFSCH_DEFINE_PRIMITIVE(vector_length, NULL){
   return dfsch_make_number_from_long(dfsch_vector_length(vector));
 
 }
-DFSCH_DEFINE_PRIMITIVE(vector_ref, NULL){
+DFSCH_DEFINE_PRIMITIVE(vector_ref, 
+                       "Return k-th element of given vector"
+                       DFSCH_DOC_SYNOPSIS("(vector k)")){
   object_t* vector;
   size_t k;
 
@@ -1086,7 +1117,9 @@ DFSCH_DEFINE_PRIMITIVE(vector_ref, NULL){
   return dfsch_vector_ref(vector, k);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector_set, NULL){
+DFSCH_DEFINE_PRIMITIVE(vector_set, 
+                       "Set k-th element of given vector"
+                       DFSCH_DOC_SYNOPSIS("(vector k new-value)")){
   object_t* vector;
   size_t k;
   object_t* obj;
@@ -1099,7 +1132,8 @@ DFSCH_DEFINE_PRIMITIVE(vector_set, NULL){
   return dfsch_vector_set(vector, k, obj);
 }
 
-DFSCH_DEFINE_PRIMITIVE(vector_2_list, NULL){
+DFSCH_DEFINE_PRIMITIVE(vector_2_list, 
+                       "Convert vector to list of it's elements"){
   object_t* vector;
 
   DFSCH_OBJECT_ARG(args, vector);
@@ -1108,7 +1142,8 @@ DFSCH_DEFINE_PRIMITIVE(vector_2_list, NULL){
   return dfsch_vector_2_list(vector);
 }
 
-DFSCH_DEFINE_PRIMITIVE(list_2_vector, NULL){
+DFSCH_DEFINE_PRIMITIVE(list_2_vector, 
+                       "Convert list into vector"){
   object_t* list;
 
   DFSCH_OBJECT_ARG(args, list);
@@ -1252,7 +1287,9 @@ DFSCH_DEFINE_PRIMITIVE(intern_symbol,
   return dfsch_intern_symbol(package, string);
 }
 
-DFSCH_DEFINE_PRIMITIVE(macro_expand, 0){
+DFSCH_DEFINE_PRIMITIVE(macro_expand, 
+                       "Call macro with given arguments"
+                       DFSCH_DOC_SYNOPSIS("(macro arguments)")){
   dfsch_object_t* macro;
   dfsch_object_t* arguments;
 
