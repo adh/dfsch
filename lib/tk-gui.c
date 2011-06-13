@@ -287,7 +287,7 @@ dfsch_object_t* dfsch_tcl_split_list(char* list){
     dfsch_vector_set(vec, i, dfsch_make_string_cstr(argv[i]));
   }
 
-  Tcl_Free(argv); /* both array and it's strings is in one chunk of heap */
+  Tcl_Free(argv); /* both array and it's strings are in one chunk of heap */
 
   return vec;
 }
