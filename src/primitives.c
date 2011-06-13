@@ -36,17 +36,6 @@
 #include <dfsch/number.h>
 #include <dfsch/strings.h>
 
-#define NEED_ARGS(args,count)                                   \
-  if (dfsch_list_length_check(args)!=(count))                   \
-    dfsch_error("Wrong number of argument",(args));
-#define MIN_ARGS(args,count)                            \
-  if (dfsch_list_length_check(args)<(count))            \
-    dfsch_error("Required arument missing", (args));
-
-// TODO: document all native functions somewhere
-
-// Native procedures:
-
 DFSCH_DEFINE_PRIMITIVE(gensym, "Allocate new unnamed symbol"
                        DFSCH_DOC_SYNOPSIS("()")){
   DFSCH_ARG_END(args);
@@ -238,20 +227,31 @@ DFSCH_DEFINE_PRIMITIVE(get_list_annotation,
 DFSCH_DEFINE_PRIMITIVE(car, 
                        "Get car field of pair (first element of list)"
                        DFSCH_DOC_SYNOPSIS("(pair)")){
-  NEED_ARGS(args,1);  
-  return dfsch_car(dfsch_car(args));
+  dfsch_object_t* pair;
+  DFSCH_OBJECT_ARG(args, pair);
+  DFSCH_ARG_END(args);
+
+  return dfsch_car(pair);
 }
 DFSCH_DEFINE_PRIMITIVE(cdr, 
                        "Get cdr field of pair (list without it's first element)"
                        DFSCH_DOC_SYNOPSIS("(pair)")){
-  NEED_ARGS(args,1);  
-  return dfsch_cdr(dfsch_car(args));
+  dfsch_object_t* pair;
+  DFSCH_OBJECT_ARG(args, pair);
+  DFSCH_ARG_END(args);
+
+  return dfsch_cdr(pair);
 }
 DFSCH_DEFINE_PRIMITIVE(cons, 
                        "Allocate new pair"
                        DFSCH_DOC_SYNOPSIS("(car cdr)")){
-  NEED_ARGS(args,2);  
-  return dfsch_cons(dfsch_car(args),dfsch_car(dfsch_cdr(args)));
+  dfsch_object_t* car;
+  dfsch_object_t* cdr;
+  DFSCH_OBJECT_ARG(args, car);
+  DFSCH_OBJECT_ARG(args, cdr);
+  DFSCH_ARG_END(args);
+
+  return dfsch_cons(car, cdr);
 }
 dfsch_object_t* dfsch_generate_cons(dfsch_object_t* car, dfsch_object_t* cdr){
   return dfsch_immutable_list(3,
@@ -346,21 +346,33 @@ DFSCH_DEFINE_PRIMITIVE(length,
                        "Return length of list"
                        DFSCH_DOC_SYNOPSIS("(list)")){
   long len;
-  NEED_ARGS(args,1);  
+  dfsch_object_t* list;
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_ARG_END(args);
 
-  len = dfsch_list_length_check(dfsch_car(args));
+  len = dfsch_list_length_check(list);
 
   return dfsch_make_number_from_long(len);
 }
 DFSCH_DEFINE_PRIMITIVE(set_car, 
                        "Change car slot of mutable pair"){
-  NEED_ARGS(args,2);  
-  return dfsch_set_car(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
+  dfsch_object_t* pair;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, pair);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_set_car(pair, value);  
 }
 DFSCH_DEFINE_PRIMITIVE(set_cdr, 
                        "Change cdr slot of mutable pair"){
-  NEED_ARGS(args,2);  
-  return dfsch_set_cdr(dfsch_car(args),dfsch_car(dfsch_cdr(args)));  
+  dfsch_object_t* pair;
+  dfsch_object_t* value;
+  DFSCH_OBJECT_ARG(args, pair);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  return dfsch_set_cdr(pair, value);  
 }
 DFSCH_DEFINE_PRIMITIVE(append, 
                        "Concatenate lists"
@@ -974,8 +986,11 @@ DFSCH_DEFINE_PRIMITIVE(plist_filter_keys, "Return copy of plist with "
 /////////////////////////////////////////////////////////////////////////////
 
 DFSCH_DEFINE_PRIMITIVE(null_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_null_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_null_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(empty_p, "Is list empty?"){
   dfsch_object_t* list;
@@ -985,52 +1000,88 @@ DFSCH_DEFINE_PRIMITIVE(empty_p, "Is list empty?"){
 }
 
 DFSCH_DEFINE_PRIMITIVE(pair_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_pair_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_pair_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(list_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_list_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_list_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(atom_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_atom_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_atom_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(symbol_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_symbol_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_symbol_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(keyword_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_keyword_p(dfsch_car(args)));
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_keyword_p(object));
 }
 DFSCH_DEFINE_PRIMITIVE(string_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_string_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_string_p(object));  
 }
 DFSCH_DEFINE_PRIMITIVE(primitive_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_primitive_p(dfsch_car(args))); 
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_primitive_p(object)); 
 }
 DFSCH_DEFINE_PRIMITIVE(function_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_function_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_function_p(object));  
 }
 DFSCH_DEFINE_PRIMITIVE(procedure_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_procedure_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_procedure_p(object));  
 }
 DFSCH_DEFINE_PRIMITIVE(vector_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_vector_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_vector_p(object));  
 }
 DFSCH_DEFINE_PRIMITIVE(macro_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_macro_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_macro_p(object));  
 }
 DFSCH_DEFINE_PRIMITIVE(form_p, NULL){
-  NEED_ARGS(args,1);  
-  return dfsch_bool(dfsch_form_p(dfsch_car(args)));  
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_form_p(object));  
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1042,20 +1093,35 @@ DFSCH_DEFINE_PRIMITIVE(form_p, NULL){
 DFSCH_DEFINE_PRIMITIVE(eq_p, 
                        "Are two objects identical?"
                        DFSCH_DOC_SYNOPSIS("(a b)")){
-  NEED_ARGS(args,2);  
-  return dfsch_bool(dfsch_eq_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+  dfsch_object_t* a;
+  dfsch_object_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_eq_p(a, b));
 }
 DFSCH_DEFINE_PRIMITIVE(eqv_p,
                        "Are two objects identical or same number?"
                        DFSCH_DOC_SYNOPSIS("(a b)")){
-  NEED_ARGS(args,2);  
-  return dfsch_bool(dfsch_eqv_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+  dfsch_object_t* a;
+  dfsch_object_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_eqv_p(a, b));
 }
 DFSCH_DEFINE_PRIMITIVE(equal_p,
                        "Are two objects same?"
                        DFSCH_DOC_SYNOPSIS("(a b)")){
-  NEED_ARGS(args,2);  
-  return dfsch_bool(dfsch_equal_p(dfsch_car(args),dfsch_car(dfsch_cdr(args))));
+  dfsch_object_t* a;
+  dfsch_object_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_equal_p(a, b));
 }
 
 DFSCH_DEFINE_PRIMITIVE(not, "Logical not - equivalent to null?"){
@@ -1354,8 +1420,11 @@ DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
 
 DFSCH_DEFINE_PRIMITIVE(make_macro, 
 		       "Allocate new macro object implemented by function"){
-  NEED_ARGS(args,1);  
-  return dfsch_make_macro(dfsch_car(args));
+  dfsch_object_t* func;
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_macro(func);
 }
 dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
   return dfsch_immutable_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
