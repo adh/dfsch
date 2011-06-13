@@ -883,7 +883,10 @@ DFSCH_DEFINE_PRIMITIVE(merge,
 
 
 
-DFSCH_DEFINE_PRIMITIVE(reduce, 0){
+DFSCH_DEFINE_PRIMITIVE(reduce, 
+                       "Apply left-associative function to successive "
+                       "elements of collection"
+                       DFSCH_DOC_SYNOPSIS("(function list)")){
   object_t* func;
   object_t* list;
   object_t* tally;
@@ -892,16 +895,23 @@ DFSCH_DEFINE_PRIMITIVE(reduce, 0){
   DFSCH_OBJECT_ARG(args, list);
   DFSCH_ARG_END(args);
 
-  if (!dfsch_pair_p(list)){
-    return NULL;
+  list = dfsch_collection_get_iterator(list);
+
+  if (!list){
+    return dfsch_apply(func, NULL);
   }
 
-  tally = dfsch_car(list);
-  list = dfsch_cdr(list);
+  tally = dfsch_iterator_this(list);
 
-  while (dfsch_pair_p(list)) {
-    tally = dfsch_apply(func, dfsch_list(2, tally, dfsch_car(list)));
-    list = dfsch_cdr(list);
+  if (!list){
+    return dfsch_apply(func, dfsch_list(1, tally));
+  }
+
+  list = dfsch_iterator_next(list);
+
+  while (list) {
+    tally = dfsch_apply(func, dfsch_list(2, tally, dfsch_iterator_this(list)));
+    list = dfsch_iterator_next(list);
   }
   
   return tally;
