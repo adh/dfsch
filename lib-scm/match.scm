@@ -43,7 +43,7 @@
 (define *clause-expanders* (make-identity-hash))
 
 (define (register-clause-expander! sym proc)
-  (map-set! *clause-symbols* proc))
+  (map-set! *clause-expanders* sym proc))
 
 (define-method (expand-clause clause object variables)
   `(equal? ',clause ,object))
@@ -64,7 +64,7 @@
 (define-method (expand-clause (clause <list>) object variables)
   (let ((expander (map-ref *clause-expanders* (car clause))))
     (if expander
-        (expander clause object variables)
+        (expander (cdr clause) object variables)
         (with-gensyms (tmp)
           `(let ((,tmp ,object))
              (and (list? ,tmp)
@@ -76,6 +76,12 @@
                                   (begin (set! ,tmp (cdr ,tmp))
                                          #t))))
                             clause)))))))
+
+(register-clause-expander! 'quote
+                           (lambda (clause object variables)
+                             (unless (pair? clause)
+                               (error "Argument expected" :object clause))
+                             `(equal? ,object ',(car clause))))
 
 (define-macro (match object &rest clauses)
   (with-gensyms (obj tag)
