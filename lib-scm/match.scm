@@ -83,6 +83,12 @@
                                (error "Argument expected" :object clause))
                              `(equal? ,object ',(car clause))))
 
+(register-clause-expander! 'unquote
+                           (lambda (clause object variables)
+                             (unless (pair? clause)
+                               (error "Argument expected" :object clause))
+                             `(equal? ,object ,(car clause))))
+
 (define-macro (match object &rest clauses)
   (with-gensyms (obj tag)
     `(catch ',tag
