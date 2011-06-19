@@ -784,8 +784,8 @@ dfsch_object_t* dfsch_number_shl(dfsch_object_t* n, size_t count){
 
 dfsch_object_t* dfsch_number_add(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
-      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+  if (DFSCH_LIKELY(DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+                   DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE)){
     long an = DFSCH_FIXNUM_REF(a)<<2;
     long bn = DFSCH_FIXNUM_REF(b)<<2;
     long x = an + bn;
@@ -822,8 +822,8 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
 
 dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,  
                                  dfsch_object_t* b){ 
-  if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
-      DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE){
+  if (DFSCH_LIKELY(DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
+                   DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE)){
     long an = DFSCH_FIXNUM_REF(a)<<2;
     long bn = DFSCH_FIXNUM_REF(b)<<2;
     long x = an - bn;
