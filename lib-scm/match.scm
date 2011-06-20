@@ -77,6 +77,14 @@
                                          #t))))
                             clause)))))))
 
+(define-method (expand-clause (clause <vector>) object variables)
+  `(and (vector? ,object)
+        (= (vector-length ,object) ,(vector-length clause))
+        ,@(map (lambda (cls idx)
+                 (expand-clause cls `(vector-ref ,object ,idx) variables))
+               :result-type <list>
+               clause (make-number-sequence))))
+
 (register-clause-expander! 'quote
                            (lambda (clause object variables)
                              (unless (pair? clause)
