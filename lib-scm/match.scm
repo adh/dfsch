@@ -97,7 +97,7 @@
                                (error "Argument expected" :object clause))
                              `(equal? ,object ,(car clause))))
 
-(define-macro (match object &rest clauses)
+(define-macro (match object &body clauses)
   (with-gensyms (obj tag)
     `(catch ',tag
        (let ((,obj ,object))
@@ -114,5 +114,14 @@
                                                  (begin ,@body)))))))
                 clauses)))))
 
-                   
-        
+(define-macro (match-lambda &body clauses)
+  (with-gensyms (arg)
+    `(lambda (,arg)
+       (match ,arg
+              ,@clauses))))
+
+(define-macro (match-lambda* &body clauses)
+  (with-gensyms (arg)
+    `(lambda (&rest ,arg)
+       (match ,arg
+              ,@clauses))))
