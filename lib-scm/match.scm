@@ -79,6 +79,14 @@
                                          #t))))
                             clause)))))))
 
+(define-method (expand-clause (clause <vector>) object variables)
+  `(and (vector? ,object)
+        (= (vector-length ,object) ,(vector-length clause))
+        ,@(map (lambda (cls idx)
+                 (expand-clause cls `(vector-ref ,object ,idx) variables))
+               :result-type <list>
+               clause (make-number-sequence))))
+
 (define-macro (define-clause-expander name arguments &body body)
   (with-gensyms (clause variables)
     `(register-clause-expander ',name
