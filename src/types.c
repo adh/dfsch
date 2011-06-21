@@ -1642,12 +1642,14 @@ long dfsch_list_length_fast_bounded(object_t* list){
   dfsch_object_t *i;
   long count;
 
-  if (!list)
+  if (!list){
     return 0;
+  }
 
-  if (!DFSCH_PAIR_P(list))
-    return -1;
-
+  if (!DFSCH_PAIR_P(list)){
+    dfsch_error("Not a proper list", list);
+  }
+  
   i = list;
   count = 0;
 
@@ -1657,6 +1659,10 @@ long dfsch_list_length_fast_bounded(object_t* list){
     if (count > 65535){
       dfsch_error("Internal error: List too long", list);
     }
+  }
+
+  if (i){
+    dfsch_error("Not a proper list", list);
   }
 
   return count;
