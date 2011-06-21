@@ -1,6 +1,6 @@
 ;;; dfsch - Scheme-like Lisp dialect
 ;;;   Pattern matching
-;;; Copyright (c) 2010 Ales Hakl
+;;; Copyright (c) 2011 Ales Hakl
 ;;;
 ;;; Permission is hereby granted, free of charge, to any person obtaining
 ;;; a copy of this software and associated documentation files (the
@@ -27,7 +27,9 @@
   :exports '(:match
              :ensure-variable
              :expand-clause
-             :register-clause-symbol!))
+             :register-clause-symbol!
+             :define-clause-expander
+             :expression-to-match))
 (in-package :match)
 
 (define-constant *uninitialized* (gensym))
@@ -76,6 +78,16 @@
                                   (begin (set! ,tmp (cdr ,tmp))
                                          #t))))
                             clause)))))))
+
+(define-macro (define-clause-expander name arguments &body body)
+  (with-gensyms (clause variables)
+    `(register-clause-expander ',name
+                               (lambda (,clause expression-to-match ,variables)
+                                 (let (ensure-variable 
+                                       (lambda (name)
+                                         (ensure-variable ,variables name)))
+                                   (destructuring-bind ,arguments ,clause
+                                                       ,@body))))))
 
 (register-clause-expander! 'quote
                            (lambda (clause object variables)
