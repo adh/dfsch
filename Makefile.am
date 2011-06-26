@@ -17,6 +17,7 @@ nobase_include_HEADERS = dfsch/lib/threads.h \
         dfsch/lib/socket-port.h \
         dfsch/lib/http.h \
 	dfsch/lib/csv.h \
+	dfsch/lib/ini-file.h \
 	dfsch/lib/zlib.h \
 	dfsch/lib/tk-gui.h \
 	dfsch/lib/pcre.h \
@@ -149,6 +150,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-json.la \
 	libdfsch-zlib.la \
 	libdfsch-csv.la \
+	libdfsch-ini-file.la \
 	libdfsch-crypto.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)\
@@ -188,6 +190,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	os.la \
 	zlib.la \
 	csv.la \
+	ini-file.la \
 	crypto.la \
 	sql-support.la \
 	markdown.la \
@@ -478,6 +481,14 @@ libdfsch_csv_la_LDFLAGS = -no-undefined
 csv_la_SOURCES = lib/csv_mod.c
 csv_la_LIBADD = libdfsch.la libdfsch-csv.la
 csv_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_ini_file_la_SOURCES = lib/ini-file.c
+libdfsch_ini_file_la_LIBADD = libdfsch.la
+libdfsch_ini_file_la_LDFLAGS = -no-undefined
+
+ini_file_la_SOURCES = lib/ini-file_mod.c
+ini_file_la_LIBADD = libdfsch.la libdfsch-ini-file.la
+ini_file_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_tk_gui_la_SOURCES = lib/tk-gui.c
