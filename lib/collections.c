@@ -301,11 +301,33 @@ dfsch_object_t* dfsch_collections_bitvector_xor(dfsch_object_t* bva,
 
   return (dfsch_object_t*)r;
 }
-dfsch_object_t* dfsch_collections_bitvector_2_integer(dfsch_object_t* bv){
+dfsch_strbuf_t* dfsch_collections_bitvector_2_bytes(dfsch_object_t* bv){
 }
-dfsch_object_t* dfsch_collections_integer_2_bitvector(dfsch_object_t* bv){
+dfsch_object_t* dfsch_collections_bytes_2_bitvector(char* buf, size_t len,
+                                                    size_t res_len){
 }
 dfsch_object_t* dfsch_collections_bitvector_increment(dfsch_object_t* bv){
+  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
+  bitvector_t* r = alloc_bitvector(b->length);
+  size_t i;
+
+  for (i = 0; i < b->num_words; i++){
+    r->words[i] = b->words[i];
+  }
+
+  mask_unused_bits(r);
+
+  for (i = 0; i < b->num_words; i++){
+    unsigned int t = r->words[i];
+    r->words[i]++;
+    if (t < r->words[i]){
+      break;
+    }
+  }
+
+  mask_unused_bits(r);
+
+  return (dfsch_object_t*)r;
 }
 
 int dfsch_collections_bitvector_all_zeros_p(dfsch_object_t* bv){

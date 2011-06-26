@@ -39,6 +39,13 @@ DFSCH_DEFINE_PRIMITIVE(bitvector, NULL){
   return dfsch_collections_list_2_bitvector(args);
 }
 
+DFSCH_DEFINE_PRIMITIVE(bitvector_increment, 
+                       "Return next bitvector value in numeric ordering"){
+  dfsch_object_t* bv;
+  DFSCH_OBJECT_ARG(args, bv);
+  return dfsch_collections_bitvector_increment(bv);
+}
+
 void dfsch_module_collections_register(dfsch_object_t* env){
   dfsch_package_t* collections = dfsch_make_package("collections",
                                                     "Advanced collections");
@@ -61,5 +68,8 @@ void dfsch_module_collections_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(make_bitvector));
   dfsch_defcanon_pkgcstr(env, collections, "bitvector",
                          DFSCH_PRIMITIVE_REF(bitvector));
+
+  dfsch_defcanon_pkgcstr(env, collections, "bitvector-increment",
+                         DFSCH_PRIMITIVE_REF(bitvector_increment));
 
 }
