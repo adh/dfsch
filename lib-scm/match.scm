@@ -96,20 +96,13 @@
                                          (ensure-variable ,variables name)))
                                    (destructuring-bind ,arguments ,clause
                                                        ,@body))))))
+(define-clause-expander quote (value)
+  `(equal? ,expression-to-match ',value))
 
-(register-clause-expander! 'quote
-                           (lambda (clause object variables)
-                             (unless (pair? clause)
-                               (error "Argument expected" :object clause))
-                             `(equal? ,object ',(car clause))))
+(define-clause-expander unquote (value)
+  `(equal? ,expression-to-match ,value))
 
-(register-clause-expander! 'unquote
-                           (lambda (clause object variables)
-                             (unless (pair? clause)
-                               (error "Argument expected" :object clause))
-                             `(equal? ,object ,(car clause))))
-
-(define-macro (match object &rest clauses)
+(define-macro (match object &body clauses)
   (with-gensyms (obj tag)
     `(catch ',tag
        (let ((,obj ,object))
@@ -126,5 +119,14 @@
                                                  (begin ,@body)))))))
                 clauses)))))
 
-                   
-        
+(define-macro (match-lambda &body clauses)
+  (with-gensyms (arg)
+    `(lambda (,arg)
+       (match ,arg
+              ,@clauses))))
+
+(define-macro (match-lambda* &body clauses)
+  (with-gensyms (arg)
+    `(lambda (&rest ,arg)
+       (match ,arg
+              ,@clauses))))
