@@ -16,6 +16,18 @@ DFSCH_DEFINE_PRIMITIVE(read_file,
 
   return dfsch_ini_file_read_file(fname);
 }
+DFSCH_DEFINE_PRIMITIVE(get_entry,
+                       "Return value of entry in ini file"){
+  dfsch_object_t* ifo;
+  char* section;
+  char* property;
+  DFSCH_OBJECT_ARG(args, ifo);
+  DFSCH_STRING_ARG(args, section);
+  DFSCH_STRING_ARG(args, property);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_string_cstr(dfsch_ini_file_get(ifo, section, property));
+}
 
 void dfsch_module_ini_file_register(dfsch_object_t* env){
   dfsch_package_t* ini_file = dfsch_make_package("ini-file",
@@ -25,4 +37,6 @@ void dfsch_module_ini_file_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(make_empty));
   dfsch_defcanon_pkgcstr(env, ini_file, "read-file",
                          DFSCH_PRIMITIVE_REF(read_file));
+  dfsch_defcanon_pkgcstr(env, ini_file, "get-entry",
+                         DFSCH_PRIMITIVE_REF(get_entry));
 }

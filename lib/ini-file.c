@@ -304,8 +304,6 @@ static void parse_line(ini_parser_ctx_t* ctx, char* line){
     replace_escapes(ld->name);
   }
 
-  printf(";; name=%s value=%s %s\n", ld->name, ld->value, ld->comment);
-
   if (ctx->ifo->first){
     ctx->ifo->last->next = ld;
   } else {
@@ -451,9 +449,43 @@ void dfsch_ini_file_add_comment(dfsch_object_t* ifo,
                                 char* section,
                                 char* comment);
 
+static file_line_t* find_line(ini_file_t* ifo,
+                              char* section,
+                              char* property){
+  section_t* sec;
+  file_line_t* ret;
+
+  sec = dfsch_strhash_ref(&ifo->sections, section);
+  if (!sec){
+    return NULL;
+  }
+
+  return dfsch_strhash_ref(&sec->entries, property);
+}
+
+static char* real_get(ini_file_t* ifo,
+                      char* section,
+                      char* property){
+  file_line_t* fl = find_line(ifo, section, property);
+  
+  if (!fl){
+    if (ifo->defaults){
+      return real_get(ifo->defaults, section, property);
+    } else {
+      return NULL;
+    }
+  }
+
+  return fl->value;
+}
+
 char* dfsch_ini_file_get(dfsch_object_t* ifo,
                          char* section,
-                         char* property);
+                         char* property){
+  ini_file_t* i = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+
+  return real_get(i, section, property);
+}
 void dfsch_ini_file_set(dfsch_object_t* ifo,
                         char* section,
                         char* property,
