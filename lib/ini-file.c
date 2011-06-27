@@ -443,8 +443,6 @@ int dfsch_ini_file_has_property_p(dfsch_object_t* ifo,
                                   char* section,
                                   char* property);
 
-void dfsch_ini_file_add_section(dfsch_object_t* ifo,
-                                char* section);
 void dfsch_ini_file_add_comment(dfsch_object_t* ifo,
                                 char* section,
                                 char* comment);
@@ -453,7 +451,6 @@ static file_line_t* find_line(ini_file_t* ifo,
                               char* section,
                               char* property){
   section_t* sec;
-  file_line_t* ret;
 
   sec = dfsch_strhash_ref(&ifo->sections, section);
   if (!sec){
@@ -486,7 +483,41 @@ char* dfsch_ini_file_get(dfsch_object_t* ifo,
 
   return real_get(i, section, property);
 }
+static void real_set(ini_file_t* ifo,
+                     char* section,
+                     char* property,
+                     char* value){
+  section_t* sec;
+  file_line_t* fl;
+
+  sec = dfsch_strhash_ref(&ifo->sections, section);
+  if (!sec){
+    sec = GC_NEW(section_t);
+    dfsch_strhash_init(&sec->entries);
+    sec->first = sec->last = GC_NEW(file_line_t);
+    sec->first->name = dfsch_stracpy(section);
+    dfsch_strhash_set(&ifo->sections, section, sec);
+    goto create_entry;
+  }
+
+  fl = dfsch_strhash_ref(&sec->entries, property);
+  if (!fl){
+  create_entry:
+    fl = GC_NEW(file_line_t);
+    fl->name = dfsch_stracpy(property);
+    fl->next = sec->last->next;
+    sec->last->next = fl;
+    sec->last = fl;
+    dfsch_strhash_set(&sec->entries, fl->name, fl);
+  }
+  fl->value = dfsch_stracpy(value);
+}
+
 void dfsch_ini_file_set(dfsch_object_t* ifo,
                         char* section,
                         char* property,
-                        char* value);
+                        char* value){
+  ini_file_t* i = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+
+  real_set(i, section, property, value);
+}
