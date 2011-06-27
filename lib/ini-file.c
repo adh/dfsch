@@ -1,27 +1,34 @@
 #include <dfsch/lib/ini-file.h>
 #include <dfsch/strhash.h>
+#include <dfsch/magic.h>
+#include <stdio.h>
+#include <errno.h>
 
-typedef struct file_line_t {
+typedef struct file_line_t file_line_t;
+
+struct file_line_t{
   char* indent;
   char* name;
   char* value;
   char* comment;
   file_line_t* next;
-} file_line_t;
+};
 
 typedef struct section_t {
   file_line_t* first;
-  file_line_t* next;
+  file_line_t* last;
   dfsch_strhash_t entries;
 } section_t;
 
-typedef struct ini_file_t {
+typedef struct ini_file_t ini_file_t;
+
+struct ini_file_t{
   dfsch_type_t* type;
   file_line_t* first;
   file_line_t* last;
   dfsch_strhash_t sections;
   ini_file_t* defaults;
-} ini_file_t;
+};
 
 dfsch_type_t dfsch_ini_file_type = {
   .type = DFSCH_STANDARD_TYPE,
@@ -51,7 +58,7 @@ static void parser_init(ini_parser_ctx_t* ctx, ini_file_t* ifo){
 
 static char* split_comment(char* line){
   char* res;
-  for(;;){
+  while(*line){
     switch (*line){
     case ';':
     case '#':
@@ -72,14 +79,15 @@ static char* split_comment(char* line){
 
 static char* split_value(char* line){
   char* res;
-  for(;;){
+  while(*line){
     switch (*line){
     case '=':
       *line = '\0';
+      line++;
       while (*line == ' ' || *line == '\t') { 
         line++;
       }
-      return dfsch_stracpy(line + 1);
+      return dfsch_stracpy(line);
     case '\\':
       line++;
       if (*line == '\0'){
@@ -93,8 +101,12 @@ static char* split_value(char* line){
 }
 
 static void line_rtrim(char* line){
+  char* end;
+  if (!*line){
+    return;
+  }
   end = line + strlen(line) - 1;
-  while (end != line && (*end == ' ' || *end == '\t')){
+  while (end >= line && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n')){
     if (end != line && *(end - 1) == '\\'){
       break;
     }
@@ -292,6 +304,8 @@ static void parse_line(ini_parser_ctx_t* ctx, char* line){
     replace_escapes(ld->name);
   }
 
+  printf(";; name=%s value=%s %s\n", ld->name, ld->value, ld->comment);
+
   if (ctx->ifo->first){
     ctx->ifo->last->next = ld;
   } else {
@@ -371,14 +385,45 @@ dfsch_object_t* dfsch_ini_file_read_file(char* fname){
   ini_parser_ctx_t ctx;
 
   parser_init(&ctx, ifo);
+  FILE* f = fopen(fname, "r");
+  if (!f){
+    dfsch_error("Cannot open file", 
+                dfsch_list(2,
+                           dfsch_make_string_cstr(fname),
+                           dfsch_make_string_cstr(strerror(errno))));
+    
+  }
+  
+  DFSCH_UNWIND {
+    while(1){
+      char* line = read_line(f);
+      
+      if (!line){
+        dfsch_operating_system_error("fgets");
+      }
+      if (!*line){
+        break;
+      }
+      
+      parse_line(&ctx, line);
+    }
 
+  } DFSCH_PROTECT {
+    fclose(f);
+  } DFSCH_PROTECT_END;
+
+  return ifo;
 }
 dfsch_object_t* dfsch_ini_file_read_port(dfsch_object_t* port){
   ini_file_t* ifo = dfsch_make_empty_ini_file();
   ini_parser_ctx_t ctx;
+  dfsch_strbuf_t* line;
 
   parser_init(&ctx, ifo);
-
+  while (line = dfsch_port_readline(port)){
+    parse_line(&ctx, line->ptr);
+  }
+  return ifo;
 }
 
 void dfsch_ini_file_set_defaults(dfsch_object_t* ifo,
