@@ -1,6 +1,7 @@
 #include <dfsch/lib/ini-file.h>
 #include <dfsch/strhash.h>
 #include <dfsch/magic.h>
+#include <dfsch/util.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -432,8 +433,130 @@ void dfsch_ini_file_set_defaults(dfsch_object_t* ifo,
   i->defaults = d;
 }
 
+/* duplicated from string.c with the idea that it might diverge */
+static char escape_table[] = {
+  /* 0 */   1, 1, 1, 1, 1, 1, 1, 'a', 'b', 't', 'n', 'v', 'f', 'r', 1, 1, 
+  /* 1 */   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+  /* 2 */   0, 0,'\"', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 3 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 4 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 5 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0, 
+  /* 6 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 7 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, /* DEL */ 
+  /* 8 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* upper half */
+  /* 9 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* a */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* b */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* c */   1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* d */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* e */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* f */   0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
+};
+
+static char hex_table[] = "0123456789abcdef";
+
+static char* str_escape(char* str){
+  char *b;
+  char *i;
+  char* j = str;
+  size_t len = 0;
+
+  while (*j){
+    switch (escape_table[(unsigned char)(*j)]){
+    case 0:
+      len += 1;
+      break;
+    case 1:
+      len += 4;
+      break;
+    default:
+      len += 2;
+      break;
+    }
+    j++;
+  }
+
+  b = GC_MALLOC_ATOMIC(len+1);
+  i = b;
+  j = str;
+
+  while (*j){
+    switch (escape_table[(unsigned char)(*j)]){
+    case 0:
+      *i = *j;
+      i++;
+      break;
+    case 1:
+      i[0] = '\\';
+      i[1] = 'x';
+      i[2] = hex_table[(((unsigned char)(*j)) >> 4) & 0xf];
+      i[3] = hex_table[(((unsigned char)(*j))     ) & 0xf];
+      i += 4;
+      break;
+    default:
+      i[0] = '\\';
+      i[1] = escape_table[(unsigned char)(*j)];
+      i += 2;
+      break;
+    }
+    j++;
+  }
+
+  *i=0;
+
+  return b;
+}
+
+static char* format_line(file_line_t* line){
+  dfsch_str_list_t *sl = dfsch_sl_create();
+
+  if (line->indent){
+    dfsch_sl_append(sl, line->indent);
+  }
+
+  if (line->name) {
+    if (line->value){
+      dfsch_sl_append(sl, str_escape(line->name));
+      dfsch_sl_append(sl, " = ");
+      dfsch_sl_append(sl, str_escape(line->value));
+    } else {
+      dfsch_sl_append(sl, "[");
+      dfsch_sl_append(sl, str_escape(line->name));
+      dfsch_sl_append(sl, "]");    
+    }
+  }
+
+  if (line->comment){
+    dfsch_sl_append(sl, line->comment);
+  }
+
+  dfsch_sl_append(sl, "\n");
+
+  return dfsch_sl_value(sl);
+}
+
 void dfsch_ini_file_write_file(dfsch_object_t* ifo,
-                               char* fname);
+                               char* fname){
+  ini_file_t* fo = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+  file_line_t* i = fo->first;
+  FILE* f = fopen(fname, "w");
+  if (!f){
+    dfsch_error("Cannot open file", 
+                dfsch_list(2,
+                           dfsch_make_string_cstr(fname),
+                           dfsch_make_string_cstr(strerror(errno))));
+    
+  }
+  
+  DFSCH_UNWIND {
+    while (i){
+      fputs(format_line(i), f);
+      i = i->next;
+    }
+  } DFSCH_PROTECT {
+    fclose(f);
+  } DFSCH_PROTECT_END;  
+}
 void dfsch_ini_file_write_port(dfsch_object_t* ifo,
                                dfsch_object_t* port);
 
@@ -497,6 +620,12 @@ static void real_set(ini_file_t* ifo,
     sec->first = sec->last = GC_NEW(file_line_t);
     sec->first->name = dfsch_stracpy(section);
     dfsch_strhash_set(&ifo->sections, section, sec);
+    if (ifo->last){
+      ifo->last->next = sec->first;
+      ifo->last = sec->first;
+    } else {
+      ifo->first = ifo->last = sec->first;
+    }
     goto create_entry;
   }
 
@@ -507,6 +636,9 @@ static void real_set(ini_file_t* ifo,
     fl->name = dfsch_stracpy(property);
     fl->next = sec->last->next;
     sec->last->next = fl;
+    if (sec->last == ifo->last){
+      ifo->last = fl;
+    }
     sec->last = fl;
     dfsch_strhash_set(&sec->entries, fl->name, fl);
   }

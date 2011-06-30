@@ -29,6 +29,37 @@ DFSCH_DEFINE_PRIMITIVE(get_entry,
   return dfsch_make_string_cstr(dfsch_ini_file_get(ifo, section, property));
 }
 
+DFSCH_DEFINE_PRIMITIVE(write_file, 
+                       "Write configuration data into file"){
+  dfsch_object_t* ifo;
+  char* fname;
+  DFSCH_OBJECT_ARG(args, ifo);
+  DFSCH_STRING_ARG(args, fname);
+  DFSCH_ARG_END(args);
+
+  dfsch_ini_file_write_file(ifo, fname);
+  
+  return NULL;
+}
+
+DFSCH_DEFINE_PRIMITIVE(set_entry,
+                       "Change value of entry in ini file"){
+  dfsch_object_t* ifo;
+  char* section;
+  char* property;
+  char* value;
+  DFSCH_OBJECT_ARG(args, ifo);
+  DFSCH_STRING_ARG(args, section);
+  DFSCH_STRING_ARG(args, property);
+  DFSCH_STRING_ARG(args, value);
+  DFSCH_ARG_END(args);
+
+  dfsch_ini_file_set(ifo, section, property, value);
+
+  return NULL;
+}
+
+
 void dfsch_module_ini_file_register(dfsch_object_t* env){
   dfsch_package_t* ini_file = dfsch_make_package("ini-file",
                                                  "INI-like configuration parser");
@@ -39,4 +70,8 @@ void dfsch_module_ini_file_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(read_file));
   dfsch_defcanon_pkgcstr(env, ini_file, "get-entry",
                          DFSCH_PRIMITIVE_REF(get_entry));
+  dfsch_defcanon_pkgcstr(env, ini_file, "set-entry!",
+                         DFSCH_PRIMITIVE_REF(set_entry));
+  dfsch_defcanon_pkgcstr(env, ini_file, "write-file!",
+                         DFSCH_PRIMITIVE_REF(write_file));
 }
