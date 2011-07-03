@@ -437,7 +437,7 @@ void dfsch_ini_file_set_defaults(dfsch_object_t* ifo,
 static char escape_table[] = {
   /* 0 */   1, 1, 1, 1, 1, 1, 1, 'a', 'b', 't', 'n', 'v', 'f', 'r', 1, 1, 
   /* 1 */   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
-  /* 2 */   0, 0,'\"', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  /* 2 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /* 3 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /* 4 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
   /* 5 */   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\\', 0, 0, 0, 
@@ -558,17 +558,15 @@ void dfsch_ini_file_write_file(dfsch_object_t* ifo,
   } DFSCH_PROTECT_END;  
 }
 void dfsch_ini_file_write_port(dfsch_object_t* ifo,
-                               dfsch_object_t* port);
+                               dfsch_object_t* port){
+  ini_file_t* fo = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+  file_line_t* i = fo->first;
 
-int dfsch_ini_file_has_section_p(dfsch_object_t* ifo,
-                                 char* section);
-int dfsch_ini_file_has_property_p(dfsch_object_t* ifo,
-                                  char* section,
-                                  char* property);
-
-void dfsch_ini_file_add_comment(dfsch_object_t* ifo,
-                                char* section,
-                                char* comment);
+  while (i){
+    dfsch_port_write_cstr(port, format_line(i));
+    i = i->next;
+  }
+}
 
 static file_line_t* find_line(ini_file_t* ifo,
                               char* section,
@@ -582,6 +580,56 @@ static file_line_t* find_line(ini_file_t* ifo,
 
   return dfsch_strhash_ref(&sec->entries, property);
 }
+
+
+int dfsch_ini_file_has_section_p(dfsch_object_t* ifo,
+                                 char* section){
+  ini_file_t* fo = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+  return dfsch_strhash_ref(&fo->sections, section) != NULL;
+}
+int dfsch_ini_file_has_property_p(dfsch_object_t* ifo,
+                                  char* section,
+                                  char* property){
+  ini_file_t* fo = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+  return find_line(fo, section, property) != NULL;
+}
+
+void dfsch_ini_file_add_comment(dfsch_object_t* ifo,
+                                char* section,
+                                char* comment){
+  ini_file_t* fo = DFSCH_ASSERT_TYPE(ifo, DFSCH_INI_FILE_TYPE);
+  file_line_t* fl = GC_NEW(file_line_t);
+
+  fl->comment = dfsch_stracpy(comment);
+
+  if (section){
+    section_t* sec;
+    
+    sec = dfsch_strhash_ref(&fo->sections, section);
+    if (!sec){
+      dfsch_error("No such section", dfsch_make_string_cstr(section));
+    }
+
+    sec->last->next = fl;
+    
+    if (sec->last == fo->last){
+      fo->last = fl;
+    }
+
+    sec->last->next = fl;
+    sec->last = fl;
+  } else {
+    fl->next = fo->last;
+    if (fo->last) {
+      fo->last->next = fl;
+    } else {
+      fo->first = fl;
+    }
+    fo->last = fl;
+  }
+  
+}
+
 
 static char* real_get(ini_file_t* ifo,
                       char* section,
