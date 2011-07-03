@@ -85,6 +85,21 @@ DFSCH_DEFINE_PRIMITIVE(set_property,
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(add_comment,
+                       "Add new comment line to file"){
+  dfsch_object_t* ifo;
+  char* section;
+  char* comment;
+  DFSCH_OBJECT_ARG(args, ifo);
+  DFSCH_STRING_ARG(args, section);
+  DFSCH_STRING_ARG(args, comment);
+  DFSCH_ARG_END(args);
+
+  dfsch_ini_file_add_comment(ifo, section, comment);
+
+  return NULL;
+}
+
 
 void dfsch_module_ini_file_register(dfsch_object_t* env){
   dfsch_package_t* ini_file = dfsch_make_package("ini-file",
