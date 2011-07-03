@@ -152,6 +152,7 @@ lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-csv.la \
 	libdfsch-ini-file.la \
 	libdfsch-crypto.la \
+	libdfsch-minizip.la \
 	$(nonwin32_libs)\
 	$(tkgui_libs)\
 	$(pcre_libs)\
@@ -195,6 +196,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	sql-support.la \
 	markdown.la \
 	fastlz.la \
+	minizip.la \
 	$(nonwin32_modules)\
 	$(tkgui_modules)\
 	$(pcre_modules)\
@@ -289,6 +291,8 @@ upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
 	ext/upskirt/expanded_markdown.sh  ext/upskirt/renderers.c \
 	ext/upskirt/GNUmakefile		  ext/upskirt/renderers.h
 
+minizip_files = ext/minizip/minizip.h ext/minizip/minizip.c \
+	ext/minizip/ioapi.h ext/minizip/ioapi.c
 
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
@@ -379,6 +383,17 @@ zlib_la_LIBADD =  libdfsch.la libdfsch-zlib.la -lz
 fastlz_la_SOURCES = lib/fastlz_mod.c
 fastlz_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
 fastlz_la_LIBADD =  libdfsch.la
+
+libdfsch_minizip_la_SOURCES = lib/minizip.c dfsch/lib/minizip.h \
+	ext/minizip/unzip.c ext/minizip/unzip.h \
+	ext/minizip/zip.c ext/minizip/zip.h \
+	ext/minizip/ioapi.c ext/minizip/ioapi.h
+libdfsch_minizip_la_LDFLAGS = -version-info 2:0:0 -no-undefined
+libdfsch_minizip_la_LIBADD =  libdfsch.la
+
+minizip_la_SOURCES = lib/minizip_mod.c
+minizip_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
+minizip_la_LIBADD =  libdfsch.la libdfsch-minizip.la
 
 libdfsch_inet_la_SOURCES = lib/inet.c dfsch/lib/inet.h
 libdfsch_inet_la_LDFLAGS = -version-info 2:0:0 -no-undefined
