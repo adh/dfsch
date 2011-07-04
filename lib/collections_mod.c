@@ -35,48 +35,15 @@ DFSCH_DEFINE_PRIMITIVE(make_bitvector, NULL){
 
   return dfsch_collections_make_bitvector(length);
 }
-DFSCH_DEFINE_PRIMITIVE(bitvector_2_list, NULL){
-  dfsch_object_t* bitvector;
-  DFSCH_OBJECT_ARG(args, bitvector);
-  DFSCH_ARG_END(args);
-
-  return dfsch_collections_bitvector_2_list(bitvector);
+DFSCH_DEFINE_PRIMITIVE(bitvector, NULL){
+  return dfsch_collections_list_2_bitvector(args);
 }
-DFSCH_DEFINE_PRIMITIVE(list_2_bitvector, NULL){
-  dfsch_object_t* list;
-  DFSCH_OBJECT_ARG(args, list);
-  DFSCH_ARG_END(args);
 
-  return dfsch_collections_list_2_bitvector(list);
-}
-DFSCH_DEFINE_PRIMITIVE(bitvector_ref, NULL){
-  long k;
-  dfsch_object_t* bitvector;
-  DFSCH_OBJECT_ARG(args, bitvector);
-  DFSCH_LONG_ARG(args, k);
-  DFSCH_ARG_END(args);
-
-  return dfsch_bool(dfsch_collections_bitvector_ref(bitvector, k));
-}
-DFSCH_DEFINE_PRIMITIVE(bitvector_set, NULL){
-  long k;
-  dfsch_object_t* bitvector;
-  dfsch_object_t* value;
-  DFSCH_OBJECT_ARG(args, bitvector);
-  DFSCH_LONG_ARG(args, k);
-  DFSCH_OBJECT_ARG(args, value);
-  DFSCH_ARG_END(args);
-
-  dfsch_collections_bitvector_set(bitvector, k, value);
-  return NULL;
-}
-DFSCH_DEFINE_PRIMITIVE(bitvector_length, NULL){
-  dfsch_object_t* bitvector;
-  DFSCH_OBJECT_ARG(args, bitvector);
-  DFSCH_ARG_END(args);
-
-  return 
-    dfsch_make_number_from_long(dfsch_collections_bitvector_length(bitvector));
+DFSCH_DEFINE_PRIMITIVE(bitvector_increment, 
+                       "Return next bitvector value in numeric ordering"){
+  dfsch_object_t* bv;
+  DFSCH_OBJECT_ARG(args, bv);
+  return dfsch_collections_bitvector_increment(bv);
 }
 
 void dfsch_module_collections_register(dfsch_object_t* env){
@@ -95,17 +62,14 @@ void dfsch_module_collections_register(dfsch_object_t* env){
   dfsch_defcanon_pkgcstr(env, collections, "priority-queue-empty?",
                          DFSCH_PRIMITIVE_REF(priority_queue_empty_p));
 
+  dfsch_defcanon_pkgcstr(env, collections, "<bitvector>",
+                         DFSCH_COLLECTIONS_BITVECTOR_TYPE);
   dfsch_defcanon_pkgcstr(env, collections, "make-bitvector",
                          DFSCH_PRIMITIVE_REF(make_bitvector));
-  dfsch_defcanon_pkgcstr(env, collections, "bitvector->list",
-                         DFSCH_PRIMITIVE_REF(bitvector_2_list));
-  dfsch_defcanon_pkgcstr(env, collections, "list->bitvector",
-                         DFSCH_PRIMITIVE_REF(list_2_bitvector));
-  dfsch_defcanon_pkgcstr(env, collections, "bitvector-ref",
-                         DFSCH_PRIMITIVE_REF(bitvector_ref));
-  dfsch_defcanon_pkgcstr(env, collections, "bitvector-set!",
-                         DFSCH_PRIMITIVE_REF(bitvector_set));
-  dfsch_defcanon_pkgcstr(env, collections, "bitvector-length",
-                         DFSCH_PRIMITIVE_REF(bitvector_length));
+  dfsch_defcanon_pkgcstr(env, collections, "bitvector",
+                         DFSCH_PRIMITIVE_REF(bitvector));
+
+  dfsch_defcanon_pkgcstr(env, collections, "bitvector-increment",
+                         DFSCH_PRIMITIVE_REF(bitvector_increment));
 
 }

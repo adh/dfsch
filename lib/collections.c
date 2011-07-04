@@ -94,6 +94,7 @@ int dfsch_collections_priority_queue_empty_p(dfsch_object_t* q){
  * bit vectors
  */
 
+#define WORD_BITS (CHAR_BIT * sizeof(unsigned int))
 typedef struct bitvector_t {
   dfsch_type_t* type;
   size_t length;
@@ -101,14 +102,72 @@ typedef struct bitvector_t {
   unsigned int words[];
 } bitvector_t;
 
+static void mask_unused_bits(bitvector_t* bv){
+  bv->words[bv->num_words - 1] &= (1 << (bv->length % WORD_BITS)) - 1;
+}
+
+static dfsch_object_t* bv_get_iterator(bitvector_t* b){
+  size_t i;
+  dfsch_object_t* head;
+  dfsch_object_t* tail;
+
+  if (b->length == 0){
+    return NULL;
+  }
+  
+  head = tail = dfsch_cons(dfsch_bool(b->words[0] & 0x01 != 0), NULL);
+
+  for (i = 1; i < b->length; i++){
+    dfsch_object_t* tmp = dfsch_cons(dfsch_bool((b->words[i / WORD_BITS] 
+                                                 & 1 << (i % WORD_BITS)) 
+                                                != 0),
+                                     NULL);
+    DFSCH_FAST_CDR_MUT(tail) = tmp;
+    tail = tmp;
+  }
+
+  return head;
+}
+static dfsch_object_t* bv_ref(bitvector_t* b, size_t n){
+  if (b->length <= n){
+    dfsch_error("Index out of range", dfsch_make_number_from_long(n));
+  }
+
+  return dfsch_bool(b->words[n / WORD_BITS] & 1 << (n % WORD_BITS)) != 0;
+}
+static void bv_set(bitvector_t* b, size_t n, dfsch_object_t* val){
+  if (b->length <= n){
+    dfsch_error("Index out of range", dfsch_make_number_from_long(n));
+  }
+
+  if (val){
+    b->words[n / WORD_BITS] |= (1 << (n % WORD_BITS));  
+  } else {
+    b->words[n / WORD_BITS] &= ~(1 << (n % WORD_BITS));
+  }
+}
+static size_t bv_length(bitvector_t* b){
+  return b->length;
+}
+
+static dfsch_collection_methods_t bv_collection = {
+  .get_iterator = bv_get_iterator
+};
+
+static dfsch_sequence_methods_t bv_sequence = {
+  .ref = bv_ref,
+  .set = bv_set,
+  .length = bv_length,
+};
+
 dfsch_type_t dfsch_collections_bitvector_type = {
   .type = DFSCH_STANDARD_TYPE,
   .superclass = NULL,
   .name = "collections:bit-vector",
-  .size = sizeof(bitvector_t)
+  .size = sizeof(bitvector_t),
+  .collection = &bv_collection,
+  .sequence = &bv_sequence,
 };
-
-#define WORD_BITS (CHAR_BIT * sizeof(unsigned int))
 
 static bitvector_t* alloc_bitvector(size_t length){
   size_t num_words = length / WORD_BITS;
@@ -125,9 +184,6 @@ static bitvector_t* alloc_bitvector(size_t length){
   return bv;
 }
 
-static void mask_unused_bits(bitvector_t* bv){
-  bv->words[bv->num_words - 1] &= (1 << (bv->length % WORD_BITS)) - 1;
-}
 
 dfsch_object_t* dfsch_collections_make_bitvector(size_t length){
   bitvector_t* bv;
@@ -156,53 +212,7 @@ dfsch_object_t* dfsch_collections_list_2_bitvector(dfsch_object_t* values){
 
   return (dfsch_object_t*) bv;
 }
-dfsch_object_t* dfsch_collections_bitvector_2_list(dfsch_object_t* bv){
-  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
-  size_t i;
-  dfsch_object_t* head;
-  dfsch_object_t* tail;
 
-  if (b->length == 0){
-    return NULL;
-  }
-  
-  head = tail = dfsch_cons(dfsch_bool(b->words[0] & 0x01 != 0), NULL);
-
-  for (i = 1; i < b->length; i++){
-    dfsch_object_t* tmp = dfsch_cons(dfsch_bool((b->words[i / WORD_BITS] 
-                                                 & 1 << (i % WORD_BITS)) 
-                                                != 0),
-                                     NULL);
-    DFSCH_FAST_CDR_MUT(tail) = tmp;
-    tail = tmp;
-  }
-
-  return head;
-}
-int dfsch_collections_bitvector_ref(dfsch_object_t* bv, size_t n){
-  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
-  if (b->length <= n){
-    dfsch_error("Index out of range", dfsch_make_number_from_long(n));
-  }
-
-  return (b->words[n / WORD_BITS] & 1 << (n % WORD_BITS)) != 0;
-}
-void dfsch_collections_bitvector_set(dfsch_object_t* bv, size_t n, int v){
-  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
-  if (b->length <= n){
-    dfsch_error("Index out of range", dfsch_make_number_from_long(n));
-  }
-
-  if (v){
-    b->words[n / WORD_BITS] |= (1 << (n % WORD_BITS));  
-  } else {
-    b->words[n / WORD_BITS] &= ~(1 << (n % WORD_BITS));
-  }
-}
-size_t dfsch_collections_bitvector_length(dfsch_object_t* bv){
-  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
-  return b->length;
-}
 dfsch_object_t* dfsch_collections_bitvector_not(dfsch_object_t* bv){
   bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
   bitvector_t* r = alloc_bitvector(b->length);
@@ -291,11 +301,33 @@ dfsch_object_t* dfsch_collections_bitvector_xor(dfsch_object_t* bva,
 
   return (dfsch_object_t*)r;
 }
-dfsch_object_t* dfsch_collections_bitvector_2_integer(dfsch_object_t* bv){
+dfsch_strbuf_t* dfsch_collections_bitvector_2_bytes(dfsch_object_t* bv){
 }
-dfsch_object_t* dfsch_collections_integer_2_bitvector(dfsch_object_t* bv){
+dfsch_object_t* dfsch_collections_bytes_2_bitvector(char* buf, size_t len,
+                                                    size_t res_len){
 }
 dfsch_object_t* dfsch_collections_bitvector_increment(dfsch_object_t* bv){
+  bitvector_t* b = DFSCH_ASSERT_TYPE(bv, DFSCH_COLLECTIONS_BITVECTOR_TYPE);
+  bitvector_t* r = alloc_bitvector(b->length);
+  size_t i;
+
+  for (i = 0; i < b->num_words; i++){
+    r->words[i] = b->words[i];
+  }
+
+  mask_unused_bits(r);
+
+  for (i = 0; i < b->num_words; i++){
+    unsigned int t = r->words[i];
+    r->words[i]++;
+    if (t < r->words[i]){
+      break;
+    }
+  }
+
+  mask_unused_bits(r);
+
+  return (dfsch_object_t*)r;
 }
 
 int dfsch_collections_bitvector_all_zeros_p(dfsch_object_t* bv){
