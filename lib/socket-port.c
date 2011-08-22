@@ -23,7 +23,7 @@ typedef struct socket_port_t {
   char* buf;
   char* bufhead;
   size_t buflen;
-  pthread_mutex_t mutex;
+  pthread_mutex_t* mutex;
   char* name;
 } socket_port_t;
 
@@ -88,7 +88,7 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
     dfsch_error("Port is closed", (dfsch_object_t*)sp);
   }
 
-  pthread_mutex_lock(&(sp->mutex));
+  pthread_mutex_lock(sp->mutex);
 
   if (sp->buf != sp->bufhead){
     memmove(sp->buf, sp->bufhead, sp->buflen);
@@ -105,7 +105,7 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
     while (len > SOCK_BUFFER_SIZE){
       ret = socket_port_real_read(sp, buf, len);
       if (ret == 0){
-        pthread_mutex_unlock(&(sp->mutex));
+        pthread_mutex_unlock(sp->mutex);
         return my_ret;
       }
       buf += ret;
@@ -122,7 +122,7 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
         len -= sp->buflen;
         sp->buflen = 0;
 
-        pthread_mutex_unlock(&(sp->mutex));
+        pthread_mutex_unlock(sp->mutex);
         return my_ret;
       }
       sp->buflen += ret;
@@ -133,7 +133,7 @@ static ssize_t socket_port_read_buf(socket_port_t* sp,
   sp->buflen -= len;
   my_ret += len;
   memmove(sp->buf, sp->buf + len, sp->buflen);
-  pthread_mutex_unlock(&(sp->mutex));
+  pthread_mutex_unlock(sp->mutex);
   return my_ret;  
 }
 
@@ -142,14 +142,14 @@ static void socket_port_batch_read_start(socket_port_t* port){
     dfsch_error("Port is already closed", (dfsch_object_t*)port);
   }
   
-  pthread_mutex_lock(&(port->mutex));
+  pthread_mutex_lock(port->mutex);
 }
 static void socket_port_batch_read_end(socket_port_t* port){
   if (!port->open){
     dfsch_error("Port is already closed", (dfsch_object_t*)port);
   }
   
-  pthread_mutex_unlock(&(port->mutex));
+  pthread_mutex_unlock(port->mutex);
 }
 static int socket_port_batch_read(socket_port_t* sp){
   int ch;
@@ -213,6 +213,7 @@ static dfsch_object_t* cons_socket_port(char* name,
   sp->buf = GC_MALLOC_ATOMIC(SOCK_BUFFER_SIZE);
   sp->buflen = 0;
   sp->bufhead = sp->buf;
+  sp->mutex = dfsch_create_finalized_mutex();
 
   return sp;
 }
