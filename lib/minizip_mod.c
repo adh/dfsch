@@ -14,7 +14,7 @@ void dfsch_module_minizip_register(dfsch_object_t* env){
   dfsch_package_t* minizip = dfsch_make_package("minizip",
                                                 "Simple ZIP file handling");
   dfsch_provide(env, "minizip");
-
+  dfsch_defcanon_pkgcstr(env, minizip, "<minizip>", DFSCH_MINIZIP_TYPE);
   dfsch_defcanon_pkgcstr(env, minizip, "open",
                          DFSCH_PRIMITIVE_REF(open));
 }
