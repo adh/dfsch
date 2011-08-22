@@ -48,8 +48,40 @@ static dfsch_object_t* mz_ref(minizip_t* mz, dfsch_object_t* name_obj){
   return contents;
 }
 
+static dfsch_object_t* mz_get_keys(minizip_t* mz){
+  dfsch_object_t* list = NULL;
+  unz_file_info64 info;
+  char* buf;
+  int ret;
+
+  pthread_mutex_lock(mz->mutex);
+  if (unzGoToFirstFile(mz->file) != UNZ_OK){
+    pthread_mutex_unlock(mz->mutex);
+    dfsch_error("Error reading from archive", mz);
+  }
+
+  do {
+    unzGetCurrentFileInfo(mz->file, &info, NULL, 0, NULL, 0, NULL, 0);
+    buf = GC_MALLOC_ATOMIC(info.size_filename + 1);
+    unzGetCurrentFileInfo(mz->file, &info, buf, info.size_filename + 1, 
+                          NULL, 0, NULL, 0);
+
+    list = dfsch_cons(dfsch_make_string_cstr(buf), list);
+
+    ret = unzGoToNextFile(mz->file);
+  } while (ret == UNZ_OK);
+  pthread_mutex_unlock(mz->mutex);
+
+  if (ret != UNZ_END_OF_LIST_OF_FILE){
+    dfsch_error("Error reading from archive", mz);
+  }
+
+  return list;
+}
+
 static dfsch_mapping_methods_t mz_map = {
   .ref = mz_ref,
+  .get_keys_iterator = mz_get_keys,
 };
 
 dfsch_type_t dfsch_minizip_type = {
