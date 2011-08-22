@@ -1762,6 +1762,20 @@ dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len){
 
   return (dfsch_object_t*)s;
 }
+dfsch_object_t* dfsch_alloc_byte_vector(char** ptr, size_t len){
+  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len);
+
+  s->type = DFSCH_BYTE_VECTOR_TYPE;
+
+  s->buf.ptr = (char *)(s + 1);
+  s->buf.len = len;
+
+  if (ptr){
+    *ptr = s->buf.ptr;
+  }
+
+  return (dfsch_object_t*)s;
+}
 dfsch_object_t* dfsch_make_byte_vector_strbuf(dfsch_strbuf_t* strbuf){
   return dfsch_make_byte_vector(strbuf->ptr, strbuf->len);
 }

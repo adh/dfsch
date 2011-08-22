@@ -162,6 +162,7 @@ extern "C" {
 #define DFSCH_BYTE_VECTOR_TYPE (&dfsch_byte_vector_type)
 
   dfsch_object_t* dfsch_make_byte_vector(char* ptr, size_t len);
+  dfsch_object_t* dfsch_alloc_byte_vector(char** ptr, size_t len);
   dfsch_object_t* dfsch_make_byte_vector_strbuf(dfsch_strbuf_t* strbuf);
   dfsch_object_t* dfsch_make_byte_vector_nocopy(char* ptr, size_t len);
   void dfsch_byte_vector_set(dfsch_object_t* bv, size_t k, char b);
