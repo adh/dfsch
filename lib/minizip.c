@@ -4,6 +4,7 @@
 typedef struct minizip_t {
   dfsch_type_t* type;
   unzFile file;
+  pthread_mutex_t* mutex;
 } minizip_t;
 
 static dfsch_object_t* mz_ref(minizip_t* mz, dfsch_object_t* name_obj){
@@ -13,14 +14,17 @@ static dfsch_object_t* mz_ref(minizip_t* mz, dfsch_object_t* name_obj){
   dfsch_object_t* contents;
   char* buf;
 
+  pthread_mutex_lock(mz->mutex);
   ret = unzLocateFile(mz->file, name, 1); /* Always case sensitive */
   if (ret == UNZ_END_OF_LIST_OF_FILE){
+    pthread_mutex_unlock(mz->mutex);
     return DFSCH_INVALID_OBJECT;
   }
   
   unzGetCurrentFileInfo64(mz->file, &info, NULL, 0, NULL, 0, NULL, 0);
 
   if (unzOpenCurrentFile(mz->file) != UNZ_OK){
+    pthread_mutex_unlock(mz->mutex);
     dfsch_error("Error reading from archive", mz);
   }
 
@@ -29,10 +33,12 @@ static dfsch_object_t* mz_ref(minizip_t* mz, dfsch_object_t* name_obj){
   ret = unzReadCurrentFile(mz->file, buf, info.uncompressed_size);
   if (ret != info.uncompressed_size){
     unzCloseCurrentFile(mz->file);
+    pthread_mutex_unlock(mz->mutex);
     dfsch_error("Error reading from archive", mz);
   }
 
   ret = unzCloseCurrentFile(mz->file);
+  pthread_mutex_unlock(mz->mutex);
   if (ret == UNZ_CRCERROR){
     dfsch_error("CRC error", mz);
   } else if (ret != UNZ_OK){
@@ -69,6 +75,7 @@ dfsch_object_t* dfsch_minizip_open(char* filename){
 
   GC_register_finalizer(mz, (GC_finalization_proc)mz_finalizer, NULL,
                         NULL, NULL);
+  mz->mutex = dfsch_create_finalized_mutex();
 
   return (dfsch_object_t*)mz;
 }
