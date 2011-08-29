@@ -233,25 +233,26 @@
   (cdr cat))
 
 (define (category-index-name cat)
-  (string-append "cat_" 
+  (string-append "categories/" 
                  (string->safe-filename (category-name cat) #t) 
                  ".html"))
 
-(define (menu-bar categories current)
+(define (menu-bar categories current base)
   `(:ul 
     :class "menu-bar"
     (:li ,(if current
-              '(:a :href "index.html"
+              `(:a :href ,(string-append base "index.html")
                    "All")
               '(:strong "All")))
     (:li ,(if (eq? current :hierarchy)
                '(:strong "Type hierarchy")
-               '(:a :href "hierarchy.html"
+               `(:a :href ,(string-append base "hierarchy.html")
                     "Type hierarchy")))
     ,@(map (lambda (cat)
              (if (eq? cat current)
                  `(:li (:strong ,(category-name cat)))
-                 `(:li (:a :href ,(category-index-name cat)
+                 `(:li (:a :href ,(string-append base 
+                                                 (category-index-name cat))
                            ,(category-name cat)))))
            categories)))
 
@@ -277,7 +278,7 @@
                    (car entry)))
 
 (define (make-filename name)
-  (string-append "e_"
+  (string-append "entries/"
                  (string->safe-filename (symbol-qualified-name name))
                  ".html"))
 
@@ -337,17 +338,18 @@
 (define (emit-one-entry entry directory title categories)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
                                       title
-                                      `(,(menu-bar categories #t)
+                                      `(,(menu-bar categories #t "../")
                                         ,@(make-one-entry entry)))
                    (string-append directory "/"
                                   (entry-filename entry))))
 
-(define (make-entry-list lyst)
+(define (make-entry-list lyst base)
   `(:ul :class "entry-list"
     ,@(map (lambda (entry)
              `(:li ,(get-object-type-name (cadr entry))
                    " "
-                   (:a :href ,(entry-filename entry)
+                   (:a :href ,(string-append base 
+                                             (entry-filename entry))
                        ,(symbol-qualified-name (car entry)))))
            lyst)))
 
@@ -404,7 +406,7 @@
 (define (entry-get-categories entry)
   (get-object-categories (cadr entry)))
 
-(define (make-index-list lyst)
+(define (make-index-list lyst base)
   (let ((chars (sort-list (group-by lyst 
                                     (lambda (ent)
                                       (list (char-upcase (seq-ref (symbol-name (car ent))
@@ -414,22 +416,24 @@
     (mapcan (lambda (ch)
               `((:a :name ,(char-name ch))
                 ,(char-bar chars ch)
-                ,(make-entry-list (cdr ch))))
+                ,(make-entry-list (cdr ch) base)))
             chars)))
 
 (define (emit-documentation lyst directory title)
-  (index-put-all "" lyst)
+  (index-put-all "../" lyst)
   (let ((categories (sort-list (group-by lyst entry-get-categories)
                                (lambda (x y)
                                  (string<? (car x) (car y))))))
     (ensure-directory directory)
+    (ensure-directory (string-append directory "/entries"))
+    (ensure-directory (string-append directory "/categories"))
     (shtml:emit-file (html-boiler-plate () title 
-                                        `(,(menu-bar categories ())
-                                          ,@(make-index-list lyst)))
+                                        `(,(menu-bar categories () "./")
+                                          ,@(make-index-list lyst "./")))
                      (string-append directory "/index.html"))
     (shtml:emit-file (html-boiler-plate "Type hierarchy" 
                                         title 
-                                        `(,(menu-bar categories :hierarchy)
+                                        `(,(menu-bar categories :hierarchy "./")
                                           ,@(make-type-hierarchy-page lyst)))
                      (string-append directory "/hierarchy.html"))
 
@@ -438,9 +442,9 @@
                  (html-boiler-plate (category-name cat) 
                                     title 
                                     `(,(menu-bar categories 
-                                                 cat)
+                                                 cat "../")
                                       ,(make-entry-list 
-                                        (category-entries cat))))
+                                        (category-entries cat) "../")))
                  (string-append directory "/"
                                 (category-index-name cat))))
               categories)
