@@ -37,12 +37,10 @@ char* dfsch_format_trace(dfsch_object_t* trace){
       dfsch_object_t* tag = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 0);
       if (dfsch_compare_keyword(tag, "apply")){
         dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
-        dfsch_object_t* args = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 2);
         dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
-        sl_printf(sl, "  APPLY %s %s\n    %s\n",
+        sl_printf(sl, "  APPLY %s %s\n",
                   dfsch_object_2_string(proc, 10, DFSCH_WRITE),
-                  dfsch_object_2_string(flags, 10, DFSCH_WRITE),
-                  dfsch_object_2_string(args, 10, DFSCH_WRITE));
+                  dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
       } else if (dfsch_compare_keyword(tag, "eval")){
         dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);

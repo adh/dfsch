@@ -211,8 +211,10 @@ dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
 }
 dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
-  return dfsch_cons(DFSCH_FORM_REF(internal_let), 
-                    dfsch_cons(bind, exp));
+  return dfsch_immutable_list_cdr(exp, 
+                                  2, 
+                                  DFSCH_FORM_REF(internal_let), 
+                                  bind);
 }
 
 /////////////////////////////////////////////////////////////////////////////
