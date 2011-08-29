@@ -303,14 +303,23 @@
   (when entry
         (string-append (caddr entry) (make-filename (car entry)))))
 
+(define (build-uri entry)
+  (when entry
+        (string-append (caddr entry) (make-filename (car entry)))))
+
+
 (define (index-entry-for-name name)
   (find-if (lambda (entry) (eq? (car entry) name))
            *global-index*))
 
 (define (index-entry-for-value value)
   (and value ; ignore nil
-                  (find-if (lambda (entry) (eq? (cadr entry) value))
-                           *global-index*)))
+       (find-if (lambda (entry) (eq? (cadr entry) value))
+                *global-index*)))
+
+(define (index-entries-matching-value filter-func)
+  (filter (lambda (entry) (filter-func (cadr entry)))
+          *global-index*))
 
 (define (index-name-for-value value)
   (let ((entry (index-entry-for-value value)))
@@ -333,7 +342,20 @@
              ,(symbol-qualified-name (car entry)))
         (or name `(:pre ,(format "~y" value))))))
 
+(define (simple-value-link value &optional name)
+  (let ((entry (index-entry-for-value value)))
+    (if entry
+        `(:a :href ,(entry-filename entry)
+             ,(symbol-qualified-name (car entry)))
+        (or name `(:pre ,(format "~y" value))))))
 
+
+(define (matching-values-list filter-func)
+  `(:ul
+    ,@(map (lambda (entry)
+             `(a :href ,(build-uri entry)
+                 ,(symbol-qualified-name (car entry))))
+           (index-entries-matching-value filter-func))))
 
 (define (emit-one-entry entry directory title categories)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
@@ -388,7 +410,7 @@
           (else (< (id x) (id y))))))
 
 (define (type-subclass-tree lyst)
-  `(,@(when (car lyst) (list (value-link (car lyst))))
+  `(,@(when (car lyst) (list (simple-value-link (car lyst))))
     (:ul
      ,@(map (lambda (sub)
               `(:li
