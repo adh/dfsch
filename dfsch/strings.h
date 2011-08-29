@@ -179,7 +179,8 @@ extern "C" {
                                      char* string);
 
   char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
-                                     int preserve_uppercase);
+                                     int preserve_uppercase,
+                                     int convert_to_hypen);
 
   dfsch_object_t* dfsch_string_trim(dfsch_strbuf_t* string,
                                     dfsch_strbuf_t* bag,

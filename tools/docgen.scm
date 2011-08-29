@@ -234,7 +234,7 @@
 
 (define (category-index-name cat)
   (string-append "categories/" 
-                 (string->safe-filename (category-name cat) #t) 
+                 (string->safe-filename (category-name cat) #t #\Space) 
                  ".html"))
 
 (define (menu-bar categories current base)

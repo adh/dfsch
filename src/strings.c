@@ -1496,14 +1496,16 @@ static dfsch_object_t* pathname_extension(dfsch_object_t* s){
  * Underscore is used as escape character (with assumption that, in lisp
  * world, hypens are used more frequently than underscores).
  *
- * Primary motivation of this encoding is to be both unique and easily 
- * reversable.
+ * Primary motivation of this encoding is to be both unique and easily
+ * reversable. Note that there is no function that actualy does the
+ * inverse of this :)
  *
  * Empty names are converted to single underscore.
  */
 
 char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
-                                   int preserve_uppercase){
+                                   int preserve_uppercase,
+                                   int convert_to_hypen){
   size_t res_len = 0;
   char* res;
   char* r;
@@ -1515,7 +1517,8 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
   }
 
   while (len){
-    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-') ||
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || 
+                                     *i == convert_to_hypen) ||
         (preserve_uppercase && (*i >= 'A' && *i <= 'Z'))){
       res_len++;
     } else if (*i == '_'){
@@ -1537,9 +1540,12 @@ char* dfsch_strbuf_2_safe_filename(dfsch_strbuf_t* buf,
   len = buf->len;
   
   while (len){
-    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9' || *i == '-') ||
+    if ((*i >= 'a' && *i <= 'z') || (*i >= '0' && *i <= '9') ||
         (preserve_uppercase && (*i >= 'A' && *i <= 'Z'))){
       *r = *i;
+      r++;
+    } else if (*i == convert_to_hypen){
+      *r = '-';
       r++;
     } else if (*i == '_'){
       *r = '_';
@@ -2529,12 +2535,15 @@ DFSCH_DEFINE_PRIMITIVE(string_2_safe_filename,
                        NULL){
   dfsch_strbuf_t* string;
   dfsch_object_t* preserve_uppercase;
+  int convert_to_hypen;
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_OBJECT_ARG_OPT(args, preserve_uppercase, NULL);
+  DFSCH_LONG_ARG_OPT(args, convert_to_hypen, '-');
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string,
-                                                             preserve_uppercase != NULL));
+                                                             preserve_uppercase != NULL,
+                                                             convert_to_hypen));
 }
 
 DFSCH_DEFINE_PRIMITIVE(string_2_hexstring, 
