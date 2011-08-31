@@ -22,15 +22,19 @@
 ;;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 ;;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+;; Index searches are highly sub-optimal, but still, this thing is
+;; actually IO-bound :)
+
 (require :introspect)
 (require :shtml)
 (require :inet)
 (require :cmdopts)
 (require :os)
 (require :markdown)
+(require :markdown-tools)
 
 (define-package :docgen
-  :uses '(:dfsch :markdown :os :shtml)
+  :uses '(:dfsch :markdown :markdown-tools :os :shtml)
   :exports '())
 
 (define *stylesheet*
@@ -135,27 +139,37 @@
 (define-method (get-object-documentation (object <function-type-specializer>) 
                                          &key supress-head &allow-other-keys)
   (get-object-documentation (slot-ref object :proc) 
-                            :supress-head supress-head
+                            :supress-head #t
                             :supress-value #t))
 
 (define-method (get-object-documentation (object <standard-type>) 
                                          &key supress-head &allow-other-keys)
-  `(,(if supress-head '(:strong "Superclass:") '(:h2 "Superclass"))
+  `(,(if supress-head 
+         '(:strong "Superclass:") 
+         '(:h2 "Superclass"))
     ,(value-link (superclass object))
     ,@(unless supress-head '((:h2 "Slots")))
     (:ul ,@(map (lambda (slot) 
                   `(:li (:strong ,(slot-ref slot :name)) ": " 
                         ,(or (slot-ref slot :documentation) "")))
-                (get-slots object)))))
+                (get-slots object)))
+    ,(if supress-head 
+         '(:strong "Direct subclasses")
+         '(:h2 "Direct subclasses"))
+    ,(matching-values-list (lambda (type)
+                             (and (instance? type <standard-type>)
+                                  (eq? object (superclass type)))))))
 
 (define-method (get-object-documentation (object <standard-function>) 
                                          &key supress-head &allow-other-keys)
-  `(,@(unless supress-head '((:h2 "Arguments")))
+  `(,(if supress-head 
+         '(:strong "Arguments:")
+         '(:h2 "Arguments"))
     (:pre ,(format "~a" (slot-ref object :orig_args)))))
 
 
 (define-method (get-method-documentation (meth <method>))
-  `((:h3 "Specialized on:")
+  `((:h2 "Specialized on:")
     (:pre ,(format "~y" (slot-ref meth :specializers)))
     (:h3 "Implementation:")
     ,@(get-object-documentation (slot-ref meth :function) :supress-head #t)))
@@ -167,6 +181,14 @@
                   `(:li ,@(get-method-documentation method)))
                 (generic-function-methods object)))))
   
+(define-method (get-object-documentation (object <type-specializer>))
+  (unless (instance? object <standard-type>)
+          `((:h3 "Implemented by")
+            ,(matching-values-list 
+              (lambda (type) 
+                (and (instance? type <standard-type>)
+                     (specializer-matches-type? object type)))))))
+
 (define-method (get-object-documentation object 
                                          &key supress-value &allow-other-keys)
   (unless supress-value
@@ -209,7 +231,8 @@
   (list "Types"))
 
 (define-method (get-object-categories (object <type-specializer>))
-  (list "Type specializers"))
+  (unless (instance? object <standard-type>)
+          (list "Type specializers")))
 
 
 (define (html-boiler-plate title main-title infoset)
@@ -353,9 +376,10 @@
 (define (matching-values-list filter-func)
   `(:ul
     ,@(map (lambda (entry)
-             `(a :href ,(build-uri entry)
-                 ,(symbol-qualified-name (car entry))))
-           (index-entries-matching-value filter-func))))
+             `(:li 
+               (:a :href ,(build-uri entry)
+                   ,(symbol-qualified-name (car entry)))))
+               (index-entries-matching-value filter-func))))
 
 (define (emit-one-entry entry directory title categories)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
