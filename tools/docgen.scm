@@ -52,8 +52,13 @@
   margin-left: 0.5em; 
   margin-right: 0.5em
 }
-.menu-bar .pkg-nav {
+
+.pkg-menu {
+  display: block;
   float: right;
+}
+.pkg-label {
+  display: none;
 }
 .char-bar {
   display: block; 
@@ -286,15 +291,19 @@
                                                  (category-index-name cat))
                            ,(category-name cat)))))
            categories)
-    ,@(map (lambda (pkg)
-             (if (eq? pkg current)
-                 `(:li :class "pkg-nav"
-                       (:strong ,(slot-ref pkg :name)))
-                 `(:li :class pkg-nav
-                       (:a :href ,(string-append base 
-                                                 (package-index-name pkg))
-                           ,(slot-ref pkg :name)))))
-           packages)))
+    (:li (:strong :class "pkg-label" "Packages:")
+         (:ul :class "pkg-menu"
+              ,@(map 
+                 (lambda (pkg)
+                   (if (eq? pkg current)
+                       `(:li :class "pkg-nav"
+                             (:strong ,(slot-ref pkg :name)))
+                       `(:li :class pkg-nav
+                             (:a :href ,(string-append base 
+                                                       (package-index-name pkg))
+                                 ,(slot-ref pkg :name)))))
+                 packages))
+         (:span :class "pkg-clear"))))
 
 (define (char-name ch)
   (format "idx-~a" (car ch)))
@@ -547,9 +556,9 @@
 
     (for-each (lambda (pkg)
                 (shtml:emit-file 
-                 (html-boiler-plate () 
-                                    (string-append "Package "
+                 (html-boiler-plate (string-append "Package "
                                                    (slot-ref pkg :name))
+                                    title
                                     `(,(menu-bar categories pkg "../" packages)
                                       ,@(package-index pkg lyst)))
                  (string-append directory "/" 
