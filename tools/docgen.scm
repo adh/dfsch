@@ -52,6 +52,9 @@
   margin-left: 0.5em; 
   margin-right: 0.5em
 }
+.menu-bar .pkg-nav {
+  float: right;
+}
 .char-bar {
   display: block; 
   border-width: 1px; 
@@ -260,7 +263,12 @@
                  (string->safe-filename (category-name cat) #t #\Space) 
                  ".html"))
 
-(define (menu-bar categories current base)
+(define (package-index-name pkg)
+  (string-append "packages/" 
+                 (string->safe-filename (slot-ref pkg :name)) 
+                 ".html"))
+
+(define (menu-bar categories current base packages)
   `(:ul 
     :class "menu-bar"
     (:li ,(if current
@@ -277,7 +285,16 @@
                  `(:li (:a :href ,(string-append base 
                                                  (category-index-name cat))
                            ,(category-name cat)))))
-           categories)))
+           categories)
+    ,@(map (lambda (pkg)
+             (if (eq? pkg current)
+                 `(:li :class "pkg-nav"
+                       (:strong ,(slot-ref pkg :name)))
+                 `(:li :class pkg-nav
+                       (:a :href ,(string-append base 
+                                                 (package-index-name pkg))
+                           ,(slot-ref pkg :name)))))
+           packages)))
 
 (define (char-name ch)
   (format "idx-~a" (car ch)))
@@ -381,10 +398,13 @@
                    ,(symbol-qualified-name (car entry)))))
                (index-entries-matching-value filter-func))))
 
-(define (emit-one-entry entry directory title categories)
+(define (emit-one-entry entry directory title categories packages)
   (shtml:emit-file (html-boiler-plate (entry-name entry)
                                       title
-                                      `(,(menu-bar categories #t "../")
+                                      `(,(menu-bar categories 
+                                                   #t 
+                                                   "../" 
+                                                   packages)
                                         ,@(make-one-entry entry)))
                    (string-append directory "/"
                                   (entry-filename entry))))
@@ -409,6 +429,14 @@
     (map (lambda (cat)
            (cons (car cat) (reverse (cadr cat))))
          (collection->reversed-list m))))
+
+(define (unique lyst key)
+  (let ((m (make-hash)))
+    (for-each (lambda (entry)
+                (map-set! m (key entry) entry))
+              lyst)
+    (collection->reversed-list (map-keys m))))
+
 
 (define (build-type-hierarchy types)
   (letrec ((res (list ()))
@@ -465,21 +493,43 @@
                 ,(make-entry-list (cdr ch) base)))
             chars)))
 
+(define (package-index pkg lyst)
+  `(,@(format-documentation-slot pkg)
+    ,@(make-index-list (filter (lambda (entry) 
+                                 (eq? (symbol-package (car entry))
+                                      pkg)) 
+                               lyst)
+                       "../")))
+
 (define (emit-documentation lyst directory title)
   (index-put-all "../" lyst)
   (let ((categories (sort-list (group-by lyst entry-get-categories)
                                (lambda (x y)
-                                 (string<? (car x) (car y))))))
+                                 (string<? (car x) (car y)))))
+        (packages (sort-list (unique lyst 
+                                     (lambda (entry)
+                                       (symbol-package (car entry))))
+                             (lambda (a b)
+                               (string<? (slot-ref a :name)
+                                         (slot-ref b :name))))))
+
     (ensure-directory directory)
     (ensure-directory (string-append directory "/entries"))
     (ensure-directory (string-append directory "/categories"))
+    (ensure-directory (string-append directory "/packages"))
     (shtml:emit-file (html-boiler-plate () title 
-                                        `(,(menu-bar categories () "./")
+                                        `(,(menu-bar categories 
+                                                     () 
+                                                     "./"
+                                                     packages)
                                           ,@(make-index-list lyst "./")))
                      (string-append directory "/index.html"))
     (shtml:emit-file (html-boiler-plate "Type hierarchy" 
                                         title 
-                                        `(,(menu-bar categories :hierarchy "./")
+                                        `(,(menu-bar categories 
+                                                     :hierarchy 
+                                                     "./"
+                                                     packages)
                                           ,@(make-type-hierarchy-page lyst)))
                      (string-append directory "/hierarchy.html"))
 
@@ -488,15 +538,27 @@
                  (html-boiler-plate (category-name cat) 
                                     title 
                                     `(,(menu-bar categories 
-                                                 cat "../")
+                                                 cat "../" packages)
                                       ,(make-entry-list 
                                         (category-entries cat) "../")))
                  (string-append directory "/"
                                 (category-index-name cat))))
               categories)
+
+    (for-each (lambda (pkg)
+                (shtml:emit-file 
+                 (html-boiler-plate () 
+                                    (string-append "Package "
+                                                   (slot-ref pkg :name))
+                                    `(,(menu-bar categories pkg "../" packages)
+                                      ,@(package-index pkg lyst)))
+                 (string-append directory "/" 
+                                (package-index-name pkg))))
+              packages)
+    
                 
     (for-each (lambda (entry)
-                (emit-one-entry entry directory title categories))
+                (emit-one-entry entry directory title categories packages))
               lyst)))
 
 
