@@ -302,8 +302,7 @@
                              (:a :href ,(string-append base 
                                                        (package-index-name pkg))
                                  ,(slot-ref pkg :name)))))
-                 packages))
-         (:span :class "pkg-clear"))))
+                 packages)))))
 
 (define (char-name ch)
   (format "idx-~a" (car ch)))
