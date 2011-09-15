@@ -153,34 +153,20 @@ AM_CONDITIONAL(PCRE, test x"$enable_pcre" == x"yes")
 
 enable_tk_gui=yes
 
+
 AC_ARG_ENABLE([tk-gui],
     AS_HELP_STRING([--disable-tk-gui], [Disable tk-gui module]))
 
-SC_PATH_TCLCONFIG
-SC_LOAD_TCLCONFIG
-
 if test x$"$enable_tk_gui" == x"yes"; then
-    AC_MSG_CHECKING([for a compatible version of Tcl])      
-    if test \( "${TCL_MAJOR_VERSION}" -gt 8 \) -o \( "${TCL_MAJOR_VERSION}" -eq 8 -a "${TCL_MINOR_VERSION}" -ge 4 \); then          
-        AC_SUBST(TCL_INCLUDE_SPEC)
-        AC_MSG_RESULT(yes (${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}))
-    else
-        enable_tk_gui=no
-        AC_MSG_RESULT(no)
-    fi
-fi
+    AC_CHECK_HEADERS(tcl/tcl.h, [have_tcltk="1"], [have_tcltk="0"])
+    AC_CHECK_LIB(tcl, Tcl_Init, 
+                     [dummy_tcltk=], [have_tcltk="0"])
+    AC_CHECK_HEADERS(tcl/tk.h, [have_tcltk="1"], [have_tcltk="0"])
+    AC_CHECK_LIB(tk, Tk_Init, 
+                     [dummy_tcltk=], [have_tcltk="0"])
 
-SC_PATH_TKCONFIG
-SC_LOAD_TKCONFIG
-
-if test x$"$enable_tk_gui" == x"yes"; then
-    AC_MSG_CHECKING([for a compatible version of Tk])      
-    if test \( "${TK_MAJOR_VERSION}" -gt 8 \) -o \( "${TK_MAJOR_VERSION}" -eq 8 -a "${TK_MINOR_VERSION}" -ge 4 \); then          
-        AC_SUBST(TK_INCLUDE_SPEC)
-        AC_MSG_RESULT(yes (${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}))
-    else
+    if test x"$have_tcltk" == x"0" ; then
         enable_tk_gui=no
-        AC_MSG_RESULT(no)
     fi
 fi
 

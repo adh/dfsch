@@ -507,13 +507,13 @@ ini_file_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 
 libdfsch_tk_gui_la_SOURCES = lib/tk-gui.c
-libdfsch_tk_gui_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
-libdfsch_tk_gui_la_LIBADD = libdfsch.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
+libdfsch_tk_gui_la_LIBADD = libdfsch.la -ltcl -ltk
+libdfsch_tk_gui_la_CFLAGS = -I/usr/include/tcl
 libdfsch_tk_gui_la_LDFLAGS = -no-undefined
 
 tk_gui_interface_la_SOURCES = lib/tk-gui_mod.c
-tk_gui_interface_la_CFLAGS = $(TCL_INCLUDE_SPEC) $(TK_INCLUDE_SPEC)
-tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la $(TCL_LIB_SPEC) $(TK_LIB_SPEC)
+tk_gui_interface_la_CFLAGS = -I/usr/include/tcl
+tk_gui_interface_la_LIBADD = libdfsch.la libdfsch-tk-gui.la -ltcl -ltk
 tk_gui_interface_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
