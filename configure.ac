@@ -111,6 +111,25 @@ if test x$have_expat != x1; then
         AC_MSG_ERROR(expat XML parser is required.)
 fi
 
+AC_ARG_WITH([zlib],
+  AC_HELP_STRING([--with-zlib=PATH], [Path to zlib installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+AC_CHECK_HEADERS(zlib.h, [have_zlib="1"], [have_zlib="0"])
+AC_CHECK_LIB(z, uncompress, 
+                    [have_zlib=$have_zlib], [have_zlib="0"])
+
+if test x$have_zlib != x1; then
+        AC_MSG_RESULT()
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT(zlib not found!)
+        AC_MSG_RESULT(****************************************************************)
+        AC_MSG_RESULT()
+        AC_MSG_ERROR(zlib is required.)
+fi
+
+
 enable_pcre=yes
 
 AC_ARG_ENABLE([pcre],
