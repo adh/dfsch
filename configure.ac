@@ -157,11 +157,30 @@ enable_tk_gui=yes
 AC_ARG_ENABLE([tk-gui],
     AS_HELP_STRING([--disable-tk-gui], [Disable tk-gui module]))
 
+AC_ARG_WITH([tk-includes],
+  AC_HELP_STRING([--with-tk=PATH], [Path to Tk includes]),
+  tk_includes="${withval}")
+AC_ARG_WITH([tcl-includes],
+  AC_HELP_STRING([--with-tcl=PATH], [Path to Tcl includes]),
+  tcl_includes="${withval}")
+
 if test x$"$enable_tk_gui" == x"yes"; then
-    AC_CHECK_HEADERS(tcl/tcl.h, [have_tcltk="1"], [have_tcltk="0"])
+    if test x"$tcl_includes" == x; then
+        CPPFLAGS="$CPPFLAGS -I/usr/include/tcl"
+    else
+        CPPFLAGS="$CPPFLAGS -I${tcl_includes}"
+    fi
+
+    if test x"$tk_includes" == x; then
+        CPPFLAGS="$CPPFLAGS -I/usr/include/tk"
+    else
+        CPPFLAGS="$CPPFLAGS -I${tk_includes}"
+    fi
+
+    AC_CHECK_HEADERS(tcl.h, [have_tcltk="1"], [have_tcltk="0"])
     AC_CHECK_LIB(tcl, Tcl_Init, 
                      [dummy_tcltk=], [have_tcltk="0"])
-    AC_CHECK_HEADERS(tcl/tk.h, [have_tcltk="1"], [have_tcltk="0"])
+    AC_CHECK_HEADERS(tk.h, [have_tcltk="1"], [have_tcltk="0"])
     AC_CHECK_LIB(tk, Tk_Init, 
                      [dummy_tcltk=], [have_tcltk="0"])
 

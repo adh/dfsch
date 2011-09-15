@@ -2,8 +2,8 @@
 #define H__dfsch_lib__tk_gui__
 
 #include <dfsch/dfsch.h>
-#include <tcl/tcl.h>
-#include <tcl/tk.h>
+#include <tcl.h>
+#include <tk.h>
 
 extern dfsch_type_t dfsch_tcl_interpreter_type;
 #define DFSCH_TCL_INTERPRETER_TYPE               \
