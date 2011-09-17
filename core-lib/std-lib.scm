@@ -50,3 +50,9 @@
   `(destructuring-bind (&optional ,@variables &rest ,(gensym))
                        (%get-values ,values-form)
                        ,@body))
+
+(define-macro (dfsch:with-open-file variable args &body body)
+  (with-gensyms (result)
+  `(let ((,variable (open-file-port ,@args)))
+     (unwind-protect (begin ,@body)
+                     (close-file-port! ,variable))))
