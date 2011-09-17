@@ -1819,6 +1819,7 @@ dfsch_object_t* dfsch_get_values_list(dfsch_object_t* ret){
 
 
 extern char dfsch__std_lib[];
+extern char dfsch__sys_lib[];
 
 void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch_provide(ctx, "dfsch-language");
@@ -1901,6 +1902,7 @@ void dfsch_core_system_register(dfsch_object_t* ctx){
   dfsch__serdes_register(ctx);
   dfsch__load_register(ctx);
   dfsch__compiler_register(ctx);
+  dfsch_load_source(ctx, "*linked-system-library*", 0, dfsch__sys_lib);
 }
 
 

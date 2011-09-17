@@ -249,12 +249,12 @@ vm_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/serdes.c dfsch/serdes.h	\
 	src/sha256.c dfsch/sha256.h	\
 	ext/fastlz/fastlz.c ext/fastlz/fastlz.h \
-	std-lib.c
+	std-lib.c sys-lib.c
 
 libdfsch_la_SOURCES = $(vm_SOURCES) version.h
 
 
-BUILT_SOURCES=udata.c udata.h version.h std-lib.c
+BUILT_SOURCES=udata.c udata.h version.h std-lib.c sys-lib.c
 strings.o: udata.h
 udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
 	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
@@ -266,11 +266,18 @@ stdlib_sources = \
 	$(srcdir)/core-lib/conditions.scm\
 	$(srcdir)/core-lib/objects.scm
 
+syslib_sources = \
+	$(srcdir)/core-lib/system.scm
+
 std-lib.c: $(stdlib_sources) boot-source-tool$(EXEEXT)
 	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
 	$(stdlib_sources) -o std-lib.c
 
-CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT)
+sys-lib.c: $(syslib_sources) boot-source-tool$(EXEEXT)
+	./boot-source-tool$(EXEEXT) -c dfsch__sys_lib \
+	$(syslib_sources) -o sys-lib.c
+
+CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT) sys-lib.c
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
 	$(CC_FOR_BUILD) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
@@ -653,6 +660,6 @@ TESTS = tests/scm-test.sh
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp
 
-version.h: $(vm_SOURCES) $(stdlib_sources)
+version.h: $(vm_SOURCES) $(stdlib_sources) $(syslib_sources)
 	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
 

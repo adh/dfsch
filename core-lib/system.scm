@@ -1,5 +1,5 @@
 ;;; dfsch - Scheme-like Lisp dialect
-;;;   Standard macros
+;;;   System-related macros
 ;;; Copyright (c) 2010, 2011 Ales Hakl
 ;;;
 ;;; Permission is hereby granted, free of charge, to any person obtaining
@@ -30,23 +30,8 @@
 
 (dfsch:in-package :dfsch%implementation)
 
-;; Exported symbols are explicitly placed into dfsch package, 
-;; dfsch%implementation is not intended to be directly used by user code
-;; dfsch%internal presents low level functionality required to implement some
-;; core functionality in scheme code
-
-(define-macro (dfsch:with-gensyms gensyms &body body)
-  `@(let ,(map (lambda (name) `(,name (gensym))) gensyms)
-      ,@body))
-
-(define-macro (dfsch:loop &body exprs)
-  (with-gensyms (tag)
-    `@(catch ',tag
-             (let ()
-               (define (dfsch:break value) (throw ',tag value))
-               (%loop ,@exprs)))))
-
-(define-macro (dfsch:multiple-value-bind variables values-form &body body)
-  `(destructuring-bind (&optional ,@variables &rest ,(gensym))
-                       (%get-values ,values-form)
-                       ,@body))
+(define-macro (dfsch:with-open-file variable args &body body)
+  (with-gensyms (result)
+  `(let ((,variable (dfsch:open-file-port ,@args)))
+     (unwind-protect (begin ,@body)
+                     (dfsch:close-file-port! ,variable)))))
