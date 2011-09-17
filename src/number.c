@@ -1089,7 +1089,7 @@ dfsch_object_t* dfsch_number_logxor(dfsch_object_t* a, dfsch_object_t* b){
 }
 dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a){
   if (DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
-    return DFSCH_MAKE_FIXNUM(-DFSCH_FIXNUM_REF(a));
+    return DFSCH_MAKE_FIXNUM(~DFSCH_FIXNUM_REF(a));
   }
   return 
     dfsch_bignum_to_number(dfsch_bignum_lognot(dfsch_bignum_from_number(a)));
@@ -1582,6 +1582,17 @@ DFSCH_DEFINE_PRIMITIVE(logand, NULL){
   }
 
   return s; 
+}
+DFSCH_DEFINE_PRIMITIVE(logtest, NULL){
+  object_t* i = args;
+  dfsch_object_t* s = DFSCH_MAKE_FIXNUM(-1); /* all ones */
+
+  while(DFSCH_PAIR_P(i)){
+    s = dfsch_number_logand(s, DFSCH_FAST_CAR(i));
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return dfsch_bool(s != DFSCH_MAKE_FIXNUM(0)); 
 }
 DFSCH_DEFINE_PRIMITIVE(logior, NULL){
   object_t* i = args;
@@ -2118,6 +2129,7 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "lcm", DFSCH_PRIMITIVE_REF(lcm));
 
   dfsch_defcanon_cstr(ctx, "logand", DFSCH_PRIMITIVE_REF(logand));
+  dfsch_defcanon_cstr(ctx, "logtest", DFSCH_PRIMITIVE_REF(logtest));
   dfsch_defcanon_cstr(ctx, "logior", DFSCH_PRIMITIVE_REF(logior));
   dfsch_defcanon_cstr(ctx, "logxor", DFSCH_PRIMITIVE_REF(logxor));
   dfsch_defcanon_cstr(ctx, "lognot", DFSCH_PRIMITIVE_REF(lognot));

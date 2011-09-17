@@ -51,6 +51,19 @@
   (assert-equal (>> 3523532227357930030104576 54) 
                 195595330))
 
+(define-test bitwise-logic (:language :numbers)
+  (assert-true (logtest 1 7))
+  (assert-false (logtest 1 2))
+  (assert-true (logtest -2 -1))
+  (assert-false (logtest 0 -1))
+
+  (assert-equal (logior 1 2 4 8) 15)
+  (assert-equal (logxor 1 3 7 15) 10)
+  (assert-equal (logand 16 31) 16)
+  (assert-equal (lognot 0) -1)
+  (assert-equal (lognot (1+ (lognot 1000))) 999))
+
+
 (define-test nonlocal-exits (:language :control)
   (assert-true (catch 'foo
                       (catch 'bar
