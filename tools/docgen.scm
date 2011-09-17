@@ -73,6 +73,15 @@
   margin-right: 0.3em
 }
 
+.chapter-list {
+  margin-top: 0em;
+  background-color: #cdabef;
+  border-width: 1px; 
+  border-color: black; 
+  border-style: solid;
+  float: right;
+}
+
 ")
 
 (define (directory? path)
@@ -318,7 +327,8 @@
            chars)))
 
 (define (make-one-entry entry)
-  (let ((object (cadr entry)))
+  (let ((object (cadr entry))
+        (name (car entry)))
     (get-object-documentation object)))
 
 (define (entry-name entry)
@@ -509,7 +519,41 @@
                                lyst)
                        "../")))
 
-(define (emit-documentation lyst directory title)
+(define (read-markdown-file filename)
+  (with-open-file f (filename "r")
+                  (markdown-tools:split-file f)))
+
+(define (chapter-file-name chapter &optional (base "chapters/"))
+  (string-append base 
+                 (string->safe-filename (car chapter) #t #\Space)
+                 ".html"))
+                                         
+
+(define (chapter-index chapters)
+  (when chapters
+        `((:literal-output
+           ,(convert-documentation-block (cadar chapters)))
+          (:ul
+           ,@(map (lambda (chapter)
+                    `(:li (:a :href ,(chapter-file-name chapter)
+                              ,(car chapter))))
+                  (cdr chapters)))
+          ,@(unless (equal? "" (cadar chapters))
+                    '((:h2 "Defined symbols:"))))))
+
+(define (chapter-content chapter chapters)
+  `((:ul :class "chapter-list"
+         ,@(map (lambda (ch)
+                  `(:li ,(if (eq? ch chapter)
+                             `(:strong ,(car ch))
+                             `(:a :href ,(chapter-file-name ch "./")
+                                  ,(car ch)))))
+                (cdr chapters)))
+    (:literal-output
+     ,(convert-documentation-block (cadr chapter)))))
+
+(define (emit-documentation lyst directory title
+                            &key notes chapters)
   (index-put-all "../" lyst)
   (let ((categories (sort-list (group-by lyst entry-get-categories)
                                (lambda (x y)
@@ -519,17 +563,23 @@
                                        (symbol-package (car entry))))
                              (lambda (a b)
                                (string<? (slot-ref a :name)
-                                         (slot-ref b :name))))))
+                                         (slot-ref b :name)))))
+        (note-list (when notes (read-markdown-file notes)))
+        (chapter-list (when chapters (read-markdown-file chapters))))
 
     (ensure-directory directory)
     (ensure-directory (string-append directory "/entries"))
     (ensure-directory (string-append directory "/categories"))
     (ensure-directory (string-append directory "/packages"))
+    (when chapter-list
+          (ensure-directory (string-append directory "/chapters")))
+
     (shtml:emit-file (html-boiler-plate () title 
                                         `(,(menu-bar categories 
                                                      () 
                                                      "./"
                                                      packages)
+                                          ,@(chapter-index chapter-list)
                                           ,@(make-index-list lyst "./")))
                      (string-append directory "/index.html"))
     (shtml:emit-file (html-boiler-plate "Type hierarchy" 
@@ -540,6 +590,18 @@
                                                      packages)
                                           ,@(make-type-hierarchy-page lyst)))
                      (string-append directory "/hierarchy.html"))
+
+    (for-each (lambda (chapter)
+                (shtml:emit-file 
+                 (html-boiler-plate (car chapter) 
+                                    title 
+                                    `(,(menu-bar categories 
+                                                 #t "../" packages)
+                                      ,@(chapter-content chapter chapter-list)))
+                 (string-append directory "/"
+                                (chapter-file-name chapter))))
+              (cdr chapter-list))
+
 
     (for-each (lambda (cat)
                 (shtml:emit-file 
@@ -570,27 +632,43 @@
               lyst)))
 
 
-(define (emit-core-documentation directory)
+(define (emit-core-documentation directory &key notes chapters)
   (emit-documentation 
    (get-toplevel-variables)
    directory
-   "Default dfsch top-level environment"))
+   "Default dfsch top-level environment"
+   :notes notes
+   :chapters chapters))
 
-(define (emit-module-documentation directory module)
+(define (emit-module-documentation directory module &key notes chapters)
   (emit-documentation 
    (get-module-variables module)
    directory
-   (string-append (object->string module) " module")))
+   (string-append (object->string module) " module")
+   :notes notes
+   :chapters chapters))
 
 (when-toplevel
  (define module-name ())
  (define directory-name ())
+ (define chapters-file-name ())
+ (define notes-file-name ())
 
  (let ((parser (cmdopts:make-parser)))
    (cmdopts:add-option parser 
                        (lambda (p v)
                          (set! module-name (string->object v)))
                        :long-option "module"
+                       :has-argument #t)
+   (cmdopts:add-option parser
+                       (lambda (p v)
+                         (set! notes-file-name v))
+                       :long-option "notes"
+                       :has-argument #t)
+   (cmdopts:add-option parser
+                       (lambda (p v)
+                         (set! chapters-file-name v))
+                       :long-option "chapters"
                        :has-argument #t)
    (cmdopts:add-argument parser
                          (lambda (p v)
@@ -599,7 +677,11 @@
    (cmdopts:parse-list parser (cdr *posix-argv*)))
  
  (if module-name
-     (emit-module-documentation directory-name module-name)
-     (emit-core-documentation directory-name)))
+     (emit-module-documentation directory-name module-name
+                                :chapters chapters-file-name
+                                :notes notes-file-name)
+     (emit-core-documentation directory-name
+                              :chapters chapters-file-name
+                                :notes notes-file-name)))
 
 ;(emit-core-documentation "out")
