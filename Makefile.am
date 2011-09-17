@@ -663,3 +663,9 @@ dist-hook:
 version.h: $(vm_SOURCES) $(stdlib_sources) $(syslib_sources)
 	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
 
+.PHONY: documentation
+
+documentation: all
+	./dfsch-run -L ./.libs -L $(srcdir)/lib-scm \
+		$(srcdir)/tools/docgen.scm --chapters $(srcdir)/doc/manual.md \
+		documentation
