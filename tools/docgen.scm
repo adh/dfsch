@@ -75,6 +75,8 @@
 
 .chapter-list {
   margin-top: 0em;
+  padding-left: 1.5em;
+  padding-right: 0.5em;
   background-color: #cdabef;
   border-width: 1px; 
   border-color: black; 
