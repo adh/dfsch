@@ -221,7 +221,7 @@ dfschlibscm_DATA = lib-scm/stream-functions.scm \
 
 man_MANS = doc/dfsch-repl.1
 
-libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
+vm_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h\
 	src/types.c src/types.h dfsch/types.h src/package.c\
 	src/parse.c dfsch/parse.h 	\
 	src/primitives.c src/native_cxr.c	\
@@ -250,6 +250,8 @@ libdfsch_la_SOURCES = src/dfsch.c dfsch/dfsch.h src/internal.h version.h\
 	src/sha256.c dfsch/sha256.h	\
 	ext/fastlz/fastlz.c ext/fastlz/fastlz.h \
 	std-lib.c
+
+libdfsch_la_SOURCES = $(vm_SOURCES) version.h
 
 
 BUILT_SOURCES=udata.c udata.h version.h std-lib.c
@@ -651,6 +653,6 @@ TESTS = tests/scm-test.sh
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp
 
-version.h:
+version.h: $(vm_SOURCES) $(stdlib_sources)
 	$(srcdir)/make-version-h.sh $(srcdir)/snapshot.stamp
 
