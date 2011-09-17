@@ -226,16 +226,16 @@ dfsch_object_t* dfsch_generate_let(dfsch_object_t* bind,
 DFSCH_DEFINE_FORM(unwind_protect, {DFSCH_FORM_COMPILE(begin_like)},
                   NULL){
   object_t* protect;
-  object_t* ret;
+  object_t* ret = NULL;
   DFSCH_OBJECT_ARG(args, protect);
  
   DFSCH_UNWIND {
-    dfsch_eval(protect, env);
+    ret = dfsch_get_values_list(dfsch_eval(protect, env));
   } DFSCH_PROTECT {
-    ret = dfsch_eval_proc(args, env);
+    dfsch_eval_proc(args, env);
   } DFSCH_PROTECT_END;
 
-  return ret;
+  return dfsch_values_list(ret);
 }
 
 
