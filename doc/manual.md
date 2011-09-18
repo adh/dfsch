@@ -2,8 +2,8 @@ dfsch is programming language inspired by Scheme and C-based
 implementation of said language. Although dfsch is heavily inspired by
 Scheme, language design tries to stress practical usability and rapid
 development (of both implementation and user code) instead of Scheme's
-theoretical foundations. In some aspects, dfsch draws inspiration from
-Common Lisp.
+theoretical foundations. In some rather significant aspects, dfsch
+draws inspiration from Common Lisp.
 
 This documentation tries to explain and document whole language, but
 in it's current state probably contain parts that are not
@@ -96,4 +96,62 @@ objects prefixed by #.
 
 In contrast to Scheme, vectors in dfsch are self-evaluating atomic
 objects and thus valid when present unquoted in program source.
+
+# Program structure
+
+As previously noted, program code is represented by list structure, in
+this structure, each object represents some expression to be
+evaluated. All expressions evaluate to some value - there is no
+difference between statements and expressions.
+
+Objects of most types evaluate directly to themselves. Two important
+exceptions are non-empty lists and symbols. Symbols represent
+variables and are thus evaluated to value of relevant variable.
+
+## Compound expressions
+
+Non-empty lists represent all other useful expressions. At first,
+first element of such list is evaluated as expression. Resulting value
+can be of multiple types:
+
+ * Function or other object than can be used as function
+ * Macro (|<macro>|)
+ * Special form (|<form>|)
+
+Rest of such list is used as arguments to object resulting from such
+evaluation.
+
+### Function calls
+
+In case of function call, all arguments are evaluated first (in
+unspecified order) and then passed to relevant function. For example:
+
+
+    ]=> (+ 1 2)
+    3
+    ]=> (* 2 (+ 3 4))
+    14
+
+### Macro expansions
+
+Macro is special case of function that operates on program source code
+during compilation. Arguments are passed without any modification into
+this function which can process them in any way it wants. Result of
+this function is then executed as program code instead of original
+expression.
+
+Many control structures are actually implemented as macros that expand
+into simpler representations.
+
+### Special forms
+
+Some control structures have to be implemented by special cases in
+interpreter and compiler. Such structures are represented by so called
+special forms. As is the case with macros, exact behavior is
+completely dependent on implementation of special form.
+
+## Defining functions and variables
+
+
+
 
