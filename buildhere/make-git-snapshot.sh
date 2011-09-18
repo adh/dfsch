@@ -9,6 +9,7 @@ fi
 if make distcheck; then
   mv dfsch-0.4.0-dev.tar.gz dfsch-0.4.0-dev$REV.tar.gz
   echo  dfsch-0.4.0-dev$REV.tar.gz packaged sucessfully
+  ln -s dfsch-0.4.0-dev$REV.tar.gz dfsch-current-snapshot.tar.gz
   exit 0
 fi
 

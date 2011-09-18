@@ -353,8 +353,8 @@ esac
 AM_CONDITIONAL(WIN32, test x$win32 == xtrue)
 
 
-dfschlibexecdir="${libdir}/dfsch/"
-dfschlibscmdir="${datadir}/dfsch/scm/"
+dfschlibexecdir="${libdir}/dfsch"
+dfschlibscmdir="${datadir}/dfsch/scm"
 
 CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
 

@@ -311,6 +311,7 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	examples/tk-gui-demo.scm \
 	examples/http-server-demo.scm \
 	$(stdlib_sources) \
+	$(syslib_sources) \
 	tests/main.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
