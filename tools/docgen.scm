@@ -84,6 +84,16 @@
   float: right;
 }
 
+pre {
+  border-color: #abcdef;
+  border-style: dashed;
+  border-width: 1px;
+  border-left-style: solid;
+  border-left-width: 0.5em;
+  margin-left: 2em;
+  margin-right: 2em;
+}
+
 ")
 
 (define (directory? path)
