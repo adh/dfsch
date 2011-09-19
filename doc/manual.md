@@ -173,14 +173,14 @@ name. For example this function adds 3 to it's argument.
      (lambda (x) (+ 3 x))
 
 dfsch supplies many built-in functions, that are parametrized by
-function that is passed to them as argument. For example #|map|#:
+function that is passed to them as argument. For example |map|:
      
     ]=> (map (lambda (x) (+ 3 x)) '(1 2 3 4))
     (4 5 6 7)
 
 As functions are also values, there is no difference between variable
 naming function and any other variable. Previously shown function
-definition using #|define|# is essentially equivalent to this code:
+definition using |define| is essentially equivalent to this code:
 
     (define speak
       (lambda ()
@@ -190,3 +190,25 @@ definition using #|define|# is essentially equivalent to this code:
 There are some important differences, but they are more relevant to
 implementation of dfsch than to program meaning.
 
+For variables directly defined by user, two additional forms are
+avaiable:
+
+    (define-variable *foo* 123)
+    (define-constant +bar+ 456)
+    
+In both cases, variable is defined when it does not already exist (in
+contrast to |define|, which would overwriteit). |define-constant| also
+signals to compiler, that you do not intend to modify this
+variable. Symbols like \* and \+ around such variable names are
+traditionally used to distinguish global variables and constants from
+other names.
+
+# Collections, sequences and mappings
+
+# Strings
+
+# Numbers
+
+# Input and output
+
+# Objects and types
