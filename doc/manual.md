@@ -241,6 +241,38 @@ other names.
 
 # Collections, sequences and mappings
 
+dfsch provides abstraction for common collection types. Collections of
+objects (accessible only for iteration), ordered sequences and
+mappings (called dictionaries or hashes in other languages). These
+data types are accessed by common set of functions regardless of their
+real underlying implementation.
+
+## Collections
+
+Collection is abstraction for object that can be iterated over. All
+objects implementing |<<collection>>| can be passed to function
+|collection-iterator| which returns iterator that in some sense
+iterates over contents of given collection.
+
+Interface of iterators is designed to be partialy compatible with
+ordinary Lisp lists - that is, lists can be directly used as
+iterators. However, steping iterator to next element may modify
+iterator itself. Function |iter-this| returns object that iterator
+points to (and is thus equivalent to |car|), on the other hand
+|iter-next!| returns iterator pointing to next element or empty list,
+when no more elements are avaiable. Reusing argument to |iter-next!|
+in any way produces unpredictable results (except when |iter-next!|
+returns it's argument).
+
+Function |coerce-collection| returns collection of given type with
+same contents as collection that it's its first argument. Functions
+|collection->list| and |collection->reversed-list| convert collections
+to lists, with second one being slightly faster.
+
+## Sequences
+
+## Mappings
+
 # Strings
 
 # Numbers
