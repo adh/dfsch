@@ -152,6 +152,41 @@ completely dependent on implementation of special form.
 
 ## Defining functions and variables
 
+Special form |define| allows you to define new variables. For example:
 
+    (define pi 3.141592)
+    (define sound "nyan!")
 
+Also, you can use this special form to define functions:
+
+    (define (speak)
+      (display "nyan!")
+      (newline))
+
+Functions are simplest construct that can be used to organize programs
+into reusable components and thus are very important. In contrast to
+many commonly used programming languages, functions are not only parts
+of program, but also usable values that can be passed around. Special
+form |lambda| evaluates to function object, which does not have any
+name. For example this function adds 3 to it's argument.
+
+     (lambda (x) (+ 3 x))
+
+dfsch supplies many built-in functions, that are parametrized by
+function that is passed to them as argument. For example #|map|#:
+     
+    ]=> (map (lambda (x) (+ 3 x)) '(1 2 3 4))
+    (4 5 6 7)
+
+As functions are also values, there is no difference between variable
+naming function and any other variable. Previously shown function
+definition using #|define|# is essentially equivalent to this code:
+
+    (define speak
+      (lambda ()
+        (display "nyan!")
+        (newline)))
+
+There are some important differences, but they are more relevant to
+implementation of dfsch than to program meaning.
 
