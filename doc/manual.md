@@ -190,6 +190,41 @@ definition using |define| is essentially equivalent to this code:
 There are some important differences, but they are more relevant to
 implementation of dfsch than to program meaning.
 
+As functions are values like any other, they can be also returned from
+other functions. This allows us to define functions, that make other
+functions. For example:
+
+    (define (make-adder x)
+      (lambda (y) (+ x y)))
+
+This function would allow us to rewrite previous example with |map| in
+arguably more compact or readable form (although it is disputable, in
+this simple case):
+
+    ]=> (map (make-adder 3) '(1 2 3 4))
+    (4 5 6 7)
+
+Because variables in dfsch are lexically scoped, x in defineition of
+make-adder reffers to it's argument, even when there are other
+variables named x. In a sense, variable references refer to variables
+whose definition is nearest.
+
+Constructs |let|, |let\*| and |letrec| create new variable
+scope. Also, these constructs allow us to define variables in this new
+scope. These constructs are traditionally used for temporary variables
+and such. Initial values of new variables are evaluated in outer scope
+in |let| case, in scope containing all preceding variables for |let\*|
+and |letrec| evaluates initial values in newly created environment (it
+is called let*rec*, because it allows definition of local recursive
+functions).
+
+    (define (directory? path)
+      (let ((stat (os:stat path)))
+        (if (null? stat)
+            ()
+            (stat :isdir))))
+
+
 For variables directly defined by user, two additional forms are
 avaiable:
 
@@ -202,6 +237,7 @@ signals to compiler, that you do not intend to modify this
 variable. Symbols like \* and \+ around such variable names are
 traditionally used to distinguish global variables and constants from
 other names.
+
 
 # Collections, sequences and mappings
 
