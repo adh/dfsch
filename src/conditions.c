@@ -26,6 +26,7 @@
 #include "util.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include "internal.h"
 
 dfsch_object_t* dfsch_make_condition(dfsch_type_t* type){
   dfsch__condition_t* c;
@@ -222,10 +223,14 @@ static void print_warning(dfsch_object_t* condition){
   }
 }
 
+static DEFINE_VM_PARAM(print_warnings, 1,
+                       "Print otherwise unhandled warnings to stderr");
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  int handled = 0;
 
   i = save = ti->handler_list;
 
@@ -233,6 +238,7 @@ void dfsch_signal(dfsch_object_t* condition){
     if (DFSCH_INSTANCE_P(condition, i->type)){
       ti->handler_list = i->next;
       dfsch_apply(i->handler, dfsch_cons(condition, NULL));
+      handled = 1;
     }
     i = i->next;
   }
@@ -250,7 +256,9 @@ void dfsch_signal(dfsch_object_t* condition){
     dfsch_lose_fatally("Unhandled error condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
-  } else if (DFSCH_INSTANCE_P(condition, DFSCH_WARNING_TYPE)){
+  } else if (print_warnings 
+	     && !handled 
+	     && DFSCH_INSTANCE_P(condition, DFSCH_WARNING_TYPE)){
     print_warning(condition);
   }
 
