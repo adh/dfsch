@@ -173,14 +173,14 @@ name. For example this function adds 3 to it's argument.
      (lambda (x) (+ 3 x))
 
 dfsch supplies many built-in functions, that are parametrized by
-function that is passed to them as argument. For example #|map|#:
+function that is passed to them as argument. For example |map|:
      
     ]=> (map (lambda (x) (+ 3 x)) '(1 2 3 4))
     (4 5 6 7)
 
 As functions are also values, there is no difference between variable
 naming function and any other variable. Previously shown function
-definition using #|define|# is essentially equivalent to this code:
+definition using |define| is essentially equivalent to this code:
 
     (define speak
       (lambda ()
@@ -190,3 +190,93 @@ definition using #|define|# is essentially equivalent to this code:
 There are some important differences, but they are more relevant to
 implementation of dfsch than to program meaning.
 
+As functions are values like any other, they can be also returned from
+other functions. This allows us to define functions, that make other
+functions. For example:
+
+    (define (make-adder x)
+      (lambda (y) (+ x y)))
+
+This function would allow us to rewrite previous example with |map| in
+arguably more compact or readable form (although it is disputable, in
+this simple case):
+
+    ]=> (map (make-adder 3) '(1 2 3 4))
+    (4 5 6 7)
+
+Because variables in dfsch are lexically scoped, x in defineition of
+make-adder reffers to it's argument, even when there are other
+variables named x. In a sense, variable references refer to variables
+whose definition is nearest.
+
+Constructs |let|, |let\*| and |letrec| create new variable
+scope. Also, these constructs allow us to define variables in this new
+scope. These constructs are traditionally used for temporary variables
+and such. Initial values of new variables are evaluated in outer scope
+in |let| case, in scope containing all preceding variables for |let\*|
+and |letrec| evaluates initial values in newly created environment (it
+is called let*rec*, because it allows definition of local recursive
+functions).
+
+    (define (directory? path)
+      (let ((stat (os:stat path)))
+        (if (null? stat)
+            ()
+            (stat :isdir))))
+
+
+For variables directly defined by user, two additional forms are
+avaiable:
+
+    (define-variable *foo* 123)
+    (define-constant +bar+ 456)
+    
+In both cases, variable is defined when it does not already exist (in
+contrast to |define|, which would overwriteit). |define-constant| also
+signals to compiler, that you do not intend to modify this
+variable. Symbols like \* and \+ around such variable names are
+traditionally used to distinguish global variables and constants from
+other names.
+
+
+# Collections, sequences and mappings
+
+dfsch provides abstraction for common collection types. Collections of
+objects (accessible only for iteration), ordered sequences and
+mappings (called dictionaries or hashes in other languages). These
+data types are accessed by common set of functions regardless of their
+real underlying implementation.
+
+## Collections
+
+Collection is abstraction for object that can be iterated over. All
+objects implementing |<<collection>>| can be passed to function
+|collection-iterator| which returns iterator that in some sense
+iterates over contents of given collection.
+
+Interface of iterators is designed to be partialy compatible with
+ordinary Lisp lists - that is, lists can be directly used as
+iterators. However, steping iterator to next element may modify
+iterator itself. Function |iter-this| returns object that iterator
+points to (and is thus equivalent to |car|), on the other hand
+|iter-next!| returns iterator pointing to next element or empty list,
+when no more elements are avaiable. Reusing argument to |iter-next!|
+in any way produces unpredictable results (except when |iter-next!|
+returns it's argument).
+
+Function |coerce-collection| returns collection of given type with
+same contents as collection that it's its first argument. Functions
+|collection->list| and |collection->reversed-list| convert collections
+to lists, with second one being slightly faster.
+
+## Sequences
+
+## Mappings
+
+# Strings
+
+# Numbers
+
+# Input and output
+
+# Objects and types
