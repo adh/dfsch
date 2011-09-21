@@ -174,7 +174,7 @@ dfsch_type_t dfsch_warning_type =
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "warning");
 
 dfsch_type_t dfsch_style_warning_type = 
-  DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "style-warning");
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_WARNING_TYPE, "style-warning");
 
 dfsch_type_t dfsch_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "error");
@@ -209,6 +209,19 @@ void dfsch_set_error_policy(int pol){
   dfsch__get_thread_info()->error_policy = pol;
 }
 
+static void print_warning(dfsch_object_t* condition){
+  dfsch_object_t* msg = dfsch_condition_field_cstr(condition,
+						   "message");
+  if (msg){
+    fprintf(stderr, ";; %s: %s\n", 
+	    DFSCH_TYPE_OF(condition)->name,
+	    dfsch_string_to_cstr(msg));
+  } else {
+    fprintf(stderr, ";; warning: %s\n", 
+	    dfsch_object_2_string(condition, 10, DFSCH_WRITE));    
+  }
+}
+
 void dfsch_signal(dfsch_object_t* condition){
   dfsch__handler_list_t* save;
   dfsch__handler_list_t* i;
@@ -237,6 +250,8 @@ void dfsch_signal(dfsch_object_t* condition){
     dfsch_lose_fatally("Unhandled error condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
+  } else if (DFSCH_INSTANCE_P(condition, DFSCH_WARNING_TYPE)){
+    print_warning(condition);
   }
 
   ti->handler_list = save;
