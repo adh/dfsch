@@ -305,15 +305,15 @@ dfsch_object_t* dfsch_ffi_make_function(dfsch_object_t* lib,
 
 static internal_type_t* get_object_type(dfsch_object_t* obj){
   if (dfsch_string_p(obj)){
-    return &(internal_types[3]);
+    return &(internal_types[3]); /* char* */
   }
   if (dfsch_integer_p(obj)){
-    return &(internal_types[1]);
+    return &(internal_types[1]); /* int */
   }
   if (dfsch_real_p(obj)){
-    return &(internal_types[2]);
+    return &(internal_types[2]); /* double */
   }
-  if (DFSCH_INSTANCE_P(obj, DFSCH_FFI_POINTER_TYPE)){
+  if (DFSCH_INSTANCE_P(obj, DFSCH_FFI_POINTER_TYPE)){ /* void* */
     return &(internal_types[4]);
   }
   dfsch_error("No automatic conversion for this object", obj);
