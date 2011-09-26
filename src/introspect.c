@@ -28,6 +28,16 @@
 
 static void safe_print_object();
 
+dfsch_object_t* dfsch_find_source_annotation(dfsch_object_t* list){
+  dfsch_object_t* anot = dfsch_get_list_annotation(list);
+  while (DFSCH_PAIR_P(anot) &&
+         (DFSCH_FAST_CAR(anot) == DFSCH_SYM_MACRO_EXPANDED_FROM ||
+          DFSCH_FAST_CAR(anot) == DFSCH_SYM_COMPILED_FROM)){
+    anot = dfsch_get_list_annotation(DFSCH_FAST_CDR(anot));
+  }
+  return anot;
+}
+
 
 char* dfsch_format_trace(dfsch_object_t* trace){
   str_list_t* sl = sl_create();

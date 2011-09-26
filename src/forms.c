@@ -40,6 +40,7 @@
 DFSCH_FORM_METHOD_COMPILE(if){
   dfsch_object_t* args = DFSCH_FAST_CDR(expr);
   object_t* test;
+  object_t* test_val;
   object_t* consequent;
   object_t* alternate;
 
@@ -49,6 +50,15 @@ DFSCH_FORM_METHOD_COMPILE(if){
   DFSCH_ARG_END(args);
   
   test = dfsch_compile_expression(test, env);
+  test_val = dfsch_constant_expression_value(test, env);
+
+  if (test_val != DFSCH_INVALID_OBJECT){
+    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
+                           "conditional branch with constant condition",
+                           "code", expr,
+                           NULL);
+  }
+
   consequent = dfsch_compile_expression(consequent, env);
   alternate = dfsch_compile_expression(alternate, env);
 

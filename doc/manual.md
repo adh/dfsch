@@ -271,6 +271,11 @@ to lists, with second one being slightly faster.
 
 ## Sequences
 
+Objects implementing indexed collections of other object are so called
+sequence objects and implement |<<sequence>>|. These objects can be
+accessed by functions |seq-ref| and |seq-set!|. It's apparent, that
+most sequences are also collections.
+
 ## Mappings
 
 # Strings

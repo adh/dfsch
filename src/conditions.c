@@ -213,6 +213,8 @@ void dfsch_set_error_policy(int pol){
 static void print_warning(dfsch_object_t* condition){
   dfsch_object_t* msg = dfsch_condition_field_cstr(condition,
 						   "message");
+  dfsch_object_t* code = dfsch_condition_field_cstr(condition,
+                                                    "code");
   if (msg){
     fprintf(stderr, ";; %s: %s\n", 
 	    DFSCH_TYPE_OF(condition)->name,
@@ -220,6 +222,21 @@ static void print_warning(dfsch_object_t* condition){
   } else {
     fprintf(stderr, ";; warning: %s\n", 
 	    dfsch_object_2_string(condition, 10, DFSCH_WRITE));    
+  }
+
+  if (code) {
+    dfsch_object_t* anot = dfsch_find_source_annotation(code);
+    if (DFSCH_PAIR_P(anot)){
+      fprintf(stderr, ";;    near %s:%s\n",
+              dfsch_object_2_string(DFSCH_FAST_CAR(anot), 10, 
+                                    DFSCH_PRINT),
+              dfsch_object_2_string(DFSCH_FAST_CDR(anot), 10,
+                                    DFSCH_PRINT));
+    } else {
+      fprintf(stderr, ";;    near %s\n",
+              dfsch_object_2_string(anot, 10, 
+                                    DFSCH_WRITE));
+    }
   }
 }
 
