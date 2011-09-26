@@ -25,7 +25,7 @@
 
 (define-evaluation-test procedures (:language :r5rs)
   ((+ 3 4)                           ===>  7)
-  (((if #f + *) 3 4)                 ===>  12)
+  (((if (< 4 3) + *) 3 4)            ===>  12)
 
   (((lambda (x) (+ x x)) 4)          ===>  8)
 

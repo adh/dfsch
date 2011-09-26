@@ -256,10 +256,10 @@ libdfsch_la_SOURCES = $(vm_SOURCES) version.h
 
 BUILT_SOURCES=udata.c udata.h version.h std-lib.c sys-lib.c
 strings.o: udata.h
-udata.h: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
-	./udata-gen$(EXEEXT) header $(srcdir)/src/UnicodeData.txt udata.h
-udata.c: udata-gen$(EXEEXT) $(srcdir)/src/UnicodeData.txt
-	./udata-gen$(EXEEXT) data $(srcdir)/src/UnicodeData.txt udata.c
+udata.h: udata-gen$(EXEEXT) $(srcdir)/data/UnicodeData.txt
+	./udata-gen$(EXEEXT) header $(srcdir)/data/UnicodeData.txt udata.h
+udata.c: udata-gen$(EXEEXT) $(srcdir)/data/UnicodeData.txt
+	./udata-gen$(EXEEXT) data $(srcdir)/data/UnicodeData.txt udata.c
 
 stdlib_sources = \
 	$(srcdir)/core-lib/std-lib.scm\
@@ -305,7 +305,7 @@ minizip_files = ext/minizip/minizip.h ext/minizip/minizip.c \
 
 EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
-	src/udata-gen.c src/UnicodeData.txt tools/docgen.scm \
+	src/udata-gen.c data/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
 	$(dfschlibscm_DATA) \
 	examples/tk-gui-demo.scm \

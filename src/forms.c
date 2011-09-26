@@ -53,10 +53,19 @@ DFSCH_FORM_METHOD_COMPILE(if){
   test_val = dfsch_constant_expression_value(test, env);
 
   if (test_val != DFSCH_INVALID_OBJECT){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "conditional branch with constant condition",
-                           "code", expr,
-                           NULL);
+    if (test_val){
+      dfsch_signal_condition(DFSCH_WARNING_TYPE, 
+                             "condition is always true",
+                             "code", expr,
+                             NULL);
+      return consequent;
+    } else {
+      dfsch_signal_condition(DFSCH_WARNING_TYPE, 
+                             "condition is always false",
+                             "code", expr,
+                             NULL);
+      return alternate;
+    }
   }
 
   consequent = dfsch_compile_expression(consequent, env);
