@@ -1,5 +1,4 @@
 Bugfixes:
-* Fix locking in socket-port
 
 Non-version-specific:
 * More tests
