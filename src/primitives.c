@@ -274,6 +274,33 @@ DFSCH_DEFINE_PRIMITIVE(list,
                        DFSCH_DOC_SYNOPSIS("(&rest elements)")){
   return dfsch_list_copy(args);
 }
+DFSCH_DEFINE_PRIMITIVE(list_star, 
+                       "Construct new list with given elements "
+                       "with last argument being list of "
+                       "additional elements"
+                       DFSCH_DOC_SYNOPSIS("(&rest elements)")){
+  dfsch_object_t* head = NULL;
+  dfsch_object_t* tail = NULL;
+
+  if (!DFSCH_PAIR_P(args)){
+    return NULL;
+  }
+
+  while (DFSCH_PAIR_P(DFSCH_FAST_CDR(args))){
+    dfsch_object_t* cell = dfsch_cons(DFSCH_FAST_CAR(args), NULL);
+    if (head){
+      DFSCH_FAST_CDR_MUT(tail) = cell;
+    } else {
+      head = cell;
+    }
+    tail = cell;
+
+    args = DFSCH_FAST_CDR(args);
+  }
+  
+  DFSCH_FAST_CDR_MUT(tail) = dfsch_list_copy(DFSCH_FAST_CAR(args));
+  return head;
+}
 dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
   return dfsch_cons(DFSCH_PRIMITIVE_REF(list), 
                     exps);
@@ -1653,6 +1680,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "cons-immutable", 
                       DFSCH_PRIMITIVE_REF(cons_immutable));
   dfsch_defcanon_cstr(ctx, "list", DFSCH_PRIMITIVE_REF(list));
+  dfsch_defcanon_cstr(ctx, "list*", DFSCH_PRIMITIVE_REF(list_star));
   dfsch_defcanon_cstr(ctx, "list-immutable", 
                       DFSCH_PRIMITIVE_REF(list_immutable));
   dfsch_defcanon_cstr(ctx, "copy-list", DFSCH_PRIMITIVE_REF(copy_list));
