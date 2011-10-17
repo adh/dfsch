@@ -126,10 +126,18 @@ dfsch_number_type_t dfsch_fixnum_type = {
 };
 
 static void flonum_write(flonum_t* n, dfsch_writer_state_t* state){
-  char* res = saprintf("%.32g", n->flonum);
-  dfsch_write_string(state, res);
-  if (strchr(res, '.') == NULL){
-    dfsch_write_string(state, ".");
+  if (isnan(n->flonum)){
+    dfsch_write_string(state, "+nan.");
+  } else if (n->flonum == INFINITY) {
+    dfsch_write_string(state, "+inf.");    
+  } else if (n->flonum == -INFINITY) {
+    dfsch_write_string(state, "-inf.");    
+  } else {
+    char* res = saprintf("%.32g", n->flonum);
+    dfsch_write_string(state, res);
+    if (strchr(res, '.') == NULL){
+      dfsch_write_string(state, ".");
+    }
   }
 }
 
@@ -371,11 +379,32 @@ static int dig_val[256] = {
   37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,  37, 37, 37, 37,
 };
 
+typedef struct flonum_constant_t {
+  double value;
+  char* name;
+} flonum_constant_t;
+
+static flonum_constant_t flonum_constants[] = {
+  {INFINITY, "+inf."},
+  {-INFINITY, "-inf."},
+#ifdef NAN
+  {NAN, "+nan."},
+  {NAN, "-nan."},
+#endif
+};
+
 dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   dfsch_object_t* n = DFSCH_MAKE_FIXNUM(0);
   int base = obase;
   int d;
   int negative = 0;
+  int i;
+
+  for (i = 0; i < sizeof(flonum_constants) / sizeof(flonum_constant_t); i++){
+    if (strcasecmp(string, flonum_constants[i].name) == 0){
+      return dfsch_make_number_from_double(flonum_constants[i].value);
+    }
+  }
 
   if (strchr(string, '.') != NULL || 
       (base == 10 && strpbrk(string, "eE") != NULL)){
@@ -388,6 +417,12 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
   if (*string == '-'){
     string++;
     negative = 1;
+  } else if (*string == '+'){
+    string++;
+  }
+
+  if (*string == '\0'){
+    return NULL;
   }
 
   if (base == 0){

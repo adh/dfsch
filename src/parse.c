@@ -745,9 +745,6 @@ static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
   case '+':
   case '.':
 
-    if (data[1]<'0' || data[1]>'9')
-      break;
-
   case '0':
   case '1':
   case '2':
@@ -1054,7 +1051,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->column++;
 
         ctx->dispatch_atom_hook=dispatch_number_base;
-        ctx->tokenizer_state = T_ATOM;
+         ctx->tokenizer_state = T_ATOM;
         break;
 
       case '\\':
