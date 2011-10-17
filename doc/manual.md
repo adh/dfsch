@@ -28,6 +28,36 @@ atomic values.
 
 ## Numbers
 
+Numbers are by default written in decimal, this can be changed by
+C-like prefixes "0" and "0x". For example:
+
+  ]=> 10
+  10
+  ]=> 010
+  8
+  ]=> 0x10
+  16
+
+Fractions can be written as two integers separated by slash
+  
+  ]=> 2/4
+  1/2
+
+Base of integer and fractions can also be changed by these prefixes:
+
+ * #b - Binary
+ * #o - Octal
+ * #x - Hexadecimal
+ * #<base>r - Arbitrary base (2 <= base <= 36)
+
+Floating point numbers must be written with decimal point and may use
+E-notation.
+
+  ]=> 3.25
+  3.25
+  ]=> 1.e6
+  1000000
+
 ## Symbols
 
 Any space delimited string that does not conform to syntax of numbers
@@ -281,6 +311,23 @@ most sequences are also collections.
 # Strings
 
 # Numbers
+
+dfsch currently supports four concrete numeric types and abstract
+types representing their common properties. These are:
+
+ * |<fixnum>| - Signed integer which fits into machine word
+ * |<bignum>| - Signed integer of precision limited only by avaiable resources.
+ * |<integer>| - Union of fixnums and fracnums
+ * |<fracnum>| - Fraction of two integer values
+ * |<rational>| - Integers and fractions
+ * |<flonum>| - IEEE Double precision floating point value
+ * |<real>| - Real numbers - flonums and rationals. Currently all numbers 
+   supported by dfsch.
+
+Numbers, except floating point values, are automaticaly converted into
+simplest sufficient representation. All types except |<flonum>|
+represent exact values, function |exact->inexact| converts any number
+into inexact representation, whis is currently always |<flonum>|.
 
 # Input and output
 
