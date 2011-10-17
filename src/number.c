@@ -175,25 +175,52 @@ static uint64_t bit_reverse64(uint64_t v){
 static void flonum_serialize(flonum_t* f, dfsch_serializer_t* s){
   int exp;
   double x;
-  dfsch_serialize_stream_symbol(s, "flonum");
 
   x = f->flonum;
-  if (x < 0){
-    dfsch_serialize_integer(s, -1);
-    x = -x;
-  } else if (x == 0) {
-    dfsch_serialize_integer(s, 0);
-    return;
+
+  if (isnan(x)){
+    dfsch_serialize_stream_symbol(s, "flonum-nan");
+  } else if (x == INFINITY) {
+    dfsch_serialize_stream_symbol(s, "flonum+inf");
+  } else if (x == -INFINITY) {
+    dfsch_serialize_stream_symbol(s, "flonum-inf");
   } else {
-    dfsch_serialize_integer(s, 1);
+    dfsch_serialize_stream_symbol(s, "flonum");
+    if (x < 0){
+      dfsch_serialize_integer(s, -1);
+      x = -x;
+    } else if (x == 0) {
+      dfsch_serialize_integer(s, 0);
+      return;
+    } else {
+      dfsch_serialize_integer(s, 1);
+    }
+
+    x = frexp(x, &exp);
+    
+    dfsch_serialize_integer(s, exp);
+    dfsch_serialize_integer(s, bit_reverse64((int64_t)((1LL << 53) * x)));
   }
-
-  x = frexp(x, &exp);
-
-  dfsch_serialize_integer(s, exp);
-  dfsch_serialize_integer(s, bit_reverse64((int64_t)((1LL << 53) * x)));
 }
 
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum-nan", flonum_nan){
+  dfsch_object_t* fn;
+  fn = dfsch_make_number_from_double(NAN);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;  
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum+inf", flonum_pos_inf){
+  dfsch_object_t* fn;
+  fn = dfsch_make_number_from_double(INFINITY);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;  
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum-inf", flonum_neg_inf){
+  dfsch_object_t* fn;
+  fn = dfsch_make_number_from_double(-INFINITY);
+  dfsch_deserializer_put_partial_object(ds, fn);
+  return fn;  
+}
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("flonum", flonum){
   dfsch_object_t* fn;
   double x;
