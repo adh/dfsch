@@ -31,17 +31,17 @@ atomic values.
 Numbers are by default written in decimal, this can be changed by
 C-like prefixes "0" and "0x". For example:
 
-  ]=> 10
-  10
-  ]=> 010
-  8
-  ]=> 0x10
-  16
+    ]=> 10
+    10
+    ]=> 010
+    8
+    ]=> 0x10
+    16
 
 Fractions can be written as two integers separated by slash
   
-  ]=> 2/4
-  1/2
+    ]=> 2/4
+    1/2
 
 Base of integer and fractions can also be changed by these prefixes:
 
