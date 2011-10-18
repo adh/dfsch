@@ -53,10 +53,10 @@ Base of integer and fractions can also be changed by these prefixes:
 Floating point numbers must be written with decimal point and may use
 E-notation.
 
-  ]=> 3.25
-  3.25
-  ]=> 1.e6
-  1000000
+    ]=> 3.25
+    3.25
+    ]=> 1.e6
+    1000000
 
 ## Symbols
 
