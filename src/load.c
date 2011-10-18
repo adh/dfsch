@@ -50,8 +50,6 @@
 #include <dirent.h>
 
 
-//#define DFSCH_DEFAULT_LIBDIR "."
-
 #ifdef __WIN32__
 #define S_ISLNK(x) 0
 #endif
@@ -59,10 +57,11 @@
 
 void dfsch_load_so(dfsch_object_t* ctx, 
                    char* so_name, 
-                   char* sym_name){
+                   char* sym_name,
+                   int as_toplevel){
 #if defined(__unix__)
   void *handle;
-  dfsch_object_t* (*entry)(dfsch_object_t*);
+  dfsch_object_t* (*entry)(dfsch_object_t*, int);
   char* err;
 
   err = dlerror();
@@ -81,10 +80,10 @@ void dfsch_load_so(dfsch_object_t* ctx,
     dfsch_error("dlsym() failed", dfsch_make_string_cstr(err));
   }
   
-  entry(ctx);
+  entry(ctx, as_toplevel);
 #elif defined(__WIN32__)
   HMODULE hModule;
-  dfsch_object_t* (*entry)(dfsch_object_t*);
+  dfsch_object_t* (*entry)(dfsch_object_t*, int);
 
   hModule = LoadLibraryEx(so_name, NULL, 0);
 
@@ -107,7 +106,7 @@ void dfsch_load_so(dfsch_object_t* ctx,
     dfsch_error("GetProcAddress() failed", NULL);    
   }
 
-  entry(ctx);
+  entry(ctx, as_toplevel);
 #else
   dfsch_error("Get real operating system!", NULL);
 #endif
@@ -409,17 +408,17 @@ static char* pathname_directory(char* path){
 
 typedef struct module_loader_t {
   char* path_ext;
-  void (*load)(char* fname, dfsch_object_t* env);
+  void (*load)(char* fname, dfsch_object_t* env, int as_toplevel);
 } module_loader_t;
 
-static void scm_loader(char* fname, dfsch_object_t* env){
-  dfsch_load_scm(env, fname, 0);
+static void scm_loader(char* fname, dfsch_object_t* env, int as_toplevel){
+  dfsch_load_scm(env, fname, as_toplevel);
 }
-static void dsz_loader(char* fname, dfsch_object_t* env){
-  dfsch_load_dsz(env, fname, 0);
+static void dsz_loader(char* fname, dfsch_object_t* env, int as_toplevel){
+  dfsch_load_dsz(env, fname, as_toplevel);
 }
-static void so_loader(char* fname, dfsch_object_t* env){
-  dfsch_load_so(env, fname, get_module_symbol(fname));
+static void so_loader(char* fname, dfsch_object_t* env, int as_toplevel){
+  dfsch_load_so(env, fname, get_module_symbol(fname), as_toplevel);
 }
 
 static module_loader_t loaders[] = {
@@ -430,7 +429,8 @@ static module_loader_t loaders[] = {
 };
 
 void dfsch_load(dfsch_object_t* env, char* name, 
-                dfsch_object_t* path_list){
+                dfsch_object_t* path_list,
+                int as_toplevel){
   struct stat st;
   dfsch_object_t* path;
   char *pathpart;
@@ -476,31 +476,12 @@ void dfsch_load(dfsch_object_t* env, char* name,
         for (i = 0; i < sizeof(loaders) / sizeof(module_loader_t); i++){
           if (strcmp(pathpart + strlen(pathpart) - strlen(loaders[i].path_ext),
                      loaders[i].path_ext) == 0){
-            loaders[i].load(pathpart, env);	      
+            loaders[i].load(pathpart, env, as_toplevel);	      
             return;
           }
         }
 
         dfsch_load_scm(env, pathpart, 0);
-        return;
-      }
-      if (S_ISDIR(st.st_mode)){
-	char** list = my_scandir(pathpart);
-	
-	while(*list){
-	  l = sl_create();
-	  sl_append(l, pathpart);
-	  sl_append(l, "/");
-	  sl_append(l, *list);
-	  
-	  if (strcmp(".so", (*list)+strlen(*list)-3) == 0){
-	    dfsch_load_so(env, fname, get_module_symbol(fname));	      
-	  } else {
-	    dfsch_load_scm(env, fname, 0);
-	  }
-	  
-	  list++;
-	}
         return;
       }
     }
@@ -509,7 +490,7 @@ void dfsch_load(dfsch_object_t* env, char* name,
       fname = stracat(pathpart, loaders[i].path_ext);
       if (stat(fname, &st) == 0 && (S_ISREG(st.st_mode) || 
                                     S_ISLNK(st.st_mode))){
-        loaders[i].load(fname, env);	      
+        loaders[i].load(fname, env, as_toplevel);	      
         return;
       }
     }
@@ -540,8 +521,12 @@ int dfsch_require(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
     return 1;
   }
 
-  dfsch_load(env, name, path_list);
+  dfsch_load(env, name, path_list, 0);
   return 0;
+}
+
+void dfsch_run_module(dfsch_object_t* env, char* name, dfsch_object_t* path_list){
+  dfsch_load(env, name, path_list, 1);  
 }
 
 void dfsch_provide(dfsch_object_t* env, char* name){
@@ -696,7 +681,7 @@ DFSCH_DEFINE_FORM(load_so, {}, NULL){
   DFSCH_STRING_ARG(args, sym_name);
   DFSCH_ARG_END(args);
 
-  dfsch_load_so(env, so_name, sym_name);
+  dfsch_load_so(env, so_name, sym_name, 0);
   return NULL;
 }
 
@@ -709,7 +694,7 @@ DFSCH_DEFINE_FORM(load, {}, NULL){
   DFSCH_OBJECT_ARG_OPT(args, path_list, NULL)
   DFSCH_ARG_END(args);
 
-  dfsch_load(env, name, path_list);  
+  dfsch_load(env, name, path_list, 0);  
   return NULL;
 }
 DFSCH_DEFINE_FORM(require, {}, NULL){

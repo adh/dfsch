@@ -58,6 +58,7 @@ int main(int argc, char**argv){
   int c;
   dfsch_object_t* ctx;
   int program_is_dsz = 0;
+  int run_module = 0;
 #ifdef __unix__
   struct sigaction act;
 #endif
@@ -76,10 +77,13 @@ int main(int argc, char**argv){
   ctx = dfsch_make_top_level_environment();
   dfsch_set_standard_io_ports();
                                         
-  while ((c=getopt(argc, argv, "+L:zvch?" WINDOWS_FLAGS)) != -1){
+  while ((c=getopt(argc, argv, "+L:mzvch?" WINDOWS_FLAGS)) != -1){
     switch (c){
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
+      break;
+    case 'm':
+      run_module = 1;
       break;
     case 'X':
       dfsch_set_vm_parameter_stanza(optarg);
@@ -119,17 +123,21 @@ int main(int argc, char**argv){
   }
 
   if (optind < argc) {
-    char* directory = dfsch_get_path_directory(dfsch_realpath(argv[optind]));
-    
-    dfsch_load_extend_path(ctx, directory);
-
     dfsch_defcanon_cstr(ctx, "*posix-argv*", 
                         dfsch_cmdopts_argv_to_list(argc - optind, 
                                                    argv + optind));
-    if (program_is_dsz){
-      dfsch_load_dsz(ctx, argv[optind], 1);
+    if (run_module) {
+      dfsch_run_module(ctx, argv[optind], NULL);
     } else {
-      dfsch_load_scm(ctx, argv[optind], 1);
+      char* directory = dfsch_get_path_directory(dfsch_realpath(argv[optind]));
+      
+      dfsch_load_extend_path(ctx, directory);
+      
+      if (program_is_dsz){
+        dfsch_load_dsz(ctx, argv[optind], 1);
+      } else {
+        dfsch_load_scm(ctx, argv[optind], 1);
+      }
     }
     return 0;
   } else {

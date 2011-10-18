@@ -49,10 +49,14 @@ extern "C" {
                                     dfsch_object_t* src);
   /** Load given module (as by require, but unconditionally) */
   extern void dfsch_load(dfsch_object_t* env, char* name, 
-                         dfsch_object_t* path_list);
+                         dfsch_object_t* path_list,
+                         int as_toplevel);
   /** Load given module if it is not provided yet */
   extern int dfsch_require(dfsch_object_t* env, char* name, 
                            dfsch_object_t* path_list);
+  /** Load given module as top-level program */
+  extern void dfsch_run_module(dfsch_object_t* env, char* name, 
+                               dfsch_object_t* path_list);
   /** Provide given module (mark as loaded) */
   extern void dfsch_provide(dfsch_object_t* env, char* name);
 
@@ -60,7 +64,8 @@ extern "C" {
   /** Load given shared object module and register it into given context. */
   extern void dfsch_load_so(dfsch_object_t* ctx, 
                             char* so_name, 
-                            char* sym_name);
+                            char* sym_name,
+                            int as_toplevel);
   /** Load given source code buffer into given environment. */  
   extern void dfsch_load_source(dfsch_object_t* env,
                                 char* fname,

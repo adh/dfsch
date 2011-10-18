@@ -227,7 +227,7 @@ void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
       }
     }
   }
-  return;
+  goto out;
 
  arg_only:
   while ((argument = source(baton)) != NULL){
@@ -242,6 +242,7 @@ void dfsch_cmdopts_parse(dfsch_cmdopts_t* parser,
     }
   }
 
+ out:
   if (next_arg && next_arg->flags & DFSCH_CMDOPTS_ARGUMENT_REQUIRED){
     dfsch_signal_condition(DFSCH_CMDOPTS_ERROR_TYPE, 
                            "Required argument missing",
