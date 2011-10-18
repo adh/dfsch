@@ -76,7 +76,7 @@ int main(int argc, char**argv){
   ctx = dfsch_make_top_level_environment();
   dfsch_set_standard_io_ports();
                                         
-  while ((c=getopt(argc, argv, "+L:zv" WINDOWS_FLAGS)) != -1){
+  while ((c=getopt(argc, argv, "+L:zvch?" WINDOWS_FLAGS)) != -1){
     switch (c){
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
@@ -114,7 +114,6 @@ int main(int argc, char**argv){
       puts("  -z                Load compressed input");
       puts("");
       puts("First non-option argument is treated as filename of program to run");
-      puts("Run without non-option arguments to start in interactive mode");
       return 0;
     }
   }
@@ -133,5 +132,8 @@ int main(int argc, char**argv){
       dfsch_load_scm(ctx, argv[optind], 1);
     }
     return 0;
+  } else {
+    fprintf(stderr, "No program to run given.");
+    return 1;
   }
 }

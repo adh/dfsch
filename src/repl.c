@@ -150,7 +150,7 @@ int main(int argc, char**argv){
   dfsch_set_standard_io_ports();
   dfsch_cinspect_set_as_inspector();                                        
 
-  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdX:")) != -1){
+  while ((c=getopt(argc, argv, "+ir:l:L:e:E:hvdX:?")) != -1){
     switch (c){
     case 'r':
       dfsch_require(ctx, optarg, NULL);
