@@ -6,6 +6,8 @@
 #include "src/util.h"
 #include <stdlib.h>
 
+//#define Q_DEBUG
+
 typedef struct string_queue_t {
   char* buf;
   size_t all;
@@ -118,6 +120,7 @@ void dfsch_json_parser_set_callback(dfsch_json_parser_t *jp,
 
 static void parse_object(dfsch_json_parser_t *jp, dfsch_object_t* obj){
   dfsch_object_t* v;
+
   if (!jp->state){
     jp->callback(obj, jp->baton);
   } else {
@@ -442,12 +445,12 @@ static void parse_queue(dfsch_json_parser_t* jp){
       {
         char* e = strchr(b + 1, '"');
         if (!e){
-          return;
+          goto out;
         }
         while (e[-1] == '\\'){
           e = strchr(e + 1, '"');
           if (!e){
-            return;
+            goto out;
           }
         }
 
@@ -459,7 +462,7 @@ static void parse_queue(dfsch_json_parser_t* jp){
       {
 	char *e = strpbrk(b, "{}[],() \t\n\r\f;:");
 	if (!e){
-          return;
+          goto out;
         }
 
         parse_atom(jp, dfsch_strancpy(b, e - b));
