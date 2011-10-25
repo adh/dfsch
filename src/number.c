@@ -1477,7 +1477,7 @@ DFSCH_DEFINE_PRIMITIVE(exact_2_inexact, 0){
 
 DFSCH_DEFINE_PRIMITIVE(plus, NULL){
   object_t* i = args;
-  dfsch_object_t* s = dfsch_make_number_from_long(0);
+  dfsch_object_t* s = DFSCH_MAKE_FIXNUM(0);
   while(DFSCH_PAIR_P(i)){
     s = dfsch_number_add(s, DFSCH_FAST_CAR(i));
     i = DFSCH_FAST_CDR(i);
@@ -1504,7 +1504,7 @@ DFSCH_DEFINE_PRIMITIVE(minus, NULL){
 }
 DFSCH_DEFINE_PRIMITIVE(mult, NULL){
   object_t* i = args;
-  object_t* s = dfsch_make_number_from_long(1);
+  object_t* s = DFSCH_MAKE_FIXNUM(1);
   while(DFSCH_PAIR_P(i)){
     s = dfsch_number_mul(s,DFSCH_FAST_CAR(i));
     i = DFSCH_FAST_CDR(i);

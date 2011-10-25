@@ -633,15 +633,20 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
 #ifdef DFSCH_GC_MALLOC_MANY
   if (!ti->env_freelist){
     ti->env_freelist = GC_malloc_many(sizeof(environment_t));
+  } else {
+    if (ti->env_fl_depth > 0){
+      ti->env_fl_depth--;
+    }
   }
   e = ti->env_freelist;
   ti->env_freelist = GC_NEXT(ti->env_freelist);
-  ti->env_fl_depth--;
 #else
   if (ti->env_freelist){
     e = ti->env_freelist;
     ti->env_freelist = GC_NEXT(ti->env_freelist);
-    ti->env_fl_depth--;
+    if (ti->env_fl_depth > 0){
+      ti->env_fl_depth--;
+    }
   } else {
     e = GC_NEW(environment_t);
   }
@@ -1620,6 +1625,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
    */
 
   if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
+    if (myesc.reuse_frame){
+      free_environment(myesc.reuse_frame, ti);
+    }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    &myesc, context);
     ti->stack_trace = sframe.next;
@@ -1664,6 +1672,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   }
 
   if (DFSCH_TYPE_OF(proc)->apply){
+    if (myesc.reuse_frame){
+      free_environment(myesc.reuse_frame, ti);
+    }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
     ti->stack_trace = sframe.next;
     return r;
