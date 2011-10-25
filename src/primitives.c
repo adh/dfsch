@@ -552,7 +552,6 @@ DFSCH_DEFINE_PRIMITIVE(for_each,
   size_t len;
   int i;
   object_t** its;
-  dfsch_list_collector_t* al;
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
@@ -563,13 +562,18 @@ DFSCH_DEFINE_PRIMITIVE(for_each,
     }
   }
 
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
 
   while (1){
-    al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
-      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+      arlist[i] = dfsch_iterator_this(its[i]);
     }
-    dfsch_apply(func, dfsch_collected_list(al));
+    dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist));
     for (i = 0; i < len; i++){
       its[i] = dfsch_iterator_next(its[i]);
       if (!its[i]){
