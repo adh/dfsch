@@ -44,6 +44,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "types.h"
 #include "version.h"
@@ -686,6 +687,7 @@ static environment_t* initialize_frame(environment_t* e,
                                        dfsch_object_t* context,
                                        dfsch__thread_info_t* ti){
   dfsch_eqhash_init(&e->values, 0);
+  assert(e != parent);
   e->flags += EFRAME_SERIAL_INCR;
   e->decls = NULL;
   e->context = context;
@@ -697,7 +699,7 @@ static environment_t* maybe_reuse_frame(environment_t* e,
                                         environment_t* parent,
                                         dfsch_object_t* context,
                                         dfsch__thread_info_t* ti){
-  if ((e->flags & EFRAME_RETAIN) != 0){
+  if (e == parent || (e->flags & EFRAME_RETAIN) != 0){
     e = alloc_environment(ti);
   }
   
@@ -1627,6 +1629,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
     if (myesc.reuse_frame){
       free_environment(myesc.reuse_frame, ti);
+      myesc.reuse_frame = NULL;
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    &myesc, context);
@@ -1674,6 +1677,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   if (DFSCH_TYPE_OF(proc)->apply){
     if (myesc.reuse_frame){
       free_environment(myesc.reuse_frame, ti);
+      myesc.reuse_frame = NULL;
     }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
     ti->stack_trace = sframe.next;
