@@ -2718,6 +2718,7 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<string>", &dfsch_string_type);
   dfsch_defcanon_cstr(ctx, "<proto-string>", DFSCH_PROTO_STRING_TYPE);
   dfsch_defcanon_cstr(ctx, "<byte-vector>", DFSCH_BYTE_VECTOR_TYPE);
+  dfsch_defcanon_cstr(ctx, "<character>", DFSCH_CHARACTER_TYPE);
 
   dfsch_defcanon_cstr(ctx, "string-append", 
 		   DFSCH_PRIMITIVE_REF(string_append));
