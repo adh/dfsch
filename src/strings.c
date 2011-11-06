@@ -579,7 +579,8 @@ uint32_t dfsch_string_ref(dfsch_object_t* string, size_t index){
     i = next_char(i, e);
   }
 
-  return l;
+  dfsch_error("Index out of bound",
+              dfsch_make_number_from_long(index));
 }
 
 dfsch_object_t* dfsch_string_substring(dfsch_object_t* string,
