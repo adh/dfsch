@@ -536,10 +536,10 @@ extern dfsch_type_t* const dfsch_small_types[32];
 
 #define DFSCH_SMALL_TAG_CHARACTER 0x00
 
-#define DFSCH_SMALL_VALUE_REF()  \
+#define DFSCH_SMALL_VALUE_REF(obj)  \
   (((long)(((ptrdiff_t)(obj)) & ~0xffL)) >> 8)
 #define DFSCH_MAKE_SMALL_VALUE(value, tag)          \
-  ((dfsch_object_t*)((((size_t)(value)) << 8) | (kind << 5) | 0x5))
+  ((dfsch_object_t*)((((size_t)(value)) << 8) | (tag << 5) | 0x5))
   
 
 
@@ -597,6 +597,10 @@ typedef struct dfsch_pair_t {
 #define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 8)
 #define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 8)
 
+#define DFSCH_MAKE_CHARACTER(chr)               \
+  DFSCH_MAKE_SMALL_VALUE(chr, DFSCH_SMALL_TAG_CHARACTER)
+#define DFSCH_CHARACTER_P(obj) ((((size_t)(obj)) & 0xff) == 0x05)
+  
 
 #define DFSCH_TYPE_OF(obj)                                              \
   ((obj)?(                                                              \

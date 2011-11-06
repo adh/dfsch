@@ -170,7 +170,7 @@ static dfsch_collection_methods_t string_collection = {
 };
 
 static dfsch_object_t* string_ref(dfsch_object_t* string, int k){
-  return DFSCH_MAKE_FIXNUM(dfsch_string_ref(string, k));
+  return DFSCH_MAKE_CHARACTER(dfsch_string_ref(string, k));
 }
 
 static dfsch_sequence_methods_t string_sequence = {
@@ -1945,6 +1945,59 @@ dfsch_object_t* dfsch_string_assoc(dfsch_object_t* alist,
   }
   return NULL;
 }
+
+
+/************** characters ***********/
+
+static void character_write(dfsch_object_t* obj, dfsch_writer_state_t* ws){
+  uint32_t ch = DFSCH_SMALL_VALUE_REF(obj);
+
+  if (dfsch_writer_state_print_p(ws)){
+    char* res = GC_MALLOC_ATOMIC(5);
+    if (ch <= 0x7f){
+      res[0] = ch;
+      res[1] = 0;
+    } else if (ch <= 0x7ff) {
+      res[0] = 0xc0 | ((ch >> 6) & 0x1f); 
+      res[1] = 0x80 | (ch & 0x3f);
+      res[2] = 0;
+    } else if (ch <= 0xffff) {
+      res[0] = 0xe0 | ((ch >> 12) & 0x0f); 
+      res[1] = 0x80 | ((ch >> 6) & 0x3f);
+      res[2] = 0x80 | (ch & 0x3f);
+      res[3] = 0;
+    } else {
+      res[0] = 0xf0 | ((ch >> 18) & 0x07); 
+      res[1] = 0x80 | ((ch >> 12) & 0x3f);
+      res[2] = 0x80 | ((ch >> 6) & 0x3f);
+      res[3] = 0x80 | (ch & 0x3f);
+      res[4] = 0;
+    } 
+
+    dfsch_write_string(ws, res);
+  } else if (ch < 0x80 && ch > 0x20){
+    dfsch_write_string(ws, dfsch_saprintf("#\\%c", ch));
+  } else {
+    dfsch_write_string(ws, dfsch_saprintf("#\\u%x", ch));
+  }
+}
+static void character_serialize(dfsch_object_t* obj, dfsch_serializer_t* ser){
+  uint32_t ch = DFSCH_SMALL_VALUE_REF(obj);
+  dfsch_serialize_stream_symbol(ser, "character");
+  dfsch_serialize_integer(ser, ch);
+}
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("character", character){
+  return DFSCH_MAKE_CHARACTER(dfsch_deserialize_integer(ds));  
+}
+
+
+dfsch_type_t dfsch_character_type = {
+  .type = DFSCH_SPECIAL_TYPE,
+  .name = "character",
+  .size = 0,
+  .write = character_write,
+  .serialize = character_serialize,
+};
 
 
 /////////////////////////////////////////////////////////////////////////////

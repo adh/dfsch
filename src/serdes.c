@@ -170,7 +170,7 @@ int dfsch_type_serializable_p(dfsch_type_t* type){
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;
-  if (obj && !DFSCH_FIXNUM_P(obj)){
+  if (obj && !DFSCH_FIXNUM_P(obj) && !DFSCH_CHARACTER_P(obj)){
     dfsch_object_t* idx = (int)dfsch_eqhash_ref(&s->obj_map, obj);  
     if (idx != DFSCH_INVALID_OBJECT){
       serialize_back_reference(s, ((int)idx));

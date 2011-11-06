@@ -1120,10 +1120,20 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           ctx->column += e-data;
           s[e-data]=0;
           
+          if (*s == 'u' || *s == 'U'){
+            char* eptr;
+            uint32_t ch;
+            ch = strtol(s + 1, &eptr, 16);
+            if (*eptr == '\0') {
+              parse_object(ctx, DFSCH_MAKE_CHARACTER(ch));
+              goto char_out;
+            }
+          }
+
           for (i=0; i < sizeof(char_table)/sizeof(char_table_entry_t); i++){
 
             if (ascii_strcasecmp(s, char_table[i].name)==0){
-              parse_object(ctx, dfsch_make_number_from_long(char_table[i].ch));
+              parse_object(ctx, DFSCH_MAKE_CHARACTER(char_table[i].ch));
               if (ctx->error) return;
               goto char_out;
             }
@@ -1141,7 +1151,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
           ++data;
           ctx->column++;
           if (c < 0x80){
-            parse_object(ctx, dfsch_make_number_from_long(c));
+            parse_object(ctx, DFSCH_MAKE_CHARACTER(c));
             ctx->tokenizer_state = T_NONE;
           } else {
             long ch;
@@ -1197,7 +1207,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
               parser_abort(ctx, "Invalid unicode character");
             }
 
-            parse_object(ctx, dfsch_make_number_from_long(ch));
+            parse_object(ctx, DFSCH_MAKE_CHARACTER(ch));
             ctx->tokenizer_state = T_NONE;
           }
           break;          

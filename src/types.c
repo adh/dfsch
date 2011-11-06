@@ -1028,6 +1028,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 
 
 dfsch_type_t* const dfsch_small_types[32] = {
+  DFSCH_CHARACTER_TYPE,
 };
 
 

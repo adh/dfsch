@@ -189,6 +189,16 @@ extern "C" {
                                          dfsch_strbuf_t* bag,
                                          int side);
 
+  extern dfsch_type_t dfsch_character_type;
+#define DFSCH_CHARACTER_TYPE (&dfsch_character_type)
+
+  uint32_t dfsch_character(dfsch_object_t* obj);
+
+#define DFSCH_CHARACTER_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, uint32_t, dfsch_character)
+#define DFSCH_CHARACTER_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, uint32_t, dfsch_character)
+
 
 #ifdef __cplusplus
 }
