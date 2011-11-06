@@ -532,12 +532,15 @@ extern dfsch_type_t dfsch_tagged_types[4];
 #define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_tagged_types[3]))
 #define DFSCH_COMPACT_LIST_TYPE (&(dfsch_tagged_types[0]))
 
-extern dfsch_type_t dfsch_small_types[32];
+extern dfsch_type_t* const dfsch_small_types[32];
 
 #define DFSCH_SMALL_TAG_CHARACTER 0x00
 
 #define DFSCH_SMALL_VALUE_REF()  \
   (((long)(((ptrdiff_t)(obj)) & ~0xffL)) >> 8)
+#define DFSCH_MAKE_SMALL_VALUE(value, tag)          \
+  ((dfsch_object_t*)((((size_t)(value)) << 8) | (kind << 5) | 0x5))
+  
 
 
 #define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((ptrdiff_t) -1))
@@ -584,7 +587,7 @@ typedef struct dfsch_pair_t {
    (DFSCH_PAIR_REF(obj)->cdr))
 #define DFSCH_PAIR_P(obj) (((((size_t)(obj)) & 0x02) == 0x02))
 #define DFSCH_SYMBOL_P(obj) (((((size_t)(obj)) & 0x07) == 0x04))
-#define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x03) == 0x01)
+#define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x07) == 0x01)
 
 
 #define DFSCH_FIXNUM_REF(obj)                   \
@@ -600,8 +603,10 @@ typedef struct dfsch_pair_t {
           (((size_t)(obj)) & 0x07) == 0 ? ((dfsch_object_t*)(obj))->type: \
           ((((size_t)(obj)) & 0x01) == 0x01 ?                           \
            ((((size_t)(obj)) & 0x02) == 0x00 ?                          \
-            DFSCH_FIXNUM_TYPE : DFSCH_COMPACT_LIST_TYPE):               \
-           &(dfsch_tagged_types[(((size_t)(obj)) & 0x06) >> 1]))):        \
+            ((((size_t)(obj)) & 0x04) == 0x00 ? DFSCH_FIXNUM_TYPE :     \
+             dfsch_small_types[((((size_t)(obj)) >> 3) & 0x1f)])        \
+            : DFSCH_COMPACT_LIST_TYPE):                                 \
+           &(dfsch_tagged_types[(((size_t)(obj)) & 0x06) >> 1]))):      \
    DFSCH_EMPTY_LIST_TYPE)
 
   

@@ -1027,6 +1027,9 @@ dfsch_type_t dfsch_tagged_types[4] = {
 };
 
 
+dfsch_type_t* const dfsch_small_types[32] = {
+};
+
 
 static void primitive_write(dfsch_primitive_t* p, 
                             dfsch_writer_state_t* state){
