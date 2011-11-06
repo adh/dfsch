@@ -661,7 +661,7 @@ dfsch_object_t* dfsch_string_2_list(dfsch_object_t* string){
 
   while (i){
     dfsch_object_t* tmp;
-    tmp = dfsch_cons(dfsch_make_number_from_long(get_char(i, e)), 
+    tmp = dfsch_cons(DFSCH_MAKE_CHARACTER(get_char(i, e)), 
                      NULL);
     if (head){
       DFSCH_FAST_CDR_MUT(tail) = tmp;
@@ -687,7 +687,7 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
   
   len = 0;
   while (dfsch_pair_p((object_t*)j)){
-    uint32_t ch = dfsch_number_to_long(DFSCH_FAST_CAR(j));
+    uint32_t ch = dfsch_character(DFSCH_FAST_CAR(j));
     if (ch <= 0x7f){
       len += 1;
     } else if (ch <= 0x7ff) {
@@ -706,7 +706,7 @@ dfsch_object_t* dfsch_list_2_string(dfsch_object_t* list){
 
   j = list;
   while (dfsch_pair_p((object_t*)j)){
-    uint32_t ch = dfsch_number_to_long(DFSCH_FAST_CAR(j));
+    uint32_t ch = dfsch_character(DFSCH_FAST_CAR(j));
 
     if (ch <= 0x7f){
       string->buf.ptr[i] = ch;
@@ -1999,6 +1999,10 @@ dfsch_type_t dfsch_character_type = {
   .serialize = character_serialize,
 };
 
+uint32_t dfsch_character(dfsch_object_t* obj){
+  dfsch_object_t* ch = DFSCH_ASSERT_TYPE(obj, DFSCH_CHARACTER_TYPE);
+  return DFSCH_SMALL_VALUE_REF(ch);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2020,7 +2024,7 @@ DFSCH_DEFINE_PRIMITIVE(string_ref, 0){
   DFSCH_LONG_ARG(args, index);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_number_from_long((unsigned char)dfsch_string_ref(string, index));
+  return DFSCH_MAKE_CHARACTER(dfsch_string_ref(string, index));
 
 }
 DFSCH_DEFINE_PRIMITIVE(string_length, 0){
@@ -2120,68 +2124,68 @@ DFSCH_DEFINE_PRIMITIVE(substring, 0){
 
 DFSCH_DEFINE_PRIMITIVE(char_downcase, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
-  return dfsch_make_number_from_long(dfsch_char_downcase(ch));
+  return DFSCH_MAKE_CHARACTER(dfsch_char_downcase(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_upcase, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
-  return dfsch_make_number_from_long(dfsch_char_upcase(ch));
+  return DFSCH_MAKE_CHARACTER(dfsch_char_upcase(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_titlecase, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
-  return dfsch_make_number_from_long(dfsch_char_titlecase(ch));
+  return DFSCH_MAKE_CHARACTER(dfsch_char_titlecase(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_category, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_make_string_cstr(dfsch_char_category(ch));
 }
 
 DFSCH_DEFINE_PRIMITIVE(char_alphabetic_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_alphabetic_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_numeric_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_numeric_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_whitespace_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_whitespace_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_upper_case_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_upper_case_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_lower_case_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_lower_case_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_decimal_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_decimal_p(ch));
 }
 DFSCH_DEFINE_PRIMITIVE(char_mark_p, 0){
   uint32_t ch;
-  DFSCH_LONG_ARG(args, ch);
+  DFSCH_CHARACTER_ARG(args, ch);
 
   return dfsch_bool(dfsch_char_mark_p(ch));
 }
@@ -2592,7 +2596,7 @@ DFSCH_DEFINE_PRIMITIVE(string_2_safe_filename,
   int convert_to_hypen;
   DFSCH_BUFFER_ARG(args, string);
   DFSCH_OBJECT_ARG_OPT(args, preserve_uppercase, NULL);
-  DFSCH_LONG_ARG_OPT(args, convert_to_hypen, '-');
+  DFSCH_CHARACTER_ARG_OPT(args, convert_to_hypen, '-');
   DFSCH_ARG_END(args);
 
   return dfsch_make_string_cstr(dfsch_strbuf_2_safe_filename(string,
@@ -2691,6 +2695,23 @@ DFSCH_DEFINE_PRIMITIVE(byte_vector_trim_right,
   return dfsch_byte_vector_trim(byte_vector, bag, -1);
 }
 
+DFSCH_DEFINE_PRIMITIVE(character_2_ordinal, NULL){
+  uint32_t ch;
+  DFSCH_CHARACTER_ARG(args, ch);
+  DFSCH_ARG_END(args);
+  return DFSCH_MAKE_FIXNUM(ch);
+}
+DFSCH_DEFINE_PRIMITIVE(ordinal_2_character, NULL){
+  uint32_t ch;
+  DFSCH_LONG_ARG(args, ch);
+  DFSCH_ARG_END(args);
+  
+  if (ch < 0 || ch > 0x10ffff){
+    dfsch_error("No such character", DFSCH_MAKE_FIXNUM(ch));
+  }
+
+  return DFSCH_MAKE_CHARACTER(ch);
+}
 
 
 void dfsch__string_native_register(dfsch_object_t *ctx){
@@ -2858,5 +2879,10 @@ void dfsch__string_native_register(dfsch_object_t *ctx){
 		   DFSCH_PRIMITIVE_REF(byte_vector_trim_left));
   dfsch_defcanon_cstr(ctx, "byte-vector-trim-right", 
 		   DFSCH_PRIMITIVE_REF(byte_vector_trim_right));
+
+  dfsch_defcanon_cstr(ctx, "character->ordinal", 
+                      DFSCH_PRIMITIVE_REF(character_2_ordinal));
+  dfsch_defcanon_cstr(ctx, "ordinal->character", 
+                      DFSCH_PRIMITIVE_REF(ordinal_2_character));
 
 }

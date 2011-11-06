@@ -537,7 +537,7 @@ extern dfsch_type_t* const dfsch_small_types[32];
 #define DFSCH_SMALL_TAG_CHARACTER 0x00
 
 #define DFSCH_SMALL_VALUE_REF(obj)  \
-  (((long)(((ptrdiff_t)(obj)) & ~0xffL)) >> 8)
+  (((unsigned long)(((size_t)(obj)) & ~0xffL)) >> 8)
 #define DFSCH_MAKE_SMALL_VALUE(value, tag)          \
   ((dfsch_object_t*)((((size_t)(value)) << 8) | (tag << 5) | 0x5))
   
