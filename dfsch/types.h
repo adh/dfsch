@@ -508,7 +508,8 @@ extern dfsch_collection_constructor_type_t dfsch_mapping_constructor_type;
  * 010 - Mutable pair
  * 100 - Symbol
  * 110 - Immutable pair
- * x01 - Fixnum (cannot be 11, because of invalid object marker)
+ * 001 - Fixnum (cannot be 11, because of invalid object marker)
+ * 101 - Small direct objects
  * x11 - Entry of cdr-coded list (pointer points to WORD(!), not object)
  *
  * And there are two special values of object pointer:
@@ -530,6 +531,14 @@ extern dfsch_type_t dfsch_tagged_types[4];
 #define DFSCH_SYMBOL_TYPE (&(dfsch_tagged_types[2]))
 #define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_tagged_types[3]))
 #define DFSCH_COMPACT_LIST_TYPE (&(dfsch_tagged_types[0]))
+
+extern dfsch_type_t dfsch_small_types[32];
+
+#define DFSCH_SMALL_TAG_CHARACTER 0x00
+
+#define DFSCH_SMALL_VALUE_REF()  \
+  (((long)(((ptrdiff_t)(obj)) & ~0xffL)) >> 8)
+
 
 #define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((ptrdiff_t) -1))
 
@@ -579,11 +588,11 @@ typedef struct dfsch_pair_t {
 
 
 #define DFSCH_FIXNUM_REF(obj)                   \
-  (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 2)
+  (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 3)
 #define DFSCH_MAKE_FIXNUM(obj)                                  \
-  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 2) | 0x01L))
-#define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 4)
-#define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 4)
+  ((dfsch_object_t*) ((((ptrdiff_t)(obj)) << 3) | 0x01L))
+#define DFSCH_FIXNUM_MAX (PTRDIFF_MAX / 8)
+#define DFSCH_FIXNUM_MIN (PTRDIFF_MIN / 8)
 
 
 #define DFSCH_TYPE_OF(obj)                                              \

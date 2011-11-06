@@ -848,12 +848,12 @@ dfsch_object_t* dfsch_number_add(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_LIKELY(DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
                    DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE)){
-    long an = DFSCH_FIXNUM_REF(a)<<2;
-    long bn = DFSCH_FIXNUM_REF(b)<<2;
+    long an = DFSCH_FIXNUM_REF(a);
+    long bn = DFSCH_FIXNUM_REF(b);
     long x = an + bn;
       
-    if ((an^x) >= 0 || (bn^x) >= 0) {
-      return DFSCH_MAKE_FIXNUM(x>>2);
+    if (x <= DFSCH_FIXNUM_MAX && x >= DFSCH_FIXNUM_MIN){
+      return DFSCH_MAKE_FIXNUM(x);
     }
   }
 
@@ -886,12 +886,13 @@ dfsch_object_t* dfsch_number_sub(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_LIKELY(DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
                    DFSCH_TYPE_OF(a)== DFSCH_FIXNUM_TYPE)){
-    long an = DFSCH_FIXNUM_REF(a)<<2;
-    long bn = DFSCH_FIXNUM_REF(b)<<2;
+    long an = DFSCH_FIXNUM_REF(a);
+    long bn = DFSCH_FIXNUM_REF(b);
     long x = an - bn;
 
-    if ((an^x) >= 0 || (~bn^x) >= 0)
-      return DFSCH_MAKE_FIXNUM(x>>2);
+    if (x <= DFSCH_FIXNUM_MAX && x >= DFSCH_FIXNUM_MIN){
+      return DFSCH_MAKE_FIXNUM(x);
+    }
   }
 
   if (DFSCH_TYPE_OF(a) == DFSCH_FLONUM_TYPE ||
@@ -943,19 +944,19 @@ dfsch_object_t* dfsch_number_mul(dfsch_object_t* a,
                                  dfsch_object_t* b){ 
   if (DFSCH_TYPE_OF(a) == DFSCH_TYPE_OF(b) &&
       DFSCH_TYPE_OF(a) == DFSCH_FIXNUM_TYPE){
-    long an = DFSCH_FIXNUM_REF(a)<<2;
+    long an = DFSCH_FIXNUM_REF(a)<<3;
     long bn = DFSCH_FIXNUM_REF(b);
     long x = an * bn;
     double xd = (double)an * (double)bn;
     
     if (x == xd){
-      return DFSCH_MAKE_FIXNUM(x>>2);
+      return DFSCH_MAKE_FIXNUM(x>>3);
     }else{
       double d = x > xd ? x - xd : xd - x;
       double p = xd >= 0 ? xd : -xd;
       
       if (32.0 * d <= p){
-	return DFSCH_MAKE_FIXNUM(x>>2);
+	return DFSCH_MAKE_FIXNUM(x>>3);
       }
     }
   }
