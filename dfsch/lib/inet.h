@@ -44,6 +44,7 @@ dfsch_strbuf_t* dfsch_inet_uri_base64_decode(dfsch_strbuf_t* str_buf);
 dfsch_strbuf_t* dfsch_inet_uri_base64_encode(dfsch_strbuf_t* str_buf);
 
 char* dfsch_inet_xml_escape(char* str_buf);
+char* dfsch_inet_xml_unescape(char* str);
 
 typedef void (*dfsch_inet_header_cb_t)(void* baton,
                                        char* name,

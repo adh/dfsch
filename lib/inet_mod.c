@@ -135,6 +135,13 @@ DFSCH_DEFINE_PRIMITIVE(inet_xml_escape, NULL){
   
   return dfsch_make_string_cstr(dfsch_inet_xml_escape(str));
 }
+DFSCH_DEFINE_PRIMITIVE(inet_xml_unescape, NULL){
+  char* str;
+  DFSCH_STRING_ARG(args, str);
+  DFSCH_ARG_END(args);
+  
+  return dfsch_make_string_cstr(dfsch_inet_xml_unescape(str));
+}
 
 DFSCH_DEFINE_PRIMITIVE(headers_2_list, 
                        "Read email style headers from port into new list"){
@@ -199,6 +206,8 @@ dfsch_object_t* dfsch_module_inet_register(dfsch_object_t* env){
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "xml-escape",
                     DFSCH_PRIMITIVE_REF(inet_xml_escape));
+  dfsch_defcanon_pkgcstr(env, inet_pkg, "xml-unescape",
+                    DFSCH_PRIMITIVE_REF(inet_xml_unescape));
 
   dfsch_defcanon_pkgcstr(env, inet_pkg, "headers->list",
                        DFSCH_PRIMITIVE_REF(headers_2_list));

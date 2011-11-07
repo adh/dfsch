@@ -135,7 +135,7 @@ pre {
   (markdown:markdown string :html :emphasis-chars "*_|"
                      :emphasis (lambda (str ch)
                                  (if (eq? ch #\|)
-                                     (shtml:emit-string (name-string-link str))
+                                     (shtml:emit-string (name-string-link (inet:xml-unescape str)))
                                      (shtml:emit-string `(:em ,str))))))
 
 (define-generic-function get-object-documentation

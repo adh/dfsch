@@ -703,6 +703,71 @@ char* dfsch_inet_xml_escape(char* str){
   return res;
 }
 
+char* dfsch_inet_xml_unescape(char* str){
+  char* res;
+  size_t len;
+  char* in;
+  char* out;
+
+  in = str;
+  len = 0;
+
+  while (*in){
+    if (*in == '&'){
+      while (*in && *in != ';'){
+	in++;
+      }
+    } else {
+      len++;
+    }
+    in++;
+  }
+
+  res = out = GC_MALLOC_ATOMIC(len + 1);
+  in = str;
+
+  while (*in){
+    if (*in == '&'){
+      in++;
+      char* start = in;
+      while (*in && *in != ';'){
+	in++;
+      }
+
+      if (in - start == 2){
+	if (memcmp(start, "gt", 2) == 0){
+	  *out = '>';
+	  out++;
+	  in++;
+	  continue;
+	} else 	if (memcmp(start, "lt", 2) == 0){
+	  *out = '<';
+	  out++;
+	  in++;
+	  continue;
+	}
+      } else if (in - start == 3){
+	if (memcmp(start, "amp", 2) == 0){
+	  *out = '&';
+	  out++;
+	  in++;
+	  continue;
+	}
+      }
+      dfsch_error("Error: unknown entity", 
+		  dfsch_make_string_buf(start, in - start));
+    } else {
+      *out = *in;
+      out++;
+      in++;
+    }
+  }
+  
+  *out = 0;
+
+  return res;
+}
+
 /* void dfsch_http_header_parser_parse_line(dfsch_http_header_parser_t* hp, */
 /*                                          char* line){ */
 /*   char* value; */
