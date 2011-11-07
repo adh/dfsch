@@ -309,10 +309,10 @@ most sequences are also collections.
 ## Mappings
 
 Mappings support accessor |map-ref| and setters |map-set!| and
-|map-unset|. In addition to this, mappings also provide
+|map-unset!|. In addition to this, mappings also provide
 conditionalized setters |map-set-if-exists!| and
 |map-set-if-not-exists!|. Most mappings can be iterated over like
-|<<collections>>|, elements returned by iterator are intended to be
+|<<collection>>|, elements returned by iterator are intended to be
 lists of key and value although some mapping types return only
 keys. Keys and values separately can be iterated over by iterators
 returned from |map-keys| and |map-values|.
