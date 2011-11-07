@@ -136,7 +136,7 @@ pre {
                      :emphasis (lambda (str ch)
                                  (if (eq? ch #\|)
                                      (shtml:emit-string (name-string-link str))
-                                     (string-append "<em>" str "</em>")))))
+                                     (shtml:emit-string `(:em ,str))))))
 
 (define-generic-function get-object-documentation
   :method-combination 

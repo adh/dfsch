@@ -201,7 +201,7 @@ static int stub_line_break(struct buf* ob, callbacks_t* cb){
                   dfsch_list(2,                                         \
                              dfsch_make_string_buf(t->data,             \
                                                    t->size),            \
-                             DFSCH_MAKE_FIXNUM(ch)));                   \
+                             DFSCH_MAKE_CHARACTER(ch)));                \
     if (res) {                                                          \
       dfsch_strbuf_t* buf = dfsch_string_to_buf(res);                   \
       bufput(ob, buf->ptr, buf->len);                                   \
