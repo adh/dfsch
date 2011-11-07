@@ -407,7 +407,10 @@ pre {
     (if entry
         `(:a :href ,(build-uri entry)
              ,(symbol-qualified-name (car entry)))
-        (or name `(:code ,name-string)))))
+        (begin 
+	  (display (format "Named link to non-existent entry: ~s" name-string))
+	  (newline)
+	  (or name `(:code ,name-string))))))
 
 
 (define (value-link value &optional name)
