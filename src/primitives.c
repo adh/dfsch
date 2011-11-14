@@ -633,7 +633,7 @@ DFSCH_DEFINE_PRIMITIVE(map,
     }
     dfsch_collection_constructor_add(rc,
                                      dfsch_apply(func, 
-                                                  DFSCH_MAKE_CLIST(&arlist)));
+						 DFSCH_MAKE_CLIST(&arlist)));
     for (i = 0; i < len; i++){
       its[i] = dfsch_iterator_next(its[i]);
       if (!its[i]){
@@ -651,7 +651,6 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
   size_t len;
   int i;
   object_t** its;
-  dfsch_list_collector_t* al;
   dfsch_type_t* result_type = NULL;
   dfsch_object_t* rc;
   dfsch_object_t* t;
@@ -678,12 +677,18 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
     }
   }
 
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
+
   while (1){
-    al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
-      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+      arlist[i] = dfsch_iterator_this(its[i]);
     }
-    t = dfsch_apply(func, dfsch_collected_list(al));
+    t = dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist));
     if (t){
       dfsch_collection_constructor_add(rc, t);
     }
@@ -704,7 +709,6 @@ DFSCH_DEFINE_PRIMITIVE(mapcan,
   size_t len;
   int i;
   object_t** its;
-  dfsch_list_collector_t* al;
   dfsch_object_t* res = NULL;
   dfsch_object_t* last = NULL;
   dfsch_object_t* rl;
@@ -718,13 +722,18 @@ DFSCH_DEFINE_PRIMITIVE(mapcan,
     }
   }
 
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
 
   while (1){
-    al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
-      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+      arlist[i] = dfsch_iterator_this(its[i]);
     }
-    rl = dfsch_apply(func, dfsch_collected_list(al));
+    rl = dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist));
     
     if (last){
       dfsch_set_cdr(last, rl);
@@ -756,7 +765,6 @@ DFSCH_DEFINE_PRIMITIVE(every,
   size_t len;
   int i;
   object_t** its;
-  dfsch_list_collector_t* al;
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
@@ -767,13 +775,18 @@ DFSCH_DEFINE_PRIMITIVE(every,
     }
   }
 
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
 
   while (1){
-    al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
-      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+      arlist[i] = dfsch_iterator_this(its[i]);
     }
-    if (!dfsch_apply(func, dfsch_collected_list(al))){
+    if (!dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
       return NULL;
     }
    
@@ -792,7 +805,6 @@ DFSCH_DEFINE_PRIMITIVE(some,
   size_t len;
   int i;
   object_t** its;
-  dfsch_list_collector_t* al;
   dfsch_object_t* t;
 
   DFSCH_OBJECT_ARG(args, func);
@@ -804,13 +816,18 @@ DFSCH_DEFINE_PRIMITIVE(some,
     }
   }
 
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
 
   while (1){
-    al = dfsch_make_list_collector();
     for (i = 0; i < len; i++){
-      dfsch_list_collect(al, dfsch_iterator_this(its[i]));
+      arlist[i] = dfsch_iterator_this(its[i]);
     }
-    t = dfsch_apply(func, dfsch_collected_list(al));
+    t = dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist));
     if (t){
       return t;
     }
@@ -831,6 +848,12 @@ DFSCH_DEFINE_PRIMITIVE(filter,
   object_t* list;
   dfsch_type_t* result_type;
   object_t* c;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
 
   DFSCH_OBJECT_ARG(args, func);
   DFSCH_OBJECT_ARG(args, list);
@@ -843,8 +866,9 @@ DFSCH_DEFINE_PRIMITIVE(filter,
     object_t* item =  dfsch_iterator_this(list);
     object_t* t;
 
-    if (dfsch_apply(func, 
-                    dfsch_list(1, item))){
+    arlist[0] = item;
+
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
       dfsch_collection_constructor_add(c, item);
     }
     list = dfsch_iterator_next(list);
@@ -859,6 +883,12 @@ DFSCH_DEFINE_PRIMITIVE(find_if,
                        "empty list when there is no such element"){
   object_t* func;
   object_t* list;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
 
   DFSCH_OBJECT_ARG(args, func);
   DFSCH_OBJECT_ARG(args, list);
@@ -869,8 +899,8 @@ DFSCH_DEFINE_PRIMITIVE(find_if,
     object_t* item =  dfsch_iterator_this(list);
     object_t* t;
 
-    if (dfsch_apply(func, 
-                    dfsch_list(1, item))){
+    arlist[0] = item;
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
       return item;
     }
     list = dfsch_iterator_next(list);
