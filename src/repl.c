@@ -64,6 +64,7 @@ void interactive_repl(dfsch_object_t* ctx){
          dfsch_get_build_id(), __DATE__, __TIME__);
   printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
   printf("   )   (     under certain conditions; see file COPYING for details.\n");
+  printf("\r\n");
   if (homedir){
     dfsch_console_read_history(dfsch_saprintf("%s/.dfsch-repl-history",
                                               homedir));
