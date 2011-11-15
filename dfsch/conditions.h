@@ -41,6 +41,10 @@ dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
 extern dfsch_type_t dfsch_condition_type;
 #define DFSCH_CONDITION_TYPE (&dfsch_condition_type)
 
+extern dfsch_type_t dfsch_serious_condition_type;
+#define DFSCH_SERIOUS_CONDITION_TYPE (&dfsch_serious_condition_type)
+
+
 extern dfsch_type_t dfsch_warning_type;
 #define DFSCH_WARNING_TYPE (&dfsch_warning_type)
 

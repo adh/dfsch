@@ -171,6 +171,9 @@ dfsch_type_t dfsch_condition_type = {
   (dfsch_type_write_t)condition_write
 };
 
+dfsch_type_t dfsch_serious_condition_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "serious-condition");
+
 dfsch_type_t dfsch_warning_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "warning");
 
@@ -178,7 +181,7 @@ dfsch_type_t dfsch_style_warning_type =
   DFSCH_CONDITION_TYPE_INIT(DFSCH_WARNING_TYPE, "style-warning");
 
 dfsch_type_t dfsch_error_type = 
-  DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "error");
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_SERIOUS_CONDITION_TYPE, "error");
 
 dfsch_type_t dfsch_type_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "type-error");
@@ -261,16 +264,16 @@ void dfsch_signal(dfsch_object_t* condition){
   }
 
 
-  if (DFSCH_INSTANCE_P(condition, DFSCH_ERROR_TYPE)){
+  if (DFSCH_INSTANCE_P(condition, DFSCH_SERIOUS_CONDITION_TYPE)){
     dfsch_enter_debugger(condition);
     if (ti->error_policy == DFSCH_EP_THREAD){
-      fprintf(stderr, "Unhandled error condition in thread %p\n  %s\n\n%s\n", 
+      fprintf(stderr, "Unhandled serious condition in thread %p\n  %s\n\n%s\n", 
               ti,
               dfsch_object_2_string(condition, 10, DFSCH_WRITE),
               dfsch_format_trace(dfsch_get_trace()));
       dfsch_invoke_restart(DFSCH_SYM_TERMINATE_THREAD, NULL);
     }
-    dfsch_lose_fatally("Unhandled error condition!", condition);
+    dfsch_lose_fatally("Unhandled serious condition!", condition);
   } else if (invoke_debugger_on_all_conditions){
     dfsch_enter_debugger(condition);    
   } else if (print_warnings 
@@ -738,6 +741,8 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
+  dfsch_defcanon_cstr(ctx, "<serious-condition>", 
+                      DFSCH_SERIOUS_CONDITION_TYPE);
   dfsch_defcanon_cstr(ctx, "<warning>", DFSCH_WARNING_TYPE);
   dfsch_defcanon_cstr(ctx, "<style-warning>", DFSCH_STYLE_WARNING_TYPE);
   dfsch_defcanon_cstr(ctx, "<error>", DFSCH_ERROR_TYPE);
