@@ -646,11 +646,17 @@ DFSCH_DEFINE_FORM(restart_bind,
   while (DFSCH_PAIR_P(bindings)){
     dfsch_object_t* name;
     dfsch_object_t* proc;
-    dfsch_object_t* desc;
+    char* desc;
+    dfsch_object_t* interactive;
     dfsch_object_t* b = DFSCH_FAST_CAR(bindings); 
+
     DFSCH_OBJECT_ARG(b, name);
     DFSCH_OBJECT_ARG(b, proc);
-    DFSCH_OBJECT_ARG_OPT(b, desc, NULL);
+    DFSCH_KEYWORD_PARSER_BEGIN(b);
+    DFSCH_KEYWORD("interactive", interactive);
+    DFSCH_KEYWORD_GENERIC("description", desc,
+                          dfsch_string_to_cstr);
+    DFSCH_KEYWORD_PARSER_END(b);
     DFSCH_ARG_END(b);
 
     
@@ -658,9 +664,7 @@ DFSCH_DEFINE_FORM(restart_bind,
     proc = dfsch_eval(proc, env);
     desc = dfsch_eval(desc, env);
 
-    dfsch_restart_bind(dfsch_make_restart(name, proc, 
-                                          dfsch_string_to_cstr(desc), 
-                                          NULL));
+    dfsch_restart_bind(dfsch_make_restart(name, proc, desc, interactive));
     bindings = DFSCH_FAST_CDR(bindings);
   }
 
