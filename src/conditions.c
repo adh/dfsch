@@ -288,10 +288,14 @@ void dfsch_signal(dfsch_object_t* condition){
 
 
 static dfsch_object_t* debugger_proc = NULL;
+static dfsch_object_t* query_for_object_proc = NULL;
 static int max_debugger_recursion = 10;
 
 void dfsch_set_debugger(dfsch_object_t* proc){
   debugger_proc = proc;
+}
+void dfsch_set_query_for_object_proc(dfsch_object_t* proc){
+  query_for_object_proc = proc;
 }
 void dfsch_set_invoke_debugger_on_all_conditions(int val){
   invoke_debugger_on_all_conditions = val;
@@ -320,6 +324,65 @@ void dfsch_enter_debugger(dfsch_object_t* reason){
     pthread_mutex_unlock(&debugger_depth_mutex);
   } DFSCH_PROTECT_END;
 }
+
+dfsch_object_t* dfsch_query_for_object(dfsch_object_t* prompt){
+  if (query_for_object_proc){
+    return dfsch_apply(query_for_object_proc, dfsch_list(1, prompt));
+  } else {
+    dfsch_error("No query-object-proc-defined", NULL);
+  }
+}
+
+dfsch_object_t* dfsch_query_for_object_cstr(dfsch_object_t* prompt){
+  return dfsch_query_for_object(dfsch_make_string_cstr(prompt));
+}
+
+typedef struct argument_list_s argument_list_t;
+
+struct argument_list_s {
+  char* prompt;
+  argument_list_t* next;
+};
+
+DFSCH_PRIMITIVE_HEAD(argument_reader){
+  argument_list_t* i = baton;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  DFSCH_ARG_END(args);
+  
+
+  while (i){
+    dfsch_list_collect(lc, dfsch_query_for_object_cstr(i->prompt));
+    i = i->next;
+  }
+
+  return dfsch_collected_list(lc);
+}
+
+dfsch_object_t* dfsch_make_argument_reader_proc(char* prompt, ...){
+  va_list al;
+  argument_list_t* head;
+  argument_list_t* tail;
+  char* str;
+
+  va_start(al, prompt);
+  head = tail = GC_NEW(argument_list_t);
+  head->prompt = prompt;
+  
+  while (str = va_arg(al, char*)){
+    argument_list_t* t = GC_NEW(argument_list_t);
+    t->prompt = str;
+    tail->next = t;
+    tail = t;
+  }
+  va_end(al);
+  
+  return dfsch_make_primitive("argument-reader", 
+                              p_argument_reader_impl, 
+                              head,
+                              "Read arguments of restart interactively",
+                              0);
+}
+
 
 int dfsch_get_debugger_depth(){
   int r;
@@ -439,7 +502,17 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
     restart = i->restart;
   }
 
-  return dfsch_apply(dfsch_restart_proc(restart), args);
+  restart_t* r = DFSCH_ASSERT_TYPE(restart, DFSCH_RESTART_TYPE);
+
+  if (args == DFSCH_INVALID_OBJECT){
+    if (r->interactive) {
+      args = dfsch_apply(r->interactive, NULL);
+    } else {
+      args = NULL;
+    }
+  }
+
+  return dfsch_apply(r->proc, args);
 }
 
 
@@ -663,6 +736,14 @@ DFSCH_DEFINE_PRIMITIVE(invoke_restart, 0){
   dfsch_invoke_restart(restart, args);
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(invoke_restart_interactively, 0){
+  dfsch_object_t* restart;
+  DFSCH_OBJECT_ARG(args, restart);
+  DFSCH_ARG_END(args);
+
+  dfsch_invoke_restart(restart, DFSCH_INVALID_OBJECT);
+  return NULL;
+}
 DFSCH_DEFINE_PRIMITIVE(compute_restarts, 0){
   DFSCH_ARG_END(args);
 
@@ -737,7 +818,14 @@ DFSCH_DEFINE_PRIMITIVE(restart_description, 0){
   return dfsch_make_string_cstr(dfsch_restart_description(restart));
 }
 
+DFSCH_DEFINE_PRIMITIVE(query_for_object, 
+                       "Read object using debugger's IO facilities"){
+  dfsch_object_t* prompt;
+  DFSCH_OBJECT_ARG(args, prompt);
+  DFSCH_ARG_END(args);
 
+  return dfsch_query_for_object(prompt);
+}
 
 void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<condition>", DFSCH_CONDITION_TYPE);
@@ -768,6 +856,8 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(signal));
   dfsch_defcanon_cstr(ctx, "invoke-restart",
                     DFSCH_PRIMITIVE_REF(invoke_restart));
+  dfsch_defcanon_cstr(ctx, "invoke-restart-interactively",
+                    DFSCH_PRIMITIVE_REF(invoke_restart_interactively));
   dfsch_defcanon_cstr(ctx, "compute-restarts",
                     DFSCH_PRIMITIVE_REF(compute_restarts));
 
@@ -786,4 +876,6 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "restart-description",
                     DFSCH_PRIMITIVE_REF(restart_description));
 
+  dfsch_defcanon_cstr(ctx, "query-for-object",
+                    DFSCH_PRIMITIVE_REF(query_for_object));
 }

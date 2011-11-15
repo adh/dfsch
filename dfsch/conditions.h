@@ -64,8 +64,14 @@ void dfsch_set_error_policy(int pol);
 void dfsch_signal(dfsch_object_t* condition);
 void dfsch_set_debugger(dfsch_object_t* proc);
 void dfsch_set_invoke_debugger_on_all_conditions(int val);
+void dfsch_set_query_for_object_proc(dfsch_object_t* proc);
 void dfsch_enter_debugger(dfsch_object_t* reason);
 int dfsch_get_debugger_depth();
+
+dfsch_object_t* dfsch_query_for_object(dfsch_object_t* prompt);
+dfsch_object_t* dfsch_query_for_object_cstr(dfsch_object_t* prompt);
+
+dfsch_object_t* dfsch_make_argument_reader_proc(char* prompt, ...);
 
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,

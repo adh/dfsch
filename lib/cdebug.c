@@ -70,7 +70,7 @@ static dfsch_object_t* cdebug_callback(dfsch_object_t *obj,  cdebug_ctx_t* ctx){
   if (dfsch_integer_p(obj)){
     return dfsch_invoke_restart(dfsch_list_item(ctx->restarts, 
                                                 dfsch_number_to_long(obj)), 
-                                NULL);
+                                DFSCH_INVALID_OBJECT);
   } else {
     return dfsch_eval(obj, ctx->env);
   }
@@ -151,9 +151,19 @@ DFSCH_DEFINE_PRIMITIVE(enter_debugger, 0){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(query_for_object, 0){
+  char* prompt;
+  DFSCH_STRING_ARG(args, prompt);
+  DFSCH_ARG_END(args);
+
+  return dfsch_console_read_object(dfsch_saprintf("%s: ", prompt));
+}
+
+
 dfsch_object_t* dfsch_cdebug_get_procedure(){
   return DFSCH_PRIMITIVE_REF(enter_debugger);
 }
 void dfsch_cdebug_set_as_debugger(){
   dfsch_set_debugger(dfsch_cdebug_get_procedure());
+  dfsch_set_query_for_object_proc(DFSCH_PRIMITIVE_REF(query_for_object));
 }
