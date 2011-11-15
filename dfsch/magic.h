@@ -260,7 +260,7 @@ extern "C" {
   dfsch_restart_bind(dfsch_make_restart(name,                           \
                                         dfsch_make_throw_proc_arg(dfsch___tag), \
                                         description,                    \
-                                        "Alternate value"));
+                                        NULL));
 #define DFSCH_END_WITH_RETRY_WITH_RESTART(obj)                          \
   } DFSCH_CATCH { obj = DFSCH_CATCH_VALUE; } DFSCH_CATCH_END \
 }

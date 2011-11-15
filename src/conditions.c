@@ -334,11 +334,11 @@ typedef struct restart_t {
   dfsch_object_t* name;
   dfsch_object_t* proc;
   char* description;
-  char* arg_descriptions;
+  dfsch_object_t* interactive;
 } restart_t;
 
 static void restart_write(restart_t* r, 
-                            dfsch_writer_state_t* state){
+                          dfsch_writer_state_t* state){
   dfsch_write_unreadable_start(state, (dfsch_object_t*)r);
   
   dfsch_write_object(state, r->name); 
@@ -360,13 +360,13 @@ dfsch_type_t dfsch_restart_type = {
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
                                    char* description,
-                                   char* arg_descriptions){
+                                   dfsch_object_t* interactive){
   restart_t* r = (restart_t*) dfsch_make_object(DFSCH_RESTART_TYPE);
 
   r->name = name;
   r->proc = proc;
   r->description = description;
-  r->arg_descriptions = arg_descriptions;
+  r->interactive = interactive;
 
   return (dfsch_object_t*) r;
 }

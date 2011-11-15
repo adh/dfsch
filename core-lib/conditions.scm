@@ -73,15 +73,19 @@
              (,result (catch ',tag
                              (restart-bind 
                               ,(map (lambda (restart)
-                                      `@(',(car restart)
-                                         (lambda (&rest args)
-                                           (set! ,restart-id 
-                                                 ',restart)
-                                           (throw ',tag ()))
-                                         ',(when (string? (caddr 
-                                                           restart))
-                                                 (caddr restart))))
-                                    restarts)
+                                      (let ((name (if (pair? (car restart))
+                                                      (caar restart)
+                                                      (car restart)))
+                                            (arguments (when 
+                                                        (pair? (car restart))
+                                                        (cdar restart))))
+                                        `@(',name
+                                           (lambda (&rest args)
+                                             (set! ,restart-id 
+                                                   ',restart)
+                                             (throw ',tag ()))
+                                         ,@arguments)))
+                                      restarts)
                               ,form))))
         (case ,restart-id 
           ,.(map (lambda (restart)

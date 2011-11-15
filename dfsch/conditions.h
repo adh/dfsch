@@ -70,7 +70,7 @@ int dfsch_get_debugger_depth();
 dfsch_object_t* dfsch_make_restart(dfsch_object_t* name,
                                    dfsch_object_t* proc,
                                    char* description,
-                                   char* args_description);
+                                   dfsch_object_t* interactive);
 
 extern dfsch_type_t dfsch_restart_type;
 #define DFSCH_RESTART_TYPE (&dfsch_restart_type)
