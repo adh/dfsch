@@ -163,7 +163,12 @@ int main(int argc, char**argv){
       dfsch_load_extend_path(ctx, optarg);
       break;
     case 'X':
-      dfsch_set_vm_parameter_stanza(optarg);
+      if (strcmp(optarg, "help") == 0 || strcmp(optarg, "list") == 0){
+        dfsch_print_vm_parameters();
+        return 0;
+      } else {
+        dfsch_set_vm_parameter_stanza(optarg);
+      }
       break;
     case 'e':
       {

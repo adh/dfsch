@@ -973,8 +973,9 @@ extern "C" {
 
   extern void dfsch_set_vm_parameter(char* name, char* value);
   extern void dfsch_set_vm_parameter_stanza(char* stanza);
-  extern char* dfsch_get_vm_parameter(char* name, char* value);
+  extern char* dfsch_get_vm_parameter(char* name);
   extern dfsch_object_t* dfsch_get_vm_parameters();
+  extern void dfsch_print_vm_parameters();
 
 #ifdef __cplusplus
 }

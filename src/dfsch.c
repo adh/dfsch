@@ -2070,7 +2070,7 @@ void dfsch_set_vm_parameter_stanza(char* stanza){
 
   dfsch_set_vm_parameter(name, value);
 }
-char* dfsch_get_vm_parameter(char* name, char* value){
+char* dfsch_get_vm_parameter(char* name){
   vm_param_t* i = vm_params;
 
   while (i){
@@ -2084,5 +2084,17 @@ char* dfsch_get_vm_parameter(char* name, char* value){
   dfsch_error("No such VM parameter", dfsch_make_string_cstr(name));
 }
 dfsch_object_t* dfsch_get_vm_parameters(){
-  
+
+}
+void dfsch_print_vm_parameters(){
+  vm_param_t* i = vm_params;
+
+  printf("dfsch VM parameters:\n\n");
+
+  while (i){
+    printf("  %s (current value: %d)\n", i->name, *(i->var));
+    printf("    %s\n\n", i->desc);
+    i = i->next;
+  }
+  printf("\n");
 }
