@@ -213,6 +213,9 @@ void dfsch_set_error_policy(int pol){
   dfsch__get_thread_info()->error_policy = pol;
 }
 
+static DEFINE_VM_PARAM(warning_trace, 0,
+                       "When printing warnings to stderr, include stack trace");
+
 static void print_warning(dfsch_object_t* condition){
   dfsch_object_t* msg = dfsch_condition_field_cstr(condition,
 						   "message");
@@ -240,6 +243,9 @@ static void print_warning(dfsch_object_t* condition){
               dfsch_object_2_string(anot, 10, 
                                     DFSCH_WRITE));
     }
+  } else if (warning_trace) {
+    fprintf(stderr, "%s\n",
+            dfsch_format_trace(dfsch_get_trace()));
   }
 }
 
