@@ -555,6 +555,11 @@ DFSCH_DEFINE_PRIMITIVE(for_each,
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
+
+  if (len == 0){
+    return NULL;
+  }
+
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
     if (!its[i]){
@@ -613,6 +618,11 @@ DFSCH_DEFINE_PRIMITIVE(map,
   rc = dfsch_make_collection_constructor(result_type);
   
   its = dfsch_list_as_array(args, &len);
+
+  if (len == 0){
+    return dfsch_collection_constructor_done(rc);
+  }
+
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
     if (!its[i]){
@@ -670,6 +680,9 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
   rc = dfsch_make_collection_constructor(result_type);
   
   its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    return dfsch_collection_constructor_done(rc);
+  }
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
     if (!its[i]){
@@ -715,6 +728,9 @@ DFSCH_DEFINE_PRIMITIVE(mapcan,
 
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    return NULL;
+  }
   for (i = 0; i < len; i++){
     its[i] = dfsch_collection_get_iterator(its[i]);
     if (!its[i]){
