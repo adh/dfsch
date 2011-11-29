@@ -77,7 +77,7 @@ int main(int argc, char**argv){
   ctx = dfsch_make_top_level_environment();
   dfsch_set_standard_io_ports();
                                         
-  while ((c=getopt(argc, argv, "+L:mzvch?" WINDOWS_FLAGS)) != -1){
+  while ((c=getopt(argc, argv, "+L:X:mzvch?" WINDOWS_FLAGS)) != -1){
     switch (c){
     case 'L':
       dfsch_load_extend_path(ctx, optarg);
@@ -86,7 +86,12 @@ int main(int argc, char**argv){
       run_module = 1;
       break;
     case 'X':
-      dfsch_set_vm_parameter_stanza(optarg);
+      if (strcmp(optarg, "help") == 0 || strcmp(optarg, "list") == 0){
+        dfsch_print_vm_parameters();
+        return 0;
+      } else {
+        dfsch_set_vm_parameter_stanza(optarg);
+      }
       break;
     case 'z':
       program_is_dsz = 1;
@@ -141,7 +146,7 @@ int main(int argc, char**argv){
     }
     return 0;
   } else {
-    fprintf(stderr, "No program to run given.");
+    fprintf(stderr, "No program to run given.\n");
     return 1;
   }
 }
