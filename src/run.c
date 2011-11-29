@@ -101,6 +101,10 @@ int main(int argc, char**argv){
     case 'c':
       AllocConsole();
       break;
+#else
+    case 'c':
+      fprintf(stderr, "Option -c is only supported on Windows\n");
+      return 1;
 #endif
 
     case 'v':
