@@ -117,7 +117,7 @@ int main(int argc, char**argv){
     default:
       printf("Usage: %s [<options>] [<filename> ...]\n\n", argv[0]);
       puts("Options:");
-      puts("  -L <directory>    Append directory to load:path");
+      puts("  -L <directory>    Append directory to *load-path*");
       puts("  -X <name>=<value> Set VM parameter");
       puts("     +<name>          to 1");
       puts("     -<name>          to 0");

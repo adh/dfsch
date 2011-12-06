@@ -202,7 +202,7 @@ int main(int argc, char**argv){
       puts("Options:");
       puts("  -l <filename>     Load scheme file on startup");
       puts("  -r <module-name>  Require (load) module on startup");
-      puts("  -L <directory>    Append directory to load:path");
+      puts("  -L <directory>    Append directory to *load-path*");
       puts("  -e <expression>   Execute given expression");
       puts("  -E <expression>   Evaluate given expression");
       puts("  -X <name>=<value> Set VM parameter");
