@@ -739,6 +739,16 @@ DFSCH_DEFINE_FORM(when_toplevel, {},
   }
 }
 
+DFSCH_DEFINE_PRIMITIVE(current_load_file, NULL){
+  DFSCH_ARG_END(args);
+  load_thread_info_t* lti = get_load_ti();
+
+  if (!lti->operation){
+    return NULL;
+  }
+
+  return dfsch_make_string_cstr(lti->operation->fname);
+}
 
 #ifdef __WIN32__
 #define PATH_SEP ';'
@@ -794,4 +804,6 @@ void dfsch__load_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "provide", DFSCH_FORM_REF(provide));
 
   dfsch_defcanon_cstr(ctx, "when-toplevel", DFSCH_FORM_REF(when_toplevel));
+  dfsch_defcanon_cstr(ctx, "current-load-file", 
+                      DFSCH_PRIMITIVE_REF(current_load_file));
 }
