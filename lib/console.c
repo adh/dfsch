@@ -202,8 +202,7 @@ static completion_entry_t* generate_completions(char* text_part){
                                   compl_cb, &ctx);    
     
   }
-
-
+  
   return ctx.list;
 }
 
@@ -246,6 +245,7 @@ static char ** symbol_completion (const char* text, int start, int end){
   if (rl_line_buffer[0] == ';'){
     return rl_completion_matches(text, command_completion_cb);
   } else {
+    rl_completion_suppress_append = 1;
     return rl_completion_matches(text, symbol_completion_cb);
   }
 }
