@@ -195,6 +195,7 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
   {DFSCH_DFSCH_PACKAGE, "unquote-nconcing"},
   {DFSCH_DFSCH_PACKAGE, "break"},
+  {DFSCH_DFSCH_PACKAGE, "muffle-warning"},
 };
 
 static dfsch_package_t* find_package(char* name){

@@ -1249,9 +1249,10 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
       mode = CLL_OPTIONAL;
     } else if (arg == DFSCH_LK_KEY){
       if (mode == CLL_OPTIONAL){
-        dfsch_signal_condition(DFSCH_STYLE_WARNING_TYPE, 
-                               "Combination of optional and keyword arguments "
-                               "leads to surprising behavior", NULL);
+        dfsch_signal_warning_condition(DFSCH_STYLE_WARNING_TYPE, 
+                                       "Combination of optional and keyword "
+                                       "arguments leads to unexpected behavior",
+                                       NULL);
       }
       mode = CLL_KEYWORD;
     } else if (arg == DFSCH_LK_REST || arg == DFSCH_LK_BODY){

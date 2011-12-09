@@ -139,6 +139,27 @@ void dfsch_signal_condition(dfsch_type_t* type,
   dfsch_signal(c);
 }
 
+void dfsch_signal_warning_condition(dfsch_type_t* type, 
+                                    char* message,
+                                    ...){
+  va_list al;
+  dfsch_object_t* c = dfsch_make_condition(type);
+  char* name;
+  
+  va_start(al, message);
+  while (name = va_arg(al, char*)){
+    dfsch_condition_put_field_cstr(c, name, va_arg(al, dfsch_object_t*));
+  }
+  va_end(al);
+  dfsch_condition_put_field_cstr(c, "message", 
+                                 dfsch_make_string_cstr(message));
+
+  DFSCH_WITH_SIMPLE_RESTART(DFSCH_SYM_MUFFLE_WARNING,
+                            "Ignore warning condition"){
+    dfsch_signal(c);
+  } DFSCH_END_WITH_SIMPLE_RESTART;
+}
+
 
 dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
                                             dfsch_object_t* message,
@@ -603,6 +624,7 @@ void dfsch_index_error(dfsch_object_t* seq,
   dfsch_condition_put_field_cstr(c, "message", dfsch_make_string_cstr(m));
   dfsch_signal(c);  
 }
+
 
 DFSCH_DEFINE_PRIMITIVE(terminate_thread, NULL){
   DFSCH_ARG_END(args);

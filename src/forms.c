@@ -54,16 +54,16 @@ DFSCH_FORM_METHOD_COMPILE(if){
 
   if (test_val != DFSCH_INVALID_OBJECT){
     if (test_val){
-      dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                             "condition is always true",
-                             "code", expr,
-                             NULL);
+      dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                     "condition is always true",
+                                     "code", expr,
+                                     NULL);
       return consequent;
     } else {
-      dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                             "condition is always false",
-                             "code", expr,
-                             NULL);
+      dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                     "condition is always false",
+                                     "code", expr,
+                                     NULL);
       return alternate;
     }
   }

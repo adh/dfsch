@@ -557,9 +557,9 @@ DFSCH_DEFINE_PRIMITIVE(for_each,
   its = dfsch_list_as_array(args, &len);
 
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to for-each",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to for-each",
+                                   NULL);
     return NULL;
   }
 
@@ -623,9 +623,9 @@ DFSCH_DEFINE_PRIMITIVE(map,
   its = dfsch_list_as_array(args, &len);
 
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to map",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to map",
+                                   NULL);
     return dfsch_collection_constructor_done(rc);
   }
 
@@ -687,9 +687,9 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
   
   its = dfsch_list_as_array(args, &len);
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to map*",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to map*",
+                                   NULL);
     return dfsch_collection_constructor_done(rc);
   }
   for (i = 0; i < len; i++){
@@ -738,9 +738,9 @@ DFSCH_DEFINE_PRIMITIVE(mapcan,
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to mapcan",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to mapcan",
+                                   NULL);
     return NULL;
   }
   for (i = 0; i < len; i++){
@@ -797,9 +797,9 @@ DFSCH_DEFINE_PRIMITIVE(every,
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to every",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to every",
+                                   NULL);
     return DFSCH_SYM_TRUE;
   }
   for (i = 0; i < len; i++){
@@ -844,9 +844,9 @@ DFSCH_DEFINE_PRIMITIVE(some,
   DFSCH_OBJECT_ARG(args, func);
   its = dfsch_list_as_array(args, &len);
   if (len == 0){
-    dfsch_signal_condition(DFSCH_WARNING_TYPE, 
-                           "No collections passed to some",
-                           NULL);
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to some",
+                                   NULL);
     return NULL;
   }
   for (i = 0; i < len; i++){
