@@ -190,7 +190,7 @@ dfsch__symbol_t dfsch__static_symbols[] = {
   {DFSCH_KEYWORD_PACKAGE, "around"},
   {DFSCH_DFSCH_PACKAGE, "terminate-thread"},
   {DFSCH_DFSCH_PACKAGE, "use-value"},
-  {DFSCH_DFSCH_PACKAGE, "*macro-expanded-from*"},
+  {DFSCH_DFSCH_PACKAGE, "macro-expanded-from"},
   {DFSCH_DFSCH_PACKAGE, "immutable-quasiquote"},
   {DFSCH_DFSCH_PACKAGE, "*compiled-from*"},
   {DFSCH_DFSCH_PACKAGE, "unquote-nconcing"},
