@@ -1879,11 +1879,11 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
   dfsch_defconst_cstr(ctx, "T", DFSCH_SYM_TRUE);
 
   dfsch_defcanon_cstr(ctx, "top-level-environment", ctx);
-  dfsch_defconst_cstr(ctx,"*dfsch-version*",
+  dfsch_defconst_cstr(ctx, "*dfsch-version*",
                       dfsch_make_string_cstr(dfsch_get_version()));
-  dfsch_defconst_cstr(ctx,"*dfsch-build-id*",
+  dfsch_defconst_cstr(ctx, "*dfsch-build-id*",
                       dfsch_make_string_cstr(dfsch_get_build_id()));
-  dfsch_defconst_cstr(ctx,"*dfsch-platform*",
+  dfsch_defconst_cstr(ctx, "*dfsch-platform*",
                       dfsch_make_string_cstr(HOST_TRIPLET));
 
   dfsch__primitives_register(ctx);
