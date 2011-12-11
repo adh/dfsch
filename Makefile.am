@@ -112,6 +112,14 @@ curl_libs=
 curl_modules=
 endif
 
+if NEWT
+newt_libs=libdfsch-newt.la
+newt_modules=newt.la
+else
+newt_libs=
+newt_modules=
+endif
+
 
 if WIN32
 nonwin32_libs=
@@ -133,6 +141,8 @@ sqlite3_modules=sqlite3.la
 else
 sqlite3_modules=
 endif
+
+
 
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-os.la \
@@ -160,7 +170,8 @@ lib_LTLIBRARIES = libdfsch.la \
 	$(tt_libs) \
 	$(gd_libs) \
 	$(ffi_libs) \
-	$(curl_libs)
+	$(curl_libs) \
+	$(newt_libs)
 
 
 
@@ -206,7 +217,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(tt_modules)\
 	$(gd_modules)\
 	$(ffi_modules)\
-	$(curl_modules)
+	$(curl_modules) \
+	$(newt_modules) 
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -641,6 +653,15 @@ libdfsch_curl_la_LDFLAGS = -no-undefined
 curl_la_SOURCES = lib/curl_mod.c
 curl_la_LIBADD = libdfsch-curl.la libdfsch.la
 curl_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+libdfsch_newt_la_SOURCES = lib/newt.c
+libdfsch_newt_la_LIBADD = libdfsch.la -lnewt
+libdfsch_newt_la_LDFLAGS = -no-undefined
+
+newt_la_SOURCES = lib/newt_mod.c
+newt_la_LIBADD = libdfsch-newt.la libdfsch.la
+newt_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 
 if WIN32

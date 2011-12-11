@@ -341,6 +341,27 @@ fi
 
 AM_CONDITIONAL(CURL, test x"$enable_curl" == x"yes")
 
+enable_newt=yes
+
+AC_ARG_ENABLE([newt],
+    AC_HELP_STRING([--disable-newt], [Disable newt module]))
+AC_ARG_WITH([newt],
+  AC_HELP_STRING([--with-libnewt=PATH], [Path to libnewt installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_newt" == x"yes"; then
+    AC_CHECK_HEADERS(newt.h, [have_newt="1"], [have_newt="0"])
+    AC_CHECK_LIB(newt, newtInit, 
+                     [dummy_newt=], [have_newt="0"])
+
+    if test x"$have_newt" == x"0" ; then
+        enable_newt=no
+    fi
+fi
+
+AM_CONDITIONAL(NEWT, test x"$enable_newt" == x"yes")
+
 
 
 
@@ -392,6 +413,7 @@ tokyo-tyrant ....... : $enable_tokyo_tyrant
 gd ................. : $enable_gd
 FFI ................ : $enable_ffi
 CURL ............... : $enable_curl
+Newt ............... : $enable_newt
 
 
 EOF
