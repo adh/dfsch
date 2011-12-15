@@ -630,7 +630,7 @@ static dfsch_rwlock_t environment_rwlock = DFSCH_RWLOCK_INITIALIZER;
 static environment_t* alloc_environment(dfsch__thread_info_t* ti){
   environment_t* e;
 
-#ifdef DFSCH_GC_MALLOC_MANY
+#ifdef DFSCH_GC_MALLOC_MANY 
   if (!ti->env_freelist){
     ti->env_freelist = GC_malloc_many(sizeof(environment_t));
   } else {
@@ -643,7 +643,7 @@ static environment_t* alloc_environment(dfsch__thread_info_t* ti){
 #else
   if (ti->env_freelist){
     e = ti->env_freelist;
-    ti->env_freelist = GC_NEXT(ti->env_freelist);
+    ti->env_freelist = *((void**)(ti->env_freelist));
     if (ti->env_fl_depth > 0){
       ti->env_fl_depth--;
     }
