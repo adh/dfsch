@@ -188,7 +188,7 @@ dfsch_object_t* dfsch_pcre_match_named_substrings(pcre* pattern,
     return NULL;
   }
 
-  res = dfsch_hash_make(DFSCH_HASH_EQUAL);
+  res = dfsch_make_hash(DFSCH_HASH_EQUAL);
   dfsch_hash_set(res,
                  NULL,
                  make_substring(string,
