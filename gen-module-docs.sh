@@ -3,7 +3,7 @@
 mkdir documentation/modules/ 2>/dev/null
 
 cat > documentation/modules/index.html <<EOF 
-<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml">'
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>dfsch standard modules documentation</title>
 </head>
 <body>
