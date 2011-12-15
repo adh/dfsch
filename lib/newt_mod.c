@@ -162,6 +162,70 @@ DFSCH_DEFINE_PRIMITIVE(win_ternary,
                                                     NULL));
 }
 
+DFSCH_DEFINE_PRIMITIVE(win_menu,
+                       "Creates a window with menu"){
+  char* title = NULL;
+  char* button1_text = "OK";
+  char* button2_text = NULL;
+  char* button3_text = NULL;
+  char* text = "";
+  int suggested_width = 60;
+  int max_list_height = 10;
+  int flex_up = 15;
+  int flex_down = 15;
+  int item_index = 0;
+  char** is = GC_MALLOC(sizeof(char*) * 32);
+  size_t is_len = 32;
+  dfsch_object_t* items;
+  dfsch_object_t* it;
+  size_t i;
+  int ret;
+
+  DFSCH_OBJECT_ARG(args, items);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("title", title, dfsch_string_to_cstr); 
+  DFSCH_KEYWORD_GENERIC("text", text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("button1-text", button1_text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("button2-text", button2_text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("button3-text", button3_text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("suggested-width", 
+                        suggested_width, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("max-list-height", 
+                        max_list_height, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("flex-up", 
+                        flex_up, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("flex-down", 
+                        flex_down, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("item-index", 
+                        item_index, dfsch_number_to_long);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  it = dfsch_collection_get_iterator(items);
+
+  i = 0;
+  while (it){
+    dfsch_object_t* j = dfsch_iterator_this(it);
+    is[i] = dfsch_string_to_cstr(j);
+
+    i++;
+    if (i == is_len){
+      is_len *= 2;
+      is = GC_REALLOC(is, sizeof(char*) * is_len);
+    }
+    
+    it = dfsch_iterator_next(it);
+  }
+  is[i] = NULL;
+
+  ret = newtWinMenu(title, text, suggested_width, flex_down, flex_up,
+                    max_list_height, is, &item_index, button1_text);
+
+  return dfsch_values(2, 
+                      dfsch_make_number_from_long(item_index),
+                      dfsch_make_number_from_long(ret));
+}
+
+
 
 void dfsch_module_newt_register(dfsch_object_t* env){
   dfsch_package_t* newt = dfsch_make_package("newt",
@@ -193,4 +257,6 @@ void dfsch_module_newt_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(win_choice));
   dfsch_defcanon_pkgcstr(env, newt, "win-ternary", 
                          DFSCH_PRIMITIVE_REF(win_ternary));
+  dfsch_defcanon_pkgcstr(env, newt, "win-menu", 
+                         DFSCH_PRIMITIVE_REF(win_menu));
 }
