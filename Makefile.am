@@ -666,7 +666,17 @@ version.h: $(vm_SOURCES) $(stdlib_sources) $(syslib_sources)
 
 .PHONY: documentation
 
+MODULES = cmdopts crypto curl csv extref fastlz ffi gcollect gd http inet \
+	ini-file \
+	json markdown minizip os pcre posix-regex process shtml socket-port \
+	sxml threads tokyo-cabinet tokyo-tyrant unix xml zlib \
+	\
+	sqlite sqlite3\
+	\
+	dfsch-unit http-server markdown-tools match tk-gui
+
 documentation: all
 	./dfsch-run -L ./.libs -L $(srcdir)/lib-scm \
 		$(srcdir)/tools/docgen.scm --chapters $(srcdir)/doc/manual.md \
 		documentation
+	$(srcdir)/gen-module-docs.sh $(srcdir) "$(MODULES)"
