@@ -156,10 +156,41 @@ DFSCH_DEFINE_FORM(internal_loop,
 dfsch_object_t* dfsch_generate_loop(dfsch_object_t* exps){
   return dfsch_cons(DFSCH_FORM_REF(internal_loop), 
                     exps);
+
+}
+
+DFSCH_FORM_METHOD_COMPILE(forward_branch){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  dfsch_object_t* key;
+  dfsch_object_t* code;
+  dfsch_object_t* new_code;
+  size_t len;
+  size_t i;
+
+  DFSCH_OBJECT_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, code);
+  DFSCH_ARG_END(args);
+  
+  key = dfsch_compile_expression(key, env);
+  len = dfsch_vector_length(code);
+  new_code = dfsch_make_vector(len, NULL);
+
+  for (i = 0; i < len; i++){
+    dfsch_vector_set(new_code, 
+                     i, 
+                     dfsch_compile_expression(dfsch_vector_ref(code, i),
+                                              env));
+  }
+
+  return dfsch_cons_ast_node(form,
+                             expr,
+                             2,
+                             key,
+                             new_code);
 }
 
 DFSCH_DEFINE_FORM(forward_branch,
-                  {},
+                  {DFSCH_FORM_COMPILE(forward_branch)},
                   "Forward branch primitive for tagbody"){
   long key;
   dfsch_object_t* code;
