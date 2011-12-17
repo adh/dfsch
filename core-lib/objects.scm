@@ -50,7 +50,7 @@
 (define-has-slot-specializer dfsch:<<documented-synopsis>> :synopsis
   "All objects with :synopsis slot")
 
-(define-macro (dfsch:define-class name superclass slots &rest class-opts)
+(define-macro (dfsch:define-class name superklass slots &rest class-opts)
   (let ((class-slots (map 
                       (lambda (desc)
                         (letrec ((name (if (pair? desc) (car desc) desc))
@@ -70,7 +70,7 @@
                       slots)))
     `@(begin 
         (%define-canonical-constant ,name (make-class ',name 
-                                                      ,superclass 
+                                                      ,superklass 
                                                       (list ,@class-slots)
                                                       ,@class-opts))
         ,@(mapcan 
