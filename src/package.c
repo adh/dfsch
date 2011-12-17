@@ -536,7 +536,13 @@ dfsch_object_t* dfsch_make_keyword(char* symbol){
 static void parse_symbol(char* symbol,
                          char** package_name,
                          char** symbol_name){
-  char* colon = strrchr(symbol, ':');
+  char* colon;
+
+  if (*symbol == ':'){
+    colon = symbol;
+  } else {
+    colon = strrchr(symbol, ':');
+  }
 
   if (!colon){
     *symbol_name = dfsch_stracpy(symbol);
