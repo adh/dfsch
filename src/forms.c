@@ -158,6 +158,19 @@ dfsch_object_t* dfsch_generate_loop(dfsch_object_t* exps){
                     exps);
 }
 
+DFSCH_DEFINE_FORM(forward_branch,
+                  {},
+                  "Forward branch primitive for tagbody"){
+  long key;
+  dfsch_object_t* code;
+
+  DFSCH_LONG_ARG(args, key);
+  DFSCH_OBJECT_ARG(args, code);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_proc_tr(dfsch_vector_ref(code, key), env, esc);
+}
+
 DFSCH_FORM_METHOD_COMPILE(internal_let){
   dfsch_object_t* args = DFSCH_FAST_CDR(expr);
   object_t *vars;
@@ -681,6 +694,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "begin", DFSCH_FORM_REF(begin));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE,
                          "%loop", DFSCH_FORM_REF(internal_loop));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE,
+                         "%forward-branch", DFSCH_FORM_REF(forward_branch));
 
   dfsch_defcanon_cstr(ctx, "quote", DFSCH_FORM_REF(quote));
   dfsch_defcanon_cstr(ctx, "if", DFSCH_FORM_REF(if));
