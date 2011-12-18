@@ -809,6 +809,13 @@ dfsch_object_t* dfsch_list_all_package_symbols(dfsch_package_t* pkg){
                                 &list);
   return list;
 }
+dfsch_object_t* dfsch_list_exported_package_symbols(dfsch_package_t* pkg){
+  if (pkg->exported_symbols){
+    return dfsch_list_copy(pkg->exported_symbols);
+  } else {
+    dfsch_list_package_symbols(pkg);
+  }
+}
 
 void dfsch_unintern_symbol(dfsch_object_t* symbol){
   dfsch__symbol_t* sym = DFSCH_TAG_REF(DFSCH_ASSERT_TYPE(symbol, 
@@ -1004,9 +1011,20 @@ DFSCH_DEFINE_PRIMITIVE(list_all_package_symbols,
 
   return dfsch_list_all_package_symbols(package);
 }
+DFSCH_DEFINE_PRIMITIVE(list_exported_package_symbols, 
+                       "Return list of all symbols exported by package"){
+  dfsch_package_t* package;
+
+  DFSCH_PACKAGE_ARG(args, package);
+  DFSCH_ARG_END(args);
+
+  return dfsch_list_exported_package_symbols(package);
+}
 
 
 void dfsch__package_register(dfsch_object_t *ctx){
+  dfsch_defcanon_cstr(ctx, "<package>",
+                      DFSCH_PACKAGE_TYPE);
   dfsch_defcanon_cstr(ctx, "define-package",
                       DFSCH_PRIMITIVE_REF(define_package));
   dfsch_defcanon_cstr(ctx, "in-package",
@@ -1026,6 +1044,8 @@ void dfsch__package_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "list-package-symbols",
                       DFSCH_PRIMITIVE_REF(list_package_symbols));
   dfsch_defcanon_cstr(ctx, "list-all-package-symbols",
-                      DFSCH_PRIMITIVE_REF(list_package_symbols));
+                      DFSCH_PRIMITIVE_REF(list_all_package_symbols));
+  dfsch_defcanon_cstr(ctx, "list-exported-package-symbols",
+                      DFSCH_PRIMITIVE_REF(list_exported_package_symbols));
 
 }

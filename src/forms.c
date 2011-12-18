@@ -268,6 +268,80 @@ DFSCH_DEFINE_FORM(internal_let, {DFSCH_FORM_COMPILE(internal_let)},
 
   return dfsch_eval_proc_tr_free_env(code, ext_env, esc);
 }
+
+DFSCH_FORM_METHOD_COMPILE(internal_let_constants){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  object_t *vars;
+  object_t* o_vars; 
+  object_t *code;
+  object_t* inner_env = dfsch_new_frame(env);
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
+
+  o_vars = vars;
+  while (DFSCH_PAIR_P(vars)){
+    dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+    object_t* var;
+    object_t* val;
+    dfsch_object_t* value;
+
+    DFSCH_OBJECT_ARG(clause, var);
+    DFSCH_OBJECT_ARG(clause, val);
+    DFSCH_ARG_END(clause);
+
+    value = dfsch_eval(val, env);
+
+    dfsch_list_collect(lc,
+                       dfsch_cons_ast_node(var,
+                                           clause,
+                                           1,
+                                           dfsch_make_constant_ast_node(value)));
+    dfsch_define(var, value, inner_env, DFSCH_VAR_CONSTANT);
+
+    vars = DFSCH_FAST_CDR(vars);
+  }
+
+  return dfsch_cons_ast_node_cdr(form,
+                                 expr,
+                                 dfsch_compile_expression_list(code, inner_env),
+                                 1,
+                                 dfsch_list_annotate(dfsch_collected_list(lc),
+                                                     DFSCH_SYM_COMPILED_FROM,
+                                                     o_vars));
+}
+
+DFSCH_DEFINE_FORM(internal_let_constants, 
+                  {DFSCH_FORM_COMPILE(internal_let_constants)},
+                  NULL){
+  object_t *vars;
+  object_t *code;
+
+  DFSCH_OBJECT_ARG(args, vars);
+  DFSCH_ARG_REST(args, code);
+
+  object_t* ext_env = dfsch_new_frame(env);
+
+  while (DFSCH_PAIR_P(vars)){
+    dfsch_object_t* clause = DFSCH_FAST_CAR(vars);
+    object_t* var;
+    object_t* val;
+
+    DFSCH_OBJECT_ARG(clause, var);
+    DFSCH_OBJECT_ARG(clause, val);
+    DFSCH_ARG_END(clause);
+
+    val = dfsch_eval(val, env);
+
+    dfsch_define(var, val, ext_env, DFSCH_VAR_CONSTANT);
+    
+    vars = DFSCH_FAST_CDR(vars);
+  }
+
+  return dfsch_eval_proc_tr_free_env(code, ext_env, esc);
+}
+
 dfsch_object_t* dfsch_generate_let1(dfsch_object_t* bind,
                                     dfsch_object_t* exp){
   return dfsch_immutable_list(3, DFSCH_FORM_REF(internal_let), bind, exp);
@@ -747,6 +821,8 @@ void dfsch__forms_register(dfsch_object_t *ctx){
                          DFSCH_FORM_REF(internal_reclose_closure));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let", 
                          DFSCH_FORM_REF(internal_let));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%let-constants", 
+                         DFSCH_FORM_REF(internal_let_constants));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-variable", 
                          DFSCH_FORM_REF(internal_define_variable));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%define-constant", 

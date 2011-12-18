@@ -106,6 +106,7 @@ extern "C" {
     dfsch_object_t* scratch_pad[DFSCH_SCRATCH_PAD_SIZE];
     int error_policy;
     dfsch_package_t* current_package;
+    dfsch_object_t* macroexpanded_env;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

@@ -599,6 +599,8 @@ static dfsch_slot_t type_slots[] = {
                     "Documentation string"),
   DFSCH_OBJECT_SLOT(dfsch_type_t, superclass, DFSCH_SLOT_ACCESS_RO,
                     "Superclass"),
+  DFSCH_OBJECT_SLOT(dfsch_type_t, roles, DFSCH_SLOT_ACCESS_RO,
+                    "Implemented roles"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -1111,6 +1113,21 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
 
   dfsch_write_unreadable_end(state);
 }
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("standard-function", 
+                                     standard_function){
+  closure_t* c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
+  dfsch_deserializer_put_partial_object(ds, c);
+  c->args = dfsch_deserialize_object(ds); 
+  c->code = dfsch_deserialize_object(ds);
+  c->env = dfsch_deserialize_object(ds);
+  c->name = dfsch_deserialize_object(ds);
+  c->orig_code = dfsch_deserialize_object(ds);
+  c->orig_args = dfsch_deserialize_object(ds);
+  c->documentation = dfsch_deserialize_object(ds);
+  return c;
+}
+
 
 static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
   dfsch_serialize_stream_symbol(ser, "standard-function");
@@ -1871,6 +1888,11 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   }
 
   data[i] = DFSCH_INVALID_OBJECT;
+
+  if (i == 0){
+    return NULL; /* safety check */
+  }
+
   i++;
   data[i] = j;
   if (ti->macroexpanded_expr){

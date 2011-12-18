@@ -1493,6 +1493,18 @@ DFSCH_DEFINE_PRIMITIVE(eval_proc,
 
   return dfsch_eval_proc_tr(proc, env, esc);
 }
+
+DFSCH_DEFINE_PRIMITIVE(eval_list, 
+                       "Evaluate list of expressions in lexical environment"){
+  object_t* list;
+  object_t* env;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_list(list, env);
+}
 DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   object_t* func;
   object_t* head = NULL;
@@ -1728,6 +1740,38 @@ DFSCH_DEFINE_PRIMITIVE(values_list,
   return dfsch_values_list(values);
 }
 
+DFSCH_DEFINE_PRIMITIVE(assert_type, 
+                       "Signal continuable condition when objects type "
+                       "does not match"){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_TYPE(object, type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(assert_instance, 
+                       "Signal continuable condition when object is not "
+                       "an instance of given type"){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_INSTANCE(object, type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(macro_expansion_environment,
+                       ""){
+  DFSCH_ARG_END(args);
+
+  return dfsch__get_thread_info()->macroexpanded_env;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1877,6 +1921,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defcanon_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_defcanon_cstr(ctx, "eval-list", DFSCH_PRIMITIVE_REF(eval_list));
   dfsch_defcanon_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defcanon_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
@@ -1905,5 +1950,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "values", DFSCH_PRIMITIVE_REF(values));
   dfsch_defcanon_cstr(ctx, "values-list", DFSCH_PRIMITIVE_REF(values_list));
+
+  dfsch_defcanon_cstr(ctx, "assert-type", 
+                      DFSCH_PRIMITIVE_REF(assert_type));
+  dfsch_defcanon_cstr(ctx, "assert-instance", 
+                      DFSCH_PRIMITIVE_REF(assert_instance));
+
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+                         "%macro-expansion-environment", 
+                         DFSCH_PRIMITIVE_REF(macro_expansion_environment));
 
 }

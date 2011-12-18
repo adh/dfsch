@@ -979,19 +979,24 @@ dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
 
 static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
                                          dfsch_object_t* expr,
-                                         dfsch__thread_info_t* ti){
+                                         dfsch__thread_info_t* ti,
+                                         dfsch_object_t* env){
   dfsch_object_t* new_expr;
   dfsch_object_t* old_expr;
+  dfsch_object_t* old_env;
   int old_flags;
   
   DFSCH_UNWIND {
     old_expr = ti->macroexpanded_expr;
+    old_env = ti->macroexpanded_env;
     ti->macroexpanded_expr = expr;
+    ti->macroexpanded_env = env;
     new_expr = dfsch_apply(((macro_t*)DFSCH_ASSERT_TYPE(macro, 
                                                         DFSCH_MACRO_TYPE))->proc, 
                            DFSCH_FAST_CDR(expr));
   } DFSCH_PROTECT {
     ti->macroexpanded_expr = old_expr;    
+    ti->macroexpanded_env = old_env;    
   } DFSCH_PROTECT_END;
 
   return new_expr;
@@ -1000,13 +1005,15 @@ static dfsch_object_t* macro_expand_impl(dfsch_object_t* macro,
 dfsch_object_t* dfsch_macro_expand(dfsch_object_t* macro,
                                    dfsch_object_t* args){
   return macro_expand_impl(macro, dfsch_cons(macro, args), 
-                           dfsch__get_thread_info());
+                           dfsch__get_thread_info(),
+                           NULL);
 }
 
 dfsch_object_t* dfsch_macro_expand_expr(dfsch_object_t* macro,
                                         dfsch_object_t* expr){
   return macro_expand_impl(macro, expr, 
-                           dfsch__get_thread_info());
+                           dfsch__get_thread_info(),
+                           NULL);
 }
 
 
@@ -1183,7 +1190,7 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
                                    DFSCH_FAST_CDR(exp), 
                                    esc);
     } else if (DFSCH_TYPE_OF(f) == DFSCH_MACRO_TYPE){
-      r = dfsch_eval_impl(macro_expand_impl(f, exp, ti),
+      r = dfsch_eval_impl(macro_expand_impl(f, exp, ti, env),
                           env,
                           esc,
                           ti);

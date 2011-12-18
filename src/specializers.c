@@ -244,23 +244,28 @@ dfsch_object_t* dfsch_complementary_specializer(dfsch_object_t* specializer){
 
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_mapping_specializer, 
                                         "mapping"){
-  return DFSCH_TYPE_MAPPING_P(type);
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && DFSCH_TYPE_MAPPING_P(type);
 }
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_sequence_specializer, 
                                         "sequence"){
-  return DFSCH_TYPE_SEQUENCE_P(type);
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && DFSCH_TYPE_SEQUENCE_P(type);
 }
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_collection_specializer, 
                                         "collection"){
-  return DFSCH_TYPE_COLLECTION_P(type);
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && DFSCH_TYPE_COLLECTION_P(type);
 }
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_iterator_specializer, 
                                         "iterator"){
-  return DFSCH_TYPE_ITERATOR_P(type);
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && DFSCH_TYPE_ITERATOR_P(type);
 }
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_serializable_specializer,
                                         "serializable"){
-  return dfsch_type_serializable_p(type);
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && dfsch_type_serializable_p(type);
 }
 
 DFSCH_DEFINE_PRIMITIVE(make_type_specializer, 

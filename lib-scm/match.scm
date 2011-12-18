@@ -89,13 +89,13 @@
 
 (define-macro (define-clause-expander name arguments &body body)
   (with-gensyms (clause variables)
-    `(register-clause-expander ',name
-                               (lambda (,clause expression-to-match ,variables)
-                                 (let (ensure-variable 
-                                       (lambda (name)
-                                         (ensure-variable ,variables name)))
-                                   (destructuring-bind ,arguments ,clause
-                                                       ,@body))))))
+    `(register-clause-expander! ',name
+                                (lambda (,clause expression-to-match ,variables)
+                                  (let (ensure-variable 
+                                        (lambda (name)
+                                          (ensure-variable ,variables name)))
+                                    (destructuring-bind ,arguments ,clause
+                                                        ,@body))))))
 (define-clause-expander quote (value)
   `(equal? ,expression-to-match ',value))
 
