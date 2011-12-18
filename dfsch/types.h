@@ -374,6 +374,7 @@ struct dfsch_type_t {
   dfsch_type_serialize_t serialize;
 
   dfsch_object_t* slot_metadata;
+  dfsch_object_t* roles;
 
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
