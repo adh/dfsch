@@ -212,11 +212,14 @@ void dfsch_standard_class_prepare_slots(dfsch_standard_class_t* klass){
 dfsch_object_t* standard_make_class(dfsch_metaclass_t* metaclass,
                                     class_t* super,
                                     char* name,
-                                    dfsch_object_t* slots){
+                                    dfsch_object_t* slots,
+                                    dfsch_object_t* options,
+                                    dfsch_object_t* roles){
   class_t* klass = (class_t*)dfsch_make_object(DFSCH_STANDARD_CLASS_TYPE);
 
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   klass->standard_type.name = name;
+  klass->standard_type.roles = dfsch_list_copy_immutable(roles);
 
   if (super){
 
@@ -268,7 +271,8 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  dfsch_object_t* metaclass,
                                  char* name,
                                  dfsch_object_t* slots,
-                                 dfsch_object_t* options){
+                                 dfsch_object_t* options,
+                                 dfsch_object_t* roles){
   dfsch_metaclass_t* mc;
   dfsch_object_t* super = NULL;
 
@@ -290,7 +294,7 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                 mc);
   }
 
-  return mc->make_class(mc, super, name, slots, options);
+  return mc->make_class(mc, super, name, slots, options, roles);
 }
 
 typedef struct role_t role_t;
@@ -372,10 +376,12 @@ dfsch_object_t* dfsch_make_role(dfsch_object_t* superroles,
                                 dfsch_object_t* slots,
                                 dfsch_object_t* options){
   role_t* role = dfsch_make_object(DFSCH_ROLE_TYPE);
-  
+  dfsch_object_t* slot_lists = dfsch_cons(slots, NULL);
+  dfsch_object_t* options_lists = dfsch_cons(options, NULL);
+
   role->superroles = dfsch_list_copy_immutable(superroles);
-  role->slots = dfsch_list_copy_immutable(slots);
-  role->options = dfsch_list_copy_immutable(options);
+  role->slots = dfsch_list_copy_immutable(dfsch_append(slot_lists));
+  role->options = dfsch_list_copy_immutable(dfsch_append(options_lists));
 
   return role;
 }
@@ -470,6 +476,7 @@ DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
   dfsch_object_t* metaclass = DFSCH_STANDARD_CLASS_TYPE;
+  dfsch_object_t* roles = NULL;
   dfsch_object_t* options;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
@@ -477,11 +484,12 @@ DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
   options = args;
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("metaclass", metaclass);
+  DFSCH_KEYWORD("roles", roles);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
   return dfsch_make_class(superclass, metaclass, dfsch_symbol_2_typename(name),
-                          slots, options);  
+                          slots, options, roles);  
 }
 
 DFSCH_DEFINE_PRIMITIVE(make_role, "Create new role object"){

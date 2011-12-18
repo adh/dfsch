@@ -36,7 +36,8 @@ extern "C" {
                                                 dfsch_object_t* super,
                                                 char* name,
                                                 dfsch_object_t* slots,
-                                                dfsch_object_t* options);
+                                                dfsch_object_t* options,
+                                                dfsch_object_t* roles);
 
   struct dfsch_metaclass_t {
     dfsch_type_t type;
@@ -62,7 +63,8 @@ typedef struct dfsch_standard_class_t {
                                    dfsch_object_t* metaclass,
                                    char* name,
                                    dfsch_object_t* slots,
-                                   dfsch_object_t* options);
+                                   dfsch_object_t* options,
+                                   dfsch_object_t* roles);
   dfsch_object_t* dfsch_make_instance(dfsch_object_t* klass,
                                       dfsch_object_t* args);
 

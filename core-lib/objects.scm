@@ -70,7 +70,31 @@
                                     (,class)
                                     (make-slot-writer ,class  ,slot-name)))
 
-(define-macro (dfsch:define-class name superklass slots &rest class-opts)
+(define-slot-reader dfsch:role-superroles <role> :superroles)
+(define-slot-reader dfsch:role-options <role> :options)
+(define-slot-reader dfsch:role-slots <role> :slots)
+
+(define-macro (dfsch:define-class name superklass slots 
+                                  &rest class-opts
+                                  &key roles &allow-other-keys)
+
+  ;; Remove role list from list of class options
+  (set! class-opts (plist-remove-keys class-opts '(:roles)))
+
+  ;; Evaluate list of roles in outer context
+  (set! roles (eval-list roles (%macro-expansion-environment)))
+
+  ;; Extend used slot and options lists by matching lists in used roles
+  (for-each (lambda (role-object)
+              (let ((role (assert-instance role-object <role>)))
+                (set! slots (append slots (role-slots role)))
+                (set! class-opts (append class-opts (role-options role)))))
+            roles)
+  
+  ;; put evaluated list of roles back
+  (set! class-opts (nconc (list :roles roles)
+                          class-opts))
+
   (let ((class-slots (map 
                       (lambda (desc)
                         (letrec ((name (if (pair? desc) (car desc) desc))
