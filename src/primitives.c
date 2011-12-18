@@ -1728,6 +1728,31 @@ DFSCH_DEFINE_PRIMITIVE(values_list,
   return dfsch_values_list(values);
 }
 
+DFSCH_DEFINE_PRIMITIVE(assert_type, 
+                       "Signal continuable condition when objects type "
+                       "does not match"){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_TYPE(object, type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(assert_instance, 
+                       "Signal continuable condition when object is not "
+                       "an instance of given type"){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_INSTANCE(object, type);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1905,5 +1930,10 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "values", DFSCH_PRIMITIVE_REF(values));
   dfsch_defcanon_cstr(ctx, "values-list", DFSCH_PRIMITIVE_REF(values_list));
+
+  dfsch_defcanon_cstr(ctx, "assert-type", 
+                      DFSCH_PRIMITIVE_REF(assert_type));
+  dfsch_defcanon_cstr(ctx, "assert-instance", 
+                      DFSCH_PRIMITIVE_REF(assert_instance));
 
 }
