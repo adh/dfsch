@@ -58,14 +58,17 @@
                              ,proc)))
 
 (define-macro (dfsch:define-slot-accessor name class slot-name)
+  "Define generic method for accessing named slot of given type"
   `(add-method-to-generic-function! ,name 
                                     (,class)
                                     (make-slot-accessor ,class  ,slot-name)))
 (define-macro (dfsch:define-slot-reader name class slot-name)
+  "Define generic method for reading from named slot of given type"
   `(add-method-to-generic-function! ,name
                                     (,class)
                                     (make-slot-reader ,class  ,slot-name)))
 (define-macro (dfsch:define-slot-writer name class slot-name)
+  "Define generic method for writing into named slot of given type"
   `(add-method-to-generic-function! ,name
                                     (,class)
                                     (make-slot-writer ,class  ,slot-name)))
