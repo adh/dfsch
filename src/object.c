@@ -293,6 +293,60 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
   return mc->make_class(mc, super, name, slots, options);
 }
 
+typedef struct role_t role_t;
+
+struct role_t {
+  dfsch_type_t* type;
+  dfsch_object_t* superroles;
+  dfsch_object_t* slots;
+  dfsch_object_t* options;
+};
+
+static dfsch_slot_t role_slots[] = {
+  DFSCH_OBJECT_SLOT(role_t, superroles, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "List of parent roles"),
+  DFSCH_OBJECT_SLOT(role_t, slots, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Slots added by this role"),
+  DFSCH_OBJECT_SLOT(role_t, options, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Class options added by this role"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+
+static int role_matches_p(role_t* role,
+                          dfsch_object_t* type){
+
+}
+
+dfsch_type_specializer_type_t dfsch_role_type = {
+  .type = {
+    .type = DFSCH_TYPE_SPECIALIZER_METATYPE,
+    .superclass = DFSCH_TYPE_SPECIALIZER_TYPE,
+    .name = "role",
+    .size = sizeof(role_t),
+    .slots = role_slots,
+  },
+  .matches_p = role_matches_p,
+};
+
+dfsch_object_t* dfsch_make_role(dfsch_object_t* superroles,
+                                dfsch_object_t* slots,
+                                dfsch_object_t* options){
+  role_t* role = dfsch_make_object(DFSCH_ROLE_TYPE);
+  
+  role->superroles = dfsch_list_copy_immutable(superroles);
+  role->slots = dfsch_list_copy_immutable(slots);
+  role->options = dfsch_list_copy_immutable(options);
+
+  return role;
+}
+
+
+
+
 DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
                        "Default implementation of initialize-instance"){
   dfsch_object_t* obj;
@@ -394,6 +448,21 @@ DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
                           slots, options);  
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_role, "Create new role object"){
+  dfsch_object_t* name;
+  dfsch_object_t* superroles;
+  dfsch_object_t* slots;
+  dfsch_object_t* options;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, superroles);
+  DFSCH_OBJECT_ARG(args, slots);
+  DFSCH_OBJECT_ARG(args, options);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_role(superroles, slots, options);  
+}
+
+
 static void write_instance_add_method(dfsch_object_t* function,
                                            dfsch_method_t* method){
   class_t* klass;
@@ -458,10 +527,12 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<standard-class>", DFSCH_STANDARD_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "<role>", DFSCH_ROLE_TYPE);
+
   dfsch_defcanon_cstr(ctx, "allocate-instance", 
                       DFSCH_PRIMITIVE_REF(allocate_instance));
   dfsch_defcanon_cstr(ctx, "make-class", DFSCH_PRIMITIVE_REF(make_class));
-
+  dfsch_defcanon_cstr(ctx, "make-role", DFSCH_PRIMITIVE_REF(make_role));
 
   dfsch_define_method_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, "initialize-instance",
                               NULL, NULL, 

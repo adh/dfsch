@@ -23,6 +23,7 @@
 #define H__dfsch__object__
 
 #include <dfsch/dfsch.h>
+#include <dfsch/specializers.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,6 +70,13 @@ typedef struct dfsch_standard_class_t {
                               dfsch_type_t* klass,
                               dfsch_object_t* defs);
   void dfsch_standard_class_prepare_slots(dfsch_standard_class_t* klass);
+
+  extern dfsch_type_specializer_type_t dfsch_role_type;
+#define DFSCH_ROLE_TYPE (&dfsch_role_type)
+
+  dfsch_object_t* dfsch_make_role(dfsch_object_t* superroles,
+                                  dfsch_object_t* slots,
+                                  dfsch_object_t* options);
 
 #ifdef __cplusplus
 }
