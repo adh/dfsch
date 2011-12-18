@@ -76,7 +76,8 @@ typedef struct dfsch_standard_class_t {
   extern dfsch_type_specializer_type_t dfsch_role_type;
 #define DFSCH_ROLE_TYPE (&dfsch_role_type)
 
-  dfsch_object_t* dfsch_make_role(dfsch_object_t* superroles,
+  dfsch_object_t* dfsch_make_role(char* name,
+                                  dfsch_object_t* superroles,
                                   dfsch_object_t* slots,
                                   dfsch_object_t* options);
 

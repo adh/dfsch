@@ -83,16 +83,29 @@
 
   ;; Evaluate list of roles in outer context
   (set! roles (eval-list roles (%macro-expansion-environment)))
+  (set! superklass (eval superklass (%macro-expansion-environment)))
 
   ;; Extend used slot and options lists by matching lists in used roles
-  (for-each (lambda (role-object)
-              (let ((role (assert-instance role-object <role>)))
-                (set! slots (append slots (role-slots role)))
-                (set! class-opts (append class-opts (role-options role)))))
-            roles)
+  ;; Also remove roles that conflict with superclass roles
+  (set! roles (map* (lambda (role-object)
+                      (let ((role (assert-instance role-object <role>)))
+                        (if (and superklass
+                                 (specializer-matches-type? role superklass))
+                            (begin 
+                              (warning "Role already implemented by superclass"
+                                       :role role
+                                       :superclass superklass)
+                              #n)
+                            (begin
+                              (set! slots (append slots 
+                                                  (role-slots role)))
+                              (set! class-opts (append class-opts 
+                                                       (role-options role)))
+                              role))))
+                      roles))
   
   ;; put evaluated list of roles back
-  (set! class-opts (nconc (list :roles roles)
+  (set! class-opts (nconc `(:roles ',roles)
                           class-opts))
 
   (let ((class-slots (map 
@@ -114,7 +127,7 @@
                       slots)))
     `@(begin 
         (%define-canonical-constant ,name (make-class ',name 
-                                                      ,superklass 
+                                                      ',superklass 
                                                       (list ,@class-slots)
                                                       ,@class-opts))
         ,@(mapcan 
@@ -131,6 +144,12 @@
                   `((define-slot-reader ,(car reader) ,name ',sname)))
                 (when writer
                   `((define-slot-writer ,(car writer) ,name ',sname))))))
-           slots))))
+           slots)
+        ,name)))
 
 
+(define-macro (dfsch:define-role name superroles slots &rest options)
+  `(%define-canonical-constant ,name (make-role ',name
+                                                (list ,@superroles)
+                                                ',slots
+                                                (list ,@options))))

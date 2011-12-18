@@ -781,11 +781,17 @@ DFSCH_DEFINE_PRIMITIVE(compute_restarts, 0){
 DFSCH_DEFINE_PRIMITIVE(warning, "Signal a warning condition"){
   dfsch_object_t* message;
   dfsch_object_t* fields;
+  dfsch_object_t* c;
   DFSCH_OBJECT_ARG(args, message);
   DFSCH_ARG_REST(args, fields);
 
-  dfsch_signal(dfsch_condition_with_fields(DFSCH_WARNING_TYPE, 
-                                           message, fields));
+  c = dfsch_condition_with_fields(DFSCH_WARNING_TYPE, message, fields);
+
+  DFSCH_WITH_SIMPLE_RESTART(DFSCH_SYM_MUFFLE_WARNING,
+                            "Ignore warning condition"){
+    dfsch_signal(c);
+  } DFSCH_END_WITH_SIMPLE_RESTART;
+
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(error, "Signal an error condition"){

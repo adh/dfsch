@@ -301,12 +301,16 @@ typedef struct role_t role_t;
 
 struct role_t {
   dfsch_type_t* type;
+  char* name;
   dfsch_object_t* superroles;
   dfsch_object_t* slots;
   dfsch_object_t* options;
 };
 
 static dfsch_slot_t role_slots[] = {
+  DFSCH_STRING_SLOT(role_t, name,
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Name of this role"),
   DFSCH_OBJECT_SLOT(role_t, superroles, 
                     DFSCH_SLOT_ACCESS_DEBUG_WRITE,
                     "List of parent roles"),
@@ -372,13 +376,15 @@ dfsch_type_specializer_type_t dfsch_role_type = {
   .matches_p = role_matches_p,
 };
 
-dfsch_object_t* dfsch_make_role(dfsch_object_t* superroles,
+dfsch_object_t* dfsch_make_role(char* name,
+                                dfsch_object_t* superroles,
                                 dfsch_object_t* slots,
                                 dfsch_object_t* options){
   role_t* role = dfsch_make_object(DFSCH_ROLE_TYPE);
   dfsch_object_t* slot_lists = dfsch_cons(slots, NULL);
   dfsch_object_t* options_lists = dfsch_cons(options, NULL);
 
+  role->name = stracpy(name);
   role->superroles = dfsch_list_copy_immutable(superroles);
   role->slots = dfsch_list_copy_immutable(dfsch_append(slot_lists));
   role->options = dfsch_list_copy_immutable(dfsch_append(options_lists));
@@ -503,7 +509,8 @@ DFSCH_DEFINE_PRIMITIVE(make_role, "Create new role object"){
   DFSCH_OBJECT_ARG(args, options);
   DFSCH_ARG_END(args);
 
-  return dfsch_make_role(superroles, slots, options);  
+  return dfsch_make_role(dfsch_symbol_2_typename(name),
+                         superroles, slots, options);  
 }
 
 
