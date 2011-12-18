@@ -17,10 +17,10 @@ for i in $2; do
         cmdpart="--chapters $1/doc/module/$i.md";
     fi;
     ./dfsch-run -L ./.libs -L $1/lib-scm \
-        $1/tools/docgen.scm --module $i \
-        documentation/modules/${i} >/dev/null 2>/dev/null
+        $1/tools/docgen.scm --module $i --package-exported $i \
+        documentation/modules/${i} #>/dev/null 2>/dev/null
 
-    if [ -d documentation/modules/${i} ]; then
+    if [ $? -eq 0 ]; then
         echo ${i}... OK
         echo "<li><a href='${i}/'>${i}</a></li>" \
             >> documentation/modules/index.html

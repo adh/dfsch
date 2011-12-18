@@ -573,8 +573,19 @@ pre {
     (:literal-output
      ,(convert-documentation-block (cadr chapter)))))
 
+(define (maybe-remove-nonexported lyst package-name)
+  (let ((ret lyst))
+    (ignore-errors
+     (set! ret 
+           (let ((syms 
+                  (list-exported-package-symbols (find-package package-name))))
+             (filter (lambda (entry)
+                       (memq (car entry) syms))
+                     lyst))))
+    ret))
+     
 (define (emit-documentation lyst directory title
-                            &key notes chapters)
+                            &key notes chapters package-exported)
   (index-put-all "../" lyst)
   (let ((categories (sort-list (group-by lyst entry-get-categories)
                                (lambda (x y)
@@ -595,14 +606,19 @@ pre {
     (when chapter-list
           (ensure-directory (string-append directory "/chapters")))
 
-    (shtml:emit-file (html-boiler-plate () title 
-                                        `(,(menu-bar categories 
-                                                     () 
-                                                     "./"
-                                                     packages)
-                                          ,@(chapter-index chapter-list)
-                                          ,@(make-index-list lyst "./")))
-                     (string-append directory "/index.html"))
+    (let ((index (if package-exported 
+                     (maybe-remove-nonexported lyst package-exported)
+                     lyst)))
+      (shtml:emit-file (html-boiler-plate () title 
+                                          `(,(menu-bar categories 
+                                                       () 
+                                                       "./"
+                                                       packages)
+                                            ,@(chapter-index chapter-list)
+                                            ,@(make-index-list index "./")))
+                       (string-append directory "/index.html")))
+
+
     (shtml:emit-file (html-boiler-plate "Type hierarchy" 
                                         title 
                                         `(,(menu-bar categories 
@@ -654,33 +670,43 @@ pre {
               lyst)))
 
 
-(define (emit-core-documentation directory &key notes chapters)
+(define (emit-core-documentation directory 
+                                 &key notes chapters package-exported)
   (emit-documentation 
    (get-toplevel-variables)
    directory
    "Default dfsch top-level environment"
    :notes notes
-   :chapters chapters))
+   :chapters chapters
+   :package-exported package-exported))
 
-(define (emit-module-documentation directory module &key notes chapters)
+(define (emit-module-documentation directory module 
+                                   &key notes chapters package-exported)
   (emit-documentation 
    (get-module-variables module)
    directory
    (string-append (object->string module) " module")
    :notes notes
-   :chapters chapters))
+   :chapters chapters
+   :package-exported package-exported))
 
 (when-toplevel
  (define module-name ())
  (define directory-name ())
  (define chapters-file-name ())
  (define notes-file-name ())
+ (define package-exported ())
 
  (let ((parser (cmdopts:make-parser)))
    (cmdopts:add-option parser 
                        (lambda (p v)
                          (set! module-name (string->object v)))
                        :long-option "module"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
+                         (set! package-exported v))
+                       :long-option "package-exported"
                        :has-argument #t)
    (cmdopts:add-option parser
                        (lambda (p v)
@@ -723,9 +749,11 @@ pre {
  (if module-name
      (emit-module-documentation directory-name module-name
                                 :chapters chapters-file-name
-                                :notes notes-file-name)
+                                :notes notes-file-name
+                                :package-exported package-exported)
      (emit-core-documentation directory-name
                               :chapters chapters-file-name
-                                :notes notes-file-name)))
+                              :notes notes-file-name
+                              :package-exported package-exported)))
 
 ;(emit-core-documentation "out")
