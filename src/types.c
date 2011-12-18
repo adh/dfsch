@@ -1888,6 +1888,11 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   }
 
   data[i] = DFSCH_INVALID_OBJECT;
+
+  if (i == 0){
+    return NULL; /* safety check */
+  }
+
   i++;
   data[i] = j;
   if (ti->macroexpanded_expr){
