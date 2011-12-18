@@ -50,6 +50,26 @@
 (define-has-slot-specializer dfsch:<<documented-synopsis>> :synopsis
   "All objects with :synopsis slot")
 
+(define-macro (add-method-to-generic-function! name spec-list proc)
+  `(add-method! (define-generic-function ,name) 
+                (make-method (cons ',name ',spec-list)
+                             #n
+                             (list ,@spec-list)
+                             ,proc)))
+
+(define-macro (dfsch:define-slot-accessor name class slot-name)
+  `(add-method-to-generic-function! ,name 
+                                    (,class)
+                                    (make-slot-accessor ,class  ,slot-name)))
+(define-macro (dfsch:define-slot-reader name class slot-name)
+  `(add-method-to-generic-function! ,name
+                                    (,class)
+                                    (make-slot-reader ,class  ,slot-name)))
+(define-macro (dfsch:define-slot-writer name class slot-name)
+  `(add-method-to-generic-function! ,name
+                                    (,class)
+                                    (make-slot-writer ,class  ,slot-name)))
+
 (define-macro (dfsch:define-class name superklass slots &rest class-opts)
   (let ((class-slots (map 
                       (lambda (desc)
@@ -82,16 +102,11 @@
                       (reader (plist-get opts :reader)))
                (append 
                 (when accessor
-                  `((%define-canonical-constant ,(car accessor)
-                                                (make-slot-accessor ,name 
-                                                                    ',sname))))
-                (when writer
-                  `((%define-canonical-constant ,(car writer)
-                                                (make-slot-writer ,name 
-                                                                  ',sname))))
+                  `((define-slot-accessor ,(car accessor) ,name ',sname)))
                 (when reader
-                  `((%define-canonical-constant ,(car reader)
-                                                (make-slot-reader ,name 
-                                                                  ',sname)))))))
+                  `((define-slot-reader ,(car reader) ,name ',sname)))
+                (when writer
+                  `((define-slot-writer ,(car writer) ,name ',sname))))))
            slots))))
+
 
