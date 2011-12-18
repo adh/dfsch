@@ -264,7 +264,8 @@ udata.c: udata-gen$(EXEEXT) $(srcdir)/data/UnicodeData.txt
 stdlib_sources = \
 	$(srcdir)/core-lib/std-lib.scm\
 	$(srcdir)/core-lib/conditions.scm\
-	$(srcdir)/core-lib/objects.scm
+	$(srcdir)/core-lib/objects.scm\
+	$(srcdir)/core-lib/tagbody.scm
 
 syslib_sources = \
 	$(srcdir)/core-lib/system.scm
