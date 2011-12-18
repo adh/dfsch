@@ -1015,6 +1015,13 @@ dfsch_object_t* dfsch_macro_expand_expr(dfsch_object_t* macro,
                            dfsch__get_thread_info(),
                            NULL);
 }
+dfsch_object_t* dfsch_macro_expand_expr_in_env(dfsch_object_t* macro,
+					       dfsch_object_t* expr,
+					       dfsch_object_t* env){
+  return macro_expand_impl(macro, expr, 
+                           dfsch__get_thread_info(),
+                           env);
+}
 
 
 // Evaluator

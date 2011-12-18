@@ -528,6 +528,9 @@ extern "C" {
                                             dfsch_object_t* args);
   extern dfsch_object_t* dfsch_macro_expand_expr(dfsch_object_t* macro,
                                                  dfsch_object_t* expr);
+  extern dfsch_object_t* dfsch_macro_expand_expr_in_env(dfsch_object_t* macro,
+							dfsch_object_t* expr,
+							dfsch_object_t* env);
 
 
   // EVAL+APPLY

@@ -191,3 +191,12 @@
 
   (seq-set! l 3 'dd)
   (assert-equal (seq-ref l 3) 'dd))
+
+(define-role <<foo>> ()
+  ((:foo :accessor foo-acessor)))
+
+(define-test roles (:language :oop)
+  (define-class <bar> ()
+    ()
+    :roles (<<foo>>))
+  (assert-true (specializer-matches-type? <<foo>> <bar>)))

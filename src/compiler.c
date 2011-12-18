@@ -170,8 +170,9 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
         }
       }
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
-        return dfsch_compile_expression(dfsch_macro_expand_expr(operator_value,
-                                                                expression),
+        return dfsch_compile_expression(dfsch_macro_expand_expr_in_env(operator_value,
+								       expression,
+								       env),
                                         env);
       }
 
