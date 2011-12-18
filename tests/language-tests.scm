@@ -193,10 +193,18 @@
   (assert-equal (seq-ref l 3) 'dd))
 
 (define-role <<foo>> ()
-  ((:foo :accessor foo-acessor)))
+  ((:foo :accessor foo-accessor)))
+(define-role <<derived-foo>> (<<foo>>)
+  ((:bar :accessor bar-accessor)))
 
 (define-test roles (:language :oop)
   (define-class <bar> ()
     ()
     :roles (<<foo>>))
-  (assert-true (specializer-matches-type? <<foo>> <bar>)))
+  (assert-true (specializer-matches-type? <<foo>> <bar>))
+  
+  (define-class <quux> ()
+    ()
+    :roles (<<derived-foo>>))
+  (assert-true (specializer-matches-type? <<foo>> <quux>))
+  (assert-true (specializer-matches-type? <<derived-foo>> <quux>)))
