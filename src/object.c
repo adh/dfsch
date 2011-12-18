@@ -315,10 +315,46 @@ static dfsch_slot_t role_slots[] = {
   DFSCH_SLOT_TERMINATOR
 };
 
+static int role_inherited_p(role_t* sub, role_t* super){
+  dfsch_object_t* i;
+  if (sub == super){
+    return 1;
+  }
+  
+  i = sub->superroles;
+
+  while (DFSCH_PAIR_P(i)){
+    if (role_inherited_p(DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                               DFSCH_ROLE_TYPE),
+                         super)){
+      return 1;
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return 0;
+}
 
 static int role_matches_p(role_t* role,
                           dfsch_object_t* type){
+  if (DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
+    dfsch_object_t* i = ((dfsch_type_t*)type)->roles;
 
+    while (DFSCH_PAIR_P(i)){
+      if (role_inherited_p(DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                                 DFSCH_ROLE_TYPE),
+                           role)){
+        return 1;
+      }
+      i = DFSCH_FAST_CDR(i);
+    }
+    
+    return 0;    
+  } else if (DFSCH_INSTANCE_P(type, DFSCH_ROLE_TYPE)){
+    return role_inherited_p((role_t*)type, role);
+  } else {
+    return 0;
+  }
 }
 
 dfsch_type_specializer_type_t dfsch_role_type = {
