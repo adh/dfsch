@@ -192,12 +192,12 @@
   (seq-set! l 3 'dd)
   (assert-equal (seq-ref l 3) 'dd))
 
-(define-role <<foo>> ()
-  ((:foo :accessor foo-accessor)))
-(define-role <<derived-foo>> (<<foo>>)
-  ((:bar :accessor bar-accessor)))
 
 (define-test roles (:language :oop)
+  (define-role <<foo>> ()
+    ((:foo :accessor foo-accessor)))
+  (define-role <<derived-foo>> (<<foo>>)
+    ((:bar :accessor bar-accessor)))
   (define-class <bar> ()
     ()
     :roles (<<foo>>))

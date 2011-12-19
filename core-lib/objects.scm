@@ -152,7 +152,9 @@
 
 
 (define-macro (dfsch:define-role name superroles slots &rest options)
-  `(%define-canonical-constant ,name (make-role ',name
-                                                (list ,@superroles)
-                                                ',slots
-                                                (list ,@options))))
+  `(%define-canonical-constant ,name 
+			       (%compile-time-constant 
+				(make-role ',name
+					   (list ,@superroles)
+					   ',slots
+					   (list ,@options)))))

@@ -195,13 +195,28 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
   }
 }
 
+void dfsch_compiler_update_constant(dfsch_object_t* env, 
+				    dfsch_object_t* name, 
+				    dfsch_object_t* value){
+  value = dfsch_constant_expression_value(value, env);
+  if (value == DFSCH_INVALID_OBJECT){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+				   "constant value not known at compilation time",
+				   "name", name,
+				   NULL);
+    dfsch_define(name, NULL, env, 0); // XXX
+  } else {
+    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT); 
+  }
+}
+
 
 void dfsch_compile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
   func->code = dfsch_compile_expression_list(func->orig_code,
-                                             func->env);
+                                             dfsch_new_frame(func->env));
   func->compiled = 1;
 }
 
@@ -214,7 +229,7 @@ void dfsch_precompile_function(dfsch_object_t* function){
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
   func->code = dfsch_compile_expression_list(func->orig_code,
-                                             func->env);
+                                             dfsch_new_frame(func->env));
   func->env = NULL;
   if (recompile_precompiled >= 0){
     func->call_count = recompile_precompiled;

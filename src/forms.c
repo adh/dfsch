@@ -189,7 +189,8 @@ DFSCH_FORM_METHOD_COMPILE(internal_let){
 
   return dfsch_cons_ast_node_cdr(form,
                                  expr,
-                                 dfsch_compile_expression_list(code, env),
+                                 dfsch_compile_expression_list(code, 
+							       dfsch_new_frame(env)),
                                  1,
                                  dfsch_list_annotate(dfsch_collected_list(lc),
                                                      DFSCH_SYM_COMPILED_FROM,
@@ -508,8 +509,29 @@ dfsch_object_t* dfsch_generate_define_variable(dfsch_object_t* name,
                                                dfsch_object_t* value){
   return dfsch_list(3, DFSCH_FORM_REF(internal_define_variable), name, value);
 }
+
+DFSCH_FORM_METHOD_COMPILE(define_constant){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  object_t* name;
+  object_t* value;
+
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, value);
+  DFSCH_ARG_END(args);
+  
+  value = dfsch_compile_expression(value, env);
+
+  dfsch_compiler_update_constant(env, name, value);
+
+  return dfsch_cons_ast_node(form,
+                             expr,
+                             2,
+                             name,
+                             value);
+}
+
 DFSCH_DEFINE_FORM(internal_define_constant, 
-                  {DFSCH_FORM_COMPILE(define)},
+                  {DFSCH_FORM_COMPILE(define_constant)},
                    "Define constant"){
 
   object_t* name;
@@ -531,7 +553,7 @@ dfsch_object_t* dfsch_generate_define_constant(dfsch_object_t* name,
 }
 
 DFSCH_DEFINE_FORM(internal_define_canonical_constant, 
-                  {DFSCH_FORM_COMPILE(define)},
+                  {DFSCH_FORM_COMPILE(define_constant)},
                   "Define canonical constant (seen by serializer)"){
 
   object_t* name;
@@ -748,6 +770,27 @@ DFSCH_DEFINE_FORM(restart_bind,
   return ret;
 }
 
+/* optimalization helper */
+
+DFSCH_FORM_METHOD_COMPILE(compile_time_constant){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  dfsch_object_t* expression;
+  DFSCH_OBJECT_ARG(args, expression);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_constant_ast_node(dfsch_eval(expression, 
+						 env));
+}
+DFSCH_DEFINE_FORM(compile_time_constant, 
+                  {DFSCH_FORM_COMPILE(compile_time_constant)},
+                  "Force non-constant expression to eveluate as "
+		  "constant during compilation"){
+  dfsch_object_t* expr;
+  DFSCH_OBJECT_ARG(args, expr);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_tr(expr, env, esc);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -800,4 +843,7 @@ void dfsch__forms_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "restart-bind",
                     DFSCH_FORM_REF(restart_bind));
 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%compile-time-constant", 
+                         DFSCH_FORM_REF(compile_time_constant));
+ 
 }
