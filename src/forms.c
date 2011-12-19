@@ -791,6 +791,11 @@ DFSCH_DEFINE_FORM(compile_time_constant,
 
   return dfsch_eval_tr(expr, env, esc);
 }
+dfsch_object_t* dfsch_generate_compile_time_constant(dfsch_object_t* expr){
+  return dfsch_immutable_list(2, 
+                              DFSCH_FORM_REF(compile_time_constant), 
+                              expr);  
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
