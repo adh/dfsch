@@ -142,13 +142,14 @@
   (assert-equal (format "~10,5f" pi) "   3.14159"))
 
 
-(define-class <test-class> () 
-  ((test-slot :accessor test-slot 
-              :initform :test-slot-init-value
-              :initarg :test-slot-initarg)))
-(define-class <test-subclass> <test-class> ())
 
 (define-test classes (:language :oop)
+  (define-class <test-class> () 
+    ((test-slot :accessor test-slot 
+                :initform :test-slot-init-value
+                :initarg :test-slot-initarg)))
+  (define-class <test-subclass> <test-class> ())
+  
   (assert-equal (type-of (make-instance <test-class>))
                 <test-class>)
   (assert-equal (test-slot (make-instance <test-class>))
@@ -160,6 +161,12 @@
                 :foo))
 
 (define-test methods (:language :oop)
+  (define-class <test-class> () 
+    ((test-slot :accessor test-slot 
+                :initform :test-slot-init-value
+                :initarg :test-slot-initarg)))
+  (define-class <test-subclass> <test-class> ())
+
   (define-method (test-fun foo)
     'default)
   (define-method (test-fun (foo <test-class>))

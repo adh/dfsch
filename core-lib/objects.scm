@@ -86,26 +86,17 @@
 
   ;; Evaluate list of roles in outer context
   (set! roles (eval-list roles (%macro-expansion-environment)))
-  (set! superklass (eval superklass (%macro-expansion-environment)))
 
   ;; Extend used slot and options lists by matching lists in used roles
   ;; Also remove roles that conflict with superclass roles
   (set! roles (map* (lambda (role-object)
                       (let ((role (assert-instance role-object <role>)))
-                        (if (and superklass
-                                 (specializer-matches-type? role superklass))
-                            (begin 
-                              (warning "Role already implemented by superclass"
-                                       :role role
-                                       :superclass superklass)
-                              #n)
-                            (begin
-                              (set! slots (append slots 
-                                                  (role-slots role)))
-                              (set! class-opts (append class-opts 
-                                                       (role-options role)))
-                              role))))
-                      roles))
+                        (set! slots (append slots 
+                                            (role-slots role)))
+                        (set! class-opts (append class-opts 
+                                                 (role-options role)))
+                        role))
+                    roles))
   
   ;; put evaluated list of roles back
   (set! class-opts (nconc `(:roles ',roles)
@@ -130,7 +121,7 @@
                       slots)))
     `@(begin 
         (%define-canonical-constant ,name (make-class ',name 
-                                                      ',superklass 
+                                                      ,superklass 
                                                       (list ,@class-slots)
                                                       ,@class-opts))
         ,@(mapcan 
