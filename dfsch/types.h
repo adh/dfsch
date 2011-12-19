@@ -116,11 +116,11 @@ extern dfsch_type_t dfsch_primitive_type;
     DFSCH_DOC_STRING(documentation)                     \
   }
   
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags, documentation)   \
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, documentation, flags)		\
   static dfsch_primitive_t p_##name = {                                 \
     DFSCH_PRIMITIVE_TYPE,                                               \
     p_##name##_impl,                                                    \
-    baton,                                                              \
+    NULL,								\
     flags,                                                              \
     #name,                                                              \
     DFSCH_DOC_STRING(documentation)                                     \
@@ -135,6 +135,11 @@ extern dfsch_type_t dfsch_primitive_type;
 #define DFSCH_DEFINE_PRIMITIVE(name, documentation)     \
   DFSCH_PRIMITIVE_HEAD(name);                           \
   DFSCH_DECLARE_PRIMITIVE(name, documentation);         \
+  DFSCH_PRIMITIVE_HEAD(name)
+
+#define DFSCH_DEFINE_PRIMITIVE_EX(name, documentation, flags)	\
+  DFSCH_PRIMITIVE_HEAD(name);					\
+  DFSCH_DECLARE_PRIMITIVE(name, documentation, flags);		\
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
