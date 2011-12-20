@@ -685,7 +685,7 @@ int dfsch_number_cmp(dfsch_object_t* a, dfsch_object_t* b){
     }
   }
 
-  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE &&
       DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
     return dfsch_number_cmp(dfsch_number_mul(dfsch_number_numerator(a),
                                              dfsch_number_denominator(b)),
