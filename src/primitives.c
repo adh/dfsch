@@ -1995,7 +1995,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "make-collection-constructor",
                       DFSCH_PRIMITIVE_REF(make_collection_constructor));
-  dfsch_defcanon_cstr(ctx, "collection-constructor-add",
+  dfsch_defcanon_cstr(ctx, "collection-constructor-add!",
                       DFSCH_PRIMITIVE_REF(collection_constructor_add));
   dfsch_defcanon_cstr(ctx, "collection-constructor-done",
                       DFSCH_PRIMITIVE_REF(collection_constructor_done));
