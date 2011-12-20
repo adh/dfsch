@@ -186,8 +186,16 @@
                 '(subclass . test-class)))
 
 (define-test serialization-roundtrip (:language :serialization)
-  (assert-equal (deserialize (serialize '(1 2 3 #(a b c) 3.1415 +inf. "foo")))
-                '(1 2 3 #(a b c) 3.1415 +inf. "foo")))
+  (define data '(1 
+                 2 
+                 3 
+                 #(a b c) 
+                 3.1415 
+                 +inf. 
+                 "foo" 
+                 1/2))
+  (assert-equal (deserialize (serialize data))
+                data))
 
 (define-test sequences (:language :collections)
   (define l (list   'a 'b 'c 'd 'e 'f))

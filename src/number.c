@@ -282,6 +282,13 @@ static void fracnum_serialize(fracnum_t* n, dfsch_serializer_t* s){
   dfsch_serialize_object(s, n->num);
   dfsch_serialize_object(s, n->denom);
 }
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("fracnum", fracnum){
+  fracnum_t* f = (fracnum_t*)dfsch_make_object(DFSCH_FRACNUM_TYPE);
+  dfsch_deserializer_put_partial_object(ds, f);
+  f->num = dfsch_deserialize_object(ds);
+  f->denom = dfsch_deserialize_object(ds);
+  return f;
+}
 
 dfsch_number_type_t dfsch_fracnum_type = {
   DFSCH_STANDARD_TYPE,
