@@ -1773,6 +1773,39 @@ DFSCH_DEFINE_PRIMITIVE(macro_expansion_environment,
   return dfsch__get_thread_info()->macroexpanded_env;
 }
 
+/* collection constructors */
+
+DFSCH_DEFINE_PRIMITIVE(make_collection_constructor, 
+                       "Create new collection constructor object for "
+                       "supplied collection type"){
+  dfsch_type_t* type;
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_collection_constructor(type);
+}
+DFSCH_DEFINE_PRIMITIVE(collection_constructor_add,
+                       "Add element int construed collection"){
+  dfsch_object_t* constructor;
+  dfsch_object_t* element;
+  DFSCH_OBJECT_ARG(args, constructor);
+  DFSCH_OBJECT_ARG(args, element);
+  DFSCH_ARG_END(args);
+
+  dfsch_collection_constructor_add(constructor, element);
+
+  return element;
+}
+DFSCH_DEFINE_PRIMITIVE(collection_constructor_done,
+                       "Finish construction of collection"){
+  dfsch_object_t* constructor;
+  DFSCH_OBJECT_ARG(args, constructor);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_constructor_done(constructor);
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Registering function
@@ -1960,4 +1993,10 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                          "%macro-expansion-environment", 
                          DFSCH_PRIMITIVE_REF(macro_expansion_environment));
 
+  dfsch_defcanon_cstr(ctx, "make-collection-constructor",
+                      DFSCH_PRIMITIVE_REF(make_collection_constructor));
+  dfsch_defcanon_cstr(ctx, "collection-constructor-add",
+                      DFSCH_PRIMITIVE_REF(collection_constructor_add));
+  dfsch_defcanon_cstr(ctx, "collection-constructor-done",
+                      DFSCH_PRIMITIVE_REF(collection_constructor_done));
 }
