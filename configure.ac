@@ -71,7 +71,7 @@ if test x$have_gc != x1; then
 fi
 
 AC_CHECK_HEADERS(readline/readline.h, [have_readline="yes"], [have_readline="no"])
-AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline -lncurses"], [have_readline="no"], [-lncurses])
+AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline"], [have_readline="no"], [])
 
 
 AC_ARG_ENABLE([profile],
