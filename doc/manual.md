@@ -367,6 +367,61 @@ collector.
 Function |string-input-port| produces read-only port containing
 supplied string and |string-output-port| produces write-only port that
 collects data written to it into string (accessed by
-|string-output-port-value|)
+|string-output-port-value|). Function |null-port| returns port that
+reads as empty and cannot be written into.
+
+Global constants |\*standard-input-port\*|, |\*standard-output-port\*|
+and |\*standard-error-port\*| represent respective streams provided by
+operating system. Most functions operating on ports do not require
+explicit port argument and can use implicit ports which can be
+examined by |current-input-port| and |current-output-port| and changed
+by |set-current-input-port!| and |set-current-output-port!|
+(|current-error-port| is also supported for completenes, but not used
+by any functions in core library).
+
+Ports can be accessed on line/byte level by following functions:
+
+ * |port-write-buf|
+ * |port-read-buf|
+ * |port-read-whole|
+ * |port-seek!|
+ * |port-tell|
+ * |newline|
+ 
+Also, objects can be written in human readable format and read back.
+
+ * |display| - writes objects in human-readable format
+ * |read| - reads objects written out by |write| (or in general dfsch
+    source code)
+ * |write| - writes objects in machine-readable format
+
+## Serialization
+
+In addition to file-based IO facilities, dfsch's core library provides
+support for serialization of almost arbitrary object graphs into
+portable and hopefuly compact binary format.
+
+Functions |serialize| and |deserialize| provide high level access to
+serialization mechanism and convert objects into byte-vectors and vice
+versa. Following functions offer more control over serialization:
+
+ * |make-serializer|
+ * |serializer-set-canonical-environment!|
+ * |serializer-write-stream-header!|
+ * |serialize-object!|
+ * |serialize-bytes!|
+ * |serialize-stream-symbol!|
+ * |serialize-integer!|
+
+And deserialization:
+
+ * |make-deserializer|
+ * |deserializer-set-canonical-environment!|
+ * |deserializer-read-stream-header!|
+ * |deserialize-object!|
+ * |deserialize-bytes!|
+ * |deserialize-stream-symbol!|
+ * |deserialize-integer!|
+
 
 # Objects and types
