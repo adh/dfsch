@@ -97,6 +97,7 @@ pre {
 ")
 
 (define *footer-add* ())
+(define *chapter-top-add* ())
 (define *head-add* ())
 
 (define (directory? path)
@@ -629,16 +630,19 @@ pre {
                      (string-append directory "/hierarchy.html"))
 
     (when chapter-list
-          (for-each (lambda (chapter)
-                      (shtml:emit-file 
-                       (html-boiler-plate (car chapter) 
-                                          title 
-                                          `(,(menu-bar categories 
-                                                       #t "../" packages)
-                                            ,@(chapter-content chapter chapter-list)))
-                       (string-append directory "/"
-                                      (chapter-file-name chapter))))
-                    (cdr chapter-list)))
+          (for-each 
+           (lambda (chapter)
+             (shtml:emit-file 
+              (html-boiler-plate (car chapter) 
+                                 title 
+                                 `(,(menu-bar categories 
+                                              #t "../" packages)
+                                   ,@(when *chapter-top-add*
+                                           `((:literal-output ,*chapter-top-add*)))
+                                   ,@(chapter-content chapter chapter-list)))
+              (string-append directory "/"
+                             (chapter-file-name chapter))))
+           (cdr chapter-list)))
 
 
     (for-each (lambda (cat)
@@ -735,6 +739,17 @@ pre {
                        :has-argument #t)
    (cmdopts:add-option parser 
                        (lambda (p v)
+                         (set! *chapter-top-add* v))
+                       :long-option "chapter-top-add"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
+                         (set! *chapter-top-add* 
+                               (port-read-whole (open-file-port v "r"))))
+                       :long-option "chapter-top-add-file"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
                          (set! *head-add* v))
                        :long-option "head-add"
                        :has-argument #t)
@@ -747,10 +762,14 @@ pre {
    (cmdopts:parse-list parser (cdr *posix-argv*)))
  
  (let ((footer-file (os:getenv "DOCGEN_FOOTER_FILE"))
-       (head-file (os:getenv "DOCGEN_HEAD_FILE")))
+       (head-file (os:getenv "DOCGEN_HEAD_FILE"))
+       (chapter-top-file (os:getenv "DOCGEN_CHAPTER_TOP_FILE")))
    (when footer-file
          (set! *footer-add* 
                (port-read-whole (open-file-port footer-file "r"))))
+   (when chapter-top-file
+         (set! *chapter-top-add* 
+               (port-read-whole (open-file-port chapter-top-file "r"))))
    (when head-file
          (set! *head-add* 
                (port-read-whole (open-file-port head-file "r")))))
