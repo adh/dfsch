@@ -5,6 +5,13 @@ mkdir documentation/modules/ 2>/dev/null
 cat > documentation/modules/index.html <<EOF 
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>dfsch standard modules documentation</title>
+EOF
+
+if [ -f "$DOCGEN_HEAD_FILE" ]; then
+    cat "$DOCGEN_HEAD_FILE";
+fi
+
+cat >> documentation/modules/index.html <<EOF 
 </head>
 <body>
 <h1>dfsch standard modules documentation</h1>

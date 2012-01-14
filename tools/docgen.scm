@@ -746,6 +746,17 @@ pre {
                        :has-argument #t)
    (cmdopts:parse-list parser (cdr *posix-argv*)))
  
+ (let ((footer-file (os:getenv "DOCGEN_FOOTER_FILE"))
+       (head-file (os:getenv "DOCGEN_HEAD_FILE")))
+   (when footer-file
+         (set! *footer-add* 
+               (port-read-whole (open-file-port footer-file "r"))))
+   (when head-file
+         (set! *header-add* 
+               (port-read-whole (open-file-port head-file "r")))))
+   
+         
+
  (if module-name
      (emit-module-documentation directory-name module-name
                                 :chapters chapters-file-name
