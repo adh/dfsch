@@ -8,7 +8,7 @@ cat > documentation/modules/index.html <<EOF
 EOF
 
 if [ -f "$DOCGEN_HEAD_FILE" ]; then
-    cat "$DOCGEN_HEAD_FILE" >> documentation/modules/index.html <<EOF
+    cat "$DOCGEN_HEAD_FILE" >> documentation/modules/index.html
 fi
 
 cat >> documentation/modules/index.html <<EOF 
