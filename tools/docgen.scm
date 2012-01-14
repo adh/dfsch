@@ -752,7 +752,7 @@ pre {
          (set! *footer-add* 
                (port-read-whole (open-file-port footer-file "r"))))
    (when head-file
-         (set! *header-add* 
+         (set! *head-add* 
                (port-read-whole (open-file-port head-file "r")))))
    
          
