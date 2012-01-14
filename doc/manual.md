@@ -346,8 +346,27 @@ types representing their common properties. These are:
 Numbers, except floating point values, are automaticaly converted into
 simplest sufficient representation. All types except |<flonum>|
 represent exact values, function |exact->inexact| converts any number
-into inexact representation, whis is currently always |<flonum>|.
+into inexact representation, which is currently always |<flonum>|.
 
 # Input and output
+
+Access to file-like objects is faciliated by using so called
+ports. Core library supports on disk files and in-memory buffers, C
+extensions can implement another types of ports. Extensions bundled
+with dfsch allow you to additionally access:
+
+ * [process](../modules/process/index.html) - External processes
+ * [socket-port](../modules/socket-port/index.html) - Network sockets
+ * [zlib](../modules/zlib/index.html) - GZip compressed files
+ 
+Port for accessing on disk files can be opened by |open-file-port|,
+such port should be closed by |close-file-port!| once it is not needed
+anymore, althought it will be closed automatically by garbage
+collector.
+
+Function |string-input-port| produces read-only port containing
+supplied string and |string-output-port| produces write-only port that
+collects data written to it into string (accessed by
+|string-output-port-value|)
 
 # Objects and types
