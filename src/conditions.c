@@ -71,6 +71,30 @@ static void condition_write(dfsch__condition_t* c,
   dfsch_write_unreadable_end(state);
 }
 
+static dfsch_object_t* condition_describe(dfsch__condition_t* c){
+  dfsch_object_t* i = c->fields;
+  dfsch_object_t* j;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  
+  while (DFSCH_PAIR_P(i)){
+    j = DFSCH_FAST_CAR(i);
+    i = DFSCH_FAST_CDR(i);
+    if (!DFSCH_PAIR_P(j)){
+      dfsch_list_collect(lc, 
+                         dfsch_list(2, 
+                                    dfsch_make_string_cstr("*malformed-fields*"), 
+                                    NULL));
+      break;
+    }
+
+    dfsch_list_collect(lc, dfsch_list(2, DFSCH_FAST_CAR(j), DFSCH_FAST_CDR(j)));
+  }
+
+  return dfsch_cons(dfsch_make_string_cstr(c->type->name), 
+                    dfsch_collected_list(lc));
+}
+
 dfsch_object_t* dfsch_condition_field(dfsch_object_t* condition,
                                       dfsch_object_t* name){
   dfsch_object_t* al;
@@ -189,7 +213,8 @@ dfsch_type_t dfsch_condition_type = {
   DFSCH_CONDITION_SIZE,
   "condition",
   NULL,
-  (dfsch_type_write_t)condition_write
+  (dfsch_type_write_t)condition_write,
+  .describe = condition_describe,
 };
 
 dfsch_type_t dfsch_serious_condition_type = 
