@@ -678,5 +678,6 @@ MODULES = cmdopts crypto curl csv extref fastlz ffi gcollect gd http inet \
 documentation: all
 	./dfsch-run -L ./.libs -L $(srcdir)/lib-scm \
 		$(srcdir)/tools/docgen.scm --chapters $(srcdir)/doc/manual.md \
+		--notes $(srcdir)/doc/notes.md \
 		documentation
 	$(srcdir)/gen-module-docs.sh $(srcdir) "$(MODULES)"

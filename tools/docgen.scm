@@ -353,6 +353,9 @@ pre {
   (get-object-name (cadr entry)
                    (car entry)))
 
+(define (entry-symbol-name entry)
+  (symbol-qualified-name (car entry)))
+
 (define (make-filename name)
   (string-append "entries/"
                  (string->safe-filename (symbol-qualified-name name))
@@ -437,16 +440,23 @@ pre {
                    ,(symbol-qualified-name (car entry)))))
                (index-entries-matching-value filter-func))))
 
-(define (emit-one-entry entry directory title categories packages)
-  (shtml:emit-file (html-boiler-plate (entry-name entry)
-                                      title
-                                      `(,(menu-bar categories 
-                                                   #t 
-                                                   "../" 
-                                                   packages)
-                                        ,@(make-one-entry entry)))
-                   (string-append directory "/"
-                                  (entry-filename entry))))
+(define (format-note name note-list)
+  (let ((res (assoc name note-list)))
+    (when res `((:h2 "Additional notes")
+                (:literal-output ,(convert-documentation-block (cadr res)))))))
+
+(define (emit-one-entry entry directory title categories packages note-list)
+  (let ((note-content (format-note (entry-symbol-name entry) note-list)))
+    (shtml:emit-file (html-boiler-plate (entry-name entry)
+                                        title
+                                        `(,(menu-bar categories 
+                                                     #t 
+                                                     "../" 
+                                                     packages)
+                                          ,@(make-one-entry entry)
+                                          ,@note-content))
+                     (string-append directory "/"
+                                    (entry-filename entry)))))
 
 (define (make-entry-list lyst base)
   `(:ul :class "entry-list"
@@ -533,9 +543,12 @@ pre {
                 ,(make-entry-list (cdr ch) base)))
             chars)))
 
-(define (package-index pkg lyst)
+(define (package-index pkg lyst note-list)
   `(,@(format-documentation-slot pkg)
-    ,@(make-index-list (filter (lambda (entry) 
+    ,@(format-note (string-append "Package "
+                                  (slot-ref pkg :name)) 
+                   note-list)
+   ,@(make-index-list (filter (lambda (entry) 
                                  (eq? (symbol-package (car entry))
                                       pkg)) 
                                lyst)
@@ -659,18 +672,21 @@ pre {
 
     (for-each (lambda (pkg)
                 (shtml:emit-file 
-                 (html-boiler-plate (string-append "Package "
-                                                   (slot-ref pkg :name))
-                                    title
-                                    `(,(menu-bar categories pkg "../" packages)
-                                      ,@(package-index pkg lyst)))
+                 (html-boiler-plate 
+                  (string-append "Package "
+                                 (slot-ref pkg :name))
+                  title
+                  `(,(menu-bar categories pkg "../" packages)
+                    ,@(package-index pkg lyst note-list)))
                  (string-append directory "/" 
                                 (package-index-name pkg))))
               packages)
     
+    (write note-list)
                 
     (for-each (lambda (entry)
-                (emit-one-entry entry directory title categories packages))
+                (emit-one-entry entry directory title 
+                                categories packages note-list))
               lyst)))
 
 
