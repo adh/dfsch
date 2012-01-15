@@ -1052,7 +1052,8 @@ DFSCH_DEFINE_PRIMITIVE(reduce,
 }
 
 DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
-                       "(eg. list of &key arguments)"){
+                       "(eg. list of &key arguments)"
+                       DFSCH_DOC_SYNOPSIS("(plist indicator)")){
   dfsch_object_t* plist;
   dfsch_object_t* indicator;
 
@@ -1063,7 +1064,8 @@ DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
   return dfsch_plist_get(plist, indicator);
 }
 DFSCH_DEFINE_PRIMITIVE(plist_remove_keys, "Return copy of plist with "
-                       "specified keys removed"){
+                       "specified keys removed"
+                       DFSCH_DOC_SYNOPSIS("(plist keys)")){
   dfsch_object_t* plist;
   dfsch_object_t* keys;
 
@@ -1074,7 +1076,8 @@ DFSCH_DEFINE_PRIMITIVE(plist_remove_keys, "Return copy of plist with "
   return dfsch_plist_remove_keys(plist, keys);
 }
 DFSCH_DEFINE_PRIMITIVE(plist_filter_keys, "Return copy of plist with "
-                       "only specified keys"){
+                       "only specified keys"
+                       DFSCH_DOC_SYNOPSIS("(plist keys)")){
   dfsch_object_t* plist;
   dfsch_object_t* keys;
 
