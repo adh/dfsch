@@ -2517,7 +2517,7 @@ dfsch_object_t* dfsch_plist_get(dfsch_object_t* plist,
     dfsch_object_t* ind = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(i)){
-      dfsch_error("Invlaid plist", plist);
+      dfsch_error("Invalid plist", plist);
     }
     if (ind == indicator){
       return i;
