@@ -1398,9 +1398,26 @@ static void environment_serialize(environment_t* env, dfsch_serializer_t* ser){
   dfsch_serialize_integer(ser, -1); /* flags are unsigned */
 }
 
+DFSCH_DEFINE_PRIMITIVE(slot_sort_cmp, NULL){
+  dfsch_object_t* a;
+  dfsch_object_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(strcmp(dfsch_object_2_string(dfsch_car(a), 1, 0),
+                           dfsch_object_2_string(dfsch_car(b), 1, 0)) < 0);
+}
+
+dfsch_object_t* dfsch_sort_description_slots(dfsch_object_t* list){
+  return dfsch_sort_list(list, DFSCH_PRIMITIVE_REF(slot_sort_cmp));
+}
+
 static dfsch_object_t* environment_describe(environment_t* env){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));
+
+  list = dfsch_sort_description_slots(list);
   
   list = dfsch_cons(dfsch_list(2,
                                dfsch_make_string_cstr("*context*"),
