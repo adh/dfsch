@@ -682,8 +682,6 @@ pre {
                                 (package-index-name pkg))))
               packages)
     
-    (write note-list)
-                
     (for-each (lambda (entry)
                 (emit-one-entry entry directory title 
                                 categories packages note-list))
