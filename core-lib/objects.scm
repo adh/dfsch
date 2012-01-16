@@ -80,6 +80,7 @@
 (define-macro (dfsch:define-class name superklass slots 
                                   &rest class-opts
                                   &key roles &allow-other-keys)
+  "Define new user defined class"
 
   ;; Remove role list from list of class options
   (set! class-opts (plist-remove-keys class-opts '(:roles)))
