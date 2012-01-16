@@ -81,7 +81,8 @@ DFSCH_FORM_METHOD_COMPILE(if){
 
 DFSCH_DEFINE_FORM(if, 
                   {DFSCH_FORM_COMPILE(if)},
-                  "Conditional operator"){
+                  "Conditional operator"
+		  DFSCH_DOC_SYNOPSIS("(condition consequent alternate)")){
   object_t* test;
   object_t* consequent;
   object_t* alternate;
@@ -103,7 +104,8 @@ dfsch_object_t* dfsch_generate_if(dfsch_object_t* cond,
 }
 
 
-DFSCH_DEFINE_FORM(quote, {}, NULL){
+DFSCH_DEFINE_FORM(quote, {}, 
+		  "Quote constant value"){
   object_t* value;
   
   DFSCH_OBJECT_ARG(args, value);
