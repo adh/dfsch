@@ -440,7 +440,9 @@ DFSCH_DEFINE_PRIMITIVE(reverse,
 
   return dfsch_reverse(list);
 }
-DFSCH_DEFINE_PRIMITIVE(member, 0){
+DFSCH_DEFINE_PRIMITIVE(member, 
+		       "Return first list cell with car |equal?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -450,7 +452,9 @@ DFSCH_DEFINE_PRIMITIVE(member, 0){
 
   return dfsch_member(key, list);
 }
-DFSCH_DEFINE_PRIMITIVE(memv, 0){
+DFSCH_DEFINE_PRIMITIVE(memv,  
+		       "Return first list cell with car |eqv?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -460,7 +464,9 @@ DFSCH_DEFINE_PRIMITIVE(memv, 0){
 
   return dfsch_memv(key, list);
 }
-DFSCH_DEFINE_PRIMITIVE(memq, 0){
+DFSCH_DEFINE_PRIMITIVE(memq, 
+		       "Return first list cell with car |eq?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -483,7 +489,9 @@ DFSCH_DEFINE_PRIMITIVE(sort_list,
   return dfsch_sort_list(list, comp);
 }
 
-DFSCH_DEFINE_PRIMITIVE(assoc, 0){
+DFSCH_DEFINE_PRIMITIVE(assoc, 
+		       "Return alist element with value |equal?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
@@ -493,7 +501,9 @@ DFSCH_DEFINE_PRIMITIVE(assoc, 0){
 
   return dfsch_assoc(key, alist);
 }
-DFSCH_DEFINE_PRIMITIVE(assv, 0){
+DFSCH_DEFINE_PRIMITIVE(assv, 
+		       "Return alist element with value |eqv?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
@@ -503,7 +513,9 @@ DFSCH_DEFINE_PRIMITIVE(assv, 0){
 
   return dfsch_assv(key, alist);
 }
-DFSCH_DEFINE_PRIMITIVE(assq, 0){
+DFSCH_DEFINE_PRIMITIVE(assq,
+		       "Return alist element with value |eq?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
