@@ -24,6 +24,7 @@
 #include <dfsch/mkhash.h>
 #include <dfsch/generate.h>
 #include <dfsch/specializers.h>
+#include <dfsch/object.h>
 
 #include <stdio.h>
 
@@ -66,6 +67,10 @@ static int more_specific_method_p(dfsch_method_t* a,
     
     if (as != bs){
       if (dfsch_specializer_matches_type_p(bs, as)){
+        return 0;
+      } else if (DFSCH_INSTANCE_P(as, DFSCH_ROLE_TYPE) &&
+                 DFSCH_INSTANCE_P(bs, DFSCH_ROLE_TYPE) &&
+                 dfsch_role_inherited_p(as, bs)) {
         return 0;
       } else {
         return 1;

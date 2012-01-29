@@ -80,6 +80,8 @@ typedef struct dfsch_standard_class_t {
                                   dfsch_object_t* superroles,
                                   dfsch_object_t* slots,
                                   dfsch_object_t* options);
+  int dfsch_role_inherited_p(dfsch_object_t* sub, 
+                             dfsch_object_t* super);
 
 #ifdef __cplusplus
 }

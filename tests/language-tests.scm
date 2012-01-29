@@ -216,10 +216,19 @@
   (define-class <bar> ()
     ()
     :roles (<<foo>>))
+
   (assert-true (specializer-matches-type? <<foo>> <bar>))
   
   (define-class <quux> ()
     ()
     :roles (<<derived-foo>>))
   (assert-true (specializer-matches-type? <<foo>> <quux>))
-  (assert-true (specializer-matches-type? <<derived-foo>> <quux>)))
+  (assert-true (specializer-matches-type? <<derived-foo>> <quux>))
+
+  (define-method (test-method (i <<foo>>))
+    :foo)
+  (define-method (test-method (i <<derived-foo>>))
+    :derived-foo)
+  
+  (assert-equal (test-method (make-instance <bar>)) :foo)
+  (assert-equal (test-method (make-instance <quux>)) :derived-foo))

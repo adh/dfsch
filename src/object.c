@@ -343,6 +343,13 @@ static int role_inherited_p(role_t* sub, role_t* super){
   return 0;
 }
 
+int dfsch_role_inherited_p(dfsch_object_t* sub, 
+                           dfsch_object_t* super){
+  return role_inherited_p(DFSCH_ASSERT_INSTANCE(sub, DFSCH_ROLE_TYPE),
+                          DFSCH_ASSERT_INSTANCE(super, DFSCH_ROLE_TYPE));
+}
+
+
 static int role_matches_p(role_t* role,
                           dfsch_object_t* type){
   if (DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
