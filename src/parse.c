@@ -525,10 +525,15 @@ static void dispatch_string(dfsch_parser_ctx_t *ctx, char *data){
           *out = ((*out)<<3) | (*in - '0');
           ++in;
           if (*in >= '0' && *in <= '7'){
+            if (*out >= 16){
+              parser_abort(ctx, "Non-ASCII octal escape sequence");
+            }
             *out = ((*out)<<3) | (*in - '0');
             ++in;
           }          
         }
+
+
 	++out;
 	continue;
       case 'x':
