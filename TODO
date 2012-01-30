@@ -17,5 +17,4 @@ Sometimes:
 External modules and libraries:
 * Sound I/O
 * DOM-like API on top of SXML
-* CURL
 
