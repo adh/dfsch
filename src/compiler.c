@@ -252,6 +252,22 @@ static void declare_function_arguments(environment_t* env,
   
 }
 
+dfsch_object_t* 
+dfsch_compiler_extend_environment_with_arguments(dfsch_object_t* environment,
+                                                 dfsch_object_t* arglist){
+  dfsch_object_t* env = dfsch_new_frame(environment);
+  lambda_list_t* l;
+
+  if (DFSCH_TYPE_OF(arglist) != DFSCH_LAMBDA_LIST_TYPE){
+    l = (lambda_list_t*)dfsch_compile_lambda_list(arglist);
+  } else {
+    l = (lambda_list_t*)arglist;
+  }
+
+  declare_function_arguments(env, l);
+  return env;
+}
+
 static void compile_function(closure_t* func){
   dfsch_object_t* env = dfsch_new_frame(func->env);
 

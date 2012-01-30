@@ -22,6 +22,9 @@ void dfsch_compiler_declare_variable(dfsch_object_t* env,
 void dfsch_compiler_update_constant(dfsch_object_t* env, 
 				    dfsch_object_t* name, 
 				    dfsch_object_t* value);
+dfsch_object_t* 
+dfsch_compiler_extend_environment_with_arguments(dfsch_object_t* environment,
+                                                 dfsch_object_t* arglist);
 
 
 void dfsch_compile_function(dfsch_object_t* function);

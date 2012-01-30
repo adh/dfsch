@@ -377,12 +377,20 @@ dfsch_object_t* dfsch_generate_throw(dfsch_object_t* tag,
 DFSCH_FORM_METHOD_COMPILE(destructuring_bind){
   dfsch_object_t* args = DFSCH_FAST_CDR(expr);
   dfsch_object_t* lambda_list;
+  dfsch_object_t* list;
+  dfsch_object_t* my_env;
   DFSCH_OBJECT_ARG(args, lambda_list);
+  DFSCH_OBJECT_ARG(args, list);
+
+  my_env = dfsch_compiler_extend_environment_with_arguments(env,
+                                                            lambda_list);
+
   return dfsch_cons_ast_node_cdr(form,
                                  expr,
-                                 dfsch_compile_expression_list(args, env),
-                                 1,
-                                 lambda_list);
+                                 dfsch_compile_expression_list(args, my_env),
+                                 2,
+                                 lambda_list,
+                                 dfsch_compile_expression(list, env));
 }
 
 DFSCH_DEFINE_FORM(destructuring_bind, 
