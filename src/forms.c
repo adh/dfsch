@@ -382,6 +382,8 @@ DFSCH_FORM_METHOD_COMPILE(destructuring_bind){
   DFSCH_OBJECT_ARG(args, lambda_list);
   DFSCH_OBJECT_ARG(args, list);
 
+  lambda_list = dfsch_compile_lambda_list(lambda_list);
+
   my_env = dfsch_compiler_extend_environment_with_arguments(env,
                                                             lambda_list);
 
