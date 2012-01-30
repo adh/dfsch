@@ -124,8 +124,8 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
 
   while(DFSCH_PAIR_P(i)){
     dfsch_object_t* tmp = 
-      dfsch_cons(dfsch_compile_expression(DFSCH_FAST_CAR(i), env),
-                 NULL);
+      dfsch_cons(dfsch_compile_expression(DFSCH_FAST_CAR(i), env), NULL);
+
     if (head){
       DFSCH_FAST_CDR_MUT(tail) = tmp;
       tail = tmp;
