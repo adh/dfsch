@@ -201,6 +201,11 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
   }
 }
 
+void dfsch_compiler_declare_variable(dfsch_object_t* env,
+                                     dfsch_object_t* name){
+  dfsch_define(name, NULL, env, 0);  
+}
+
 void dfsch_compiler_update_constant(dfsch_object_t* env, 
 				    dfsch_object_t* name, 
 				    dfsch_object_t* value){
@@ -216,13 +221,51 @@ void dfsch_compiler_update_constant(dfsch_object_t* env,
   }
 }
 
+static void declare_function_arguments(environment_t* env,
+                                       lambda_list_t* ll){
+  size_t i;
+  dfsch_object_t* j;
+
+  size_t arg_count = ll->positional_count + ll->keyword_count 
+    + ll->optional_count;
+
+  for (i = 0; i < arg_count; i++){
+    dfsch_compiler_declare_variable(env, ll->arg_list[i]);
+  }
+
+  arg_count = ll->keyword_count + ll->optional_count; /* supplied-p */
+  for (i = 0; i < arg_count; i++){
+    if (ll->supplied_p[i]){
+      dfsch_compiler_declare_variable(env, ll->supplied_p[i]);
+    }
+  }
+
+  if (ll->rest){
+    dfsch_compiler_declare_variable(env, ll->rest);
+  }
+
+  j = ll->aux_list;
+  while (DFSCH_PAIR_P(j)){
+    dfsch_compiler_declare_variable(env, dfsch_car(DFSCH_FAST_CAR(j)));
+    j = DFSCH_FAST_CDR(j);
+  }
+  
+}
+
+static void compile_function(closure_t* func){
+  dfsch_object_t* env = dfsch_new_frame(func->env);
+
+  declare_function_arguments(env, func->args);
+  func->code = dfsch_compile_expression_list(func->orig_code, env);
+
+}
 
 void dfsch_compile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
-  func->code = dfsch_compile_expression_list(func->orig_code,
-                                             dfsch_new_frame(func->env));
+  compile_function(func);
+
   func->compiled = 1;
 }
 
@@ -234,9 +277,9 @@ void dfsch_precompile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
-  func->code = dfsch_compile_expression_list(func->orig_code,
-                                             dfsch_new_frame(func->env));
+  compile_function(func);
   func->env = NULL;
+
   if (recompile_precompiled >= 0){
     func->call_count = recompile_precompiled;
   } else {

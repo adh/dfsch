@@ -180,6 +180,8 @@ DFSCH_FORM_METHOD_COMPILE(internal_let){
     DFSCH_OBJECT_ARG(clause, val);
     DFSCH_ARG_END(clause);
 
+    dfsch_compiler_declare_variable(env, var);
+
     dfsch_list_collect(lc,
                        dfsch_cons_ast_node(var,
                                            clause,
@@ -481,8 +483,9 @@ DFSCH_FORM_METHOD_COMPILE(define){
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
-  
+
   value = dfsch_compile_expression(value, env);
+  dfsch_compiler_declare_variable(env, name);
 
   return dfsch_cons_ast_node(form,
                              expr,

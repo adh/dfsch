@@ -17,6 +17,8 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                          dfsch_object_t* env);
 
+void dfsch_compiler_declare_variable(dfsch_object_t* env,
+                                     dfsch_object_t* name);
 void dfsch_compiler_update_constant(dfsch_object_t* env, 
 				    dfsch_object_t* name, 
 				    dfsch_object_t* value);
