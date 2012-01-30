@@ -189,7 +189,13 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
     
 
   } else if (DFSCH_SYMBOL_P(expression)){
-    return expression; // TODO
+    dfsch_object_t* value = dfsch_constant_expression_value(expression, env);
+    
+    if (value == DFSCH_INVALID_OBJECT){
+      return expression;
+    } else {
+      return dfsch_make_constant_ast_node(value);
+    }
   } else {
     return expression;
   }

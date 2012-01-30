@@ -112,13 +112,13 @@
   `(incr +pass-count+))
 
 (define-macro (assert-equal expr expected)
-  (with-gensyms (result exp)
+  (with-gensyms (result expected-result)
     `(let ((,result ,expr)
-           (,exp ,expected))
-       (if (equal? ,result ,exp) 
+           (,expected-result ,expected))
+       (if (equal? ,result ,expected-result) 
            (pass)
            (fail (format "~s returned ~s expected ~s"
-                         ',expr ,result ,exp))))))
+                         ',expr ,result ,expected-result))))))
 
 (define-macro (assert-true expr)
   `(if ,expr 
@@ -179,7 +179,7 @@
     (print (test-name test) ": " message " " )
     result))
 
-(define (run-tests list &key one-fail? trap-errors?)
+(define (run-tests test-list &key one-fail? trap-errors?)
   (let ((passed 0) (failed 0) (mayfail 0) (errors 0))
     (measure
     (catch 'fail
@@ -201,7 +201,7 @@
                        (incr mayfail))
                       ((:pass)
                        (incr passed)))))
-                list)))
+                test-list)))
     (print)
     (print "  ***** Test suite run complete *****")
     (print "Tests passed:            " passed)
