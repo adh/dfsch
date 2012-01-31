@@ -3,7 +3,8 @@
      exp)   ===> :local))
 
 (define-evaluation-test argument-shadowing (:language :compiler)
-  (((lambda (exp) exp) :local) ===> :local))
+  (((lambda (exp) exp) :local) ===> :local)
+  (((lambda (&aux (exp :local)) exp)) ===> :local))
 
 (define-evaluation-test local-shadowing (:language :compiler)
   ((begin
@@ -13,3 +14,4 @@
 (define-evaluation-test destructuring-bind-shadowing (:language :compiler)
   ((destructuring-bind (exp) '(:local)
                        exp) ===> :local))
+
