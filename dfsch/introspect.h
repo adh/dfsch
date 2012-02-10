@@ -23,7 +23,7 @@ typedef void* (*dfsch_function_entry_hook_t)(void* baton,
                                              dfsch_object_t* context);
 typedef void (*dfsch_function_exit_hook_t)(void* baton,
                                            dfsch_object_t* func,
-                                           dfsch_object_t* result,
+                                           dfsch_object_t* values,
                                            dfsch_object_t* context,
                                            void* entry_token);
 
