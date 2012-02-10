@@ -316,6 +316,7 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
 	tests/fix-regression-tests.scm \
+	tests/compiler-tests.scm \
 	$(fastlz_files) \
 	$(upskirt_files)
 
