@@ -1160,6 +1160,18 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   return dfsch_apply_impl(proc, args, context, esc, ti);
 }
 
+typedef struct break_pointentry_t {
+  
+} breakpoint_entry_t;
+
+static int have_breakpoints = 0;
+
+void dfsch_add_breakpoint(dfsch_object_t* expr,
+                          dfsch_breakpoint_hook_t hook,
+                          void* baton){
+  have_breakpoints = 1;
+}
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
@@ -1171,6 +1183,10 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
 
   if(DFSCH_SYMBOL_P(exp)){
     return lookup_impl(exp, env, ti);
+  }
+
+  if (DFSCH_UNLIKELY(have_breakpoints)){
+    printf("Bar!");
   }
 
   if(DFSCH_PAIR_P(exp)){
@@ -1591,8 +1607,19 @@ struct dfsch_tail_escape_t {
 static DEFINE_VM_PARAM(compile_on_apply, 1,
                        "Compile all closures on their first execution");
 
+static int have_traced_funcs = 0;
+
+void dfsch_add_traced_function(dfsch_object_t* func,
+                               dfsch_function_entry_hook_t entry,
+                               dfsch_function_exit_hook_t exit,
+                               void* baton){
+  have_traced_funcs = 1;
+}
+
+
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
+
 
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
@@ -1602,6 +1629,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   dfsch_object_t* r;
   tail_escape_t myesc;
   dfsch__stack_trace_frame_t sframe;
+  tail_escape_t* next_esc;
 
   sframe.next = ti->stack_trace;
 
@@ -1634,6 +1662,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   ti->values = NULL;
   async_apply_check(ti);
 
+  next_esc = &myesc;
+
+  if (DFSCH_UNLIKELY(have_traced_funcs)){
+    printf("foo!");
+    next_esc = NULL;
+  }
 
   /*
    * Two most common cases are written here explicitly (for historical
@@ -1646,7 +1680,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       myesc.reuse_frame = NULL;
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                   &myesc, context);
+                                   next_esc, context);
     ti->stack_trace = sframe.next;
     return r;
   }
@@ -1681,7 +1715,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     destructure_impl(((closure_t*)proc)->args, args, env, ti);
     r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
                              env,
-                             &myesc,
+                             next_esc,
                              ti);
     free_environment(env, ti);
     ti->stack_trace = sframe.next;
@@ -1693,7 +1727,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       free_environment(myesc.reuse_frame, ti);
       myesc.reuse_frame = NULL;
     }
-    r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
+    r = DFSCH_TYPE_OF(proc)->apply(proc, args, next_esc, context);
     ti->stack_trace = sframe.next;
     return r;
   }
