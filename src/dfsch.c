@@ -1160,16 +1160,38 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   return dfsch_apply_impl(proc, args, context, esc, ti);
 }
 
-typedef struct break_pointentry_t {
-  
+typedef struct breakpoint_entry_t {
+  dfsch_breakpoint_hook_t hook;
+  void* baton;
 } breakpoint_entry_t;
 
-static int have_breakpoints = 0;
+static dfsch_eqhash_t* breakpoint_table = NULL;
 
 void dfsch_add_breakpoint(dfsch_object_t* expr,
                           dfsch_breakpoint_hook_t hook,
                           void* baton){
-  have_breakpoints = 1;
+  breakpoint_entry_t* entry = GC_NEW(breakpoint_entry_t);
+  if (!breakpoint_table){
+    breakpoint_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(breakpoint_table, 0);
+  }
+
+  entry->hook = hook;
+  entry->baton = baton;
+
+  dfsch_eqhash_set(breakpoint_table, expr, entry);
+}
+
+void dfsch_remove_breakpoint(dfsch_object_t* expr){
+  if (!breakpoint_table){
+    return;
+  }
+
+  dfsch_eqhash_unset(breakpoint_table, expr);
+}
+
+void dfsch_clear_breakpoints(){
+  breakpoint_table = NULL;
 }
 
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
@@ -1185,8 +1207,11 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     return lookup_impl(exp, env, ti);
   }
 
-  if (DFSCH_UNLIKELY(have_breakpoints)){
-    printf("Bar!");
+  if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
+    breakpoint_entry_t* bp = dfsch_eqhash_ref(breakpoint_table, exp);
+    if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
+      bp->hook(bp->baton, exp, env);
+    }
   }
 
   if(DFSCH_PAIR_P(exp)){
@@ -1607,13 +1632,38 @@ struct dfsch_tail_escape_t {
 static DEFINE_VM_PARAM(compile_on_apply, 1,
                        "Compile all closures on their first execution");
 
-static int have_traced_funcs = 0;
+typedef struct traced_function_entry_t {
+  dfsch_function_entry_hook_t entry;
+  dfsch_function_exit_hook_t exit;
+  void* baton;
+} traced_function_entry_t;
+
+static dfsch_eqhash_t* traced_function_table = NULL;
 
 void dfsch_add_traced_function(dfsch_object_t* func,
                                dfsch_function_entry_hook_t entry,
                                dfsch_function_exit_hook_t exit,
                                void* baton){
-  have_traced_funcs = 1;
+  traced_function_entry_t* ent = GC_NEW(breakpoint_entry_t);
+  if (!traced_function_table){
+    traced_function_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(traced_function_table, 0);
+  }
+
+  ent->entry = entry;
+  ent->exit = exit;
+  ent->baton = baton;
+
+  dfsch_eqhash_set(traced_function_table, func, ent);
+}
+void dfsch_remove_traced_function(dfsch_object_t* func){
+  if (!traced_function_table){
+    return;
+  }
+  dfsch_eqhash_unset(traced_function_table, func);
+}
+void dfsch_clear_traced_functions(){
+  traced_function_table = NULL;
 }
 
 
@@ -1630,6 +1680,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   tail_escape_t myesc;
   dfsch__stack_trace_frame_t sframe;
   tail_escape_t* next_esc;
+  traced_function_entry_t* tp = NULL;
+  void* tp_token;
 
   sframe.next = ti->stack_trace;
 
@@ -1664,9 +1716,14 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
 
   next_esc = &myesc;
 
-  if (DFSCH_UNLIKELY(have_traced_funcs)){
-    printf("foo!");
-    next_esc = NULL;
+  if (DFSCH_UNLIKELY(traced_function_table != NULL)){
+    tp = dfsch_eqhash_ref(traced_function_table, proc);
+    if (tp != DFSCH_INVALID_OBJECT){
+      next_esc = NULL;
+      tp_token = tp->entry(tp->baton, proc, args, context);
+    } else {
+      tp = NULL;
+    }
   }
 
   /*
@@ -1681,6 +1738,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    next_esc, context);
+    if (tp){
+      tp->exit(tp->baton, proc, r, context, tp_token);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }
@@ -1718,6 +1778,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                              next_esc,
                              ti);
     free_environment(env, ti);
+    if (tp){
+      tp->exit(tp->baton, proc, r, context, tp_token);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }
@@ -1728,6 +1791,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       myesc.reuse_frame = NULL;
     }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, next_esc, context);
+    if (tp){
+      tp->exit(tp->baton, proc, r, context, tp_token);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }

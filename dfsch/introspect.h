@@ -33,14 +33,13 @@ void dfsch_add_breakpoint(dfsch_object_t* expr,
 void dfsch_remove_breakpoint(dfsch_object_t* expr);
 void dfsch_clear_breakpoints();
 
-void dfsch_add_single_step_break(dfsch_breakpoint_hook_t hook,
-                                 void* baton);
-
 void dfsch_add_traced_function(dfsch_object_t* func,
                                dfsch_function_entry_hook_t entry,
                                dfsch_function_exit_hook_t exit,
                                void* baton);
 void dfsch_remove_traced_function(dfsch_object_t* func);
 void dfsch_clear_traced_functions();
+
+void dfsch_trace_function(dfsch_object_t* func);
 
 #endif
