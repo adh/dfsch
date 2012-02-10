@@ -36,7 +36,8 @@
              :begin-transaction!
              :commit-transaction!
              :rollback-transaction!
-             :with-transaction))
+             :with-transaction,
+             :escape-string))
 (in-package :sql)
 
 ;;; Fallback implementation (for sqlite3)
@@ -48,7 +49,8 @@
 
 (define (build-query string values &optional db)
   (construct-string string values
-                    :convert-all convert-sql-value
+                    :convert-all (lambda (val)
+                                   (convert-sql-value val db))
                     :escape-character #\:))
 
 (define-method (exec! db statement &rest args)
@@ -58,11 +60,14 @@
   (query-string db (build-query statement args db)))
 
 
-(define-method (convert-sql-value (value <proto-string>))
-  (sql-support:escape-string value))
-(define-method (convert-sql-value (value <number>))
+(define-method (escape-string db string)
+  (sql-support:escape-string string))
+
+(define-method (convert-sql-value (value <proto-string>) db)
+  (sql:escape-string db value))
+(define-method (convert-sql-value (value <number>) db)
   (number->string value))
-(define-method (convert-sql-value (value <<collection>>))
+(define-method (convert-sql-value (value <<collection>>) db)
   (string-append
    "("
    (string-join (map convert-sql-value value) ", ")
