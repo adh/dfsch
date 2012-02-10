@@ -233,6 +233,28 @@ fi
 
 AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
 
+enable_dbi=yes
+
+AC_ARG_ENABLE([dbi],
+    AC_HELP_STRING([--disable-dbi], [Disable dbi module]))
+AC_ARG_WITH([dbi],
+  AC_HELP_STRING([--with-dbi=PATH], [Path to libdbi installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_dbi" == x"yes"; then
+    AC_CHECK_HEADERS(dbi/dbi.h, [have_dbi="1"], [have_dbi="0"])
+    AC_CHECK_LIB(dbi, dbi_conn_new, 
+                     [dummy_dbi=], [have_dbi="0"])
+
+    if test x"$have_dbi" == x"0" ; then
+        enable_dbi=no
+    fi
+fi
+
+AM_CONDITIONAL(DBI, test x"$enable_dbi" == x"yes")
+
+
 enable_tokyo_cabinet=yes
 
 AC_ARG_ENABLE([tokyo-cabinet],
@@ -387,6 +409,7 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
+libdbi ............. : $enable_dbi
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 gd ................. : $enable_gd
