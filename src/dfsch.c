@@ -1738,7 +1738,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    next_esc, context);
-    if (tp){
+    if (tp && tp->exit){
       dfsch_object_t* values = dfsch_get_values_list(r);
       tp->exit(tp->baton, proc, values, context, tp_token);
       r = dfsch_values_list(values);
@@ -1780,7 +1780,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                              next_esc,
                              ti);
     free_environment(env, ti);
-    if (tp){
+    if (tp && tp->exit){
       dfsch_object_t* values = dfsch_get_values_list(r);
       tp->exit(tp->baton, proc, values, context, tp_token);
       r = dfsch_values_list(values);
@@ -1795,7 +1795,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       myesc.reuse_frame = NULL;
     }
     r = DFSCH_TYPE_OF(proc)->apply(proc, args, next_esc, context);
-    if (tp){
+    if (tp && tp->exit){
       dfsch_object_t* values = dfsch_get_values_list(r);
       tp->exit(tp->baton, proc, values, context, tp_token);
       r = dfsch_values_list(values);
