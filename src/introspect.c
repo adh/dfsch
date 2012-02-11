@@ -304,6 +304,27 @@ void dfsch_trace_function(dfsch_object_t* func){
                             NULL);
 }
 
+static void standard_breakpoint_hook(void* baton,
+                                     dfsch_object_t* exp,
+                                     dfsch_object_t* env){
+  dfsch_object_t* bp = dfsch_make_condition(DFSCH_BREAKPOINT_CONDITION_TYPE);
+  dfsch_condition_put_field_cstr(bp, "expression", exp);
+  dfsch_condition_put_field_cstr(bp, "environment", env);
+  dfsch_enter_debugger(bp);
+}
+
+void dfsch_add_standard_breakpoint(dfsch_object_t* expr){
+  dfsch_add_breakpoint(expr, standard_breakpoint_hook, NULL);
+}
+void dfsch_add_function_breakpoint(dfsch_object_t* fun){
+  closure_t* f = DFSCH_ASSERT_INSTANCE(fun, DFSCH_STANDARD_FUNCTION_TYPE);
+
+  if (!DFSCH_PAIR_P(f->code) || !DFSCH_PAIR_P(DFSCH_FAST_CAR(f->code))){
+    dfsch_error("Cannot create breakpoint on first form of function", f);
+  }
+
+  dfsch_add_standard_breakpoint(DFSCH_FAST_CAR(f->code));
+}
 
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
@@ -490,6 +511,16 @@ DFSCH_DEFINE_PRIMITIVE(untrace_all_functions,
 
   return NULL;
 }
+DFSCH_DEFINE_PRIMITIVE(add_function_breakpoint,
+                       "Put breakpoint on first form of function"){
+  dfsch_object_t* func;
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_ARG_END(args);
+
+  dfsch_add_function_breakpoint(func);
+
+  return func;
+}
 
 
 void dfsch_introspect_register(dfsch_object_t* env){
@@ -536,5 +567,7 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(untrace_function));
   dfsch_defcanon_cstr(env, "untrace-all-functions!",
                     DFSCH_PRIMITIVE_REF(untrace_all_functions));
+  dfsch_defcanon_cstr(env, "add-function-breakpoint!",
+                    DFSCH_PRIMITIVE_REF(add_function_breakpoint));
 
 }

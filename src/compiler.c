@@ -55,6 +55,7 @@ dfsch_object_t* dfsch_cons_ast_node(dfsch_object_t* head,
   }
 
   va_end(al);
+
   return DFSCH_MAKE_CLIST(data);  
 }
 
@@ -89,8 +90,8 @@ dfsch_object_t* dfsch_cons_ast_node_cdr(dfsch_object_t* head,
   }
 
   va_end(al);
-  return DFSCH_MAKE_CLIST(data);
-  
+
+  return DFSCH_MAKE_CLIST(data);  
 }
 
 dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
@@ -145,6 +146,8 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
 
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                          dfsch_object_t* env){
+  dfsch_object_t* res;
+
   if (DFSCH_PAIR_P(expression)){
     dfsch_object_t* operator = DFSCH_FAST_CAR(expression);
     dfsch_object_t* operator_value;
@@ -157,48 +160,51 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_FORM_TYPE){
         dfsch_form_t* form = ((dfsch_form_t*)operator_value);
         if (form->methods.compile){
-          return form->methods.compile(operator_value, expression, env);
+          res = form->methods.compile(operator_value, expression, env);
         } else {
           if (operator != operator_value){ 
-            return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
-                                           expression,
-                                           args,
-                                           0);
+            res = dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
+                                          expression,
+                                          args,
+                                          0);
           } else {
-            return expression;
+            res = expression;
           }
         }
-      }
-      if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
-        return dfsch_compile_expression(dfsch_macro_expand_expr_in_env(operator_value,
+      } else if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
+        res = dfsch_compile_expression(dfsch_macro_expand_expr_in_env(operator_value,
 								       expression,
 								       env),
                                         env);
+      } else {
+        res = dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
+                                      expression, 
+                                      dfsch_compile_expression_list(args,
+                                                                    env),
+                                      0);
       }
-
-      return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
-                                     expression, 
-                                     dfsch_compile_expression_list(args,
-                                                                   env),
-                                     0);
+    } else {
+      res = dfsch_cons_ast_node_cdr(operator, expression, 
+                                    dfsch_compile_expression_list(args,
+                                                                  env),
+                                    0);
     }
-    return dfsch_cons_ast_node_cdr(operator, expression, 
-                                   dfsch_compile_expression_list(args,
-                                                                 env),
-                                   0);
-    
-
   } else if (DFSCH_SYMBOL_P(expression)){
     dfsch_object_t* value = dfsch_constant_expression_value(expression, env);
     
     if (value == DFSCH_INVALID_OBJECT){
-      return expression;
+      res = expression;
     } else {
-      return dfsch_make_constant_ast_node(value);
+      res = dfsch_make_constant_ast_node(value);
     }
   } else {
     return expression;
   }
+
+  if (expression != res){
+    dfsch__copy_breakpoint_to_compiled_ast_node(expression, res);
+  }
+  return res;
 }
 
 void dfsch_compiler_declare_variable(dfsch_object_t* env,

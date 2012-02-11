@@ -1194,6 +1194,17 @@ void dfsch_clear_breakpoints(){
   breakpoint_table = NULL;
 }
 
+void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
+                                                 dfsch_object_t* dst){
+  breakpoint_entry_t* bp;
+  if (!breakpoint_table){
+    return;
+  }
+
+  bp = dfsch_eqhash_ref(breakpoint_table, src);
+  dfsch_eqhash_set(breakpoint_table, dst, bp);
+}
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
@@ -1761,6 +1772,17 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     if (compile_on_apply){
       if (!((closure_t*)proc)->compiled){
         if (((closure_t*)proc)->call_count == 0){
+          if (DFSCH_PAIR_P(((closure_t*)proc)->code) &&
+              DFSCH_UNLIKELY(breakpoint_table != NULL) &&
+              DFSCH_UNLIKELY(dfsch_eqhash_ref(breakpoint_table, 
+                                              DFSCH_FAST_CAR(((closure_t*)proc)
+                                                             ->code)) 
+                             != DFSCH_INVALID_OBJECT)){
+            /* do not compile functions with breakpoints on first line */
+            goto abort_compile; 
+          }
+
+
           if (myesc.reuse_frame){ /* tail call */
             args = dfsch_list_copy_immutable(args);
             /* On tail calls, arguments are in many cases in global scratchpad 
@@ -1772,6 +1794,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
         }
       }
     }
+
+  abort_compile:
 
     myesc.reuse_frame = env;
     destructure_impl(((closure_t*)proc)->args, args, env, ti);

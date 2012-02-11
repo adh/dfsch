@@ -235,6 +235,10 @@ dfsch_type_t dfsch_type_error_type =
 dfsch_type_t dfsch_runtime_error_type = 
   DFSCH_CONDITION_TYPE_INIT(DFSCH_ERROR_TYPE, "runtime-error");
 
+dfsch_type_t dfsch_breakpoint_condition_type = 
+  DFSCH_CONDITION_TYPE_INIT(DFSCH_CONDITION_TYPE, "breakpoint-condition");
+
+
 static int invoke_debugger_on_all_conditions = 0;
 
 static int recursive_lossage = 0;

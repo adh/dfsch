@@ -41,5 +41,8 @@ void dfsch_remove_traced_function(dfsch_object_t* func);
 void dfsch_clear_traced_functions();
 
 void dfsch_trace_function(dfsch_object_t* func);
+void dfsch_add_standard_breakpoint(dfsch_object_t* expr);
+void dfsch_add_function_breakpoint(dfsch_object_t* fun);
+
 
 #endif

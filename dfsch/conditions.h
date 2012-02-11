@@ -44,6 +44,9 @@ extern dfsch_type_t dfsch_condition_type;
 extern dfsch_type_t dfsch_serious_condition_type;
 #define DFSCH_SERIOUS_CONDITION_TYPE (&dfsch_serious_condition_type)
 
+extern dfsch_type_t dfsch_breakpoint_condition_type;
+#define DFSCH_BREAKPOINT_CONDITION_TYPE (&dfsch_breakpoint_condition_type)
+
 
 extern dfsch_type_t dfsch_warning_type;
 #define DFSCH_WARNING_TYPE (&dfsch_warning_type)
