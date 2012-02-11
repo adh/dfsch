@@ -1778,6 +1778,11 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
                                               DFSCH_FAST_CAR(((closure_t*)proc)
                                                              ->code)) 
                              != DFSCH_INVALID_OBJECT)){
+            dfsch_signal_warning_condition(DFSCH_WARNING_TYPE,
+                                           "leaving function with breakpoint on first form uncompiled",
+                                           "function", proc,
+                                           NULL);
+
             /* do not compile functions with breakpoints on first line */
             goto abort_compile; 
           }
