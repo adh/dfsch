@@ -249,6 +249,62 @@ dfsch_object_t* dfsch_describe_object(dfsch_object_t* obj){
                     dfsch_collected_list(lc));
 }
 
+static char* trace_indent(int level){
+  char* buf = "| | | | | | | | | | ";
+  if (level > 10){
+    return "| | ...................";
+  }
+  return buf + 2*(10 - level);
+}
+
+static int trace_level = 0;
+
+static void* default_trace_entry(void* discard,
+                                 dfsch_object_t* function,
+                                 dfsch_object_t* arguments,
+                                 dfsch_object_t* context){
+  fprintf(stderr, ";; %s+<< %s\n",
+          trace_indent(trace_level),
+          dfsch_object_2_string(function, 3, DFSCH_WRITE));
+  fprintf(stderr, ";; %s| \\  %s\n",
+          trace_indent(trace_level),
+          dfsch_object_2_string(arguments, 3, DFSCH_WRITE));
+  if (context){
+    fprintf(stderr, ";; %s|   ... with context %s\n",
+            trace_indent(trace_level),
+            dfsch_object_2_string(context, 3, DFSCH_WRITE));
+  }
+
+  trace_level++;
+
+
+  return dfsch_list_copy(arguments);
+}
+
+static void default_trace_exit(void* discard,
+                               dfsch_object_t* function,
+                               dfsch_object_t* result,
+                               dfsch_object_t* context,
+                               dfsch_object_t* saved_args){
+  trace_level --;
+  fprintf(stderr, ";; %s+>> %s\n",
+          trace_indent(trace_level),
+          dfsch_object_2_string(function, 3, DFSCH_WRITE));
+  fprintf(stderr, ";; %s  \\  %s -> %s\n",
+          trace_indent(trace_level),
+          dfsch_object_2_string(saved_args, 3, DFSCH_WRITE),
+          dfsch_object_2_string(result, 3, DFSCH_WRITE));
+
+}
+
+void dfsch_trace_function(dfsch_object_t* func){
+  dfsch_add_traced_function(func, 
+                            default_trace_entry, 
+                            default_trace_exit, 
+                            NULL);
+}
+
+
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){
   dfsch_object_t* proc;
@@ -406,6 +462,35 @@ DFSCH_DEFINE_PRIMITIVE(make_top_level_environment, 0){
 
   return dfsch_make_top_level_environment();
 }
+DFSCH_DEFINE_PRIMITIVE(trace_function, 
+                       "Add function to set of traced functions"){
+  dfsch_object_t* func;
+  DFSCH_OBJECT_ARG(args, func);
+
+  dfsch_trace_function(func);
+
+  return func;
+}
+DFSCH_DEFINE_PRIMITIVE(untrace_function, 
+                       "Remove function from set of traced functions"){
+  dfsch_object_t* func;
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_ARG_END(args);
+
+  dfsch_remove_traced_function(func);
+
+  return func;
+}
+
+DFSCH_DEFINE_PRIMITIVE(untrace_all_functions, 
+                       "Clear set of traced functions"){
+  DFSCH_ARG_END(args);
+
+  dfsch_clear_traced_functions();
+
+  return NULL;
+}
+
 
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
@@ -444,4 +529,12 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(make_empty_environment));
   dfsch_defcanon_cstr(env, "make-top-level-environment",
                     DFSCH_PRIMITIVE_REF(make_top_level_environment));
+
+  dfsch_defcanon_cstr(env, "trace-function!",
+                    DFSCH_PRIMITIVE_REF(trace_function));
+  dfsch_defcanon_cstr(env, "untrace-function!",
+                    DFSCH_PRIMITIVE_REF(untrace_function));
+  dfsch_defcanon_cstr(env, "untrace-all-functions!",
+                    DFSCH_PRIMITIVE_REF(untrace_all_functions));
+
 }
