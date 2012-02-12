@@ -34,6 +34,7 @@
 
 #include <dfsch/dfsch.h>
 #include <dfsch/conditions.h>
+#include <dfsch/introspect.h>
 #include <setjmp.h>
 
 #ifdef __cplusplus
@@ -107,6 +108,11 @@ extern "C" {
     int error_policy;
     dfsch_package_t* current_package;
     dfsch_object_t* macroexpanded_env;
+
+    dfsch_breakpoint_hook_t trace_hook;
+    void* trace_baton;
+    dfsch_breakpoint_hook_t user_trace_hook;
+    void* user_trace_baton;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();

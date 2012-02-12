@@ -1171,10 +1171,7 @@ void dfsch_add_breakpoint(dfsch_object_t* expr,
                           dfsch_breakpoint_hook_t hook,
                           void* baton){
   breakpoint_entry_t* entry = GC_NEW(breakpoint_entry_t);
-  if (!breakpoint_table){
-    breakpoint_table = GC_NEW(dfsch_eqhash_t);
-    dfsch_eqhash_init(breakpoint_table, 0);
-  }
+  dfsch__allocate_breakpoint_table();
 
   entry->hook = hook;
   entry->baton = baton;
@@ -1192,6 +1189,13 @@ void dfsch_remove_breakpoint(dfsch_object_t* expr){
 
 void dfsch_clear_breakpoints(){
   breakpoint_table = NULL;
+}
+
+void dfsch__allocate_breakpoint_table(){
+  if (!breakpoint_table){
+    breakpoint_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(breakpoint_table, 0);
+  }
 }
 
 void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
@@ -1218,13 +1222,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     return lookup_impl(exp, env, ti);
   }
 
-  if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
-    breakpoint_entry_t* bp = dfsch_eqhash_ref(breakpoint_table, exp);
-    if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
-      bp->hook(bp->baton, exp, env);
-    }
-  }
-
   if(DFSCH_PAIR_P(exp)){
     dfsch__stack_trace_frame_t sframe;
     dfsch_object_t* r;
@@ -1236,6 +1233,18 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     sframe.next = ti->stack_trace;
     ti->stack_trace = &sframe;
 
+    if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
+      breakpoint_entry_t* bp;
+      
+      if (DFSCH_UNLIKELY(ti->trace_hook)){
+        ti->trace_hook(ti->trace_baton, exp, env);
+      }
+      
+      bp = dfsch_eqhash_ref(breakpoint_table, exp);
+      if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
+        bp->hook(bp->baton, exp, env);
+      }
+    }
 
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);

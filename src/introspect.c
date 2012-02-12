@@ -325,6 +325,18 @@ void dfsch_add_function_breakpoint(dfsch_object_t* fun){
 
   dfsch_add_standard_breakpoint(DFSCH_FAST_CAR(f->code));
 }
+void dfsch_prepare_trace_trap(dfsch_breakpoint_hook_t hook,
+                              void* baton){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  ti->user_trace_hook = hook;
+  ti->user_trace_baton = baton;
+}
+void dfsch_prepare_single_step_breakpoint(){
+  dfsch_prepare_trace_trap(standard_breakpoint_hook, NULL);
+}
+int dfsch_have_trace_trap_p(){
+  return dfsch__get_thread_info()->user_trace_hook != NULL;
+}
 
 
 DFSCH_DEFINE_PRIMITIVE(set_debugger, 0){

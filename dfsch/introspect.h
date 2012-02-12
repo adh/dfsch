@@ -44,5 +44,9 @@ void dfsch_trace_function(dfsch_object_t* func);
 void dfsch_add_standard_breakpoint(dfsch_object_t* expr);
 void dfsch_add_function_breakpoint(dfsch_object_t* fun);
 
+void dfsch_prepare_trace_trap(dfsch_breakpoint_hook_t hook,
+                              void* baton);
+void dfsch_prepare_single_step_breakpoint();
+int dfsch_have_trace_trap_p();
 
 #endif

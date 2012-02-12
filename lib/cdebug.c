@@ -24,6 +24,7 @@
 #include <dfsch/conditions.h>
 #include <dfsch/introspect.h>
 #include <dfsch/util.h>
+#include <dfsch/magic.h>
 #include <stdio.h>
 #include <dfsch/lib/console.h>
 
@@ -98,6 +99,8 @@ static dfsch_object_t* cdebug_callback(dfsch_object_t *obj,  cdebug_ctx_t* ctx){
   return dfsch_eval(obj, ctx->env);
 }
 
+static dfsch_object_t debugger_exit = {DFSCH_INVALID_OBJECT_TYPE};
+
 static void command_variables(char* cmdline, cdebug_ctx_t* ctx){
   dfsch_inspect_object(ctx->bp_env);
 }
@@ -111,6 +114,15 @@ static void command_stack(char* cmdline, cdebug_ctx_t* ctx){
 static void command_condition(char* cmdline, cdebug_ctx_t* ctx){
   dfsch_inspect_object(ctx->reason);
 }
+static void command_step(char* cmdline, cdebug_ctx_t* ctx){
+  dfsch_prepare_single_step_breakpoint();
+  dfsch_throw(&debugger_exit, NULL);
+}
+static void command_continue(char* cmdline, cdebug_ctx_t* ctx){
+  dfsch_prepare_trace_trap(NULL, NULL);
+  dfsch_throw(&debugger_exit, NULL);
+}
+
 
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
@@ -172,6 +184,12 @@ static void debug_main(dfsch_object_t* reason){
   cmds = dfsch_console_add_command(cmds, "condition",
                                    "Inspect condition object",
                                    command_condition, &ctx);
+  cmds = dfsch_console_add_command(cmds, "step",
+                                   "Run program for single evaluator step",
+                                   command_step, &ctx);
+  cmds = dfsch_console_add_command(cmds, "continue",
+                                   "Run program without single stepping",
+                                   command_continue, &ctx);
 
 
   if (!ctx.bp_env){
@@ -203,9 +221,16 @@ static void debug_main(dfsch_object_t* reason){
     fprintf(stderr, "EOF to continue, ;disable to remove breakpoint, ;help for more commands\n");
   }
   
-  dfsch_console_run_repl_eval(dfsch_saprintf("dbg%d> ", 
-                                             dfsch_get_debugger_depth()), 
-                              cdebug_callback, &ctx, cmds);
+  if (dfsch_have_trace_trap_p()){
+    fprintf(stderr, "Program has trace trap, type ;continue to disable\n");
+  }
+
+  DFSCH_CATCH_BEGIN(&debugger_exit){
+    dfsch_console_run_repl_eval(dfsch_saprintf("dbg%d> ", 
+                                               dfsch_get_debugger_depth()), 
+                                cdebug_callback, &ctx, cmds);
+  } DFSCH_CATCH {
+  } DFSCH_CATCH_END;
 }
 
 void dfsch_cdebug_enter_debugger(dfsch_object_t* reason){

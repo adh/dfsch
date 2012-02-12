@@ -94,6 +94,9 @@ void dfsch_handler_bind(dfsch_type_t* type,
 dfsch_object_t* dfsch_compute_restarts();
 dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
                                      dfsch_object_t* args);
+dfsch_object_t* dfsch_invoke_restart_cstr(char* restart,
+                                          dfsch_object_t* args);
+
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag);
 dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag);

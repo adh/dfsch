@@ -64,6 +64,7 @@ dfsch_object_t* dfsch__reclose_closure(dfsch_object_t* closure,
                                        environment_t* env);
 void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
                                                  dfsch_object_t* dst);
+void dfsch__allocate_breakpoint_table();
 
 
 #endif

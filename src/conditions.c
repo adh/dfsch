@@ -361,6 +361,10 @@ static int debugger_depth = 0;
 static pthread_mutex_t debugger_depth_mutex= PTHREAD_MUTEX_INITIALIZER;
 
 void dfsch_enter_debugger(dfsch_object_t* reason){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch_breakpoint_hook_t old_user_trace_hook;
+  void* old_user_trace_baton;
+
   pthread_mutex_lock(&debugger_depth_mutex);
   if (debugger_depth > max_debugger_recursion){
     pthread_mutex_unlock(&debugger_depth_mutex);
@@ -370,11 +374,26 @@ void dfsch_enter_debugger(dfsch_object_t* reason){
   debugger_depth++;
   pthread_mutex_unlock(&debugger_depth_mutex);
 
+  old_user_trace_hook = ti->user_trace_hook;
+  old_user_trace_baton = ti->user_trace_baton;
+  ti->user_trace_hook = ti->trace_hook;
+  ti->user_trace_baton = ti->trace_baton;
+  ti->trace_hook = NULL;
+  ti->trace_baton = NULL;
+
   DFSCH_UNWIND {
     if (debugger_proc){
       dfsch_apply(debugger_proc, dfsch_cons(reason, NULL));
     }
   } DFSCH_PROTECT {
+    ti->trace_hook = ti->user_trace_hook;
+    ti->trace_baton = ti->user_trace_baton;
+    ti->user_trace_hook = old_user_trace_hook;
+    ti->user_trace_baton = old_user_trace_baton;
+    if (ti->trace_hook){
+      dfsch__allocate_breakpoint_table();
+    }
+
     pthread_mutex_lock(&debugger_depth_mutex);
     debugger_depth--;
     pthread_mutex_unlock(&debugger_depth_mutex);
@@ -570,7 +589,12 @@ dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
 
   return dfsch_apply(r->proc, args);
 }
-
+dfsch_object_t* dfsch_invoke_restart_cstr(char* restart, 
+                                          dfsch_object_t* args){
+  return dfsch_invoke_restart(dfsch_intern_symbol(DFSCH_DFSCH_PACKAGE, 
+                                                  restart), 
+                              args);
+}
 
 static dfsch_object_t* throw_proc(dfsch_object_t* tag,
                                   dfsch_object_t* args,
