@@ -63,11 +63,13 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
 }
 
 static void prettyprint_locals(dfsch_object_t* env){
-  dfsch_object_t* i = dfsch_get_environment_variables(env);
+  dfsch_object_t* i;
   dfsch_object_t* j;
   int count = 0;
 
  next_frame:
+
+  i = dfsch_sort_description_slots(dfsch_get_environment_variables(env));
 
   while (DFSCH_PAIR_P(i)){
     j = DFSCH_FAST_CAR(i);
@@ -93,7 +95,6 @@ static void prettyprint_locals(dfsch_object_t* env){
         fprintf(stderr, "      ... top level scope variables ommited\n");
       } else {
         fprintf(stderr, "  -- in next outer scope --\n");
-        i = dfsch_get_environment_variables(env);
         goto next_frame;
       }
     }
