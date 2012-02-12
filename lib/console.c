@@ -448,6 +448,11 @@ int dfsch_console_read_objects_parser(char* prompt,
     running_prompt = NULL;
     running_cmds = NULL;
   } DFSCH_PROTECT_END;
+
+  if (!line){
+    printf("EOF\n");
+  }
+
   return ret;
 }
 int dfsch_console_read_objects_list_parser(char* prompt,

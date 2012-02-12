@@ -62,18 +62,41 @@ static void prettyprint_condition_fields(dfsch_object_t* fields){
   
 }
 
-static void prettyprint_locals(dfsch_object_t* locals){
-  dfsch_object_t* i = locals;
+static void prettyprint_locals(dfsch_object_t* env){
+  dfsch_object_t* i = dfsch_get_environment_variables(env);
   dfsch_object_t* j;
+  int count = 0;
+
+ next_frame:
+
   while (DFSCH_PAIR_P(i)){
     j = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(j)){
       return;
     }
+    count++;
+    if (count == 16){
+      fprintf(stderr, "      ... use ;variables to inspect more\n");
+      return;
+    }
+
     fprintf(stderr, "    %s: %s\n" ,
             dfsch_object_2_string(dfsch_list_item(j, 0), 10, 1),
             dfsch_object_2_string(dfsch_list_item(j, 1), 10, 1));
+  }
+
+  if (count < 12){
+    env = dfsch_get_parent_frame(env);
+    if (env){
+      if (!dfsch_get_parent_frame(env)){
+        fprintf(stderr, "      ... top level scope variables ommited\n");
+      } else {
+        fprintf(stderr, "  -- in next outer scope --\n");
+        i = dfsch_get_environment_variables(env);
+        goto next_frame;
+      }
+    }
   }
   
 }
@@ -109,6 +132,9 @@ static void command_disable(char* cmdline, cdebug_ctx_t* ctx){
 }
 
 static void command_stack(char* cmdline, cdebug_ctx_t* ctx){
+  fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_trace(ctx->ustack));
+}
+static void command_inspect_stack(char* cmdline, cdebug_ctx_t* ctx){
   dfsch_inspect_object(ctx->ustack);
 }
 static void command_condition(char* cmdline, cdebug_ctx_t* ctx){
@@ -133,6 +159,8 @@ static void debug_main(dfsch_object_t* reason){
   int i;
   dfsch_console_repl_command_t* cmds = NULL;
 
+  fflush(stdout);
+
   if (!debugger_env){
     debugger_env = dfsch_make_top_level_environment();
     dfsch_introspect_register(debugger_env);
@@ -155,13 +183,14 @@ static void debug_main(dfsch_object_t* reason){
                                                           "environment");
 
       ctx.bp_env = bp_env;
-      fprintf(stderr, "breakpoint on %s:\n",
+      fprintf(stderr, "Program stopped on breakpoint:\n  %s\n",
               dfsch_object_2_string(dfsch_condition_field_cstr(reason,
                                                                "expression"),
                                     10, 0));
       dfsch_define_cstr(env, "environment", bp_env);
       fprintf(stderr, "\nLocal variables:\n");
-      prettyprint_locals(dfsch_get_environment_variables(bp_env));
+      prettyprint_locals(bp_env);
+      fprintf(stderr, "\n");
     } else {
       fprintf(stderr, "debugger invoked on %s:\n",
               DFSCH_TYPE_OF(reason)->name);
@@ -170,17 +199,23 @@ static void debug_main(dfsch_object_t* reason){
                                                                "message"),
                                     10, 0));
       prettyprint_condition_fields(dfsch_condition_fields(reason));
+
+      fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_trace(ustack));
     }
   } else {
     fprintf(stderr,"debugger invoked on:\n  %s\n", 
             dfsch_object_2_string(reason, 10, 1));
+
+    fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_trace(ustack));
   }
 
-  fprintf(stderr, "\nstack trace:\n%s\n", dfsch_format_trace(ustack));
 
   cmds = dfsch_console_add_command(cmds, "stack",
-                                   "Inspect stack trace",
+                                   "Show stack trace",
                                    command_stack, &ctx);
+  cmds = dfsch_console_add_command(cmds, "inspect-stack",
+                                   "Inspect stack trace",
+                                   command_inspect_stack, &ctx);
   cmds = dfsch_console_add_command(cmds, "condition",
                                    "Inspect condition object",
                                    command_condition, &ctx);
