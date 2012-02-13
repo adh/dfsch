@@ -31,6 +31,9 @@ static void init_state(inspector_state_t*is){
 static void update_state(inspector_state_t* is, dfsch_object_t* obj){
   dfsch_object_t* desc = dfsch_describe_object(obj);
   
+  dfsch_define_cstr(is->env, "object", obj);
+  dfsch_define_cstr(is->env, "description", desc);
+
   is->description = dfsch_string_to_cstr(dfsch_car(desc));
   is->slot_list = dfsch_cdr(desc);
   dfsch_defcanon_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
@@ -139,10 +142,10 @@ static void command_pop(char* cmdline, inspector_state_t* is){
   redisplay_object(is);
 }
 
-
 static void inspect_object(dfsch_object_t* obj){
   inspector_state_t is;
   dfsch_console_repl_command_t* cmds = NULL;
+  dfsch_object_t* env;
   init_state(&is);
   push_object(&is, obj);
   redisplay_object(&is);

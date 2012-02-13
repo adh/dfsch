@@ -964,6 +964,11 @@ dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   return res;
 }
+dfsch_object_t* dfsch_get_parent_frame(dfsch_object_t* env){
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  return e->parent;
+}
+
 dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                            dfsch_type_t* klass){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
@@ -1171,10 +1176,7 @@ void dfsch_add_breakpoint(dfsch_object_t* expr,
                           dfsch_breakpoint_hook_t hook,
                           void* baton){
   breakpoint_entry_t* entry = GC_NEW(breakpoint_entry_t);
-  if (!breakpoint_table){
-    breakpoint_table = GC_NEW(dfsch_eqhash_t);
-    dfsch_eqhash_init(breakpoint_table, 0);
-  }
+  dfsch__allocate_breakpoint_table();
 
   entry->hook = hook;
   entry->baton = baton;
@@ -1194,6 +1196,24 @@ void dfsch_clear_breakpoints(){
   breakpoint_table = NULL;
 }
 
+void dfsch__allocate_breakpoint_table(){
+  if (!breakpoint_table){
+    breakpoint_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(breakpoint_table, 0);
+  }
+}
+
+void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
+                                                 dfsch_object_t* dst){
+  breakpoint_entry_t* bp;
+  if (!breakpoint_table){
+    return;
+  }
+
+  bp = dfsch_eqhash_ref(breakpoint_table, src);
+  dfsch_eqhash_set(breakpoint_table, dst, bp);
+}
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
@@ -1207,13 +1227,6 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     return lookup_impl(exp, env, ti);
   }
 
-  if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
-    breakpoint_entry_t* bp = dfsch_eqhash_ref(breakpoint_table, exp);
-    if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
-      bp->hook(bp->baton, exp, env);
-    }
-  }
-
   if(DFSCH_PAIR_P(exp)){
     dfsch__stack_trace_frame_t sframe;
     dfsch_object_t* r;
@@ -1225,6 +1238,18 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     sframe.next = ti->stack_trace;
     ti->stack_trace = &sframe;
 
+    if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
+      breakpoint_entry_t* bp;
+      
+      if (DFSCH_UNLIKELY(ti->trace_hook)){
+        ti->trace_hook(ti->trace_baton, exp, env);
+      }
+      
+      bp = dfsch_eqhash_ref(breakpoint_table, exp);
+      if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
+        bp->hook(bp->baton, exp, env);
+      }
+    }
 
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
@@ -1761,6 +1786,22 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     if (compile_on_apply){
       if (!((closure_t*)proc)->compiled){
         if (((closure_t*)proc)->call_count == 0){
+          if (DFSCH_PAIR_P(((closure_t*)proc)->code) &&
+              DFSCH_UNLIKELY(breakpoint_table != NULL) &&
+              DFSCH_UNLIKELY(dfsch_eqhash_ref(breakpoint_table, 
+                                              DFSCH_FAST_CAR(((closure_t*)proc)
+                                                             ->code)) 
+                             != DFSCH_INVALID_OBJECT)){
+            dfsch_signal_warning_condition(DFSCH_WARNING_TYPE,
+                                           "leaving function with breakpoint on first form uncompiled",
+                                           "function", proc,
+                                           NULL);
+
+            /* do not compile functions with breakpoints on first line */
+            goto abort_compile; 
+          }
+
+
           if (myesc.reuse_frame){ /* tail call */
             args = dfsch_list_copy_immutable(args);
             /* On tail calls, arguments are in many cases in global scratchpad 
@@ -1772,6 +1813,8 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
         }
       }
     }
+
+  abort_compile:
 
     myesc.reuse_frame = env;
     destructure_impl(((closure_t*)proc)->args, args, env, ti);

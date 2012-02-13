@@ -520,6 +520,7 @@ extern "C" {
                            unsigned short flags);
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_get_parent_frame(dfsch_object_t* env);
 
   extern dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                                     dfsch_type_t* klass);

@@ -44,6 +44,9 @@ extern dfsch_type_t dfsch_condition_type;
 extern dfsch_type_t dfsch_serious_condition_type;
 #define DFSCH_SERIOUS_CONDITION_TYPE (&dfsch_serious_condition_type)
 
+extern dfsch_type_t dfsch_breakpoint_condition_type;
+#define DFSCH_BREAKPOINT_CONDITION_TYPE (&dfsch_breakpoint_condition_type)
+
 
 extern dfsch_type_t dfsch_warning_type;
 #define DFSCH_WARNING_TYPE (&dfsch_warning_type)
@@ -91,6 +94,9 @@ void dfsch_handler_bind(dfsch_type_t* type,
 dfsch_object_t* dfsch_compute_restarts();
 dfsch_object_t* dfsch_invoke_restart(dfsch_object_t* restart,
                                      dfsch_object_t* args);
+dfsch_object_t* dfsch_invoke_restart_cstr(char* restart,
+                                          dfsch_object_t* args);
+
 
 dfsch_object_t* dfsch_make_throw_proc(dfsch_object_t* catch_tag);
 dfsch_object_t* dfsch_make_throw_proc_arg(dfsch_object_t* catch_tag);
