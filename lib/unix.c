@@ -19,6 +19,8 @@
  *
  */
 
+#define _XOPEN_SOURCE 500
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -29,6 +31,7 @@
 #include <dfsch/load.h>
 #include <dfsch/conditions.h>
 #include <dfsch/random.h>
+#include <dfsch/magic.h>
 
 #include "src/util.h"
 
@@ -46,6 +49,7 @@
 #include <time.h>
 #include <sys/mman.h>
 #include <syslog.h>
+#include <ftw.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -676,6 +680,114 @@ DFSCH_DEFINE_PRIMITIVE(setlogmask, NULL){
   return NULL;
 }
 
+static pthread_mutex_t ftw_mutex;
+static dfsch_object_t* ftw_fun;
+static pthread_once_t ftw_mutex_once = PTHREAD_ONCE_INIT;
+
+static void ftw_mutex_init(){
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&ftw_mutex, &attr);
+  pthread_mutexattr_destroy(&attr);
+}
+
+static void ftw_enter(){
+  pthread_once(&ftw_mutex_once, ftw_mutex_init);
+  pthread_mutex_lock(&ftw_mutex);
+}
+
+static void ftw_leave(){
+  pthread_mutex_unlock(&ftw_mutex);
+}
+
+static int ftw_cb(const char *fpath, const struct stat *sb,
+                  int typeflag, struct FTW *ftwbuf){
+  dfsch_object_t* tfo;
+  int ret;
+
+  switch (typeflag){
+  case FTW_F:
+    tfo = dfsch_make_keyword("FTW_F");
+    break;
+  case FTW_D:
+    tfo = dfsch_make_keyword("FTW_D");
+    break;
+  case FTW_DNR:
+    tfo = dfsch_make_keyword("FTW_DNR");
+    break;
+  case FTW_NS:
+    tfo = dfsch_make_keyword("FTW_NS");
+    break;
+  case FTW_DP:
+    tfo = dfsch_make_keyword("FTW_DP");
+    break;
+  case FTW_SL:
+    tfo = dfsch_make_keyword("FTW_SL");
+    break;
+  case FTW_SLN:
+    tfo = dfsch_make_keyword("FTW_SLN");
+    break;
+  default:
+    tfo = dfsch_make_number_from_long(typeflag);
+  }
+
+  DFSCH_SCATCH_BEGIN {
+    ret = (dfsch_apply(ftw_fun,
+                       dfsch_list(5, 
+                                  dfsch_make_string_cstr(fpath),
+                                  dfsch_os_cons_stat_struct(sb),
+                                  tfo,
+                                  dfsch_make_number_from_long(ftwbuf->base),
+                                  dfsch_make_number_from_long(ftwbuf->base))) 
+           == NULL) ? 0 : 1;
+  } DFSCH_SCATCH {
+    ret = -1;
+  } DFSCH_SCATCH_END;
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(nftw, NULL){
+  char* dirpath;
+  dfsch_object_t* fun;
+  int nopenfd;
+  int flags = 0;
+  int res;
+  dfsch_object_t* old_fun;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  DFSCH_STRING_ARG(args, dirpath);
+  DFSCH_OBJECT_ARG(args, fun);
+  DFSCH_LONG_ARG(args, nopenfd);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("chdir", FTW_CHDIR, flags);
+  DFSCH_FLAG_SET("depth", FTW_DEPTH, flags);
+  DFSCH_FLAG_SET("mount", FTW_MOUNT, flags);
+  DFSCH_FLAG_SET("phys", FTW_PHYS, flags);
+  DFSCH_FLAG_PARSER_END(args);
+
+  ftw_enter();
+  old_fun = ftw_fun;
+  ftw_fun = fun;
+
+  DFSCH_UNWIND {
+    res = nftw(dirpath, ftw_cb, nopenfd, flags);
+    if (ti->throw_tag){
+      dfsch__continue_unwind(ti);
+    }
+    if (res == -1){
+      dfsch_operating_system_error("nftw");      
+    }
+
+  } DFSCH_PROTECT {
+    ftw_fun = old_fun;
+    ftw_leave();
+  } DFSCH_PROTECT_END;
+  
+  return NULL;
+}
+
 
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
@@ -764,6 +876,8 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                     DFSCH_PRIMITIVE_REF(syslog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setlogmask", 
                     DFSCH_PRIMITIVE_REF(setlogmask));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nftw", 
+                    DFSCH_PRIMITIVE_REF(nftw));
   
   dfsch_provide(ctx, "unix");
 

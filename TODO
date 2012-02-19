@@ -12,7 +12,7 @@ Sometimes:
 * Unicode
    - Normalization
    - Collation
-* Missing parts of unix library (ftw, various system databases...)
+* Missing parts of unix library (various system databases...)
 
 External modules and libraries:
 * Sound I/O

@@ -202,6 +202,15 @@ dfsch_object_t* dfsch_os_make_stat_struct(){
   return dfsch_make_object(&stat_type);
 }
 
+dfsch_object_t* dfsch_os_cons_stat_struct(struct stat* orig){
+  dfsch_object_t* stat = dfsch_os_make_stat_struct();
+
+  memcpy(dfsch_os_get_stat(stat), orig, sizeof(struct stat));
+
+  return stat;
+}
+
+
 struct stat* dfsch_os_get_stat(dfsch_object_t* stat){
   if (DFSCH_TYPE_OF(stat) != &stat_type){
     dfsch_error("Not a stat struct", stat);
