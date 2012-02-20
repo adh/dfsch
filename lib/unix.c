@@ -50,6 +50,7 @@
 #include <sys/mman.h>
 #include <syslog.h>
 #include <ftw.h>
+#include <pwd.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -788,6 +789,79 @@ DFSCH_DEFINE_PRIMITIVE(nftw, NULL){
   return NULL;
 }
 
+typedef struct passwd_object_t {
+  dfsch_type_t* type;
+  char   *pw_name;       /* username */
+  char   *pw_passwd;     /* user password */
+  long    pw_uid;        /* user ID */
+  long    pw_gid;        /* group ID */
+  char   *pw_gecos;      /* user information */
+  char   *pw_dir;        /* home directory */
+  char   *pw_shell;      /* shell program */
+} passwd_object_t;
+
+static void passwd_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_with_slots(state, obj);
+}
+
+static dfsch_slot_t passwd_slots[] = {
+  DFSCH_STRING_SLOT(passwd_object_t, pw_name, DFSCH_SLOT_ACCESS_RO,
+                    "User name"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_passwd, DFSCH_SLOT_ACCESS_RO,
+                    "User password"),
+  DFSCH_LONG_SLOT(passwd_object_t, pw_uid, DFSCH_SLOT_ACCESS_RO,
+                  "User ID"),
+  DFSCH_LONG_SLOT(passwd_object_t, pw_uid, DFSCH_SLOT_ACCESS_RO,
+                  "Primary group ID"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_gecos, DFSCH_SLOT_ACCESS_RO,
+                    "User information"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_dir, DFSCH_SLOT_ACCESS_RO,
+                    "Home directory"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_shell, DFSCH_SLOT_ACCESS_RO,
+                    "User shell"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static dfsch_type_t passwd_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "unix:passwd",
+  .size = sizeof(passwd_object_t),
+  .slots = passwd_slots,
+  .write = passwd_write,
+};
+
+static dfsch_object_t* cons_passwd(struct passwd *pwd){
+  passwd_object_t* obj = dfsch_make_object(&passwd_type);
+  obj->pw_name = dfsch_stracpy(pwd->pw_name);
+  obj->pw_passwd = dfsch_stracpy(pwd->pw_passwd);
+  obj->pw_uid = pwd->pw_uid;
+  obj->pw_gid = pwd->pw_gid;
+  obj->pw_gecos = dfsch_stracpy(pwd->pw_gecos);
+  obj->pw_dir = dfsch_stracpy(pwd->pw_dir);
+  obj->pw_shell = dfsch_stracpy(pwd->pw_shell);
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getpwnam, "Get user record by user name"){
+  char* name;
+  struct passwd* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getpwnam(name);
+  if (!res){
+    dfsch_unlock_libc();
+    dfsch_operating_system_error("getpwnam");
+  }
+  ret = cons_passwd(res);
+  dfsch_unlock_libc();
+
+  return ret;
+}
 
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
@@ -796,88 +870,94 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_require(ctx, "os", NULL);
 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "passwd", &passwd_type);
+
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "crypt", 
-                    DFSCH_PRIMITIVE_REF(crypt));
+                         DFSCH_PRIMITIVE_REF(crypt));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchdir", 
-                    DFSCH_PRIMITIVE_REF(fchdir));
+                         DFSCH_PRIMITIVE_REF(fchdir));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chmod", 
-                    DFSCH_PRIMITIVE_REF(chmod));
+                         DFSCH_PRIMITIVE_REF(chmod));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchmod", 
-                    DFSCH_PRIMITIVE_REF(fchmod));
+                         DFSCH_PRIMITIVE_REF(fchmod));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chown", 
-                    DFSCH_PRIMITIVE_REF(chown));
+                         DFSCH_PRIMITIVE_REF(chown));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchown", 
-                    DFSCH_PRIMITIVE_REF(fchown));
+                         DFSCH_PRIMITIVE_REF(fchown));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fork", 
-                    DFSCH_PRIMITIVE_REF(fork));
+                         DFSCH_PRIMITIVE_REF(fork));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getegid", 
-                    DFSCH_PRIMITIVE_REF(getegid));
+                         DFSCH_PRIMITIVE_REF(getegid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "geteuid", 
-                    DFSCH_PRIMITIVE_REF(geteuid));
+                         DFSCH_PRIMITIVE_REF(geteuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgid", 
-                    DFSCH_PRIMITIVE_REF(getgid));
+                         DFSCH_PRIMITIVE_REF(getgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getuid", 
-                    DFSCH_PRIMITIVE_REF(getuid));
+                         DFSCH_PRIMITIVE_REF(getuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgid", 
-                    DFSCH_PRIMITIVE_REF(getpgid));
+                         DFSCH_PRIMITIVE_REF(getpgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgrp", 
-                    DFSCH_PRIMITIVE_REF(getpgrp));
+                         DFSCH_PRIMITIVE_REF(getpgrp));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getsid", 
-                    DFSCH_PRIMITIVE_REF(getsid));
+                         DFSCH_PRIMITIVE_REF(getsid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpid", 
-                    DFSCH_PRIMITIVE_REF(getpid));
+                         DFSCH_PRIMITIVE_REF(getpid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getppid", 
-                    DFSCH_PRIMITIVE_REF(getppid));
+                         DFSCH_PRIMITIVE_REF(getppid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "kill", 
-                    DFSCH_PRIMITIVE_REF(kill));
+                         DFSCH_PRIMITIVE_REF(kill));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "killpg", 
-                    DFSCH_PRIMITIVE_REF(killpg));
+                         DFSCH_PRIMITIVE_REF(killpg));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "link", 
-                    DFSCH_PRIMITIVE_REF(link));
+                         DFSCH_PRIMITIVE_REF(link));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "lstat", 
-                    DFSCH_PRIMITIVE_REF(lstat));
+                         DFSCH_PRIMITIVE_REF(lstat));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mkfifo", 
-                    DFSCH_PRIMITIVE_REF(mkfifo));
+                         DFSCH_PRIMITIVE_REF(mkfifo));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nice", 
-                    DFSCH_PRIMITIVE_REF(nice));
+                         DFSCH_PRIMITIVE_REF(nice));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "pipe", 
-                    DFSCH_PRIMITIVE_REF(pipe));
+                         DFSCH_PRIMITIVE_REF(pipe));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setegid", 
-                    DFSCH_PRIMITIVE_REF(setegid));
+                         DFSCH_PRIMITIVE_REF(setegid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "seteuid", 
-                    DFSCH_PRIMITIVE_REF(seteuid));
+                         DFSCH_PRIMITIVE_REF(seteuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setgid", 
-                    DFSCH_PRIMITIVE_REF(setgid));
+                         DFSCH_PRIMITIVE_REF(setgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setuid", 
-                    DFSCH_PRIMITIVE_REF(setuid));
+                         DFSCH_PRIMITIVE_REF(setuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgid", 
-                    DFSCH_PRIMITIVE_REF(setpgid));
+                         DFSCH_PRIMITIVE_REF(setpgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgrp", 
-                    DFSCH_PRIMITIVE_REF(setpgrp));
+                         DFSCH_PRIMITIVE_REF(setpgrp));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setsid", 
-                    DFSCH_PRIMITIVE_REF(setsid));
+                         DFSCH_PRIMITIVE_REF(setsid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "symlink", 
-                    DFSCH_PRIMITIVE_REF(symlink));
+                         DFSCH_PRIMITIVE_REF(symlink));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "sync", 
-                    DFSCH_PRIMITIVE_REF(sync));
+                         DFSCH_PRIMITIVE_REF(sync));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "wait", 
-                    DFSCH_PRIMITIVE_REF(wait));
+                         DFSCH_PRIMITIVE_REF(wait));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "waitpid", 
-                    DFSCH_PRIMITIVE_REF(waitpid));
+                         DFSCH_PRIMITIVE_REF(waitpid));
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mmap", 
-                    DFSCH_PRIMITIVE_REF(mmap));
+                         DFSCH_PRIMITIVE_REF(mmap));
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "openlog", 
-                    DFSCH_PRIMITIVE_REF(openlog));
+                         DFSCH_PRIMITIVE_REF(openlog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "closelog", 
-                    DFSCH_PRIMITIVE_REF(closelog));
+                         DFSCH_PRIMITIVE_REF(closelog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "syslog", 
-                    DFSCH_PRIMITIVE_REF(syslog));
+                         DFSCH_PRIMITIVE_REF(syslog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setlogmask", 
-                    DFSCH_PRIMITIVE_REF(setlogmask));
+                         DFSCH_PRIMITIVE_REF(setlogmask));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nftw", 
-                    DFSCH_PRIMITIVE_REF(nftw));
+                         DFSCH_PRIMITIVE_REF(nftw));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwnam", 
+                         DFSCH_PRIMITIVE_REF(getpwnam));
+
   
   dfsch_provide(ctx, "unix");
 
