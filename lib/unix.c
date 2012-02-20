@@ -891,6 +891,37 @@ DFSCH_DEFINE_PRIMITIVE(getpwuid, "Get user record by user ID"){
   return ret;
 }
 
+DFSCH_DEFINE_PRIMITIVE(getpwents, "Get all user records"){
+  struct passwd* res;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  setpwent();
+ 
+  errno = 0;
+  for (;;){
+    res = getpwent();
+    if (!res){
+      if (errno != 0){
+        int err = errno;
+        endpwent();
+        dfsch_unlock_libc();
+        dfsch_operating_system_error_saved(err, "getpwent");
+      } else {
+        break;
+      }
+    }
+    dfsch_list_collect(lc, cons_passwd(res));
+  }
+  endpwent();
+  dfsch_unlock_libc();
+
+  return dfsch_collected_list(lc);
+}
+
+
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
                                                  "UNIX-specific system "
@@ -987,6 +1018,8 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                          DFSCH_PRIMITIVE_REF(getpwnam));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwuid", 
                          DFSCH_PRIMITIVE_REF(getpwuid));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwents", 
+                         DFSCH_PRIMITIVE_REF(getpwents));
 
   
   dfsch_provide(ctx, "unix");
