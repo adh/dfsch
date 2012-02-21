@@ -12,7 +12,6 @@ Sometimes:
 * Unicode
    - Normalization
    - Collation
-* Missing parts of unix library (various system databases...)
 
 External modules and libraries:
 * Sound I/O

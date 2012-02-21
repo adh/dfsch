@@ -427,7 +427,6 @@ apply_standard_generic_function(standard_generic_function_t* function,
 
   while (i < function->longest_spec_list && DFSCH_PAIR_P(j)){
     cache_keys[i] = DFSCH_TYPE_OF(DFSCH_FAST_CAR(j));
-    //    printf(";; [%d] = %s\n", i, dfsch_object_2_string(cache_keys[i], 100, 100));
     i++;
     j = DFSCH_FAST_CDR(j);
   }
