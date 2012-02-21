@@ -51,6 +51,7 @@
 #include <syslog.h>
 #include <ftw.h>
 #include <pwd.h>
+#include <grp.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -922,6 +923,132 @@ DFSCH_DEFINE_PRIMITIVE(getpwents, "Get all user records"){
 }
 
 
+typedef struct group_object_t {
+  dfsch_type_t* type;
+  char   *gr_name;       /* group name */
+  gid_t   gr_gid;        /* group ID */
+  dfsch_object_t* *gr_mem;        /* group members */
+} group_object_t;
+
+static void group_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_with_slots(state, obj);
+}
+
+static dfsch_slot_t group_slots[] = {
+  DFSCH_STRING_SLOT(group_object_t, gr_name, DFSCH_SLOT_ACCESS_RO,
+                    "Group name"),
+  DFSCH_LONG_SLOT(group_object_t, gr_gid, DFSCH_SLOT_ACCESS_RO,
+                  "Group ID"),
+  DFSCH_OBJECT_SLOT(group_object_t, gr_mem, DFSCH_SLOT_ACCESS_RO,
+                    "Group members"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static dfsch_type_t group_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "unix:group",
+  .size = sizeof(group_object_t),
+  .slots = group_slots,
+  .write = group_write,
+};
+
+static dfsch_object_t* cons_group(struct group *grp){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  group_object_t* obj = dfsch_make_object(&group_type);
+  char** i = grp->gr_mem;
+  obj->gr_name = dfsch_stracpy(grp->gr_name);
+  obj->gr_gid = grp->gr_gid;
+  
+  while (*i){
+    dfsch_list_collect(lc, dfsch_make_string_cstr(*i));
+    i++;
+  }
+
+  obj->gr_mem = dfsch_collected_list(lc);
+
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrnam, "Get group record by group name"){
+  char* name;
+  struct group* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getgrnam(name);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getgrnam");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_group(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrgid, "Get group record by group ID"){
+  long uid;
+  struct group* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_LONG_ARG_OPT(args, uid, getgid());
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getgrgid(uid);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getgrgid");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_group(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrents, "Get all group records"){
+  struct group* res;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  setgrent();
+ 
+  errno = 0;
+  for (;;){
+    res = getgrent();
+    if (!res){
+      if (errno != 0){
+        int err = errno;
+        endgrent();
+        dfsch_unlock_libc();
+        dfsch_operating_system_error_saved(err, "getgrent");
+      } else {
+        break;
+      }
+    }
+    dfsch_list_collect(lc, cons_group(res));
+  }
+  endgrent();
+  dfsch_unlock_libc();
+
+  return dfsch_collected_list(lc);
+}
+
+
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
                                                  "UNIX-specific system "
@@ -929,7 +1056,8 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_require(ctx, "os", NULL);
 
-  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "passwd", &passwd_type);
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "<passwd>", &passwd_type);
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "<group>", &group_type);
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "crypt", 
                          DFSCH_PRIMITIVE_REF(crypt));
@@ -1020,6 +1148,13 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                          DFSCH_PRIMITIVE_REF(getpwuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwents", 
                          DFSCH_PRIMITIVE_REF(getpwents));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrnam", 
+                         DFSCH_PRIMITIVE_REF(getgrnam));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrgid", 
+                         DFSCH_PRIMITIVE_REF(getgrgid));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrents", 
+                         DFSCH_PRIMITIVE_REF(getgrents));
 
   
   dfsch_provide(ctx, "unix");
