@@ -1048,6 +1048,31 @@ DFSCH_DEFINE_PRIMITIVE(getgrents, "Get all group records"){
   return dfsch_collected_list(lc);
 }
 
+DFSCH_DEFINE_PRIMITIVE(getgroups,
+		       "Get list of supplementary group IDs of current process"){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  int size;
+  int i;
+  gid_t* list;
+  DFSCH_ARG_END(args);
+
+  size = getgroups(0, NULL);
+  if (size < 0){
+    dfsch_operating_system_error("getgroups");
+  }
+  list = malloc(sizeof(gid_t) * size);
+  if (getgroups(size, list) < 0){
+    int err = errno;
+    free(list);
+    dfsch_operating_system_error_saved(err, "getgroups");
+  }
+  
+  for (i = 0; i < size; i++){
+    dfsch_list_collect(lc, dfsch_make_number_from_long(list[i]));
+  }
+
+  return dfsch_collected_list(lc);
+}
 
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
@@ -1155,6 +1180,9 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
                          DFSCH_PRIMITIVE_REF(getgrgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrents", 
                          DFSCH_PRIMITIVE_REF(getgrents));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgroups", 
+                         DFSCH_PRIMITIVE_REF(getgroups));
 
   
   dfsch_provide(ctx, "unix");
