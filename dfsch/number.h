@@ -73,6 +73,8 @@ extern "C" {
   extern double dfsch_number_to_double(dfsch_object_t *n);
   /** Returns value of given number as long. */
   extern long dfsch_number_to_long(dfsch_object_t *n);
+  /** Returns value of given number as unsigned long. */
+  extern unsigned long dfsch_number_to_ulong(dfsch_object_t *n);
   /** Returns value of given number as int64_t. */
   extern int64_t dfsch_number_to_int64(dfsch_object_t *n);
   extern uint64_t dfsch_number_to_uint64(dfsch_object_t *n);
@@ -167,10 +169,21 @@ dfsch_object_t* dfsch_number_lognot(dfsch_object_t* a);
 #define DFSCH_LONG_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, long, dfsch_number_to_long)
 
+#define DFSCH_ULONG_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, unsigned long, dfsch_number_to_ulong)
+#define DFSCH_ULONG_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, unsigned long, dfsch_number_to_ulong)
+
+
 #define DFSCH_INT64_ARG(al, name) \
-  DFSCH_GENERIC_ARG(al, name, long, dfsch_number_to_int64)
+  DFSCH_GENERIC_ARG(al, name, int64_t, dfsch_number_to_int64)
 #define DFSCH_INT64_ARG_OPT(al, name, default) \
-  DFSCH_GENERIC_ARG_OPT(al, name, default, long, dfsch_number_to_int64)
+  DFSCH_GENERIC_ARG_OPT(al, name, default, int64_t, dfsch_number_to_int64)
+
+#define DFSCH_UINT64_ARG(al, name) \
+  DFSCH_GENERIC_ARG(al, name, uint64_t, dfsch_number_to_uint64)
+#define DFSCH_UINT64_ARG_OPT(al, name, default) \
+  DFSCH_GENERIC_ARG_OPT(al, name, default, uint64_t, dfsch_number_to_uint64)
 
 
 
