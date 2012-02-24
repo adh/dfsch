@@ -72,6 +72,7 @@ DFSCH_DEFINE_PRIMITIVE(setup_block_cipher_mode,
   return dfsch_setup_block_cipher_mode(mode, cipher, iv->ptr, iv->len);  
 }
 
+
 DFSCH_DEFINE_PRIMITIVE(encrypt_blocks,
                        "Encrypt blocks with given block cipher mode"){
   dfsch_block_cipher_mode_context_t* ctx;
@@ -119,6 +120,160 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_blocks,
 
   return str;
 }
+
+
+DFSCH_DEFINE_PRIMITIVE(encrypt_bytes,
+                       "Pad bytes to whole number of blocks and encrypt with given block cipher mode"){
+  dfsch_block_cipher_mode_context_t* ctx;
+  dfsch_strbuf_t* bytes;
+  size_t padded_len;
+  size_t blocks;
+  char* buf;
+  dfsch_object_t* str;
+  int i;
+
+  DFSCH_BLOCK_CIPHER_MODE_CONTEXT_ARG(args, ctx);
+  DFSCH_BUFFER_ARG(args, bytes);
+  DFSCH_ARG_END(args);
+
+  blocks = bytes->len / ctx->cipher->cipher->block_size + 1;
+  padded_len = blocks * ctx->cipher->cipher->block_size;
+
+  str = dfsch_alloc_byte_vector(&buf, padded_len);
+
+  memcpy(buf, bytes->ptr, bytes->len);
+  for (i = bytes->len; i < padded_len; i++){
+    buf[i] = padded_len - bytes->len;
+  }
+
+  ctx->mode->encrypt(ctx, buf, buf, blocks);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(decrypt_bytes,
+                       "Decrypt blocks with given block cipher mode and remove padding"){
+  dfsch_block_cipher_mode_context_t* ctx;
+  dfsch_strbuf_t* blocks;
+  char* midbuf;
+  char* buf;
+  dfsch_object_t* str;
+
+  DFSCH_BLOCK_CIPHER_MODE_CONTEXT_ARG(args, ctx);
+  DFSCH_BUFFER_ARG(args, blocks);
+  DFSCH_ARG_END(args);
+
+  if (blocks->len % ctx->cipher->cipher->block_size != 0){
+    dfsch_error("Length of supplied string is not multiple of block size", 
+                NULL);
+  }
+
+  midbuf = GC_MALLOC_ATOMIC(blocks->len);
+
+  ctx->mode->decrypt(ctx, blocks->ptr, midbuf, 
+                     blocks->len / ctx->cipher->cipher->block_size);
+
+  if (midbuf[blocks->len - 1] > ctx->cipher->cipher->block_size){
+    dfsch_error("Invalid padding", NULL);
+  }
+
+  str = dfsch_make_byte_vector_nocopy(midbuf, blocks->len - midbuf[blocks->len - 1]);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(encrypt_bytes_with_iv,
+                       "Pad bytes to whole number of blocks and encrypt with given block cipher mode"){
+  dfsch_block_cipher_mode_context_t* ctx;
+  dfsch_strbuf_t* bytes;
+  size_t padded_len;
+  size_t blocks;
+  char* buf;
+  dfsch_object_t* str;
+  int i;
+  dfsch_object_t* random_source = NULL;
+  size_t block_size;
+  dfsch_block_cipher_mode_t* mode;
+  dfsch_block_cipher_context_t* cipher;
+
+  DFSCH_BLOCK_CIPHER_CONTEXT_ARG(args, cipher);
+  DFSCH_BLOCK_CIPHER_MODE_ARG(args, mode);
+  DFSCH_BUFFER_ARG(args, bytes);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD("random-source", random_source);
+  DFSCH_KEYWORD_PARSER_END(args);
+  DFSCH_ARG_END(args);
+
+  if (!random_source){
+    random_source = dfsch_crypto_get_fast_prng_state();
+  }
+
+  block_size = cipher->cipher->block_size;
+
+  blocks = bytes->len / block_size + 1;
+  padded_len = blocks * block_size;
+
+  str = dfsch_alloc_byte_vector(&buf, padded_len + block_size);
+
+  dfsch_random_get_bytes(random_source, buf, block_size);
+
+  ctx = dfsch_setup_block_cipher_mode(mode, cipher, buf, block_size);
+
+  memcpy(buf + block_size, bytes->ptr, bytes->len);
+  for (i = bytes->len; i < padded_len; i++){
+    buf[i + block_size] = padded_len - bytes->len;
+  }
+
+  ctx->mode->encrypt(ctx, buf + block_size, buf + block_size, blocks);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(decrypt_bytes_with_iv,
+                       "Decrypt blocks with given block cipher mode and remove padding"){
+  dfsch_block_cipher_mode_context_t* ctx;
+  dfsch_strbuf_t* blocks;
+  uint8_t* midbuf;
+  char* buf;
+  dfsch_object_t* str;
+  size_t block_size;
+  dfsch_block_cipher_mode_t* mode;
+  dfsch_block_cipher_context_t* cipher;
+ 
+  DFSCH_BLOCK_CIPHER_CONTEXT_ARG(args, cipher);
+  DFSCH_BLOCK_CIPHER_MODE_ARG(args, mode);
+  DFSCH_BUFFER_ARG(args, blocks);
+  DFSCH_ARG_END(args);
+
+  block_size = cipher->cipher->block_size;
+
+  if (blocks->len % block_size != 0){
+    dfsch_error("Length of supplied string is not multiple of block size", 
+                NULL);
+  }
+
+  if (blocks->len < block_size * 2){
+    dfsch_error("Supplied string is shorter than two blocks", 
+                NULL);
+  }
+
+  ctx = dfsch_setup_block_cipher_mode(mode, cipher, blocks->ptr, block_size);
+
+  midbuf = GC_MALLOC_ATOMIC(blocks->len - block_size);
+
+  ctx->mode->decrypt(ctx, blocks->ptr + block_size, midbuf, 
+                     blocks->len / block_size);
+
+  if (midbuf[blocks->len - block_size - 1] > block_size){
+    dfsch_error("Invalid padding", NULL);
+  }
+
+  str = dfsch_make_byte_vector_nocopy(midbuf, blocks->len - block_size - midbuf[blocks->len - block_size - 1]);
+
+  return str;
+}
+
+
 
 DFSCH_DEFINE_PRIMITIVE(setup_stream_cipher,
                        "Create new stream cipher context"){
@@ -675,6 +830,16 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(encrypt_blocks));
   dfsch_defcanon_pkgcstr(env, crypto, "decrypt-blocks",
                          DFSCH_PRIMITIVE_REF(decrypt_blocks));
+  dfsch_defcanon_pkgcstr(env, crypto, "encrypt-bytes",
+                         DFSCH_PRIMITIVE_REF(encrypt_bytes));
+  dfsch_defcanon_pkgcstr(env, crypto, "decrypt-bytes",
+                         DFSCH_PRIMITIVE_REF(decrypt_bytes));
+  dfsch_defcanon_pkgcstr(env, crypto, "encrypt-bytes-with-iv",
+                         DFSCH_PRIMITIVE_REF(encrypt_bytes_with_iv));
+  dfsch_defcanon_pkgcstr(env, crypto, "decrypt-bytes-with-iv",
+                         DFSCH_PRIMITIVE_REF(decrypt_bytes_with_iv));
+
+
 
   dfsch_defcanon_pkgcstr(env, crypto, "setup-stream-cipher",
                          DFSCH_PRIMITIVE_REF(setup_stream_cipher));
