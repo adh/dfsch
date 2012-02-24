@@ -153,7 +153,7 @@ DFSCH_DEFINE_PRIMITIVE(hash_result,
   DFSCH_CRYPTO_HASH_CONTEXT_ARG(args, hash);
   DFSCH_ARG_END(args);
 
-  str = dfsch_make_string_for_write(hash->algo->result_len, &buf);
+  str = dfsch_alloc_byte_vector(&buf, hash->algo->result_len);
 
   hash->algo->result(hash, buf);
 
@@ -178,7 +178,7 @@ DFSCH_DEFINE_PRIMITIVE(curve25519,
     dfsch_error("Basepoint must be 32 byte string", NULL);
   }
 
-  str = dfsch_make_string_for_write(32, &buf);
+  str = dfsch_alloc_byte_vector(&buf, 32);
 
   dfsch_crypto_curve25519(buf, secret->ptr, basepoint->ptr);
 
@@ -198,7 +198,7 @@ DFSCH_DEFINE_PRIMITIVE(curve25519_private_key,
     dfsch_error("Private key must be 32 byte string", NULL);
   }
 
-  str = dfsch_make_string_for_write(32, &buf);
+  str = dfsch_alloc_byte_vector(&buf, 32);
   memcpy(buf, string->ptr, 32);
 
   buf[0] &= 248;
