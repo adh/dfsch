@@ -47,7 +47,7 @@ static void hmac_result(hmac_context_t* ctx, uint8_t* res){
     (((uint8_t*)ctx) + ctx->hmac->hash->type.size)[i] ^= (0x36 ^ 0x5c);
   }
 
-  ctx->hmac->hash->result(oc, buf);
+  ctx->hmac->hash->result(ctx, buf);
   
   oc = dfsch_crypto_hash_setup(ctx->hmac->hash, NULL, 0);
   oc->algo->process(oc, 
