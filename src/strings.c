@@ -1795,6 +1795,7 @@ dfsch_object_t* dfsch_make_byte_vector_nocopy(char* ptr, size_t len){
   return s;
 }
 
+
 dfsch_object_t* dfsch_list_2_byte_vector(dfsch_object_t* list){
   dfsch_string_t* string;
   dfsch_object_t* j = list;

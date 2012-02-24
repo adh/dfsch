@@ -120,6 +120,43 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_blocks,
   return str;
 }
 
+DFSCH_DEFINE_PRIMITIVE(setup_stream_cipher,
+                       "Create new stream cipher context"){
+  dfsch_block_cipher_t* cipher;
+  dfsch_strbuf_t* key;
+  dfsch_strbuf_t* nonce;
+
+  DFSCH_STREAM_CIPHER_ARG(args, cipher);
+  DFSCH_BUFFER_ARG(args, key);
+  DFSCH_BUFFER_ARG_OPT(args, nonce, DFSCH_EMPTY_STRBUF);
+  DFSCH_ARG_END(args);
+
+  return dfsch_setup_stream_cipher(cipher, 
+                                   key->ptr, key->len, 
+                                   nonce->ptr, nonce->len);
+}
+
+DFSCH_DEFINE_PRIMITIVE(get_keystream,
+                       "Get message digest"){
+  dfsch_stream_cipher_context_t* ctx;
+  char* buf;
+  dfsch_object_t* str;
+  long result_len;
+
+  DFSCH_STREAM_CIPHER_CONTEXT_ARG(args, ctx);
+  DFSCH_ULONG_ARG(args, result_len);
+  DFSCH_ARG_END(args);
+
+  str = dfsch_alloc_byte_vector(&buf, result_len);
+
+  memset(buf, 0, result_len);
+  ctx->cipher->encrypt_bytes(ctx, buf, result_len);
+
+  return str;
+}
+
+
+
 DFSCH_DEFINE_PRIMITIVE(setup_hash,
                        "Create new hash context"){
   dfsch_crypto_hash_t* hash;
@@ -572,6 +609,12 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defconst_pkgcstr(env, crypto, "<ctr>",
                          DFSCH_CRYPTO_CTR_MODE);
 
+  dfsch_defconst_pkgcstr(env, crypto, "<rc4>",
+                         DFSCH_CRYPTO_RC4_CIPHER);
+  dfsch_defconst_pkgcstr(env, crypto, "<stream-cipher>",
+                         DFSCH_STREAM_CIPHER_TYPE);
+
+
   dfsch_defconst_pkgcstr(env, crypto, "<sha-256>",
                          DFSCH_CRYPTO_SHA256);
   dfsch_defconst_pkgcstr(env, crypto, "<hmac-sha-256>",
@@ -608,6 +651,12 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(encrypt_blocks));
   dfsch_defconst_pkgcstr(env, crypto, "decrypt-blocks",
                          DFSCH_PRIMITIVE_REF(decrypt_blocks));
+
+  dfsch_defconst_pkgcstr(env, crypto, "setup-stream-cipher",
+                         DFSCH_PRIMITIVE_REF(setup_stream_cipher));
+  dfsch_defconst_pkgcstr(env, crypto, "get-keystream",
+                         DFSCH_PRIMITIVE_REF(get_keystream));
+
 
   dfsch_defconst_pkgcstr(env, crypto, "setup-hash",
                          DFSCH_PRIMITIVE_REF(setup_hash));
