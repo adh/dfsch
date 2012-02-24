@@ -28,7 +28,7 @@ DFSCH_DEFINE_PRIMITIVE(encrypt_block,
     dfsch_error("Block length does not match cipher block length", NULL);
   }
 
-  str = dfsch_make_string_for_write(ctx->cipher->block_size, &buf);
+  str = dfsch_alloc_byte_vector(&buf, ctx->cipher->block_size);
 
   ctx->cipher->encrypt(ctx, block->ptr, buf);
 
@@ -50,7 +50,7 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_block,
     dfsch_error("Block length does not match cipher block length", NULL);
   }
 
-  str = dfsch_make_string_for_write(ctx->cipher->block_size, &buf);
+  str = dfsch_alloc_byte_vector(&buf, ctx->cipher->block_size);
 
   ctx->cipher->decrypt(ctx, block->ptr, buf);
 
@@ -88,7 +88,7 @@ DFSCH_DEFINE_PRIMITIVE(encrypt_blocks,
                 NULL);
   }
 
-  str = dfsch_make_string_for_write(blocks->len, &buf);
+  str = dfsch_alloc_byte_vector(&buf, blocks->len);
 
   ctx->mode->encrypt(ctx, blocks->ptr, buf, 
                      blocks->len / ctx->cipher->cipher->block_size);
@@ -112,7 +112,7 @@ DFSCH_DEFINE_PRIMITIVE(decrypt_blocks,
                 NULL);
   }
 
-  str = dfsch_make_string_for_write(blocks->len, &buf);
+  str = dfsch_alloc_byte_vector(&buf, blocks->len);
 
   ctx->mode->decrypt(ctx, blocks->ptr, buf, 
                      blocks->len / ctx->cipher->cipher->block_size);
