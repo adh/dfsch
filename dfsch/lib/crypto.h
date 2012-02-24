@@ -154,6 +154,10 @@ dfsch_stream_cipher_t* dfsch_stream_cipher(dfsch_object_t* obj);
 
 extern dfsch_stream_cipher_t dfsch_crypto_rc4_cipher;
 #define DFSCH_CRYPTO_RC4_CIPHER (&dfsch_crypto_rc4_cipher)
+extern dfsch_stream_cipher_t dfsch_crypto_rc4_drop768_cipher;
+#define DFSCH_CRYPTO_RC4_DROP768_CIPHER (&dfsch_crypto_rc4_drop768_cipher)
+extern dfsch_stream_cipher_t dfsch_crypto_rc4_drop3072_cipher;
+#define DFSCH_CRYPTO_RC4_DROP3072_CIPHER (&dfsch_crypto_rc4_drop3072_cipher)
 
 
 extern dfsch_type_t dfsch_stream_cipher_type;

@@ -68,3 +68,55 @@ dfsch_stream_cipher_t dfsch_crypto_rc4_cipher = {
   .setup = rc4_setup,
   .encrypt_bytes = rc4_encrypt_bytes,
 };
+
+static void rc4_setup_drop768(rc4_context_t* ctx,
+                              uint8_t* key,
+                              size_t key_len,
+                              uint8_t *nonce,
+                              size_t nonce_len){
+  int i;
+  uint8_t buf[128];
+  rc4_setup(ctx, key, key_len, nonce, nonce_len);
+  
+  for (i = 0; i < 6; i++){
+    rc4_encrypt_bytes(ctx, buf, 128);
+  }
+}
+
+static void rc4_setup_drop3072(rc4_context_t* ctx,
+                              uint8_t* key,
+                              size_t key_len,
+                              uint8_t *nonce,
+                              size_t nonce_len){
+  int i;
+  uint8_t buf[128];
+  rc4_setup(ctx, key, key_len, nonce, nonce_len);
+  
+  for (i = 0; i < 24; i++){
+    rc4_encrypt_bytes(ctx, buf, 128);
+  }
+}
+
+dfsch_stream_cipher_t dfsch_crypto_rc4_drop768_cipher = {
+  .type = {
+    .type = DFSCH_STREAM_CIPHER_TYPE,
+    .size = sizeof(rc4_context_t),
+    .name = "crypto:rc4-drop768"
+  },
+  .name = "RC4",
+
+  .setup = rc4_setup_drop768,
+  .encrypt_bytes = rc4_encrypt_bytes,
+};
+
+dfsch_stream_cipher_t dfsch_crypto_rc4_drop3072_cipher = {
+  .type = {
+    .type = DFSCH_STREAM_CIPHER_TYPE,
+    .size = sizeof(rc4_context_t),
+    .name = "crypto:rc4-drop3072"
+  },
+  .name = "RC4",
+
+  .setup = rc4_setup_drop3072,
+  .encrypt_bytes = rc4_encrypt_bytes,
+};

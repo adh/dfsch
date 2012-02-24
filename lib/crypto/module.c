@@ -609,155 +609,159 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_crypto_put_entropy(&crypto, sizeof(dfsch_package_t*));
   dfsch_crypto_put_entropy(&env, sizeof(dfsch_object_t*));
 
-  dfsch_defconst_pkgcstr(env, crypto, "<aes>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<aes>",
                          DFSCH_CRYPTO_AES_CIPHER);
-  dfsch_defconst_pkgcstr(env, crypto, "<xtea>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<xtea>",
                          DFSCH_CRYPTO_XTEA_CIPHER);
-  dfsch_defconst_pkgcstr(env, crypto, "<blowfish>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<blowfish>",
                          DFSCH_CRYPTO_BLOWFISH_CIPHER);
-  dfsch_defconst_pkgcstr(env, crypto, "<block-cipher>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<block-cipher>",
                          DFSCH_BLOCK_CIPHER_TYPE);
 
-  dfsch_defconst_pkgcstr(env, crypto, "<ecb>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<ecb>",
                          DFSCH_CRYPTO_ECB_MODE);
-  dfsch_defconst_pkgcstr(env, crypto, "<cbc>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<cbc>",
                          DFSCH_CRYPTO_CBC_MODE);
-  dfsch_defconst_pkgcstr(env, crypto, "<cfb>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<cfb>",
                          DFSCH_CRYPTO_CFB_MODE);
-  dfsch_defconst_pkgcstr(env, crypto, "<ofb>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<ofb>",
                          DFSCH_CRYPTO_OFB_MODE);
-  dfsch_defconst_pkgcstr(env, crypto, "<ctr>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<ctr>",
                          DFSCH_CRYPTO_CTR_MODE);
 
-  dfsch_defconst_pkgcstr(env, crypto, "<rc4>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<rc4>",
                          DFSCH_CRYPTO_RC4_CIPHER);
-  dfsch_defconst_pkgcstr(env, crypto, "<stream-cipher>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<rc4-drop768>",
+                         DFSCH_CRYPTO_RC4_DROP768_CIPHER);
+  dfsch_defcanon_pkgcstr(env, crypto, "<rc4-drop3072>",
+                         DFSCH_CRYPTO_RC4_DROP3072_CIPHER);
+  dfsch_defcanon_pkgcstr(env, crypto, "<stream-cipher>",
                          DFSCH_STREAM_CIPHER_TYPE);
 
 
-  dfsch_defconst_pkgcstr(env, crypto, "<sha-256>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<sha-256>",
                          DFSCH_CRYPTO_SHA256);
-  dfsch_defconst_pkgcstr(env, crypto, "<hmac-sha-256>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hmac-sha-256>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_SHA256));
-  dfsch_defconst_pkgcstr(env, crypto, "<sha-512>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<sha-512>",
                          DFSCH_CRYPTO_SHA512);
-  dfsch_defconst_pkgcstr(env, crypto, "<hmac-sha-512>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hmac-sha-512>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_SHA512));
-  dfsch_defconst_pkgcstr(env, crypto, "<sha-1>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<sha-1>",
                          DFSCH_CRYPTO_SHA1);
-  dfsch_defconst_pkgcstr(env, crypto, "<hmac-sha-1>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hmac-sha-1>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_SHA1));
-  dfsch_defconst_pkgcstr(env, crypto, "<md5>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<md5>",
                          DFSCH_CRYPTO_MD5);
-  dfsch_defconst_pkgcstr(env, crypto, "<hmac-md5>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hmac-md5>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_MD5));
-  dfsch_defconst_pkgcstr(env, crypto, "<md4>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<md4>",
                          DFSCH_CRYPTO_MD4);
-  dfsch_defconst_pkgcstr(env, crypto, "<hmac-md4>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hmac-md4>",
                          dfsch_crypto_make_hmac(DFSCH_CRYPTO_MD4));
-  dfsch_defconst_pkgcstr(env, crypto, "<hash>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<hash>",
                          DFSCH_CRYPTO_HASH_TYPE);
 
-  dfsch_defconst_pkgcstr(env, crypto, "setup-block-cipher",
+  dfsch_defcanon_pkgcstr(env, crypto, "setup-block-cipher",
                          DFSCH_PRIMITIVE_REF(setup_block_cipher));
-  dfsch_defconst_pkgcstr(env, crypto, "encrypt-block",
+  dfsch_defcanon_pkgcstr(env, crypto, "encrypt-block",
                          DFSCH_PRIMITIVE_REF(encrypt_block));
-  dfsch_defconst_pkgcstr(env, crypto, "decrypt-block",
+  dfsch_defcanon_pkgcstr(env, crypto, "decrypt-block",
                          DFSCH_PRIMITIVE_REF(decrypt_block));
 
-  dfsch_defconst_pkgcstr(env, crypto, "setup-block-cipher-mode",
+  dfsch_defcanon_pkgcstr(env, crypto, "setup-block-cipher-mode",
                          DFSCH_PRIMITIVE_REF(setup_block_cipher_mode));
-  dfsch_defconst_pkgcstr(env, crypto, "encrypt-blocks",
+  dfsch_defcanon_pkgcstr(env, crypto, "encrypt-blocks",
                          DFSCH_PRIMITIVE_REF(encrypt_blocks));
-  dfsch_defconst_pkgcstr(env, crypto, "decrypt-blocks",
+  dfsch_defcanon_pkgcstr(env, crypto, "decrypt-blocks",
                          DFSCH_PRIMITIVE_REF(decrypt_blocks));
 
-  dfsch_defconst_pkgcstr(env, crypto, "setup-stream-cipher",
+  dfsch_defcanon_pkgcstr(env, crypto, "setup-stream-cipher",
                          DFSCH_PRIMITIVE_REF(setup_stream_cipher));
-  dfsch_defconst_pkgcstr(env, crypto, "get-keystream",
+  dfsch_defcanon_pkgcstr(env, crypto, "get-keystream",
                          DFSCH_PRIMITIVE_REF(get_keystream));
-  dfsch_defconst_pkgcstr(env, crypto, "apply-stream-cipher",
+  dfsch_defcanon_pkgcstr(env, crypto, "apply-stream-cipher",
                          DFSCH_PRIMITIVE_REF(apply_stream_cipher));
 
 
-  dfsch_defconst_pkgcstr(env, crypto, "setup-hash",
+  dfsch_defcanon_pkgcstr(env, crypto, "setup-hash",
                          DFSCH_PRIMITIVE_REF(setup_hash));
-  dfsch_defconst_pkgcstr(env, crypto, "hash-process",
+  dfsch_defcanon_pkgcstr(env, crypto, "hash-process",
                          DFSCH_PRIMITIVE_REF(hash_process));
-  dfsch_defconst_pkgcstr(env, crypto, "hash-result",
+  dfsch_defcanon_pkgcstr(env, crypto, "hash-result",
                          DFSCH_PRIMITIVE_REF(hash_result));
 
-  dfsch_defconst_pkgcstr(env, crypto, "*curve25519-basepoint*",
+  dfsch_defcanon_pkgcstr(env, crypto, "*curve25519-basepoint*",
                          dfsch_make_string_buf(curve25519_basepoint, 32));
-  dfsch_defconst_pkgcstr(env, crypto, "curve25519",
+  dfsch_defcanon_pkgcstr(env, crypto, "curve25519",
                          DFSCH_PRIMITIVE_REF(curve25519));
-  dfsch_defconst_pkgcstr(env, crypto, "curve25519-private-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "curve25519-private-key",
                          DFSCH_PRIMITIVE_REF(curve25519_private_key));
 
 
-  dfsch_defconst_pkgcstr(env, crypto, "<rsa-public-key>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<rsa-public-key>",
                          DFSCH_RSA_PUBLIC_KEY_TYPE);
-  dfsch_defconst_pkgcstr(env, crypto, "<rsa-private-key>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<rsa-private-key>",
                          DFSCH_RSA_PRIVATE_KEY_TYPE);
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-generate-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-generate-key",
                          DFSCH_PRIMITIVE_REF(rsa_generate_key));
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-get-public-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-get-public-key",
                          DFSCH_PRIMITIVE_REF(rsa_get_public_key));
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-public-key->list",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-public-key->list",
                          DFSCH_PRIMITIVE_REF(rsa_public_key_2_list));
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-private-key->list",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-private-key->list",
                          DFSCH_PRIMITIVE_REF(rsa_private_key_2_list));
-  dfsch_defconst_pkgcstr(env, crypto, "make-rsa-public-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "make-rsa-public-key",
                          DFSCH_PRIMITIVE_REF(make_rsa_public_key));
-  dfsch_defconst_pkgcstr(env, crypto, "make-rsa-private-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "make-rsa-private-key",
                          DFSCH_PRIMITIVE_REF(make_rsa_private_key));
-  dfsch_defconst_pkgcstr(env, crypto, "list->rsa-public-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "list->rsa-public-key",
                          DFSCH_PRIMITIVE_REF(list_2_rsa_public_key));
-  dfsch_defconst_pkgcstr(env, crypto, "list->rsa-private-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "list->rsa-private-key",
                          DFSCH_PRIMITIVE_REF(list_2_rsa_private_key));
 
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-encrypt-number",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-encrypt-number",
                          DFSCH_PRIMITIVE_REF(rsa_encrypt_number));
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-decrypt-number",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-decrypt-number",
                          DFSCH_PRIMITIVE_REF(rsa_decrypt_number));
 
-  dfsch_defconst_pkgcstr(env, crypto, "oaep-encode",
+  dfsch_defcanon_pkgcstr(env, crypto, "oaep-encode",
                          DFSCH_PRIMITIVE_REF(oaep_encode));
-  dfsch_defconst_pkgcstr(env, crypto, "oaep-decode",
+  dfsch_defcanon_pkgcstr(env, crypto, "oaep-decode",
                          DFSCH_PRIMITIVE_REF(oaep_decode));
-  dfsch_defconst_pkgcstr(env, crypto, "pss-encode",
+  dfsch_defcanon_pkgcstr(env, crypto, "pss-encode",
                          DFSCH_PRIMITIVE_REF(pss_encode));
-  dfsch_defconst_pkgcstr(env, crypto, "pss-verify",
+  dfsch_defcanon_pkgcstr(env, crypto, "pss-verify",
                          DFSCH_PRIMITIVE_REF(pss_verify));
 
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-pss-sign",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-pss-sign",
                          DFSCH_PRIMITIVE_REF(rsa_pss_sign));
-  dfsch_defconst_pkgcstr(env, crypto, "rsa-pss-verify",
+  dfsch_defcanon_pkgcstr(env, crypto, "rsa-pss-verify",
                          DFSCH_PRIMITIVE_REF(rsa_pss_verify));
 
-  dfsch_defconst_pkgcstr(env, crypto, "prng-state",
+  dfsch_defcanon_pkgcstr(env, crypto, "prng-state",
                          DFSCH_PRIMITIVE_REF(prng_state));
 
-  dfsch_defconst_pkgcstr(env, crypto, "<sign25519-public-key>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<sign25519-public-key>",
                          DFSCH_SIGN25519_PUBLIC_KEY_TYPE);
-  dfsch_defconst_pkgcstr(env, crypto, "<sign25519-private-key>",
+  dfsch_defcanon_pkgcstr(env, crypto, "<sign25519-private-key>",
                          DFSCH_SIGN25519_PRIVATE_KEY_TYPE);
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-generate-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-generate-key",
                          DFSCH_PRIMITIVE_REF(sign25519_generate_key));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-get-public-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-get-public-key",
                          DFSCH_PRIMITIVE_REF(sign25519_get_public_key));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-sign",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-sign",
                          DFSCH_PRIMITIVE_REF(sign25519_sign));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-verify",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-verify",
                          DFSCH_PRIMITIVE_REF(sign25519_verify));
 
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-private-key->byte-vector",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-private-key->byte-vector",
                          DFSCH_PRIMITIVE_REF(sign25519_private_key_2_byte_vector));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-public-key->byte-vector",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-public-key->byte-vector",
                          DFSCH_PRIMITIVE_REF(sign25519_public_key_2_byte_vector));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-make-private-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-make-private-key",
                          DFSCH_PRIMITIVE_REF(sign25519_make_private_key));
-  dfsch_defconst_pkgcstr(env, crypto, "sign25519-make-public-key",
+  dfsch_defcanon_pkgcstr(env, crypto, "sign25519-make-public-key",
                          DFSCH_PRIMITIVE_REF(sign25519_make_public_key));
 
 
