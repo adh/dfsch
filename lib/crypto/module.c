@@ -137,7 +137,7 @@ DFSCH_DEFINE_PRIMITIVE(setup_stream_cipher,
 }
 
 DFSCH_DEFINE_PRIMITIVE(get_keystream,
-                       "Get message digest"){
+                       "Get output of stream cipher"){
   dfsch_stream_cipher_context_t* ctx;
   char* buf;
   dfsch_object_t* str;
@@ -151,6 +151,26 @@ DFSCH_DEFINE_PRIMITIVE(get_keystream,
 
   memset(buf, 0, result_len);
   ctx->cipher->encrypt_bytes(ctx, buf, result_len);
+
+  return str;
+}
+
+DFSCH_DEFINE_PRIMITIVE(apply_stream_cipher,
+                       "XOR bytes with cipher output"){
+  dfsch_stream_cipher_context_t* ctx;
+  char* buf;
+  dfsch_object_t* str;
+  dfsch_strbuf_t* bytes;
+
+
+  DFSCH_STREAM_CIPHER_CONTEXT_ARG(args, ctx);
+  DFSCH_BUFFER_ARG(args, bytes);
+  DFSCH_ARG_END(args);
+
+  str = dfsch_alloc_byte_vector(&buf, bytes->len);
+
+  memcpy(buf, bytes->ptr, bytes->len);
+  ctx->cipher->encrypt_bytes(ctx, buf, bytes->len);
 
   return str;
 }
@@ -656,6 +676,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(setup_stream_cipher));
   dfsch_defconst_pkgcstr(env, crypto, "get-keystream",
                          DFSCH_PRIMITIVE_REF(get_keystream));
+  dfsch_defconst_pkgcstr(env, crypto, "apply-stream-cipher",
+                         DFSCH_PRIMITIVE_REF(apply_stream_cipher));
 
 
   dfsch_defconst_pkgcstr(env, crypto, "setup-hash",
