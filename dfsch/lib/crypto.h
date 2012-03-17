@@ -179,6 +179,11 @@ struct dfsch_stream_cipher_context_t{
   DFSCH_GENERIC_ARG(al, name, dfsch_stream_cipher_context_t*, \
                     dfsch_stream_cipher_context)
 
+extern dfsch_type_t dfsch_block_stream_mode_type;
+#define DFSCH_BLOCK_STREAM_MODE_TYPE (&dfsch_block_stream_mode_type)
+
+dfsch_stream_cipher_t* dfsch_make_ofb_cipher(dfsch_block_cipher_t* cipher);
+dfsch_stream_cipher_t* dfsch_make_ctr_cipher(dfsch_block_cipher_t* cipher);
 
 
 typedef struct dfsch_crypto_hash_context_t dfsch_crypto_hash_context_t;
