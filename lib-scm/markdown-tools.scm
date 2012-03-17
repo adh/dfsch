@@ -25,8 +25,10 @@
 (require :markdown)
 
 (define-package :markdown-tools
-  :uses '(:markdown)
+  :uses '(:dfsch :markdown)
   :exports '(:split-file
+             :get-title
+             :get-file-title
              :make-outlining-header-renderer))
 (use-package :markdown-tools)
 
@@ -43,3 +45,15 @@
                                              line))))
               (make-port-line-iterator port))
     res))
+
+(define (get-title port)
+  (catch 'done
+         (for-each (lambda (line)
+                     (when (string-starts-with? line "# ")
+                           (throw 'done 
+                                  (string-trim " \t\n\r#" (substring line 1)))))
+                   (make-port-line-iterator port))))
+
+(define (get-file-title filename)
+  (with-open-file f (filename "r")
+                  (get-title f)))
