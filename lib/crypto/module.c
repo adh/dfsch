@@ -454,6 +454,29 @@ DFSCH_DEFINE_PRIMITIVE(apply_stream_cipher,
   return str;
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_ofb_cipher,
+                       "Create new stream cipher type implementing "
+                       "OFB mode of block cipher"){
+  dfsch_block_cipher_t* cipher;
+  dfsch_strbuf_t* key;
+
+  DFSCH_BLOCK_CIPHER_ARG(args, cipher);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_ofb_cipher(cipher);
+}
+DFSCH_DEFINE_PRIMITIVE(make_ctr_cipher,
+                       "Create new stream cipher type implementing "
+                       "CTR mode of block cipher"){
+  dfsch_block_cipher_t* cipher;
+  dfsch_strbuf_t* key;
+
+  DFSCH_BLOCK_CIPHER_ARG(args, cipher);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_ctr_cipher(cipher);
+}
+
 
 
 DFSCH_DEFINE_PRIMITIVE(setup_hash,
@@ -976,6 +999,10 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
   dfsch_defcanon_pkgcstr(env, crypto, "apply-stream-cipher",
                          DFSCH_PRIMITIVE_REF(apply_stream_cipher));
 
+  dfsch_defcanon_pkgcstr(env, crypto, "make-ofb-cipher",
+                         DFSCH_PRIMITIVE_REF(make_ofb_cipher));
+  dfsch_defcanon_pkgcstr(env, crypto, "make-ctr-cipher",
+                         DFSCH_PRIMITIVE_REF(make_ctr_cipher));
 
   dfsch_defcanon_pkgcstr(env, crypto, "setup-hash",
                          DFSCH_PRIMITIVE_REF(setup_hash));
