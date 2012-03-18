@@ -494,8 +494,8 @@ DFSCH_FORM_METHOD_COMPILE(define){
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
-  value = dfsch_compile_expression(value, env);
   dfsch_compiler_declare_variable(env, name);
+  value = dfsch_compile_expression(value, env);
 
   return dfsch_cons_ast_node(form,
                              expr,
@@ -534,6 +534,12 @@ DFSCH_FORM_METHOD_COMPILE(define_constant){
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
   
+  dfsch_compiler_declare_variable(env, name); 
+  /* Expression can refer to value of constrant we are defining, or to
+     it's previous value. This works out correctly during runtime, but
+     we cannot do constant folding of processed variable at
+     compile-time.*/
+
   value = dfsch_compile_expression(value, env);
 
   dfsch_compiler_update_constant(env, name, value);
