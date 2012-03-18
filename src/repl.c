@@ -60,8 +60,7 @@ void interactive_repl(dfsch_object_t* ctx){
   char* homedir = getenv("HOME");
   printf("  /\\___/\\    dfsch version %s\n", 
          dfsch_get_version());
-  printf(" ( o   o )     (%s) [%s %s]\n", 
-         dfsch_get_build_id(), __DATE__, __TIME__);
+  printf(" ( o   o )\n");
   printf(" ==  *  ==   dfsch is free software, and you are welcome to redistribute it\n");
   printf("   )   (     under certain conditions; see file COPYING for details.\n");
   printf("\r\n");
