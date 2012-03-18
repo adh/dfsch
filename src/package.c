@@ -877,8 +877,8 @@ DFSCH_DEFINE_PRIMITIVE(define_package,
                        "Define new symbol package with given name if it does "
                        "not already exist"){
   char* name;
-  dfsch_object_t* imports;
-  dfsch_object_t* exports;
+  dfsch_object_t* imports = NULL;
+  dfsch_object_t* exports = NULL;
   dfsch_object_t* pkg;
   char* documentation = NULL;
 
