@@ -547,6 +547,31 @@ long dfsch_number_to_long(dfsch_object_t *n){
   dfsch_error("Not an integer", n);
 }
 
+unsigned long dfsch_number_to_ulong(dfsch_object_t *n){
+  int64_t r;
+
+  if (DFSCH_TYPE_OF(n)==DFSCH_FIXNUM_TYPE){
+    if (DFSCH_FIXNUM_REF(n) < 0){
+      dfsch_error("Non-negative value expected", n);
+    }
+    return DFSCH_FIXNUM_REF(n);
+  } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
+    if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r) || 
+        r > ULONG_MAX){
+      dfsch_error("Value too large", n);
+    }
+
+    if (r < 0){
+      dfsch_error("Non-negative value expected", n);
+    }
+
+
+    return r;
+  }
+  dfsch_error("Not an integer", n);
+}
+
+
 int64_t dfsch_number_to_int64(dfsch_object_t *n){
   int64_t r;
 

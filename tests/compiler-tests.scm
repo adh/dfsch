@@ -2,6 +2,17 @@
   ((let ((exp :local))
      exp)   ===> :local))
 
+(define-evaluation-test letrec-shadowing (:language :compiler)
+  ((letrec ((exp :local))
+     exp)   ===> :local))
+
+(define-evaluation-test named-let-shadowing (:language :compiler)
+  ((let ((my-var :outer))
+     (let my-var ()
+       (procedure? my-var)))     ===> #t)
+  ((let pi ()
+     (procedure? pi))            ===> #t))
+
 (define-evaluation-test argument-shadowing (:language :compiler)
   (((lambda (exp) exp) :local) ===> :local)
   (((lambda (&aux (exp :local)) exp)) ===> :local))
