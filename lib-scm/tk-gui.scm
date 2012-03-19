@@ -140,11 +140,11 @@
 
 
 (define-method (bind-event (widget <widget>) (event <list>) 
-                           proc &key args append)
+                           proc &key args add)
   (tcl-eval "bind"
             (widget-path widget)
             event
-            (append (if append '("+") ())
+            (append (if add '("+") ())
                     (cons (bind-command (widget-window widget)
                                         proc)
                           args))))
