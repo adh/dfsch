@@ -1,5 +1,5 @@
 #ifndef H__dfsch__lib_os__
-#define H__DFSCH__lib_os__
+#define H__dfsch__lib_os__
 
 #include <dfsch/dfsch.h>
 #include <sys/stat.h>
