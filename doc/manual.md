@@ -317,6 +317,18 @@ lists of key and value although some mapping types return only
 keys. Keys and values separately can be iterated over by iterators
 returned from |map-keys| and |map-values|.
 
+## Functions operating on collections
+
+ * |concatenate|
+ * |every| and |some|
+ * |filter|
+ * |find-if|
+ * |for-each|
+ * |map|, |map*| and |mapcan|
+ * |merge|
+ * |reduce|
+ * |zip|
+
 # Strings
 
 There are two kinds of strings - immutable textual strings encoded in
