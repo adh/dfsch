@@ -1,5 +1,10 @@
 Bugfixes:
 
+0.4.1:
+* encodings
+* user defined collections, sequences, mappings, ports
+  - overriding of type methods
+
 Non-version-specific:
 * More tests
 * Documentation

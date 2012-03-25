@@ -199,6 +199,8 @@ extern "C" {
 #define DFSCH_CHARACTER_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, uint32_t, dfsch_character)
 
+  
+
 
 #ifdef __cplusplus
 }
