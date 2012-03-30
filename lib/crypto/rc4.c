@@ -1,7 +1,7 @@
 #include "dfsch/lib/crypto.h"
 
 typedef struct rc4_context_t {
-  dfsch_block_cipher_t* cipher;
+  dfsch_stream_cipher_t* cipher;
   uint8_t i;
   uint8_t j;
   uint8_t s[256];
