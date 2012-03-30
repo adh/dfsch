@@ -575,15 +575,12 @@ static dfsch_object_t* write_instance_apply(dfsch_object_t* ignore,
   return NULL;
 }
 
-
 static dfsch_singleton_generic_function_t write_instance = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .add_method = write_instance_add_method,  
   .remove_method = write_instance_remove_method,  
   .apply = write_instance_apply,
 };
-
-
 
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
@@ -599,5 +596,5 @@ void dfsch__object_native_register(dfsch_object_t *ctx){
                               NULL, NULL, 
                               DFSCH_PRIMITIVE_REF(default_initialize_instance));
 
-  dfsch_defcanon_cstr(ctx, "dfsch%write-instance", &write_instance);
+  dfsch_defcanon_cstr(ctx, "write-instance", &write_instance);
 }

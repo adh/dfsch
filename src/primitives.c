@@ -1963,9 +1963,9 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(string_2_object));
   dfsch_defcanon_cstr(ctx, "string->object-list", 
                       DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-object", 
+  dfsch_defcanon_cstr(ctx, "writer-write-object", 
                       DFSCH_PRIMITIVE_REF(write__object));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-string", 
+  dfsch_defcanon_cstr(ctx, "writer-write-string", 
                       DFSCH_PRIMITIVE_REF(write__string));
 
   dfsch_defcanon_cstr(ctx, "symbol-qualified-name", 
