@@ -977,12 +977,21 @@ void dfsch_declare(dfsch_object_t* variable,
   dfsch_object_t* old = NULL;
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  dfsch_object_t* ret;
 
-  if (e->owner != ti){
-    e->owner = NULL;
-    DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
+  DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
+
+  for(;;){
+    if (!e){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      dfsch_error("Unbound variable", dfsch_cons(name, env));
+    }
+    ret = dfsch_eqhash_ref(&e->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
+      break;
+    }
+    e = e->parent;
   }
-
 
   if (!e->decls){
     e->decls = dfsch_make_idhash();
@@ -996,9 +1005,7 @@ void dfsch_declare(dfsch_object_t* variable,
   dfsch_idhash_set(e->decls, variable, 
                    dfsch_cons(dfsch_list(2, name, value), old));  
 
-  if (e->owner != ti){
-    DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
 }
 
 dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
