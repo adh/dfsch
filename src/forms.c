@@ -602,11 +602,16 @@ DFSCH_DEFINE_FORM(declare, {},
   dfsch_object_t* decls;
 
   DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_REST(args, decls);
 
-  while (DFSCH_PAIR_P(decls)){
-    dfsch_declare(name, DFSCH_FAST_CDR(decls), env);
-    decls = DFSCH_FAST_CDR(decls);
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* decl_name;
+    dfsch_object_t* decl_value;
+    DFSCH_OBJECT_ARG(args, decl_name);
+    DFSCH_OBJECT_ARG(args, decl_value);
+
+    decl_value = dfsch_eval(decl_value, env);
+
+    dfsch_declare(name, decl_name, decl_value, env);
   }
 
   return NULL;

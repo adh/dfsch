@@ -853,6 +853,49 @@ dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
   return DFSCH_INVALID_OBJECT;
 }
 
+object_t* dfsch_env_get_declarations(object_t* name, object_t* env){
+  environment_t *i;
+  object_t* ret;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    ret = dfsch_eqhash_ref(&i->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
+      if (!i->decls){
+        DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+        return NULL;
+      }
+      ret = dfsch_idhash_ref(i->decls, name);
+      if (ret == DFSCH_INVALID_OBJECT){
+        ret = NULL;
+      }
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return NULL;
+}
+
+dfsch_object_t* dfsch_env_get_declaration_value(dfsch_object_t* name, 
+                                                dfsch_object_t* env,
+                                                dfsch_object_t* decl_name){
+  dfsch_object_t* decls = dfsch_env_get_declarations(name, env);
+  while (DFSCH_PAIR_P(decls)){
+    dfsch_object_t* decl = DFSCH_FAST_CAR(decls);
+    dfsch_object_t* dn;
+    DFSCH_OBJECT_ARG(decl, dn);
+    if (dn == decl_name){
+      dfsch_object_t* value;
+    }
+
+    decls = DFSCH_FAST_CDR(decls);
+  }
+}
+
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -927,7 +970,9 @@ void dfsch_define(object_t* name, object_t* value, object_t* env,
 
 
 
-void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
+void dfsch_declare(dfsch_object_t* variable, 
+                   dfsch_object_t* name, 
+                   dfsch_object_t* value,
                    dfsch_object_t* env){
   dfsch_object_t* old = NULL;
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
@@ -949,7 +994,7 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
   }
   
   dfsch_idhash_set(e->decls, variable, 
-                   dfsch_cons(declaration, old));  
+                   dfsch_cons(dfsch_list(2, name, value), old));  
 
   if (e->owner != ti){
     DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
