@@ -26,3 +26,7 @@
   ((destructuring-bind (exp) '(:local)
                        exp) ===> :local))
 
+(define-test declare (:language :compiler)
+  (define foo 1)
+  (declare foo :type <fixnum>)
+  (assert-true #t))

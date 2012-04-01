@@ -984,9 +984,9 @@ void dfsch_declare(dfsch_object_t* variable,
   for(;;){
     if (!e){
       DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-      dfsch_error("Unbound variable", dfsch_cons(name, env));
+      dfsch_error("Unbound variable", dfsch_cons(variable, env));
     }
-    ret = dfsch_eqhash_ref(&e->values, name);
+    ret = dfsch_eqhash_ref(&e->values, variable);
     if (ret != DFSCH_INVALID_OBJECT){
       break;
     }
