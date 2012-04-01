@@ -595,8 +595,29 @@ dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
                               name, value);
 }
 
+DFSCH_FORM_METHOD_COMPILE(declare){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  dfsch_object_t* name;
+  dfsch_object_t* decls;
 
-DFSCH_DEFINE_FORM(declare, {},
+  DFSCH_OBJECT_ARG(args, name);
+
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* decl_name;
+    dfsch_object_t* decl_value;
+    DFSCH_OBJECT_ARG(args, decl_name);
+    DFSCH_OBJECT_ARG(args, decl_value);
+
+    decl_value = dfsch_eval(decl_value, env);
+
+    dfsch_declare(name, decl_name, decl_value, env);
+  }
+
+  return NULL;
+}
+
+
+DFSCH_DEFINE_FORM(declare, {DFSCH_FORM_COMPILE(declare)},
                   "Add declaration specifier to given symbol"){
   dfsch_object_t* name;
   dfsch_object_t* decls;
