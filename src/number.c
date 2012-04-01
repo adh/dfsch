@@ -1508,7 +1508,7 @@ DFSCH_DEFINE_PRIMITIVE(exact_2_inexact, 0){
   return dfsch_number_to_inexact(n);
 }
 
-DFSCH_DEFINE_PRIMITIVE(plus, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(plus, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(0);
   while(DFSCH_PAIR_P(i)){

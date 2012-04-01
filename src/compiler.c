@@ -97,7 +97,10 @@ dfsch_object_t* dfsch_cons_ast_node_cdr(dfsch_object_t* head,
 dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
                                                 dfsch_object_t* env){
   if (DFSCH_SYMBOL_P(expression)){
-    return dfsch_variable_constant_value(expression,env);
+    if (!env){
+      return DFSCH_INVALID_OBJECT;
+    }
+    return dfsch_variable_constant_value(expression, env);
   } else if (dfsch_quote_expression_p(expression)){
     return DFSCH_FAST_CAR(expression);
   } else if (DFSCH_PAIR_P(expression)){
@@ -144,6 +147,39 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
   
 }
 
+static int all_constants_p(dfsch_object_t* list){
+  while (DFSCH_PAIR_P(list)){
+    if (dfsch_constant_expression_value(DFSCH_FAST_CAR(list), 
+                                        NULL) == DFSCH_INVALID_OBJECT) {
+      return 0;
+    }
+    list = DFSCH_FAST_CDR(list);
+  }
+  return 1;
+}
+
+static int pure_function_p(dfsch_object_t* proc){
+  if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
+    return ((dfsch_primitive_t*)proc)->flags & DFSCH_PRIMITIVE_PURE;
+  }
+  return 0;
+}
+
+static dfsch_object_t* compile_funcall(dfsch_object_t* expression,
+                                       dfsch_object_t* operator,
+                                       dfsch_object_t* args,
+                                       dfsch_object_t* env){
+  if (pure_function_p(operator) && all_constants_p(args)){
+    return dfsch_apply(operator, dfsch_eval_list(args, env));
+  }
+
+  return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator), 
+                                 expression, 
+                                 dfsch_compile_expression_list(args,
+                                                               env),
+                                 0);
+}
+
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                          dfsch_object_t* env){
   dfsch_object_t* res;
@@ -177,11 +213,7 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
 								       env),
                                         env);
       } else {
-        res = dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
-                                      expression, 
-                                      dfsch_compile_expression_list(args,
-                                                                    env),
-                                      0);
+        res = compile_funcall(expression, operator_value, args, env);
       }
     } else {
       res = dfsch_cons_ast_node_cdr(operator, expression, 
