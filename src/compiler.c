@@ -170,7 +170,15 @@ static dfsch_object_t* compile_funcall(dfsch_object_t* expression,
                                        dfsch_object_t* args,
                                        dfsch_object_t* env){
   if (pure_function_p(operator) && all_constants_p(args)){
-    return dfsch_apply(operator, dfsch_eval_list(args, env));
+    dfsch_object_t* res = DFSCH_INVALID_OBJECT;
+
+    DFSCH_IGNORE_ERRORS {
+      res = dfsch_apply(operator, dfsch_eval_list(args, env));
+    } DFSCH_END_IGNORE_ERRORS;
+    
+    if (res != DFSCH_INVALID_OBJECT){
+      return dfsch_make_constant_ast_node(res);
+    }
   }
 
   return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator), 
