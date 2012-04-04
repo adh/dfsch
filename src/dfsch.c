@@ -882,14 +882,16 @@ object_t* dfsch_env_get_declarations(object_t* name, object_t* env){
 
 dfsch_object_t* dfsch_env_get_declaration_value(dfsch_object_t* name, 
                                                 dfsch_object_t* env,
-                                                dfsch_object_t* decl_name){
+                                                char* decl_name){
   dfsch_object_t* decls = dfsch_env_get_declarations(name, env);
   while (DFSCH_PAIR_P(decls)){
     dfsch_object_t* decl = DFSCH_FAST_CAR(decls);
     dfsch_object_t* dn;
     DFSCH_OBJECT_ARG(decl, dn);
-    if (dn == decl_name){
+    if (dfsch_compare_keyword(dn, decl_name)){
       dfsch_object_t* value;
+      DFSCH_OBJECT_ARG(decl, value);
+      return value;
     }
 
     decls = DFSCH_FAST_CDR(decls);

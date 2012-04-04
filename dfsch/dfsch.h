@@ -526,7 +526,7 @@ extern "C" {
                                              dfsch_object_t* env);
   dfsch_object_t* dfsch_env_get_declaration_value(dfsch_object_t* name, 
                                                   dfsch_object_t* env,
-                                                  dfsch_object_t* decl_name);
+                                                  char* decl_name);
   
 
 
