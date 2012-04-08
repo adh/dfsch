@@ -12,7 +12,7 @@ Common Lisp.
 
 # Syntax
 
-As dfsch is one of many dislects of Lisp, it uses parenthesis based
+As dfsch is one of many dialects of Lisp, it uses parenthesis based
 syntax. Source code read from text files on disk is converted into
 in-memory representation consisting of lists and other normal user
 accessible objects. Runtime behavior of programs does not directly
@@ -317,6 +317,18 @@ lists of key and value although some mapping types return only
 keys. Keys and values separately can be iterated over by iterators
 returned from |map-keys| and |map-values|.
 
+## Functions operating on collections
+
+ * |concatenate|
+ * |every| and |some|
+ * |filter|
+ * |find-if|
+ * |for-each|
+ * |map|, |map*| and |mapcan|
+ * |merge|
+ * |reduce|
+ * |zip|
+
 # Strings
 
 There are two kinds of strings - immutable textual strings encoded in
@@ -346,8 +358,242 @@ types representing their common properties. These are:
 Numbers, except floating point values, are automaticaly converted into
 simplest sufficient representation. All types except |<flonum>|
 represent exact values, function |exact->inexact| converts any number
-into inexact representation, whis is currently always |<flonum>|.
+into inexact representation, which is currently always |<flonum>|.
 
 # Input and output
 
-# Objects and types
+Access to file-like objects is faciliated by using so called
+ports. Core library supports on disk files and in-memory buffers, C
+extensions can implement another types of ports. Extensions bundled
+with dfsch allow you to additionally access:
+
+ * [process](../modules/process/index.html) - External processes
+ * [socket-port](../modules/socket-port/index.html) - Network sockets
+ * [zlib](../modules/zlib/index.html) - GZip compressed files
+ 
+Port for accessing on disk files can be opened by |open-file-port|,
+such port should be closed by |close-file-port!| once it is not needed
+anymore, althought it will be closed automatically by garbage
+collector.
+
+Function |string-input-port| produces read-only port containing
+supplied string and |string-output-port| produces write-only port that
+collects data written to it into string (accessed by
+|string-output-port-value|). Function |null-port| returns port that
+reads as empty and cannot be written into.
+
+Global constants |\*standard-input-port\*|, |\*standard-output-port\*|
+and |\*standard-error-port\*| represent respective streams provided by
+operating system. Most functions operating on ports do not require
+explicit port argument and can use implicit ports which can be
+examined by |current-input-port| and |current-output-port| and changed
+by |set-current-input-port!| and |set-current-output-port!|
+(|current-error-port| is also supported for completenes, but not used
+by any functions in core library).
+
+Ports can be accessed on line/byte level by following functions:
+
+ * |port-write-buf|
+ * |port-read-buf|
+ * |port-read-whole|
+ * |port-seek!|
+ * |port-tell|
+ * |newline|
+ 
+Also, objects can be written in human readable format and read back.
+
+ * |display| - writes objects in human-readable format
+ * |read| - reads objects written out by |write| (or in general dfsch
+    source code)
+ * |write| - writes objects in machine-readable format
+
+## Serialization
+
+In addition to file-based IO facilities, dfsch's core library provides
+support for serialization of almost arbitrary object graphs into
+portable and hopefuly compact binary format.
+
+Functions |serialize| and |deserialize| provide high level access to
+serialization mechanism and convert objects into byte-vectors and vice
+versa. Following functions offer more control over serialization:
+
+ * |make-serializer|
+ * |serializer-set-canonical-environment!|
+ * |serializer-write-stream-header!|
+ * |serialize-object!|
+ * |serialize-bytes!|
+ * |serialize-stream-symbol!|
+ * |serialize-integer!|
+
+And deserialization:
+
+ * |make-deserializer|
+ * |deserializer-set-canonical-environment!|
+ * |deserializer-read-stream-header!|
+ * |deserialize-object!|
+ * |deserialize-bytes!|
+ * |deserialize-stream-symbol!|
+ * |deserialize-integer!|
+
+
+# Types and object orientation
+
+All values in dfsch are of some type. These types comprise an
+[inheritance hierarchy](../hierarchy.html). Apart from normal
+hierarchical inheritnce, dfsch provides concept of type specializers
+(|<type-specializer>|), which can designate arbitrary subsets of
+types. Roles are special cases of type specializers which can be used
+to compose not only behavior, but also instance structure.
+
+In contrast to most object-oriented languages and similarly to CLOS,
+methods are not part of classes or types, but of so called generic
+functions. This allows user to extend behavior of any existing class
+regardless of whether it's definition is accessible. Also, methods can
+be specialized on arbitrary type specializers and not only concrete
+types, moreover it's possible to dispatch on any argument of generic
+function or even multiple at once.
+
+## Defining generic functions and methods
+
+Generic functions are defined using |define-generic-function| macro,
+which is necessary only to pass optional arguments to generic function
+constructor such as documentation string or different method
+combination function. 
+
+For example:
+
+    (define-generic speak)
+    (define-generic draw
+                    :documentation "Draw an representation of given object")
+
+Generic function without any methods is not especially useful, methods
+can be added by |define-method| macro. It's syntax is similar to
+normal |define|, but allows one to add so called qualifiers (which can
+be used to pass data to method combination function and thus influence
+role of this method in really executed code) and specializers to
+method or it's arguments respectively. Specializers place restrictions
+on argument types for which this method is called.
+
+    (define-method (speak (who <cat>))
+      (display "Nyaaa!")
+      (newline))
+      
+    (define-method (draw (what <cat>) (where <port>))
+      (display "=^.^=" where)
+      (newline where))
+      
+    (define-method (draw (what <cat>) (where <gd:image>))
+      ...)
+
+Inside methods, macro |call-next-method| can be used to defer
+processing to next less specialized method (similarly to *super* or so
+in other languages). Calling |call-next-method| without any arguments
+passes arguments originally passed to containing method, presense of
+arguments to |call-next-method| overrides this behavior.
+
+Methods without any qualifiers are called primary Default method
+combination allow use of following qualifiers:
+
+ * `:before` - Method is called always before calling any primary
+   methods. Multiple methods with this qualifier are called in order
+   from most specialized to least
+ * `:after` - Method is called always after calling any primary
+   methods. Multiple methods with this qualifier are called in order
+   from least specialized to most
+ * `:around` - Most specialized method is called instead of any other
+   methods, |call-next-method| inside it proceeds to call next `:around`
+   method or to normal ordering of `:before`, primary and `:after` methods
+   if there are no more `:around` methods.
+   
+For example:
+
+    ]=> (define-method ((foo :before) x)
+      ..> (display "()")
+      ..> (newline))
+    #<method 0xa8b270 ((foo :before))>
+    ]=> (define-method ((foo :before) (x <number>))
+      ..> (display "<number>")
+      ..> (newline))
+    #<method 0xa8b0c0 ((foo :before) <number>)>
+    ]=> (define-method ((foo :before) (x <fixnum>))
+      ..> (display "<fixnum>")
+      ..> (newline))
+    #<method 0xadcf00 ((foo :before) <fixnum>)>
+    ]=> (foo 1)
+    <fixnum>
+    <number>
+    ()
+    ()
+   
+### Method combination functions
+
+Method combination function allow user to influence what methods are
+actually called by providing function that converts list of matching
+methods into actually called function - simple example of why this is
+useful is calling all matching primary methods at once instad of only
+most specialized and combining their results together, method
+combination function doing exactly that can be produced by
+|make-simple-method-combination|.
+
+## Defining classes
+
+User defined classes are defined using |define-class| macro. Apart
+from name and superclass, this macro requires list of slots of new
+class (often known as *instance variables*). Each slot declaration can
+specify several options:
+
+ * `:initform` - Expression giving default value of slot
+ * `:initarg` - Keyword argument name of default class constructor for
+   setting this slot's value
+ * `:reader` - Name of method defined by |define-class| for reading
+   values of this slot
+ * `:writer` - Name of method defined by |define-class| for changing
+   values of this slot
+ * `:accessor` - Name of method defined by |define-class| for accessing
+   values of this slot. Read with one argument, change with two.
+   
+And additionaly:
+
+ * `:initfunc` - Function to call for default value of this slot
+   (automaticaly generated by |define-class| from :initform)
+ * `:type` - Type of this slot (instance of |<slot-type>|, describes
+   memory layout of slot, not normal object type). Useful to limit
+   values assignable to slot and to conserve memory.
+
+For example:
+
+    (define-class <animal> ()
+      ((:weight :initarg :weight :reader animal-weight)))
+    (define-class <pet> <animal>
+      ((:name :initarg :name :accessor pet-name)))
+    (define-class <cat> <pet>
+      ((:color :initarg :color :reader cat-color)
+       (:fur-length :initarg :fur-length :reader cat-fur-length)))
+
+After slot list, additional class options may be present:
+
+ * `:roles` - List of roles implemented by this class
+ * `:metaclsss` - Metaclass used for this class
+ 
+### Roles
+
+Apart from roles being usable for specialization of methods, they can
+also contain slots and class options, that are inserted into classes
+implementing them. In contrast to classes, roles support multiple
+inheritance.
+
+New role is defined by |define-role| macro. Building on previos
+example we can do this:
+
+    (define-role <<furry>> ()
+      ((:color :initarg :color :reader cat-color)
+       (:fur-length :initarg :fur-length :reader cat-fur-length)))
+    (define-class <cat> <pet>
+      ()
+      :roles (<<furry>>))
+    (define-class <dog> <pet>
+      ()
+      :roles (<<furry>>))
+    (define-class <boar> <animal>
+      ()
+      :roles (<<furry>>))

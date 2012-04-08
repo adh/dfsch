@@ -100,6 +100,8 @@ typedef struct dfsch_primitive_t {
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
+#define DFSCH_PRIMITIVE_PURE 1
+
 extern dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_DOC_SYNOPSIS(list) , .synopsis = list
@@ -116,11 +118,11 @@ extern dfsch_type_t dfsch_primitive_type;
     DFSCH_DOC_STRING(documentation)                     \
   }
   
-#define DFSCH_DECLARE_PRIMITIVE_EX(name, baton, flags, documentation)   \
+#define DFSCH_DECLARE_PRIMITIVE_EX(name, documentation, flags)		\
   static dfsch_primitive_t p_##name = {                                 \
     DFSCH_PRIMITIVE_TYPE,                                               \
     p_##name##_impl,                                                    \
-    baton,                                                              \
+    NULL,								\
     flags,                                                              \
     #name,                                                              \
     DFSCH_DOC_STRING(documentation)                                     \
@@ -135,6 +137,11 @@ extern dfsch_type_t dfsch_primitive_type;
 #define DFSCH_DEFINE_PRIMITIVE(name, documentation)     \
   DFSCH_PRIMITIVE_HEAD(name);                           \
   DFSCH_DECLARE_PRIMITIVE(name, documentation);         \
+  DFSCH_PRIMITIVE_HEAD(name)
+
+#define DFSCH_DEFINE_PRIMITIVE_EX(name, documentation, flags)	\
+  DFSCH_PRIMITIVE_HEAD(name);					\
+  DFSCH_DECLARE_PRIMITIVE_EX(name, documentation, flags);       \
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)
@@ -374,6 +381,7 @@ struct dfsch_type_t {
   dfsch_type_serialize_t serialize;
 
   dfsch_object_t* slot_metadata;
+  dfsch_object_t* roles;
 
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;

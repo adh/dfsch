@@ -142,13 +142,14 @@
   (assert-equal (format "~10,5f" pi) "   3.14159"))
 
 
-(define-class <test-class> () 
-  ((test-slot :accessor test-slot 
-              :initform :test-slot-init-value
-              :initarg :test-slot-initarg)))
-(define-class <test-subclass> <test-class> ())
 
 (define-test classes (:language :oop)
+  (define-class <test-class> () 
+    ((test-slot :accessor test-slot 
+                :initform :test-slot-init-value
+                :initarg :test-slot-initarg)))
+  (define-class <test-subclass> <test-class> ())
+  
   (assert-equal (type-of (make-instance <test-class>))
                 <test-class>)
   (assert-equal (test-slot (make-instance <test-class>))
@@ -160,6 +161,12 @@
                 :foo))
 
 (define-test methods (:language :oop)
+  (define-class <test-class> () 
+    ((test-slot :accessor test-slot 
+                :initform :test-slot-init-value
+                :initarg :test-slot-initarg)))
+  (define-class <test-subclass> <test-class> ())
+
   (define-method (test-fun foo)
     'default)
   (define-method (test-fun (foo <test-class>))
@@ -179,8 +186,16 @@
                 '(subclass . test-class)))
 
 (define-test serialization-roundtrip (:language :serialization)
-  (assert-equal (deserialize (serialize '(1 2 3 #(a b c) 3.1415 +inf. "foo")))
-                '(1 2 3 #(a b c) 3.1415 +inf. "foo")))
+  (define data '(1 
+                 2 
+                 3 
+                 #(a b c) 
+                 3.1415 
+                 +inf. 
+                 "foo" 
+                 1/2))
+  (assert-equal (deserialize (serialize data))
+                data))
 
 (define-test sequences (:language :collections)
   (define l (list   'a 'b 'c 'd 'e 'f))
@@ -191,3 +206,29 @@
 
   (seq-set! l 3 'dd)
   (assert-equal (seq-ref l 3) 'dd))
+
+
+(define-test roles (:language :oop)
+  (define-role <<foo>> ()
+    ((:foo :accessor foo-accessor)))
+  (define-role <<derived-foo>> (<<foo>>)
+    ((:bar :accessor bar-accessor)))
+  (define-class <bar> ()
+    ()
+    :roles (<<foo>>))
+
+  (assert-true (specializer-matches-type? <<foo>> <bar>))
+  
+  (define-class <quux> ()
+    ()
+    :roles (<<derived-foo>>))
+  (assert-true (specializer-matches-type? <<foo>> <quux>))
+  (assert-true (specializer-matches-type? <<derived-foo>> <quux>))
+
+  (define-method (test-method (i <<foo>>))
+    :foo)
+  (define-method (test-method (i <<derived-foo>>))
+    :derived-foo)
+  
+  (assert-equal (test-method (make-instance <bar>)) :foo)
+  (assert-equal (test-method (make-instance <quux>)) :derived-foo))

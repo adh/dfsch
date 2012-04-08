@@ -55,6 +55,7 @@ dfsch_object_t* dfsch_cons_ast_node(dfsch_object_t* head,
   }
 
   va_end(al);
+
   return DFSCH_MAKE_CLIST(data);  
 }
 
@@ -89,14 +90,17 @@ dfsch_object_t* dfsch_cons_ast_node_cdr(dfsch_object_t* head,
   }
 
   va_end(al);
-  return DFSCH_MAKE_CLIST(data);
-  
+
+  return DFSCH_MAKE_CLIST(data);  
 }
 
 dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
                                                 dfsch_object_t* env){
   if (DFSCH_SYMBOL_P(expression)){
-    return dfsch_variable_constant_value(expression,env);
+    if (!env){
+      return DFSCH_INVALID_OBJECT;
+    }
+    return dfsch_variable_constant_value(expression, env);
   } else if (dfsch_quote_expression_p(expression)){
     return DFSCH_FAST_CAR(expression);
   } else if (DFSCH_PAIR_P(expression)){
@@ -124,8 +128,8 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
 
   while(DFSCH_PAIR_P(i)){
     dfsch_object_t* tmp = 
-      dfsch_cons(dfsch_compile_expression(DFSCH_FAST_CAR(i), env),
-                 NULL);
+      dfsch_cons(dfsch_compile_expression(DFSCH_FAST_CAR(i), env), NULL);
+
     if (head){
       DFSCH_FAST_CDR_MUT(tail) = tmp;
       tail = tmp;
@@ -143,8 +147,51 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
   
 }
 
+static int all_constants_p(dfsch_object_t* list){
+  while (DFSCH_PAIR_P(list)){
+    if (dfsch_constant_expression_value(DFSCH_FAST_CAR(list), 
+                                        NULL) == DFSCH_INVALID_OBJECT) {
+      return 0;
+    }
+    list = DFSCH_FAST_CDR(list);
+  }
+  return 1;
+}
+
+static int pure_function_p(dfsch_object_t* proc){
+  if (DFSCH_TYPE_OF(proc) == DFSCH_PRIMITIVE_TYPE){
+    return ((dfsch_primitive_t*)proc)->flags & DFSCH_PRIMITIVE_PURE;
+  }
+  return 0;
+}
+
+static dfsch_object_t* compile_funcall(dfsch_object_t* expression,
+                                       dfsch_object_t* operator,
+                                       dfsch_object_t* args,
+                                       dfsch_object_t* env){
+  if (pure_function_p(operator) && all_constants_p(args)){
+    dfsch_object_t* res = DFSCH_INVALID_OBJECT;
+
+    DFSCH_IGNORE_ERRORS {
+      res = dfsch_apply(operator, dfsch_eval_list(args, env));
+    } DFSCH_END_IGNORE_ERRORS;
+    
+    if (res != DFSCH_INVALID_OBJECT){
+      return dfsch_make_constant_ast_node(res);
+    }
+  }
+
+  return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator), 
+                                 expression, 
+                                 dfsch_compile_expression_list(args,
+                                                               env),
+                                 0);
+}
+
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                          dfsch_object_t* env){
+  dfsch_object_t* res;
+
   if (DFSCH_PAIR_P(expression)){
     dfsch_object_t* operator = DFSCH_FAST_CAR(expression);
     dfsch_object_t* operator_value;
@@ -157,50 +204,130 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_FORM_TYPE){
         dfsch_form_t* form = ((dfsch_form_t*)operator_value);
         if (form->methods.compile){
-          return form->methods.compile(operator_value, expression, env);
+          res = form->methods.compile(operator_value, expression, env);
         } else {
           if (operator != operator_value){ 
-            return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
-                                           expression,
-                                           args,
-                                           0);
+            res = dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
+                                          expression,
+                                          args,
+                                          0);
           } else {
-            return expression;
+            res = expression;
           }
         }
-      }
-      if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
-        return dfsch_compile_expression(dfsch_macro_expand_expr(operator_value,
-                                                                expression),
+      } else if (DFSCH_TYPE_OF(operator_value) == DFSCH_MACRO_TYPE){
+        res = dfsch_compile_expression(dfsch_macro_expand_expr_in_env(operator_value,
+								       expression,
+								       env),
                                         env);
+      } else {
+        res = compile_funcall(expression, operator_value, args, env);
       }
-
-      return dfsch_cons_ast_node_cdr(dfsch_make_constant_ast_node(operator_value),
-                                     expression, 
-                                     dfsch_compile_expression_list(args,
-                                                                   env),
-                                     0);
+    } else {
+      res = dfsch_cons_ast_node_cdr(operator, expression, 
+                                    dfsch_compile_expression_list(args,
+                                                                  env),
+                                    0);
     }
-    return dfsch_cons_ast_node_cdr(operator, expression, 
-                                   dfsch_compile_expression_list(args,
-                                                                 env),
-                                   0);
-    
-
   } else if (DFSCH_SYMBOL_P(expression)){
-    return expression; // TODO
+    dfsch_object_t* value = dfsch_constant_expression_value(expression, env);
+    
+    if (value == DFSCH_INVALID_OBJECT){
+      res = expression;
+    } else {
+      res = dfsch_make_constant_ast_node(value);
+    }
   } else {
     return expression;
   }
+
+  if (expression != res){
+    dfsch__copy_breakpoint_to_compiled_ast_node(expression, res);
+  }
+  return res;
 }
 
+void dfsch_compiler_declare_variable(dfsch_object_t* env,
+                                     dfsch_object_t* name){
+  dfsch_define(name, NULL, env, 0);  
+}
+
+void dfsch_compiler_update_constant(dfsch_object_t* env, 
+				    dfsch_object_t* name, 
+				    dfsch_object_t* value){
+  value = dfsch_constant_expression_value(value, env);
+  if (value == DFSCH_INVALID_OBJECT){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+				   "constant value not known at compilation time",
+				   "name", name,
+				   NULL);
+    dfsch_define(name, NULL, env, 0); // XXX
+  } else {
+    dfsch_define(name, value, env, DFSCH_VAR_CONSTANT); 
+  }
+}
+
+static void declare_function_arguments(environment_t* env,
+                                       lambda_list_t* ll){
+  size_t i;
+  dfsch_object_t* j;
+
+  size_t arg_count = ll->positional_count + ll->keyword_count 
+    + ll->optional_count;
+
+  for (i = 0; i < arg_count; i++){
+    dfsch_compiler_declare_variable(env, ll->arg_list[i]);
+  }
+
+  arg_count = ll->keyword_count + ll->optional_count; /* supplied-p */
+  for (i = 0; i < arg_count; i++){
+    if (ll->supplied_p[i]){
+      dfsch_compiler_declare_variable(env, ll->supplied_p[i]);
+    }
+  }
+
+  if (ll->rest){
+    dfsch_compiler_declare_variable(env, ll->rest);
+  }
+
+  j = ll->aux_list;
+  while (DFSCH_PAIR_P(j)){
+    dfsch_compiler_declare_variable(env, dfsch_car(DFSCH_FAST_CAR(j)));
+    j = DFSCH_FAST_CDR(j);
+  }
+  
+}
+
+dfsch_object_t* 
+dfsch_compiler_extend_environment_with_arguments(dfsch_object_t* environment,
+                                                 dfsch_object_t* arglist){
+  dfsch_object_t* env = dfsch_new_frame(environment);
+  lambda_list_t* l;
+
+  if (DFSCH_TYPE_OF(arglist) != DFSCH_LAMBDA_LIST_TYPE){
+    l = (lambda_list_t*)dfsch_compile_lambda_list(arglist);
+  } else {
+    l = (lambda_list_t*)arglist;
+  }
+
+  declare_function_arguments(env, l);
+  return env;
+}
+
+static void compile_function(closure_t* func){
+  dfsch_object_t* env = dfsch_new_frame(func->env);
+
+  declare_function_arguments(env, func->args);
+  func->code = dfsch_compile_expression_list(func->orig_code, env);
+
+}
 
 void dfsch_compile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
-  func->code = dfsch_compile_expression_list(func->orig_code,
-                                             func->env);
+  compile_function(func);
+
   func->compiled = 1;
 }
 
@@ -212,9 +339,9 @@ void dfsch_precompile_function(dfsch_object_t* function){
   closure_t* func = DFSCH_ASSERT_INSTANCE(function, 
                                           DFSCH_STANDARD_FUNCTION_TYPE);
 
-  func->code = dfsch_compile_expression_list(func->orig_code,
-                                             func->env);
+  compile_function(func);
   func->env = NULL;
+
   if (recompile_precompiled >= 0){
     func->call_count = recompile_precompiled;
   } else {

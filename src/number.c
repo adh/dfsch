@@ -282,6 +282,13 @@ static void fracnum_serialize(fracnum_t* n, dfsch_serializer_t* s){
   dfsch_serialize_object(s, n->num);
   dfsch_serialize_object(s, n->denom);
 }
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("fracnum", fracnum){
+  fracnum_t* f = (fracnum_t*)dfsch_make_object(DFSCH_FRACNUM_TYPE);
+  dfsch_deserializer_put_partial_object(ds, f);
+  f->num = dfsch_deserialize_object(ds);
+  f->denom = dfsch_deserialize_object(ds);
+  return f;
+}
 
 dfsch_number_type_t dfsch_fracnum_type = {
   DFSCH_STANDARD_TYPE,
@@ -540,6 +547,31 @@ long dfsch_number_to_long(dfsch_object_t *n){
   dfsch_error("Not an integer", n);
 }
 
+unsigned long dfsch_number_to_ulong(dfsch_object_t *n){
+  int64_t r;
+
+  if (DFSCH_TYPE_OF(n)==DFSCH_FIXNUM_TYPE){
+    if (DFSCH_FIXNUM_REF(n) < 0){
+      dfsch_error("Non-negative value expected", n);
+    }
+    return DFSCH_FIXNUM_REF(n);
+  } else if (DFSCH_TYPE_OF(n)==DFSCH_BIGNUM_TYPE){
+    if (!dfsch_bignum_to_int64((dfsch_bignum_t*)n, &r) || 
+        r > ULONG_MAX){
+      dfsch_error("Value too large", n);
+    }
+
+    if (r < 0){
+      dfsch_error("Non-negative value expected", n);
+    }
+
+
+    return r;
+  }
+  dfsch_error("Not an integer", n);
+}
+
+
 int64_t dfsch_number_to_int64(dfsch_object_t *n){
   int64_t r;
 
@@ -678,7 +710,7 @@ int dfsch_number_cmp(dfsch_object_t* a, dfsch_object_t* b){
     }
   }
 
-  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE ||
+  if (DFSCH_TYPE_OF(a) == DFSCH_FRACNUM_TYPE &&
       DFSCH_TYPE_OF(b) == DFSCH_FRACNUM_TYPE){
     return dfsch_number_cmp(dfsch_number_mul(dfsch_number_numerator(a),
                                              dfsch_number_denominator(b)),
@@ -1428,55 +1460,55 @@ dfsch_object_t* dfsch_make_number_sequence(dfsch_object_t* from,
 /////////////////////////////////////////////////////////////////////////////
 
 
-DFSCH_DEFINE_PRIMITIVE(number_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(number_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_number_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(real_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(real_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_real_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(rational_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(rational_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_rational_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(integer_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(integer_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_integer_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(exact_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(exact_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(dfsch_number_exact_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(inexact_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(inexact_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *obj;
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_ARG_END(args);
 
   return dfsch_bool(!dfsch_number_exact_p(obj));  
 }
-DFSCH_DEFINE_PRIMITIVE(exact_2_inexact, 0){
+DFSCH_DEFINE_PRIMITIVE_EX(exact_2_inexact, 0, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   return dfsch_number_to_inexact(n);
 }
 
-DFSCH_DEFINE_PRIMITIVE(plus, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(plus, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(0);
   while(DFSCH_PAIR_P(i)){
@@ -1486,7 +1518,7 @@ DFSCH_DEFINE_PRIMITIVE(plus, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(minus, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(minus, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
@@ -1503,7 +1535,7 @@ DFSCH_DEFINE_PRIMITIVE(minus, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(mult, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(mult, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   object_t* s = DFSCH_MAKE_FIXNUM(1);
   while(DFSCH_PAIR_P(i)){
@@ -1513,7 +1545,7 @@ DFSCH_DEFINE_PRIMITIVE(mult, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(slash, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(slash, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
@@ -1532,7 +1564,7 @@ DFSCH_DEFINE_PRIMITIVE(slash, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(slash_i, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(slash_i, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
@@ -1551,7 +1583,7 @@ DFSCH_DEFINE_PRIMITIVE(slash_i, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(modulo, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(modulo, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   object_t* s;
   if (!DFSCH_PAIR_P(i))
@@ -1571,7 +1603,7 @@ DFSCH_DEFINE_PRIMITIVE(modulo, NULL){
   return s; 
 }
 
-DFSCH_DEFINE_PRIMITIVE(number_equal, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(number_equal, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* z0, *z1;
   DFSCH_OBJECT_ARG(args, z0);
   DFSCH_OBJECT_ARG(args, z1);
@@ -1580,7 +1612,7 @@ DFSCH_DEFINE_PRIMITIVE(number_equal, NULL){
   return dfsch_bool(dfsch_number_equal_p(z0,z1));
 }
 
-DFSCH_DEFINE_PRIMITIVE(lt, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(lt, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *a;
   object_t *b;
 
@@ -1593,7 +1625,7 @@ DFSCH_DEFINE_PRIMITIVE(lt, NULL){
   }
   return DFSCH_SYM_TRUE;
 }
-DFSCH_DEFINE_PRIMITIVE(gt, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(gt, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *a;
   object_t *b;
 
@@ -1606,7 +1638,7 @@ DFSCH_DEFINE_PRIMITIVE(gt, NULL){
   }
   return DFSCH_SYM_TRUE;
 }
-DFSCH_DEFINE_PRIMITIVE(lte, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(lte, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *a;
   object_t *b;
 
@@ -1619,7 +1651,7 @@ DFSCH_DEFINE_PRIMITIVE(lte, NULL){
   }
   return DFSCH_SYM_TRUE;
 }
-DFSCH_DEFINE_PRIMITIVE(gte, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(gte, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *a;
   object_t *b;
 
@@ -1635,7 +1667,7 @@ DFSCH_DEFINE_PRIMITIVE(gte, NULL){
 
 // Bitwise
 
-DFSCH_DEFINE_PRIMITIVE(logand, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(logand, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(-1); /* all ones */
 
@@ -1646,7 +1678,7 @@ DFSCH_DEFINE_PRIMITIVE(logand, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(logtest, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(logtest, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(-1); /* all ones */
 
@@ -1657,7 +1689,7 @@ DFSCH_DEFINE_PRIMITIVE(logtest, NULL){
 
   return dfsch_bool(s != DFSCH_MAKE_FIXNUM(0)); 
 }
-DFSCH_DEFINE_PRIMITIVE(logior, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(logior, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(0);
   while(DFSCH_PAIR_P(i)){
@@ -1667,7 +1699,7 @@ DFSCH_DEFINE_PRIMITIVE(logior, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(logxor, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(logxor, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* i = args;
   dfsch_object_t* s = DFSCH_MAKE_FIXNUM(0);
   while(DFSCH_PAIR_P(i)){
@@ -1677,7 +1709,7 @@ DFSCH_DEFINE_PRIMITIVE(logxor, NULL){
 
   return s; 
 }
-DFSCH_DEFINE_PRIMITIVE(lognot, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(lognot, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -1688,7 +1720,7 @@ DFSCH_DEFINE_PRIMITIVE(lognot, NULL){
 
 // Functions
 
-DFSCH_DEFINE_PRIMITIVE(abs, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(abs, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -1697,14 +1729,14 @@ DFSCH_DEFINE_PRIMITIVE(abs, NULL){
   return dfsch_number_abs(n);
 }
 
-DFSCH_DEFINE_PRIMITIVE(exp, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(exp, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG_OPT(args, z, 1.0);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(exp(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(log, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(log, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -1719,44 +1751,44 @@ DFSCH_DEFINE_PRIMITIVE(log, NULL){
   return dfsch_make_number_from_double(log(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(sin, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(sin, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(sin(z));
 }
-DFSCH_DEFINE_PRIMITIVE(cos, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(cos, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(cos(z));
 }
-DFSCH_DEFINE_PRIMITIVE(tan, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(tan, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tan(z));
 }
-DFSCH_DEFINE_PRIMITIVE(sinh, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(sinh, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(sinh(z));
 }
-DFSCH_DEFINE_PRIMITIVE(cosh, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(cosh, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(cosh(z));
 }
-DFSCH_DEFINE_PRIMITIVE(tanh, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(tanh, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(tanh(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(asin, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(asin, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -1771,7 +1803,7 @@ DFSCH_DEFINE_PRIMITIVE(asin, NULL){
   return dfsch_make_number_from_double(asin(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(acos, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(acos, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -1786,7 +1818,7 @@ DFSCH_DEFINE_PRIMITIVE(acos, NULL){
   return dfsch_make_number_from_double(acos(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(atan, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(atan, NULL, DFSCH_PRIMITIVE_PURE){
   double z0, z1;
   DFSCH_DOUBLE_ARG(args, z0);
   DFSCH_DOUBLE_ARG_OPT(args, z1, 1.0);
@@ -1794,7 +1826,7 @@ DFSCH_DEFINE_PRIMITIVE(atan, NULL){
   return dfsch_make_number_from_double(atan(z0/z1));
 }
 
-DFSCH_DEFINE_PRIMITIVE(sqrt, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(sqrt, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -1809,7 +1841,7 @@ DFSCH_DEFINE_PRIMITIVE(sqrt, NULL){
   return dfsch_make_number_from_double(sqrt(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(expt, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(expt, NULL, DFSCH_PRIMITIVE_PURE){
   double z0, z1, v;
   DFSCH_DOUBLE_ARG(args, z0);
   DFSCH_DOUBLE_ARG(args, z1);
@@ -1828,42 +1860,42 @@ DFSCH_DEFINE_PRIMITIVE(expt, NULL){
   return dfsch_make_number_from_double(v);
 }
 
-DFSCH_DEFINE_PRIMITIVE(zero_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(zero_p, NULL, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   return dfsch_bool(dfsch_number_sign(n) == 0);
 }
 
-DFSCH_DEFINE_PRIMITIVE(positive_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(positive_p, NULL, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   return dfsch_bool(dfsch_number_sign(n) > 0);
 }
 
-DFSCH_DEFINE_PRIMITIVE(negative_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(negative_p, NULL, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   return dfsch_bool(dfsch_number_sign(n) < 0);
 }
 
-DFSCH_DEFINE_PRIMITIVE(even_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(even_p, NULL, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   return dfsch_bool(dfsch_number_even_p(n));
 }
 
-DFSCH_DEFINE_PRIMITIVE(odd_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(odd_p, NULL, DFSCH_PRIMITIVE_PURE){
   dfsch_object_t* n;
   DFSCH_OBJECT_ARG(args, n);
   DFSCH_ARG_END(args);
   return dfsch_bool(dfsch_number_odd_p(n));
 }
 
-DFSCH_DEFINE_PRIMITIVE(max, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(max, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *max;
   object_t *i;
 
@@ -1876,7 +1908,7 @@ DFSCH_DEFINE_PRIMITIVE(max, NULL){
   return max;
 }
 
-DFSCH_DEFINE_PRIMITIVE(min, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(min, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *max;
   object_t *i;
 
@@ -1889,50 +1921,50 @@ DFSCH_DEFINE_PRIMITIVE(min, NULL){
   return max;
 }
 
-DFSCH_DEFINE_PRIMITIVE(round, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(round, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(round(z));
 }
-DFSCH_DEFINE_PRIMITIVE(floor, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(floor, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(floor(z));
 }
-DFSCH_DEFINE_PRIMITIVE(ceiling, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(ceiling, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(ceil(z));
 }
-DFSCH_DEFINE_PRIMITIVE(truncate, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(truncate, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_double(trunc(z));
 }
 
-DFSCH_DEFINE_PRIMITIVE(round_i, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(round_i, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_int64(round(z));
 }
-DFSCH_DEFINE_PRIMITIVE(floor_i, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(floor_i, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_int64(floor(z));
 }
-DFSCH_DEFINE_PRIMITIVE(ceiling_i, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(ceiling_i, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
   return dfsch_make_number_from_int64(ceil(z));
 }
-DFSCH_DEFINE_PRIMITIVE(truncate_i, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(truncate_i, NULL, DFSCH_PRIMITIVE_PURE){
   double z;
   DFSCH_DOUBLE_ARG(args, z);
   DFSCH_ARG_END(args);
@@ -1940,7 +1972,7 @@ DFSCH_DEFINE_PRIMITIVE(truncate_i, NULL){
 }
 
 
-DFSCH_DEFINE_PRIMITIVE(number_2_string, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(number_2_string, NULL, DFSCH_PRIMITIVE_PURE){
   object_t *n;
   long base;
 
@@ -1950,7 +1982,7 @@ DFSCH_DEFINE_PRIMITIVE(number_2_string, NULL){
 
   return dfsch_make_string_cstr(dfsch_number_to_string(n, base));
 }
-DFSCH_DEFINE_PRIMITIVE(string_2_number, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(string_2_number, NULL, DFSCH_PRIMITIVE_PURE){
   char *str;
   long base;
 
@@ -1960,7 +1992,7 @@ DFSCH_DEFINE_PRIMITIVE(string_2_number, NULL){
 
   return dfsch_make_number_from_string(str, base);
 }
-DFSCH_DEFINE_PRIMITIVE(gcd, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(gcd, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* a;
   object_t* b;
 
@@ -1976,7 +2008,7 @@ DFSCH_DEFINE_PRIMITIVE(gcd, NULL){
 
   return a;
 }
-DFSCH_DEFINE_PRIMITIVE(mod_inv, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(mod_inv, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* a;
   object_t* b;
 
@@ -1987,7 +2019,7 @@ DFSCH_DEFINE_PRIMITIVE(mod_inv, NULL){
 
   return dfsch_number_mod_inv(a, b);
 }
-DFSCH_DEFINE_PRIMITIVE(lcm, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(lcm, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* a = DFSCH_MAKE_FIXNUM(1);
   object_t* b;
 
@@ -1999,7 +2031,7 @@ DFSCH_DEFINE_PRIMITIVE(lcm, NULL){
   return a;
 }
 
-DFSCH_DEFINE_PRIMITIVE(lsb, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(lsb, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -2009,7 +2041,7 @@ DFSCH_DEFINE_PRIMITIVE(lsb, NULL){
   return DFSCH_MAKE_FIXNUM(dfsch_number_lsb(n));
 }
 
-DFSCH_DEFINE_PRIMITIVE(msb, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(msb, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -2019,7 +2051,7 @@ DFSCH_DEFINE_PRIMITIVE(msb, NULL){
   return DFSCH_MAKE_FIXNUM(dfsch_number_msb(n));
 }
 
-DFSCH_DEFINE_PRIMITIVE(inc, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(inc, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -2028,7 +2060,7 @@ DFSCH_DEFINE_PRIMITIVE(inc, NULL){
 
   return dfsch_number_add(n, DFSCH_MAKE_FIXNUM(1));
 }
-DFSCH_DEFINE_PRIMITIVE(dec, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(dec, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -2038,7 +2070,7 @@ DFSCH_DEFINE_PRIMITIVE(dec, NULL){
   return dfsch_number_sub(n, DFSCH_MAKE_FIXNUM(1));
 }
 
-DFSCH_DEFINE_PRIMITIVE(shr, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(shr, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
   size_t count;
 
@@ -2049,7 +2081,7 @@ DFSCH_DEFINE_PRIMITIVE(shr, NULL){
 
   return dfsch_number_shr(n, count);
 }
-DFSCH_DEFINE_PRIMITIVE(shl, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(shl, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
   size_t count;
 
@@ -2060,7 +2092,7 @@ DFSCH_DEFINE_PRIMITIVE(shl, NULL){
 
   return dfsch_number_shl(n, count);
 }
-DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(prime_p, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);
@@ -2070,7 +2102,7 @@ DFSCH_DEFINE_PRIMITIVE(prime_p, NULL){
   return dfsch_bool(dfsch_number_prime_p(n));
 }
 
-DFSCH_DEFINE_PRIMITIVE(next_prime, NULL){
+DFSCH_DEFINE_PRIMITIVE_EX(next_prime, NULL, DFSCH_PRIMITIVE_PURE){
   object_t* n;
 
   DFSCH_OBJECT_ARG(args, n);

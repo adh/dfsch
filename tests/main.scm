@@ -18,5 +18,6 @@
 (require :language-tests)
 (require :r5rs-tests)
 (require :fix-regression-tests)
+(require :compiler-tests)
 
 (test-toplevel)

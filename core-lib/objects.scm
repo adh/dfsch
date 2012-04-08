@@ -50,7 +50,59 @@
 (define-has-slot-specializer dfsch:<<documented-synopsis>> :synopsis
   "All objects with :synopsis slot")
 
-(define-macro (dfsch:define-class name superclass slots &rest class-opts)
+(define-macro (add-method-to-generic-function! name spec-list proc)
+  `(add-method! (define-generic-function ,name) 
+                (make-method (cons ',name ',spec-list)
+                             #n
+                             (list ,@spec-list)
+                             ,proc)))
+
+(define-macro (dfsch:define-slot-accessor name class slot-name)
+  "Define generic method for accessing named slot of given type"
+  `(add-method-to-generic-function! ,name 
+                                    (,class)
+                                    (make-slot-accessor ,class  ,slot-name)))
+(define-macro (dfsch:define-slot-reader name class slot-name)
+  "Define generic method for reading from named slot of given type"
+  `(add-method-to-generic-function! ,name
+                                    (,class)
+                                    (make-slot-reader ,class  ,slot-name)))
+(define-macro (dfsch:define-slot-writer name class slot-name)
+  "Define generic method for writing into named slot of given type"
+  `(add-method-to-generic-function! ,name
+                                    (,class)
+                                    (make-slot-writer ,class  ,slot-name)))
+
+(define-slot-reader dfsch:role-superroles <role> :superroles)
+(define-slot-reader dfsch:role-options <role> :options)
+(define-slot-reader dfsch:role-slots <role> :slots)
+
+(define-macro (dfsch:define-class name superklass slots 
+                                  &rest class-opts
+                                  &key roles &allow-other-keys)
+  "Define new user defined class"
+
+  ;; Remove role list from list of class options
+  (set! class-opts (plist-remove-keys class-opts '(:roles)))
+
+  ;; Evaluate list of roles in outer context
+  (set! roles (eval-list roles (%macro-expansion-environment)))
+
+  ;; Extend used slot and options lists by matching lists in used roles
+  ;; Also remove roles that conflict with superclass roles
+  (set! roles (map* (lambda (role-object)
+                      (let ((role (assert-instance role-object <role>)))
+                        (set! slots (append slots 
+                                            (role-slots role)))
+                        (set! class-opts (append class-opts 
+                                                 (role-options role)))
+                        role))
+                    roles))
+  
+  ;; put evaluated list of roles back
+  (set! class-opts (nconc `(:roles ',roles)
+                          class-opts))
+
   (let ((class-slots (map 
                       (lambda (desc)
                         (letrec ((name (if (pair? desc) (car desc) desc))
@@ -70,7 +122,7 @@
                       slots)))
     `@(begin 
         (%define-canonical-constant ,name (make-class ',name 
-                                                      ,superclass 
+                                                      ,superklass 
                                                       (list ,@class-slots)
                                                       ,@class-opts))
         ,@(mapcan 
@@ -82,16 +134,19 @@
                       (reader (plist-get opts :reader)))
                (append 
                 (when accessor
-                  `((%define-canonical-constant ,(car accessor)
-                                                (make-slot-accessor ,name 
-                                                                    ',sname))))
-                (when writer
-                  `((%define-canonical-constant ,(car writer)
-                                                (make-slot-writer ,name 
-                                                                  ',sname))))
+                  `((define-slot-accessor ,(car accessor) ,name ',sname)))
                 (when reader
-                  `((%define-canonical-constant ,(car reader)
-                                                (make-slot-reader ,name 
-                                                                  ',sname)))))))
-           slots))))
+                  `((define-slot-reader ,(car reader) ,name ',sname)))
+                (when writer
+                  `((define-slot-writer ,(car writer) ,name ',sname))))))
+           slots)
+        ,name)))
 
+
+(define-macro (dfsch:define-role name superroles slots &rest options)
+  `(%define-canonical-constant ,name 
+			       (%compile-time-constant 
+				(make-role ',name
+					   (list ,@superroles)
+					   ',slots
+					   (list ,@options)))))

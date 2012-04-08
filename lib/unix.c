@@ -19,6 +19,8 @@
  *
  */
 
+#define _XOPEN_SOURCE 500
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -29,6 +31,7 @@
 #include <dfsch/load.h>
 #include <dfsch/conditions.h>
 #include <dfsch/random.h>
+#include <dfsch/magic.h>
 
 #include "src/util.h"
 
@@ -46,6 +49,9 @@
 #include <time.h>
 #include <sys/mman.h>
 #include <syslog.h>
+#include <ftw.h>
+#include <pwd.h>
+#include <grp.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -676,6 +682,397 @@ DFSCH_DEFINE_PRIMITIVE(setlogmask, NULL){
   return NULL;
 }
 
+static pthread_mutex_t ftw_mutex;
+static dfsch_object_t* ftw_fun;
+static pthread_once_t ftw_mutex_once = PTHREAD_ONCE_INIT;
+
+static void ftw_mutex_init(){
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&ftw_mutex, &attr);
+  pthread_mutexattr_destroy(&attr);
+}
+
+static void ftw_enter(){
+  pthread_once(&ftw_mutex_once, ftw_mutex_init);
+  pthread_mutex_lock(&ftw_mutex);
+}
+
+static void ftw_leave(){
+  pthread_mutex_unlock(&ftw_mutex);
+}
+
+static int ftw_cb(const char *fpath, const struct stat *sb,
+                  int typeflag, struct FTW *ftwbuf){
+  dfsch_object_t* tfo;
+  int ret;
+
+  switch (typeflag){
+  case FTW_F:
+    tfo = dfsch_make_keyword("FTW_F");
+    break;
+  case FTW_D:
+    tfo = dfsch_make_keyword("FTW_D");
+    break;
+  case FTW_DNR:
+    tfo = dfsch_make_keyword("FTW_DNR");
+    break;
+  case FTW_NS:
+    tfo = dfsch_make_keyword("FTW_NS");
+    break;
+  case FTW_DP:
+    tfo = dfsch_make_keyword("FTW_DP");
+    break;
+  case FTW_SL:
+    tfo = dfsch_make_keyword("FTW_SL");
+    break;
+  case FTW_SLN:
+    tfo = dfsch_make_keyword("FTW_SLN");
+    break;
+  default:
+    tfo = dfsch_make_number_from_long(typeflag);
+  }
+
+  DFSCH_SCATCH_BEGIN {
+    ret = (dfsch_apply(ftw_fun,
+                       dfsch_list(5, 
+                                  dfsch_make_string_cstr(fpath),
+                                  dfsch_os_cons_stat_struct(sb),
+                                  tfo,
+                                  dfsch_make_number_from_long(ftwbuf->base),
+                                  dfsch_make_number_from_long(ftwbuf->base))) 
+           == NULL) ? 0 : 1;
+  } DFSCH_SCATCH {
+    ret = -1;
+  } DFSCH_SCATCH_END;
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(nftw, NULL){
+  char* dirpath;
+  dfsch_object_t* fun;
+  int nopenfd;
+  int flags = 0;
+  int res;
+  dfsch_object_t* old_fun;
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+
+  DFSCH_STRING_ARG(args, dirpath);
+  DFSCH_OBJECT_ARG(args, fun);
+  DFSCH_LONG_ARG(args, nopenfd);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("chdir", FTW_CHDIR, flags);
+  DFSCH_FLAG_SET("depth", FTW_DEPTH, flags);
+  DFSCH_FLAG_SET("mount", FTW_MOUNT, flags);
+  DFSCH_FLAG_SET("phys", FTW_PHYS, flags);
+  DFSCH_FLAG_PARSER_END(args);
+
+  ftw_enter();
+  old_fun = ftw_fun;
+  ftw_fun = fun;
+
+  DFSCH_UNWIND {
+    res = nftw(dirpath, ftw_cb, nopenfd, flags);
+    if (ti->throw_tag){
+      dfsch__continue_unwind(ti);
+    }
+    if (res == -1){
+      dfsch_operating_system_error("nftw");      
+    }
+
+  } DFSCH_PROTECT {
+    ftw_fun = old_fun;
+    ftw_leave();
+  } DFSCH_PROTECT_END;
+  
+  return NULL;
+}
+
+typedef struct passwd_object_t {
+  dfsch_type_t* type;
+  char   *pw_name;       /* username */
+  char   *pw_passwd;     /* user password */
+  long    pw_uid;        /* user ID */
+  long    pw_gid;        /* group ID */
+  char   *pw_gecos;      /* user information */
+  char   *pw_dir;        /* home directory */
+  char   *pw_shell;      /* shell program */
+} passwd_object_t;
+
+static void passwd_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_with_slots(state, obj);
+}
+
+static dfsch_slot_t passwd_slots[] = {
+  DFSCH_STRING_SLOT(passwd_object_t, pw_name, DFSCH_SLOT_ACCESS_RO,
+                    "User name"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_passwd, DFSCH_SLOT_ACCESS_RO,
+                    "User password"),
+  DFSCH_LONG_SLOT(passwd_object_t, pw_uid, DFSCH_SLOT_ACCESS_RO,
+                  "User ID"),
+  DFSCH_LONG_SLOT(passwd_object_t, pw_uid, DFSCH_SLOT_ACCESS_RO,
+                  "Primary group ID"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_gecos, DFSCH_SLOT_ACCESS_RO,
+                    "User information"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_dir, DFSCH_SLOT_ACCESS_RO,
+                    "Home directory"),
+  DFSCH_STRING_SLOT(passwd_object_t, pw_shell, DFSCH_SLOT_ACCESS_RO,
+                    "User shell"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static dfsch_type_t passwd_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "unix:passwd",
+  .size = sizeof(passwd_object_t),
+  .slots = passwd_slots,
+  .write = passwd_write,
+};
+
+static dfsch_object_t* cons_passwd(struct passwd *pwd){
+  passwd_object_t* obj = dfsch_make_object(&passwd_type);
+  obj->pw_name = dfsch_stracpy(pwd->pw_name);
+  obj->pw_passwd = dfsch_stracpy(pwd->pw_passwd);
+  obj->pw_uid = pwd->pw_uid;
+  obj->pw_gid = pwd->pw_gid;
+  obj->pw_gecos = dfsch_stracpy(pwd->pw_gecos);
+  obj->pw_dir = dfsch_stracpy(pwd->pw_dir);
+  obj->pw_shell = dfsch_stracpy(pwd->pw_shell);
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getpwnam, "Get user record by user name"){
+  char* name;
+  struct passwd* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getpwnam(name);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getpwnam");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_passwd(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getpwuid, "Get user record by user ID"){
+  long uid;
+  struct passwd* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_LONG_ARG_OPT(args, uid, getuid());
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getpwuid(uid);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getpwuid");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_passwd(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getpwents, "Get all user records"){
+  struct passwd* res;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  setpwent();
+ 
+  errno = 0;
+  for (;;){
+    res = getpwent();
+    if (!res){
+      if (errno != 0){
+        int err = errno;
+        endpwent();
+        dfsch_unlock_libc();
+        dfsch_operating_system_error_saved(err, "getpwent");
+      } else {
+        break;
+      }
+    }
+    dfsch_list_collect(lc, cons_passwd(res));
+  }
+  endpwent();
+  dfsch_unlock_libc();
+
+  return dfsch_collected_list(lc);
+}
+
+
+typedef struct group_object_t {
+  dfsch_type_t* type;
+  char   *gr_name;       /* group name */
+  gid_t   gr_gid;        /* group ID */
+  dfsch_object_t* *gr_mem;        /* group members */
+} group_object_t;
+
+static void group_write(dfsch_object_t*obj, dfsch_writer_state_t* state){
+  dfsch_write_unreadable_with_slots(state, obj);
+}
+
+static dfsch_slot_t group_slots[] = {
+  DFSCH_STRING_SLOT(group_object_t, gr_name, DFSCH_SLOT_ACCESS_RO,
+                    "Group name"),
+  DFSCH_LONG_SLOT(group_object_t, gr_gid, DFSCH_SLOT_ACCESS_RO,
+                  "Group ID"),
+  DFSCH_OBJECT_SLOT(group_object_t, gr_mem, DFSCH_SLOT_ACCESS_RO,
+                    "Group members"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static dfsch_type_t group_type = {
+  .type = DFSCH_STANDARD_TYPE,
+  .superclass = NULL,
+  .name = "unix:group",
+  .size = sizeof(group_object_t),
+  .slots = group_slots,
+  .write = group_write,
+};
+
+static dfsch_object_t* cons_group(struct group *grp){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  group_object_t* obj = dfsch_make_object(&group_type);
+  char** i = grp->gr_mem;
+  obj->gr_name = dfsch_stracpy(grp->gr_name);
+  obj->gr_gid = grp->gr_gid;
+  
+  while (*i){
+    dfsch_list_collect(lc, dfsch_make_string_cstr(*i));
+    i++;
+  }
+
+  obj->gr_mem = dfsch_collected_list(lc);
+
+  return obj;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrnam, "Get group record by group name"){
+  char* name;
+  struct group* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_STRING_ARG(args, name);
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getgrnam(name);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getgrnam");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_group(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrgid, "Get group record by group ID"){
+  long uid;
+  struct group* res;
+  dfsch_object_t* ret;
+  
+  DFSCH_LONG_ARG_OPT(args, uid, getgid());
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  res = getgrgid(uid);
+  if (!res){
+    if (errno != 0){
+      dfsch_unlock_libc();
+      dfsch_operating_system_error("getgrgid");
+    }
+    ret = NULL;
+  } else {
+    ret = cons_group(res);
+  }
+  dfsch_unlock_libc();
+
+  return ret;
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgrents, "Get all group records"){
+  struct group* res;
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  
+  DFSCH_ARG_END(args);
+
+  dfsch_lock_libc();
+  setgrent();
+ 
+  errno = 0;
+  for (;;){
+    res = getgrent();
+    if (!res){
+      if (errno != 0){
+        int err = errno;
+        endgrent();
+        dfsch_unlock_libc();
+        dfsch_operating_system_error_saved(err, "getgrent");
+      } else {
+        break;
+      }
+    }
+    dfsch_list_collect(lc, cons_group(res));
+  }
+  endgrent();
+  dfsch_unlock_libc();
+
+  return dfsch_collected_list(lc);
+}
+
+DFSCH_DEFINE_PRIMITIVE(getgroups,
+		       "Get list of supplementary group IDs of current process"){
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  int size;
+  int i;
+  gid_t* list;
+  DFSCH_ARG_END(args);
+
+  size = getgroups(0, NULL);
+  if (size < 0){
+    dfsch_operating_system_error("getgroups");
+  }
+  list = malloc(sizeof(gid_t) * size);
+  if (getgroups(size, list) < 0){
+    int err = errno;
+    free(list);
+    dfsch_operating_system_error_saved(err, "getgroups");
+  }
+  
+  for (i = 0; i < size; i++){
+    dfsch_list_collect(lc, dfsch_make_number_from_long(list[i]));
+  }
+
+  return dfsch_collected_list(lc);
+}
 
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
@@ -684,86 +1081,109 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_require(ctx, "os", NULL);
 
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "<passwd>", &passwd_type);
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "<group>", &group_type);
+
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "crypt", 
-                    DFSCH_PRIMITIVE_REF(crypt));
+                         DFSCH_PRIMITIVE_REF(crypt));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchdir", 
-                    DFSCH_PRIMITIVE_REF(fchdir));
+                         DFSCH_PRIMITIVE_REF(fchdir));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chmod", 
-                    DFSCH_PRIMITIVE_REF(chmod));
+                         DFSCH_PRIMITIVE_REF(chmod));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchmod", 
-                    DFSCH_PRIMITIVE_REF(fchmod));
+                         DFSCH_PRIMITIVE_REF(fchmod));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "chown", 
-                    DFSCH_PRIMITIVE_REF(chown));
+                         DFSCH_PRIMITIVE_REF(chown));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fchown", 
-                    DFSCH_PRIMITIVE_REF(fchown));
+                         DFSCH_PRIMITIVE_REF(fchown));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "fork", 
-                    DFSCH_PRIMITIVE_REF(fork));
+                         DFSCH_PRIMITIVE_REF(fork));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getegid", 
-                    DFSCH_PRIMITIVE_REF(getegid));
+                         DFSCH_PRIMITIVE_REF(getegid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "geteuid", 
-                    DFSCH_PRIMITIVE_REF(geteuid));
+                         DFSCH_PRIMITIVE_REF(geteuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgid", 
-                    DFSCH_PRIMITIVE_REF(getgid));
+                         DFSCH_PRIMITIVE_REF(getgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getuid", 
-                    DFSCH_PRIMITIVE_REF(getuid));
+                         DFSCH_PRIMITIVE_REF(getuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgid", 
-                    DFSCH_PRIMITIVE_REF(getpgid));
+                         DFSCH_PRIMITIVE_REF(getpgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpgrp", 
-                    DFSCH_PRIMITIVE_REF(getpgrp));
+                         DFSCH_PRIMITIVE_REF(getpgrp));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getsid", 
-                    DFSCH_PRIMITIVE_REF(getsid));
+                         DFSCH_PRIMITIVE_REF(getsid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpid", 
-                    DFSCH_PRIMITIVE_REF(getpid));
+                         DFSCH_PRIMITIVE_REF(getpid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getppid", 
-                    DFSCH_PRIMITIVE_REF(getppid));
+                         DFSCH_PRIMITIVE_REF(getppid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "kill", 
-                    DFSCH_PRIMITIVE_REF(kill));
+                         DFSCH_PRIMITIVE_REF(kill));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "killpg", 
-                    DFSCH_PRIMITIVE_REF(killpg));
+                         DFSCH_PRIMITIVE_REF(killpg));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "link", 
-                    DFSCH_PRIMITIVE_REF(link));
+                         DFSCH_PRIMITIVE_REF(link));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "lstat", 
-                    DFSCH_PRIMITIVE_REF(lstat));
+                         DFSCH_PRIMITIVE_REF(lstat));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mkfifo", 
-                    DFSCH_PRIMITIVE_REF(mkfifo));
+                         DFSCH_PRIMITIVE_REF(mkfifo));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nice", 
-                    DFSCH_PRIMITIVE_REF(nice));
+                         DFSCH_PRIMITIVE_REF(nice));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "pipe", 
-                    DFSCH_PRIMITIVE_REF(pipe));
+                         DFSCH_PRIMITIVE_REF(pipe));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setegid", 
-                    DFSCH_PRIMITIVE_REF(setegid));
+                         DFSCH_PRIMITIVE_REF(setegid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "seteuid", 
-                    DFSCH_PRIMITIVE_REF(seteuid));
+                         DFSCH_PRIMITIVE_REF(seteuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setgid", 
-                    DFSCH_PRIMITIVE_REF(setgid));
+                         DFSCH_PRIMITIVE_REF(setgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setuid", 
-                    DFSCH_PRIMITIVE_REF(setuid));
+                         DFSCH_PRIMITIVE_REF(setuid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgid", 
-                    DFSCH_PRIMITIVE_REF(setpgid));
+                         DFSCH_PRIMITIVE_REF(setpgid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setpgrp", 
-                    DFSCH_PRIMITIVE_REF(setpgrp));
+                         DFSCH_PRIMITIVE_REF(setpgrp));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setsid", 
-                    DFSCH_PRIMITIVE_REF(setsid));
+                         DFSCH_PRIMITIVE_REF(setsid));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "symlink", 
-                    DFSCH_PRIMITIVE_REF(symlink));
+                         DFSCH_PRIMITIVE_REF(symlink));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "sync", 
-                    DFSCH_PRIMITIVE_REF(sync));
+                         DFSCH_PRIMITIVE_REF(sync));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "wait", 
-                    DFSCH_PRIMITIVE_REF(wait));
+                         DFSCH_PRIMITIVE_REF(wait));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "waitpid", 
-                    DFSCH_PRIMITIVE_REF(waitpid));
+                         DFSCH_PRIMITIVE_REF(waitpid));
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "mmap", 
-                    DFSCH_PRIMITIVE_REF(mmap));
+                         DFSCH_PRIMITIVE_REF(mmap));
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "openlog", 
-                    DFSCH_PRIMITIVE_REF(openlog));
+                         DFSCH_PRIMITIVE_REF(openlog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "closelog", 
-                    DFSCH_PRIMITIVE_REF(closelog));
+                         DFSCH_PRIMITIVE_REF(closelog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "syslog", 
-                    DFSCH_PRIMITIVE_REF(syslog));
+                         DFSCH_PRIMITIVE_REF(syslog));
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "setlogmask", 
-                    DFSCH_PRIMITIVE_REF(setlogmask));
+                         DFSCH_PRIMITIVE_REF(setlogmask));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "nftw", 
+                         DFSCH_PRIMITIVE_REF(nftw));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwnam", 
+                         DFSCH_PRIMITIVE_REF(getpwnam));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwuid", 
+                         DFSCH_PRIMITIVE_REF(getpwuid));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getpwents", 
+                         DFSCH_PRIMITIVE_REF(getpwents));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrnam", 
+                         DFSCH_PRIMITIVE_REF(getgrnam));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrgid", 
+                         DFSCH_PRIMITIVE_REF(getgrgid));
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgrents", 
+                         DFSCH_PRIMITIVE_REF(getgrents));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgroups", 
+                         DFSCH_PRIMITIVE_REF(getgroups));
+
   
   dfsch_provide(ctx, "unix");
 

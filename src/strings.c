@@ -142,16 +142,40 @@ static void string_write(dfsch_string_t* o, dfsch_writer_state_t* state){
   dfsch_write_string(state, b);
 }
 
-static size_t string_hash(dfsch_string_t* s){
-  size_t ret = s->buf.len;
+#define HASH_CACHE_CUTOFF 256
+
+typedef struct hash_cached_string_t {
+  dfsch_string_t content;
+  uint32_t hash;
+} hash_cached_string_t;
+
+
+static uint32_t calculate_hash(char* ptr, size_t len){
+  uint32_t ret = len;
   size_t i;
 
-  for (i = 0; i < s->buf.len; i++){
-    ret ^= s->buf.ptr[i] ^ (ret << 7);
-    ret ^= ((size_t)s->buf.ptr[i] << 23) ^ (ret >> 7);
+  for (i = 0; i < len; i++){
+    ret ^= ptr[i] ^ (ret << 7);
+    ret ^= ((size_t)ptr[i] << 23) ^ (ret >> 7);
+  }
+
+  if (ret == 0){
+    ret = 1 << 31;
   }
 
   return ret;
+}
+
+static uint32_t string_hash(dfsch_string_t* s){
+  if (s->buf.len > HASH_CACHE_CUTOFF){
+    hash_cached_string_t* hc = s;
+    if (!hc->hash){
+      hc->hash = calculate_hash(s->buf.ptr, s->buf.len);
+    } 
+    return hc->hash;  
+  }
+
+  return calculate_hash(s->buf.ptr, s->buf.len);
 }
 
 static void string_serialize(dfsch_string_t* str, dfsch_serializer_t* se){
@@ -248,11 +272,18 @@ dfsch_object_t* dfsch_make_string_strbuf(dfsch_strbuf_t* strbuf){
   return dfsch_make_string_buf(strbuf->ptr, strbuf->len);
 }
 dfsch_object_t* dfsch_make_string_buf(char* ptr, size_t len){
-  dfsch_string_t *s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
+  dfsch_string_t *s;
+
+  if (len > HASH_CACHE_CUTOFF){
+    s = GC_MALLOC_ATOMIC(sizeof(dfsch_string_t)+len+1);
+    s->buf.ptr = (char *)(s + 1);
+  } else {
+    s = GC_MALLOC_ATOMIC(sizeof(hash_cached_string_t)+len+1);
+    s->buf.ptr = (char *)(((hash_cached_string_t*)s) + 1);
+  }
 
   s->type = DFSCH_STRING_TYPE;
 
-  s->buf.ptr = (char *)(s + 1);
   s->buf.len = len;
 
   if(ptr) // For allocating space to be used later
@@ -1794,6 +1825,7 @@ dfsch_object_t* dfsch_make_byte_vector_nocopy(char* ptr, size_t len){
 
   return s;
 }
+
 
 dfsch_object_t* dfsch_list_2_byte_vector(dfsch_object_t* list){
   dfsch_string_t* string;

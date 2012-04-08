@@ -3,7 +3,7 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 
 dnl package name and version number
 
-AC_INIT(dfsch, 0.4.0-dev)
+AC_INIT(dfsch, 0.4.1-dev)
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([m4])
@@ -71,7 +71,7 @@ if test x$have_gc != x1; then
 fi
 
 AC_CHECK_HEADERS(readline/readline.h, [have_readline="yes"], [have_readline="no"])
-AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline -lncurses"], [have_readline="no"], [-lncurses])
+AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline"], [have_readline="no"], [])
 
 
 AC_ARG_ENABLE([profile],
@@ -232,6 +232,28 @@ if test x$"$enable_sqlite3" == x"yes"; then
 fi
 
 AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
+
+enable_dbi=yes
+
+AC_ARG_ENABLE([dbi],
+    AC_HELP_STRING([--disable-dbi], [Disable dbi module]))
+AC_ARG_WITH([dbi],
+  AC_HELP_STRING([--with-dbi=PATH], [Path to libdbi installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_dbi" == x"yes"; then
+    AC_CHECK_HEADERS(dbi/dbi.h, [have_dbi="1"], [have_dbi="0"])
+    AC_CHECK_LIB(dbi, dbi_conn_new, 
+                     [dummy_dbi=], [have_dbi="0"])
+
+    if test x"$have_dbi" == x"0" ; then
+        enable_dbi=no
+    fi
+fi
+
+AM_CONDITIONAL(DBI, test x"$enable_dbi" == x"yes")
+
 
 enable_tokyo_cabinet=yes
 
@@ -408,6 +430,7 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
+libdbi ............. : $enable_dbi
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant
 gd ................. : $enable_gd

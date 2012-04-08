@@ -212,11 +212,14 @@ void dfsch_standard_class_prepare_slots(dfsch_standard_class_t* klass){
 dfsch_object_t* standard_make_class(dfsch_metaclass_t* metaclass,
                                     class_t* super,
                                     char* name,
-                                    dfsch_object_t* slots){
+                                    dfsch_object_t* slots,
+                                    dfsch_object_t* options,
+                                    dfsch_object_t* roles){
   class_t* klass = (class_t*)dfsch_make_object(DFSCH_STANDARD_CLASS_TYPE);
 
   klass->standard_type.flags = DFSCH_TYPEF_USER_EXTENSIBLE;
   klass->standard_type.name = name;
+  klass->standard_type.roles = dfsch_list_copy_immutable(roles);
 
   if (super){
 
@@ -268,7 +271,8 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                                  dfsch_object_t* metaclass,
                                  char* name,
                                  dfsch_object_t* slots,
-                                 dfsch_object_t* options){
+                                 dfsch_object_t* options,
+                                 dfsch_object_t* roles){
   dfsch_metaclass_t* mc;
   dfsch_object_t* super = NULL;
 
@@ -290,8 +294,116 @@ dfsch_object_t* dfsch_make_class(dfsch_object_t* superclass,
                 mc);
   }
 
-  return mc->make_class(mc, super, name, slots, options);
+  return mc->make_class(mc, super, name, slots, options, roles);
 }
+
+typedef struct role_t role_t;
+
+struct role_t {
+  dfsch_type_t* type;
+  char* name;
+  dfsch_object_t* superroles;
+  dfsch_object_t* slots;
+  dfsch_object_t* options;
+};
+
+static dfsch_slot_t role_slots[] = {
+  DFSCH_STRING_SLOT(role_t, name,
+                    DFSCH_SLOT_ACCESS_RO,
+                    "Name of this role"),
+  DFSCH_OBJECT_SLOT(role_t, superroles, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "List of parent roles"),
+  DFSCH_OBJECT_SLOT(role_t, slots, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Slots added by this role"),
+  DFSCH_OBJECT_SLOT(role_t, options, 
+                    DFSCH_SLOT_ACCESS_DEBUG_WRITE,
+                    "Class options added by this role"),
+  DFSCH_SLOT_TERMINATOR
+};
+
+static int role_inherited_p(role_t* sub, role_t* super){
+  dfsch_object_t* i;
+  if (sub == super){
+    return 1;
+  }
+  
+  i = sub->superroles;
+
+  while (DFSCH_PAIR_P(i)){
+    if (role_inherited_p(DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                               DFSCH_ROLE_TYPE),
+                         super)){
+      return 1;
+    }
+    i = DFSCH_FAST_CDR(i);
+  }
+
+  return 0;
+}
+
+int dfsch_role_inherited_p(dfsch_object_t* sub, 
+                           dfsch_object_t* super){
+  return role_inherited_p(DFSCH_ASSERT_INSTANCE(sub, DFSCH_ROLE_TYPE),
+                          DFSCH_ASSERT_INSTANCE(super, DFSCH_ROLE_TYPE));
+}
+
+
+static int role_matches_p(role_t* role,
+                          dfsch_object_t* type){
+  if (DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE)){
+    dfsch_type_t* t = ((dfsch_type_t*)type);
+    while (t){
+      dfsch_object_t* i = t->roles;
+      
+      while (DFSCH_PAIR_P(i)){
+        if (role_inherited_p(DFSCH_ASSERT_INSTANCE(DFSCH_FAST_CAR(i),
+                                                   DFSCH_ROLE_TYPE),
+                             role)){
+          return 1;
+        }
+        i = DFSCH_FAST_CDR(i);
+      }
+      t = t->superclass;
+    }
+    return 0;    
+  } else if (DFSCH_INSTANCE_P(type, DFSCH_ROLE_TYPE)){
+    return role_inherited_p((role_t*)type, role);
+  } else {
+    return 0;
+  }
+}
+
+dfsch_type_specializer_type_t dfsch_role_type = {
+  .type = {
+    .type = DFSCH_TYPE_SPECIALIZER_METATYPE,
+    .superclass = DFSCH_TYPE_SPECIALIZER_TYPE,
+    .name = "role",
+    .size = sizeof(role_t),
+    .slots = role_slots,
+  },
+  .matches_p = role_matches_p,
+};
+
+dfsch_object_t* dfsch_make_role(char* name,
+                                dfsch_object_t* superroles,
+                                dfsch_object_t* slots,
+                                dfsch_object_t* options){
+  role_t* role = dfsch_make_object(DFSCH_ROLE_TYPE);
+  dfsch_object_t* slot_lists = dfsch_cons(slots, NULL);
+  dfsch_object_t* options_lists = dfsch_cons(options, NULL);
+
+  role->name = stracpy(name);
+  role->superroles = dfsch_list_copy_immutable(superroles);
+  role->slots = dfsch_list_copy_immutable(dfsch_append(slot_lists));
+  role->options = dfsch_list_copy_immutable(dfsch_append(options_lists));
+
+  return role;
+}
+
+
+
 
 DFSCH_DEFINE_PRIMITIVE(default_initialize_instance,
                        "Default implementation of initialize-instance"){
@@ -380,6 +492,7 @@ DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
   dfsch_object_t* superclass;
   dfsch_object_t* slots;
   dfsch_object_t* metaclass = DFSCH_STANDARD_CLASS_TYPE;
+  dfsch_object_t* roles = NULL;
   dfsch_object_t* options;
   DFSCH_OBJECT_ARG(args, name);
   DFSCH_OBJECT_ARG(args, superclass);
@@ -387,12 +500,29 @@ DFSCH_DEFINE_PRIMITIVE(make_class, "Create new class object"){
   options = args;
   DFSCH_KEYWORD_PARSER_BEGIN(args);
   DFSCH_KEYWORD("metaclass", metaclass);
+  DFSCH_KEYWORD("roles", roles);
   DFSCH_KEYWORD_PARSER_END(args);
   DFSCH_ARG_END(args);
 
   return dfsch_make_class(superclass, metaclass, dfsch_symbol_2_typename(name),
-                          slots, options);  
+                          slots, options, roles);  
 }
+
+DFSCH_DEFINE_PRIMITIVE(make_role, "Create new role object"){
+  dfsch_object_t* name;
+  dfsch_object_t* superroles;
+  dfsch_object_t* slots;
+  dfsch_object_t* options;
+  DFSCH_OBJECT_ARG(args, name);
+  DFSCH_OBJECT_ARG(args, superroles);
+  DFSCH_OBJECT_ARG(args, slots);
+  DFSCH_OBJECT_ARG(args, options);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_role(dfsch_symbol_2_typename(name),
+                         superroles, slots, options);  
+}
+
 
 static void write_instance_add_method(dfsch_object_t* function,
                                            dfsch_method_t* method){
@@ -445,7 +575,6 @@ static dfsch_object_t* write_instance_apply(dfsch_object_t* ignore,
   return NULL;
 }
 
-
 static dfsch_singleton_generic_function_t write_instance = {
   .type = DFSCH_SINGLETON_GENERIC_FUNCTION_TYPE,
   .add_method = write_instance_add_method,  
@@ -454,18 +583,18 @@ static dfsch_singleton_generic_function_t write_instance = {
 };
 
 
-
-
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<standard-class>", DFSCH_STANDARD_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "<role>", DFSCH_ROLE_TYPE);
+
   dfsch_defcanon_cstr(ctx, "allocate-instance", 
                       DFSCH_PRIMITIVE_REF(allocate_instance));
   dfsch_defcanon_cstr(ctx, "make-class", DFSCH_PRIMITIVE_REF(make_class));
-
+  dfsch_defcanon_cstr(ctx, "make-role", DFSCH_PRIMITIVE_REF(make_role));
 
   dfsch_define_method_pkgcstr(ctx, DFSCH_DFSCH_PACKAGE, "initialize-instance",
                               NULL, NULL, 
                               DFSCH_PRIMITIVE_REF(default_initialize_instance));
 
-  dfsch_defcanon_cstr(ctx, "dfsch%write-instance", &write_instance);
+  dfsch_defcanon_cstr(ctx, "write-instance", &write_instance);
 }

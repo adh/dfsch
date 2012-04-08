@@ -24,6 +24,7 @@
 #include <dfsch/mkhash.h>
 #include <dfsch/generate.h>
 #include <dfsch/specializers.h>
+#include <dfsch/object.h>
 
 #include <stdio.h>
 
@@ -66,6 +67,10 @@ static int more_specific_method_p(dfsch_method_t* a,
     
     if (as != bs){
       if (dfsch_specializer_matches_type_p(bs, as)){
+        return 0;
+      } else if (DFSCH_INSTANCE_P(as, DFSCH_ROLE_TYPE) &&
+                 DFSCH_INSTANCE_P(bs, DFSCH_ROLE_TYPE) &&
+                 dfsch_role_inherited_p(as, bs)) {
         return 0;
       } else {
         return 1;
@@ -422,7 +427,6 @@ apply_standard_generic_function(standard_generic_function_t* function,
 
   while (i < function->longest_spec_list && DFSCH_PAIR_P(j)){
     cache_keys[i] = DFSCH_TYPE_OF(DFSCH_FAST_CAR(j));
-    //    printf(";; [%d] = %s\n", i, dfsch_object_2_string(cache_keys[i], 100, 100));
     i++;
     j = DFSCH_FAST_CDR(j);
   }

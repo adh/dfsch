@@ -295,5 +295,135 @@ dfsch_block_cipher_mode_t dfsch_crypto_ctr_mode = {
   .setup = ctr_setup
 };
 
+typedef struct block_stream_mode_t {
+  dfsch_stream_cipher_t parent;
+  dfsch_block_cipher_t* cipher;
+} block_stream_mode_t;
+
+dfsch_type_t dfsch_block_stream_mode_type = {
+  .type = DFSCH_META_TYPE,
+  .superclass = DFSCH_STREAM_CIPHER_TYPE,
+  .name = "block-stream-mode",
+  .size = sizeof(block_stream_mode_t),
+};
+
+typedef struct block_stream_context_t {
+  block_stream_mode_t* mode;
+  dfsch_block_cipher_context_t* cipher;
+  uint8_t* next_input;
+  uint8_t* last_output;
+  size_t output_offset;
+  size_t output_size;
+} block_stream_context_t;
+
+static void bs_ofb_setup(block_stream_context_t* ctx,
+                         uint8_t *key,
+                         size_t keylen,
+                         uint8_t *nonce,
+                         size_t nonce_len){
+  if (nonce_len != ctx->mode->cipher->block_size){
+    dfsch_error("Nonce for OFB mode must be same size as cipher's block", 
+                NULL);
+  }
+
+  ctx->cipher = dfsch_setup_block_cipher(ctx->mode->cipher, key, keylen);
+  ctx->next_input = GC_MALLOC_ATOMIC(ctx->mode->cipher->block_size);
+  ctx->last_output = GC_MALLOC_ATOMIC(ctx->mode->cipher->block_size);
+  ctx->output_offset = ctx->mode->cipher->block_size;
+  ctx->output_size = ctx->mode->cipher->block_size;
+
+  memcpy(ctx->next_input, nonce, ctx->output_size);
+}
+
+static void bs_ofb_encrypt_bytes(block_stream_context_t* ctx,
+                                 uint8_t* out,
+                                 size_t outlen){
+  while (outlen){
+    if (ctx->output_offset >= ctx->output_size){
+      ctx->cipher->cipher->encrypt(ctx->cipher, 
+                                   ctx->next_input, 
+                                   ctx->last_output);
+      memcpy(ctx->next_input, ctx->last_output, ctx->output_size);
+      ctx->output_offset = 0;
+    }
+    *out ^= ctx->last_output[ctx->output_offset];
+    ctx->output_offset++;
+    out++;
+    outlen--;
+  }
+}
+
+dfsch_stream_cipher_t* dfsch_make_ofb_cipher(dfsch_block_cipher_t* cipher){
+  block_stream_mode_t* bs = dfsch_make_object(DFSCH_BLOCK_STREAM_MODE_TYPE);
+    
+  bs->parent.name = dfsch_saprintf("%s in OFB mode",
+                                   cipher->name);
+  bs->parent.type.name = dfsch_saprintf("%s-ofb", cipher->type.name);
+  bs->parent.type.size = sizeof(block_stream_context_t);
+  
+  bs->parent.setup = bs_ofb_setup;
+  bs->parent.encrypt_bytes = bs_ofb_encrypt_bytes;
+
+  return bs;
+}
+
+static void bs_ctr_setup(block_stream_context_t* ctx,
+                         uint8_t *key,
+                         size_t keylen,
+                         uint8_t *nonce,
+                         size_t nonce_len){
+  if (nonce_len != ctx->mode->cipher->block_size){
+    dfsch_error("Nonce for OFB mode must be same size as cipher's block", 
+                NULL);
+  }
+
+  ctx->cipher = dfsch_setup_block_cipher(ctx->mode->cipher, key, keylen);
+  ctx->next_input = GC_MALLOC_ATOMIC(ctx->mode->cipher->block_size);
+  ctx->last_output = GC_MALLOC_ATOMIC(ctx->mode->cipher->block_size);
+  ctx->output_offset = ctx->mode->cipher->block_size;
+  ctx->output_size = ctx->mode->cipher->block_size;
+
+  memcpy(ctx->next_input, nonce, ctx->output_size);
+}
+
+static void bs_ctr_encrypt_bytes(block_stream_context_t* ctx,
+                                 uint8_t* out,
+                                 size_t outlen){
+  int i;
+
+  while (outlen){
+    if (ctx->output_offset >= ctx->output_size){
+      ctx->cipher->cipher->encrypt(ctx->cipher, 
+                                   ctx->next_input, 
+                                   ctx->last_output);
+      
+      for (i = 0; i < ctx->output_size; i++){
+        ctx->next_input[i]++;
+        if (ctx->next_input[i] != 0){
+          break;
+        }
+      }
+
+      ctx->output_offset = 0;
+    }
+    *out ^= ctx->last_output[ctx->output_offset];
+    ctx->output_offset++;
+    out++;
+    outlen--;
+  }
+}
 
 
+dfsch_stream_cipher_t* dfsch_make_ctr_cipher(dfsch_block_cipher_t* cipher){
+  block_stream_mode_t* bs = dfsch_make_object(DFSCH_BLOCK_STREAM_MODE_TYPE);
+
+  bs->parent.name = dfsch_saprintf("%s in CTR mode",
+                                   cipher->name);
+  bs->parent.type.name = dfsch_saprintf("%s-ctr", cipher->type.name);
+  bs->parent.type.size = sizeof(block_stream_context_t);
+
+  bs->parent.setup = bs_ctr_setup;
+  bs->parent.encrypt_bytes = bs_ctr_encrypt_bytes;
+
+  return bs;
+}

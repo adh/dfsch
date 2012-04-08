@@ -146,9 +146,10 @@ DFSCH_DEFINE_MACRO(define_macro,
 
   return dfsch_generate_define_canonical_constant
     (name,
-     dfsch_generate_make_macro(dfsch_generate_lambda(name, 
-                                                     arglist, 
-                                                     args)));
+     dfsch_generate_compile_time_constant
+     (dfsch_generate_make_macro(dfsch_generate_lambda(name, 
+						      arglist, 
+						      args))));
 }
 
 DFSCH_DEFINE_MACRO(define, "Define variable or procedure"){

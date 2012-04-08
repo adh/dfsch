@@ -274,7 +274,7 @@ static hash_entry_t** alloc_vector(size_t mask){
 }
 
 #ifdef DFSCH_THREADS_FINALIZE
-static void hash_finalizer(hash_t* h, void* cd) {
+static void hash_finalizer(dfsch_hash_t* h, void* cd) {
   DFSCH_DESTROY_RWLOCK(&h->lock);
 }
 #endif

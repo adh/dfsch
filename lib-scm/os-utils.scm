@@ -20,13 +20,13 @@
 
 (define (directory->list directory &key full-paths? filter)  
   (let ((dd (os:opendir directory)))
-    (let loop ((list ()))
+    (let next ((list ()))
       (let ((dirent (os:readdir dd)))
         (if (null? dirent)
             list
             (if (and filter (not (filter dirent)))
-                (loop list)
-                (loop (cons (if full-paths? 
+                (next list)
+                (next (cons (if full-paths? 
                                 (string-append directory "/" dirent)
                                 dirent)
                             list))))))))

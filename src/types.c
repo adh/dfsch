@@ -599,6 +599,8 @@ static dfsch_slot_t type_slots[] = {
                     "Documentation string"),
   DFSCH_OBJECT_SLOT(dfsch_type_t, superclass, DFSCH_SLOT_ACCESS_RO,
                     "Superclass"),
+  DFSCH_OBJECT_SLOT(dfsch_type_t, roles, DFSCH_SLOT_ACCESS_RO,
+                    "Implemented roles"),
   DFSCH_SLOT_TERMINATOR
 };
 
@@ -1112,6 +1114,21 @@ static void function_write(closure_t* c, dfsch_writer_state_t* state){
   dfsch_write_unreadable_end(state);
 }
 
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("standard-function", 
+                                     standard_function){
+  closure_t* c = (closure_t*)dfsch_make_object(DFSCH_STANDARD_FUNCTION_TYPE);
+  dfsch_deserializer_put_partial_object(ds, c);
+  c->args = dfsch_deserialize_object(ds); 
+  c->code = dfsch_deserialize_object(ds);
+  c->env = dfsch_deserialize_object(ds);
+  c->name = dfsch_deserialize_object(ds);
+  c->orig_code = dfsch_deserialize_object(ds);
+  c->orig_args = dfsch_deserialize_object(ds);
+  c->documentation = dfsch_deserialize_object(ds);
+  return c;
+}
+
+
 static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
   dfsch_serialize_stream_symbol(ser, "standard-function");
   dfsch_serialize_object(ser, c->args);
@@ -1381,9 +1398,26 @@ static void environment_serialize(environment_t* env, dfsch_serializer_t* ser){
   dfsch_serialize_integer(ser, -1); /* flags are unsigned */
 }
 
+DFSCH_DEFINE_PRIMITIVE(slot_sort_cmp, NULL){
+  dfsch_object_t* a;
+  dfsch_object_t* b;
+  DFSCH_OBJECT_ARG(args, a);
+  DFSCH_OBJECT_ARG(args, b);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(strcmp(dfsch_object_2_string(dfsch_car(a), 1, 0),
+                           dfsch_object_2_string(dfsch_car(b), 1, 0)) < 0);
+}
+
+dfsch_object_t* dfsch_sort_description_slots(dfsch_object_t* list){
+  return dfsch_sort_list(list, DFSCH_PRIMITIVE_REF(slot_sort_cmp));
+}
+
 static dfsch_object_t* environment_describe(environment_t* env){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   dfsch_object_t* list = dfsch_eqhash_2_alist(&(env->values));
+
+  list = dfsch_sort_description_slots(list);
   
   list = dfsch_cons(dfsch_list(2,
                                dfsch_make_string_cstr("*context*"),
@@ -1871,6 +1905,11 @@ dfsch_object_t* dfsch_list_copy_immutable(dfsch_object_t* list){
   }
 
   data[i] = DFSCH_INVALID_OBJECT;
+
+  if (i == 0){
+    return NULL; /* safety check */
+  }
+
   i++;
   data[i] = j;
   if (ti->macroexpanded_expr){
@@ -2478,7 +2517,7 @@ dfsch_object_t* dfsch_plist_get(dfsch_object_t* plist,
     dfsch_object_t* ind = DFSCH_FAST_CAR(i);
     i = DFSCH_FAST_CDR(i);
     if (!DFSCH_PAIR_P(i)){
-      dfsch_error("Invlaid plist", plist);
+      dfsch_error("Invalid plist", plist);
     }
     if (ind == indicator){
       return i;

@@ -382,7 +382,8 @@ DFSCH_DEFINE_PRIMITIVE(length,
   return dfsch_make_number_from_long(len);
 }
 DFSCH_DEFINE_PRIMITIVE(set_car, 
-                       "Change car slot of mutable pair"){
+                       "Change car slot of mutable pair"
+		       DFSCH_DOC_SYNOPSIS("(pair new-value)")){
   dfsch_object_t* pair;
   dfsch_object_t* value;
   DFSCH_OBJECT_ARG(args, pair);
@@ -392,7 +393,8 @@ DFSCH_DEFINE_PRIMITIVE(set_car,
   return dfsch_set_car(pair, value);  
 }
 DFSCH_DEFINE_PRIMITIVE(set_cdr, 
-                       "Change cdr slot of mutable pair"){
+                       "Change cdr slot of mutable pair"
+		       DFSCH_DOC_SYNOPSIS("(pair new-value)")){
   dfsch_object_t* pair;
   dfsch_object_t* value;
   DFSCH_OBJECT_ARG(args, pair);
@@ -440,7 +442,9 @@ DFSCH_DEFINE_PRIMITIVE(reverse,
 
   return dfsch_reverse(list);
 }
-DFSCH_DEFINE_PRIMITIVE(member, 0){
+DFSCH_DEFINE_PRIMITIVE(member, 
+		       "Return first list cell with car |equal?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -450,7 +454,9 @@ DFSCH_DEFINE_PRIMITIVE(member, 0){
 
   return dfsch_member(key, list);
 }
-DFSCH_DEFINE_PRIMITIVE(memv, 0){
+DFSCH_DEFINE_PRIMITIVE(memv,  
+		       "Return first list cell with car |eqv?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -460,7 +466,9 @@ DFSCH_DEFINE_PRIMITIVE(memv, 0){
 
   return dfsch_memv(key, list);
 }
-DFSCH_DEFINE_PRIMITIVE(memq, 0){
+DFSCH_DEFINE_PRIMITIVE(memq, 
+		       "Return first list cell with car |eq?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* list;
   object_t* key;
 
@@ -483,7 +491,9 @@ DFSCH_DEFINE_PRIMITIVE(sort_list,
   return dfsch_sort_list(list, comp);
 }
 
-DFSCH_DEFINE_PRIMITIVE(assoc, 0){
+DFSCH_DEFINE_PRIMITIVE(assoc, 
+		       "Return alist element with value |equal?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
@@ -493,7 +503,9 @@ DFSCH_DEFINE_PRIMITIVE(assoc, 0){
 
   return dfsch_assoc(key, alist);
 }
-DFSCH_DEFINE_PRIMITIVE(assv, 0){
+DFSCH_DEFINE_PRIMITIVE(assv, 
+		       "Return alist element with value |eqv?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
@@ -503,7 +515,9 @@ DFSCH_DEFINE_PRIMITIVE(assv, 0){
 
   return dfsch_assv(key, alist);
 }
-DFSCH_DEFINE_PRIMITIVE(assq, 0){
+DFSCH_DEFINE_PRIMITIVE(assq,
+		       "Return alist element with value |eq?| to key"
+		       DFSCH_DOC_SYNOPSIS("(key list)")){
   object_t* alist;
   object_t* key;
 
@@ -662,7 +676,10 @@ DFSCH_DEFINE_PRIMITIVE(map,
 DFSCH_DEFINE_PRIMITIVE(map_star, 
                        "Map contents of collections as in |dfsch:map| "
                        "but collect only non-nil results in resulting "
-                       "collection"){
+                       "collection"
+		       DFSCH_DOC_SYNOPSIS("(function &rest collections)\n"
+                                          "(function :result-type result-type "
+                                          "&rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -726,7 +743,8 @@ DFSCH_DEFINE_PRIMITIVE(map_star,
 
 DFSCH_DEFINE_PRIMITIVE(mapcan, 
                        "Map contents of collections as in |dfsch:map| "
-                       "but concatenate resulting lists as by |dfsch:nconc|"){
+                       "but concatenate resulting lists as by |dfsch:nconc|"
+		       DFSCH_DOC_SYNOPSIS("(function &rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -788,7 +806,8 @@ DFSCH_DEFINE_PRIMITIVE(mapcan,
 }
 
 DFSCH_DEFINE_PRIMITIVE(every, 
-                       "Returns true if all elements of sequence match predicate"){
+                       "Returns true if all elements of sequence match predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -834,7 +853,9 @@ DFSCH_DEFINE_PRIMITIVE(every,
 }
 
 DFSCH_DEFINE_PRIMITIVE(some, 
-                       "Returns true if at least one element of sequence matches predicate"){
+                       "Returns true if at least one element of sequence matches predicate"
+		       "(or more precisely, first non-nil value returned by predicate)"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
   object_t* func;
   size_t len;
   int i;
@@ -883,7 +904,8 @@ DFSCH_DEFINE_PRIMITIVE(some,
 
 
 DFSCH_DEFINE_PRIMITIVE(filter,
-                       "Return new sequence containing only items that match predicate"){
+                       "Return new sequence containing only items that match predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection)")){
   object_t* func;
   object_t* list;
   dfsch_type_t* result_type;
@@ -920,7 +942,8 @@ DFSCH_DEFINE_PRIMITIVE(filter,
 
 DFSCH_DEFINE_PRIMITIVE(find_if, 
                        "Return first element of sequence that matches predicate, "
-                       "empty list when there is no such element"){
+                       "empty list when there is no such element"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection)")){
   object_t* func;
   object_t* list;
   object_t* arlist[5];
@@ -951,7 +974,8 @@ DFSCH_DEFINE_PRIMITIVE(find_if,
 
 DFSCH_DEFINE_PRIMITIVE(concatenate,
                        "Return new collection containing concatenation "
-                       "of supplied collections"){
+                       "of supplied collections"
+		       DFSCH_DOC_SYNOPSIS("(result-type &rest collections)")){
   object_t* func;
   object_t* list;
   dfsch_type_t* result_type;
@@ -975,7 +999,8 @@ DFSCH_DEFINE_PRIMITIVE(concatenate,
   return dfsch_collection_constructor_done(c);
 }
 DFSCH_DEFINE_PRIMITIVE(merge,
-                       "Merge two sequences according to predicate"){
+                       "Merge two sequences according to predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate sequence1 sequence2 &optional result-type)")){
   object_t* predicate;
   object_t* seq1;
   object_t* seq2;
@@ -1052,7 +1077,8 @@ DFSCH_DEFINE_PRIMITIVE(reduce,
 }
 
 DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
-                       "(eg. list of &key arguments)"){
+                       "(eg. list of &key arguments)"
+                       DFSCH_DOC_SYNOPSIS("(plist indicator)")){
   dfsch_object_t* plist;
   dfsch_object_t* indicator;
 
@@ -1063,7 +1089,8 @@ DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
   return dfsch_plist_get(plist, indicator);
 }
 DFSCH_DEFINE_PRIMITIVE(plist_remove_keys, "Return copy of plist with "
-                       "specified keys removed"){
+                       "specified keys removed"
+                       DFSCH_DOC_SYNOPSIS("(plist keys)")){
   dfsch_object_t* plist;
   dfsch_object_t* keys;
 
@@ -1074,7 +1101,8 @@ DFSCH_DEFINE_PRIMITIVE(plist_remove_keys, "Return copy of plist with "
   return dfsch_plist_remove_keys(plist, keys);
 }
 DFSCH_DEFINE_PRIMITIVE(plist_filter_keys, "Return copy of plist with "
-                       "only specified keys"){
+                       "only specified keys"
+                       DFSCH_DOC_SYNOPSIS("(plist keys)")){
   dfsch_object_t* plist;
   dfsch_object_t* keys;
 
@@ -1331,7 +1359,8 @@ DFSCH_DEFINE_PRIMITIVE(list_2_vector,
 /////////////////////////////////////////////////////////////////////////////
 
 DFSCH_DEFINE_PRIMITIVE(object_2_string, 
-                       "Convert object to it's string representation"){
+                       "Convert object to it's string representation"
+		       DFSCH_DOC_SYNOPSIS("(object &optional readable? print-depth)")){
   object_t* object;
   object_t* readable;
   long depth;
@@ -1362,9 +1391,10 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object_list,
 
   return dfsch_string_2_object_list(string);
 }
-DFSCH_DEFINE_PRIMITIVE(write__object, 
+DFSCH_DEFINE_PRIMITIVE(write_object, 
                        "Recursively print object "
-                       "- used by implementation of write methods"){
+                       "- used by implementation of write methods"
+		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
   dfsch_object_t* state;
   dfsch_object_t* object;
   DFSCH_OBJECT_ARG(args, state);
@@ -1375,8 +1405,9 @@ DFSCH_DEFINE_PRIMITIVE(write__object,
                      object);
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(write__string, 
-                       "Print string in write method implementation"){
+DFSCH_DEFINE_PRIMITIVE(write_string, 
+                       "Print string in write method implementation"
+		       DFSCH_DOC_SYNOPSIS("(writer-state string)")){
   dfsch_object_t* state;
   dfsch_strbuf_t* string;
   DFSCH_OBJECT_ARG(args, state);
@@ -1385,6 +1416,35 @@ DFSCH_DEFINE_PRIMITIVE(write__string,
 
   dfsch_write_strbuf(DFSCH_ASSERT_TYPE(state, DFSCH_WRITER_STATE_TYPE),
                      string->ptr, string->len);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write_unreadable_start, 
+                       "Start printing unreadable object "
+                       "- used by implementation of write methods"
+		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_unreadable_start(DFSCH_ASSERT_TYPE(state, 
+                                                 DFSCH_WRITER_STATE_TYPE),
+                               object);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write_unreadable_end, 
+                       "End printing of unreadable object "
+                       "- used by implementation of write methods"
+		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_unreadable_end(DFSCH_ASSERT_TYPE(state, 
+                                               DFSCH_WRITER_STATE_TYPE));
   return NULL;
 }
 
@@ -1447,7 +1507,8 @@ DFSCH_DEFINE_PRIMITIVE(string_2_symbol,
   return dfsch_make_symbol(string);
 }
 DFSCH_DEFINE_PRIMITIVE(intern_symbol, 
-                       "Intern symbol in current package"){
+                       "Intern symbol in current package"
+		       DFSCH_DOC_SYNOPSIS("(name &optional package)")){
   char* string;
   dfsch_package_t* package;
 
@@ -1492,6 +1553,18 @@ DFSCH_DEFINE_PRIMITIVE(eval_proc,
   DFSCH_ARG_END(args);
 
   return dfsch_eval_proc_tr(proc, env, esc);
+}
+
+DFSCH_DEFINE_PRIMITIVE(eval_list, 
+                       "Evaluate list of expressions in lexical environment"){
+  object_t* list;
+  object_t* env;
+
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_OBJECT_ARG(args, env);
+  DFSCH_ARG_END(args);
+
+  return dfsch_eval_list(list, env);
 }
 DFSCH_DEFINE_PRIMITIVE(apply, "Call function with given arguments"){
   object_t* func;
@@ -1545,7 +1618,8 @@ DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection")
 }
 
 DFSCH_DEFINE_PRIMITIVE(coerce_collection, 
-                       "Ensure that collection is of specified collection type"){
+                       "Ensure that collection is of specified collection type"
+		       DFSCH_DOC_SYNOPSIS("(collection result-type)")){
   dfsch_object_t* collection;
   dfsch_type_t* result_type;
   DFSCH_OBJECT_ARG(args, collection);
@@ -1594,7 +1668,8 @@ DFSCH_DEFINE_PRIMITIVE(iter_this,
 }
 
 
-DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
+DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"
+		       DFSCH_DOC_SYNOPSIS("(sequence k)")){
   dfsch_object_t* obj;
   size_t k;
   DFSCH_OBJECT_ARG(args, obj);
@@ -1604,7 +1679,8 @@ DFSCH_DEFINE_PRIMITIVE(seq_ref, "Get k-th element of sequence"){
   return dfsch_sequence_ref(obj, k);
 }
 
-DFSCH_DEFINE_PRIMITIVE(seq_set, "Set k-th element of sequence"){
+DFSCH_DEFINE_PRIMITIVE(seq_set, "Set k-th element of sequence"
+		       DFSCH_DOC_SYNOPSIS("(sequence k new-value)")){
   dfsch_object_t* obj;
   dfsch_object_t* value;
   size_t k;
@@ -1625,7 +1701,8 @@ DFSCH_DEFINE_PRIMITIVE(seq_length, "Get length of sequence"){
   return dfsch_make_number_from_long(dfsch_sequence_length(obj));
 }
 
-DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"){
+DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"
+		       DFSCH_DOC_SYNOPSIS("(mapping key)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -1644,7 +1721,8 @@ DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"){
     return dfsch_values(2, value, DFSCH_SYM_TRUE);
   }
 }
-DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"){
+DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"
+		       DFSCH_DOC_SYNOPSIS("(mapping key new-value)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -1657,7 +1735,8 @@ DFSCH_DEFINE_PRIMITIVE(map_set, "Set value of mapping"){
   dfsch_mapping_set(obj, key, value);
   return obj;
 }
-DFSCH_DEFINE_PRIMITIVE(map_unset, "Remove key from mapping"){
+DFSCH_DEFINE_PRIMITIVE(map_unset, "Remove key from mapping"
+		       DFSCH_DOC_SYNOPSIS("(mapping key)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
 
@@ -1669,7 +1748,8 @@ DFSCH_DEFINE_PRIMITIVE(map_unset, "Remove key from mapping"){
   return obj;
 }
 DFSCH_DEFINE_PRIMITIVE(map_set_if_exists, 
-                       "Set value of mapping when key has already associated value"){
+                       "Set value of mapping when key has already associated value"
+		       DFSCH_DOC_SYNOPSIS("(mapping key new-value)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -1683,7 +1763,8 @@ DFSCH_DEFINE_PRIMITIVE(map_set_if_exists,
   return obj;
 }
 DFSCH_DEFINE_PRIMITIVE(map_set_if_not_exists, 
-                       "Set value of mapping unless key has already associated value"){
+                       "Set value of mapping unless key has already associated value"
+		       DFSCH_DOC_SYNOPSIS("(mapping key new-value)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -1726,6 +1807,74 @@ DFSCH_DEFINE_PRIMITIVE(values_list,
   DFSCH_OBJECT_ARG(args, values);
   DFSCH_ARG_END(args);
   return dfsch_values_list(values);
+}
+
+DFSCH_DEFINE_PRIMITIVE(assert_type, 
+                       "Signal continuable condition when objects type "
+                       "does not match"
+		       DFSCH_DOC_SYNOPSIS("(object type)")){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_TYPE(object, type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(assert_instance, 
+                       "Signal continuable condition when object is not "
+                       "an instance of given type"
+		       DFSCH_DOC_SYNOPSIS("(object type)")){
+  dfsch_object_t* object;
+  dfsch_type_t* type;
+
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return DFSCH_ASSERT_INSTANCE(object, type);
+}
+
+DFSCH_DEFINE_PRIMITIVE(macro_expansion_environment,
+                       ""){
+  DFSCH_ARG_END(args);
+
+  return dfsch__get_thread_info()->macroexpanded_env;
+}
+
+/* collection constructors */
+
+DFSCH_DEFINE_PRIMITIVE(make_collection_constructor, 
+                       "Create new collection constructor object for "
+                       "supplied collection type"){
+  dfsch_type_t* type;
+  DFSCH_TYPE_ARG(args, type);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_collection_constructor(type);
+}
+DFSCH_DEFINE_PRIMITIVE(collection_constructor_add,
+                       "Add element int construed collection"
+		       DFSCH_DOC_SYNOPSIS("(constructor element)")){
+  dfsch_object_t* constructor;
+  dfsch_object_t* element;
+  DFSCH_OBJECT_ARG(args, constructor);
+  DFSCH_OBJECT_ARG(args, element);
+  DFSCH_ARG_END(args);
+
+  dfsch_collection_constructor_add(constructor, element);
+
+  return element;
+}
+DFSCH_DEFINE_PRIMITIVE(collection_constructor_done,
+                       "Finish construction of collection"){
+  dfsch_object_t* constructor;
+  DFSCH_OBJECT_ARG(args, constructor);
+  DFSCH_ARG_END(args);
+
+  return dfsch_collection_constructor_done(constructor);
 }
 
 
@@ -1843,10 +1992,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(string_2_object));
   dfsch_defcanon_cstr(ctx, "string->object-list", 
                       DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-object", 
-                      DFSCH_PRIMITIVE_REF(write__object));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-string", 
-                      DFSCH_PRIMITIVE_REF(write__string));
+  dfsch_defcanon_cstr(ctx, "writer-write-object", 
+                      DFSCH_PRIMITIVE_REF(write_object));
+  dfsch_defcanon_cstr(ctx, "writer-write-string", 
+                      DFSCH_PRIMITIVE_REF(write_string));
+  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-start", 
+                      DFSCH_PRIMITIVE_REF(write_unreadable_start));
+  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-end", 
+                      DFSCH_PRIMITIVE_REF(write_unreadable_end));
 
   dfsch_defcanon_cstr(ctx, "symbol-qualified-name", 
                       DFSCH_PRIMITIVE_REF(symbol_qualified_name));
@@ -1877,6 +2030,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "eval", DFSCH_PRIMITIVE_REF(eval));
   dfsch_defcanon_cstr(ctx, "eval-proc", DFSCH_PRIMITIVE_REF(eval_proc));
+  dfsch_defcanon_cstr(ctx, "eval-list", DFSCH_PRIMITIVE_REF(eval_list));
   dfsch_defcanon_cstr(ctx, "apply", DFSCH_PRIMITIVE_REF(apply));
 
   dfsch_defcanon_cstr(ctx, "collection-iterator", DFSCH_PRIMITIVE_REF(collection_iterator));
@@ -1906,4 +2060,19 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "values", DFSCH_PRIMITIVE_REF(values));
   dfsch_defcanon_cstr(ctx, "values-list", DFSCH_PRIMITIVE_REF(values_list));
 
+  dfsch_defcanon_cstr(ctx, "assert-type", 
+                      DFSCH_PRIMITIVE_REF(assert_type));
+  dfsch_defcanon_cstr(ctx, "assert-instance", 
+                      DFSCH_PRIMITIVE_REF(assert_instance));
+
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, 
+                         "%macro-expansion-environment", 
+                         DFSCH_PRIMITIVE_REF(macro_expansion_environment));
+
+  dfsch_defcanon_cstr(ctx, "make-collection-constructor",
+                      DFSCH_PRIMITIVE_REF(make_collection_constructor));
+  dfsch_defcanon_cstr(ctx, "collection-constructor-add!",
+                      DFSCH_PRIMITIVE_REF(collection_constructor_add));
+  dfsch_defcanon_cstr(ctx, "collection-constructor-done",
+                      DFSCH_PRIMITIVE_REF(collection_constructor_done));
 }

@@ -142,6 +142,11 @@ else
 sqlite3_modules=
 endif
 
+if DBI
+dbi_modules=dbi.la
+else
+dbi_modules=
+endif
 
 
 lib_LTLIBRARIES = libdfsch.la \
@@ -213,6 +218,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(pcre_modules)\
 	$(sqlite_modules)\
 	$(sqlite3_modules)\
+	$(dbi_modules)\
 	$(tc_modules)\
 	$(tt_modules)\
 	$(gd_modules)\
@@ -315,7 +321,7 @@ upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
 minizip_files = ext/minizip/minizip.h ext/minizip/minizip.c \
 	ext/minizip/ioapi.h ext/minizip/ioapi.c
 
-EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
+EXTRA_DIST = tests/scm-test.sh tests/scm-test-interp.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
 	src/udata-gen.c data/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
@@ -328,6 +334,7 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
 	tests/fix-regression-tests.scm \
+	tests/compiler-tests.scm \
 	$(fastlz_files) \
 	$(upskirt_files)
 
@@ -559,7 +566,8 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/fe25519.h lib/crypto/fe25519.c \
 	lib/crypto/ge25519.h lib/crypto/ge25519.c \
 	lib/crypto/sc25519.h lib/crypto/sc25519.c \
-	lib/crypto/sign25519.c
+	lib/crypto/sign25519.c \
+	lib/crypto/rc4.c
 
 if WIN32
 prng_libadd = -lrpcrt4
@@ -595,6 +603,10 @@ sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 sqlite3_la_SOURCES = lib/sql/sqlite3.c
 sqlite3_la_LIBADD = libdfsch.la -lsqlite3
 sqlite3_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+dbi_la_SOURCES = lib/sql/dbi.c
+dbi_la_LIBADD = libdfsch.la -ldbi
+dbi_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 sql_support_la_SOURCES = lib/sql/sql-support.c
 sql_support_la_LIBADD = libdfsch.la
@@ -677,7 +689,7 @@ dfsch_run_LDFLAGS = $(gui_flags)
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
 
-TESTS = tests/scm-test.sh
+TESTS = tests/scm-test.sh tests/scm-test-interp.sh
 
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp
@@ -687,7 +699,18 @@ version.h: $(vm_SOURCES) $(stdlib_sources) $(syslib_sources)
 
 .PHONY: documentation
 
+MODULES = cmdopts crypto curl csv extref fastlz ffi gcollect gd http inet \
+	ini-file \
+	json markdown minizip os pcre posix-regex process shtml socket-port \
+	sxml threads tokyo-cabinet tokyo-tyrant unix xml zlib \
+	\
+	sqlite sqlite3 dbi\
+	\
+	dfsch-unit http-server markdown-tools match tk-gui
+
 documentation: all
 	./dfsch-run -L ./.libs -L $(srcdir)/lib-scm \
 		$(srcdir)/tools/docgen.scm --chapters $(srcdir)/doc/manual.md \
+		--notes $(srcdir)/doc/notes.md \
 		documentation
+	$(srcdir)/gen-module-docs.sh $(srcdir) "$(MODULES)"

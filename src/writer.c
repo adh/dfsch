@@ -24,6 +24,7 @@
 #include "util.h"
 #include <limits.h>
 #include <stdio.h>
+#include <assert.h>
 
 struct dfsch_writer_state_t {
   dfsch_object_t object_head;

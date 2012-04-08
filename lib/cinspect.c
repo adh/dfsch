@@ -31,6 +31,9 @@ static void init_state(inspector_state_t*is){
 static void update_state(inspector_state_t* is, dfsch_object_t* obj){
   dfsch_object_t* desc = dfsch_describe_object(obj);
   
+  dfsch_define_cstr(is->env, "object", obj);
+  dfsch_define_cstr(is->env, "description", desc);
+
   is->description = dfsch_string_to_cstr(dfsch_car(desc));
   is->slot_list = dfsch_cdr(desc);
   dfsch_defcanon_pkgcstr(is->env, DFSCH_DFSCH_PACKAGE, "object", obj);
@@ -42,8 +45,12 @@ static void push_object(inspector_state_t* is, dfsch_object_t* obj){
 }
 
 static void pop_object(inspector_state_t* is){
-  is->object_stack = dfsch_cdr(is->object_stack);
-  update_state(is, dfsch_car(is->object_stack));
+  if (is->object_stack){
+    is->object_stack = dfsch_cdr(is->object_stack);
+    update_state(is, dfsch_car(is->object_stack));
+  } else {
+    fprintf(stderr, "No previous object\n");
+  }
 }
 
 
@@ -111,13 +118,13 @@ static dfsch_object_t* cinspect_callback(dfsch_object_t *obj,  inspector_state_t
                                                     dfsch_number_to_long(obj)),
                                     1));
     redisplay_object(is);
-    return dfsch_car(is->object_stack);
+    return dfsch_values(0);
   } else if (dfsch_keyword_p(obj)){
     push_object(is, dfsch_slot_ref_by_name(dfsch_car(is->object_stack),
                                            dfsch_string_or_symbol_to_cstr(obj),
                                            1));
     redisplay_object(is);
-    return dfsch_car(is->object_stack);
+    return dfsch_values(0);
   } else {
     return dfsch_eval(obj, is->env);
   }
@@ -135,10 +142,10 @@ static void command_pop(char* cmdline, inspector_state_t* is){
   redisplay_object(is);
 }
 
-
 static void inspect_object(dfsch_object_t* obj){
   inspector_state_t is;
   dfsch_console_repl_command_t* cmds = NULL;
+  dfsch_object_t* env;
   init_state(&is);
   push_object(&is, obj);
   redisplay_object(&is);

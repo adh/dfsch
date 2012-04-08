@@ -97,6 +97,7 @@ pre {
 ")
 
 (define *footer-add* ())
+(define *chapter-top-add* ())
 (define *head-add* ())
 
 (define (directory? path)
@@ -352,6 +353,9 @@ pre {
   (get-object-name (cadr entry)
                    (car entry)))
 
+(define (entry-symbol-name entry)
+  (symbol-qualified-name (car entry)))
+
 (define (make-filename name)
   (string-append "entries/"
                  (string->safe-filename (symbol-qualified-name name))
@@ -436,16 +440,23 @@ pre {
                    ,(symbol-qualified-name (car entry)))))
                (index-entries-matching-value filter-func))))
 
-(define (emit-one-entry entry directory title categories packages)
-  (shtml:emit-file (html-boiler-plate (entry-name entry)
-                                      title
-                                      `(,(menu-bar categories 
-                                                   #t 
-                                                   "../" 
-                                                   packages)
-                                        ,@(make-one-entry entry)))
-                   (string-append directory "/"
-                                  (entry-filename entry))))
+(define (format-note name note-list)
+  (let ((res (assoc name note-list)))
+    (when res `((:h2 "Additional notes")
+                (:literal-output ,(convert-documentation-block (cadr res)))))))
+
+(define (emit-one-entry entry directory title categories packages note-list)
+  (let ((note-content (format-note (entry-symbol-name entry) note-list)))
+    (shtml:emit-file (html-boiler-plate (entry-name entry)
+                                        title
+                                        `(,(menu-bar categories 
+                                                     #t 
+                                                     "../" 
+                                                     packages)
+                                          ,@(make-one-entry entry)
+                                          ,@note-content))
+                     (string-append directory "/"
+                                    (entry-filename entry)))))
 
 (define (make-entry-list lyst base)
   `(:ul :class "entry-list"
@@ -532,9 +543,12 @@ pre {
                 ,(make-entry-list (cdr ch) base)))
             chars)))
 
-(define (package-index pkg lyst)
+(define (package-index pkg lyst note-list)
   `(,@(format-documentation-slot pkg)
-    ,@(make-index-list (filter (lambda (entry) 
+    ,@(format-note (string-append "Package "
+                                  (slot-ref pkg :name)) 
+                   note-list)
+   ,@(make-index-list (filter (lambda (entry) 
                                  (eq? (symbol-package (car entry))
                                       pkg)) 
                                lyst)
@@ -573,8 +587,19 @@ pre {
     (:literal-output
      ,(convert-documentation-block (cadr chapter)))))
 
+(define (maybe-remove-nonexported lyst package-name)
+  (let ((ret lyst))
+    (ignore-errors
+     (set! ret 
+           (let ((syms 
+                  (list-exported-package-symbols (find-package package-name))))
+             (filter (lambda (entry)
+                       (memq (car entry) syms))
+                     lyst))))
+    ret))
+     
 (define (emit-documentation lyst directory title
-                            &key notes chapters)
+                            &key notes chapters package-exported)
   (index-put-all "../" lyst)
   (let ((categories (sort-list (group-by lyst entry-get-categories)
                                (lambda (x y)
@@ -595,14 +620,19 @@ pre {
     (when chapter-list
           (ensure-directory (string-append directory "/chapters")))
 
-    (shtml:emit-file (html-boiler-plate () title 
-                                        `(,(menu-bar categories 
-                                                     () 
-                                                     "./"
-                                                     packages)
-                                          ,@(chapter-index chapter-list)
-                                          ,@(make-index-list lyst "./")))
-                     (string-append directory "/index.html"))
+    (let ((index (if package-exported 
+                     (maybe-remove-nonexported lyst package-exported)
+                     lyst)))
+      (shtml:emit-file (html-boiler-plate () title 
+                                          `(,(menu-bar categories 
+                                                       () 
+                                                       "./"
+                                                       packages)
+                                            ,@(chapter-index chapter-list)
+                                            ,@(make-index-list index "./")))
+                       (string-append directory "/index.html")))
+
+
     (shtml:emit-file (html-boiler-plate "Type hierarchy" 
                                         title 
                                         `(,(menu-bar categories 
@@ -613,16 +643,19 @@ pre {
                      (string-append directory "/hierarchy.html"))
 
     (when chapter-list
-          (for-each (lambda (chapter)
-                      (shtml:emit-file 
-                       (html-boiler-plate (car chapter) 
-                                          title 
-                                          `(,(menu-bar categories 
-                                                       #t "../" packages)
-                                            ,@(chapter-content chapter chapter-list)))
-                       (string-append directory "/"
-                                      (chapter-file-name chapter))))
-                    (cdr chapter-list)))
+          (for-each 
+           (lambda (chapter)
+             (shtml:emit-file 
+              (html-boiler-plate (car chapter) 
+                                 title 
+                                 `(,(menu-bar categories 
+                                              #t "../" packages)
+                                   ,@(when *chapter-top-add*
+                                           `((:literal-output ,*chapter-top-add*)))
+                                   ,@(chapter-content chapter chapter-list)))
+              (string-append directory "/"
+                             (chapter-file-name chapter))))
+           (cdr chapter-list)))
 
 
     (for-each (lambda (cat)
@@ -639,48 +672,59 @@ pre {
 
     (for-each (lambda (pkg)
                 (shtml:emit-file 
-                 (html-boiler-plate (string-append "Package "
-                                                   (slot-ref pkg :name))
-                                    title
-                                    `(,(menu-bar categories pkg "../" packages)
-                                      ,@(package-index pkg lyst)))
+                 (html-boiler-plate 
+                  (string-append "Package "
+                                 (slot-ref pkg :name))
+                  title
+                  `(,(menu-bar categories pkg "../" packages)
+                    ,@(package-index pkg lyst note-list)))
                  (string-append directory "/" 
                                 (package-index-name pkg))))
               packages)
     
-                
     (for-each (lambda (entry)
-                (emit-one-entry entry directory title categories packages))
+                (emit-one-entry entry directory title 
+                                categories packages note-list))
               lyst)))
 
 
-(define (emit-core-documentation directory &key notes chapters)
+(define (emit-core-documentation directory 
+                                 &key notes chapters package-exported)
   (emit-documentation 
    (get-toplevel-variables)
    directory
    "Default dfsch top-level environment"
    :notes notes
-   :chapters chapters))
+   :chapters chapters
+   :package-exported package-exported))
 
-(define (emit-module-documentation directory module &key notes chapters)
+(define (emit-module-documentation directory module 
+                                   &key notes chapters package-exported)
   (emit-documentation 
    (get-module-variables module)
    directory
    (string-append (object->string module) " module")
    :notes notes
-   :chapters chapters))
+   :chapters chapters
+   :package-exported package-exported))
 
 (when-toplevel
  (define module-name ())
  (define directory-name ())
  (define chapters-file-name ())
  (define notes-file-name ())
+ (define package-exported ())
 
  (let ((parser (cmdopts:make-parser)))
    (cmdopts:add-option parser 
                        (lambda (p v)
                          (set! module-name (string->object v)))
                        :long-option "module"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
+                         (set! package-exported v))
+                       :long-option "package-exported"
                        :has-argument #t)
    (cmdopts:add-option parser
                        (lambda (p v)
@@ -709,6 +753,17 @@ pre {
                        :has-argument #t)
    (cmdopts:add-option parser 
                        (lambda (p v)
+                         (set! *chapter-top-add* v))
+                       :long-option "chapter-top-add"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
+                         (set! *chapter-top-add* 
+                               (port-read-whole (open-file-port v "r"))))
+                       :long-option "chapter-top-add-file"
+                       :has-argument #t)
+   (cmdopts:add-option parser 
+                       (lambda (p v)
                          (set! *head-add* v))
                        :long-option "head-add"
                        :has-argument #t)
@@ -720,12 +775,29 @@ pre {
                        :has-argument #t)
    (cmdopts:parse-list parser (cdr *posix-argv*)))
  
+ (let ((footer-file (os:getenv "DOCGEN_FOOTER_FILE"))
+       (head-file (os:getenv "DOCGEN_HEAD_FILE"))
+       (chapter-top-file (os:getenv "DOCGEN_CHAPTER_TOP_FILE")))
+   (when footer-file
+         (set! *footer-add* 
+               (port-read-whole (open-file-port footer-file "r"))))
+   (when chapter-top-file
+         (set! *chapter-top-add* 
+               (port-read-whole (open-file-port chapter-top-file "r"))))
+   (when head-file
+         (set! *head-add* 
+               (port-read-whole (open-file-port head-file "r")))))
+   
+         
+
  (if module-name
      (emit-module-documentation directory-name module-name
                                 :chapters chapters-file-name
-                                :notes notes-file-name)
+                                :notes notes-file-name
+                                :package-exported package-exported)
      (emit-core-documentation directory-name
                               :chapters chapters-file-name
-                                :notes notes-file-name)))
+                              :notes notes-file-name
+                              :package-exported package-exported)))
 
 ;(emit-core-documentation "out")
