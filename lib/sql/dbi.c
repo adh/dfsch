@@ -272,6 +272,10 @@ static void result_finalizer(dbi_result_t* res, void* discard){
   }
 }
 
+#define DBI_RESULT_ARG(al, name)                                \
+  DFSCH_INSTANCE_ARG(al, name, dbi_result_t*, &dbi_result_type)
+
+
 DFSCH_DEFINE_PRIMITIVE(query_string,
                        "Execute query and return result object"
                        DFSCH_DOC_SYNOPSIS("(db sql)")){
@@ -299,6 +303,27 @@ DFSCH_DEFINE_PRIMITIVE(query_string,
   return res;
 }
 
+DFSCH_DEFINE_PRIMITIVE(column_names,
+                       "Return vector of column names"){
+  dbi_result_t* res;
+  size_t i;
+  dfsch_object_t* vec;
+  int n_columns;
+
+  DBI_RESULT_ARG(args, res);
+  DFSCH_ARG_END(args);
+
+  n_columns = dbi_result_get_numfields(res->res);
+  vec = dfsch_make_vector(n_columns, NULL);
+
+  for (i = 0; i < n_columns; i++){
+    dfsch_vector_set(vec, i, 
+                     dfsch_make_string_cstr(dbi_result_get_field_name(res->res,
+                                                                      i + 1)));
+  }
+
+  return vec;
+}
 
 void dfsch_module_dbi_register(dfsch_object_t* env){
   dfsch_package_t* dbi = dfsch_make_package("dbi",
@@ -325,4 +350,7 @@ void dfsch_module_dbi_register(dfsch_object_t* env){
   dfsch_define_method_pkgcstr(env, sql, "query-string",
                               NULL, dfsch_list(1, &database_type),
                               DFSCH_PRIMITIVE_REF(query_string));
+  dfsch_define_method_pkgcstr(env, sql, "column-names",
+                              NULL, dfsch_list(1, &dbi_result_type),
+                              DFSCH_PRIMITIVE_REF(column_names));
 }
