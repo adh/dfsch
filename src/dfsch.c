@@ -853,6 +853,51 @@ dfsch_object_t* dfsch_variable_constant_value(object_t* name, object_t* env){
   return DFSCH_INVALID_OBJECT;
 }
 
+object_t* dfsch_env_get_declarations(object_t* name, object_t* env){
+  environment_t *i;
+  object_t* ret;
+
+  i = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  DFSCH_RWLOCK_RDLOCK(&environment_rwlock);
+  while (i){
+    ret = dfsch_eqhash_ref(&i->values, name);
+    if (ret != DFSCH_INVALID_OBJECT){
+      if (!i->decls){
+        DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+        return NULL;
+      }
+      ret = dfsch_idhash_ref(i->decls, name);
+      if (ret == DFSCH_INVALID_OBJECT){
+        ret = NULL;
+      }
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      return ret;
+    }
+
+    i = i->parent;
+  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+  return NULL;
+}
+
+dfsch_object_t* dfsch_env_get_declaration_value(dfsch_object_t* name, 
+                                                dfsch_object_t* env,
+                                                char* decl_name){
+  dfsch_object_t* decls = dfsch_env_get_declarations(name, env);
+  while (DFSCH_PAIR_P(decls)){
+    dfsch_object_t* decl = DFSCH_FAST_CAR(decls);
+    dfsch_object_t* dn;
+    DFSCH_OBJECT_ARG(decl, dn);
+    if (dfsch_compare_keyword(dn, decl_name)){
+      dfsch_object_t* value;
+      DFSCH_OBJECT_ARG(decl, value);
+      return value;
+    }
+
+    decls = DFSCH_FAST_CDR(decls);
+  }
+}
+
 object_t* dfsch_set(object_t* name, object_t* value, object_t* env){
   environment_t *i;
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
@@ -927,17 +972,28 @@ void dfsch_define(object_t* name, object_t* value, object_t* env,
 
 
 
-void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
+void dfsch_declare(dfsch_object_t* variable, 
+                   dfsch_object_t* name, 
+                   dfsch_object_t* value,
                    dfsch_object_t* env){
   dfsch_object_t* old = NULL;
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
   dfsch__thread_info_t *ti = dfsch__get_thread_info();
+  dfsch_object_t* ret;
 
-  if (e->owner != ti){
-    e->owner = NULL;
-    DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
+  DFSCH_RWLOCK_WRLOCK(&environment_rwlock);
+
+  for(;;){
+    if (!e){
+      DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
+      dfsch_error("Unbound variable", dfsch_cons(variable, env));
+    }
+    ret = dfsch_eqhash_ref(&e->values, variable);
+    if (ret != DFSCH_INVALID_OBJECT){
+      break;
+    }
+    e = e->parent;
   }
-
 
   if (!e->decls){
     e->decls = dfsch_make_idhash();
@@ -949,11 +1005,9 @@ void dfsch_declare(dfsch_object_t* variable, dfsch_object_t* declaration,
   }
   
   dfsch_idhash_set(e->decls, variable, 
-                   dfsch_cons(declaration, old));  
+                   dfsch_cons(dfsch_list(2, name, value), old));  
 
-  if (e->owner != ti){
-    DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
-  }
+  DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
 }
 
 dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
@@ -964,6 +1018,11 @@ dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env){
   DFSCH_RWLOCK_UNLOCK(&environment_rwlock);
   return res;
 }
+dfsch_object_t* dfsch_get_parent_frame(dfsch_object_t* env){
+  environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
+  return e->parent;
+}
+
 dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                            dfsch_type_t* klass){
   environment_t* e = DFSCH_ASSERT_TYPE(env, DFSCH_ENVIRONMENT_TYPE);
@@ -1160,6 +1219,55 @@ static dfsch_object_t* eval_args_and_apply(dfsch_object_t* proc,
   return dfsch_apply_impl(proc, args, context, esc, ti);
 }
 
+typedef struct breakpoint_entry_t {
+  dfsch_breakpoint_hook_t hook;
+  void* baton;
+} breakpoint_entry_t;
+
+static dfsch_eqhash_t* breakpoint_table = NULL;
+
+void dfsch_add_breakpoint(dfsch_object_t* expr,
+                          dfsch_breakpoint_hook_t hook,
+                          void* baton){
+  breakpoint_entry_t* entry = GC_NEW(breakpoint_entry_t);
+  dfsch__allocate_breakpoint_table();
+
+  entry->hook = hook;
+  entry->baton = baton;
+
+  dfsch_eqhash_set(breakpoint_table, expr, entry);
+}
+
+void dfsch_remove_breakpoint(dfsch_object_t* expr){
+  if (!breakpoint_table){
+    return;
+  }
+
+  dfsch_eqhash_unset(breakpoint_table, expr);
+}
+
+void dfsch_clear_breakpoints(){
+  breakpoint_table = NULL;
+}
+
+void dfsch__allocate_breakpoint_table(){
+  if (!breakpoint_table){
+    breakpoint_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(breakpoint_table, 0);
+  }
+}
+
+void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
+                                                 dfsch_object_t* dst){
+  breakpoint_entry_t* bp;
+  if (!breakpoint_table){
+    return;
+  }
+
+  bp = dfsch_eqhash_ref(breakpoint_table, src);
+  dfsch_eqhash_set(breakpoint_table, dst, bp);
+}
+
 static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp, 
                                        environment_t* env,
                                        dfsch_tail_escape_t* esc,
@@ -1184,6 +1292,18 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
     sframe.next = ti->stack_trace;
     ti->stack_trace = &sframe;
 
+    if (DFSCH_UNLIKELY(breakpoint_table != NULL)){
+      breakpoint_entry_t* bp;
+      
+      if (DFSCH_UNLIKELY(ti->trace_hook)){
+        ti->trace_hook(ti->trace_baton, exp, env);
+      }
+      
+      bp = dfsch_eqhash_ref(breakpoint_table, exp);
+      if (DFSCH_UNLIKELY(bp != DFSCH_INVALID_OBJECT)){
+        bp->hook(bp->baton, exp, env);
+      }
+    }
 
     if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
       f = lookup_impl(f, env, ti);
@@ -1591,8 +1711,44 @@ struct dfsch_tail_escape_t {
 static DEFINE_VM_PARAM(compile_on_apply, 1,
                        "Compile all closures on their first execution");
 
+typedef struct traced_function_entry_t {
+  dfsch_function_entry_hook_t entry;
+  dfsch_function_exit_hook_t exit;
+  void* baton;
+} traced_function_entry_t;
+
+static dfsch_eqhash_t* traced_function_table = NULL;
+
+void dfsch_add_traced_function(dfsch_object_t* func,
+                               dfsch_function_entry_hook_t entry,
+                               dfsch_function_exit_hook_t exit,
+                               void* baton){
+  traced_function_entry_t* ent = GC_NEW(breakpoint_entry_t);
+  if (!traced_function_table){
+    traced_function_table = GC_NEW(dfsch_eqhash_t);
+    dfsch_eqhash_init(traced_function_table, 0);
+  }
+
+  ent->entry = entry;
+  ent->exit = exit;
+  ent->baton = baton;
+
+  dfsch_eqhash_set(traced_function_table, func, ent);
+}
+void dfsch_remove_traced_function(dfsch_object_t* func){
+  if (!traced_function_table){
+    return;
+  }
+  dfsch_eqhash_unset(traced_function_table, func);
+}
+void dfsch_clear_traced_functions(){
+  traced_function_table = NULL;
+}
+
+
 /* it might be interesting to optionally disable tail-calls for slight 
  * performance boost (~5%) */
+
 
 static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc, 
                                         dfsch_object_t* args,
@@ -1602,6 +1758,9 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   dfsch_object_t* r;
   tail_escape_t myesc;
   dfsch__stack_trace_frame_t sframe;
+  tail_escape_t* next_esc;
+  traced_function_entry_t* tp = NULL;
+  void* tp_token;
 
   sframe.next = ti->stack_trace;
 
@@ -1634,6 +1793,17 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
   ti->values = NULL;
   async_apply_check(ti);
 
+  next_esc = &myesc;
+
+  if (DFSCH_UNLIKELY(traced_function_table != NULL)){
+    tp = dfsch_eqhash_ref(traced_function_table, proc);
+    if (tp != DFSCH_INVALID_OBJECT){
+      next_esc = NULL;
+      tp_token = tp->entry(tp->baton, proc, args, context);
+    } else {
+      tp = NULL;
+    }
+  }
 
   /*
    * Two most common cases are written here explicitly (for historical
@@ -1646,7 +1816,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       myesc.reuse_frame = NULL;
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
-                                   &myesc, context);
+                                   next_esc, context);
+    if (tp && tp->exit){
+      dfsch_object_t* values = dfsch_get_values_list(r);
+      tp->exit(tp->baton, proc, values, context, tp_token);
+      r = dfsch_values_list(values);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }
@@ -1665,6 +1840,22 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     if (compile_on_apply){
       if (!((closure_t*)proc)->compiled){
         if (((closure_t*)proc)->call_count == 0){
+          if (DFSCH_PAIR_P(((closure_t*)proc)->code) &&
+              DFSCH_UNLIKELY(breakpoint_table != NULL) &&
+              DFSCH_UNLIKELY(dfsch_eqhash_ref(breakpoint_table, 
+                                              DFSCH_FAST_CAR(((closure_t*)proc)
+                                                             ->code)) 
+                             != DFSCH_INVALID_OBJECT)){
+            dfsch_signal_warning_condition(DFSCH_WARNING_TYPE,
+                                           "leaving function with breakpoint on first form uncompiled",
+                                           "function", proc,
+                                           NULL);
+
+            /* do not compile functions with breakpoints on first line */
+            goto abort_compile; 
+          }
+
+
           if (myesc.reuse_frame){ /* tail call */
             args = dfsch_list_copy_immutable(args);
             /* On tail calls, arguments are in many cases in global scratchpad 
@@ -1677,13 +1868,20 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       }
     }
 
+  abort_compile:
+
     myesc.reuse_frame = env;
     destructure_impl(((closure_t*)proc)->args, args, env, ti);
     r = dfsch_eval_proc_impl(((closure_t*)proc)->code,
                              env,
-                             &myesc,
+                             next_esc,
                              ti);
     free_environment(env, ti);
+    if (tp && tp->exit){
+      dfsch_object_t* values = dfsch_get_values_list(r);
+      tp->exit(tp->baton, proc, values, context, tp_token);
+      r = dfsch_values_list(values);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }
@@ -1693,7 +1891,12 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
       free_environment(myesc.reuse_frame, ti);
       myesc.reuse_frame = NULL;
     }
-    r = DFSCH_TYPE_OF(proc)->apply(proc, args, &myesc, context);
+    r = DFSCH_TYPE_OF(proc)->apply(proc, args, next_esc, context);
+    if (tp && tp->exit){
+      dfsch_object_t* values = dfsch_get_values_list(r);
+      tp->exit(tp->baton, proc, values, context, tp_token);
+      r = dfsch_values_list(values);
+    }
     ti->stack_trace = sframe.next;
     return r;
   }

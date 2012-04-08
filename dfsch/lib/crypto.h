@@ -125,6 +125,66 @@ struct dfsch_block_cipher_mode_context_t {
   dfsch_block_cipher_context_t* cipher;
 };
 
+typedef struct dfsch_stream_cipher_context_t dfsch_stream_cipher_context_t;
+
+typedef
+void (*dfsch_stream_cipher_setup_t)(dfsch_stream_cipher_context_t* ctx,
+                                    uint8_t *key,
+                                    size_t keylen,
+                                    uint8_t *nonce,
+                                    size_t nonce_len);
+typedef 
+void (*dfsch_stream_cipher_encrypt_bytes_t)(dfsch_stream_cipher_context_t* ctx,
+                                            uint8_t *keystream,
+                                            size_t keystreamlen);
+
+typedef struct dfsch_stream_cipher_t {
+  dfsch_type_t type;
+  char* name;
+  
+  dfsch_stream_cipher_encrypt_bytes_t encrypt_bytes;
+  dfsch_stream_cipher_setup_t setup;
+
+  DFSCH_ALIGN8_DUMMY
+} DFSCH_ALIGN8_ATTR dfsch_stream_cipher_t;
+
+dfsch_stream_cipher_t* dfsch_stream_cipher(dfsch_object_t* obj);
+#define DFSCH_STREAM_CIPHER_ARG(al, name)                             \
+  DFSCH_GENERIC_ARG(al, name, dfsch_stream_cipher_t*, dfsch_stream_cipher)
+
+extern dfsch_stream_cipher_t dfsch_crypto_rc4_cipher;
+#define DFSCH_CRYPTO_RC4_CIPHER (&dfsch_crypto_rc4_cipher)
+extern dfsch_stream_cipher_t dfsch_crypto_rc4_drop768_cipher;
+#define DFSCH_CRYPTO_RC4_DROP768_CIPHER (&dfsch_crypto_rc4_drop768_cipher)
+extern dfsch_stream_cipher_t dfsch_crypto_rc4_drop3072_cipher;
+#define DFSCH_CRYPTO_RC4_DROP3072_CIPHER (&dfsch_crypto_rc4_drop3072_cipher)
+
+
+extern dfsch_type_t dfsch_stream_cipher_type;
+#define DFSCH_STREAM_CIPHER_TYPE (&dfsch_stream_cipher_type)
+
+dfsch_stream_cipher_context_t* 
+dfsch_setup_stream_cipher(dfsch_stream_cipher_t* cipher,
+                          uint8_t* key,
+                          size_t key_len,
+                          uint8_t *nonce,
+                          size_t nonce_len);
+int dfsch_stream_cipher_context_p(dfsch_object_t* obj);
+dfsch_stream_cipher_context_t*  dfsch_stream_cipher_context(dfsch_object_t* obj);
+
+struct dfsch_stream_cipher_context_t{
+  dfsch_stream_cipher_t* cipher;
+};
+#define DFSCH_STREAM_CIPHER_CONTEXT_ARG(al, name)             \
+  DFSCH_GENERIC_ARG(al, name, dfsch_stream_cipher_context_t*, \
+                    dfsch_stream_cipher_context)
+
+extern dfsch_type_t dfsch_block_stream_mode_type;
+#define DFSCH_BLOCK_STREAM_MODE_TYPE (&dfsch_block_stream_mode_type)
+
+dfsch_stream_cipher_t* dfsch_make_ofb_cipher(dfsch_block_cipher_t* cipher);
+dfsch_stream_cipher_t* dfsch_make_ctr_cipher(dfsch_block_cipher_t* cipher);
+
 
 typedef struct dfsch_crypto_hash_context_t dfsch_crypto_hash_context_t;
 

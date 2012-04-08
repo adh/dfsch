@@ -435,6 +435,9 @@ int dfsch_console_read_objects_parser(char* prompt,
         } else {
           ret = dfsch_parser_feed_line(parser, line);
         }
+        running_prompt = prompt;
+        running_cmds = cmds;
+        running_parser = parser;
       }DFSCH_END_WITH_SIMPLE_RESTART;
       if (ret){
         break;
@@ -445,6 +448,11 @@ int dfsch_console_read_objects_parser(char* prompt,
     running_prompt = NULL;
     running_cmds = NULL;
   } DFSCH_PROTECT_END;
+
+  if (!line){
+    printf("EOF\n");
+  }
+
   return ret;
 }
 int dfsch_console_read_objects_list_parser(char* prompt,

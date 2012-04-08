@@ -518,8 +518,20 @@ extern "C" {
                            dfsch_object_t* value,
                            dfsch_object_t* env,
                            unsigned short flags);
+  extern void dfsch_declare(dfsch_object_t* variable, 
+                            dfsch_object_t* name, 
+                            dfsch_object_t* value,
+                            dfsch_object_t* env);
+  dfsch_object_t* dfsch_env_get_declarations(dfsch_object_t* name, 
+                                             dfsch_object_t* env);
+  dfsch_object_t* dfsch_env_get_declaration_value(dfsch_object_t* name, 
+                                                  dfsch_object_t* env,
+                                                  char* decl_name);
+  
+
 
   extern dfsch_object_t* dfsch_get_environment_variables(dfsch_object_t* env);
+  extern dfsch_object_t* dfsch_get_parent_frame(dfsch_object_t* env);
 
   extern dfsch_object_t* dfsch_find_lexical_context(dfsch_object_t* env,
                                                     dfsch_type_t* klass);

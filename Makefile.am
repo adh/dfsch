@@ -311,7 +311,7 @@ upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
 minizip_files = ext/minizip/minizip.h ext/minizip/minizip.c \
 	ext/minizip/ioapi.h ext/minizip/ioapi.c
 
-EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
+EXTRA_DIST = tests/scm-test.sh tests/scm-test-interp.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
 	src/udata-gen.c data/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
@@ -324,6 +324,7 @@ EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
 	tests/language-tests.scm \
 	tests/r5rs-tests.scm \
 	tests/fix-regression-tests.scm \
+	tests/compiler-tests.scm \
 	$(fastlz_files) \
 	$(upskirt_files)
 
@@ -555,7 +556,8 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 	lib/crypto/fe25519.h lib/crypto/fe25519.c \
 	lib/crypto/ge25519.h lib/crypto/ge25519.c \
 	lib/crypto/sc25519.h lib/crypto/sc25519.c \
-	lib/crypto/sign25519.c
+	lib/crypto/sign25519.c \
+	lib/crypto/rc4.c
 
 if WIN32
 prng_libadd = -lrpcrt4
@@ -668,7 +670,7 @@ dfsch_run_LDFLAGS = $(gui_flags)
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
 
-TESTS = tests/scm-test.sh
+TESTS = tests/scm-test.sh tests/scm-test-interp.sh
 
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp

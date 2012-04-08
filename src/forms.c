@@ -494,8 +494,8 @@ DFSCH_FORM_METHOD_COMPILE(define){
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
 
-  value = dfsch_compile_expression(value, env);
   dfsch_compiler_declare_variable(env, name);
+  value = dfsch_compile_expression(value, env);
 
   return dfsch_cons_ast_node(form,
                              expr,
@@ -534,6 +534,12 @@ DFSCH_FORM_METHOD_COMPILE(define_constant){
   DFSCH_OBJECT_ARG(args, value);
   DFSCH_ARG_END(args);
   
+  dfsch_compiler_declare_variable(env, name); 
+  /* Expression can refer to value of constrant we are defining, or to
+     it's previous value. This works out correctly during runtime, but
+     we cannot do constant folding of processed variable at
+     compile-time.*/
+
   value = dfsch_compile_expression(value, env);
 
   dfsch_compiler_update_constant(env, name, value);
@@ -589,18 +595,44 @@ dfsch_object_t* dfsch_generate_define_canonical_constant(dfsch_object_t* name,
                               name, value);
 }
 
+DFSCH_FORM_METHOD_COMPILE(declare){
+  dfsch_object_t* args = DFSCH_FAST_CDR(expr);
+  dfsch_object_t* name;
+  dfsch_object_t* decls;
 
-DFSCH_DEFINE_FORM(declare, {},
+  DFSCH_OBJECT_ARG(args, name);
+
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* decl_name;
+    dfsch_object_t* decl_value;
+    DFSCH_OBJECT_ARG(args, decl_name);
+    DFSCH_OBJECT_ARG(args, decl_value);
+
+    decl_value = dfsch_eval(decl_value, env);
+
+    dfsch_declare(name, decl_name, decl_value, env);
+  }
+
+  return NULL;
+}
+
+
+DFSCH_DEFINE_FORM(declare, {DFSCH_FORM_COMPILE(declare)},
                   "Add declaration specifier to given symbol"){
   dfsch_object_t* name;
   dfsch_object_t* decls;
 
   DFSCH_OBJECT_ARG(args, name);
-  DFSCH_ARG_REST(args, decls);
 
-  while (DFSCH_PAIR_P(decls)){
-    dfsch_declare(name, DFSCH_FAST_CDR(decls), env);
-    decls = DFSCH_FAST_CDR(decls);
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* decl_name;
+    dfsch_object_t* decl_value;
+    DFSCH_OBJECT_ARG(args, decl_name);
+    DFSCH_OBJECT_ARG(args, decl_value);
+
+    decl_value = dfsch_eval(decl_value, env);
+
+    dfsch_declare(name, decl_name, decl_value, env);
   }
 
   return NULL;

@@ -12,7 +12,7 @@ Common Lisp.
 
 # Syntax
 
-As dfsch is one of many dislects of Lisp, it uses parenthesis based
+As dfsch is one of many dialects of Lisp, it uses parenthesis based
 syntax. Source code read from text files on disk is converted into
 in-memory representation consisting of lists and other normal user
 accessible objects. Runtime behavior of programs does not directly
@@ -316,6 +316,18 @@ conditionalized setters |map-set-if-exists!| and
 lists of key and value although some mapping types return only
 keys. Keys and values separately can be iterated over by iterators
 returned from |map-keys| and |map-values|.
+
+## Functions operating on collections
+
+ * |concatenate|
+ * |every| and |some|
+ * |filter|
+ * |find-if|
+ * |for-each|
+ * |map|, |map*| and |mapcan|
+ * |merge|
+ * |reduce|
+ * |zip|
 
 # Strings
 

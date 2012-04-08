@@ -34,6 +34,7 @@
 
 #include <dfsch/dfsch.h>
 #include <dfsch/conditions.h>
+#include <dfsch/introspect.h>
 #include <setjmp.h>
 
 #ifdef __cplusplus
@@ -107,6 +108,11 @@ extern "C" {
     int error_policy;
     dfsch_package_t* current_package;
     dfsch_object_t* macroexpanded_env;
+
+    dfsch_breakpoint_hook_t trace_hook;
+    void* trace_baton;
+    dfsch_breakpoint_hook_t user_trace_hook;
+    void* user_trace_baton;
   };
 
   extern dfsch__thread_info_t* dfsch__get_thread_info();
@@ -264,6 +270,16 @@ extern "C" {
                                         dfsch_make_argument_reader_proc("Alternate value")));
 #define DFSCH_END_WITH_RETRY_WITH_RESTART(obj)                          \
   } DFSCH_CATCH { obj = DFSCH_CATCH_VALUE; } DFSCH_CATCH_END \
+}
+
+#define DFSCH_IGNORE_ERRORS                                             \
+  {                                                                     \
+  dfsch_object_t* dfsch___tag = dfsch_gensym();                         \
+  DFSCH_CATCH_BEGIN(dfsch___tag){                                       \
+    dfsch_handler_bind(DFSCH_SERIOUS_CONDITION_TYPE,                    \
+                       dfsch_make_throw_proc_arg(dfsch___tag));             
+#define DFSCH_END_IGNORE_ERRORS                                         \
+      } DFSCH_CATCH {} DFSCH_CATCH_END                                  \
 }
   
 

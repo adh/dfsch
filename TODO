@@ -1,5 +1,10 @@
 Bugfixes:
 
+0.4.1:
+* encodings
+* user defined collections, sequences, mappings, ports
+  - overriding of type methods
+
 Non-version-specific:
 * More tests
 * Documentation
@@ -12,7 +17,6 @@ Sometimes:
 * Unicode
    - Normalization
    - Collation
-* Missing parts of unix library (ftw, various system databases...)
 
 External modules and libraries:
 * Sound I/O

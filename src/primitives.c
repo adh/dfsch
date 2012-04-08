@@ -1391,7 +1391,7 @@ DFSCH_DEFINE_PRIMITIVE(string_2_object_list,
 
   return dfsch_string_2_object_list(string);
 }
-DFSCH_DEFINE_PRIMITIVE(write__object, 
+DFSCH_DEFINE_PRIMITIVE(write_object, 
                        "Recursively print object "
                        "- used by implementation of write methods"
 		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
@@ -1405,7 +1405,7 @@ DFSCH_DEFINE_PRIMITIVE(write__object,
                      object);
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(write__string, 
+DFSCH_DEFINE_PRIMITIVE(write_string, 
                        "Print string in write method implementation"
 		       DFSCH_DOC_SYNOPSIS("(writer-state string)")){
   dfsch_object_t* state;
@@ -1416,6 +1416,35 @@ DFSCH_DEFINE_PRIMITIVE(write__string,
 
   dfsch_write_strbuf(DFSCH_ASSERT_TYPE(state, DFSCH_WRITER_STATE_TYPE),
                      string->ptr, string->len);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write_unreadable_start, 
+                       "Start printing unreadable object "
+                       "- used by implementation of write methods"
+		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_unreadable_start(DFSCH_ASSERT_TYPE(state, 
+                                                 DFSCH_WRITER_STATE_TYPE),
+                               object);
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write_unreadable_end, 
+                       "End printing of unreadable object "
+                       "- used by implementation of write methods"
+		       DFSCH_DOC_SYNOPSIS("(writer-state object)")){
+  dfsch_object_t* state;
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, state);
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+
+  dfsch_write_unreadable_end(DFSCH_ASSERT_TYPE(state, 
+                                               DFSCH_WRITER_STATE_TYPE));
   return NULL;
 }
 
@@ -1963,10 +1992,14 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(string_2_object));
   dfsch_defcanon_cstr(ctx, "string->object-list", 
                       DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-object", 
-                      DFSCH_PRIMITIVE_REF(write__object));
-  dfsch_defcanon_cstr(ctx, "dfsch%write-string", 
-                      DFSCH_PRIMITIVE_REF(write__string));
+  dfsch_defcanon_cstr(ctx, "writer-write-object", 
+                      DFSCH_PRIMITIVE_REF(write_object));
+  dfsch_defcanon_cstr(ctx, "writer-write-string", 
+                      DFSCH_PRIMITIVE_REF(write_string));
+  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-start", 
+                      DFSCH_PRIMITIVE_REF(write_unreadable_start));
+  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-end", 
+                      DFSCH_PRIMITIVE_REF(write_unreadable_end));
 
   dfsch_defcanon_cstr(ctx, "symbol-qualified-name", 
                       DFSCH_PRIMITIVE_REF(symbol_qualified_name));
