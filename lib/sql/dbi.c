@@ -333,6 +333,11 @@ void dfsch_module_dbi_register(dfsch_object_t* env){
   dfsch_require(env, "sql", NULL);
   dfsch_provide(env, "dbi");
 
+  dfsch_define_pkgcstr(env, dbi, "<driver>", &driver_type);
+  dfsch_define_pkgcstr(env, dbi, "<database>", &database_type);
+  dfsch_define_pkgcstr(env, dbi, "<result>", &dbi_result_type);
+
+
   dfsch_defcanon_pkgcstr(env, dbi, "initialize",
                          DFSCH_PRIMITIVE_REF(initialize));
   dfsch_defcanon_pkgcstr(env, dbi, "get-driver-list",
