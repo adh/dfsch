@@ -100,6 +100,8 @@ typedef struct dfsch_primitive_t {
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_primitive_t;
 
+#define DFSCH_PRIMITIVE_PURE 1
+
 extern dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_DOC_SYNOPSIS(list) , .synopsis = list
@@ -139,7 +141,7 @@ extern dfsch_type_t dfsch_primitive_type;
 
 #define DFSCH_DEFINE_PRIMITIVE_EX(name, documentation, flags)	\
   DFSCH_PRIMITIVE_HEAD(name);					\
-  DFSCH_DECLARE_PRIMITIVE(name, documentation, flags);		\
+  DFSCH_DECLARE_PRIMITIVE_EX(name, documentation, flags);       \
   DFSCH_PRIMITIVE_HEAD(name)
 
 #define DFSCH_PRIMITIVE_REF(name) ((dfsch_object_t*)&p_##name)

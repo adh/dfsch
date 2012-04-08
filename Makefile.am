@@ -134,6 +134,13 @@ else
 sqlite3_modules=
 endif
 
+if DBI
+dbi_modules=dbi.la
+else
+dbi_modules=
+endif
+
+
 lib_LTLIBRARIES = libdfsch.la \
 	libdfsch-os.la \
 	libdfsch-console.la \
@@ -202,6 +209,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(pcre_modules)\
 	$(sqlite_modules)\
 	$(sqlite3_modules)\
+	$(dbi_modules)\
 	$(tc_modules)\
 	$(tt_modules)\
 	$(gd_modules)\
@@ -303,7 +311,7 @@ upskirt_files = ext/upskirt/array.c		  ext/upskirt/kilt.c \
 minizip_files = ext/minizip/minizip.h ext/minizip/minizip.c \
 	ext/minizip/ioapi.h ext/minizip/ioapi.c
 
-EXTRA_DIST = tests/scm-test.sh tests/interp-test.scm \
+EXTRA_DIST = tests/scm-test.sh tests/scm-test-interp.sh tests/interp-test.scm \
 	doc/dfsch-repl.1\
 	src/udata-gen.c data/UnicodeData.txt tools/docgen.scm \
 	make-version-h.sh git-make-stamp.sh \
@@ -586,6 +594,10 @@ sqlite3_la_SOURCES = lib/sql/sqlite3.c
 sqlite3_la_LIBADD = libdfsch.la -lsqlite3
 sqlite3_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
+dbi_la_SOURCES = lib/sql/dbi.c
+dbi_la_LIBADD = libdfsch.la -ldbi
+dbi_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 sql_support_la_SOURCES = lib/sql/sql-support.c
 sql_support_la_LIBADD = libdfsch.la
 sql_support_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
@@ -658,7 +670,7 @@ dfsch_run_LDFLAGS = $(gui_flags)
 dfsch_source_tool_SOURCES = src/source-tool.c
 dfsch_source_tool_LDADD = -lz
 
-TESTS = tests/scm-test.sh
+TESTS = tests/scm-test.sh tests/scm-test-interp.sh
 
 dist-hook:
 	$(srcdir)/git-make-stamp.sh $(distdir)/snapshot.stamp
@@ -673,7 +685,7 @@ MODULES = cmdopts crypto curl csv extref fastlz ffi gcollect gd http inet \
 	json markdown minizip os pcre posix-regex process shtml socket-port \
 	sxml threads tokyo-cabinet tokyo-tyrant unix xml zlib \
 	\
-	sqlite sqlite3\
+	sqlite sqlite3 dbi\
 	\
 	dfsch-unit http-server markdown-tools match tk-gui
 
