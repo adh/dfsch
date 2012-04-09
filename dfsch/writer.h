@@ -2,6 +2,7 @@
 #define H__dfsch__writer__
 
 #include <dfsch/dfsch.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,9 @@ extern "C" {
 
   void dfsch_write_unreadable_with_slots_method(dfsch_object_t* obj,
                                                 dfsch_writer_state_t* state);
+
+  void dfsch_put_object(FILE* f, dfsch_object_t* obj,
+                        int max_depth, int mode);
 
 #ifdef __cplusplus
 }
