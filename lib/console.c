@@ -487,7 +487,8 @@ static int repl_callback(dfsch_object_t *obj, repl_context_t* ctx){
   dfsch_object_t** ret;
   ret = dfsch_get_values(ctx->last_result = ctx->evalfun(obj, ctx->baton));
   while (*ret != DFSCH_INVALID_OBJECT){
-    puts(dfsch_object_2_string(*ret,ctx->print_depth,1));
+    dfsch_put_object(stdout, *ret, ctx->print_depth, 1);
+    printf("\n");
     ret++;
   }
   return 1;

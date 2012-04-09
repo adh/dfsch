@@ -82,10 +82,28 @@ void dfsch_write_object_circular(dfsch_object_t* obj,
   dfsch_invalidate_writer_state(state);
 }
 
+static void stdio_output_proc(FILE* stream, char* buf, size_t len){
+  if (fwrite(buf, len, 1, stream) != 1){
+    dfsch_operating_system_error("fwrite");
+  }
+}
 
 void dfsch_put_object(FILE* f, dfsch_object_t* obj,
-                      int max_depth){
-  
+                      int max_depth, int mode){
+  if (max_depth >= 0){
+    dfsch_writer_state_t* state = 
+      dfsch_make_writer_state(max_depth,
+                              mode,
+                              (dfsch_output_proc_t)stdio_output_proc,
+                              f);
+    dfsch_write_object(state, obj);
+    dfsch_invalidate_writer_state(state);
+  } else {
+    dfsch_write_object_circular(obj, 
+                                mode,
+                                (dfsch_output_proc_t)stdio_output_proc,
+                                f);
+  }
 }
 
 
