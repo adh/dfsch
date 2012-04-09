@@ -166,8 +166,6 @@ DFSCH_DEFINE_PRIMITIVE(win_menu,
                        "Creates a window with menu"){
   char* title = NULL;
   char* button1_text = "OK";
-  char* button2_text = NULL;
-  char* button3_text = NULL;
   char* text = "";
   int suggested_width = 60;
   int max_list_height = 10;
@@ -186,8 +184,6 @@ DFSCH_DEFINE_PRIMITIVE(win_menu,
   DFSCH_KEYWORD_GENERIC("title", title, dfsch_string_to_cstr); 
   DFSCH_KEYWORD_GENERIC("text", text, dfsch_string_to_cstr);
   DFSCH_KEYWORD_GENERIC("button1-text", button1_text, dfsch_string_to_cstr);
-  DFSCH_KEYWORD_GENERIC("button2-text", button2_text, dfsch_string_to_cstr);
-  DFSCH_KEYWORD_GENERIC("button3-text", button3_text, dfsch_string_to_cstr);
   DFSCH_KEYWORD_GENERIC("suggested-width", 
                         suggested_width, dfsch_number_to_long);
   DFSCH_KEYWORD_GENERIC("max-list-height", 
@@ -219,6 +215,49 @@ DFSCH_DEFINE_PRIMITIVE(win_menu,
 
   ret = newtWinMenu(title, text, suggested_width, flex_down, flex_up,
                     max_list_height, is, &item_index, button1_text);
+
+  return dfsch_values(2, 
+                      dfsch_make_number_from_long(item_index),
+                      dfsch_make_number_from_long(ret));
+}
+
+DFSCH_DEFINE_PRIMITIVE(win_entry, "Create a window with entry field"){
+  char* title = NULL;
+  char* button1_text = "OK";
+  char* button2_text = "Cancel";
+  char* button3_text = NULL;
+  char* button4_text = NULL;
+  char* text = "";
+  char* label = "";
+  int suggested_width = 60;
+  int max_list_height = 10;
+  int flex_up = 15;
+  int flex_down = 15;
+  int data_width = 40;
+  size_t i;
+  int ret;
+  struct newtWinEntry entry[2];
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_KEYWORD_PARSER_BEGIN(args);
+  DFSCH_KEYWORD_GENERIC("title", title, dfsch_string_to_cstr); 
+  DFSCH_KEYWORD_GENERIC("text", text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("label", label, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("button1-text", button1_text, dfsch_string_to_cstr);
+  DFSCH_KEYWORD_GENERIC("suggested-width", 
+                        suggested_width, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("max-list-height", 
+                        max_list_height, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("flex-up", 
+                        flex_up, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("flex-down", 
+                        flex_down, dfsch_number_to_long);
+  DFSCH_KEYWORD_GENERIC("data-width", 
+                        data_width, dfsch_number_to_long);
+  DFSCH_KEYWORD_PARSER_END(args);
+  
+  entry[0].
+  
 
   return dfsch_values(2, 
                       dfsch_make_number_from_long(item_index),
