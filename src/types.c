@@ -41,6 +41,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #include "types.h"
 
@@ -816,11 +817,9 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
   symbol_t* s;
   s = DFSCH_TAG_REF(o);
 
-
   if (s->name){
     if (!s->package){
-      dfsch_write_string(state, dfsch_saprintf("#<uninterned-symbol %p %s>", 
-                                               o, 
+      dfsch_write_string(state, dfsch_saprintf("#:%s", 
                                                s->name)); 
     } else {
       if (dfsch_writer_state_print_p(state)){
@@ -838,7 +837,7 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
       dfsch_write_string(state, s->name);
     }
   } else {
-    dfsch_write_string(state, dfsch_saprintf("#<gensym %p>", o)); 
+    dfsch_write_string(state, dfsch_saprintf("#:g-%"PRIxPTR, o)); 
   }
 }
 
