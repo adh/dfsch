@@ -596,7 +596,10 @@ typedef struct dfsch_pair_t {
 #define DFSCH_PAIR_P(obj) (((((size_t)(obj)) & 0x02) == 0x02))
 #define DFSCH_SYMBOL_P(obj) (((((size_t)(obj)) & 0x07) == 0x04))
 #define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x07) == 0x01)
-
+#define DFSCH_INTERNED_SYMBOL_P(obj)                                    \
+  (DFSCH_SYMBOL_P((obj))                                                \
+   && ((dfsch__symbol_t*)DFSCH_TAG_REF((obj)))->name != NULL            \
+   &&  ((dfsch__symbol_t*)DFSCH_TAG_REF((obj)))->package != NULL)
 
 #define DFSCH_FIXNUM_REF(obj)                   \
   (((long)(((ptrdiff_t)(obj)) & ~0x03L)) >> 3)
