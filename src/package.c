@@ -604,6 +604,14 @@ dfsch_object_t* dfsch_make_symbol(char* symbol){
   return dfsch_intern_symbol(dfsch_get_current_package(), symbol);
 }
 
+dfsch_object_t* dfsch_make_uninterned_symbol(char* symbol){
+  dfsch__symbol_t* sym;
+  sym = GC_NEW(dfsch__symbol_t);
+  sym->name = dfsch_stracpy(symbol);
+  sym->package = NULL;
+  return DFSCH_TAG_ENCODE(sym, 2);
+}
+
 
 char* dfsch_symbol(dfsch_object_t* symbol){
   symbol_t* s;

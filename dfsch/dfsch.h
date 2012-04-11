@@ -323,6 +323,7 @@ extern "C" {
 
   /** Makes symbol object from string. */
   extern dfsch_object_t* dfsch_make_symbol(char* symbol);
+  extern dfsch_object_t* dfsch_make_uninterned_symbol(char* symbol);
 
   /** Returns unique generated symbol. */
   extern dfsch_object_t* dfsch_gensym();
