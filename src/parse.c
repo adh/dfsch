@@ -740,6 +740,10 @@ static void dispatch_number_base(dfsch_parser_ctx_t *ctx, char *data){
   parse_object(ctx, dfsch_make_number_from_string(data, ctx->hash_arg));
 }
 
+static void dispatch_uninterned(dfsch_parser_ctx_t *ctx, char *data){
+  parse_object(ctx, dfsch_make_uninterned_symbol(data));
+}
+
 static void dispatch_atom(dfsch_parser_ctx_t *ctx, char *data){
 #ifdef T_DEBUG
   printf(";; Atom: [%s]\n", data);
@@ -1056,7 +1060,14 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->column++;
 
         ctx->dispatch_atom_hook=dispatch_number_base;
-         ctx->tokenizer_state = T_ATOM;
+        ctx->tokenizer_state = T_ATOM;
+        break;
+      case ':':
+        ++data;
+        ctx->column++;
+
+        ctx->dispatch_atom_hook=dispatch_uninterned;
+        ctx->tokenizer_state = T_ATOM;
         break;
 
       case '\\':
