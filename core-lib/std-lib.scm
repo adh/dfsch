@@ -36,7 +36,9 @@
 ;; core functionality in scheme code
 
 (define-macro (dfsch:with-gensyms gensyms &body body)
-  `@(let ,(map (lambda (name) `(,name (gensym))) gensyms)
+  `@(let ,(map (lambda (name) 
+                 `(,name (make-symbol ',(symbol-name name)))) 
+               gensyms)
       ,@body))
 
 (define-macro (dfsch:loop &body exprs)
