@@ -1484,7 +1484,8 @@ DFSCH_DEFINE_PRIMITIVE(symbol_package,
   return dfsch_symbol_package(object);
 }
 DFSCH_DEFINE_PRIMITIVE(keyword_name, 
-                       "Return symbols's name as string"){
+                       "Return keyword's name as string, signals error "
+                       "for symbols not interned in keyword package"){
   object_t* object;
 
   DFSCH_OBJECT_ARG(args, object);
@@ -1507,7 +1508,7 @@ DFSCH_DEFINE_PRIMITIVE(string_2_symbol,
   return dfsch_make_symbol(string);
 }
 DFSCH_DEFINE_PRIMITIVE(intern_symbol, 
-                       "Intern symbol in current package"
+                       "Intern symbol in current or specified package"
 		       DFSCH_DOC_SYNOPSIS("(name &optional package)")){
   char* string;
   dfsch_package_t* package;
@@ -1518,6 +1519,15 @@ DFSCH_DEFINE_PRIMITIVE(intern_symbol,
   DFSCH_ARG_END(args);
 
   return dfsch_intern_symbol(package, string);
+}
+DFSCH_DEFINE_PRIMITIVE(make_symbol, 
+                       "Create uninterned symbol"){
+  char* string;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_uninterned_symbol(string);
 }
 
 DFSCH_DEFINE_PRIMITIVE(macro_expand, 
@@ -2013,6 +2023,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(string_2_symbol));
   dfsch_defcanon_cstr(ctx, "intern-symbol", 
                       DFSCH_PRIMITIVE_REF(intern_symbol));
+  dfsch_defcanon_cstr(ctx, "make-symbol", 
+                      DFSCH_PRIMITIVE_REF(make_symbol));
 
   dfsch_defcanon_cstr(ctx, "macro-expand", 
                       DFSCH_PRIMITIVE_REF(macro_expand));
