@@ -309,6 +309,16 @@ void dfsch_write_unreadable_end(dfsch_writer_state_t* state){
   dfsch_write_string(state, ">");
   dfsch_write_pprint_end(state);
 }
+void dfsch__write_internal_reference(dfsch_writer_state_t* state,
+                                     dfsch_object_t* obj,
+                                     char* tag){
+  if (state->readability == DFSCH_STRICT_WRITE){
+    dfsch_error("Object has no readable representation", obj);
+  }
+  dfsch_write_string(state,
+                     saprintf("#%%%s", tag));    
+}
+
 
 void dfsch_write_pprint_newline(dfsch_writer_state_t* state){
 

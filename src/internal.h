@@ -66,5 +66,9 @@ void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
                                                  dfsch_object_t* dst);
 void dfsch__allocate_breakpoint_table();
 
+void dfsch__write_internal_reference(dfsch_writer_state_t* state,
+                                     dfsch_object_t* obj,
+                                     char* tag);
+
 
 #endif

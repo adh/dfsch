@@ -1082,6 +1082,7 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
         ctx->tokenizer_state = T_NONE;
         break;
       case '<':
+      case '%':
         parser_abort(ctx, "Unreadable object");
         return;        
       case '!': /* for shebang */

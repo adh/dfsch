@@ -1035,8 +1035,11 @@ dfsch_type_t* const dfsch_small_types[32] = {
 
 static void primitive_write(dfsch_primitive_t* p, 
                             dfsch_writer_state_t* state){
-  char* name = p->name ? p->name : "";
-  dfsch_write_unreadable(state, (dfsch_object_t*)p, "%s", name);
+  if (!p->name){
+    dfsch_write_unreadable(state, (dfsch_object_t*)p, "(unnamed)");
+  } else {
+    dfsch_write_unreadable(state, (dfsch_object_t*)p, "%s", p->name);
+  }
 }
 
 static dfsch_slot_t primitive_slots[] = {
@@ -1218,8 +1221,7 @@ dfsch_type_t dfsch_macro_type = {
 #define MACRO DFSCH_MACRO_TYPE
 
 static void form_write(dfsch_form_t* f, dfsch_writer_state_t* state){
-  dfsch_write_unreadable(state, (dfsch_object_t*)f,
-                         "%s", f->name);
+  dfsch__write_internal_reference(state, (dfsch_object_t*)f, f->name);
 }
 static dfsch_slot_t form_slots[] = {
   DFSCH_STRING_SLOT(dfsch_form_t, name, DFSCH_SLOT_ACCESS_RO,
