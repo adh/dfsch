@@ -822,10 +822,8 @@ static void symbol_write(object_t* o, dfsch_writer_state_t* state){
       dfsch_write_string(state, dfsch_saprintf("#:%s", 
                                                s->name)); 
     } else {
-      if (dfsch_writer_state_print_p(state)){
-        if (s->package == DFSCH_KEYWORD_PACKAGE) {
-          dfsch_write_string(state, ":");
-        }
+      if (s->package == DFSCH_KEYWORD_PACKAGE) {
+        dfsch_write_string(state, ":");
       } else if (dfsch_writer_state_strict_write_p(state) || 
                  !dfsch_in_current_package(o)) {
         if (s->package != DFSCH_KEYWORD_PACKAGE) {
