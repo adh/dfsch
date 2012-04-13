@@ -11,6 +11,8 @@ Non-version-specific:
 
 0.4.x fetaures
 * Pretty-printer
+* Parser rewrite (recursive descent)
+  - read macros
 * non-trivial loop
 
 Sometimes:
