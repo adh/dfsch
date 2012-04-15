@@ -445,7 +445,14 @@ dfsch_object_t* dfsch_make_number_from_string_noerror(char* string, int obase){
     if (base != 10 && base != 0){
       return NULL;
     }
-    return dfsch_make_number_from_double(atof(string));
+    char* endptr;
+    double d = strtod(string, &endptr);
+
+    if (*endptr != '\0'){
+      return NULL;
+    }
+
+    return dfsch_make_number_from_double(d);
   }
 
   if (*string == '-'){
