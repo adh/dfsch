@@ -101,7 +101,10 @@ static XMLCALL void character_data_handler(parser_ctx_t* c,
       }
     }
     
-    len = j; 
+    len = j;
+    if (len == 0 || (len == 1 && strchr(" \t\n", data[0]))){
+      return;
+    }
   }
 
   if (c->stack->last_cdata){
