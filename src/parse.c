@@ -932,14 +932,23 @@ static void tokenizer_process (dfsch_parser_ctx_t *ctx, char* data){
       }
     case T_STRING: // TODO: count characters and lines
       {
-	char *e= strchr(data, '"');
+	char *e = strchr(data, '"');
 	if (!e){
           consume_queue(ctx->q, data);
 	  return;
 	}
-	if (e>data){
+	if (e > data){
 	  while (*(e-1)=='\\'){
+            if ((e - 2) >= data && *(e - 2) == '\\' && 
+                ((e - 2) == data || *(e - 3) != '\\')){
+              break;
+            }
+
 	    e = strchr(e+1, '"');
+            if (!e) {
+              consume_queue(ctx->q, data);
+              return;
+            }
 	  }
 	}
 
