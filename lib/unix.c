@@ -52,6 +52,7 @@
 #include <ftw.h>
 #include <pwd.h>
 #include <grp.h>
+#include <wordexp.h>
 
 static void gen_salt(unsigned char* buf, size_t len){
   static char* b64 = 
@@ -1074,6 +1075,55 @@ DFSCH_DEFINE_PRIMITIVE(getgroups,
   return dfsch_collected_list(lc);
 }
 
+DFSCH_DEFINE_PRIMITIVE(wordexp, 
+                       "Perform shell word expansion on string"){
+  char* string;
+  wordexp_t we;
+  int flags = 0;
+  int ret;
+  dfsch_list_collector_t* lc;
+  int i;
+
+  DFSCH_STRING_ARG(args, string);
+  DFSCH_FLAG_PARSER_BEGIN(args);
+  DFSCH_FLAG_SET("nocmd", WRDE_NOCMD, flags);
+  DFSCH_FLAG_SET("showerr", WRDE_SHOWERR, flags);
+  DFSCH_FLAG_SET("undef", WRDE_UNDEF, flags);
+  DFSCH_FLAG_PARSER_END(args);
+
+  ret = wordexp(string, &we, flags);
+
+  if (ret != 0){
+    switch(ret){
+    case WRDE_BADCHAR:
+      dfsch_error("Invalid character during word expansion",
+                  dfsch_make_string_cstr(string));
+    case WRDE_BADVAL:
+      dfsch_error("Undefined variable referenced during word expansion",
+                  dfsch_make_string_cstr(string));
+    case WRDE_CMDSUB:
+      dfsch_error("Command expansion is not allowed",
+                  dfsch_make_string_cstr(string));
+    case WRDE_SYNTAX:
+      dfsch_error("Syntax error during word expansion",
+                  dfsch_make_string_cstr(string));
+    default:
+      dfsch_error("Unknown during word expansion",
+                  dfsch_make_string_cstr(string));
+    }
+  }
+
+  lc = dfsch_make_list_collector();
+
+  for (i = 0; i < we.we_wordc; i++){
+    dfsch_list_collect(lc, dfsch_make_string_cstr(we.we_wordv[i]));
+  }
+
+  wordfree(&we);
+
+  return dfsch_collected_list(lc);
+}
+
 dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
   dfsch_package_t* unix_pkg = dfsch_make_package("unix",
                                                  "UNIX-specific system "
@@ -1183,6 +1233,9 @@ dfsch_object_t* dfsch_module_unix_register(dfsch_object_t* ctx){
 
   dfsch_defcanon_pkgcstr(ctx, unix_pkg, "getgroups", 
                          DFSCH_PRIMITIVE_REF(getgroups));
+
+  dfsch_defcanon_pkgcstr(ctx, unix_pkg, "wordexp", 
+                         DFSCH_PRIMITIVE_REF(wordexp));
 
   
   dfsch_provide(ctx, "unix");
