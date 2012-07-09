@@ -83,7 +83,7 @@ void dfsch_write_object_circular(dfsch_object_t* obj,
 }
 
 static void stdio_output_proc(FILE* stream, char* buf, size_t len){
-  if (fwrite(buf, len, 1, stream) != 1){
+  if (fwrite(buf, len, 1, stream) != 1 && len != 0){
     dfsch_operating_system_error("fwrite");
   }
 }
