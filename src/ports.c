@@ -913,7 +913,8 @@ DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
   return dfsch_make_string_strbuf(buf);
 }
 
-DFSCH_DEFINE_PRIMITIVE(port_write_buf, NULL){
+DFSCH_DEFINE_PRIMITIVE(port_write_buf, "Write byte vector to port"
+                       DFSCH_DOC_SYNOPSIS("(byte-vector port)"){
   dfsch_object_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
