@@ -90,7 +90,7 @@ DFSCH_DEFINE_PRIMITIVE(image_2_gif,
 }
 DFSCH_DEFINE_PRIMITIVE(image_2_png,
                        "Convert image to PNG data"
-                       DFSCH_DOC_SYNOPSIS("(image &opt compression)"){
+                       DFSCH_DOC_SYNOPSIS("(image &opt compression)")){
   gdImagePtr image;
   dfsch_object_t* res;
   int compression;

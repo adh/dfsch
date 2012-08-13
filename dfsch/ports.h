@@ -101,6 +101,13 @@ extern "C" {
     dfsch_port_batch_read_t batch_read;
   } dfsch_port_type_t;
 
+  typedef struct dfsch_port_t {
+    dfsch_port_type_t* type;
+    int pushback :1;
+    int freshline :1;
+    char pushback_content;
+  } dfsch_port_t;
+
   /**
    * Type of port types.
    */
@@ -129,19 +136,22 @@ extern "C" {
   int dfsch_output_port_p(dfsch_object_t* obj);
   int dfsch_input_port_p(dfsch_object_t* obj);
 
-  void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size);
-  void dfsch_port_write_cstr(dfsch_object_t* port, char*str);
-  ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size);
-  dfsch_strbuf_t* dfsch_port_read_whole(dfsch_object_t* port);
-  void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence);
-  int64_t dfsch_port_tell(dfsch_object_t* port);
+  void dfsch_port_write_buf(dfsch_port_t* port, char*buf, size_t size);
+  void dfsch_port_write_cstr(dfsch_port_t* port, char*str);
+  ssize_t dfsch_port_read_buf(dfsch_port_t* port, char*buf, size_t size);
+  dfsch_strbuf_t* dfsch_port_read_whole(dfsch_port_t* port);
+  void dfsch_port_seek(dfsch_port_t* port, int64_t offset, int whence);
+  int64_t dfsch_port_tell(dfsch_port_t* port);
   
-  void dfsch_port_batch_read_start(dfsch_object_t* port);
-  void dfsch_port_batch_read_end(dfsch_object_t* port);
-  int dfsch_port_batch_read(dfsch_object_t* port);
-  
-  dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port);
-  dfsch_strbuf_t* dfsch_port_readline_len(dfsch_object_t* port,
+  void dfsch_port_batch_read_start(dfsch_port_t* port);
+  void dfsch_port_batch_read_end(dfsch_port_t* port);
+  int dfsch_port_batch_read(dfsch_port_t* port);
+  void dfsch_port_batch_unread(dfsch_port_t* port, char ch);
+
+  void dfsch_port_freshline(dfsch_port_t* port);
+
+  dfsch_strbuf_t* dfsch_port_readline(dfsch_port_t* port);
+  dfsch_strbuf_t* dfsch_port_readline_len(dfsch_port_t* port,
                                           size_t max_len);
 
   dfsch_object_t* dfsch_null_port();
@@ -154,9 +164,9 @@ extern "C" {
   dfsch_object_t* dfsch_standard_input_port();
   dfsch_object_t* dfsch_standard_error_port();
 
-  void dfsch_set_current_output_port(dfsch_object_t* port);
-  void dfsch_set_current_input_port(dfsch_object_t* port);
-  void dfsch_set_current_error_port(dfsch_object_t* port);
+  void dfsch_set_current_output_port(dfsch_port_t* port);
+  void dfsch_set_current_input_port(dfsch_port_t* port);
+  void dfsch_set_current_error_port(dfsch_port_t* port);
 
   dfsch_object_t* dfsch_string_output_port();
   dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port);
@@ -172,6 +182,12 @@ extern "C" {
 #define DFSCH_PORT_LINE_ITERATOR_TYPE (&dfsch_port_line_iterator_type)
 
   dfsch_object_t* dfsch_make_port_line_iterator(dfsch_object_t* port);
+
+#define DFSCH_PORT_ARG(al, name)                                \
+  DFSCH_IMPLEMENTS_ARG(al, name, dfsch_port_t*, DFSCH_PORT_TYPE)
+#define DFSCH_PORT_ARG_OPT(al, name, default)                           \
+  DFSCH_IMPLEMENTS_ARG_OPT(al, name, default, dfsch_port_t*, DFSCH_PORT_TYPE)
+
 
 #ifdef __cplusplus
 }

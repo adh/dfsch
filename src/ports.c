@@ -69,7 +69,7 @@ int dfsch_input_port_p(dfsch_object_t* port){
 }
 
 
-void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
+void dfsch_port_write_buf(dfsch_port_t* port, char*buf, size_t size){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf(port, buf, size);
@@ -80,12 +80,12 @@ void dfsch_port_write_buf(dfsch_object_t* port, char*buf, size_t size){
     dfsch_error("Not a port", port);
   }
 }
-void dfsch_port_write_cstr(dfsch_object_t* port, char*str){
+void dfsch_port_write_cstr(dfsch_port_t* port, char*str){
   dfsch_port_write_buf(port, str, strlen(str));
 }
 
 
-ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
+ssize_t dfsch_port_read_buf(dfsch_port_t* port, char*buf, size_t size){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf){
       return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf(port, 
@@ -98,7 +98,7 @@ ssize_t dfsch_port_read_buf(dfsch_object_t* port, char*buf, size_t size){
   }
 }
 
-dfsch_strbuf_t* dfsch_port_read_whole(dfsch_object_t* port){
+dfsch_strbuf_t* dfsch_port_read_whole(dfsch_port_t* port){
   ssize_t ret;
   char* buf = GC_MALLOC_ATOMIC(1024);
   str_list_t* sl = sl_create();
@@ -109,7 +109,7 @@ dfsch_strbuf_t* dfsch_port_read_whole(dfsch_object_t* port){
   return sl_value_strbuf(sl);
 }
 
-void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence){
+void dfsch_port_seek(dfsch_port_t* port, int64_t offset, int whence){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek(port, offset, whence);
@@ -120,7 +120,7 @@ void dfsch_port_seek(dfsch_object_t* port, int64_t offset, int whence){
     dfsch_error("Not a port", port);
   }
 }
-int64_t dfsch_port_tell(dfsch_object_t* port){
+int64_t dfsch_port_tell(dfsch_port_t* port){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell){
       return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell(port);
@@ -132,7 +132,7 @@ int64_t dfsch_port_tell(dfsch_object_t* port){
   }
 }
 
-void dfsch_port_batch_read_start(dfsch_object_t* port){
+void dfsch_port_batch_read_start(dfsch_port_t* port){
   if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
     if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start){
       ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start(port);
@@ -141,36 +141,48 @@ void dfsch_port_batch_read_start(dfsch_object_t* port){
     dfsch_error("Not a port", port);
   }
 }
-void dfsch_port_batch_read_end(dfsch_object_t* port){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_end){
-      ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_end(port);
-    }
-  } else {
-    dfsch_error("Not a port", port);
+void dfsch_port_batch_read_end(dfsch_port_t* port){
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_end){
+    ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_end(port);
   }
 }
-int dfsch_port_batch_read(dfsch_object_t* port){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read){
-      return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read(port);
-    } else {
-      char buf;
-      if (dfsch_port_read_buf(port, &buf, 1) != 1){
-        return -1;
-      } else {
-        return buf;
-      }
-    }
+int dfsch_port_batch_read(dfsch_port_t* port){
+  if (port->pushback){
+    port->pushback = 0;
+    return port->pushback_content;
+  }
+  if (port->type->batch_read){
+    return port->type->batch_read(port);
   } else {
-    dfsch_error("Not a port", port);
+    char buf;
+    if (dfsch_port_read_buf(port, &buf, 1) != 1){
+      return -1;
+    } else {
+      return buf;
+    }
   }
 }
 
-dfsch_strbuf_t* dfsch_port_readline(dfsch_object_t* port){
+void dfsch_port_batch_unread(dfsch_port_t* port, char ch){
+  if (port->pushback){
+    dfsch_error("Unread called multiple times", port);
+  }
+  port->pushback = 1;
+  port->pushback_content = ch;
+}
+
+void dfsch_port_freshline(dfsch_port_t* port){
+  if (!port->freshline){
+    port->freshline = 1;
+    dfsch_port_write_buf(port, "\n", 1);
+  }
+}
+
+
+dfsch_strbuf_t* dfsch_port_readline(dfsch_port_t* port){
   return dfsch_port_readline_len(port, 0);
 }
-dfsch_strbuf_t* dfsch_port_readline_len(dfsch_object_t* port,
+dfsch_strbuf_t* dfsch_port_readline_len(dfsch_port_t* port,
                                         size_t max_len){
   int ch;
   char* buf;
@@ -251,7 +263,7 @@ int dfsch_eof_object_p(dfsch_object_t* obj){
  */
 
 typedef struct null_port_t {
-  dfsch_port_type_t* type;
+  dfsch_port_t port;
 } null_port_t;
 
 static void null_port_write_buf(dfsch_object_t* port, 
@@ -336,19 +348,19 @@ dfsch_object_t* dfsch_current_error_port(){
   return current_ports()->error_port;
 }
 
-void dfsch_set_current_output_port(dfsch_object_t* port){
+void dfsch_set_current_output_port(dfsch_port_t* port){
   if (!dfsch_output_port_p(port)){
     dfsch_error("Not an output port", port);
   }
   current_ports()->output_port = port;
 }
-void dfsch_set_current_input_port(dfsch_object_t* port){
+void dfsch_set_current_input_port(dfsch_port_t* port){
   if (!dfsch_input_port_p(port)){
     dfsch_error("Not an input port", port);
   }
   current_ports()->input_port = port;  
 }
-void dfsch_set_current_error_port(dfsch_object_t* port){
+void dfsch_set_current_error_port(dfsch_port_t* port){
   if (!dfsch_output_port_p(port)){
     dfsch_error("Not an output port", port);
   }
@@ -360,7 +372,7 @@ void dfsch_set_current_error_port(dfsch_object_t* port){
  */
 
 typedef struct string_output_port_t {
-  dfsch_type_t* type;
+  dfsch_port_t super;
   str_list_t* list;
   pthread_mutex_t* mutex;
 } string_output_port_t;
@@ -428,7 +440,7 @@ dfsch_strbuf_t* dfsch_string_output_port_value(dfsch_object_t* port){
  */
 
 typedef struct string_input_port_t {
-  dfsch_type_t* type;
+  dfsch_port_t super;
   size_t len;
   size_t cur;
   char* buf;
@@ -500,7 +512,7 @@ dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
  */
 
 typedef struct file_port_t {
-  dfsch_type_t* type;
+  dfsch_port_t super;
   FILE* file;
   int close;
   int open;
@@ -800,22 +812,22 @@ DFSCH_DEFINE_PRIMITIVE(current_error_port, NULL){
   return dfsch_current_error_port();
 }
 DFSCH_DEFINE_PRIMITIVE(set_current_output_port, NULL){
-  dfsch_object_t* port;
-  DFSCH_OBJECT_ARG(args, port);  
+  dfsch_port_t* port;
+  DFSCH_PORT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_output_port(port);
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(set_current_input_port, NULL){
-  dfsch_object_t* port;
-  DFSCH_OBJECT_ARG(args, port);  
+  dfsch_port_t* port;
+  DFSCH_PORT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_input_port(port);
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(set_current_error_port, NULL){
-  dfsch_object_t* port;
-  DFSCH_OBJECT_ARG(args, port);  
+  dfsch_port_t* port;
+  DFSCH_PORT_ARG(args, port);  
   DFSCH_ARG_END(args);
   dfsch_set_current_error_port(port);
   return NULL;
@@ -825,12 +837,12 @@ DFSCH_DEFINE_PRIMITIVE(null_port, NULL){
   return dfsch_null_port();
 }
 DFSCH_DEFINE_PRIMITIVE(write, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   dfsch_object_t* object;
   dfsch_object_t* strict;
   char *buf;
   DFSCH_OBJECT_ARG(args, object);
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_OBJECT_ARG_OPT(args, strict, NULL);  
   DFSCH_ARG_END(args);
 
@@ -841,11 +853,11 @@ DFSCH_DEFINE_PRIMITIVE(write, NULL){
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(display, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   dfsch_object_t* object;
   char *buf;
   DFSCH_OBJECT_ARG(args, object);
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
   buf = dfsch_object_2_string(object, 1000, DFSCH_PRINT);
@@ -854,9 +866,9 @@ DFSCH_DEFINE_PRIMITIVE(display, NULL){
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(newline, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   char *buf;
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
   dfsch_port_write_buf(port, "\n", 1);
@@ -865,20 +877,20 @@ DFSCH_DEFINE_PRIMITIVE(newline, NULL){
 }
 
 DFSCH_DEFINE_PRIMITIVE(read, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   char *buf;
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
   return dfsch_parser_read_from_port(port);
 }
 
 DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   size_t len;
   char* buf;
   DFSCH_LONG_ARG(args, len);
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
   buf = GC_MALLOC_ATOMIC(len+1);
@@ -893,16 +905,16 @@ DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
 }
 
 DFSCH_DEFINE_PRIMITIVE(port_read_whole, 0){
-  dfsch_object_t* port;
-  DFSCH_OBJECT_ARG(args, port);
+  dfsch_port_t* port;
+  DFSCH_PORT_ARG(args, port);
   DFSCH_ARG_END(args);
   return dfsch_make_string_strbuf(dfsch_port_read_whole(port));
 }
 
 DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   dfsch_strbuf_t* buf;
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
   buf = dfsch_port_readline(port);
@@ -914,11 +926,11 @@ DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
 }
 
 DFSCH_DEFINE_PRIMITIVE(port_write_buf, "Write byte vector to port"
-                       DFSCH_DOC_SYNOPSIS("(byte-vector port)"){
-  dfsch_object_t* port;
+                       DFSCH_DOC_SYNOPSIS("(byte-vector port)")){
+  dfsch_port_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
-  DFSCH_OBJECT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
   DFSCH_ARG_END(args);
 
   dfsch_port_write_buf(port, buf->ptr, buf->len);
@@ -926,11 +938,11 @@ DFSCH_DEFINE_PRIMITIVE(port_write_buf, "Write byte vector to port"
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(port_seek, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   int64_t offset;
   int whence = SEEK_SET;
   
-  DFSCH_OBJECT_ARG(args, port);
+  DFSCH_PORT_ARG(args, port);
   DFSCH_INT64_ARG(args, offset);
   DFSCH_FLAG_PARSER_BEGIN_ONE_OPT(args, whence);
   DFSCH_FLAG_VALUE("set", SEEK_SET, whence);
@@ -943,9 +955,9 @@ DFSCH_DEFINE_PRIMITIVE(port_seek, NULL){
   return NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(port_tell, NULL){
-  dfsch_object_t* port;
+  dfsch_port_t* port;
   char *buf;
-  DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_PORT_ARG(args, port);  
   DFSCH_ARG_END(args);
   
   return dfsch_make_number_from_long(dfsch_port_tell(port));

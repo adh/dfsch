@@ -122,6 +122,18 @@ DFSCH_DEFINE_PRIMITIVE(instance_p, "Is object instance of given type?"
 
   return dfsch_bool(dfsch_instance_p(object, (dfsch_type_t*)type));
 }
+
+DFSCH_DEFINE_PRIMITIVE(implements_p, "Does object's type match given specializer?"
+                       DFSCH_DOC_SYNOPSIS("(object specializer)")){
+  dfsch_object_t* object;
+  dfsch_object_t* specializer;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_OBJECT_ARG(args, specializer);
+  DFSCH_ARG_END(args);
+
+  return dfsch_bool(dfsch_implements_p(object, specializer));
+}
+
 dfsch_object_t* dfsch_generate_instance_p(dfsch_object_t* obj,
                                           dfsch_object_t* klass){
   return dfsch_immutable_list(3, 
@@ -1902,6 +1914,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "type-name", DFSCH_PRIMITIVE_REF(type_name));
   dfsch_defcanon_cstr(ctx, "superclass?", DFSCH_PRIMITIVE_REF(superclass_p));
   dfsch_defcanon_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
+  dfsch_defcanon_cstr(ctx, "implements?", DFSCH_PRIMITIVE_REF(implements_p));
   dfsch_defcanon_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
   dfsch_defcanon_cstr(ctx, "get-list-annotation", 
                       DFSCH_PRIMITIVE_REF(get_list_annotation));
@@ -1911,7 +1924,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "equal?", DFSCH_PRIMITIVE_REF(equal_p));
 
   dfsch_defcanon_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
-
 
   dfsch_defcanon_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
   dfsch_defcanon_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));

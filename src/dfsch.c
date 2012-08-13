@@ -196,6 +196,14 @@ int dfsch_instance_p(dfsch_object_t* obj, dfsch_type_t* type){
   return dfsch_superclass_p(DFSCH_TYPE_OF(obj), type);
 }
 
+int dfsch_implements_p(dfsch_object_t* obj, dfsch_object_t* specializer){
+  dfsch_type_t* t = DFSCH_TYPE_OF(obj);
+  if (t == specializer){
+    return 1;
+  }
+  return dfsch_specializer_matches_type_p(specializer, t);
+}
+
 void* dfsch_assert_type(dfsch_object_t* obj, dfsch_type_t* type){
   dfsch_object_t* o = obj;
   while (DFSCH_TYPE_OF(o) != type){
@@ -217,6 +225,18 @@ dfsch_object_t* dfsch_assert_instance(dfsch_object_t* obj,
   }
   return o;
 }
+dfsch_object_t* dfsch_assert_implements(dfsch_object_t* obj,
+                                        dfsch_object_t* specializer){
+  dfsch_object_t* o = obj;
+  while (!dfsch_implements_p(o, specializer)){
+    DFSCH_WITH_RETRY_WITH_RESTART(DFSCH_SYM_USE_VALUE, 
+                                  "Retry with alternate value") {
+      dfsch_type_error(o, specializer, 1);
+    } DFSCH_END_WITH_RETRY_WITH_RESTART(o);
+  }
+  return o;
+}
+
 dfsch_object_t* dfsch_assert_metaclass_instance(dfsch_object_t* obj, 
                                                 dfsch_type_t* type){
   dfsch_object_t* o = obj;
