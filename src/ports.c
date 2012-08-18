@@ -876,6 +876,18 @@ DFSCH_DEFINE_PRIMITIVE(newline, NULL){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(freshline, 
+                       "Output newline if previous character wasn't newline"){
+  dfsch_port_t* port;
+  char *buf;
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_ARG_END(args);
+
+  dfsch_port_freshline(port);
+  
+  return NULL;
+}
+
 DFSCH_DEFINE_PRIMITIVE(read, NULL){
   dfsch_port_t* port;
   char *buf;
@@ -1039,6 +1051,8 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(display));
   dfsch_defcanon_cstr(ctx, "newline", 
                     DFSCH_PRIMITIVE_REF(newline));
+  dfsch_defcanon_cstr(ctx, "freshline", 
+                    DFSCH_PRIMITIVE_REF(freshline));
   dfsch_defcanon_cstr(ctx, "read", 
                     DFSCH_PRIMITIVE_REF(read));
 
