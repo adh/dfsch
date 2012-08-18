@@ -70,14 +70,12 @@ int dfsch_input_port_p(dfsch_object_t* port){
 
 
 void dfsch_port_write_buf(dfsch_port_t* port, char*buf, size_t size){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf){
-      ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf(port, buf, size);
-    } else {
-      dfsch_error("Not an output port", port);
-    }
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf){
+    int freshline = buf[size - 1] == '\n';
+    ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->write_buf(port, buf, size);
+    port->freshline = freshline;
   } else {
-    dfsch_error("Not a port", port);
+    dfsch_error("Not an output port", port);
   }
 }
 void dfsch_port_write_cstr(dfsch_port_t* port, char*str){
@@ -86,15 +84,12 @@ void dfsch_port_write_cstr(dfsch_port_t* port, char*str){
 
 
 ssize_t dfsch_port_read_buf(dfsch_port_t* port, char*buf, size_t size){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf){
-      return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf(port, 
-                                                                   buf, size);
-    } else {
-      dfsch_error("Not an input port", port);
-    }
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf){
+    port->pushback = 0;
+    return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf(port, 
+                                                                 buf, size);
   } else {
-    dfsch_error("Not a port", port);
+    dfsch_error("Not an input port", port);
   }
 }
 
@@ -110,35 +105,23 @@ dfsch_strbuf_t* dfsch_port_read_whole(dfsch_port_t* port){
 }
 
 void dfsch_port_seek(dfsch_port_t* port, int64_t offset, int whence){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
-      ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek(port, offset, whence);
-    } else {
-      dfsch_error("Port is not seekable", port);
-    }
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek){
+    ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek(port, offset, whence);
   } else {
-    dfsch_error("Not a port", port);
+    dfsch_error("Port is not seekable", port);
   }
 }
 int64_t dfsch_port_tell(dfsch_port_t* port){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell){
-      return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell(port);
-    } else {
-      return -1;
-    }
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell){
+    return ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->tell(port);
   } else {
-    dfsch_error("Not a port", port);
+    return -1;
   }
 }
 
 void dfsch_port_batch_read_start(dfsch_port_t* port){
-  if (DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE){
-    if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start){
-      ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start(port);
-    }
-  } else {
-    dfsch_error("Not a port", port);
+  if (((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start){
+    ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->batch_read_start(port);
   }
 }
 void dfsch_port_batch_read_end(dfsch_port_t* port){
