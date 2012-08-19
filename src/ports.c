@@ -466,15 +466,7 @@ dfsch_port_type_t dfsch_string_input_port_type = {
     NULL,
     "Input-only port backed by string"
   },
-  NULL,
-  (dfsch_port_read_buf_t)string_input_port_read_buf,
-
-  NULL,
-  NULL,
-
-  NULL, // TODO
-  NULL,
-  NULL
+  .read_buf = (dfsch_port_read_buf_t)string_input_port_read_buf,
 };
 
 dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
@@ -505,14 +497,6 @@ typedef struct file_port_t {
   int open;
   char* name;
 } file_port_t;
-
-
-static void errno_error(char* name, dfsch_object_t* object, int e){
-  dfsch_error(name, dfsch_list(3, 
-                               object,
-                               dfsch_make_number_from_long(e),
-                               dfsch_make_string_cstr(strerror(e))));
-}
 
 static void file_port_write_buf(file_port_t* port, 
                                 char*buf, size_t len){
@@ -649,6 +633,23 @@ dfsch_port_type_t dfsch_file_port_type = {
     
     file_port_slots,
     
+    "base class for ports backed by stdio streams"
+  },
+};
+
+dfsch_port_type_t dfsch_file_input_output_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    DFSCH_FILE_PORT_TYPE,
+    sizeof(file_port_t),
+    "file-input-output-port",
+    NULL,
+    (dfsch_type_write_t)file_port_write,
+    NULL,
+    NULL,
+    
+    file_port_slots,
+    
     "port backed by stdio stream"
   },
   .write_buf = (dfsch_port_write_buf_t)file_port_write_buf,
@@ -663,6 +664,52 @@ dfsch_port_type_t dfsch_file_port_type = {
 #endif
 };
 
+dfsch_port_type_t dfsch_file_input_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    DFSCH_FILE_PORT_TYPE,
+    sizeof(file_port_t),
+    "file-input-port",
+    NULL,
+    (dfsch_type_write_t)file_port_write,
+    NULL,
+    NULL,
+    
+    file_port_slots,
+    
+    "port backed by read-only stdio stream"
+  },
+  .read_buf = (dfsch_port_read_buf_t)file_port_read_buf,
+
+  .seek = (dfsch_port_seek_t)file_port_seek,
+  .tell = (dfsch_port_tell_t)file_port_tell,
+#ifdef __unix__
+  .batch_read_start = (dfsch_port_batch_read_start_t)file_port_batch_read_start,
+  .batch_read_end = (dfsch_port_batch_read_end_t)file_port_batch_read_end,
+  .batch_read = (dfsch_port_batch_read_t)file_port_batch_read,
+#endif
+};
+dfsch_port_type_t dfsch_file_output_port_type = {
+  {
+    DFSCH_PORT_TYPE_TYPE,
+    DFSCH_FILE_PORT_TYPE,
+    sizeof(file_port_t),
+    "file-output-port",
+    NULL,
+    (dfsch_type_write_t)file_port_write,
+    NULL,
+    NULL,
+    
+    file_port_slots,
+    
+    "port backed by write-only stdio stream"
+  },
+  .write_buf = (dfsch_port_write_buf_t)file_port_write_buf,
+
+  .seek = (dfsch_port_seek_t)file_port_seek,
+  .tell = (dfsch_port_tell_t)file_port_tell,
+};
+
 
 
 static void file_port_finalizer(file_port_t* port, void* cd){
@@ -674,7 +721,7 @@ static void file_port_finalizer(file_port_t* port, void* cd){
 
 dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
   file_port_t* port = (file_port_t*)dfsch_make_object((dfsch_type_t*)
-                                                      DFSCH_FILE_PORT_TYPE);
+                                                      DFSCH_FILE_INPUT_OUTPUT_PORT_TYPE);
 
   port->file = file;
   port->close = close;
@@ -1040,6 +1087,12 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<port>", DFSCH_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<null-port>", DFSCH_NULL_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<file-port>", DFSCH_FILE_PORT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<file-input-port>", 
+                      DFSCH_FILE_INPUT_PORT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<file-output-port>", 
+                      DFSCH_FILE_OUTPUT_PORT_TYPE);
+  dfsch_defcanon_cstr(ctx, "<file-input-output-port>", 
+                      DFSCH_FILE_INPUT_OUTPUT_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<string-input-port>", DFSCH_STRING_INPUT_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<string-output-port>", DFSCH_STRING_OUTPUT_PORT_TYPE);
   dfsch_defcanon_cstr(ctx, "<eof-object>", DFSCH_EOF_OBJECT_TYPE);
