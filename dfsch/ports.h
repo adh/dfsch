@@ -131,6 +131,12 @@ extern "C" {
 #define DFSCH_STRING_INPUT_PORT_TYPE (&dfsch_string_input_port_type)
   extern dfsch_port_type_t dfsch_file_port_type;
 #define DFSCH_FILE_PORT_TYPE (&dfsch_file_port_type)
+  extern dfsch_port_type_t dfsch_file_input_port_type;
+#define DFSCH_FILE_INPUT_PORT_TYPE (&dfsch_file_input_port_type)
+  extern dfsch_port_type_t dfsch_file_output_port_type;
+#define DFSCH_FILE_OUTPUT_PORT_TYPE (&dfsch_file_output_port_type)
+  extern dfsch_port_type_t dfsch_file_input_output_port_type;
+#define DFSCH_FILE_INPUT_OUTPUT_PORT_TYPE (&dfsch_file_input_output_port_type)
 
 
   int dfsch_port_p(dfsch_object_t* obj);
@@ -193,6 +199,8 @@ extern dfsch_singleton_type_specializer_t dfsch_input_port_specializer;
 #define DFSCH_INPUT_PORT_SPECIALIZER (&dfsch_input_port_specializer)
 extern dfsch_singleton_type_specializer_t dfsch_output_port_specializer;
 #define DFSCH_OUTPUT_PORT_SPECIALIZER (&dfsch_output_port_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_seekable_port_specializer;
+#define DFSCH_SEEKABLE_PORT_SPECIALIZER (&dfsch_seekable_port_specializer)
 
 
 #ifdef __cplusplus

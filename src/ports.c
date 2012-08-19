@@ -67,6 +67,10 @@ int dfsch_input_port_p(dfsch_object_t* port){
   return DFSCH_INSTANCE_P(DFSCH_TYPE_OF(port), DFSCH_PORT_TYPE_TYPE) &&
     ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf;
 }
+int dfsch_seekable_port_p(dfsch_object_t* port){
+  return DFSCH_INSTANCE_P(DFSCH_TYPE_OF(port), DFSCH_PORT_TYPE_TYPE) &&
+    ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->seek;
+}
 
 
 void dfsch_port_write_buf(dfsch_port_t* port, char*buf, size_t size){
@@ -647,17 +651,19 @@ dfsch_port_type_t dfsch_file_port_type = {
     
     "port backed by stdio stream"
   },
-  (dfsch_port_write_buf_t)file_port_write_buf,
-  (dfsch_port_read_buf_t)file_port_read_buf,
+  .write_buf = (dfsch_port_write_buf_t)file_port_write_buf,
+  .read_buf = (dfsch_port_read_buf_t)file_port_read_buf,
 
-  (dfsch_port_seek_t)file_port_seek,
-  (dfsch_port_tell_t)file_port_tell,
+  .seek = (dfsch_port_seek_t)file_port_seek,
+  .tell = (dfsch_port_tell_t)file_port_tell,
 #ifdef __unix__
-  (dfsch_port_batch_read_start_t)file_port_batch_read_start,
-  (dfsch_port_batch_read_end_t)file_port_batch_read_end,
-  (dfsch_port_batch_read_t)file_port_batch_read,
+  .batch_read_start = (dfsch_port_batch_read_start_t)file_port_batch_read_start,
+  .batch_read_end = (dfsch_port_batch_read_end_t)file_port_batch_read_end,
+  .batch_read = (dfsch_port_batch_read_t)file_port_batch_read,
 #endif
 };
+
+
 
 static void file_port_finalizer(file_port_t* port, void* cd){
   if (port->open && port->close){
@@ -790,6 +796,11 @@ DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_output_port_specializer,
                                         "output-port"){
   return DFSCH_INSTANCE_P(type, DFSCH_PORT_TYPE_TYPE) 
     && ((dfsch_port_type_t*)type)->write_buf;
+}
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_seekable_port_specializer, 
+                                        "seekable-port"){
+  return DFSCH_INSTANCE_P(type, DFSCH_PORT_TYPE_TYPE) 
+    && ((dfsch_port_type_t*)type)->seek;
 }
 
 
@@ -1039,6 +1050,8 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
                       DFSCH_INPUT_PORT_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<output-port>>", 
                       DFSCH_OUTPUT_PORT_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<seekable-port>>", 
+                      DFSCH_SEEKABLE_PORT_SPECIALIZER);
 
   dfsch_defcanon_cstr(ctx, "current-output-port", 
                     DFSCH_PRIMITIVE_REF(current_output_port));

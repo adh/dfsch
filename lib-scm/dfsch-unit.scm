@@ -43,7 +43,8 @@
              :all-tests
              :run-all-tests
              :tests-in-category
-             :test-toplevel))
+             :test-toplevel
+             :with-mayfail-asserts))
 
 (in-package :dfsch-unit)
 
