@@ -57,14 +57,14 @@ dfsch_type_t dfsch_port_type_type = {
 };
 
 int dfsch_port_p(dfsch_object_t* port){
-  return DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE;
+  return DFSCH_INSTANCE_P(DFSCH_TYPE_OF(port), DFSCH_PORT_TYPE_TYPE);
 }
 int dfsch_output_port_p(dfsch_object_t* port){
-  return DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE &&
+  return DFSCH_INSTANCE_P(DFSCH_TYPE_OF(port), DFSCH_PORT_TYPE_TYPE) &&
     ((dfsch_port_type_t*)DFSCH_TYPE_OF(port))->write_buf;
 }
 int dfsch_input_port_p(dfsch_object_t* port){
-  return DFSCH_TYPE_OF(port)->type == DFSCH_PORT_TYPE_TYPE &&
+  return DFSCH_INSTANCE_P(DFSCH_TYPE_OF(port), DFSCH_PORT_TYPE_TYPE) &&
     ((dfsch_port_type_t*)(DFSCH_TYPE_OF(port)))->read_buf;
 }
 
@@ -777,6 +777,21 @@ dfsch_object_t* dfsch_make_port_line_iterator(dfsch_object_t* port){
   return li_next(li);
 }
 
+/*
+ * OO-interface infrastructure
+ */
+
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_input_port_specializer, 
+                                        "input-port"){
+  return DFSCH_INSTANCE_P(type, DFSCH_PORT_TYPE_TYPE) 
+    && ((dfsch_port_type_t*)type)->read_buf;
+}
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_output_port_specializer, 
+                                        "output-port"){
+  return DFSCH_INSTANCE_P(type, DFSCH_PORT_TYPE_TYPE) 
+    && ((dfsch_port_type_t*)type)->write_buf;
+}
+
 
 /*
  * Scheme interface
@@ -1019,6 +1034,11 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<eof-object>", DFSCH_EOF_OBJECT_TYPE);
   dfsch_defcanon_cstr(ctx, "<port-line-iterator>", 
                       DFSCH_PORT_LINE_ITERATOR_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<<input-port>>", 
+                      DFSCH_INPUT_PORT_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<output-port>>", 
+                      DFSCH_OUTPUT_PORT_SPECIALIZER);
 
   dfsch_defcanon_cstr(ctx, "current-output-port", 
                     DFSCH_PRIMITIVE_REF(current_output_port));

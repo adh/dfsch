@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <dfsch/strings.h>
+#include <dfsch/specializers.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -187,6 +188,11 @@ extern "C" {
   DFSCH_IMPLEMENTS_ARG(al, name, dfsch_port_t*, DFSCH_PORT_TYPE)
 #define DFSCH_PORT_ARG_OPT(al, name, default)                           \
   DFSCH_IMPLEMENTS_ARG_OPT(al, name, default, dfsch_port_t*, DFSCH_PORT_TYPE)
+
+extern dfsch_singleton_type_specializer_t dfsch_input_port_specializer;
+#define DFSCH_INPUT_PORT_SPECIALIZER (&dfsch_input_port_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_output_port_specializer;
+#define DFSCH_OUTPUT_PORT_SPECIALIZER (&dfsch_output_port_specializer)
 
 
 #ifdef __cplusplus

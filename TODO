@@ -4,6 +4,7 @@ Bugfixes:
 * encodings
 * user defined collections, sequences, mappings, ports
   - overriding of type methods
+* Allow at least call-next-method in methods with C wrapper
 
 Non-version-specific:
 * More tests

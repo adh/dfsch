@@ -32,7 +32,6 @@ extern dfsch_type_specializer_type_t dfsch_metatype_specializer_type;
 typedef struct dfsch_singleton_type_specializer_t {
   dfsch_type_t* type;
   dfsch_type_specializer_matches_p_t matches_p;
-  dfsch_object_t* superspecializer;
   char* name;
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR dfsch_singleton_type_specializer_t;
