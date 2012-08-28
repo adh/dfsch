@@ -104,8 +104,8 @@ extern "C" {
 
   typedef struct dfsch_port_t {
     dfsch_port_type_t* type;
-    int pushback :1;
-    int freshline :1;
+    char pushback;
+    char freshline;
     char pushback_content;
   } dfsch_port_t;
 
