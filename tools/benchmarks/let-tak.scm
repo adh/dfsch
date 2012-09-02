@@ -41,5 +41,5 @@
                              ,start-bytes)))))
 
 
-(measure-time "tak" (tak 24 16 8))
-(measure-time "%tak" (%tak 24 16 8))
+(measure-time "let-tak" (tak 24 16 8))
+(measure-time "%let-tak" (%tak 24 16 8))
