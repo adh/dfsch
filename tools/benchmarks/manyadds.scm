@@ -35,7 +35,13 @@
 (define (many-add-fix-fun)
   (for-each (lambda (x) (+ x x)) (make-number-sequence :to 10000000)))
 
+(define (reduce-fix-fun)
+  (for-each (lambda (x) (+ x x)) (make-number-sequence :to 10000000)))
+
 (measure-time "many-add-fix" (for-each (lambda (x) (+ x x)) (make-number-sequence :to 10000000)))
 (measure-time "many-add-fix-fun" (many-add-fix-fun))
-(measure-time "many-add-fix-fun" (many-add-fix-fun))
 (measure-time "many-add-flo" (for-each (lambda (x) (+ x pi)) (make-number-sequence :to 10000000)))
+
+(measure-time "reduce-fix" (reduce + (make-number-sequence :to 10000000)))
+(measure-time "reduce-fix-fun" (many-add-fix-fun))
+(measure-time "reduce-flo" (reduce + (make-number-sequence :to 10000000)))
