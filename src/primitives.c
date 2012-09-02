@@ -1724,7 +1724,7 @@ DFSCH_DEFINE_PRIMITIVE(seq_length, "Get length of sequence"){
 }
 
 DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"
-		       DFSCH_DOC_SYNOPSIS("(mapping key)")){
+		       DFSCH_DOC_SYNOPSIS("(mapping key &optional default)")){
   dfsch_object_t* obj;
   dfsch_object_t* key;
   dfsch_object_t* value;
@@ -1732,13 +1732,22 @@ DFSCH_DEFINE_PRIMITIVE(map_ref, "Get value of mapping"
 
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_OBJECT_ARG(args, key);
-  DFSCH_OBJECT_ARG_OPT(args, def, NULL);
+  DFSCH_OBJECT_ARG_OPT(args, def, DFSCH_INVALID_OBJECT);
   DFSCH_ARG_END(args);
   
   value = dfsch_mapping_ref(obj, key);
 
   if (value == DFSCH_INVALID_OBJECT){
-    return dfsch_values(2, def, NULL);
+    if (def == DFSCH_INVALID_OBJECT){
+      dfsch_signal(dfsch_condition(DFSCH_ERROR_TYPE, 
+                                   "message", dfsch_make_string_cstr("No such key in mapping"),
+                                   "key", key,
+                                   "mapping", obj,
+                                   NULL));
+
+    } else {
+      return dfsch_values(2, def, NULL);
+    }
   } else {
     return dfsch_values(2, value, DFSCH_SYM_TRUE);
   }

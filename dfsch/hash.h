@@ -47,6 +47,12 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_idhash();
 
   /**
+   * Create new set object
+   */
+  extern dfsch_object_t* dfsch_make_set();
+  extern dfsch_object_t* dfsch_make_idset();
+
+  /**
    * Get given entry in hashtable.
    *
    * returns DFSCH_INVALID_OBJECT when not found.
@@ -65,6 +71,12 @@ extern "C" {
   extern void dfsch_idhash_set(dfsch_hash_t* hash,
                                dfsch_object_t* key,
                                dfsch_object_t* value);
+  extern void dfsch_set_set(dfsch_hash_t* hash,
+                            dfsch_object_t* key,
+                            dfsch_object_t* value);
+  extern void dfsch_idset_set(dfsch_hash_t* hash,
+                              dfsch_object_t* key,
+                              dfsch_object_t* value);
 
   /**
    * Delete given key.
@@ -104,10 +116,16 @@ extern "C" {
   extern dfsch_object_t* dfsch_alist_2_idhash(dfsch_object_t* alist);
   
 
+  extern dfsch_type_t dfsch_base_hash_table_type;
+#define DFSCH_BASE_HASH_TABLE_TYPE (&dfsch_base_hash_table_type)
   extern dfsch_type_t dfsch_hash_table_type;
 #define DFSCH_HASH_TABLE_TYPE (&dfsch_hash_table_type)
   extern dfsch_type_t dfsch_identity_hash_table_type;
 #define DFSCH_IDENTITY_HASH_TABLE_TYPE (&dfsch_identity_hash_table_type)
+  extern dfsch_type_t dfsch_set_type;
+#define DFSCH_SET_TYPE (&dfsch_set_type)
+  extern dfsch_type_t dfsch_identity_set_type;
+#define DFSCH_IDENTITY_SET_TYPE (&dfsch_identity_set_type)
 
 
   extern dfsch_type_t dfsch_hash_items_iterator_type;

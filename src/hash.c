@@ -155,6 +155,7 @@ static dfsch_mapping_methods_t hash_table_map = {
   .set = dfsch_hash_set,
   .unset = dfsch_hash_unset,
   .set_if_exists = dfsch_hash_set_if_exists,
+  //.set_if_not_exists = dfsch_hash_set_if_not_exists,
 
   .get_keys_iterator = get_hash_keys_iterator,
   .get_values_iterator = get_hash_values_iterator,
@@ -191,9 +192,48 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("hash-table", hash_table){
   return hash;
 }
 
+static void set_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
+  int j;
+  hash_entry_t *i;
+
+  DFSCH_RWLOCK_RDLOCK(&h->lock);
+  dfsch_serialize_stream_symbol(s, "set");
+
+  for (j=0; j<(h->mask+1); j++){
+    i = h->vector[j];
+    while (i){
+      dfsch_serialize_integer(s, 1);
+      dfsch_serialize_object(s, i->key);
+      i = i->next;
+    }
+  }
+  dfsch_serialize_integer(s, 0);
+  DFSCH_RWLOCK_UNLOCK(&h->lock);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("set", set){
+  dfsch_object_t* hash = dfsch_make_hash();
+  dfsch_deserializer_put_partial_object(ds, hash);
+  while (dfsch_deserialize_integer(ds) == 1){
+    dfsch_object_t* key = dfsch_deserialize_object(ds);
+    dfsch_hash_set(hash, key, DFSCH_SYM_TRUE);
+  }
+  return hash;
+}
+
+dfsch_type_t dfsch_base_hash_table_type = {
+  DFSCH_ABSTRACT_TYPE,
+  NULL,
+  sizeof(dfsch_hash_t),
+  "base-hash-table",
+  NULL,
+  NULL,
+  NULL,
+};
+
 dfsch_type_t dfsch_hash_table_type = {
   DFSCH_STANDARD_TYPE,
-  NULL, //DFSCH_MAPPING_TYPE,
+  DFSCH_BASE_HASH_TABLE_TYPE,
   sizeof(dfsch_hash_t),
   "hash-table",
   NULL,
@@ -218,7 +258,10 @@ static dfsch_mapping_methods_t idhash_table_map = {
   .set = dfsch_idhash_set,
   .unset = dfsch_idhash_unset,
   .set_if_exists = dfsch_idhash_set_if_exists,
-  //  .set_if_not_exists = dfsch_idhash_set_if_not_exists,
+  //.set_if_not_exists = dfsch_idhash_set_if_not_exists,
+
+  .get_keys_iterator = get_hash_keys_iterator,
+  .get_values_iterator = get_hash_values_iterator,
 };
 
 static void idhash_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
@@ -253,9 +296,40 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("identity-hash-table",
   return hash;
 }
 
+static void idset_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
+  int j;
+  hash_entry_t *i;
+
+  DFSCH_RWLOCK_RDLOCK(&h->lock);
+  dfsch_serialize_stream_symbol(s, "identity-set");
+
+  for (j=0; j<(h->mask+1); j++){
+    i = h->vector[j];
+    while (i){
+      dfsch_serialize_integer(s, 1);
+      dfsch_serialize_object(s, i->key);
+      i = i->next;
+    }
+  }
+  dfsch_serialize_integer(s, 0);
+  DFSCH_RWLOCK_UNLOCK(&h->lock);
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("identity-set", 
+                                     identity_set){
+  dfsch_hash_t* hash = dfsch_make_idset();
+  dfsch_deserializer_put_partial_object(ds, hash);
+  while (dfsch_deserialize_integer(ds) == 1){
+    dfsch_object_t* key = dfsch_deserialize_object(ds);
+    dfsch_idhash_set(hash, key, DFSCH_SYM_TRUE);
+  }
+  return hash;
+}
+
+
 dfsch_type_t dfsch_identity_hash_table_type = {
   DFSCH_STANDARD_TYPE,
-  DFSCH_HASH_TABLE_TYPE,
+  DFSCH_BASE_HASH_TABLE_TYPE,
   sizeof(dfsch_hash_t),
   "identity-hash-table",
   NULL,
@@ -265,6 +339,96 @@ dfsch_type_t dfsch_identity_hash_table_type = {
   .collection = &idhash_table_col,
   .mapping = &idhash_table_map,
   .serialize = idhash_serialize,
+};
+
+typedef struct set_constructor_t {
+  dfsch_collection_constructor_type_t* type;
+  dfsch_object_t* set;
+} set_constructor_t;
+
+static void set_constructor_add(set_constructor_t* sc,
+                                dfsch_object_t* element){
+  dfsch_mapping_set(sc->set, element, DFSCH_SYM_TRUE);
+}
+
+static dfsch_object_t* set_constructor_done(set_constructor_t* sc){
+  return sc->set;
+}
+
+static dfsch_collection_constructor_type_t set_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .name = "set-constructor",
+    .size = sizeof(set_constructor_t),
+  },
+  .add = set_constructor_add,
+  .done = set_constructor_done,
+};
+
+static dfsch_object_t* dfsch_make_set_constructor(dfsch_object_t* set){
+  set_constructor_t* sc = dfsch_make_object(&set_constructor_type);
+  sc->set = set;
+  return sc;
+}
+
+static dfsch_object_t* idset_make_constructor(dfsch_type_t* discard){
+  return dfsch_make_set_constructor(dfsch_make_idhash());
+}
+static dfsch_object_t* set_make_constructor(dfsch_type_t* discard){
+  return dfsch_make_set_constructor(dfsch_make_idhash());
+}
+
+
+static dfsch_collection_methods_t set_col = {
+  .get_iterator = get_hash_keys_iterator,
+  .make_constructor = set_make_constructor,
+};
+static dfsch_mapping_methods_t set_map = {
+  .ref = dfsch_hash_ref,
+  .set = dfsch_set_set,
+  .unset = dfsch_hash_unset,
+
+  .get_keys_iterator = get_hash_keys_iterator,
+};
+
+dfsch_type_t dfsch_set_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_BASE_HASH_TABLE_TYPE,
+  sizeof(dfsch_hash_t),
+  "set",
+  NULL,
+  NULL,
+  NULL,
+
+  .collection = &set_col,
+  .mapping = &set_map,
+  .serialize = set_serialize,
+};
+
+static dfsch_collection_methods_t idset_col = {
+  .get_iterator = get_hash_keys_iterator,
+  .make_constructor = idset_make_constructor,
+};
+static dfsch_mapping_methods_t idset_map = {
+  .ref = dfsch_idhash_ref,
+  .set = dfsch_idset_set,
+  .unset = dfsch_idhash_unset,
+
+  .get_keys_iterator = get_hash_keys_iterator,
+};
+
+dfsch_type_t dfsch_identity_set_type = {
+  DFSCH_STANDARD_TYPE,
+  DFSCH_BASE_HASH_TABLE_TYPE,
+  sizeof(dfsch_hash_t),
+  "identity-set",
+  NULL,
+  NULL,
+  NULL,
+
+  .collection = &idset_col,
+  .mapping = &idset_map,
+  .serialize = idset_serialize,
 };
 
 
@@ -280,7 +444,7 @@ static void hash_finalizer(dfsch_hash_t* h, void* cd) {
 #endif
 
 static dfsch_hash_t* make_hash(dfsch_type_t* type){
-  dfsch_hash_t *h = dfsch_make_object(DFSCH_HASH_TABLE_TYPE); 
+  dfsch_hash_t *h = dfsch_make_object(type); 
 
   h->count = 0;
   h->mask = INITIAL_MASK;
@@ -298,6 +462,12 @@ dfsch_object_t* dfsch_make_hash(){
 }
 dfsch_object_t* dfsch_make_idhash(){
   return make_hash(DFSCH_IDENTITY_HASH_TABLE_TYPE);
+}
+dfsch_object_t* dfsch_make_set(){
+  return make_hash(DFSCH_SET_TYPE);
+}
+dfsch_object_t* dfsch_make_idset(){
+  return make_hash(DFSCH_IDENTITY_SET_TYPE);
 }
 
 
@@ -464,6 +634,26 @@ void dfsch_idhash_set(dfsch_hash_t* hash,
   hash_put(hash, key, h, value);
 
   DFSCH_RWLOCK_UNLOCK(&hash->lock);
+}
+
+void dfsch_set_set(dfsch_hash_t* hash,
+                   dfsch_object_t* key,
+                   dfsch_object_t* value){
+  if (value) {
+    dfsch_hash_set(hash, key, DFSCH_SYM_TRUE);
+  } else {
+    dfsch_hash_unset(hash, key);
+  }
+}
+
+void dfsch_idset_set(dfsch_hash_t* hash,
+                     dfsch_object_t* key,
+                     dfsch_object_t* value){
+  if (value) {
+    dfsch_idhash_set(hash, key, DFSCH_SYM_TRUE);
+  } else {
+    dfsch_idhash_unset(hash, key);
+  }
 }
 
 
@@ -702,6 +892,20 @@ DFSCH_DEFINE_PRIMITIVE(alist_2_idhash, NULL){
   return dfsch_alist_2_idhash(alist);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_set, NULL){
+  dfsch_object_t *mode;
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_set();
+}
+DFSCH_DEFINE_PRIMITIVE(make_idset, NULL){
+  dfsch_object_t *mode;
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_idset();
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(hash, NULL){
   dfsch_hash_t* hash = dfsch_make_hash();
   while (DFSCH_PAIR_P(args)){
@@ -725,11 +929,34 @@ DFSCH_DEFINE_PRIMITIVE(idhash, NULL){
   return hash;
 }
 
+DFSCH_DEFINE_PRIMITIVE(set, NULL){
+  dfsch_hash_t* hash = dfsch_make_set();
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* key;
+    DFSCH_OBJECT_ARG(args, key);
+    dfsch_hash_set(hash, key, DFSCH_SYM_TRUE);
+  }
+  return hash;
+}
+DFSCH_DEFINE_PRIMITIVE(idset, NULL){
+  dfsch_hash_t* hash = dfsch_make_idset();
+  while (DFSCH_PAIR_P(args)){
+    dfsch_object_t* key;
+    DFSCH_OBJECT_ARG(args, key);
+    dfsch_idhash_set(hash, key, DFSCH_SYM_TRUE);
+  }
+  return hash;
+}
+
 
 void dfsch__hash_native_register(dfsch_object_t *ctx){
+  dfsch_defcanon_cstr(ctx, "<base-hash-table>", DFSCH_BASE_HASH_TABLE_TYPE);
   dfsch_defcanon_cstr(ctx, "<hash-table>", DFSCH_HASH_TABLE_TYPE);
   dfsch_defcanon_cstr(ctx, "<identity-hash-table>", 
                       DFSCH_IDENTITY_HASH_TABLE_TYPE);
+  dfsch_defcanon_cstr(ctx, "<set>", DFSCH_SET_TYPE);
+  dfsch_defcanon_cstr(ctx, "<identity-set>", 
+                      DFSCH_IDENTITY_SET_TYPE);
 
   dfsch_defcanon_cstr(ctx, "make-hash", 
                     DFSCH_PRIMITIVE_REF(make_hash));
@@ -739,8 +966,18 @@ void dfsch__hash_native_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(make_idhash));
   dfsch_defcanon_cstr(ctx, "alist->identity-hash", 
                     DFSCH_PRIMITIVE_REF(alist_2_idhash));
+
+  dfsch_defcanon_cstr(ctx, "make-set", 
+                    DFSCH_PRIMITIVE_REF(make_set));
+  dfsch_defcanon_cstr(ctx, "make-identity-set", 
+                    DFSCH_PRIMITIVE_REF(make_idset));
+
   dfsch_defcanon_cstr(ctx, "hash", 
                     DFSCH_PRIMITIVE_REF(hash));
   dfsch_defcanon_cstr(ctx, "identity-hash", 
                     DFSCH_PRIMITIVE_REF(idhash));
+  dfsch_defcanon_cstr(ctx, "set", 
+                    DFSCH_PRIMITIVE_REF(set));
+  dfsch_defcanon_cstr(ctx, "identity-set", 
+                    DFSCH_PRIMITIVE_REF(idset));
 }
