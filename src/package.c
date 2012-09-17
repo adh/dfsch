@@ -581,6 +581,10 @@ dfsch_object_t* dfsch_intern_symbol(dfsch_package_t* package,
 
   parse_symbol(name, &package_name, &symbol_name);
 
+  if (*symbol_name == '\0'){
+    dfsch_error("Symbol must have non-empty name", NULL);
+  }
+
   if (package_name){
     if (*package_name){
       package = find_package_by_alias(package, package_name);
