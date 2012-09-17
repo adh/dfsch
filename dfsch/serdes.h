@@ -17,6 +17,7 @@ void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
 int dfsch_type_serializable_p(dfsch_type_t* type);
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj);
+void dfsch_serialize_invalid_object(dfsch_serializer_t* s);
 
 void dfsch_serialize_integer(dfsch_serializer_t* s,
                              int64_t i);

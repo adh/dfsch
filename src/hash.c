@@ -171,21 +171,20 @@ static void hash_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
   for (j=0; j<(h->mask+1); j++){
     i = h->vector[j];
     while (i){
-      dfsch_serialize_integer(s, 1);
       dfsch_serialize_object(s, i->key);
       dfsch_serialize_object(s, i->value);
       i = i->next;
     }
   }
-  dfsch_serialize_integer(s, 0);
+  dfsch_serialize_invalid_object(s);
   DFSCH_RWLOCK_UNLOCK(&h->lock);
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("hash-table", hash_table){
   dfsch_object_t* hash = dfsch_make_hash();
+  dfsch_object_t* key;
   dfsch_deserializer_put_partial_object(ds, hash);
-  while (dfsch_deserialize_integer(ds) == 1){
-    dfsch_object_t* key = dfsch_deserialize_object(ds);
+  while ((key = dfsch_deserialize_object(ds)) != DFSCH_INVALID_OBJECT){
     dfsch_object_t* value = dfsch_deserialize_object(ds);
     dfsch_hash_set(hash, key, value);
   }
@@ -202,20 +201,19 @@ static void set_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
   for (j=0; j<(h->mask+1); j++){
     i = h->vector[j];
     while (i){
-      dfsch_serialize_integer(s, 1);
       dfsch_serialize_object(s, i->key);
       i = i->next;
     }
   }
-  dfsch_serialize_integer(s, 0);
+  dfsch_serialize_invalid_object(s);
   DFSCH_RWLOCK_UNLOCK(&h->lock);
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("set", set){
   dfsch_object_t* hash = dfsch_make_set();
+  dfsch_object_t* key;
   dfsch_deserializer_put_partial_object(ds, hash);
-  while (dfsch_deserialize_integer(ds) == 1){
-    dfsch_object_t* key = dfsch_deserialize_object(ds);
+  while ((key = dfsch_deserialize_object(ds)) != DFSCH_INVALID_OBJECT){
     dfsch_hash_set(hash, key, DFSCH_SYM_TRUE);
   }
   return hash;
@@ -274,22 +272,21 @@ static void idhash_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
   for (j=0; j<(h->mask+1); j++){
     i = h->vector[j];
     while (i){
-      dfsch_serialize_integer(s, 1);
       dfsch_serialize_object(s, i->key);
       dfsch_serialize_object(s, i->value);
       i = i->next;
     }
   }
-  dfsch_serialize_integer(s, 0);
+  dfsch_serialize_invalid_object(s);
   DFSCH_RWLOCK_UNLOCK(&h->lock);
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("identity-hash-table", 
                                      identity_hash_table){
   dfsch_object_t* hash = dfsch_make_idhash();
+  dfsch_object_t* key;
   dfsch_deserializer_put_partial_object(ds, hash);
-  while (dfsch_deserialize_integer(ds) == 1){
-    dfsch_object_t* key = dfsch_deserialize_object(ds);
+  while ((key = dfsch_deserialize_object(ds)) != DFSCH_INVALID_OBJECT){
     dfsch_object_t* value = dfsch_deserialize_object(ds);
     dfsch_idhash_set(hash, key, value);
   }
@@ -306,21 +303,20 @@ static void idset_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
   for (j=0; j<(h->mask+1); j++){
     i = h->vector[j];
     while (i){
-      dfsch_serialize_integer(s, 1);
       dfsch_serialize_object(s, i->key);
       i = i->next;
     }
   }
-  dfsch_serialize_integer(s, 0);
+  dfsch_serialize_invalid_object(s);
   DFSCH_RWLOCK_UNLOCK(&h->lock);
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("identity-set", 
                                      identity_set){
   dfsch_hash_t* hash = dfsch_make_idset();
+  dfsch_object_t* key;
   dfsch_deserializer_put_partial_object(ds, hash);
-  while (dfsch_deserialize_integer(ds) == 1){
-    dfsch_object_t* key = dfsch_deserialize_object(ds);
+  while ((key = dfsch_deserialize_object(ds)) != DFSCH_INVALID_OBJECT){
     dfsch_idhash_set(hash, key, DFSCH_SYM_TRUE);
   }
   return hash;

@@ -167,6 +167,10 @@ int dfsch_type_serializable_p(dfsch_type_t* type){
   return 0;
 }
 
+void dfsch_serialize_invalid_object(dfsch_serializer_t* s){
+  dfsch_serialize_stream_symbol(s, "invalid-object");
+}
+
 void dfsch_serialize_object(dfsch_serializer_t* s,
                             dfsch_object_t* obj){
   dfsch_type_t* klass;
