@@ -212,7 +212,7 @@ static void set_serialize(dfsch_hash_t* h, dfsch_serializer_t* s){
 }
 
 DFSCH_DEFINE_DESERIALIZATION_HANDLER("set", set){
-  dfsch_object_t* hash = dfsch_make_hash();
+  dfsch_object_t* hash = dfsch_make_set();
   dfsch_deserializer_put_partial_object(ds, hash);
   while (dfsch_deserialize_integer(ds) == 1){
     dfsch_object_t* key = dfsch_deserialize_object(ds);

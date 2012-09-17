@@ -652,6 +652,9 @@ static dfsch_object_t* fixnum_handler(dfsch_deserializer_t* ds){
   dfsch_object_t* v = dfsch_make_number_from_int64(u);
   return v;
 }
+static dfsch_object_t* invalid_object_handler(dfsch_deserializer_t* ds){
+  return DFSCH_INVALID_OBJECT;
+}
 static dfsch_object_t* canon_env_ref_handler(dfsch_deserializer_t* ds){
   char* package = dfsch_deserialize_stream_symbol(ds);
   char* name = dfsch_deserialize_strbuf(ds)->ptr;
@@ -683,6 +686,8 @@ static void __attribute__((constructor)) register_core_handlers(){
                                       fixnum_handler);
   dfsch_register_deserializer_handler("canon-env-ref",
                                       canon_env_ref_handler);
+  dfsch_register_deserializer_handler("invalid-object",
+                                      invalid_object_handler);
 }
 
 dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj, 
