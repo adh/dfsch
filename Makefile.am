@@ -112,6 +112,12 @@ curl_libs=
 curl_modules=
 endif
 
+if RRD
+rrd_modules=rrd.la
+else
+rrd_modules=
+endif
+
 
 if WIN32
 nonwin32_libs=
@@ -214,7 +220,8 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(tt_modules)\
 	$(gd_modules)\
 	$(ffi_modules)\
-	$(curl_modules)
+	$(curl_modules)\
+	$(rrd_modules)
 
 
 dfschlibscm_DATA = lib-scm/stream-functions.scm \
@@ -656,6 +663,10 @@ curl_la_SOURCES = lib/curl_mod.c
 curl_la_LIBADD = libdfsch-curl.la libdfsch.la
 curl_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
+rrd_la_SOURCES = lib/rrd_mod.c
+rrd_la_LIBADD = libdfsch.la
+rrd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
 
 if WIN32
 gui_flags = -mwindows
@@ -680,7 +691,7 @@ version.h: $(vm_SOURCES) $(stdlib_sources) $(syslib_sources)
 
 .PHONY: documentation
 
-MODULES = cmdopts crypto curl csv extref fastlz ffi gcollect gd http inet \
+MODULES = cmdopts crypto curl rrd csv extref fastlz ffi gcollect gd http inet \
 	ini-file \
 	json markdown minizip os pcre posix-regex process shtml socket-port \
 	sxml threads tokyo-cabinet tokyo-tyrant unix xml zlib \
