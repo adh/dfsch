@@ -164,6 +164,7 @@ DFSCH_DEFINE_PRIMITIVE(graph,
     rrd_error("graph");
   }
   res = convert_info(info);
+  rrd_info_free(info);
   pthread_mutex_unlock(&rrd_lock);
   
   return res;
@@ -182,6 +183,7 @@ DFSCH_DEFINE_PRIMITIVE(info,
     rrd_error("info");
   }
   res = convert_info(info);
+  rrd_info_free(info);
   pthread_mutex_unlock(&rrd_lock);
   
   return res;
