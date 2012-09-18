@@ -665,7 +665,7 @@ curl_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 rrd_la_SOURCES = lib/rrd_mod.c
 rrd_la_LIBADD = libdfsch.la
-rrd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+rrd_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined -lrrd
 
 
 if WIN32
