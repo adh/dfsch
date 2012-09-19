@@ -106,10 +106,6 @@ void dfsch_serializer_set_canonical_environment(dfsch_serializer_t* s,
                                                 dfsch_object_t* env){
   s->canon_env = env;
 }
-void dfsch_serializer_set_compress(dfsch_serializer_t* s,
-                                   int compress){
-  s->compress = compress;
-}
 
 
 static void serialize_bytes(dfsch_serializer_t* s,
@@ -125,11 +121,10 @@ static void serialize_back_reference(dfsch_serializer_t* s,
   dfsch_serialize_integer(s, ref);
 }
 
-#define DSS_MAGIC            "dSs0"
+#define DSS_MAGIC            "dSs1"
 #define DSS_FLAG_CANON       1
-#define DSS_FLAG_COMPRESSED  2
 
-#define DSS_UNKNOWN_FLAGS    (~3)
+#define DSS_UNKNOWN_FLAGS    (~1)
 
 #define COMPRESS_CUTOFF      512
 
@@ -139,9 +134,6 @@ void dfsch_serializer_write_stream_header(dfsch_serializer_t* s,
   serialize_bytes(s, DSS_MAGIC, 4);
   if (s->canon_env){
     flags |= DSS_FLAG_CANON;
-  }
-  if (s->compress){
-    flags |= DSS_FLAG_COMPRESSED;
   }
   dfsch_serialize_integer(s, flags);
   if (format){
@@ -292,7 +284,7 @@ void dfsch_serialize_integer(dfsch_serializer_t* s,
 }
 void dfsch_serialize_string(dfsch_serializer_t* s,
                             char* str, size_t len){
-  if (s->compress && len > COMPRESS_CUTOFF){
+  if (len > COMPRESS_CUTOFF){
     char* compressed_buffer = GC_MALLOC_ATOMIC(len + (len / 19));
     int compressed = dfsch__fastlz_compress(str, len, compressed_buffer);
 
@@ -703,9 +695,6 @@ dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj,
   if (canon_env){
     dfsch_serializer_set_canonical_environment(ser, canon_env);
   }
-  if (flags & DFSCH_SERIALIZE_COMPRESS){
-    dfsch_serializer_set_compress(ser, 1);
-  }
 
   dfsch_serialize_object(ser, obj);
   return dfsch_sl_value_strbuf(sl);
@@ -791,7 +780,6 @@ DFSCH_DEFINE_PRIMITIVE(serialize,
   DFSCH_OBJECT_ARG(args, obj);
   DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
   DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_SET("compress", DFSCH_SERIALIZE_COMPRESS, flags);
   DFSCH_FLAG_PARSER_END(args);
   DFSCH_ARG_END(args);
 
@@ -818,7 +806,6 @@ DFSCH_DEFINE_PRIMITIVE(make_serializing_map,
   DFSCH_OBJECT_ARG(args, mapping);
   DFSCH_OBJECT_ARG_OPT(args, canon_env, NULL);
   DFSCH_FLAG_PARSER_BEGIN(args);
-  DFSCH_FLAG_SET("compress", DFSCH_SERIALIZE_COMPRESS, flags);
   DFSCH_FLAG_PARSER_END(args);
 
   return dfsch_make_serializing_map(mapping, canon_env, flags);

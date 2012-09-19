@@ -49,8 +49,6 @@ void dfsch_serializer_set_unserializable_hook(dfsch_serializer_t* s,
                                               void* baton);
 void dfsch_serializer_set_canonical_environment(dfsch_serializer_t* s,
                                                 dfsch_object_t* env);
-void dfsch_serializer_set_compress(dfsch_serializer_t* s,
-                                   int compress);
 
 extern dfsch_type_t dfsch_deserializer_type;
 #define DFSCH_DESERIALIZER_TYPE (&dfsch_deserializer_type)
@@ -98,8 +96,6 @@ void dfsch_register_deserializer_handler(char* name,
   static dfsch_object_t* deshandler_##cname(dfsch_deserializer_t* ds)
 
 /* High-level C interface */
-
-#define DFSCH_SERIALIZE_COMPRESS  1
 
 dfsch_strbuf_t* dfsch_serialize(dfsch_object_t* obj, 
                                 dfsch_object_t* canon_env,
