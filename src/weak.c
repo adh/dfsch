@@ -399,41 +399,6 @@ dfsch_type_t dfsch_weak_key_hash_type = {
   .mapping = &weak_key_hash_map,
 };
 
-typedef struct finalizer_chain_entry_t {
-  dfsch_object_t* proc;
-  GC_finalization_proc fn;
-  void* cd;
-} finalizer_chain_entry_t;
-
-static void user_finalizer(dfsch_object_t* obj,
-                           finalizer_chain_entry_t* entry){
-  DFSCH_SCATCH_BEGIN {
-    dfsch_apply(entry->proc, dfsch_list(1, obj));
-  } DFSCH_SCATCH {
-    /* XXX: register as async apply callback? ignore? */
-  } DFSCH_SCATCH_END;
-
-  if (entry->fn){
-    entry->fn(obj, entry->cd);
-  }
-}
-
-void dfsch_schedule_finalization(dfsch_object_t* object, 
-                                 dfsch_object_t* function){
-  finalizer_chain_entry_t* ent = GC_NEW(finalizer_chain_entry_t);
-
-  ent->proc = function;
-
-  if (GC_base(object) == object){
-    GC_REGISTER_FINALIZER(GC_base(object), user_finalizer, ent, 
-                          &ent->fn, &ent->cd);
-  } else {
-    dfsch_error("Objects with special allocation are not finalizable",
-                object);
-  }
-}
-
-
 
 /*
  * Scheme binding
@@ -611,21 +576,6 @@ DFSCH_PRIMITIVE_HEAD(detach_parasite){
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(schedule_finalization,
-                       "Schedule finalization function to be called when"
-                       "object becomes unreachable"
-                       DFSCH_DOC_SYNOPSIS("(object function)")){
-  dfsch_object_t* object;
-  dfsch_object_t* function;
-  DFSCH_OBJECT_ARG(args, object);
-  DFSCH_OBJECT_ARG(args, function);
-  DFSCH_ARG_END(args);
-
-  dfsch_schedule_finalization(object, function);
-
-  return NULL;
-}
-
 void dfsch__weak_native_register(dfsch_object_t *ctx){
   weak_hash_t* parasite_table = dfsch_make_weak_key_hash();
 
@@ -670,9 +620,6 @@ void dfsch__weak_native_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF_MAKE(detach_parasite,
                                                parasite_table,
                                                "Remove previously attached parasite"));
-
-  dfsch_defcanon_cstr(ctx, "schedule-finalization!", 
-                    DFSCH_PRIMITIVE_REF(schedule_finalization));
 
 }
 
