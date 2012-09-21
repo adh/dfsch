@@ -227,6 +227,7 @@ dfsch_type_t dfsch_base_hash_table_type = {
   NULL,
   NULL,
   NULL,
+  .documentation = "Base class for containers implemented by hash table"
 };
 
 dfsch_type_t dfsch_hash_table_type = {
@@ -238,6 +239,7 @@ dfsch_type_t dfsch_hash_table_type = {
   NULL,
   NULL,
 
+  .documentation = "Mapping implemented by hash table with comparison of key values",
   .collection = &hash_table_col,
   .mapping = &hash_table_map,
   .serialize = hash_serialize,
@@ -332,6 +334,7 @@ dfsch_type_t dfsch_identity_hash_table_type = {
   NULL,
   NULL,
 
+  .documentation = "Mapping implemented by hash table with comparison of key identities",
   .collection = &idhash_table_col,
   .mapping = &idhash_table_map,
   .serialize = idhash_serialize,
@@ -396,6 +399,7 @@ dfsch_type_t dfsch_set_type = {
   NULL,
   NULL,
 
+  .documentation = "Set with comparison of key values, accessed as mapping",
   .collection = &set_col,
   .mapping = &set_map,
   .serialize = set_serialize,
@@ -422,6 +426,7 @@ dfsch_type_t dfsch_identity_set_type = {
   NULL,
   NULL,
 
+  .documentation = "Set with comparison of key identities, accessed as mapping",
   .collection = &idset_col,
   .mapping = &idset_map,
   .serialize = idset_serialize,
