@@ -264,6 +264,8 @@ typedef struct dfsch_serializer_t dfsch_serializer_t;
 typedef void (*dfsch_type_serialize_t)(dfsch_object_t* obj,
                                        dfsch_serializer_t* s);
 
+typedef void (*dfsch_type_destroy_t)(dfsch_object_t* object);
+
 
 
 /** Disable weak references for this type */
@@ -382,6 +384,12 @@ struct dfsch_type_t {
 
   dfsch_object_t* slot_metadata;
   dfsch_object_t* roles;
+
+  /**
+   * Called when user code explicitly releases object. Type pointer slot is 
+   * zeroed out by calling code after return from this method.
+   */
+  dfsch_type_destroy_t destroy;
 
   DFSCH_ALIGN8_DUMMY
 } DFSCH_ALIGN8_ATTR;
