@@ -93,6 +93,21 @@ void dfsch_invalidate_object(dfsch_object_t* obj){
   obj->type = DFSCH_INVALID_OBJECT_TYPE;
 }
 
+void dfsch_destroy_object(dfsch_object_t* obj){
+  dfsch_type_t* type = DFSCH_TYPE_OF(obj);
+  if (DFSCH_INSTANCE_P(type, DFSCH_SPECIAL_TYPE)){
+    dfsch_error("Cannot destroy object with special layout", obj);
+  }
+  if (!(obj && GC_base(obj))){
+    dfsch_error("Cannot destroy non-heap object", obj);
+  }
+
+  if (type->destroy){
+    type->destroy(obj);
+  }
+  obj->type = DFSCH_INVALID_OBJECT_TYPE;
+}
+
 int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   return (a==b);
 }

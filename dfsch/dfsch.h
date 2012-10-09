@@ -94,7 +94,10 @@ extern "C" {
   extern dfsch_object_t* dfsch_make_object(const dfsch_type_t* type);
   extern dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, 
                                                size_t size);
+  /** Overwrite whole object with zeros */
   extern void dfsch_invalidate_object(dfsch_object_t* obj);
+  /** Call destructor if defined and change object's type to #<invalid-object> */
+  extern void dfsch_destroy_object(dfsch_object_t* obj);
 
   /** @name Comparisons */
   /** @{ */

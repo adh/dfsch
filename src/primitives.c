@@ -229,6 +229,18 @@ DFSCH_DEFINE_PRIMITIVE(get_list_annotation,
   return dfsch_get_list_annotation(list);
 }
 
+DFSCH_DEFINE_PRIMITIVE(destroy_object,
+                       "Call destructor if it is defined and mark "
+                       "object as invalid"
+                       DFSCH_DOC_SYNOPSIS("(object)")){
+  dfsch_object_t* object;
+  DFSCH_OBJECT_ARG(args, object);
+  DFSCH_ARG_END(args);
+  
+  dfsch_destroy_object(object);
+
+  return NULL;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1927,6 +1939,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
   dfsch_defcanon_cstr(ctx, "get-list-annotation", 
                       DFSCH_PRIMITIVE_REF(get_list_annotation));
+  dfsch_defcanon_cstr(ctx, "destroy-object!", 
+                      DFSCH_PRIMITIVE_REF(destroy_object));
 
   dfsch_defcanon_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
   dfsch_defcanon_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
