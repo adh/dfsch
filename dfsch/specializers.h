@@ -57,6 +57,9 @@ extern dfsch_singleton_type_specializer_t dfsch_iterator_specializer;
 #define DFSCH_ITERATOR_SPECIALIZER (&dfsch_iterator_specializer)
 extern dfsch_singleton_type_specializer_t dfsch_serializable_specializer;
 #define DFSCH_SERIALIZABLE_SPECIALIZER (&dfsch_serializable_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_destroyable_specializer;
+#define DFSCH_DESTROYABLE_SPECIALIZER (&dfsch_destroyable_specializer)
+
 
 extern dfsch_type_specializer_type_t dfsch_singleton_type_specializer_type;
 #define DFSCH_SINGLETON_TYPE_SPECIALIZER_TYPE (&dfsch_singleton_type_specializer_type)

@@ -267,6 +267,12 @@ DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_serializable_specializer,
   return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
     && dfsch_type_serializable_p(type);
 }
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_destroyable_specializer,
+                                        "destroyable"){
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && ((dfsch_type_t*)type)->destroy;
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(make_type_specializer, 
                        "Create new type specializer from arbitrary "
@@ -320,6 +326,8 @@ void dfsch__specializers_register(dfsch_object_t* ctx){
                       DFSCH_ITERATOR_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<serializable>>", 
                       DFSCH_SERIALIZABLE_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<destroyable>>", 
+                      DFSCH_DESTROYABLE_SPECIALIZER);
 
 
   dfsch_defcanon_cstr(ctx, "<type-specializer-type>", 
