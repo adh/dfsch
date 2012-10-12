@@ -243,7 +243,6 @@
   (assert-false (implements? (string-output-port) <<input-port>>))
   (assert-false (implements? (string-output-port) <<sequence>>)))
 
-(define-test string-port (:language :io)
-  (assert-equal (port-read-whole (string-input-port "abc")) "abc")
-;  (assert-equal (with-output-to-string (display "foo")) "foo")
-  )
+(define-test string-ports (:language :io)
+  (assert-equal (read-whole-port (string-input-port #"abc")) #"abc")
+  (assert-equal (with-output-to-string (display "foo")) "foo"))
