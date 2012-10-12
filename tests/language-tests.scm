@@ -233,7 +233,7 @@
   (assert-equal (test-method (make-instance <bar>)) :foo)
   (assert-equal (test-method (make-instance <quux>)) :derived-foo))
 
-(define-failing-test port-specializers (:language :sys-lib :oop)
+(define-test port-specializers (:language :sys-lib :oop)
   (assert-true (implements? (string-input-port "foo") <<input-port>>))
   (assert-false (implements? (string-input-port "foo") <<output-port>>))
   (assert-true (implements? (string-input-port "foo") <<seekable-port>>))
@@ -243,3 +243,7 @@
   (assert-false (implements? (string-output-port) <<input-port>>))
   (assert-false (implements? (string-output-port) <<sequence>>)))
 
+(define-test string-port (:language :io)
+  (assert-equal (port-read-whole (string-input-port "abc")) "abc")
+;  (assert-equal (with-output-to-string (display "foo")) "foo")
+  )

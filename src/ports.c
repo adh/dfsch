@@ -452,6 +452,36 @@ static ssize_t string_input_port_read_buf(string_input_port_t* port,
   return len;
 }
 
+static void string_input_port_seek(string_input_port_t* port, 
+                                   int64_t offset, int whence){
+  int64_t newpos;
+  
+  switch (whence){
+  case SEEK_SET:
+    newpos = 0;
+    break;
+  case SEEK_CUR:
+    newpos = port->cur;
+    break;
+  case SEEK_END:
+    newpos = port->len - 1;
+    break;
+  }
+
+  newpos += offset;
+
+  if (newpos < 0 && newpos >= port->len){
+    dfsch_error("Attempt to seek outside of string-port extent", port);
+  }
+
+  port->cur = newpos;
+}
+
+static int64_t string_input_port_tell(string_input_port_t* port){
+  return port->cur;
+}
+
+
 dfsch_port_type_t dfsch_string_input_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
@@ -467,6 +497,8 @@ dfsch_port_type_t dfsch_string_input_port_type = {
     "Input-only port backed by string"
   },
   .read_buf = (dfsch_port_read_buf_t)string_input_port_read_buf,
+  .seek = (dfsch_port_seek_t)string_input_port_seek,
+  .tell = (dfsch_port_seek_t)string_input_port_tell,
 };
 
 dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){

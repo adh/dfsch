@@ -35,3 +35,4 @@
   `(let ((,variable (dfsch:open-file-port ,@args)))
      (unwind-protect (begin ,@body)
                      (dfsch:close-file-port! ,variable)))))
+
