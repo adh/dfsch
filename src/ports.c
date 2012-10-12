@@ -456,6 +456,7 @@ static void string_input_port_seek(string_input_port_t* port,
                                    int64_t offset, int whence){
   int64_t newpos;
   
+  pthread_mutex_lock(port->mutex);
   switch (whence){
   case SEEK_SET:
     newpos = 0;
@@ -471,10 +472,12 @@ static void string_input_port_seek(string_input_port_t* port,
   newpos += offset;
 
   if (newpos < 0 && newpos >= port->len){
+    pthread_mutex_unlock(port->mutex);
     dfsch_error("Attempt to seek outside of string-port extent", port);
   }
 
   port->cur = newpos;
+  pthread_mutex_unlock(port->mutex);
 }
 
 static int64_t string_input_port_tell(string_input_port_t* port){
@@ -1010,7 +1013,7 @@ DFSCH_DEFINE_PRIMITIVE(read_whole_port,
                        DFSCH_DOC_SYNOPSIS("(&optional port)")){
   dfsch_port_t* port;
   dfsch_strbuf_t* buf;
-  DFSCH_PORT_ARG(args, port);
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());
   DFSCH_ARG_END(args);
 
   buf = dfsch_port_read_whole(port);
@@ -1039,7 +1042,7 @@ DFSCH_DEFINE_PRIMITIVE(write_string, "Write byte vector or string to port"
   dfsch_port_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
-  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
   dfsch_port_write_buf(port, buf->ptr, buf->len);
@@ -1051,7 +1054,7 @@ DFSCH_DEFINE_PRIMITIVE(write_line, "Write byte vector or string to port followed
   dfsch_port_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
-  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
   dfsch_port_write_buf(port, buf->ptr, buf->len);
