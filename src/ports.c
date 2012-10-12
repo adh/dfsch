@@ -452,6 +452,39 @@ static ssize_t string_input_port_read_buf(string_input_port_t* port,
   return len;
 }
 
+static void string_input_port_seek(string_input_port_t* port, 
+                                   int64_t offset, int whence){
+  int64_t newpos;
+  
+  pthread_mutex_lock(port->mutex);
+  switch (whence){
+  case SEEK_SET:
+    newpos = 0;
+    break;
+  case SEEK_CUR:
+    newpos = port->cur;
+    break;
+  case SEEK_END:
+    newpos = port->len - 1;
+    break;
+  }
+
+  newpos += offset;
+
+  if (newpos < 0 && newpos >= port->len){
+    pthread_mutex_unlock(port->mutex);
+    dfsch_error("Attempt to seek outside of string-port extent", port);
+  }
+
+  port->cur = newpos;
+  pthread_mutex_unlock(port->mutex);
+}
+
+static int64_t string_input_port_tell(string_input_port_t* port){
+  return port->cur;
+}
+
+
 dfsch_port_type_t dfsch_string_input_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
@@ -467,6 +500,8 @@ dfsch_port_type_t dfsch_string_input_port_type = {
     "Input-only port backed by string"
   },
   .read_buf = (dfsch_port_read_buf_t)string_input_port_read_buf,
+  .seek = (dfsch_port_seek_t)string_input_port_seek,
+  .tell = (dfsch_port_seek_t)string_input_port_tell,
 };
 
 dfsch_object_t* dfsch_string_input_port(char* buf, size_t len){
@@ -944,7 +979,7 @@ DFSCH_DEFINE_PRIMITIVE(freshline,
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(read, NULL){
+DFSCH_DEFINE_PRIMITIVE(read, "Read one object from port"){
   dfsch_port_t* port;
   char *buf;
   DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
@@ -953,7 +988,8 @@ DFSCH_DEFINE_PRIMITIVE(read, NULL){
   return dfsch_parser_read_from_port(port);
 }
 
-DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
+DFSCH_DEFINE_PRIMITIVE(read_byte_vector, "Read LEN bytes from port into byte-vector"
+                       DFSCH_DOC_SYNOPSIS("(len &optional port)")){
   dfsch_port_t* port;
   size_t len;
   char* buf;
@@ -972,14 +1008,22 @@ DFSCH_DEFINE_PRIMITIVE(port_read_buf, NULL){
   return dfsch_make_string_buf(buf, len);
 }
 
-DFSCH_DEFINE_PRIMITIVE(port_read_whole, 0){
+DFSCH_DEFINE_PRIMITIVE(read_whole_port, 
+                       "Read complete contents of port into byte-vector"
+                       DFSCH_DOC_SYNOPSIS("(&optional port)")){
   dfsch_port_t* port;
-  DFSCH_PORT_ARG(args, port);
+  dfsch_strbuf_t* buf;
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());
   DFSCH_ARG_END(args);
-  return dfsch_make_string_strbuf(dfsch_port_read_whole(port));
+
+  buf = dfsch_port_read_whole(port);
+
+  return dfsch_make_byte_vector_nocopy(buf->ptr, buf->len);
 }
 
-DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
+DFSCH_DEFINE_PRIMITIVE(read_line, 
+                       "Read one line from port"
+                       DFSCH_DOC_SYNOPSIS("(&optional port)")){
   dfsch_port_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
@@ -993,15 +1037,28 @@ DFSCH_DEFINE_PRIMITIVE(port_read_line, NULL){
   return dfsch_make_string_strbuf(buf);
 }
 
-DFSCH_DEFINE_PRIMITIVE(port_write_buf, "Write byte vector to port"
-                       DFSCH_DOC_SYNOPSIS("(byte-vector port)")){
+DFSCH_DEFINE_PRIMITIVE(write_string, "Write byte vector or string to port"
+                       DFSCH_DOC_SYNOPSIS("(byte-vector &optional port)")){
   dfsch_port_t* port;
   dfsch_strbuf_t* buf;
   DFSCH_BUFFER_ARG(args, buf);
-  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_input_port());  
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
   DFSCH_ARG_END(args);
 
   dfsch_port_write_buf(port, buf->ptr, buf->len);
+
+  return NULL;
+}
+DFSCH_DEFINE_PRIMITIVE(write_line, "Write byte vector or string to port followed by newline"
+                       DFSCH_DOC_SYNOPSIS("(byte-vector &optional port)")){
+  dfsch_port_t* port;
+  dfsch_strbuf_t* buf;
+  DFSCH_BUFFER_ARG(args, buf);
+  DFSCH_PORT_ARG_OPT(args, port, dfsch_current_output_port());  
+  DFSCH_ARG_END(args);
+
+  dfsch_port_write_buf(port, buf->ptr, buf->len);
+  dfsch_port_write_buf(port, "\n", 1);
 
   return NULL;
 }
@@ -1035,12 +1092,25 @@ DFSCH_DEFINE_PRIMITIVE(string_output_port, NULL){
   DFSCH_ARG_END(args);
   return dfsch_string_output_port();
 }
-DFSCH_DEFINE_PRIMITIVE(string_output_port_value, NULL){
+DFSCH_DEFINE_PRIMITIVE(string_output_port_value, 
+                       "Return data output into <string-output-port> instance. "
+                       "Optional argument `string?` requests output as immutable "
+                       "unicode string, byte-vector is returned otherwise."
+                       DFSCH_DOC_SYNOPSIS("(port &optional string?)")){
   dfsch_object_t* port;
+  dfsch_object_t* string_p;
+  dfsch_strbuf_t* buf;
   DFSCH_OBJECT_ARG(args, port);  
+  DFSCH_OBJECT_ARG_OPT(args, string_p, NULL);  
   DFSCH_ARG_END(args);
 
-  return dfsch_make_string_strbuf(dfsch_string_output_port_value(port));
+  buf = dfsch_string_output_port_value(port);
+
+  if (string_p){
+    return dfsch_make_string_strbuf(buf);
+  } else {
+    return dfsch_make_byte_vector_nocopy(buf->ptr, buf->len);
+  }
 }
 DFSCH_DEFINE_PRIMITIVE(string_input_port, NULL){
   dfsch_strbuf_t* string;
@@ -1128,14 +1198,16 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "eof-object?", 
                     DFSCH_PRIMITIVE_REF(eof_object_p));
 
-  dfsch_defcanon_cstr(ctx, "port-write-buf", 
-                    DFSCH_PRIMITIVE_REF(port_write_buf));
-  dfsch_defcanon_cstr(ctx, "port-read-buf", 
-                    DFSCH_PRIMITIVE_REF(port_read_buf));
-  dfsch_defcanon_cstr(ctx, "port-read-whole", 
-                    DFSCH_PRIMITIVE_REF(port_read_whole));
-  dfsch_defcanon_cstr(ctx, "port-read-line", 
-                    DFSCH_PRIMITIVE_REF(port_read_line));
+  dfsch_defcanon_cstr(ctx, "write-string", 
+                    DFSCH_PRIMITIVE_REF(write_string));
+  dfsch_defcanon_cstr(ctx, "write-line", 
+                    DFSCH_PRIMITIVE_REF(write_line));
+  dfsch_defcanon_cstr(ctx, "read-byte-vector", 
+                    DFSCH_PRIMITIVE_REF(read_byte_vector));
+  dfsch_defcanon_cstr(ctx, "read-whole-port", 
+                    DFSCH_PRIMITIVE_REF(read_whole_port));
+  dfsch_defcanon_cstr(ctx, "read-line", 
+                    DFSCH_PRIMITIVE_REF(read_line));
   dfsch_defcanon_cstr(ctx, "port-seek!", 
                     DFSCH_PRIMITIVE_REF(port_seek));
   dfsch_defcanon_cstr(ctx, "port-tell", 
@@ -1148,11 +1220,11 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "string-input-port", 
                     DFSCH_PRIMITIVE_REF(string_input_port));
 
-  dfsch_defcanon_cstr(ctx, "set-current-output-port!", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%set-current-output-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_output_port));
-  dfsch_defcanon_cstr(ctx, "set-current-input-port!", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%set-current-input-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_input_port));
-  dfsch_defcanon_cstr(ctx, "set-current-error-port!", 
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_INTERNAL_PACKAGE, "%set-current-error-port!", 
                     DFSCH_PRIMITIVE_REF(set_current_error_port));
 
   dfsch_defcanon_cstr(ctx, "make-port-line-iterator", 

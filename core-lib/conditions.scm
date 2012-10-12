@@ -97,3 +97,11 @@
                  restarts)
           (else ,result)))))
 
+(define-macro (bind-and-rebind set get value &body body)
+  (with-gensyms (saved)
+    `(let ((,saved ,get))
+       (unwind-protect
+        (begin (,set ,value) 
+               ,@body)
+        (,set ,saved)))))
+        

@@ -35,3 +35,32 @@
   `(let ((,variable (dfsch:open-file-port ,@args)))
      (unwind-protect (begin ,@body)
                      (dfsch:close-file-port! ,variable)))))
+
+(define-macro (dfsch:with-input-from-port port &body body)
+  `(bind-and-rebind %set-current-input-port! 
+                    (current-input-port) 
+                    ,port
+                    ,@body))
+
+(define-macro (dfsch:with-output-to-port port &body body)
+  `(bind-and-rebind %set-current-output-port! 
+                    (current-output-port) 
+                    ,port
+                    ,@body))
+
+(define-macro (dfsch:with-input-from-string string &body body)
+  `(with-input-from-port (string-input-port ,string)
+     ,@body))
+
+(define-macro (%with-output-to-string string? &body body)
+  (with-gensyms (port)
+    `(let ((,port (string-output-port)))
+       (with-output-to-port ,port
+         ,@body)
+       (string-output-port-value ,port ,string?))))
+
+(define-macro (dfsch:with-output-to-string &body body)
+  `(%with-output-to-string #t ,@body))
+(define-macro (dfsch:with-output-to-byte-vector &body body)
+  `(%with-output-to-string #f ,@body))
+
