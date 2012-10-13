@@ -48,13 +48,6 @@
 
 #include "types.h"
 
-//#define ALLOC_DEBUG
-
-#ifdef ALLOC_DEBUG
-static int obj_count = 0;
-static int obj_size = 0;
-#endif
-
 #define MAX_OBJECT_SIZE 256*1024*1024
 
 dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
@@ -72,13 +65,6 @@ dfsch_object_t* dfsch_make_object_var(const dfsch_type_t* type, size_t size){
     
 
   o->type = (dfsch_type_t*)type;
-
-#ifdef ALLOC_DEBUG
-  obj_count ++;
-  obj_size += type->size + size;
-  printf(";; Alloc'd: #<%s 0x%x> serial %d arena %d\n", type->name, o, 
-         obj_count, obj_size);
-#endif
 
   return o;
 }
@@ -1852,7 +1838,7 @@ static dfsch_object_t* dfsch_apply_impl(dfsch_object_t* proc,
     }
     r = ((primitive_t*)proc)->proc(((primitive_t*)proc)->baton,args,
                                    next_esc, context);
-    if (tp && tp->exit){
+    if (DFSCH_UNLIKELY(tp) && tp->exit){
       dfsch_object_t* values = dfsch_get_values_list(r);
       tp->exit(tp->baton, proc, values, context, tp_token);
       r = dfsch_values_list(values);
