@@ -52,3 +52,10 @@
   `(destructuring-bind (&optional ,@variables &rest ,(gensym))
                        (%get-values ,values-form)
                        ,@body))
+
+(define-macro (dfsch:with-destroyable-object var expr &body body)
+  `(let ((,var ,expr))
+     (unwind-protect
+      (begin ,@body)
+      (destroy-object! ,var))))
+
