@@ -6,10 +6,13 @@
 typedef struct interpreter_t {
   dfsch_type_t* type;
   Tcl_Interp* interpreter;
-  int active;
 
   dfsch__thread_info_t* owner;
 } interpreter_t;
+
+static void destroy_interpreter(interpreter_t* i){
+  Tcl_DeleteInterp(i->interpreter);
+}
 
 dfsch_type_t dfsch_tcl_interpreter_type = {
   DFSCH_STANDARD_TYPE,
@@ -19,7 +22,8 @@ dfsch_type_t dfsch_tcl_interpreter_type = {
   NULL,
   NULL,
   NULL,
-  NULL
+  NULL,
+  .destroy = destroy_interpreter,
 };
 
 typedef struct command_wrapper_t {
@@ -63,9 +67,6 @@ static void check_apartment(interpreter_t* i){
 
 static interpreter_t* interpreter(dfsch_object_t* obj){
   interpreter_t* i = DFSCH_ASSERT_TYPE(obj, DFSCH_TCL_INTERPRETER_TYPE);
-  if (!i->active){
-    dfsch_error("Interpreter already destroyed", obj);
-  }
   check_apartment(i);
   return i;
 }
@@ -74,23 +75,15 @@ Tcl_Interp* dfsch_tcl_interpreter(dfsch_object_t* obj){
   return interpreter(obj)->interpreter;
 }
 
-static void interpreter_finalizer(interpreter_t* i, void* cd){
-  if (i->active){
-    i->active = 0;
-    Tcl_DeleteInterp(i->interpreter);
-  }
-}
-
 dfsch_object_t* dfsch_tcl_make_interpreter(Tcl_Interp* interp){
   interpreter_t* i 
     = (interpreter_t*)dfsch_make_object(DFSCH_TCL_INTERPRETER_TYPE);
 
   i->interpreter = interp;
-  i->active = 1;
   i->owner = dfsch__get_thread_info();
-  GC_register_finalizer(i, (GC_finalization_proc)interpreter_finalizer,
-                        NULL, NULL, NULL);
 
+  dfsch_register_destroy_finalizer(i);
+  
   return (dfsch_object_t*)i;
 }
 
@@ -103,12 +96,6 @@ dfsch_object_t* dfsch_tcl_create_interpreter(){
     dfsch_tcl_error(i);
   }
   return dfsch_tcl_make_interpreter(i);
-}
-void dfsch_tcl_destroy_interpreter(dfsch_object_t* obj){
-  interpreter_t* i = interpreter(obj);
-
-  i->active = 0;
-  Tcl_DeleteInterp(i->interpreter);
 }
 
 dfsch_object_t* dfsch_tcl_wrap_command(char* name,

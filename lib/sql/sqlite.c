@@ -13,6 +13,10 @@ typedef struct sqlite_database_t {
   pthread_mutex_t* mutex;
 } sqlite_database_t;
 
+static void database_destroy(sqlite_database_t* db){
+  sqlite_close(db->db);  
+}
+
 static dfsch_type_t sqlite_database_type = {
   DFSCH_STANDARD_TYPE,
   NULL,
@@ -20,7 +24,8 @@ static dfsch_type_t sqlite_database_type = {
   "sqlite:database",
   NULL,
   NULL,
-  NULL
+  NULL,
+  .destroy=database_destroy,
 };
 
 typedef struct sqlite_result_t {
@@ -32,6 +37,10 @@ typedef struct sqlite_result_t {
   char**names;
   pthread_mutex_t* mutex;
 } sqlite_result_t;
+
+static void destroy_result(sqlite_result_t* res){
+  sqlite_finalize(res->vm, NULL);
+}
 
 
 static void finalize_result(sqlite_result_t* res);
@@ -90,15 +99,8 @@ static dfsch_type_t sqlite_result_type = {
   NULL,
   .collection = &dfsch_iterator_collection_methods,
   .iterator = &result_iterator,
+  .destroy = destroy_result,
 };
-
-
-static void database_finalizer(sqlite_database_t* db, void* cd){
-  if (db->type = &sqlite_database_type){
-    sqlite_close(db->db);
-  }
-}
-
 
 #define SQLITE_DATABASE_ARG(al, name) \
   DFSCH_INSTANCE_ARG(al, name, sqlite_database_t*, &sqlite_database_type)
@@ -131,9 +133,7 @@ DFSCH_DEFINE_PRIMITIVE(open_database,
   DFSCH_ARG_END(args);
 
   db = (sqlite_database_t*)dfsch_make_object(&sqlite_database_type);
-  GC_REGISTER_FINALIZER(db, 
-                        (GC_finalization_proc)database_finalizer,
-                        NULL, NULL, NULL);
+  dfsch_register_destroy_finalizer(db);
  
   created = (stat(filename, &s)==-1 || !S_ISREG(s.st_mode));
   

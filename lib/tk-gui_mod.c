@@ -38,14 +38,6 @@ DFSCH_DEFINE_PRIMITIVE(eval_list, 0){
 }
 
 
-DFSCH_DEFINE_PRIMITIVE(destroy_interpreter, 0){
-  dfsch_object_t* interpreter;
-  DFSCH_OBJECT_ARG(args, interpreter);
-  DFSCH_ARG_END(args);
-  
-  dfsch_tcl_destroy_interpreter(interpreter);
-  return NULL;
-}
 DFSCH_DEFINE_PRIMITIVE(wrap_command, 0){
   dfsch_object_t* interpreter;
   char* name;
@@ -163,8 +155,6 @@ void dfsch_module_tk_gui_interface_register(dfsch_object_t* env){
 
   dfsch_defcanon_pkgcstr(env, tk_gui, "create-interpreter", 
                        DFSCH_PRIMITIVE_REF(create_interpreter));
-  dfsch_defcanon_pkgcstr(env, tk_gui, "destroy-interpreter", 
-                       DFSCH_PRIMITIVE_REF(destroy_interpreter));
   dfsch_defcanon_pkgcstr(env, tk_gui, "tcl-eval", 
                        DFSCH_PRIMITIVE_REF(eval));
   dfsch_defcanon_pkgcstr(env, tk_gui, "tcl-eval-list", 

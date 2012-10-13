@@ -41,6 +41,7 @@ dfsch_object_t* dfsch_gd_cons_image(gdImagePtr img){
     dfsch_error("Error creating GD image", NULL);
   }
   i->img = img;
+  dfsch_register_destroy_finalizer(i);
 
   return i;
 }
