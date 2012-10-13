@@ -93,7 +93,12 @@ void dfsch_destroy_object(dfsch_object_t* obj){
 }
 
 static void destroy_finalizer(dfsch_object_t* obj){
-
+  dfsch_type_t* type = DFSCH_TYPE_OF(obj);
+  if (type && type != DFSCH_INVALID_OBJECT){
+    if (type->destroy){
+      type->destroy(obj);
+    }
+  }
 }
 
 void dfsch_register_destroy_finalizer(dfsch_object_t* obj){

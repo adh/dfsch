@@ -28,7 +28,7 @@ gdImagePtr dfsch_gd_image(dfsch_object_t* obj){
   return i->img;
 }
 
-static image_finalizer(gd_image_t* img, void* discard){
+static image_finalizer(gd_image_t* img){
   if (img->type == DFSCH_GD_IMAGE_TYPE){
     gdImageDestroy(img->img);
   }
