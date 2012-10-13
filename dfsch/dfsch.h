@@ -99,6 +99,10 @@ extern "C" {
   /** Call destructor if defined and change object's type to #<invalid-object> */
   extern void dfsch_destroy_object(dfsch_object_t* obj);
 
+  /** Add finalizer to object which calls type's destroy method */
+  extern void dfsch_register_destroy_finalizer(dfsch_object_t* obj);
+
+
   /** @name Comparisons */
   /** @{ */
   /** Same object? (i.e. equal addresses) */

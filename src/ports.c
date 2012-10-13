@@ -529,17 +529,12 @@ typedef struct file_port_t {
   dfsch_port_t super;
   FILE* file;
   int close;
-  int open;
   char* name;
 } file_port_t;
 
 static void file_port_write_buf(file_port_t* port, 
                                 char*buf, size_t len){
   size_t ret;
-
-  if (!port->open){
-    dfsch_error("Port is closed", (dfsch_object_t*)port);
-  }
 
   if (len != 0){
     ret = fwrite(buf, len, 1, port->file);
@@ -552,10 +547,6 @@ static ssize_t file_port_read_buf(file_port_t* port,
                                   char* buf, size_t len){
   size_t ret;
 
-  if (!port->open){
-    dfsch_error("Port is closed", (dfsch_object_t*)port);
-  }
-
   ret = fread(buf, 1, len, port->file);
   if (ret == 0){
     if (feof(port->file)){
@@ -567,27 +558,18 @@ static ssize_t file_port_read_buf(file_port_t* port,
   return ret;
 }
 static void file_port_write(file_port_t* port, dfsch_writer_state_t* state){
-  if (port->open){
-    if (port->name){
-      dfsch_write_unreadable(state, (dfsch_object_t*)port, 
-                             "name %s fd %d", 
-                             port->name,
-                             fileno(port->file));
-    } else {
-      dfsch_write_unreadable(state, (dfsch_object_t*)port, 
-                             "fd %d", fileno(port->file));
-    }
+  if (port->name){
+    dfsch_write_unreadable(state, (dfsch_object_t*)port, 
+                           "name %s fd %d", 
+                           port->name,
+                           fileno(port->file));
   } else {
     dfsch_write_unreadable(state, (dfsch_object_t*)port, 
-                           "*closed*");
+                           "fd %d", fileno(port->file));
   }
 }
 
 static void file_port_seek(file_port_t* port, int64_t offset, int whence){
-  if (!port->open){
-    dfsch_error("Port is already closed", (dfsch_object_t*)port);
-  }
-
   if (fseek(port->file, offset, whence) != 0){
     dfsch_operating_system_error("fseek");    
   }
@@ -595,9 +577,6 @@ static void file_port_seek(file_port_t* port, int64_t offset, int whence){
 
 static int64_t file_port_tell(file_port_t* port){
   off_t ret;
-  if (!port->open){
-    dfsch_error("Port is already closed", (dfsch_object_t*)port);
-  }
 
   ret = ftell(port->file);
 
@@ -610,25 +589,13 @@ static int64_t file_port_tell(file_port_t* port){
 
 #ifdef __unix__
 static void file_port_batch_read_start(file_port_t* port){
-  if (!port->open){
-    dfsch_error("Port is already closed", (dfsch_object_t*)port);
-  }
-  
   flockfile(port->file);
 }
 static void file_port_batch_read_end(file_port_t* port){
-  if (!port->open){
-    dfsch_error("Port is already closed", (dfsch_object_t*)port);
-  }
-  
   funlockfile(port->file);
 }
 static int file_port_batch_read(file_port_t* port){
   int ch;
-
-  if (!port->open){
-    dfsch_error("Port is already closed", (dfsch_object_t*)port);
-  }
   
   ch = getc_unlocked(port->file);
 
@@ -648,8 +615,6 @@ static int file_port_batch_read(file_port_t* port){
 static dfsch_slot_t file_port_slots[] = {
   DFSCH_STRING_SLOT(file_port_t, name, DFSCH_SLOT_ACCESS_RO,
                     "Filename associated to port"),
-  DFSCH_BOOLEAN_SLOT(file_port_t, open, DFSCH_SLOT_ACCESS_RO,
-                     "Is port open for accesses?"),
   DFSCH_BOOLEAN_SLOT(file_port_t, close, DFSCH_SLOT_ACCESS_RO,
                      "Will port be automatically closed by GC?"),
   DFSCH_SLOT_TERMINATOR,
@@ -724,6 +689,14 @@ dfsch_port_type_t dfsch_file_input_port_type = {
   .batch_read = (dfsch_port_batch_read_t)file_port_batch_read,
 #endif
 };
+
+
+static void destroy_file_port(file_port_t* port){
+  if (port->close){
+    fclose(port->file);
+  }
+}
+
 dfsch_port_type_t dfsch_file_output_port_type = {
   {
     DFSCH_PORT_TYPE_TYPE,
@@ -737,7 +710,8 @@ dfsch_port_type_t dfsch_file_output_port_type = {
     
     file_port_slots,
     
-    "port backed by write-only stdio stream"
+    "port backed by write-only stdio stream",
+    .destroy = destroy_file_port,
   },
   .write_buf = (dfsch_port_write_buf_t)file_port_write_buf,
 
@@ -747,12 +721,6 @@ dfsch_port_type_t dfsch_file_output_port_type = {
 
 
 
-static void file_port_finalizer(file_port_t* port, void* cd){
-  if (port->open && port->close){
-    fclose(port->file);
-    port->open = 0;
-  }
-}
 
 dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
   file_port_t* port = (file_port_t*)dfsch_make_object((dfsch_type_t*)
@@ -761,11 +729,9 @@ dfsch_object_t* dfsch_make_file_port(FILE* file, int close, char* name){
   port->file = file;
   port->close = close;
   port->name = name;
-  port->open = 1; /* Creating closed ports makes no sense */
 
   if (close){
-    GC_REGISTER_FINALIZER(port, (GC_finalization_proc)file_port_finalizer,
-                          NULL, NULL, NULL);
+    dfsch_register_destroy_finalizer(port);
   }
 
   return (dfsch_object_t*)port;
@@ -814,19 +780,6 @@ dfsch_object_t* dfsch_open_file_port(char* filename, char* mode){
   }
 
   return dfsch_make_file_port(file, 1, filename);
-}
-
-void dfsch_close_file_port(dfsch_object_t* port){
-  file_port_t* p = 
-    (file_port_t*)DFSCH_ASSERT_INSTANCE(port, 
-                                        (dfsch_type_t*)DFSCH_FILE_PORT_TYPE);
-
-  p = (file_port_t*) port;
-
-  if (p->close && p->open){
-    fclose(p->file);
-    p->open = 0;
-  }  
 }
 
 typedef struct line_iterator_t {
@@ -1136,14 +1089,6 @@ DFSCH_DEFINE_PRIMITIVE(open_file_port, NULL){
 
   return dfsch_open_file_port(fname, mode);
 }
-DFSCH_DEFINE_PRIMITIVE(close_file_port, NULL){
-  dfsch_object_t* port;
-  DFSCH_OBJECT_ARG(args, port);  
-  DFSCH_ARG_END(args);
-
-  dfsch_close_file_port(port);
-  return NULL;
-}
 
 DFSCH_DEFINE_PRIMITIVE(make_port_line_iterator, NULL){
   dfsch_object_t* port;
@@ -1241,6 +1186,4 @@ void dfsch__port_native_register(dfsch_object_t *ctx){
 void dfsch__port_files_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "open-file-port", 
                     DFSCH_PRIMITIVE_REF(open_file_port));
-  dfsch_defcanon_cstr(ctx, "close-file-port!", 
-                    DFSCH_PRIMITIVE_REF(close_file_port));
 }

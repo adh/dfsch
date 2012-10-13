@@ -92,6 +92,19 @@ void dfsch_destroy_object(dfsch_object_t* obj){
   obj->type = DFSCH_INVALID_OBJECT_TYPE;
 }
 
+static void destroy_finalizer(dfsch_object_t* obj){
+
+}
+
+void dfsch_register_destroy_finalizer(dfsch_object_t* obj){
+  if (!(obj && GC_base(obj))){
+    dfsch_error("Cannot register finalizer for non-heap object", obj);
+  }
+  GC_REGISTER_FINALIZER(obj, (GC_finalization_proc)destroy_finalizer,
+                        NULL, NULL, NULL);
+}
+
+
 int dfsch_eq_p(dfsch_object_t *a, dfsch_object_t *b){
   return (a==b);
 }
