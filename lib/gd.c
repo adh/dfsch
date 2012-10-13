@@ -10,10 +10,16 @@ typedef struct gd_font_t {
   gdFontPtr font;
 } gd_font_t;
 
+static void image_destroy(gd_image_t* img){
+  gdImageDestroy(img->img);
+}
+
+
 dfsch_type_t dfsch_gd_image_type = {
   .type = DFSCH_STANDARD_TYPE,
   .name = "gd:image",
   .size = sizeof(gd_image_t),
+  .destroy = image_destroy,
 };
 
 dfsch_type_t dfsch_gd_font_type = {
@@ -28,11 +34,6 @@ gdImagePtr dfsch_gd_image(dfsch_object_t* obj){
   return i->img;
 }
 
-static image_finalizer(gd_image_t* img){
-  if (img->type == DFSCH_GD_IMAGE_TYPE){
-    gdImageDestroy(img->img);
-  }
-}
 
 dfsch_object_t* dfsch_gd_cons_image(gdImagePtr img){
   gd_image_t* i = dfsch_make_object(DFSCH_GD_IMAGE_TYPE);
@@ -40,15 +41,8 @@ dfsch_object_t* dfsch_gd_cons_image(gdImagePtr img){
     dfsch_error("Error creating GD image", NULL);
   }
   i->img = img;
-  GC_REGISTER_FINALIZER(i, (GC_finalization_proc)image_finalizer,
-                        NULL, NULL, NULL);
 
   return i;
-}
-void dfsch_gd_destroy_image(dfsch_object_t* img){
-  gd_image_t* i = DFSCH_ASSERT_TYPE(img, DFSCH_GD_IMAGE_TYPE);
-  gdImageDestroy(i->img);
-  dfsch_invalidate_object(i);
 }
 
 gdFontPtr dfsch_gd_font(dfsch_object_t* obj){
