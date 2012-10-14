@@ -6,6 +6,9 @@
 void dfsch_print_trace_buffer();
 dfsch_object_t* dfsch_get_trace();
 
+char* dfsch_format_trace(dfsch_object_t* trace);
+char* dfsch_format_trace_entry(dfsch_object_t* entry);
+
 void dfsch_introspect_register(dfsch_object_t* env);
 
 void dfsch_set_inspector(dfsch_object_t* proc);
