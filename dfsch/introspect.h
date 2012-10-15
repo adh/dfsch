@@ -53,4 +53,10 @@ void dfsch_prepare_trace_trap(dfsch_breakpoint_hook_t hook,
 void dfsch_prepare_single_step_breakpoint();
 int dfsch_have_trace_trap_p();
 
+void dfsch_get_trace_hook(dfsch_breakpoint_hook_t* trace_hook,
+                          void** trace_baton);
+void dfsch_set_trace_hook(dfsch_breakpoint_hook_t trace_hook,
+                          void* trace_baton);
+
+
 #endif

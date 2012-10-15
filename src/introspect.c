@@ -542,6 +542,20 @@ DFSCH_DEFINE_PRIMITIVE(add_function_breakpoint,
   return func;
 }
 
+DFSCH_DEFINE_FORM(step, 
+                  {},
+                  "Evaluate list of expressions with single-stepping enabled and return last result"){
+  dfsch_object_t* res;
+  dfsch_breakpoint_hook_t hook;
+  void* baton;
+
+  dfsch_get_trace_hook(&hook, &baton);
+  dfsch_set_trace_hook(standard_breakpoint_hook, NULL);
+  res = dfsch_eval_proc_tr(args, env, esc);
+  dfsch_set_trace_hook(hook, baton);
+  return res;
+}
+
 
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
@@ -589,5 +603,8 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(untrace_all_functions));
   dfsch_defcanon_cstr(env, "add-function-breakpoint!",
                     DFSCH_PRIMITIVE_REF(add_function_breakpoint));
+
+  dfsch_defcanon_cstr(env, "step",
+                      DFSCH_FORM_REF(step));
 
 }

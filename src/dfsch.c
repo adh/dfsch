@@ -1287,8 +1287,20 @@ void dfsch__maybe_free_breakpoint_table(){
   }
 }
 
-
-
+void dfsch_get_trace_hook(dfsch_breakpoint_hook_t* trace_hook,
+                          void** trace_baton){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  *trace_hook = ti->trace_hook;
+  *trace_baton = ti->trace_baton;
+}
+void dfsch_set_trace_hook(dfsch_breakpoint_hook_t trace_hook,
+                          void* trace_baton){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__allocate_breakpoint_table();
+  ti->trace_hook = trace_hook;
+  ti->trace_baton = trace_baton;
+  dfsch__maybe_free_breakpoint_table();
+}
 
 void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
                                                  dfsch_object_t* dst){
