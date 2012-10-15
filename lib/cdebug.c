@@ -79,7 +79,7 @@ static void prettyprint_locals(dfsch_object_t* env){
     }
     count++;
     if (count == 16){
-      fprintf(stderr, "      ... use ;variables to inspect more\n");
+      fprintf(stderr, "      ... use ;variables or ;inspect-locals to inspect more\n");
       return;
     }
 
@@ -150,6 +150,47 @@ static void command_continue(char* cmdline, cdebug_ctx_t* ctx){
   dfsch_throw(&debugger_exit, NULL);
 }
 
+static dfsch_object_t* get_locals(char* cmdline, cdebug_ctx_t* ctx){
+  dfsch_object_t* i = dfsch_reverse(ctx->ustack);
+  int depth = 0;
+  if (*cmdline){
+    depth = atoi(cmdline);
+  }
+
+  while (DFSCH_PAIR_P(i)){
+    if (dfsch_compare_keyword(dfsch_vector_ref(DFSCH_FAST_CAR(i), 0), "eval")){
+      if (depth == 0){
+        fprintf(stderr, "Locals for frame:\n%s\n", 
+                dfsch_format_trace_entry(DFSCH_FAST_CAR(i)));
+        return dfsch_vector_ref(DFSCH_FAST_CAR(i), 2);
+      } else {
+        depth--;
+      }
+    }
+
+
+    i = DFSCH_FAST_CDR(i);
+  }
+  return NULL;
+}
+
+static void command_inspect_locals(char* cmdline, cdebug_ctx_t* ctx){
+  dfsch_object_t* env = get_locals(cmdline, ctx);
+  if (env){
+    dfsch_inspect_object(env);
+  } else {
+    fprintf(stderr, "No stack frame to inspect\n");
+  }
+}
+static void command_locals(char* cmdline, cdebug_ctx_t* ctx){
+  dfsch_object_t* env = get_locals(cmdline, ctx);
+  if (env){
+    prettyprint_locals(env);
+  } else {
+    fprintf(stderr, "No stack frame to print\n");
+  }
+}
+
 
 static void debug_main(dfsch_object_t* reason){
   dfsch_object_t* restarts = dfsch_compute_restarts();
@@ -184,10 +225,10 @@ static void debug_main(dfsch_object_t* reason){
                                                           "environment");
 
       ctx.bp_env = bp_env;
+      ctx.bp_expr = dfsch_condition_field_cstr(reason, "expression");
+
       fprintf(stderr, "Program stopped on breakpoint:\n  %s\n",
-              dfsch_object_2_string(dfsch_condition_field_cstr(reason,
-                                                               "expression"),
-                                    10, 0));
+              dfsch_object_2_string(ctx.bp_expr, 10, 0));
       dfsch_define_cstr(env, "environment", bp_env);
       fprintf(stderr, "\nLocal variables:\n");
       prettyprint_locals(bp_env);
@@ -220,6 +261,13 @@ static void debug_main(dfsch_object_t* reason){
   cmds = dfsch_console_add_command(cmds, "condition",
                                    "Inspect condition object",
                                    command_condition, &ctx);
+  cmds = dfsch_console_add_command(cmds, "inspect-locals",
+                                   "Inspect local variables of inner-most EVAL stack frame",
+                                   command_inspect_locals, &ctx);
+  cmds = dfsch_console_add_command(cmds, "locals",
+                                   "Print local variables of inner-most EVAL stack frame",
+                                   command_locals, &ctx);
+
   cmds = dfsch_console_add_command(cmds, "step",
                                    "Run program for single evaluator step",
                                    command_step, &ctx);

@@ -1281,6 +1281,7 @@ void dfsch_remove_breakpoint(dfsch_object_t* expr){
   }
 
   dfsch_eqhash_unset(breakpoint_table, expr);
+  dfsch__maybe_free_breakpoint_table();
 }
 
 void dfsch_clear_breakpoints(){
@@ -1292,6 +1293,30 @@ void dfsch__allocate_breakpoint_table(){
     breakpoint_table = GC_NEW(dfsch_eqhash_t);
     dfsch_eqhash_init(breakpoint_table, 0);
   }
+}
+void dfsch__maybe_free_breakpoint_table(){
+  if (!breakpoint_table){
+    return;
+  }
+  if (dfsch_eqhash_empty_p(breakpoint_table) &&
+      !dfsch__get_thread_info()->trace_hook){
+    breakpoint_table = NULL;
+  }
+}
+
+void dfsch_get_trace_hook(dfsch_breakpoint_hook_t* trace_hook,
+                          void** trace_baton){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  *trace_hook = ti->trace_hook;
+  *trace_baton = ti->trace_baton;
+}
+void dfsch_set_trace_hook(dfsch_breakpoint_hook_t trace_hook,
+                          void* trace_baton){
+  dfsch__thread_info_t* ti = dfsch__get_thread_info();
+  dfsch__allocate_breakpoint_table();
+  ti->trace_hook = trace_hook;
+  ti->trace_baton = trace_baton;
+  dfsch__maybe_free_breakpoint_table();
 }
 
 void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
@@ -1760,7 +1785,7 @@ void dfsch_add_traced_function(dfsch_object_t* func,
                                dfsch_function_entry_hook_t entry,
                                dfsch_function_exit_hook_t exit,
                                void* baton){
-  traced_function_entry_t* ent = GC_NEW(breakpoint_entry_t);
+  traced_function_entry_t* ent = GC_NEW(traced_function_entry_t);
   if (!traced_function_table){
     traced_function_table = GC_NEW(dfsch_eqhash_t);
     dfsch_eqhash_init(traced_function_table, 0);
@@ -1777,6 +1802,9 @@ void dfsch_remove_traced_function(dfsch_object_t* func){
     return;
   }
   dfsch_eqhash_unset(traced_function_table, func);
+  if (dfsch_eqhash_empty_p(traced_function_table)){
+    traced_function_table = NULL;
+  }
 }
 void dfsch_clear_traced_functions(){
   traced_function_table = NULL;

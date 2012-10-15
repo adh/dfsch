@@ -39,65 +39,73 @@ dfsch_object_t* dfsch_find_source_annotation(dfsch_object_t* list){
 }
 
 
-char* dfsch_format_trace(dfsch_object_t* trace){
+char* dfsch_format_trace_entry(dfsch_object_t* entry){
   str_list_t* sl = sl_create();
-  
-  while (DFSCH_PAIR_P(trace)){
-    if (dfsch_vector_p(DFSCH_FAST_CAR(trace))){
-      dfsch_object_t* tag = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 0);
-      if (dfsch_compare_keyword(tag, "apply")){
-        dfsch_object_t* proc = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
-        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
-        sl_printf(sl, "  APPLY %s %s\n",
-                  dfsch_object_2_string(proc, 10, DFSCH_WRITE),
-                  dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
-      } else if (dfsch_compare_keyword(tag, "eval")){
-        dfsch_object_t* expr = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 1);
-        dfsch_object_t* flags = dfsch_vector_ref(DFSCH_FAST_CAR(trace), 3);
-        dfsch_object_t* annot = dfsch_get_list_annotation(expr);
-        sl_printf(sl, "  EVAL %s %s\n",
-                  dfsch_object_2_string(expr, 10, DFSCH_WRITE),
-                  dfsch_object_2_string(flags, 10, DFSCH_WRITE));
+  if (dfsch_vector_p(entry)){
+    dfsch_object_t* tag = dfsch_vector_ref(entry, 0);
+    if (dfsch_compare_keyword(tag, "apply")){
+      dfsch_object_t* proc = dfsch_vector_ref(entry, 1);
+      dfsch_object_t* flags = dfsch_vector_ref(entry, 3);
+      sl_printf(sl, "  APPLY %s %s\n",
+                dfsch_object_2_string(proc, 10, DFSCH_WRITE),
+                dfsch_object_2_string(flags, 10, DFSCH_WRITE));
 
-        while (DFSCH_PAIR_P(annot)){
-          if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
-            sl_printf(sl, "    <- %s\n", 
-                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
-                                            DFSCH_WRITE));
-          } else if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_COMPILED_FROM) {
-            sl_printf(sl, "    <= %s\n", 
-                      dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
-                                            DFSCH_WRITE));
-          } else {
-            break;
-          }
-          annot = dfsch_get_list_annotation(DFSCH_FAST_CDR(annot));
+    } else if (dfsch_compare_keyword(tag, "eval")){
+      dfsch_object_t* expr = dfsch_vector_ref(entry, 1);
+      dfsch_object_t* flags = dfsch_vector_ref(entry, 3);
+      dfsch_object_t* annot = dfsch_get_list_annotation(expr);
+      sl_printf(sl, "  EVAL %s %s\n",
+                dfsch_object_2_string(expr, 10, DFSCH_WRITE),
+                dfsch_object_2_string(flags, 10, DFSCH_WRITE));
+
+      while (DFSCH_PAIR_P(annot)){
+        if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_MACRO_EXPANDED_FROM){
+          sl_printf(sl, "    <- %s\n", 
+                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
+                                          DFSCH_WRITE));
+        } else if (DFSCH_FAST_CAR(annot) == DFSCH_SYM_COMPILED_FROM) {
+          sl_printf(sl, "    <= %s\n", 
+                    dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10, 
+                                          DFSCH_WRITE));
+        } else {
+          break;
         }
-        if (annot){
-          sl_printf(sl, "     @ %s:%s\n", 
+        annot = dfsch_get_list_annotation(DFSCH_FAST_CDR(annot));
+      }
+      if (annot){
+        sl_printf(sl, "     @ %s:%s\n", 
                   dfsch_object_2_string(DFSCH_FAST_CAR(annot), 10, 
                                         DFSCH_PRINT),
                   dfsch_object_2_string(DFSCH_FAST_CDR(annot), 10,
                                         DFSCH_PRINT));
           
-        }
-
-      } else {
-        sl_printf(sl, "  UNKNOWN %s\n", 
-                  dfsch_object_2_string(DFSCH_FAST_CAR(trace),
-                                        10, DFSCH_WRITE));
       }
+
     } else {
-      sl_printf(sl, "  INVALID %s\n", 
-                dfsch_object_2_string(DFSCH_FAST_CAR(trace),
+      sl_printf(sl, "  UNKNOWN %s\n", 
+                dfsch_object_2_string(entry,
                                       10, DFSCH_WRITE));
     }
+  } else {
+    sl_printf(sl, "  INVALID %s\n", 
+              dfsch_object_2_string(entry,
+                                    10, DFSCH_WRITE));
+  }
 
+  return sl_value(sl);
+}
+
+char* dfsch_format_trace(dfsch_object_t* trace){
+  str_list_t* sl = sl_create();
+  
+  while (DFSCH_PAIR_P(trace)){
+    sl_append(sl, dfsch_format_trace_entry(DFSCH_FAST_CAR(trace)));
     trace = DFSCH_FAST_CDR(trace);
   }
   return sl_value(sl);
 }
+
 
 void dfsch_print_trace_buffer(){
   dfsch__thread_info_t* ti = dfsch__get_thread_info();
@@ -534,6 +542,20 @@ DFSCH_DEFINE_PRIMITIVE(add_function_breakpoint,
   return func;
 }
 
+DFSCH_DEFINE_FORM(step, 
+                  {},
+                  "Evaluate list of expressions with single-stepping enabled and return last result"){
+  dfsch_object_t* res;
+  dfsch_breakpoint_hook_t hook;
+  void* baton;
+
+  dfsch_get_trace_hook(&hook, &baton);
+  dfsch_set_trace_hook(standard_breakpoint_hook, NULL);
+  res = dfsch_eval_proc_tr(args, env, esc);
+  dfsch_set_trace_hook(hook, baton);
+  return res;
+}
+
 
 void dfsch_introspect_register(dfsch_object_t* env){
   dfsch_provide(env, "introspect");
@@ -581,5 +603,8 @@ void dfsch_introspect_register(dfsch_object_t* env){
                     DFSCH_PRIMITIVE_REF(untrace_all_functions));
   dfsch_defcanon_cstr(env, "add-function-breakpoint!",
                     DFSCH_PRIMITIVE_REF(add_function_breakpoint));
+
+  dfsch_defcanon_cstr(env, "step",
+                      DFSCH_FORM_REF(step));
 
 }

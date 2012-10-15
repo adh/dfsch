@@ -103,4 +103,7 @@ dfsch_object_t* dfsch_eqhash_revscan(dfsch_eqhash_t* hash,
                                      dfsch_object_t* value,
                                      unsigned short flags);
 dfsch_eqhash_entry_t* dfsch_eqhash_2_entry_list(dfsch_eqhash_t* hash);
+
+int dfsch_eqhash_empty_p(dfsch_eqhash_t* hash);
+
 #endif

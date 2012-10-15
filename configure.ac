@@ -364,6 +364,28 @@ fi
 AM_CONDITIONAL(CURL, test x"$enable_curl" == x"yes")
 
 
+enable_rrd=yes
+
+AC_ARG_ENABLE([rrd],
+    AC_HELP_STRING([--disable-rrd], [Disable rrd module]))
+AC_ARG_WITH([rrd],
+  AC_HELP_STRING([--with-librrd=PATH], [Path to librrd installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_rrd" == x"yes"; then
+    AC_CHECK_HEADERS(rrd.h, [have_rrd="1"], [have_rrd="0"])
+    AC_CHECK_LIB(rrd, rrd_create, 
+                     [dummy_rrd=], [have_rrd="0"])
+
+    if test x"$have_rrd" == x"0" ; then
+        enable_rrd=no
+    fi
+fi
+
+AM_CONDITIONAL(RRD, test x"$enable_rrd" == x"yes")
+
+
 
 
 AC_SYS_LARGEFILE 
@@ -415,6 +437,7 @@ tokyo-tyrant ....... : $enable_tokyo_tyrant
 gd ................. : $enable_gd
 FFI ................ : $enable_ffi
 CURL ............... : $enable_curl
+RRD ................ : $enable_rrd
 
 
 EOF

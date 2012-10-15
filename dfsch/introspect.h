@@ -6,6 +6,9 @@
 void dfsch_print_trace_buffer();
 dfsch_object_t* dfsch_get_trace();
 
+char* dfsch_format_trace(dfsch_object_t* trace);
+char* dfsch_format_trace_entry(dfsch_object_t* entry);
+
 void dfsch_introspect_register(dfsch_object_t* env);
 
 void dfsch_set_inspector(dfsch_object_t* proc);
@@ -49,5 +52,11 @@ void dfsch_prepare_trace_trap(dfsch_breakpoint_hook_t hook,
                               void* baton);
 void dfsch_prepare_single_step_breakpoint();
 int dfsch_have_trace_trap_p();
+
+void dfsch_get_trace_hook(dfsch_breakpoint_hook_t* trace_hook,
+                          void** trace_baton);
+void dfsch_set_trace_hook(dfsch_breakpoint_hook_t trace_hook,
+                          void* trace_baton);
+
 
 #endif

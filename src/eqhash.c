@@ -90,7 +90,7 @@ static void eqhash_large_put_low(dfsch_eqhash_entry_t* vector,
                                  dfsch_object_t* value,
                                  unsigned short flags){
   uint32_t h = fast_ptr_hash(key);
-  
+
   if (vector[h & mask].key != DFSCH_INVALID_OBJECT){
     vector[h & mask].next = alloc_entry(key, value, flags, vector[h & mask].next);
   } else {
@@ -242,6 +242,7 @@ static int delete_entry(dfsch_eqhash_t* hash,
           i->value = DFSCH_INVALID_OBJECT;
         }
       }
+      hash->contents.large.count--;
       return 1;
     }
     j = i;
@@ -465,4 +466,18 @@ dfsch_eqhash_entry_t* dfsch_eqhash_2_entry_list(dfsch_eqhash_t* hash){
   }
   return result;
 
+}
+
+int dfsch_eqhash_empty_p(dfsch_eqhash_t* hash){
+  if (hash->is_large){
+    return hash->contents.large.count == 0;
+  } else {
+    int i;
+    for (i = 0; i < DFSCH_EQHASH_SMALL_SIZE; i++){
+      if (hash->contents.small.keys[i] == DFSCH_INVALID_OBJECT){
+        return 0;
+      }
+    }
+    return 1;
+  }
 }
