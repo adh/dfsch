@@ -65,7 +65,12 @@ static void gen_salt(unsigned char* buf, size_t len){
   }
 }
 
-DFSCH_DEFINE_PRIMITIVE(crypt, NULL){
+DFSCH_DEFINE_PRIMITIVE(crypt, "Generate UNIX password hash, when salt is not provided "
+                       "random salt is generated and output format is MD5, otherwise "
+                       "salt is assumed to be previous output from this function, "
+                       "password is valid when result of this function equals original "
+                       "password hash which was also passed as salt argument"
+                       DFSCH_DOC_SYNOPSIS("(key &optional salt)")){
   char* key;
   char* salt;
   dfsch_object_t* ret;
@@ -101,7 +106,9 @@ DFSCH_DEFINE_PRIMITIVE(crypt, NULL){
 
   return ret;
 }
-DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
+DFSCH_DEFINE_PRIMITIVE(fchdir, "Change current directory to dirrectory "
+                       "reffered to by file descriptor"
+                       DFSCH_DOC_SYNOPSIS("(dir)")){
   int dir;
   DFSCH_LONG_ARG(args, dir);
   DFSCH_ARG_END(args);
@@ -111,7 +118,8 @@ DFSCH_DEFINE_PRIMITIVE(fchdir, NULL){
   }
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(chmod, NULL){
+DFSCH_DEFINE_PRIMITIVE(chmod, "Change file mode (permissions)"
+                       DFSCH_DOC_SYNOPSIS("(name mode)")){
   char* fname;
   mode_t mode;
   DFSCH_STRING_ARG(args, fname);
@@ -123,7 +131,9 @@ DFSCH_DEFINE_PRIMITIVE(chmod, NULL){
   }
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(fchmod, NULL){
+DFSCH_DEFINE_PRIMITIVE(fchmod, "Change mode (permissions) of open file "
+                       "reffered to by file descriptor"
+                       DFSCH_DOC_SYNOPSIS("(file mode)")){
   int file;
   mode_t mode;
   DFSCH_LONG_ARG(args, file);
@@ -136,7 +146,8 @@ DFSCH_DEFINE_PRIMITIVE(fchmod, NULL){
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(chown, NULL){
+DFSCH_DEFINE_PRIMITIVE(chown, "Change owner of file"
+                       DFSCH_DOC_SYNOPSIS("(fname user group)")){
   char* fname;
   uid_t user;
   gid_t group;
@@ -150,7 +161,9 @@ DFSCH_DEFINE_PRIMITIVE(chown, NULL){
   }
   return NULL;
 }
-DFSCH_DEFINE_PRIMITIVE(fchown, NULL){
+DFSCH_DEFINE_PRIMITIVE(fchown, "Change owner of file reffered to by open "
+                       "file descriptor"
+                       DFSCH_DOC_SYNOPSIS("(file user group)")){
   int file;
   uid_t user;
   gid_t group;
@@ -165,7 +178,8 @@ DFSCH_DEFINE_PRIMITIVE(fchown, NULL){
   return NULL;
 }
 
-DFSCH_DEFINE_PRIMITIVE(fork, NULL){
+DFSCH_DEFINE_PRIMITIVE(fork, "Create new process"
+                       DFSCH_DOC_SYNOPSIS("()")){
   pid_t pid;
   DFSCH_ARG_END(args);
 
