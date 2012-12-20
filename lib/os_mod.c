@@ -469,6 +469,10 @@ DFSCH_DEFINE_PRIMITIVE(mkdir, NULL){
   return NULL;
 }
 
+DFSCH_DEFINE_PRIMITIVE(mktime, NULL){
+  
+}
+
 DFSCH_DEFINE_PRIMITIVE(open, NULL){
   char* path;
   mode_t mode = 0;

@@ -30,6 +30,7 @@
 #endif
 #include <unistd.h>
 #include <limits.h>
+#include <errno.h>
 
 
 typedef struct decoded_time_t {
@@ -139,6 +140,7 @@ DFSCH_DEFINE_PRIMITIVE(decode_universal_time, NULL){
 
 DFSCH_DEFINE_PRIMITIVE(encode_universal_time, NULL){
   struct tm tm;
+  time_t t;
   DFSCH_LONG_ARG(args, tm.tm_sec);
   DFSCH_LONG_ARG(args, tm.tm_min);
   DFSCH_LONG_ARG(args, tm.tm_hour);
@@ -150,8 +152,15 @@ DFSCH_DEFINE_PRIMITIVE(encode_universal_time, NULL){
 
   tm.tm_mon -= 1;
   tm.tm_year -= 1900;
+  tm.tm_isdst = -1;
 
-  return dfsch_make_number_from_long(mktime(&tm));
+  errno = 0;
+  t = mktime(&tm);
+  if (t == -1 && errno != 0){
+    dfsch_operating_system_error("mktime");
+  }
+
+  return dfsch_make_number_from_long(t);
 }
 
 DFSCH_DEFINE_PRIMITIVE(get_decoded_time, NULL){
