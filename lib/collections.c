@@ -1,6 +1,7 @@
 #include <dfsch/lib/collections.h>
 
 #include <limits.h>
+#include <assert.h>
 
 /*
  * Priority queues
@@ -12,8 +13,7 @@ struct fib_node_t {
   dfsch_object_t* object;
   fib_node_t* children;
   fib_node_t* next;
-  int marked :1;
-  int degree :10;
+  int degree;
 };
 
 typedef struct pqueue_t {
@@ -50,7 +50,6 @@ void dfsch_collections_priority_queue_push(dfsch_object_t* q,
   fib_node_t* n = GC_NEW(fib_node_t);
 
   n->object = o;
-  n->marked = 0;
   n->degree = 0;
   n->children = NULL;
 
@@ -127,16 +126,20 @@ dfsch_object_t* dfsch_collections_priority_queue_pop(dfsch_object_t* q){
   for (j = 0; j < MAX_DEGREE; j++){
     if (degree_map[j]){
       pq->head = degree_map[j];
+      pq->head->next = NULL;
+      break;
     }
   }
-  for (; j < MAX_DEGREE; j++){
-    if (dfsch_apply(pq->lt,
-                    dfsch_list(2, pq->head->object, degree_map[j]->object))){
-      degree_map[j]->next = pq->head->next;
-      pq->head->next = degree_map[j];
-    } else {
-      degree_map[j]->next = pq->head;
-      pq->head = degree_map[j];      
+  for (j++; j < MAX_DEGREE; j++){
+    if (degree_map[j]){
+      if (dfsch_apply(pq->lt,
+                      dfsch_list(2, pq->head->object, degree_map[j]->object))){
+        degree_map[j]->next = pq->head->next;
+        pq->head->next = degree_map[j];
+      } else {
+        degree_map[j]->next = pq->head;
+        pq->head = degree_map[j];      
+      }
     }
   }
 
