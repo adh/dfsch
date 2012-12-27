@@ -6,16 +6,19 @@
  * Priority queues
  */
 
-typedef struct pq_entry_t pq_entry_t;
+typedef struct fib_node_t fib_node_t;
 
-struct pq_entry_t {
+struct fib_node_t {
   dfsch_object_t* object;
-  pq_entry_t* next;
+  fib_node_t* children;
+  fib_node_t* next;
+  int marked :1;
+  int degree :10;
 };
 
 typedef struct pqueue_t {
   dfsch_type_t* type;
-  pq_entry_t* head;
+  fib_node_t* head;
   dfsch_object_t* lt;
 } pqueue_t;
 
@@ -39,49 +42,105 @@ dfsch_object_t* dfsch_collections_make_priority_queue(dfsch_object_t* lt){
 void dfsch_collections_priority_queue_push(dfsch_object_t* q,
                                            dfsch_object_t* o){
   pqueue_t* pq;
-  pq_entry_t* e;
-  pq_entry_t* i;
   if (!DFSCH_INSTANCE_P(q, DFSCH_COLLECTIONS_PRIORITY_QUEUE_TYPE)){
     dfsch_error("Not a priority queue", q);
   }
   pq = (pqueue_t*)q;
 
-  e = GC_NEW(pq_entry_t);
-  e->object = o;
+  fib_node_t* n = GC_NEW(fib_node_t);
+
+  n->object = o;
+  n->marked = 0;
+  n->degree = 0;
+  n->children = NULL;
 
   if (!pq->head){
-    pq->head = e;
-  } else if (dfsch_apply(pq->lt, dfsch_list(2,
-                                            e->object,
-                                            pq->head->object)) != NULL){
-    e->next = pq->head;
-    pq->head = e;
+    pq->head = n;
+  } else if (dfsch_apply(pq->lt, 
+                         dfsch_list(2, n->object, pq->head->object))){
+    n->next = pq->head;
+    pq->head = n;    
   } else {
-    i = pq->head;
-    while (i->next){
-      if (dfsch_apply(pq->lt, dfsch_list(2, 
-                                         e->object,
-                                         i->next->object))){
-        e->next = i->next;
-        break;
-      }
-    }
-    i->next = e;
+    n->next = pq->head->next;
+    pq->head->next = n;
   }
 }
+
+#define MAX_DEGREE (sizeof(size_t) << 3)
+
 dfsch_object_t* dfsch_collections_priority_queue_pop(dfsch_object_t* q){
   pqueue_t* pq;
-  pq_entry_t* e;
+  fib_node_t* n;
+  dfsch_object_t* res;
+  fib_node_t* degree_map[MAX_DEGREE];
+  fib_node_t* i;
+  size_t j;
   if (!DFSCH_INSTANCE_P(q, DFSCH_COLLECTIONS_PRIORITY_QUEUE_TYPE)){
     dfsch_error("Not a priority queue", q);
   }
   pq = q;
+
   if (!pq->head){
-    dfsch_error("Priority queue is empty", q);
+    dfsch_error("Priority queue is empty", pq);
   }
-  e = pq->head;
-  pq->head = e->next;
-  return e->object;
+
+  n = pq->head;
+  res = n->object;
+
+  pq->head = n->next;
+
+  i = n->children;
+  if (i){
+    while (i->next){
+      i = i->next;
+    }
+    i->next = pq->head;
+    pq->head = n->children;
+  } 
+
+  memset(degree_map, 0, MAX_DEGREE*sizeof(fib_node_t*));
+
+  i = pq->head;
+  while (i){
+    if (!degree_map[i->degree]){
+      degree_map[i->degree] = i;
+      i = i->next;
+    } else {
+      fib_node_t* pn = degree_map[i->degree];
+      fib_node_t* cn = i;
+      if (dfsch_apply(pq->lt,
+                      dfsch_list(2, i->object, pn->object))){
+        cn = pn;
+        pn = i;
+      }
+      degree_map[i->degree] = NULL;
+      pn->next = i->next;
+      i = pn;
+
+      cn->next = pn->children;
+      pn->children = cn;
+      pn->degree++;
+    }
+  }
+
+  pq->head = NULL;
+  for (j = 0; j < MAX_DEGREE; j++){
+    if (degree_map[j]){
+      pq->head = degree_map[j];
+    }
+  }
+  for (; j < MAX_DEGREE; j++){
+    if (dfsch_apply(pq->lt,
+                    dfsch_list(2, pq->head->object, degree_map[j]->object))){
+      degree_map[j]->next = pq->head->next;
+      pq->head->next = degree_map[j];
+    } else {
+      degree_map[j]->next = pq->head;
+      pq->head = degree_map[j];      
+    }
+  }
+
+  return res;
 }
 int dfsch_collections_priority_queue_empty_p(dfsch_object_t* q){
   if (!DFSCH_INSTANCE_P(q, DFSCH_COLLECTIONS_PRIORITY_QUEUE_TYPE)){
