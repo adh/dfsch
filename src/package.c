@@ -949,9 +949,9 @@ DFSCH_DEFINE_PRIMITIVE(use_package,
   return (dfsch_object_t*)NULL;
 }
 DFSCH_DEFINE_PRIMITIVE(use_package_as, 
-                       "Add package to list of packages used by "
-                       "current package. Current package can be "
-                       "overriden by optional second argument"){
+                       "Use package with alternate package name while "
+                       "current package is current. Optional third argument "
+                       "overrides current package."){
   dfsch_package_t* package;
   char* alias;
   dfsch_package_t* in;

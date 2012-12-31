@@ -25,6 +25,7 @@
 #include <dfsch/generate.h>
 #include <dfsch/specializers.h>
 #include <dfsch/object.h>
+#include "types.h"
 
 #include <stdio.h>
 
@@ -654,6 +655,7 @@ dfsch_object_t* dfsch_make_generic_function(dfsch_object_t* name,
   gf->methods = NULL;
   gf->method_combination = method_combination;
   gf->dispatch_cache = dfsch_make_mkhash(0, 0);
+  gf->documentation = documentation;
 
   return (dfsch_object_t*)gf;
 }
@@ -674,7 +676,8 @@ dfsch_object_t* dfsch_generic_function_methods(dfsch_object_t* function){
 }
 
 static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
-                                               dfsch_object_t* name){
+                                               dfsch_object_t* name,
+                                               char* documentation){
   dfsch_object_t* fun;
   fun = dfsch_env_get(name, env);
   if (fun != DFSCH_INVALID_OBJECT){
@@ -686,7 +689,7 @@ static dfsch_object_t* ensure_generic_function(dfsch_object_t* env,
     }
   }
 
-  fun = dfsch_make_generic_function(name, NULL, NULL);
+  fun = dfsch_make_generic_function(name, NULL, documentation);
   dfsch_define(name, fun, env, DFSCH_VAR_CANONICAL);
 
   return fun;
@@ -697,7 +700,14 @@ void dfsch_define_method(dfsch_object_t* env,
                          dfsch_object_t* qualifiers,
                          dfsch_object_t* specializers,
                          dfsch_object_t* proc){
-  dfsch_object_t* function = ensure_generic_function(env, name);
+  char* documentation = NULL;
+  dfsch_object_t* function;
+
+  if (dfsch_primitive_p(proc)){
+    documentation = ((dfsch_primitive_t*)proc)->documentation;
+  }
+
+  function = ensure_generic_function(env, name, documentation);
   dfsch_add_method_proc(function, qualifiers, specializers, proc);
 }
 void dfsch_define_method_pkgcstr(dfsch_object_t* env,
