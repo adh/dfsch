@@ -2,7 +2,17 @@
 #include <dfsch/hash.h>
 #include <dfsch/strings.h>
 #include <dfsch/number.h>
+
+#ifdef BERKELEY_DB
+#include <dbsql.h>
+#define dfsch_module_sqlite3_register\
+  dfsch_module_db_sqlite_register
+#define MOD_NAME "db-sqlite"
+#else
 #include <sqlite3.h>
+#define MOD_NAME "sqlite3"
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -296,11 +306,13 @@ DFSCH_DEFINE_PRIMITIVE(sqlite3_last_insert_rowid, NULL){
 
 void dfsch_module_sqlite3_register(dfsch_object_t* env){
   dfsch_package_t* sql = dfsch_make_package("sql", NULL);
-  dfsch_package_t* sqlite3 = dfsch_make_package("sqlite3",
-                                                "Sqlite3 driver");
+  dfsch_package_t* sqlite3 = dfsch_make_package(MOD_NAME,
+                                                "SQLite3 database");
+  dfsch_package_t* sqlite = dfsch_make_package("sqlite",
+                                               "SQLite database");
 
   dfsch_require(env, "sql", NULL);
-  dfsch_provide(env, "sqlite3");
+  dfsch_provide(env, MOD_NAME);
 
   dfsch_define_pkgcstr(env, sqlite3, "<database>", &sqlite3_database_type);
   dfsch_define_pkgcstr(env, sqlite3, "<result>", &sqlite3_result_type);
@@ -329,8 +341,8 @@ void dfsch_module_sqlite3_register(dfsch_object_t* env){
 
 
   /* sqlite specific functions */
-  dfsch_define_pkgcstr(env, sqlite3, "changes", 
+  dfsch_define_pkgcstr(env, sqlite, "changes", 
                        DFSCH_PRIMITIVE_REF(sqlite3_changes));
-  dfsch_define_pkgcstr(env, sqlite3, "last-insert-rowid", 
+  dfsch_define_pkgcstr(env, sqlite, "last-insert-rowid", 
                        DFSCH_PRIMITIVE_REF(sqlite3_last_insert_rowid));
 }

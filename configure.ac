@@ -235,6 +235,27 @@ fi
 
 AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
 
+enable_db_sqlite=yes
+
+AC_ARG_ENABLE([db-sqlite],
+    AC_HELP_STRING([--disable-db-sqlite], [Disable db-sqlite module]))
+AC_ARG_WITH([db-sql],
+  AC_HELP_STRING([--with-db-sql=PATH], [Path to Berkeley DB installation]),
+  CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
+  LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
+
+if test x$"$enable_db_sqlite" == x"yes"; then
+    AC_CHECK_HEADERS(dbsql.h, [have_db_sql="1"], [have_db_sql="0"])
+    AC_CHECK_LIB(db_sql, sqlite3_open, 
+                     [dummy_db_sql=], [have_db_sql="0"])
+
+    if test x"$have_db_sql" == x"0" ; then
+        enable_db_sqlite=no
+    fi
+fi
+
+AM_CONDITIONAL(DB_SQLITE, test x"$enable_db_sqlite" == x"yes")
+
 enable_dbi=yes
 
 AC_ARG_ENABLE([dbi],
@@ -433,6 +454,7 @@ tk-gui ............. : $enable_tk_gui
 pcre ............... : $enable_pcre
 sqlite ............. : $enable_sqlite
 sqlite3 ............ : $enable_sqlite3
+db-sqlite .......... : $enable_db_sqlite
 libdbi ............. : $enable_dbi
 tokyo-cabinet ...... : $enable_tokyo_cabinet
 tokyo-tyrant ....... : $enable_tokyo_tyrant

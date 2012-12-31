@@ -140,6 +140,12 @@ else
 sqlite3_modules=
 endif
 
+if DB_SQLITE
+db_sqlite_modules=db-sqlite.la
+else
+db_sqlite_modules=
+endif
+
 if DBI
 dbi_modules=dbi.la
 else
@@ -215,6 +221,7 @@ dfschlibexec_LTLIBRARIES = threads.la \
 	$(pcre_modules)\
 	$(sqlite_modules)\
 	$(sqlite3_modules)\
+	$(db_sqlite_modules)\
 	$(dbi_modules)\
 	$(tc_modules)\
 	$(tt_modules)\
@@ -600,6 +607,11 @@ sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 sqlite3_la_SOURCES = lib/sql/sqlite3.c
 sqlite3_la_LIBADD = libdfsch.la -lsqlite3
 sqlite3_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
+
+db_sqlite_la_SOURCES = lib/sql/sqlite3.c
+db_sqlite_la_LIBADD = libdfsch.la -ldb_sql
+db_sqlite_la_CFLAGS = -DBERKELEY_DB
+db_sqlite_la_LDFLAGS = -module -shrext .dsl -avoid-version -no-undefined
 
 dbi_la_SOURCES = lib/sql/dbi.c
 dbi_la_LIBADD = libdfsch.la -ldbi
