@@ -202,6 +202,7 @@ char* dfsch_tcl_quote(char* str){
   char* ret;
   char* out;
   ret = out = GC_MALLOC_ATOMIC(strlen(str)*2+3);
+  (*out++) = '"';
   while (*str){
     switch (*str){
     case '\\':
@@ -244,6 +245,7 @@ char* dfsch_tcl_quote(char* str){
     }
   }
 
+  (*out++) = '"';
   (*out) = '\0';
   return ret;
 }

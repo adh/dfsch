@@ -141,7 +141,8 @@
 
 (define-method (bind-event (widget <widget>) (event <list>) 
                            proc &key args add)
-  (tcl-eval "bind"
+  (tcl-eval (widget-interpreter widget)
+            "bind"
             (widget-path widget)
             event
             (append (if add '("+") ())
@@ -385,6 +386,13 @@
   (widget-command entry "delete" "0" "end")
   (widget-command entry "insert" "0" value))
 
+(define-method (entry-append! (entry <entry>) value)
+  (widget-command entry "insert" "end" value))
+
+(define-method (entry-prepend! (entry <entry>) value)
+  (widget-command entry "insert" "0" value))
+  
+
 ;;;; Button widget
 
 (define-class <basic-button> <widget>
@@ -392,6 +400,9 @@
 
 (define-method (flash-button! (button <basic-button>))
   (widget-command button "flash"))
+
+(define-method (invoke-button! (button <basic-button>))
+  (widget-command button "invoke"))
 
 (define-class <button> <basic-button>
   ())
