@@ -403,7 +403,12 @@
 (define-method (flash-button! (button <basic-button>))
   (widget-command button "flash"))
 
-(define-method (invoke-button! (button <basic-button>))
+(define-method (invoke-button! (button <basic-button>) &optional effect-time)
+  (when effect-time
+        (configure-widget button :relief "sunken")
+        (tcl-eval (widget-interpreter button)
+                  "after" effect-time
+                  (widget-path button) "configure" :relief "raised"))
   (widget-command button "invoke"))
 
 (define-class <button> <basic-button>
