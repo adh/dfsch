@@ -343,7 +343,7 @@
   
 
 (define-macro (define-widget parent type args mgr mgr-args 
-                &key variable contents events)
+                &key variable contents events slot)
   (let ((tmp-widget (gensym)))
     `(begin
        (define ,tmp-widget ,((get-widget-construction-expander type)
@@ -351,6 +351,8 @@
        (,(get-manager-proc mgr) ,tmp-widget ,@mgr-args)
        ,@(when variable
                `((define ,variable ,tmp-widget)))
+       ,@(when slot
+               `((slot-set! ,parent ,slot ,tmp-widget)))
        ,@(when contents
                `((define-widgets ,tmp-widget ,@contents)))
        ,@(map (lambda (event-spec)
