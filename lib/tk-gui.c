@@ -149,7 +149,7 @@ static int command_proc(command_context_t* ctx,
 
   DFSCH_SCATCH_BEGIN {
     res = dfsch_apply(ctx->proc, head);
-    Tcl_SetResult(interp, dfsch_object_2_string(res, 100, 0), 
+    Tcl_SetResult(interp, dfsch_object_2_string(res, -1, 0), 
                   TCL_VOLATILE);
     ret = TCL_OK;
   } DFSCH_SCATCH {
@@ -213,6 +213,11 @@ char* dfsch_tcl_quote(char* str){
     case ' ':
       (*out++) = '\\';
       (*out++) = ' ';
+      str++;
+      break;
+    case '"':
+      (*out++) = '\\';
+      (*out++) = '"';
       str++;
       break;
     case '\t':
