@@ -2274,6 +2274,7 @@ struct vm_param_t {
   char* name;
   char* desc;
   vm_param_t* next;
+  void (*change)(char* val);
 };
 
 static vm_param_t* vm_params = NULL;
@@ -2284,10 +2285,24 @@ void dfsch__register_vm_param(int* var, char* name, char* desc){
   vmp->var = var;
   vmp->name = name;
   vmp->desc = desc;
+  vmp->change = NULL;
 
   vmp->next = vm_params;
   vm_params = vmp;
 }
+void dfsch__register_vm_param_proc(int* var, char* name, char* desc,
+                                   void (*change)(char* val)){
+  vm_param_t* vmp = malloc(sizeof(vm_param_t));
+  
+  vmp->var = var;
+  vmp->name = name;
+  vmp->desc = desc;
+  vmp->change = change;
+
+  vmp->next = vm_params;
+  vm_params = vmp;
+}
+
 
 void dfsch_set_vm_parameter(char* name, char* value){
   int val = atoi(value);
@@ -2296,6 +2311,9 @@ void dfsch_set_vm_parameter(char* name, char* value){
   while (i){
     if (strcmp(i->name, name) == 0){
       *(i->var) = val;
+      if (i->change){
+        i->change(value);
+      }
       return;
     }
 
@@ -2354,4 +2372,11 @@ void dfsch_print_vm_parameters(){
     i = i->next;
   }
   printf("\n");
+}
+
+DEFINE_VM_PARAM_PROC(incremental_gc, 0,
+                     "Use incremental garbage collector"){
+  if (incremental_gc){
+    GC_enable_incremental();
+  }
 }

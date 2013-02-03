@@ -60,6 +60,18 @@ void dfsch__register_vm_param(int* var, char* name, char* desc);
     dfsch__register_vm_param(&name, #name, desc);                \
   }
 
+void dfsch__register_vm_param_proc(int* var, char* name, char* desc,
+                                   void (*change)(char* value));
+
+#define DEFINE_VM_PARAM_PROC(name, default, desc)                     \
+  int name = default;                                                 \
+  static void vmp__change_##name();                                   \
+  static void __attribute__((constructor)) vmp__init_##name(){        \
+    dfsch__register_vm_param_proc(&name, #name, desc,                 \
+                                  vmp__change_##name);                \
+  }                                                                   \
+  static void vmp__change_##name()
+
 dfsch_object_t* dfsch__reclose_closure(dfsch_object_t* closure,
                                        environment_t* env);
 void dfsch__copy_breakpoint_to_compiled_ast_node(dfsch_object_t* src,
