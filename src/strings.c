@@ -321,11 +321,22 @@ dfsch_object_t* dfsch_make_string_nocopy(dfsch_strbuf_t* buf){
 char* dfsch_string_to_cstr(dfsch_object_t* obj){
   dfsch_string_t* s = DFSCH_ASSERT_TYPE(obj, STRING);
 
+  if (strlen(s->buf.ptr) != s->buf.len){
+    dfsch_error("Cannot convert string with embedded NULs to char*",
+                s);
+  }
+
   return s->buf.ptr;
 }
 char* dfsch_proto_string_to_cstr(dfsch_object_t* obj){
   dfsch_strbuf_t* sb = dfsch_string_to_buf(obj);
   char* res = GC_MALLOC_ATOMIC(sb->len + 1);
+
+  if (strlen(sb->ptr) != sb->len){
+    dfsch_error("Cannot convert string with embedded NULs to char*",
+                sb);
+  }
+
   memcpy(res, sb->ptr, sb->len);
   res[sb->len] = '\0';
   return res;
@@ -338,6 +349,11 @@ char* dfsch_string_or_symbol_to_cstr(dfsch_object_t* obj){
   }
 
   s = DFSCH_ASSERT_TYPE(obj, STRING);
+
+  if (strlen(s->buf.ptr) != s->buf.len){
+    dfsch_error("Cannot convert string with embedded NULs to char*",
+                s);
+  }
 
   return s->buf.ptr;
 }
@@ -2562,8 +2578,11 @@ DFSCH_DEFINE_PRIMITIVE(construct_string,
   while (pos = strchr(query, delim)){
     dfsch_sl_nappend(sl, query, pos - query);
     query = pos + 1;
-    if (*query == ':'){
-      dfsch_sl_append(sl, delim);
+    if (*query == delim){
+      char buf[2];
+      buf[0] = delim;
+      buf[1] = 0;
+      dfsch_sl_append(sl, buf);
       query++;
     } else {
       size_t name_len = name_end(query, delim);
