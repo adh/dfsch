@@ -1133,6 +1133,8 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("standard-function",
   c->orig_code = dfsch_deserialize_object(ds);
   c->orig_args = dfsch_deserialize_object(ds);
   c->documentation = dfsch_deserialize_object(ds);
+  c->compiled = dfsch_deserialize_integer(ds);
+  c->call_count = dfsch_deserialize_integer(ds);
   return c;
 }
 
@@ -1146,6 +1148,8 @@ static void function_serialize(closure_t* c, dfsch_serializer_t* ser){
   dfsch_serialize_object(ser, c->orig_code);
   dfsch_serialize_object(ser, c->orig_args);
   dfsch_serialize_object(ser, c->documentation);
+  dfsch_serialize_integer(ser, c->compiled);
+  dfsch_serialize_integer(ser, c->call_count);
 }
 
 static dfsch_slot_t closure_slots[] = {
