@@ -2249,6 +2249,9 @@ void dfsch__number_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "next-prime", DFSCH_PRIMITIVE_REF(next_prime));
   dfsch_defcanon_cstr(ctx, "factorize", DFSCH_PRIMITIVE_REF(factorize));
 
+  dfsch_defcanon_cstr(ctx, "<number-sequence>", 
+                      DFSCH_NUMBER_SEQUENCE_TYPE);
+
   dfsch_defcanon_cstr(ctx, "make-number-sequence", 
                       DFSCH_PRIMITIVE_REF(make_number_sequence));
  

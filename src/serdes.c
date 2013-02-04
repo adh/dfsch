@@ -970,7 +970,9 @@ DFSCH_DEFINE_PRIMITIVE(deserialize_integer,
 void dfsch__serdes_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "<serializer>", DFSCH_SERIALIZER_TYPE);
   dfsch_defcanon_cstr(env, "<deserializer>", DFSCH_DESERIALIZER_TYPE);
-  
+
+  dfsch_defcanon_cstr(env, "<serializing-map>", 
+                      DFSCH_SERIALIZING_MAP_TYPE);  
 
   dfsch_defcanon_cstr(env, "serialize",
                       DFSCH_PRIMITIVE_REF(serialize));

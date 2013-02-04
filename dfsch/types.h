@@ -494,6 +494,10 @@ extern dfsch_type_t dfsch_collection_constructor_type_type;
 #define DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE \
   (&dfsch_collection_constructor_type_type)
 
+extern dfsch_type_t dfsch_collection_constructor_type;
+#define DFSCH_COLLECTION_CONSTRUCTOR_TYPE \
+  (&dfsch_collection_constructor_type)
+
 extern dfsch_collection_constructor_type_t dfsch_mutable_list_constructor_type;
 #define DFSCH_MUTABLE_LIST_CONSTRUCTOR_TYPE \
   (&dfsch_mutable_list_constructor_type)

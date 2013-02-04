@@ -1,4 +1,13 @@
 Bugfixes:
+* solve sharing in compact-list serialization
+
+nearterm:
+* compact-list collection constructor
+* lambda-lists accessible for introspection
+* parse-specialized-lambda-list accessible to user code
+* define-method as core-lib macro
+* collection constructor for strings
+* weak-value-hash
 
 0.4.1:
 * encodings

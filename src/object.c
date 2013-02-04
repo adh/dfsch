@@ -585,6 +585,7 @@ static dfsch_singleton_generic_function_t write_instance = {
 
 void dfsch__object_native_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "<standard-class>", DFSCH_STANDARD_CLASS_TYPE);
+  dfsch_defcanon_cstr(ctx, "<metaclass>", DFSCH_METACLASS_TYPE);
   dfsch_defcanon_cstr(ctx, "<role>", DFSCH_ROLE_TYPE);
 
   dfsch_defcanon_cstr(ctx, "allocate-instance", 

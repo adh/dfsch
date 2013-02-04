@@ -1908,6 +1908,19 @@ DFSCH_DEFINE_PRIMITIVE(collection_constructor_done,
   return dfsch_collection_constructor_done(constructor);
 }
 
+DFSCH_DEFINE_PRIMITIVE(make_sequence_iterator,
+                       "Create sequence-iterator object. "
+                       "Useful for objects that does not "
+                       "preserve ordering on iteration or "
+                       "present different contents as "
+                       "sequence and as collection"){
+  dfsch_object_t* sequence;
+  DFSCH_OBJECT_ARG(args, sequence);
+  DFSCH_ARG_END(args);
+
+  return dfsch_make_sequence_iterator(sequence);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2080,6 +2093,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "seq-ref", DFSCH_PRIMITIVE_REF(seq_ref));
   dfsch_defcanon_cstr(ctx, "seq-set!", DFSCH_PRIMITIVE_REF(seq_set));
   dfsch_defcanon_cstr(ctx, "seq-length", DFSCH_PRIMITIVE_REF(seq_length));
+  dfsch_defcanon_cstr(ctx, "make-sequence-iterator", 
+                      DFSCH_PRIMITIVE_REF(make_sequence_iterator));
 
   dfsch_defcanon_cstr(ctx, "map-ref", DFSCH_PRIMITIVE_REF(map_ref));
   dfsch_defcanon_cstr(ctx, "map-set!", DFSCH_PRIMITIVE_REF(map_set));

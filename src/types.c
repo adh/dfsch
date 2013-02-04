@@ -568,6 +568,7 @@ dfsch_type_t dfsch_sequence_iterator_type = {
   .size = sizeof(sequence_iterator_t),
   .collection = &dfsch_iterator_collection_methods,
   .iterator = &si_methods,
+  .documentation = "This iterator walks indexes of arbitrary sequence objects"
 };
 
 dfsch_object_t* dfsch_make_sequence_iterator(dfsch_object_t* sequence){
@@ -637,6 +638,12 @@ dfsch_type_t dfsch_collection_constructor_type_type = {
   .name = "collection-constructor-type",
   .size = sizeof(dfsch_collection_constructor_type_t),
 };
+dfsch_type_t dfsch_collection_constructor_type = {
+  .type = DFSCH_ABSTRACT_TYPE,
+  .superclass = NULL,
+  .name = "collection-constructor",
+  .size = 0,
+};
 
 
 static dfsch_object_t* list_get_iterator(dfsch_object_t* l){
@@ -676,6 +683,7 @@ dfsch_object_t* dfsch_collected_list(dfsch_list_collector_t* col){
 dfsch_collection_constructor_type_t dfsch_mutable_list_constructor_type = {
   .type = {
     .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
     .name = "mutable-list-constructor",
     .size = sizeof(dfsch_list_collector_t),
   },
@@ -2763,7 +2771,8 @@ dfsch_object_t* dfsch_list_2_vector(dfsch_object_t* list){
 
 dfsch_type_t dfsch_invalid_object_type = {
   .type = DFSCH_SPECIAL_TYPE,
-  .name = "invalid-object"
+  .name = "invalid-object",
+  .documentation = "Destroyable objects became instances of this type after destruction",
 };
 
 

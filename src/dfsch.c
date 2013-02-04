@@ -2137,6 +2137,24 @@ void dfsch_core_language_register(dfsch_object_t* ctx){
 
   dfsch_defcanon_cstr(ctx, "<environment>", DFSCH_ENVIRONMENT_TYPE);
 
+  dfsch_defcanon_cstr(ctx, "<parse-error>", DFSCH_PARSE_ERROR_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<sequence-iterator>", 
+                      DFSCH_SEQUENCE_ITERATOR_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<collection-constructor>", 
+                      DFSCH_COLLECTION_CONSTRUCTOR_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<lambda-list>", 
+                      DFSCH_LAMBDA_LIST_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<invalid-object>", 
+                      DFSCH_INVALID_OBJECT_TYPE);
+
+  dfsch_defcanon_cstr(ctx, "<writer-state>", 
+                      DFSCH_WRITER_STATE_TYPE);
+
+
   dfsch_defconst_cstr(ctx, "true", DFSCH_SYM_TRUE);
   dfsch_defconst_cstr(ctx, "nil", NULL);
   dfsch_defconst_cstr(ctx, "else", DFSCH_SYM_TRUE);
