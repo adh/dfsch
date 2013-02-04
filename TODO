@@ -15,6 +15,8 @@ nearterm:
   - overriding of type methods
 * Allow at least call-next-method in methods with C wrapper
 * Futures
+* batch compiler
+  - package API as special forms or something
 
 Non-version-specific:
 * More tests

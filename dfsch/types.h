@@ -173,8 +173,9 @@ typedef struct dfsch_form_t dfsch_form_t;
 /* methods used by compiler, in different struct for easier expansion */
 typedef struct dfsch_form_methods_t {
   dfsch_object_t* (*compile)(dfsch_form_t* form, 
-                                   dfsch_object_t* expr,
-                                   dfsch_object_t* env);
+                             dfsch_object_t* expr,
+                             dfsch_object_t* env);
+  int compile_time_eval;
 } dfsch_form_methods_t;
 
 typedef dfsch_object_t* (*dfsch_form_impl_t)(dfsch_form_t* form,
@@ -212,6 +213,9 @@ extern dfsch_type_t dfsch_form_type;
 
 #define DFSCH_FORM_COMPILE(name)                  \
   .compile = form_##name##_compile
+
+#define DFSCH_FORM_COMPILE_TIME                 \
+  .compile_time_eval = 1
 
 #define DFSCH_DEFINE_FORM(name, meths, doc...)                  \
   DFSCH_FORM_IMPLEMENTATION(name);                              \

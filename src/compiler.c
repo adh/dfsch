@@ -203,6 +203,11 @@ dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
     if (operator_value != DFSCH_INVALID_OBJECT){
       if (DFSCH_TYPE_OF(operator_value) == DFSCH_FORM_TYPE){
         dfsch_form_t* form = ((dfsch_form_t*)operator_value);
+
+        if (form->methods.compile_time_eval){
+          form->impl(form, env, args, NULL);
+        }
+
         if (form->methods.compile){
           res = form->methods.compile(operator_value, expression, env);
         } else {
