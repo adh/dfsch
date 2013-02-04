@@ -830,7 +830,7 @@ DFSCH_FORM_METHOD_COMPILE(compile_time_constant){
 }
 DFSCH_DEFINE_FORM(compile_time_constant, 
                   {DFSCH_FORM_COMPILE(compile_time_constant)},
-                  "Force non-constant expression to eveluate as "
+                  "Force non-constant expression to evaluate as "
 		  "constant during compilation"){
   dfsch_object_t* expr;
   DFSCH_OBJECT_ARG(args, expr);
