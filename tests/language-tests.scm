@@ -197,6 +197,14 @@
   (assert-equal (deserialize (serialize data))
                 data))
 
+(define-test serialization-list-sharing (:language :serialization)
+  (define data '(a b c d e f))
+  (assert-true (eq? (type-of data) <compact-list>))
+  (let ((res (deserialize (serialize (vector data (cdr data))))))
+    (assert-equal (seq-ref res 0) data)
+    (assert-true (eq? (seq-ref res 1)
+                      (cdr (seq-ref res 0))))))
+
 (define-test sequences (:language :collections)
   (define l (list   'a 'b 'c 'd 'e 'f))
   (define v (vector 'a 'b 'c 'd 'e 'f))

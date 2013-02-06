@@ -899,7 +899,7 @@ static void compact_list_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
     if (*i == DFSCH_INVALID_OBJECT){
       break;
     }
-    dfsch_put_serialized_object(s, i);
+    dfsch_put_serialized_object(s, DFSCH_MAKE_CLIST(i));
   }
 
   dfsch_serialize_object(s, i[1]);  
