@@ -205,6 +205,12 @@
     (assert-true (eq? (seq-ref res 1)
                       (cdr (seq-ref res 0))))))
 
+(define-test serialization-code (:language :serialization)
+  (define proc (slot-ref define-class :proc))
+  (define res (deserialize (serialize proc top-level-environment) top-level-environment))
+  (assert-true (eq? (type-of res) <standard-function>)))
+
+
 (define-test sequences (:language :collections)
   (define l (list   'a 'b 'c 'd 'e 'f))
   (define v (vector 'a 'b 'c 'd 'e 'f))
