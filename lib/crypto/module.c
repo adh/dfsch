@@ -519,6 +519,27 @@ DFSCH_DEFINE_PRIMITIVE(hash_result,
   return str;
 }
 
+DFSCH_DEFINE_PRIMITIVE(hash_string,
+                       "Hash single string"){
+  dfsch_crypto_hash_t* hash;
+  dfsch_strbuf_t* key;
+  dfsch_strbuf_t* input;
+  dfsch_strbuf_t* result;
+
+  DFSCH_CRYPTO_HASH_ARG(args, hash);
+  DFSCH_BUFFER_ARG(args, input);
+  DFSCH_BUFFER_ARG_OPT(args, key, DFSCH_EMPTY_STRBUF);
+  DFSCH_ARG_END(args);
+
+  result = dfsch_crypto_hash_buffer(hash, 
+                                    input->ptr, input->len, 
+                                    key->ptr, key->len);
+
+  return dfsch_make_byte_vector_strbuf(result);
+}
+
+
+
 DFSCH_DEFINE_PRIMITIVE(curve25519,
                        "Calculate curve25519 function"){
   dfsch_strbuf_t* secret;
@@ -1010,6 +1031,8 @@ void dfsch_module_crypto_register(dfsch_object_t* env){
                          DFSCH_PRIMITIVE_REF(hash_process));
   dfsch_defcanon_pkgcstr(env, crypto, "hash-result",
                          DFSCH_PRIMITIVE_REF(hash_result));
+  dfsch_defcanon_pkgcstr(env, crypto, "hash-string",
+                         DFSCH_PRIMITIVE_REF(hash_string));
 
   dfsch_defcanon_pkgcstr(env, crypto, "*curve25519-basepoint*",
                          dfsch_make_string_buf(curve25519_basepoint, 32));
