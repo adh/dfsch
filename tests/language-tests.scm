@@ -205,10 +205,14 @@
     (assert-true (eq? (seq-ref res 1)
                       (cdr (seq-ref res 0))))))
 
+(define-test serialization-envrefs (:language :serialization)
+  (let ((res (deserialize (serialize + top-level-environment) top-level-environment)))
+    (assert-true (eq? + res))))
+
 (define-test serialization-code (:language :serialization)
   (define proc (slot-ref define-class :proc))
-  (define res (deserialize (serialize proc top-level-environment) top-level-environment))
-  (assert-true (eq? (type-of res) <standard-function>)))
+  (let ((res (deserialize (serialize proc top-level-environment) top-level-environment)))
+    (assert-true (eq? (type-of res) <standard-function>))))
 
 
 (define-test sequences (:language :collections)
