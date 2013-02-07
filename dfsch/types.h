@@ -734,4 +734,6 @@ extern dfsch__symbol_t dfsch__static_symbols[];
 #define DFSCH_SYM_BREAK DFSCH__STATIC_SYMBOL(24)
 #define DFSCH_SYM_MUFFLE_WARNING DFSCH__STATIC_SYMBOL(25)
 
+#define DFSCH_LK_ALL DFSCH__STATIC_SYMBOL(26)
+
 #endif

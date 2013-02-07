@@ -1,5 +1,4 @@
 Bugfixes:
-* solve sharing in compact-list serialization
 
 nearterm:
 * compact-list collection constructor

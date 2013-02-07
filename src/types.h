@@ -21,6 +21,7 @@ typedef struct lambda_list_t {
   uint16_t keyword_count;
   uint16_t optional_count;
   dfsch_object_t* rest;
+  dfsch_object_t* all;
   dfsch_object_t** defaults;
   dfsch_object_t** supplied_p;
   dfsch_object_t** keywords;

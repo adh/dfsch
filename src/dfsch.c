@@ -1407,6 +1407,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
   size_t opt_arg_count;
   dfsch_object_t* rest = NULL;
   dfsch_object_t* aux_list = NULL;
+  dfsch_object_t* all = NULL;
   int flags = 0;
 
   dfsch_object_t* arg_list = NULL; 
@@ -1443,8 +1444,14 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
       }
       rest = DFSCH_FAST_CAR(i);
       mode = CLL_NO_ARGUMENTS;
+    } else if (arg == DFSCH_LK_ALL){
+      i = DFSCH_FAST_CDR(i);
+      if (!DFSCH_PAIR_P(i)){
+        dfsch_error("Missing argument for &all", list);
+      }
+      all = DFSCH_FAST_CAR(i);
     } else if (arg == DFSCH_LK_AUX){
-      aux_list = DFSCH_FAST_CDR(i);
+      aux_list = dfsch_list_copy_immutable(DFSCH_FAST_CDR(i));
       i = NULL;
       break;
     } else if (arg == DFSCH_LK_ALLOW_OTHER_KEYS){
@@ -1499,6 +1506,7 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
                                              arg_count
                                              * sizeof(dfsch_object_t*));
   ll->rest = rest;
+  ll->all = all;
   ll->aux_list = aux_list;
   ll->flags = flags;
 
@@ -1606,6 +1614,11 @@ static void destructure_impl(lambda_list_t* ll,
                              dfsch__thread_info_t* ti) DFSCH_FUNC_HOT{
   int i;
   dfsch_object_t* j = list;
+
+  if (DFSCH_UNLIKELY(ll->all)){
+    j = dfsch_list_copy_immutable(list);
+    dfsch_eqhash_put(&env->values, ll->all, j);
+  }
 
   for (i = 0; i < ll->positional_count; i++){
     if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
