@@ -1483,6 +1483,7 @@ static void lambda_list_serialize(lambda_list_t* ll, dfsch_serializer_t* ser){
   dfsch_serialize_integer(ser, ll->keyword_count);
   dfsch_serialize_integer(ser, ll->optional_count);
   dfsch_serialize_object(ser, ll->rest);
+  dfsch_serialize_object(ser, ll->all);
   for (i = 0; i < ll->optional_count + ll->keyword_count; i++){
     dfsch_serialize_object(ser, ll->defaults[i]);
   }
@@ -1517,6 +1518,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("lambda-list", lambda_list){
   ll->optional_count = optional_count;
   ll->keyword_count = keyword_count;
   ll->rest = dfsch_deserialize_object(ds);
+  ll->all = dfsch_deserialize_object(ds);
   if (ll->optional_count + ll->keyword_count){
     ll->defaults = GC_MALLOC(sizeof(dfsch_object_t*) * (ll->optional_count 
                                                         + ll->keyword_count));

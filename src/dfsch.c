@@ -1461,6 +1461,9 @@ dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list){
         dfsch_error("Junk positional argument in keyword position", list);
       }
       if (mode == CLL_POSITIONAL) {
+        if (dfsch_pair_p(arg)){
+          arg = dfsch_compile_lambda_list(arg); /* pattern support */
+        }
         arg_list = dfsch_cons(arg, arg_list);
         positional_count++;
       } else {
@@ -1624,8 +1627,14 @@ static void destructure_impl(lambda_list_t* ll,
     if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
       dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
-    dfsch_eqhash_put(&env->values, ll->arg_list[i], 
-                     DFSCH_FAST_CAR(j));
+    if (DFSCH_SYMBOL_P(ll->arg_list[i])){
+      dfsch_eqhash_put(&env->values, ll->arg_list[i], 
+                       DFSCH_FAST_CAR(j));
+    } else if (DFSCH_TYPE_OF(ll->arg_list[i]) == DFSCH_LAMBDA_LIST_TYPE){
+      destructure_impl(ll->arg_list[i], DFSCH_FAST_CAR(j), env, ti);
+    } else {
+      dfsch_error("Unknown object in lambda-list", ll->arg_list[i]);
+    }
     j = DFSCH_FAST_CDR(j);
   }
 
