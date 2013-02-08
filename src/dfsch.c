@@ -1627,7 +1627,7 @@ static void destructure_impl(lambda_list_t* ll,
     if (DFSCH_UNLIKELY(!DFSCH_PAIR_P(j))){
       dfsch_error("Too few arguments", dfsch_list(2, ll, list));
     }
-    if (DFSCH_SYMBOL_P(ll->arg_list[i])){
+    if (DFSCH_LIKELY(DFSCH_SYMBOL_P(ll->arg_list[i]))){
       dfsch_eqhash_put(&env->values, ll->arg_list[i], 
                        DFSCH_FAST_CAR(j));
     } else if (DFSCH_TYPE_OF(ll->arg_list[i]) == DFSCH_LAMBDA_LIST_TYPE){

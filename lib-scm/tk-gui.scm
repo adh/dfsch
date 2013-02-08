@@ -116,8 +116,14 @@
                                (widget-path widget)
                                index)
                          args)))
-                               
-  
+
+(define-method (grid-anchor (widget <widget>) anchor)
+  (tcl-eval-list (widget-interpreter widget)
+                 (list "grid" 
+                       "anchor"
+                       (widget-path widget)
+                       anchor)))
+                    
 
 (define-method (widget-command-list (widget <widget>) args)
   (tcl-eval-list (widget-interpreter widget)
@@ -169,7 +175,11 @@
 (define-macro (make-window context &rest args)
   `(make-instance <window> ,context (unique-widget-name) (list ,@args)))
 
+(define-macro (make-custom-window class context &rest args)
+  `(make-instance ,class ,context (unique-widget-name) (list ,@args)))
+
 (define-method (initialize-instance (win <window>) context path args)
+  (unless path (set! path (unique-widget-name)))
   (slot-set! win :path path)
   (slot-set! win :context context)
   (slot-set! win :window win)
@@ -479,13 +489,16 @@
   (set-value! (radio-button-variable radio)
               (if value (radio-button-value radio) ())))
 
+
 ;;;; Listbox widget
 
 (define-class <list-box> <widget>
   ())
 
 (define-method (initialize-instance (button <list-box>) parent args)
-  (call-next-method button parent "listbox" (unique-widget-name) args))
+  (call-next-method button parent "listbox" (unique-widget-name) 
+                    (append (list :exportselection 0)
+                            args)))
 
 (register-simple-widget-type <list-box>)
 
@@ -499,5 +512,31 @@
   (split-list (widget-command list-box "curselection")))
 
 (define-method (get-value (list-box <list-box>))
-  (widget-command list-box "index" "active"))
+  (string->number (widget-command list-box "index" "active")))
 
+;;;; Simple scrollbars for other widgets
+
+(define (make-trivial-vertical-scrollbar parent for-widget)
+  (let ((res (make-widget parent "scrollbar"
+                          :command (list (widget-path for-widget) "yview"))))
+    (configure-widget for-widget 
+                      :yscrollcommand (list (widget-path res)
+                                            "set"))
+    res))
+
+(register-widget-type '*vertical-scrollbar*
+                      (lambda (parent args)
+                        `(make-trivial-vertical-scrollbar ,parent ,@args)))
+
+(define (make-trivial-horizontal-scrollbar parent for-widget)
+  (let ((res (make-widget parent "scrollbar"
+                          :orient "horizontal"
+                          :command (list (widget-path for-widget) "xview"))))
+    (configure-widget for-widget 
+                      :xscrollcommand (list (widget-path res)
+                                            "set"))
+    res))
+
+(register-widget-type '*horizontal-scrollbar*
+                      (lambda (parent args)
+                        `(make-trivial-horizontal-scrollbar ,parent ,@args)))
