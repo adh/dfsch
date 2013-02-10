@@ -27,6 +27,27 @@
   :uses '(:dfsch :tk-gui%interface))
 (in-package :tk-gui)
 
+(define-constant +ttk-mapped-widgets+
+  '("button"
+    "checkbutton"
+    "combobox"
+    "entry"
+    "frame"
+    "label"
+    "labelframe"
+    "menubutton"
+    "notebook"
+    "panedwindow"
+    "progressbar"
+    "radiobutton"
+    "scale"
+    "scrollbar"
+    "separator"
+    "sizegrip"
+    "spinbox"
+    "treeview"))
+(define-variable *do-ttk-mapping* #t)
+
 (define *waited-window* ())
 
 (define-class <context> ()
@@ -68,7 +89,11 @@
                     :path (translate-widget-path parent path)
                     :context (widget-context parent)
                     :window (widget-window parent))
-      
+  
+  (when (and *do-ttk-mapping*
+             (member type +ttk-mapped-widgets+))
+        (set! type (string-append "ttk::" type)))
+
   (tcl-eval-list (widget-interpreter widget)
                  (append (list type (widget-path widget))
                          args)))
@@ -354,6 +379,7 @@
             (error "Unknown widget type" :type type)))))
 
 (define-method (get-widget-construction-expander (type <string>))
+  (when (member type ))
   (lambda (parent args) 
     `(make-widget ,parent ,type ,@args)))
   

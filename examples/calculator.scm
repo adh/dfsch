@@ -2,6 +2,8 @@
 
 (require :tk-gui)
 
+(set! tk-gui:*do-ttk-mapping* #f)
+
 (use-package :tk-gui)
 
 (define context (make-context :withdraw-toplevel #t))
@@ -142,6 +144,9 @@
             :grid (:row 3 :rowspan 2 :column 4 :sticky "nsew")
             :variable beq
             :events ((:command do-it!))))
+
+(grid-configure window :column "all" :weight 1)
+(grid-configure window :row "all" :weight 1)
 
 (define (make-shortcut-handler btn)
   (lambda () 
