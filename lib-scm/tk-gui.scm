@@ -49,6 +49,12 @@
   (when withdraw-toplevel
         (withdraw-window (context-toplevel-window context))))  
 
+(define-method (context-eval-list (context <context>) lyst)
+  (tcl-eval-list (context-interpreter context) lyst))
+
+(define-method (use-theme (context <context>) name)
+  (context-eval-list context (list "ttk::style" "theme" "use" name)))
+
 (define-method (wait-for-toplevel (context <context>))
   (wait-for-window (context-toplevel-window context)))
 
