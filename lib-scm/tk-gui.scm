@@ -73,8 +73,10 @@
 (define-method (context-eval-list (context <context>) lyst)
   (tcl-eval-list (context-interpreter context) lyst))
 
-(define-method (use-theme (context <context>) name)
-  (context-eval-list context (list "ttk::style" "theme" "use" name)))
+(define-method (use-theme (context <context>) &optional name)
+  (if name
+      (context-eval-list context (list "ttk::style" "theme" "use" name))
+      (context-eval-list context '("ttk::style" "theme" "use"))))
 
 (define-method (wait-for-toplevel (context <context>))
   (wait-for-window (context-toplevel-window context)))
@@ -170,6 +172,13 @@
 
 (define-method (validate-event-name (widget <widget>) name)
   #t)
+
+(define-method (widget-set-state! (widget <widget>) state)
+  (widget-command widget "state" state))
+(define-method (widget-disable! (widget <widget>))
+  (widget-set-state! widget "disabled"))
+(define-method (widget-enable! (widget <widget>))
+  (widget-set-state! widget "!disabled"))
 
 (define-method (bind-event (widget <widget>) (event <symbol>) proc)
   (configure-widget widget event (bind-command (widget-window widget)
@@ -441,9 +450,6 @@
 
 (define-class <basic-button> <widget>
   ())
-
-(define-method (flash-button! (button <basic-button>))
-  (widget-command button "flash"))
 
 (define-method (invoke-button! (button <basic-button>) &optional effect-time)
   (when effect-time
