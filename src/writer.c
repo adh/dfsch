@@ -161,6 +161,9 @@ void dfsch_write_object(dfsch_writer_state_t* state,
       while (DFSCH_PAIR_P(i)){
         dfsch_write_object(state, DFSCH_FAST_CAR(i));
         i = DFSCH_FAST_CDR(i);
+        if (dfsch_eqhash_ref(&(state->circ_hash), i) != DFSCH_INVALID_OBJECT){
+          break;
+        }
       }
 
       dfsch_write_object(state, i);
@@ -193,7 +196,6 @@ void dfsch_write_object(dfsch_writer_state_t* state,
         if (i) {
           dfsch_write_string(state, " ");  
         }
-
         if (DFSCH_FIXNUM_P(dfsch_eqhash_ref(&(state->circ_hash), i))){
           break;
         }
