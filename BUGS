@@ -1,8 +1,1 @@
-]=> (cdr '#1='#1#)
-(#0=(quote #0#))
-]=> (define f (cons 'a 'b))
-(a . b)
-]=> (set-cdr! f f)
-^C
-^\Quit
 
