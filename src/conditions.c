@@ -953,7 +953,7 @@ void dfsch__conditions_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "error",
                     DFSCH_PRIMITIVE_REF(error));
   dfsch_defcanon_cstr(ctx, "cerror",
-                    DFSCH_PRIMITIVE_REF(error));
+                    DFSCH_PRIMITIVE_REF(cerror));
   dfsch_defcanon_cstr(ctx, "runtime-error",
                     DFSCH_PRIMITIVE_REF(runtime_error));
 
