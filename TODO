@@ -7,6 +7,7 @@ nearterm:
 * define-method as core-lib macro
 * collection constructor for strings
 * weak-value-hash
+* python-like iter() with sentinel
 
 0.4.1:
 * encodings
