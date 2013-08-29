@@ -1115,7 +1115,12 @@ dfsch_object_t* dfsch_decompile_lambda_list(dfsch_object_t* lambda_list){
   dfsch_list_collector_t* lc = dfsch_make_list_collector();
   int i;
   for (i = 0; i < ll->positional_count; i++){
-    dfsch_list_collect(lc, ll->arg_list[i]);
+    if (DFSCH_TYPE_OF(ll->arg_list[i]) == DFSCH_LAMBDA_LIST_TYPE){
+      dfsch_list_collect(lc, 
+                         dfsch_decompile_lambda_list(ll->arg_list[i]));
+    } else {
+      dfsch_list_collect(lc, ll->arg_list[i]);
+    }
   }
   if (ll->optional_count > 0){
     dfsch_list_collect(lc, DFSCH_LK_OPTIONAL);
