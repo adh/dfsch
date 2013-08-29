@@ -190,10 +190,12 @@ dfsch_object_t* dfsch_get_slots(dfsch_type_t* type){
   dfsch_object_t* head = NULL;
   dfsch_object_t* tail;
   dfsch_object_t* tmp;
+
   while(type){
+    /* recurse over superclasses */
     if (type->slots){
       i = type->slots;
-      while (i->type){
+      while (i->type){ /* copy list of slots */
         tmp = dfsch_cons((dfsch_object_t*)i, NULL);
         if (!head) {
           head = tail = tmp;
@@ -213,14 +215,16 @@ dfsch_slot_t* dfsch_find_slot(dfsch_type_t* type,
                               char* name){
   dfsch_slot_t* i;
   while(type){
+    /* recurse over superclasses */
     if (type->slots){
-    i = type->slots;
-    while (i->type){
-      if (strcmp(i->name, name)==0){
-        return i;
+      i = type->slots;
+      while (i->type){
+        /* find matching slot name */
+        if (strcmp(i->name, name)==0){
+          return i;
+        }
+        i++;
       }
-      i++;
-    }
     }
     type = type->superclass;
   }
