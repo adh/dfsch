@@ -29,6 +29,8 @@
 
 #include <stdio.h>
 
+//#define GENERIC_PRINT_STATS
+
 typedef struct standard_generic_function_t {
   dfsch_type_t* type;
   dfsch_mkhash_t* dispatch_cache;
@@ -436,7 +438,8 @@ apply_standard_generic_function(standard_generic_function_t* function,
     i++;
   }
 
-  if (!dfsch_mkhash_ref(function->dispatch_cache, cache_keys, &em)){
+  if (DFSCH_UNLIKELY(!dfsch_mkhash_ref(function->dispatch_cache, 
+                                       cache_keys, &em))){
 #ifdef GENERIC_PRINT_STATS
     fprintf(stderr, ";; Cache miss\n");
 #endif
