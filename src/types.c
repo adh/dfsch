@@ -1109,6 +1109,40 @@ static void print_lambda_list(lambda_list_t* ll, dfsch_writer_state_t* ws){
   }
 }
 
+dfsch_object_t* dfsch_decompile_lambda_list(dfsch_object_t* lambda_list){
+  lambda_list_t* ll = DFSCH_ASSERT_INSTANCE(lambda_list,
+                                            DFSCH_LAMBDA_LIST_TYPE);
+  dfsch_list_collector_t* lc = dfsch_make_list_collector();
+  int i;
+  for (i = 0; i < ll->positional_count; i++){
+    dfsch_list_collect(lc, ll->arg_list[i]);
+  }
+  if (ll->optional_count > 0){
+    dfsch_list_collect(lc, DFSCH_LK_OPTIONAL);
+    for (i = 0; i < ll->optional_count; i++){
+      dfsch_list_collect(lc, ll->arg_list[i + ll->positional_count]);
+    }
+  }
+  if (ll->rest){
+    if (ll->flags & LL_FLAG_REST_IS_BODY){
+      dfsch_list_collect(lc, DFSCH_LK_BODY);
+    } else {
+      dfsch_list_collect(lc, DFSCH_LK_REST);
+    }
+    dfsch_list_collect(lc, ll->rest);    
+  }
+  if (ll->keyword_count > 0){
+    dfsch_list_collect(lc, DFSCH_LK_KEY);
+    for (i = 0; i < ll->keyword_count; i++){
+      dfsch_list_collect(lc, ll->arg_list[i + ll->positional_count 
+                                          + ll->optional_count]);
+    }
+  }
+
+  return dfsch_collected_list(lc);
+}
+
+
 static void function_write(closure_t* c, dfsch_writer_state_t* state){
   int readability;
   dfsch_write_unreadable_start(state, (dfsch_object_t*)c);

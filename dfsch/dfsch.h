@@ -487,6 +487,8 @@ extern "C" {
   extern dfsch_object_t* dfsch_lookup(dfsch_object_t* name, 
 				      dfsch_object_t* env);
   extern dfsch_object_t* dfsch_compile_lambda_list(dfsch_object_t* list);
+  extern dfsch_object_t* dfsch_decompile_lambda_list(dfsch_object_t* lambda_list);
+
   extern dfsch_object_t* dfsch_destructuring_bind(dfsch_object_t* arglist, 
                                                   dfsch_object_t* list, 
                                                   dfsch_object_t* env);

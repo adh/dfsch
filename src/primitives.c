@@ -1921,6 +1921,16 @@ DFSCH_DEFINE_PRIMITIVE(make_sequence_iterator,
   return dfsch_make_sequence_iterator(sequence);
 }
 
+DFSCH_DEFINE_PRIMITIVE(decompile_lambda_list, 
+                       "Convert compiled lambda-list to list representation"){
+  dfsch_object_t* lambda_list;
+
+  DFSCH_OBJECT_ARG(args, lambda_list);
+  DFSCH_ARG_END(args);
+
+  return dfsch_decompile_lambda_list(lambda_list);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2123,4 +2133,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(collection_constructor_add));
   dfsch_defcanon_cstr(ctx, "collection-constructor-done",
                       DFSCH_PRIMITIVE_REF(collection_constructor_done));
+
+  dfsch_defcanon_cstr(ctx, "decompile-lambda-list",
+                      DFSCH_PRIMITIVE_REF(decompile_lambda_list));
+
 }
