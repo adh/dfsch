@@ -1151,6 +1151,22 @@ DFSCH_DEFINE_PRIMITIVE(get_qualified_methods,
   return dfsch_get_qualified_methods(methods, qualifier);
 }
 
+DFSCH_DEFINE_PRIMITIVE(parse_specialized_lambda_list,
+                       "Parse list-represented lambda-list into "
+                       "non-specialized lambda-list and list of "
+                       "specializers"){
+  dfsch_object_t* specialized_lambda_list;
+  dfsch_object_t* lambda_list;
+  dfsch_object_t* specializers;
+  DFSCH_OBJECT_ARG(args, specialized_lambda_list);
+  DFSCH_ARG_END(args);
+  
+  dfsch_parse_specialized_lambda_list(specialized_lambda_list,
+                                      &lambda_list,
+                                      &specializers);
+
+  return dfsch_values(2, lambda_list, specializers);
+}
 
 void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "make-generic-function",
@@ -1174,10 +1190,6 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "call-method",
                       DFSCH_PRIMITIVE_REF(call_method));
 
-  dfsch_defcanon_cstr(env, "get-primary-methods",
-                      DFSCH_PRIMITIVE_REF(get_primary_methods));
-  dfsch_defcanon_cstr(env, "get-qualified-methods",
-                      DFSCH_PRIMITIVE_REF(get_qualified_methods));
 
   dfsch_defcanon_cstr(env, "<generic-function-type>", 
                       DFSCH_GENERIC_FUNCTION_TYPE_TYPE);
@@ -1202,4 +1214,15 @@ void dfsch__generic_register(dfsch_object_t* env){
   dfsch_defcanon_cstr(env, "<method>", 
                       DFSCH_METHOD_TYPE);
 
+  dfsch_defcanon_pkgcstr(env, DFSCH_DFSCH_LANG_PACKAGE,
+                         "parse-specialized-lambda-list",
+                         DFSCH_PRIMITIVE_REF(parse_specialized_lambda_list));
+
+  dfsch_defcanon_pkgcstr(env, DFSCH_DFSCH_LANG_PACKAGE,
+                         "get-primary-methods",
+                         DFSCH_PRIMITIVE_REF(get_primary_methods));
+
+  dfsch_defcanon_pkgcstr(env, DFSCH_DFSCH_LANG_PACKAGE,
+                         "get-qualified-methods",
+                         DFSCH_PRIMITIVE_REF(get_qualified_methods));
 }

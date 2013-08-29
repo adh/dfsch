@@ -23,7 +23,7 @@
 
 ;; General state of interpreter is unknown when this gets loaded
 (dfsch:define-package :dfsch%implementation 
-                      :uses '(:dfsch :dfsch%internal)
+                      :uses '(:dfsch :dfsch%internal :dfsch-lang)
                       :exports '()
                       :documentation 
                       "Internal package used by self-hosted standard library")

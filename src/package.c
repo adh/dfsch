@@ -94,6 +94,7 @@ struct dfsch_package_t {
 
 static pkg_hash_entry_t dfsch_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_user_entries[INITIAL_PACKAGE_SIZE];
+static pkg_hash_entry_t dfsch_lang_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_internal_entries[INITIAL_PACKAGE_SIZE];
 static pkg_hash_entry_t dfsch_keyword_entries[INITIAL_PACKAGE_SIZE];
 
@@ -110,7 +111,7 @@ dfsch_package_t dfsch_dfsch_package = {
 };
 dfsch_package_t dfsch_dfsch_user_package = {
   .type = DFSCH_PACKAGE_TYPE,
-  .next = DFSCH_DFSCH_INTERNAL_PACKAGE,
+  .next = DFSCH_DFSCH_LANG_PACKAGE,
 
   .name = "dfsch-user",
   .documentation = "Default user package",
@@ -118,6 +119,17 @@ dfsch_package_t dfsch_dfsch_user_package = {
   .sym_count = 0,
   .mask = INITIAL_PACKAGE_MASK,
   .entries = dfsch_user_entries,
+};
+dfsch_package_t dfsch_dfsch_lang_package = {
+  .type = DFSCH_PACKAGE_TYPE,
+  .next = DFSCH_DFSCH_INTERNAL_PACKAGE,
+
+  .name = "dfsch-lang",
+  .documentation = "Additional tools for code manipulation and introspection",
+
+  .sym_count = 0,
+  .mask = INITIAL_PACKAGE_MASK,
+  .entries = dfsch_lang_entries,
 };
 dfsch_package_t dfsch_dfsch_internal_package = {
   .type = DFSCH_PACKAGE_TYPE,

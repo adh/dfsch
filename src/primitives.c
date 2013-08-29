@@ -1948,8 +1948,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "instance?", DFSCH_PRIMITIVE_REF(instance_p));
   dfsch_defcanon_cstr(ctx, "implements?", DFSCH_PRIMITIVE_REF(implements_p));
   dfsch_defcanon_cstr(ctx, "superclass", DFSCH_PRIMITIVE_REF(superclass));
-  dfsch_defcanon_cstr(ctx, "get-list-annotation", 
-                      DFSCH_PRIMITIVE_REF(get_list_annotation));
 
   dfsch_defcanon_cstr(ctx, "eq?", DFSCH_PRIMITIVE_REF(eq_p));
   dfsch_defcanon_cstr(ctx, "eqv?", DFSCH_PRIMITIVE_REF(eqv_p));
@@ -1957,7 +1955,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
 
   dfsch_defcanon_cstr(ctx, "not", DFSCH_PRIMITIVE_REF(not));
 
-  dfsch_defcanon_cstr(ctx, "make-macro", DFSCH_PRIMITIVE_REF(make_macro));
   dfsch_defcanon_cstr(ctx, "cons", DFSCH_PRIMITIVE_REF(cons));
   dfsch_defcanon_cstr(ctx, "cons-immutable", 
                       DFSCH_PRIMITIVE_REF(cons_immutable));
@@ -2046,14 +2043,6 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(string_2_object));
   dfsch_defcanon_cstr(ctx, "string->object-list", 
                       DFSCH_PRIMITIVE_REF(string_2_object_list));
-  dfsch_defcanon_cstr(ctx, "writer-write-object", 
-                      DFSCH_PRIMITIVE_REF(write_object));
-  dfsch_defcanon_cstr(ctx, "writer-write-string", 
-                      DFSCH_PRIMITIVE_REF(write_string));
-  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-start", 
-                      DFSCH_PRIMITIVE_REF(write_unreadable_start));
-  dfsch_defcanon_cstr(ctx, "writer-write-unreadable-end", 
-                      DFSCH_PRIMITIVE_REF(write_unreadable_end));
 
   dfsch_defcanon_cstr(ctx, "symbol-qualified-name", 
                       DFSCH_PRIMITIVE_REF(symbol_qualified_name));
@@ -2134,7 +2123,27 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "collection-constructor-done",
                       DFSCH_PRIMITIVE_REF(collection_constructor_done));
 
-  dfsch_defcanon_cstr(ctx, "decompile-lambda-list",
-                      DFSCH_PRIMITIVE_REF(decompile_lambda_list));
+
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "make-macro", 
+                         DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "decompile-lambda-list",
+                         DFSCH_PRIMITIVE_REF(decompile_lambda_list));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "get-list-annotation", 
+                         DFSCH_PRIMITIVE_REF(get_list_annotation));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "writer-write-object", 
+                         DFSCH_PRIMITIVE_REF(write_object));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "writer-write-string", 
+                         DFSCH_PRIMITIVE_REF(write_string));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "writer-write-unreadable-start", 
+                         DFSCH_PRIMITIVE_REF(write_unreadable_start));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "writer-write-unreadable-end", 
+                         DFSCH_PRIMITIVE_REF(write_unreadable_end));
 
 }
