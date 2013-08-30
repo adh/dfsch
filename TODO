@@ -8,6 +8,7 @@ nearterm:
 * weak-value-hash
 * weak-list (set?)
 * python-like iter() with sentinel
+* Iterator building blocks
 
 0.4.1:
 * encodings
