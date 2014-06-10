@@ -552,11 +552,14 @@ extern dfsch_type_t* const dfsch_small_types[32];
 
 #define DFSCH_SMALL_TAG_CHARACTER 0x00
 
-#define DFSCH_SMALL_VALUE_REF(obj)  \
+#define DFSCH_SMALL_VALUE_REF(obj)                      \
   (((unsigned long)(((size_t)(obj)) & ~0xffL)) >> 8)
-#define DFSCH_MAKE_SMALL_VALUE(value, tag)          \
-  ((dfsch_object_t*)((((size_t)(value)) << 8) | (tag << 5) | 0x5))
+#define DFSCH_SMALL_VALUE_TAG(obj)                      \
+  (((unsigned long)(((size_t)(obj)) & ~0xf8L)) >> 3)
+#define DFSCH_MAKE_SMALL_VALUE(value, tag)                              \
+  ((dfsch_object_t*)((((size_t)(value)) << 8) | (tag << 3) | 0x5))
   
+
 
 
 #define DFSCH_INVALID_OBJECT ((dfsch_object_t*)((ptrdiff_t) -1))
@@ -601,7 +604,8 @@ typedef struct dfsch_pair_t {
   (DFSCH__FAST_CDR_CODED_P(obj) ?                               \
    DFSCH__COMPACT_LIST_CDR(obj):                                \
    (DFSCH_PAIR_REF(obj)->cdr))
-#define DFSCH_PAIR_P(obj) (((((size_t)(obj)) & 0x02) == 0x02))
+#define DFSCH_PAIR_P(obj) \
+  (((((size_t)(obj)) & 0x07) == 0x02) || ((((size_t)(obj)) & 0x03) == 0x03))
 #define DFSCH_SYMBOL_P(obj) (((((size_t)(obj)) & 0x07) == 0x04))
 #define DFSCH_FIXNUM_P(obj) ((((size_t)(obj)) & 0x07) == 0x01)
 #define DFSCH_INTERNED_SYMBOL_P(obj)                                    \

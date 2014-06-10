@@ -1670,12 +1670,16 @@ dfsch_object_t* dfsch_cons(dfsch_object_t* car, dfsch_object_t* cdr){
 }
 
 dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
-  dfsch_pair_t* p = GC_NEW(dfsch_pair_t);
+  dfsch_object_t** data = GC_MALLOC(sizeof(object_t*)*5);
 
-  p->car = car;
-  p->cdr = cdr;
+  data[0] = car;
+  data[1] = DFSCH_INVALID_OBJECT;
+  data[2] = cdr;
+  data[3] = NULL;
+  data[4] = NULL;
 
-  return DFSCH_TAG_ENCODE(p, 3);
+  return DFSCH_MAKE_CLIST(data);
+
 }
 
 
