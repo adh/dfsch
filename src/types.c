@@ -1679,7 +1679,6 @@ dfsch_object_t* dfsch_cons_immutable(dfsch_object_t* car, dfsch_object_t* cdr){
   data[4] = NULL;
 
   return DFSCH_MAKE_CLIST(data);
-
 }
 
 
