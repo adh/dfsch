@@ -1350,10 +1350,12 @@ static dfsch_object_t* dfsch_eval_impl(dfsch_object_t* exp,
       }
     }
 
-    if (DFSCH_LIKELY(DFSCH_SYMBOL_P(f))){
+    if (DFSCH_SYMBOL_P(f)){
       f = lookup_impl(f, env, ti);
     } else {
-      f = dfsch_eval_impl(f , env, NULL, ti);
+      if (DFSCH_UNLIKELY(DFSCH_PAIR_P(f))){
+        f = dfsch_eval_impl(f , env, NULL, ti);
+      }
     }
     
     if (DFSCH_TYPE_OF(f) == DFSCH_FORM_TYPE){
