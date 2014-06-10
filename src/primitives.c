@@ -1631,6 +1631,17 @@ dfsch_object_t* dfsch_generate_make_macro(dfsch_object_t* proc_exp){
   return dfsch_immutable_list(2, DFSCH_PRIMITIVE_REF(make_macro), proc_exp);
 }
 
+DFSCH_DEFINE_PRIMITIVE(macro_procedure,
+                       "Get underlying procedure that implements macro"){
+  dfsch_object_t* macro;
+  DFSCH_OBJECT_ARG(args, macro);
+  DFSCH_ARG_END(args);
+
+  return dfsch_macro_procedure(macro);
+
+}
+
+
 DFSCH_DEFINE_PRIMITIVE(collection_iterator, "Get iterator for given collection"){
   dfsch_object_t* obj;
   DFSCH_OBJECT_ARG(args, obj);
@@ -2127,6 +2138,9 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
                          "make-macro", 
                          DFSCH_PRIMITIVE_REF(make_macro));
+  dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
+                         "macro-procedure", 
+                         DFSCH_PRIMITIVE_REF(macro_procedure));
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
                          "decompile-lambda-list",
                          DFSCH_PRIMITIVE_REF(decompile_lambda_list));

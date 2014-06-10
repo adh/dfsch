@@ -210,7 +210,7 @@
     (assert-true (eq? + res))))
 
 (define-test serialization-code (:language :serialization)
-  (define proc (slot-ref define-class :proc))
+  (define proc (dfsch-lang:macro-procedure define-class))
   (let ((res (deserialize (serialize proc top-level-environment) top-level-environment)))
     (assert-true (eq? (type-of res) <standard-function>))))
 

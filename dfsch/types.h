@@ -64,8 +64,6 @@ extern dfsch_type_t dfsch_empty_list_type;
 
 extern dfsch_type_t dfsch_function_type;
 #define DFSCH_FUNCTION_TYPE (&dfsch_function_type)
-extern dfsch_type_t dfsch_macro_type;
-#define DFSCH_MACRO_TYPE (&dfsch_macro_type)
 extern dfsch_type_t dfsch_vector_type;
 #define DFSCH_VECTOR_TYPE (&dfsch_vector_type)
 extern dfsch_type_t dfsch_environment_type;
@@ -157,13 +155,10 @@ typedef struct dfsch_macro_t {
 #define DFSCH_DEFINE_MACRO(name, documentation)         \
   DFSCH_PRIMITIVE_HEAD(macro_##name);                   \
   DFSCH_DECLARE_PRIMITIVE(macro_##name, documentation); \
-  static dfsch_macro_t macro_##name = {                 \
-    DFSCH_MACRO_TYPE,                                   \
-    DFSCH_PRIMITIVE_REF(macro_##name)                   \
-  };                                                    \
   DFSCH_PRIMITIVE_HEAD(macro_##name)
    
-#define DFSCH_MACRO_REF(name) ((dfsch_object_t*)&macro_##name)
+#define DFSCH_MACRO_REF(name)                           \
+  (DFSCH_MAKE_MACRO(DFSCH_PRIMITIVE_REF(macro_##name)))
 
 
 
@@ -523,7 +518,7 @@ extern dfsch_collection_constructor_type_t dfsch_mapping_constructor_type;
  * 000 - Normal object, first word is type
  * 010 - Mutable pair
  * 100 - Symbol
- * 110 - Immutable pair
+ * 110 - Macro
  * 001 - Fixnum (cannot be 11, because of invalid object marker)
  * 101 - Small direct objects
  * x11 - Entry of cdr-coded list (pointer points to WORD(!), not object)
@@ -541,11 +536,18 @@ extern dfsch_collection_constructor_type_t dfsch_mapping_constructor_type;
 
 extern dfsch_type_t dfsch_pair_type;
 #define DFSCH_PAIR_TYPE (&dfsch_pair_type)
+extern dfsch_type_t dfsch_immutable_pair_type;
+#define DFSCH_IMMUTABLE_PAIR_TYPE (&dfsch_immutable_pair_type)
 
 extern dfsch_type_t dfsch_tagged_types[4];
+
+#define DFSCH_LOW_TAG_PAIR   1
+#define DFSCH_LOW_TAG_SYMBOL 2
+#define DFSCH_LOW_TAG_MACRO  3
+
 #define DFSCH_MUTABLE_PAIR_TYPE (&(dfsch_tagged_types[1]))
 #define DFSCH_SYMBOL_TYPE (&(dfsch_tagged_types[2]))
-#define DFSCH_IMMUTABLE_PAIR_TYPE (&(dfsch_tagged_types[3]))
+#define DFSCH_MACRO_TYPE (&(dfsch_tagged_types[3]))
 #define DFSCH_COMPACT_LIST_TYPE (&(dfsch_tagged_types[0]))
 
 extern dfsch_type_t* const dfsch_small_types[32];
@@ -623,7 +625,13 @@ typedef struct dfsch_pair_t {
 #define DFSCH_MAKE_CHARACTER(chr)               \
   DFSCH_MAKE_SMALL_VALUE(chr, DFSCH_SMALL_TAG_CHARACTER)
 #define DFSCH_CHARACTER_P(obj) ((((size_t)(obj)) & 0xff) == 0x05)
-  
+
+#define DFSCH_MAKE_MACRO(obj)  \
+  DFSCH_TAG_ENCODE(obj, DFSCH_LOW_TAG_MACRO)
+#define DFSCH_MACRO_P(obj)\
+  (((((size_t)(obj)) & 0x07) == 0x06))
+#define DFSCH_MACRO_PROCEDURE(macro)\
+  DFSCH_TAG_REF(macro)
 
 #define DFSCH_TYPE_OF(obj)                                              \
   ((obj)?(                                                              \

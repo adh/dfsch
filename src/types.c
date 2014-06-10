@@ -932,24 +932,6 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("mutable-pair", mutable_pair){
   return DFSCH_TAG_ENCODE(p, 1);
 }
 
-static void immutable_pair_serialize(dfsch_object_t* obj, dfsch_serializer_t* s){
-  dfsch_serialize_stream_symbol(s, "immutable-pair");
-  dfsch_serialize_object(s, DFSCH_FAST_CAR(obj));
-  dfsch_serialize_object(s, DFSCH_FAST_CDR(obj));
-}
-
-DFSCH_DEFINE_DESERIALIZATION_HANDLER("immutable-pair", immutable_pair){
-  dfsch_pair_t* p = GC_NEW(dfsch_pair_t);
-
-  dfsch_deserializer_put_partial_object(ds, DFSCH_TAG_ENCODE(p, 3));
-
-  p->car = dfsch_deserialize_object(ds);
-  p->cdr = dfsch_deserialize_object(ds);
-
-  return DFSCH_TAG_ENCODE(p, 3);
-}
-
-
 static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
   size_t len = dfsch_deserialize_integer(ds);
   dfsch_object_t** list = GC_MALLOC(sizeof(dfsch_object_t*) * (len+4));
@@ -967,6 +949,57 @@ static dfsch_object_t* compact_list_deserialize(dfsch_deserializer_t* ds){
 
   return DFSCH_MAKE_CLIST(list);
 }
+
+static dfsch_slot_t macro_slots[] = {
+  DFSCH_OBJECT_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
+                    "Procedure implementing macro"),
+  DFSCH_SLOT_TERMINATOR  
+};
+
+static void macro_write(macro_t* m, dfsch_writer_state_t* state){
+  dfsch_object_t* proc = DFSCH_MACRO_PROCEDURE(m);
+  if (dfsch_primitive_p(proc)){
+    dfsch_write_unreadable(state, (dfsch_object_t*)m,
+                           "%%%s", 
+                           ((dfsch_primitive_t*)proc)->name);
+  } else {
+    dfsch_write_unreadable_start(state, (dfsch_object_t*)m);
+    dfsch_write_object(state, proc);
+    dfsch_write_unreadable_end(state);
+  }
+}
+
+static void macro_serialize(macro_t* m, dfsch_serializer_t* ser){
+  dfsch_serialize_stream_symbol(ser, "macro");
+  dfsch_serialize_object(ser, DFSCH_MACRO_PROCEDURE(m));
+}
+
+DFSCH_DEFINE_DESERIALIZATION_HANDLER("macro", macro){
+  dfsch_object_t* proc;
+  dfsch_deserializer_put_partial_object(ds, NULL); // XXX
+  proc = dfsch_deserialize_object(ds);
+  return dfsch_make_macro(proc);
+}
+
+#define MACRO DFSCH_MACRO_TYPE
+
+dfsch_type_t dfsch_immutable_pair_type = {
+  DFSCH_SPECIAL_TYPE,
+  DFSCH_PAIR_TYPE,
+  sizeof(dfsch_pair_t), 
+  "immutable-pair",
+  (dfsch_type_equal_p_t)pair_equal_p,
+  (dfsch_type_write_t)pair_write,
+  NULL,
+  (dfsch_type_hash_t)pair_hash,
+  NULL,
+  "Immutable cons cell",
+  
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
+  .iterator = &pair_iterator,
+};
+
 
 dfsch_type_t dfsch_tagged_types[4] = {
   {
@@ -1005,7 +1038,7 @@ dfsch_type_t dfsch_tagged_types[4] = {
 
   },
   {
-    DFSCH_STANDARD_TYPE,
+    DFSCH_SPECIAL_TYPE,
     NULL,
     sizeof(symbol_t), 
     "symbol",
@@ -1020,21 +1053,17 @@ dfsch_type_t dfsch_tagged_types[4] = {
   },
   {
     DFSCH_SPECIAL_TYPE,
-    DFSCH_PAIR_TYPE,
-    sizeof(dfsch_pair_t), 
-    "immutable-pair",
-    (dfsch_type_equal_p_t)pair_equal_p,
-    (dfsch_type_write_t)pair_write,
     NULL,
-    (dfsch_type_hash_t)pair_hash,
+    0,
+    "macro",
     NULL,
-    "Immutable cons cell",
-
-    .collection = &list_collection,
-    .sequence = &list_sequence,  
-    .serialize = immutable_pair_serialize,
-    .iterator = &pair_iterator,
-  },
+    (dfsch_type_write_t)macro_write,
+    NULL,
+    NULL,
+    macro_slots,
+    "Macro implemented by arbitrary function",
+    .serialize = macro_serialize,
+  }
 };
 
 
@@ -1227,51 +1256,6 @@ dfsch_type_t dfsch_standard_function_type = {
   .serialize = function_serialize,
 };
 #define FUNCTION DFSCH_STANDARD_FUNCTION_TYPE
-
-static dfsch_slot_t macro_slots[] = {
-  DFSCH_OBJECT_SLOT(macro_t, proc, DFSCH_SLOT_ACCESS_RO,
-                    "Procedure implementing macro"),
-  DFSCH_SLOT_TERMINATOR  
-};
-
-static void macro_write(macro_t* m, dfsch_writer_state_t* state){
-  if (dfsch_primitive_p(m->proc)){
-    dfsch_write_unreadable(state, (dfsch_object_t*)m,
-                           "%%%s", 
-                           ((dfsch_primitive_t*)m->proc)->name);
-  } else {
-    dfsch_write_unreadable_start(state, (dfsch_object_t*)m);
-    dfsch_write_object(state, m->proc);
-    dfsch_write_unreadable_end(state);
-  }
-}
-
-static void macro_serialize(macro_t* m, dfsch_serializer_t* ser){
-  dfsch_serialize_stream_symbol(ser, "macro");
-  dfsch_serialize_object(ser, m->proc);
-}
-
-DFSCH_DEFINE_DESERIALIZATION_HANDLER("macro", macro){
-  macro_t* m = (macro_t*)dfsch_make_object(DFSCH_MACRO_TYPE);
-  dfsch_deserializer_put_partial_object(ds, m);
-  m->proc = dfsch_deserialize_object(ds);
-  return m;
-}
-
-dfsch_type_t dfsch_macro_type = {
-  DFSCH_STANDARD_TYPE,
-  NULL,
-  sizeof(macro_t),
-  "macro",
-  NULL,
-  (dfsch_type_write_t)macro_write,
-  NULL,
-  NULL,
-  macro_slots,
-  "Macro implemented by arbitrary function",
-  .serialize = macro_serialize,
-};
-#define MACRO DFSCH_MACRO_TYPE
 
 static void form_write(dfsch_form_t* f, dfsch_writer_state_t* state){
   dfsch__write_internal_reference(state, (dfsch_object_t*)f, f->name);
@@ -1643,7 +1627,7 @@ int dfsch_procedure_p(dfsch_object_t* obj){
     (DFSCH_TYPE_OF(obj)->apply);
 }
 int dfsch_macro_p(dfsch_object_t* obj){
-  return DFSCH_TYPE_OF(obj) == MACRO;
+  return DFSCH_MACRO_P(obj);
 }
 int dfsch_form_p(dfsch_object_t* obj){
   return DFSCH_TYPE_OF(obj) == DFSCH_FORM_TYPE;
@@ -2712,15 +2696,17 @@ object_t* dfsch_make_primitive(char* name,
 // macros
 
 object_t* dfsch_make_macro(object_t *proc){
-  macro_t *m = (macro_t*)dfsch_make_object(MACRO);
-  
-  if (!m)
-    return NULL;
+  if (((size_t)proc) & 0x07){
+    dfsch_error("Object cannot be used as macro", proc);
+  }
 
-  m->proc = proc;
-
-  return (object_t*)m;
+  return DFSCH_MAKE_MACRO(proc);
 }
+dfsch_object_t* dfsch_macro_procedure(dfsch_object_t* macro){
+  dfsch_object_t* m = DFSCH_ASSERT_TYPE(macro, DFSCH_MACRO_TYPE);
+  return DFSCH_MACRO_PROCEDURE(m);
+}
+
 dfsch_object_t* dfsch_make_form(dfsch_form_impl_t impl,
                                 void* baton,
                                 char* name){
