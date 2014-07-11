@@ -1921,6 +1921,38 @@ DFSCH_DEFINE_PRIMITIVE(make_sequence_iterator,
   return dfsch_make_sequence_iterator(sequence);
 }
 
+DFSCH_DEFINE_PRIMITIVE(collection_tabulate,
+                       "Make sequence containing results of successive calls "
+                       "to function with increasing argument"
+                       DFSCH_DOC_SYNOPSIS("(length function &key result-type)")){
+  dfsch_object_t* function;
+  dfsch_type_t* result_type = DFSCH_LIST_TYPE;
+  long length;
+  long i;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_KEYWORD_PARSER_BEGIN_KWONLY(args);
+  DFSCH_KEYWORD_GENERIC("result-type", result_type, dfsch_object_as_type);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  dfsch_object_t* lc = dfsch_make_collection_constructor(result_type);
+
+  for (i = 0; i < length; i++){
+    arlist[0] = dfsch_make_number_from_long(i);
+    dfsch_collection_constructor_add(lc, dfsch_apply(function, 
+                                                     DFSCH_MAKE_CLIST(arlist)));
+  }
+
+  return dfsch_collection_constructor_done(lc);
+}
+
 DFSCH_DEFINE_PRIMITIVE(decompile_lambda_list, 
                        "Convert compiled lambda-list to list representation"){
   dfsch_object_t* lambda_list;
@@ -2122,6 +2154,9 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(collection_constructor_add));
   dfsch_defcanon_cstr(ctx, "collection-constructor-done",
                       DFSCH_PRIMITIVE_REF(collection_constructor_done));
+
+  dfsch_defcanon_cstr(ctx, "collection-tabulate",
+                      DFSCH_PRIMITIVE_REF(collection_tabulate));
 
 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 
