@@ -914,6 +914,56 @@ DFSCH_DEFINE_PRIMITIVE(some,
   }
 }
 
+DFSCH_DEFINE_PRIMITIVE(count, 
+                       "Return count of elemnts of sequence that match "
+                       "predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  long count = 0;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to count",
+                                   NULL);
+    return DFSCH_MAKE_FIXNUM(0);
+  }
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return DFSCH_MAKE_FIXNUM(0);
+    }
+  }
+
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
+
+  while (1){
+    for (i = 0; i < len; i++){
+      arlist[i] = dfsch_iterator_this(its[i]);
+    }
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      count++;
+    }
+   
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_make_number_from_long(count);
+      }
+    }
+  }
+
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(filter,
                        "Return new sequence containing only items that match predicate"
@@ -2015,6 +2065,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "mapcan", DFSCH_PRIMITIVE_REF(mapcan));
   dfsch_defcanon_cstr(ctx, "every", DFSCH_PRIMITIVE_REF(every));
   dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
+  dfsch_defcanon_cstr(ctx, "count", DFSCH_PRIMITIVE_REF(count));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
   dfsch_defcanon_cstr(ctx, "find-if", DFSCH_PRIMITIVE_REF(find_if));
   dfsch_defcanon_cstr(ctx, "concatenate", DFSCH_PRIMITIVE_REF(concatenate));
