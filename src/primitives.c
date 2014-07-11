@@ -1003,6 +1003,50 @@ DFSCH_DEFINE_PRIMITIVE(filter,
   return dfsch_collection_constructor_done(c);
 }
 
+DFSCH_DEFINE_PRIMITIVE(partition,
+                       "Return sequence of elemnts matching the predicate "
+                       "and second sequence of non-matching elements"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* func;
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* c_rest;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  c_rest = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    object_t* t;
+
+    arlist[0] = item;
+
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      dfsch_collection_constructor_add(c, item);
+    } else {
+      dfsch_collection_constructor_add(c_rest, item);
+    }
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_values(2, 
+                      dfsch_collection_constructor_done(c),
+                      dfsch_collection_constructor_done(c_rest));
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(find_if, 
                        "Return first element of sequence that matches predicate, "
@@ -2331,6 +2375,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
   dfsch_defcanon_cstr(ctx, "count", DFSCH_PRIMITIVE_REF(count));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
+  dfsch_defcanon_cstr(ctx, "partition", DFSCH_PRIMITIVE_REF(partition)); 
   dfsch_defcanon_cstr(ctx, "find-if", DFSCH_PRIMITIVE_REF(find_if));
   dfsch_defcanon_cstr(ctx, "concatenate", DFSCH_PRIMITIVE_REF(concatenate));
   dfsch_defcanon_cstr(ctx, "merge", DFSCH_PRIMITIVE_REF(merge));
