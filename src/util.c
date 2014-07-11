@@ -42,41 +42,81 @@ str_list_t* dfsch_sl_create(){
   list->tail = NULL;
   list->len = 0;
 
+  list->buf_used = 0;
+
   return list;
 }
 
+static void real_sl_append(str_list_t* list, char* buf, size_t len){
+  str_li_t* i = GC_MALLOC(sizeof(str_li_t));
+
+  i->str = buf;
+  i->len = len;
+  i->next = NULL;
+
+  if (list->head){
+    list->tail->next = i;
+    list->tail = i;
+    list->len = list->len + i->len;
+  }else{
+    list->head = list->tail = i;
+    list->len = i->len;
+  }
+}
+
 void dfsch_sl_append(str_list_t* list, char* string){
-  str_li_t* i = GC_MALLOC(sizeof(str_li_t));
-
-  i->str = string;
-  i->len = strlen(string);
-  i->next = NULL;
-
-  if (list->head){
-    list->tail->next = i;
-    list->tail = i;
-    list->len = list->len + i->len;
-  }else{
-    list->head = list->tail = i;
-    list->len = i->len;
-  }
+  dfsch_sl_nappend(list, string, strlen(string));
 }
+
 void dfsch_sl_nappend(str_list_t* list, char* string, size_t l){
-  str_li_t* i = GC_MALLOC(sizeof(str_li_t));
-
-  i->str = string;
-  i->len = l;
-  i->next = NULL;
-
-  if (list->head){
-    list->tail->next = i;
-    list->tail = i;
-    list->len = list->len + i->len;
-  }else{
-    list->head = list->tail = i;
-    list->len = i->len;
+  if (l > (SL_BUF_LEN - list->buf_used)){
+    memcpy(list->buf + list->buf_used, string, l);
+  } else {
+    real_sl_append(list, list->buf, list->buf_used);
+    real_sl_append(list, string, l);
+    list->buf_used = 0;
   }
 }
+void dfsch_sl_append_char(str_list_t* list, char c){
+  if (list->len >= (SL_BUF_LEN - 1)){
+    real_sl_append(list, list->buf, list->buf_used);
+    list->buf_used = 0;    
+  }
+
+  list->buf[list->buf_used] = c;
+  list->buf_used++;
+}
+void dfsch_sl_append_utf8(str_list_t* list, uint32_t ch){
+  if (list->len >= (SL_BUF_LEN - 4)){
+    real_sl_append(list, list->buf, list->buf_used);
+    list->buf_used = 0;    
+  }
+
+  size_t i = list->buf_used;
+
+  if (ch <= 0x7f){
+    list->buf[i] = ch;
+    i += 1;
+  } else if (ch <= 0x7ff) {
+    list->buf[i] = 0xc0 | ((ch >> 6) & 0x1f); 
+    list->buf[i+1] = 0x80 | (ch & 0x3f);
+    i += 2;
+  } else if (ch <= 0xffff) {
+    list->buf[i] = 0xe0 | ((ch >> 12) & 0x0f); 
+    list->buf[i+1] = 0x80 | ((ch >> 6) & 0x3f);
+    list->buf[i+2] = 0x80 | (ch & 0x3f);
+    i += 3;
+  } else {
+    list->buf[i] = 0xf0 | ((ch >> 18) & 0x07); 
+    list->buf[i+1] = 0x80 | ((ch >> 12) & 0x3f);
+    list->buf[i+2] = 0x80 | ((ch >> 6) & 0x3f);
+    list->buf[i+3] = 0x80 | (ch & 0x3f);
+    i += 4;
+  } 
+
+  list->buf_used = i;  
+}
+
 
 void dfsch_sl_printf(str_list_t* sl, char* format, ...){
   char* ret;
@@ -91,6 +131,11 @@ char* dfsch_sl_value(str_list_t* list){
   char *buf = GC_MALLOC_ATOMIC(list->len+1);
   str_li_t *i = list->head;
   char *ptr = buf;
+
+  if (list->buf_used){
+    real_sl_append(list, list->buf, list->buf_used);
+    list->buf_used = 0;
+  }
 
   while (i){
     memcpy(ptr, i->str, i->len);

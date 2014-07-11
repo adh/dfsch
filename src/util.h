@@ -1,7 +1,7 @@
 /*
  * dfsch - dfox's quick and dirty scheme implementation
  *   Utility functions
- * Copyright (C) 2005-2008 Ales Hakl
+ * Copyright (C) 2005-2014 Ales Hakl
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,12 +24,17 @@
 
 #include "dfsch/util.h"
 
+#define SL_BUF_LEN 512
+
 typedef struct str_li_t str_li_t;
 typedef dfsch_str_list_t str_list_t;
 struct dfsch_str_list_t {
   str_li_t* head;
   str_li_t* tail;
   size_t len;
+
+  char buf[SL_BUF_LEN];
+  size_t buf_used;
 };
 struct str_li_t {
   char* str;
@@ -38,7 +43,6 @@ struct str_li_t {
 };
 
 #define ASCII_tolower(c) ((c)<='Z'&&(c)>='A'?(c)+('a'-'A'):(c))
-
 
 #define sl_create dfsch_sl_create
 #define sl_append dfsch_sl_append
