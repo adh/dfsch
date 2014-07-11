@@ -447,7 +447,7 @@ dfsch_object_t* dfsch_make_collection_constructor(dfsch_type_t* ct){
   if (ct->collection->make_constructor) {
     return ct->collection->make_constructor(ct);
   } else {
-    return dfsch_make_list_collector(); /* fallback to mutable list */
+    dfsch_error("Type does not have collection-constructor", ct);
   }
 
 }
