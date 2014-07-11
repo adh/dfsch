@@ -1147,14 +1147,8 @@ DFSCH_DEFINE_PRIMITIVE(take,
   object_t* list;
   dfsch_type_t* result_type;
   object_t* c;
-  object_t* arlist[5];
   long count;
   long i = 0;
-
-  arlist[1] = DFSCH_INVALID_OBJECT;
-  arlist[2] = NULL;
-  arlist[3] = NULL;
-  arlist[4] = NULL;
 
   DFSCH_LONG_ARG(args, count);
   DFSCH_OBJECT_ARG(args, list);
@@ -1172,6 +1166,47 @@ DFSCH_DEFINE_PRIMITIVE(take,
     if (i >= count){
       break;
     }
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(take_while,
+                       "Return new sequence with longest prefix of argument "
+                       "sequence whose elements satisfy predicate."
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* arlist[5];
+  object_t* predicate;
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    arlist[0] = item;
+    if (!dfsch_apply(predicate, DFSCH_MAKE_CLIST(&arlist))){
+      break;
+    }
+
+    dfsch_collection_constructor_add(c, item);
 
     list = dfsch_iterator_next(list);
   }
@@ -1205,6 +1240,52 @@ DFSCH_DEFINE_PRIMITIVE(drop,
   while (list){
     i++;
     if (i > count){
+      break;
+    }
+
+    list = dfsch_iterator_next(list);
+  }
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c, item);
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(drop_while,
+                       "Return new sequence with longest prefix of argument "
+                       "sequence whose elements satisfy predicate removed."
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* arlist[5];
+  object_t* predicate;
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    arlist[0] = item;
+    if (!dfsch_apply(predicate, DFSCH_MAKE_CLIST(&arlist))){
       break;
     }
 
@@ -2157,6 +2238,8 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
   dfsch_defcanon_cstr(ctx, "take", DFSCH_PRIMITIVE_REF(take));
   dfsch_defcanon_cstr(ctx, "drop", DFSCH_PRIMITIVE_REF(drop));
+  dfsch_defcanon_cstr(ctx, "take-while", DFSCH_PRIMITIVE_REF(take_while));
+  dfsch_defcanon_cstr(ctx, "drop-while", DFSCH_PRIMITIVE_REF(drop_while));
 
   dfsch_defcanon_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
   dfsch_defcanon_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
