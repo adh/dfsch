@@ -821,6 +821,8 @@ dfsch_type_t dfsch_pair_type = {
   (dfsch_type_hash_t)pair_hash,
   NULL,
   "Abstract superclass for all pair representations",
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
   .iterator = &pair_iterator,
 };
 #define PAIR (&dfsch_pair_type)

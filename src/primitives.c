@@ -313,6 +313,7 @@ DFSCH_DEFINE_PRIMITIVE(list_star,
   DFSCH_FAST_CDR_MUT(tail) = dfsch_list_copy(DFSCH_FAST_CAR(args));
   return head;
 }
+
 dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
   return dfsch_cons(DFSCH_PRIMITIVE_REF(list), 
                     exps);
@@ -958,6 +959,56 @@ DFSCH_DEFINE_PRIMITIVE(count,
       its[i] = dfsch_iterator_next(its[i]);
       if (!its[i]){
         return dfsch_make_number_from_long(count);
+      }
+    }
+  }
+
+}
+
+DFSCH_DEFINE_PRIMITIVE(find_index, 
+                       "Return index of first element that matches predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  long count = 0;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to find-index",
+                                   NULL);
+    return NULL;
+  }
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
+  }
+
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
+
+  while (1){
+    for (i = 0; i < len; i++){
+      arlist[i] = dfsch_iterator_this(its[i]);
+    }
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      return dfsch_make_number_from_long(count);
+    }
+    count++;
+
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return NULL;
       }
     }
   }
@@ -2374,6 +2425,7 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "every", DFSCH_PRIMITIVE_REF(every));
   dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
   dfsch_defcanon_cstr(ctx, "count", DFSCH_PRIMITIVE_REF(count));
+  dfsch_defcanon_cstr(ctx, "find-index", DFSCH_PRIMITIVE_REF(find_index));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
   dfsch_defcanon_cstr(ctx, "partition", DFSCH_PRIMITIVE_REF(partition)); 
   dfsch_defcanon_cstr(ctx, "find-if", DFSCH_PRIMITIVE_REF(find_if));
