@@ -78,7 +78,7 @@ void dfsch_sl_nappend(str_list_t* list, char* string, size_t l){
   }
 }
 void dfsch_sl_append_char(str_list_t* list, char c){
-  if (list->len >= (SL_BUF_LEN - 1)){
+  if (list->buf_used >= (SL_BUF_LEN - 1)){
     real_sl_append(list, list->buf, list->buf_used);
     list->buf_used = 0;    
   }
@@ -87,7 +87,7 @@ void dfsch_sl_append_char(str_list_t* list, char c){
   list->buf_used++;
 }
 void dfsch_sl_append_utf8(str_list_t* list, uint32_t ch){
-  if (list->len >= (SL_BUF_LEN - 4)){
+  if (list->buf_used >= (SL_BUF_LEN - 4)){
     real_sl_append(list, list->buf, list->buf_used);
     list->buf_used = 0;    
   }
@@ -148,10 +148,17 @@ char* dfsch_sl_value(str_list_t* list){
   return buf;
 }
 dfsch_strbuf_t* dfsch_sl_value_strbuf(str_list_t* list){
-  dfsch_strbuf_t *buf = GC_MALLOC_ATOMIC(sizeof(dfsch_strbuf_t) + 
-                                         list->len + 1);
-  str_li_t *i = list->head;
+  dfsch_strbuf_t *buf;
+  str_li_t *i;
   char *ptr;
+
+  if (list->buf_used){
+    real_sl_append(list, list->buf, list->buf_used);
+    list->buf_used = 0;
+  }
+
+  buf = GC_MALLOC_ATOMIC(sizeof(dfsch_strbuf_t) + list->len + 1);
+  i = list->head;
 
   buf->ptr = ((char*)buf) + sizeof(dfsch_strbuf_t);
   buf->len = list->len;

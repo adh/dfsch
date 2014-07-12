@@ -149,6 +149,67 @@ typedef struct hash_cached_string_t {
   uint32_t hash;
 } hash_cached_string_t;
 
+typedef struct string_constructor_t {
+  dfsch_collection_constructor_type_t* type;
+  str_list_t* str_list;
+} string_constructor_t;
+
+static dfsch_object_t* string_constructor_done(string_constructor_t* sc){
+  return dfsch_make_string_nocopy(dfsch_sl_value_strbuf(sc->str_list));
+}
+static dfsch_object_t* byte_vector_constructor_done(string_constructor_t* sc){
+  dfsch_strbuf_t* buf = dfsch_sl_value_strbuf(sc->str_list);
+  return dfsch_make_byte_vector_nocopy(buf->ptr, buf->len);
+}
+static void string_constructor_add(string_constructor_t* sc, 
+                                   dfsch_object_t* v){
+  dfsch_sl_append_utf8(sc->str_list, dfsch_character(v));
+}
+static void byte_vector_constructor_add(string_constructor_t* sc, 
+                                   dfsch_object_t* v){
+  dfsch_sl_append_char(sc->str_list, dfsch_number_to_long(v));
+}
+
+
+dfsch_collection_constructor_type_t dfsch_string_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
+    .name = "string-constructor",
+    .size = sizeof(string_constructor_t)
+  },
+  .add = string_constructor_add,
+  .done = string_constructor_done,
+};
+
+dfsch_collection_constructor_type_t dfsch_byte_vector_constructor_type = {
+  .type = {
+    .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
+    .name = "byte-vector-constructor",
+    .size = sizeof(string_constructor_t)
+  },
+  .add = byte_vector_constructor_add,
+  .done = byte_vector_constructor_done,
+};
+
+static dfsch_object_t* make_string_constructor(dfsch_type_t* discard){
+  string_constructor_t* sc = dfsch_make_object(DFSCH_STRING_CONSTRUCTOR_TYPE);
+  sc->str_list = dfsch_sl_create();
+  return sc;
+}
+
+static dfsch_object_t* make_byte_vector_constructor(dfsch_type_t* discard){
+  string_constructor_t* sc = dfsch_make_object(DFSCH_BYTE_VECTOR_CONSTRUCTOR_TYPE);
+  sc->str_list = dfsch_sl_create();
+  return sc;
+}
+
+dfsch_type_t dfsch_proto_string_constructor_type = {
+  .type = DFSCH_ABSTRACT_TYPE,
+  .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
+  .name = "proto-string-constructor"
+};
 
 static uint32_t calculate_hash(char* ptr, size_t len){
   uint32_t ret = len;
@@ -191,6 +252,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("string", string){
 
 static dfsch_collection_methods_t string_collection = {
   .get_iterator = dfsch_string_2_list,
+  .make_constructor = make_string_constructor,
 };
 
 static dfsch_object_t* string_ref(dfsch_object_t* string, int k){
@@ -1768,6 +1830,7 @@ DFSCH_DEFINE_DESERIALIZATION_HANDLER("byte-vector", byte_vector){
 
 static dfsch_collection_methods_t byte_vector_collection = {
   .get_iterator = dfsch_string_2_byte_list,
+  .make_constructor = make_byte_vector_constructor,
 };
 
 static dfsch_object_t* byte_vector_seq_ref(dfsch_string_t* bv,
