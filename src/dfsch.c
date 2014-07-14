@@ -687,15 +687,13 @@ dfsch_object_t* dfsch_reify_environment(dfsch_object_t* env){
   return env;
 }
 
-#define ENV_FREELIST_MAX_DEPTH 32
+#define ENV_FREELIST_MAX_DEPTH 64
 
 static void free_environment(environment_t* env, dfsch__thread_info_t* ti){
   if ((env->flags & EFRAME_RETAIN) == 0 &&
       ti->env_fl_depth < ENV_FREELIST_MAX_DEPTH){
-    int old_serial = env->flags & EFRAME_SERIAL_MASK;
     memset(env, 0, sizeof(environment_t));
     env->type = ti->env_freelist;
-    env->flags = old_serial;
     ti->env_freelist = env;
     ti->env_fl_depth++;
   }
@@ -707,7 +705,6 @@ static environment_t* initialize_frame(environment_t* e,
                                        dfsch__thread_info_t* ti){
   dfsch_eqhash_init(&e->values, 0);
   assert(e != parent);
-  e->flags += EFRAME_SERIAL_INCR;
   e->decls = NULL;
   e->context = context;
   e->owner = ti;
