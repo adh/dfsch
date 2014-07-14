@@ -257,6 +257,12 @@ DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_collection_specializer,
   return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
     && DFSCH_TYPE_COLLECTION_P(type);
 }
+DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_collection_with_constructor_specializer, 
+                                        "collection-with-constructor"){
+  return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
+    && DFSCH_TYPE_COLLECTION_P(type) 
+    && ((dfsch_type_t*)type)->collection->make_constructor;
+}
 DFSCH_DEFINE_SINGLETON_TYPE_SPECIALIZER(dfsch_iterator_specializer, 
                                         "iterator"){
   return DFSCH_INSTANCE_P(type, DFSCH_STANDARD_TYPE) 
@@ -312,6 +318,8 @@ DFSCH_DEFINE_PRIMITIVE(complementary_specializer,
 void dfsch__specializers_register(dfsch_object_t* ctx){
   dfsch_defcanon_cstr(ctx, "<<collection>>", 
                       DFSCH_COLLECTION_SPECIALIZER);
+  dfsch_defcanon_cstr(ctx, "<<collection-with-constructor>>", 
+                      DFSCH_COLLECTION_WITH_CONSTRUCTOR_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<mapping>>", 
                       DFSCH_MAPPING_SPECIALIZER);
   dfsch_defcanon_cstr(ctx, "<<sequence>>", 

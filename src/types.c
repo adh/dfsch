@@ -821,6 +821,8 @@ dfsch_type_t dfsch_pair_type = {
   (dfsch_type_hash_t)pair_hash,
   NULL,
   "Abstract superclass for all pair representations",
+  .collection = &list_collection,
+  .sequence = &list_sequence,  
   .iterator = &pair_iterator,
 };
 #define PAIR (&dfsch_pair_type)
@@ -1396,6 +1398,7 @@ static dfsch_object_t* vector_constructor_done(vector_constructor_t* vc){
 dfsch_collection_constructor_type_t dfsch_vector_constructor_type = {
   .type = {
     .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
     .name = "vector-constructor",
     .size = sizeof(vector_constructor_t)
   },
@@ -2869,6 +2872,7 @@ static dfsch_object_t* map_constructor_done(map_constructor_t* mc){
 dfsch_collection_constructor_type_t dfsch_mapping_constructor_type = {
   .type = {
     .type = DFSCH_COLLECTION_CONSTRUCTOR_TYPE_TYPE,
+    .superclass = DFSCH_COLLECTION_CONSTRUCTOR_TYPE,
     .name = "mapping-constructor",
     .size = sizeof(map_constructor_t),
   },

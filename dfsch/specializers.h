@@ -53,6 +53,9 @@ extern dfsch_singleton_type_specializer_t dfsch_sequence_specializer;
 #define DFSCH_SEQUENCE_SPECIALIZER (&dfsch_sequence_specializer)
 extern dfsch_singleton_type_specializer_t dfsch_collection_specializer;
 #define DFSCH_COLLECTION_SPECIALIZER (&dfsch_collection_specializer)
+extern dfsch_singleton_type_specializer_t dfsch_collection_specializer;
+#define DFSCH_COLLECTION_WITH_CONSTRUCTOR_SPECIALIZER \
+  (&dfsch_collection_with_constructor_specializer)
 extern dfsch_singleton_type_specializer_t dfsch_iterator_specializer;
 #define DFSCH_ITERATOR_SPECIALIZER (&dfsch_iterator_specializer)
 extern dfsch_singleton_type_specializer_t dfsch_serializable_specializer;

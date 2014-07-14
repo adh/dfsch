@@ -313,6 +313,7 @@ DFSCH_DEFINE_PRIMITIVE(list_star,
   DFSCH_FAST_CDR_MUT(tail) = dfsch_list_copy(DFSCH_FAST_CAR(args));
   return head;
 }
+
 dfsch_object_t* dfsch_generate_eval_list(dfsch_object_t* exps){
   return dfsch_cons(DFSCH_PRIMITIVE_REF(list), 
                     exps);
@@ -914,10 +915,112 @@ DFSCH_DEFINE_PRIMITIVE(some,
   }
 }
 
+DFSCH_DEFINE_PRIMITIVE(count, 
+                       "Return count of elemnts of sequence that match "
+                       "predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  long count = 0;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to count",
+                                   NULL);
+    return DFSCH_MAKE_FIXNUM(0);
+  }
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return DFSCH_MAKE_FIXNUM(0);
+    }
+  }
+
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
+
+  while (1){
+    for (i = 0; i < len; i++){
+      arlist[i] = dfsch_iterator_this(its[i]);
+    }
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      count++;
+    }
+   
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return dfsch_make_number_from_long(count);
+      }
+    }
+  }
+
+}
+
+DFSCH_DEFINE_PRIMITIVE(find_index, 
+                       "Return index of first element that matches predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate &rest collections)")){
+  object_t* func;
+  size_t len;
+  int i;
+  object_t** its;
+  long count = 0;
+
+  DFSCH_OBJECT_ARG(args, func);
+  its = dfsch_list_as_array(args, &len);
+  if (len == 0){
+    dfsch_signal_warning_condition(DFSCH_WARNING_TYPE, 
+                                   "No collections passed to find-index",
+                                   NULL);
+    return NULL;
+  }
+  for (i = 0; i < len; i++){
+    its[i] = dfsch_collection_get_iterator(its[i]);
+    if (!its[i]){
+      return NULL;
+    }
+  }
+
+  object_t* arlist[len + 4];
+
+  arlist[len] = DFSCH_INVALID_OBJECT;
+  arlist[len+1] = NULL;
+  arlist[len+2] = NULL;
+  arlist[len+3] = NULL;
+
+  while (1){
+    for (i = 0; i < len; i++){
+      arlist[i] = dfsch_iterator_this(its[i]);
+    }
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      return dfsch_make_number_from_long(count);
+    }
+    count++;
+
+    for (i = 0; i < len; i++){
+      its[i] = dfsch_iterator_next(its[i]);
+      if (!its[i]){
+        return NULL;
+      }
+    }
+  }
+
+}
+
 
 DFSCH_DEFINE_PRIMITIVE(filter,
-                       "Return new sequence containing only items that match predicate"
-		       DFSCH_DOC_SYNOPSIS("(predicate collection)")){
+                       "Return new sequence containing only items that match "
+                       "predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
   object_t* func;
   object_t* list;
   dfsch_type_t* result_type;
@@ -949,6 +1052,50 @@ DFSCH_DEFINE_PRIMITIVE(filter,
   }
   
   return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(partition,
+                       "Return sequence of elemnts matching the predicate "
+                       "and second sequence of non-matching elements"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* func;
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* c_rest;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, func);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  c_rest = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    object_t* t;
+
+    arlist[0] = item;
+
+    if (dfsch_apply(func, DFSCH_MAKE_CLIST(&arlist))){
+      dfsch_collection_constructor_add(c, item);
+    } else {
+      dfsch_collection_constructor_add(c_rest, item);
+    }
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_values(2, 
+                      dfsch_collection_constructor_done(c),
+                      dfsch_collection_constructor_done(c_rest));
 }
 
 
@@ -1087,6 +1234,268 @@ DFSCH_DEFINE_PRIMITIVE(reduce,
   
   return tally;
 }
+
+DFSCH_DEFINE_PRIMITIVE(take,
+                       "Return new sequence containing only first N items"
+		       DFSCH_DOC_SYNOPSIS("(count collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  long count;
+  long i = 0;
+
+  DFSCH_LONG_ARG(args, count);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    dfsch_collection_constructor_add(c, item);
+
+    i++;
+    if (i >= count){
+      break;
+    }
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(take_while,
+                       "Return new sequence with longest prefix of argument "
+                       "sequence whose elements satisfy predicate."
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* arlist[5];
+  object_t* predicate;
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    arlist[0] = item;
+    if (!dfsch_apply(predicate, DFSCH_MAKE_CLIST(&arlist))){
+      break;
+    }
+
+    dfsch_collection_constructor_add(c, item);
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(drop,
+                       "Return new sequence without first N items"
+		       DFSCH_DOC_SYNOPSIS("(count collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* arlist[5];
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_LONG_ARG(args, count);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    i++;
+    if (i > count){
+      break;
+    }
+
+    list = dfsch_iterator_next(list);
+  }
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c, item);
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(drop_while,
+                       "Return new sequence with longest prefix of argument "
+                       "sequence whose elements satisfy predicate removed."
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* arlist[5];
+  object_t* predicate;
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    arlist[0] = item;
+    if (!dfsch_apply(predicate, DFSCH_MAKE_CLIST(&arlist))){
+      break;
+    }
+
+    list = dfsch_iterator_next(list);
+  }
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c, item);
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_collection_constructor_done(c);
+}
+
+DFSCH_DEFINE_PRIMITIVE(split_at,
+                       "Split sequence on N-th element"
+		       DFSCH_DOC_SYNOPSIS("(count collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* c_rest;
+  object_t* arlist[5];
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_LONG_ARG(args, count);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  c_rest = dfsch_make_collection_constructor(result_type);
+  while (list){
+    i++;
+    if (i > count){
+      break;
+    }
+
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c, item);
+    list = dfsch_iterator_next(list);
+  }
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c_rest, item);
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_values(2, 
+                      dfsch_collection_constructor_done(c),
+                      dfsch_collection_constructor_done(c_rest));
+}
+
+DFSCH_DEFINE_PRIMITIVE(span,
+                       "Split sequence on first element that matches predicate"
+		       DFSCH_DOC_SYNOPSIS("(predicate collection &optional "
+                                          "result-type)")){
+  object_t* list;
+  dfsch_type_t* result_type;
+  object_t* c;
+  object_t* c_rest;
+  object_t* arlist[5];
+  object_t* predicate;
+  long count;
+  long i = 0;
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_OBJECT_ARG(args, predicate);
+  DFSCH_OBJECT_ARG(args, list);
+  DFSCH_TYPE_ARG_OPT(args, result_type, DFSCH_TYPE_OF(list));
+  DFSCH_ARG_END(args);
+
+  list = dfsch_collection_get_iterator(list);
+  c = dfsch_make_collection_constructor(result_type);
+  c_rest = dfsch_make_collection_constructor(result_type);
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+
+    arlist[0] = item;
+    if (!dfsch_apply(predicate, DFSCH_MAKE_CLIST(&arlist))){
+      break;
+    }
+
+    dfsch_collection_constructor_add(c, item);
+
+    list = dfsch_iterator_next(list);
+  }
+
+  while (list){
+    object_t* item =  dfsch_iterator_this(list);
+    dfsch_collection_constructor_add(c_rest, item);
+
+    list = dfsch_iterator_next(list);
+  }
+  
+  return dfsch_values(2, 
+                      dfsch_collection_constructor_done(c),
+                      dfsch_collection_constructor_done(c_rest));
+}
+
+
 
 DFSCH_DEFINE_PRIMITIVE(plist_get, "Get value from property list "
                        "(eg. list of &key arguments)"
@@ -1921,6 +2330,38 @@ DFSCH_DEFINE_PRIMITIVE(make_sequence_iterator,
   return dfsch_make_sequence_iterator(sequence);
 }
 
+DFSCH_DEFINE_PRIMITIVE(collection_tabulate,
+                       "Make sequence containing results of successive calls "
+                       "to function with increasing argument"
+                       DFSCH_DOC_SYNOPSIS("(length function &key result-type)")){
+  dfsch_object_t* function;
+  dfsch_type_t* result_type = DFSCH_LIST_TYPE;
+  long length;
+  long i;
+  object_t* arlist[5];
+
+  arlist[1] = DFSCH_INVALID_OBJECT;
+  arlist[2] = NULL;
+  arlist[3] = NULL;
+  arlist[4] = NULL;
+
+  DFSCH_LONG_ARG(args, length);
+  DFSCH_OBJECT_ARG(args, function);
+  DFSCH_KEYWORD_PARSER_BEGIN_KWONLY(args);
+  DFSCH_KEYWORD_GENERIC("result-type", result_type, dfsch_object_as_type);
+  DFSCH_KEYWORD_PARSER_END(args);
+
+  dfsch_object_t* lc = dfsch_make_collection_constructor(result_type);
+
+  for (i = 0; i < length; i++){
+    arlist[0] = dfsch_make_number_from_long(i);
+    dfsch_collection_constructor_add(lc, dfsch_apply(function, 
+                                                     DFSCH_MAKE_CLIST(arlist)));
+  }
+
+  return dfsch_collection_constructor_done(lc);
+}
+
 DFSCH_DEFINE_PRIMITIVE(decompile_lambda_list, 
                        "Convert compiled lambda-list to list representation"){
   dfsch_object_t* lambda_list;
@@ -1983,11 +2424,20 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
   dfsch_defcanon_cstr(ctx, "mapcan", DFSCH_PRIMITIVE_REF(mapcan));
   dfsch_defcanon_cstr(ctx, "every", DFSCH_PRIMITIVE_REF(every));
   dfsch_defcanon_cstr(ctx, "some", DFSCH_PRIMITIVE_REF(some));
+  dfsch_defcanon_cstr(ctx, "count", DFSCH_PRIMITIVE_REF(count));
+  dfsch_defcanon_cstr(ctx, "find-index", DFSCH_PRIMITIVE_REF(find_index));
   dfsch_defcanon_cstr(ctx, "filter", DFSCH_PRIMITIVE_REF(filter));
+  dfsch_defcanon_cstr(ctx, "partition", DFSCH_PRIMITIVE_REF(partition)); 
   dfsch_defcanon_cstr(ctx, "find-if", DFSCH_PRIMITIVE_REF(find_if));
   dfsch_defcanon_cstr(ctx, "concatenate", DFSCH_PRIMITIVE_REF(concatenate));
   dfsch_defcanon_cstr(ctx, "merge", DFSCH_PRIMITIVE_REF(merge));
   dfsch_defcanon_cstr(ctx, "reduce", DFSCH_PRIMITIVE_REF(reduce));
+  dfsch_defcanon_cstr(ctx, "take", DFSCH_PRIMITIVE_REF(take));
+  dfsch_defcanon_cstr(ctx, "drop", DFSCH_PRIMITIVE_REF(drop));
+  dfsch_defcanon_cstr(ctx, "take-while", DFSCH_PRIMITIVE_REF(take_while));
+  dfsch_defcanon_cstr(ctx, "drop-while", DFSCH_PRIMITIVE_REF(drop_while));
+  dfsch_defcanon_cstr(ctx, "split-at", DFSCH_PRIMITIVE_REF(split_at));
+  dfsch_defcanon_cstr(ctx, "span", DFSCH_PRIMITIVE_REF(span));
 
   dfsch_defcanon_cstr(ctx, "list-ref", DFSCH_PRIMITIVE_REF(list_ref));
   dfsch_defcanon_cstr(ctx, "reverse", DFSCH_PRIMITIVE_REF(reverse));
@@ -2122,6 +2572,9 @@ void dfsch__primitives_register(dfsch_object_t *ctx){
                       DFSCH_PRIMITIVE_REF(collection_constructor_add));
   dfsch_defcanon_cstr(ctx, "collection-constructor-done",
                       DFSCH_PRIMITIVE_REF(collection_constructor_done));
+
+  dfsch_defcanon_cstr(ctx, "collection-tabulate",
+                      DFSCH_PRIMITIVE_REF(collection_tabulate));
 
 
   dfsch_defcanon_pkgcstr(ctx, DFSCH_DFSCH_LANG_PACKAGE, 

@@ -199,6 +199,10 @@ extern "C" {
 #define DFSCH_CHARACTER_ARG_OPT(al, name, default) \
   DFSCH_GENERIC_ARG_OPT(al, name, default, uint32_t, dfsch_character)
 
+#define DFSCH_STRING_CONSTRUCTOR_TYPE (&dfsch_string_constructor_type)
+  dfsch_collection_constructor_type_t dfsch_string_constructor_type;
+#define DFSCH_BYTE_VECTOR_CONSTRUCTOR_TYPE (&dfsch_byte_vector_constructor_type)
+  dfsch_collection_constructor_type_t dfsch_byte_vector_constructor_type;
   
 
 
