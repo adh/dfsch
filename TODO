@@ -2,9 +2,7 @@ Bugfixes:
 
 nearterm:
 * compact-list collection constructor
-* lambda-lists accessible for introspection
 * define-method as core-lib macro
-* collection constructor for strings
 * weak-value-hash
 * weak-list (set?)
 * python-like iter() with sentinel

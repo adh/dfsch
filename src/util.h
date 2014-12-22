@@ -33,8 +33,8 @@ struct dfsch_str_list_t {
   str_li_t* tail;
   size_t len;
 
-  char buf[SL_BUF_LEN];
   size_t buf_used;
+  char buf[SL_BUF_LEN];
 };
 struct str_li_t {
   char* str;
