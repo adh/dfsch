@@ -1,6 +1,7 @@
 The big interop idea:
 * Optimized weak-key-hash
 * Multiple inheritance (at least for user-defined classes, somehow)
+* FreeBSD
 
 Bugfixes:
 
