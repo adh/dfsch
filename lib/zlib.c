@@ -67,9 +67,9 @@ dfsch_port_type_t dfsch_gzip_output_port_type = {
   NULL
 };
 
-static void port_read_buf(gzip_port_t* port, 
-                          char*buf, size_t len){
-  size_t ret;
+static ssize_t port_read_buf(gzip_port_t* port, 
+                             char*buf, size_t len){
+  int ret;
   
   if (!port->open){
     dfsch_error("Port is already closed", port);
@@ -96,7 +96,7 @@ dfsch_port_type_t dfsch_gzip_input_port_type = {
     NULL
   },
   NULL,
-  (dfsch_port_write_buf_t)port_read_buf,
+  (dfsch_port_read_buf_t)port_read_buf,
   
   NULL,
   NULL,
@@ -166,6 +166,5 @@ void dfsch_gzip_close_port(dfsch_object_t* port){
       dfsch_error("Error closing gzip port", DFSCH_MAKE_FIXNUM(r));
     }
   }
-  return NULL;
+  return;
 }
-

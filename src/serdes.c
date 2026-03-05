@@ -738,7 +738,7 @@ static void smap_set(smap_t* sm,
                     dfsch_make_byte_vector_nocopy(sb->ptr, sb->len));
 }
 
-static void smap_get_iterator(smap_t* sm){
+static dfsch_object_t* smap_get_iterator(smap_t* sm){
   return dfsch_collection_get_iterator(sm->mapping);
 }
 

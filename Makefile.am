@@ -292,21 +292,20 @@ syslib_sources = \
 	$(srcdir)/core-lib/system.scm
 
 std-lib.c: $(stdlib_sources) boot-source-tool$(EXEEXT)
-	./boot-source-tool$(EXEEXT) -c dfsch__std_lib \
-	$(stdlib_sources) -o std-lib.c
+	./boot-source-tool$(EXEEXT) -c dfsch__std_lib -o std-lib.c \
+	$(stdlib_sources)
 
 sys-lib.c: $(syslib_sources) boot-source-tool$(EXEEXT)
-	./boot-source-tool$(EXEEXT) -c dfsch__sys_lib \
-	$(syslib_sources) -o sys-lib.c
+	./boot-source-tool$(EXEEXT) -c dfsch__sys_lib -o sys-lib.c \
+	$(syslib_sources)
 
 CLEANFILES=udata.c udata.h udata-gen$(EXEEXT) version.h std-lib.c boot-source-tool$(EXEEXT) sys-lib.c
 
 udata-gen$(EXEEXT): $(srcdir)/src/udata-gen.c 
-	$(CC_FOR_BUILD) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
+	$(CC_FOR_BUILD) $(CPPFLAGS) -I$(srcdir) -o udata-gen$(EXEEXT) $(srcdir)/src/udata-gen.c
 
 boot-source-tool$(EXEEXT): $(srcdir)/src/source-tool.c
-	$(CC_FOR_BUILD) -I$(srcdir) -o boot-source-tool$(EXEEXT) -lz -lgc \
-	-DPACKAGE_VERSION=\"\" $(srcdir)/src/source-tool.c
+	$(CC_FOR_BUILD) $(CPPFLAGS) -I$(srcdir) -DPACKAGE_VERSION=\"\" -o boot-source-tool$(EXEEXT) $(srcdir)/src/source-tool.c $(LDFLAGS) -lz -lgc
 
 fastlz_files = 	ext/fastlz/LICENSE \
 	ext/fastlz/README.TXT \
@@ -395,7 +394,7 @@ posix_regex_la_LIBADD =  libdfsch.la libdfsch-posix-regex.la
 
 unix_la_SOURCES = lib/unix.c dfsch/lib/unix.h
 unix_la_LDFLAGS = -avoid-version -module -shrext .dsl -no-undefined
-unix_la_LIBADD =  libdfsch.la libdfsch-os.la -lcrypt
+unix_la_LIBADD =  libdfsch.la libdfsch-os.la
 
 libdfsch_os_la_SOURCES = lib/os.c dfsch/lib/os.h
 libdfsch_os_la_LDFLAGS = -version-info 1:0:0 -no-undefined
@@ -576,7 +575,7 @@ libdfsch_crypto_la_SOURCES = lib/crypto/crypto.c \
 if WIN32
 prng_libadd = -lrpcrt4
 else
-prng_libadd = -lrt
+prng_libadd =
 endif
 
 libdfsch_crypto_la_LIBADD = libdfsch.la $(prng_libadd)

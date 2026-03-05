@@ -58,6 +58,21 @@ if test x$not_posix == x1; then
 fi
 
 
+AC_PATH_PROG(PKG_CONFIG, pkg-config)
+if test -n "$PKG_CONFIG"; then
+        GC_CFLAGS=`$PKG_CONFIG --cflags-only-I bdw-gc 2>/dev/null`
+        GC_LDFLAGS=`$PKG_CONFIG --libs-only-L bdw-gc 2>/dev/null`
+        if test -n "$GC_CFLAGS$GC_LDFLAGS"; then
+                CPPFLAGS="$CPPFLAGS $GC_CFLAGS"
+                LDFLAGS="$LDFLAGS $GC_LDFLAGS"
+        fi
+fi
+
+if test -d /opt/homebrew/opt/bdw-gc/include -a -d /opt/homebrew/opt/bdw-gc/lib; then
+        CPPFLAGS="$CPPFLAGS -I/opt/homebrew/opt/bdw-gc/include"
+        LDFLAGS="$LDFLAGS -L/opt/homebrew/opt/bdw-gc/lib"
+fi
+
 AC_CHECK_HEADERS(gc/gc.h, [have_gc="1"], [have_gc="0"])
 AC_CHECK_LIB(gc, GC_malloc,, [have_gc="0"], [])
 
@@ -423,7 +438,7 @@ AM_CONDITIONAL(WIN32, test x$win32 == xtrue)
 dfschlibexecdir="${libdir}/dfsch"
 dfschlibscmdir="${datadir}/dfsch/scm"
 
-CFLAGS="$CFLAGS -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
+CFLAGS="$CFLAGS -std=gnu89 -Wno-error=implicit-function-declaration -Wno-error=int-conversion -Wno-error=incompatible-function-pointer-types -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
 
 AC_DEFINE_UNQUOTED(HOST_TRIPLET, "$host", [Host triplet])
 dnl AC_DEFINE_UNQUOTED(DFSCH_LIB_SCM_DIR, "$dfschlibscmdir", [Host triplet])

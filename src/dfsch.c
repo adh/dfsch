@@ -31,6 +31,7 @@
 #include <dfsch/strings.h>
 #include <dfsch/magic.h>
 #include <dfsch/conditions.h>
+#include <dfsch/compiler.h>
 #include <dfsch/introspect.h>
 #include <dfsch/weak.h>
 #include <dfsch/backquote.h>

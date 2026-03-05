@@ -20,7 +20,7 @@ void dfsch_strhash_init(dfsch_strhash_t* h){
   h->vector = GC_MALLOC(sizeof(dfsch_strhash__entry_t*)*8);
   memset(h->vector, 0, sizeof(dfsch_strhash__entry_t*)*8);
 
-  return h;
+  return;
 }
 
 void dfsch_strhash_init_sa(dfsch_strhash_t* h){
@@ -29,7 +29,7 @@ void dfsch_strhash_init_sa(dfsch_strhash_t* h){
   h->vector = malloc(sizeof(dfsch_strhash__entry_t*)*8);
   memset(h->vector, 0, sizeof(dfsch_strhash__entry_t*)*8);
 
-  return h;
+  return;
 }
 
 static dfsch_strhash__entry_t* get_hash_entry(dfsch_strhash_t* h, 
@@ -182,4 +182,3 @@ void* dfsch_strhash_ref(dfsch_strhash_t* h, char* name){
     return NULL;
   }
 }
-

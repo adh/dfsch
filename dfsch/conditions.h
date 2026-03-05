@@ -29,6 +29,7 @@ dfsch_object_t* dfsch_condition_fields(dfsch_object_t* condition);
 
 dfsch_object_t* dfsch_condition(dfsch_type_t* type, ...);
 void dfsch_signal_condition(dfsch_type_t* type, char* message, ...);
+void dfsch_signal_warning_condition(dfsch_type_t* type, char* message, ...);
 dfsch_object_t* dfsch_condition_with_fields(dfsch_type_t* type,
                                             dfsch_object_t* message,
                                             dfsch_object_t* fields);
@@ -70,6 +71,7 @@ void dfsch_set_invoke_debugger_on_all_conditions(int val);
 void dfsch_set_query_for_object_proc(dfsch_object_t* proc);
 void dfsch_enter_debugger(dfsch_object_t* reason);
 int dfsch_get_debugger_depth();
+void dfsch_activate_segv_handler();
 
 dfsch_object_t* dfsch_query_for_object(dfsch_object_t* prompt);
 dfsch_object_t* dfsch_query_for_object_cstr(dfsch_object_t* prompt);

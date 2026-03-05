@@ -40,7 +40,9 @@ static int rl_interrupt_function(int sig){
     dfsch_parser_reset(running_parser);
   }
   rl_set_prompt(running_prompt);
-  rl_replace_line("", 1);
+  rl_line_buffer[0] = '\0';
+  rl_point = 0;
+  rl_end = 0;
   rl_redisplay();
 }
 
@@ -245,7 +247,6 @@ static char ** symbol_completion (const char* text, int start, int end){
   if (rl_line_buffer[0] == ';'){
     return rl_completion_matches(text, command_completion_cb);
   } else {
-    rl_completion_suppress_append = 1;
     return rl_completion_matches(text, symbol_completion_cb);
   }
 }

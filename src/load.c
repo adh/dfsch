@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
 
@@ -59,7 +59,7 @@ void dfsch_load_so(dfsch_object_t* ctx,
                    char* so_name, 
                    char* sym_name,
                    int as_toplevel){
-#if defined(__unix__)
+#if defined(__unix__) || defined(__APPLE__)
   void *handle;
   dfsch_object_t* (*entry)(dfsch_object_t*, int);
   char* err;

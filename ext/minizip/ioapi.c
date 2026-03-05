@@ -16,6 +16,18 @@
 
 #include "ioapi.h"
 
+#if defined(__APPLE__)
+#ifndef fopen64
+#define fopen64 fopen
+#endif
+#ifndef ftello64
+#define ftello64 ftello
+#endif
+#ifndef fseeko64
+#define fseeko64 fseeko
+#endif
+#endif
+
 voidpf call_zopen64 (const zlib_filefunc64_32_def* pfilefunc,const void*filename,int mode)
 {
     if (pfilefunc->zfile_func64.zopen64_file != NULL)

@@ -11,6 +11,6 @@ fi
 
 autoheader \
 && aclocal$VERSION \
-&& libtoolize \
+&& (command -v libtoolize >/dev/null 2>&1 && libtoolize || glibtoolize) \
 && automake$VERSION --add-missing \
 && autoconf

@@ -539,7 +539,7 @@ char* dfsch_get_interpreter_home(){
 #endif
 #endif
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
 char* dfsch_get_user_home_directory(){
   char* homedir = getenv("HOME");
   if (!homedir){

@@ -456,12 +456,12 @@ DFSCH_DEFINE_PRIMITIVE(mkdir, NULL){
   DFSCH_STRING_ARG(args, path);
   DFSCH_ARG_END(args);
 
-#ifdef __unix__
-  if (mkdir(path, 0777) != 0){
+#ifdef _WIN32
+  if (_mkdir(path) != 0){
     dfsch_operating_system_error("mkdir");
   }
 #else
-  if (mkdir(path) != 0){
+  if (mkdir(path, 0777) != 0){
     dfsch_operating_system_error("mkdir");
   }
 #endif
@@ -706,4 +706,3 @@ dfsch_object_t* dfsch_module_os_register(dfsch_object_t* ctx){
 
   return NULL;
 }
-
