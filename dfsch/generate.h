@@ -39,6 +39,7 @@ dfsch_object_t* dfsch_generate_list_immutable(dfsch_object_t* exps);
 dfsch_object_t* dfsch_generate_copy_list_immutable(dfsch_object_t* list);
 dfsch_object_t* dfsch_generate_append_immutable(dfsch_object_t* list);
 dfsch_object_t* dfsch_generate_compile_time_constant(dfsch_object_t* expr);
+dfsch_object_t* dfsch_generate_current_environment();
 
 
 #endif
