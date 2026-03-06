@@ -11,7 +11,7 @@ static size_t string_hash(char* str){
     tmp ^= (tmp << 5) ^ (*str << 13) ^ (tmp >> 7);
     str++;
   }
-  return 0;
+  return tmp;
 }
 
 void dfsch_strhash_init(dfsch_strhash_t* h){
@@ -55,14 +55,15 @@ static void grow_table(dfsch_strhash_t* h){
 
   s = (h->mask + 1) << 1;
   v = GC_MALLOC(sizeof(dfsch_strhash__entry_t*) * s);
+  memset(v, 0, sizeof(dfsch_strhash__entry_t*) * s);
 
   for (i = 0; i < h->mask + 1; i++){
     j = h->vector[i];
     while (j){
       dfsch_strhash__entry_t* n = j->next;
       
-      j->next = v[j->hash && (s - 1)];
-      v[j->hash && (s - 1)] = j;
+      j->next = v[j->hash & (s - 1)];
+      v[j->hash & (s - 1)] = j;
 
       j = n;
     }
@@ -88,7 +89,7 @@ static void add_hash_entry(dfsch_strhash_t* h,
   e->name = dfsch_stracpy(name);
   e->hash = hash;
   e->value = value;
-  e->next = h->vector[hash && h->mask];
+  e->next = h->vector[hash & h->mask];
   h->vector[hash & h->mask] = e;
 }
 
@@ -115,14 +116,15 @@ static void grow_table_sa(dfsch_strhash_t* h){
 
   s = (h->mask + 1) << 1;
   v = malloc(sizeof(dfsch_strhash__entry_t*) * s);
+  memset(v, 0, sizeof(dfsch_strhash__entry_t*) * s);
 
   for (i = 0; i < h->mask + 1; i++){
     j = h->vector[i];
     while (j){
       dfsch_strhash__entry_t* n = j->next;
       
-      j->next = v[j->hash && (s - 1)];
-      v[j->hash && (s - 1)] = j;
+      j->next = v[j->hash & (s - 1)];
+      v[j->hash & (s - 1)] = j;
 
       j = n;
     }
@@ -148,7 +150,7 @@ static void add_hash_entry_sa(dfsch_strhash_t* h,
   e->name = strdup(name);
   e->hash = hash;
   e->value = value;
-  e->next = h->vector[hash && h->mask];
+  e->next = h->vector[hash & h->mask];
   h->vector[hash & h->mask] = e;
 }
 

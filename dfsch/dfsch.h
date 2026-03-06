@@ -268,6 +268,10 @@ extern "C" {
   extern dfsch_object_t* dfsch_zip(dfsch_object_t* llist);
   /** Concatenate lists */
   extern dfsch_object_t* dfsch_append(dfsch_object_t* llist);
+  /** Concatenate lists by modifying the last pair */
+  extern dfsch_object_t* dfsch_nconc(dfsch_object_t* llist);
+  /** Return true when object is callable */
+  extern int dfsch_function_p(dfsch_object_t* obj);
   /** Construct list from arguments */
   extern dfsch_object_t* dfsch_list(size_t count, ...);
   /** Construct list from arguments */
@@ -365,6 +369,7 @@ extern "C" {
   extern dfsch_package_t* dfsch_find_package(char* name);
   extern dfsch_object_t* dfsch_make_package(char* name,
                                             char* documentation);
+  extern int dfsch_in_current_package(dfsch_object_t* symbol);
   extern dfsch_package_t* dfsch_package_designator(dfsch_object_t* obj);
   /** Retrun current default package (as in CL's *package*) */
   extern dfsch_package_t* dfsch_get_current_package();

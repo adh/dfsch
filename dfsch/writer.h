@@ -31,6 +31,10 @@ extern "C" {
 
   void dfsch_write_object(dfsch_writer_state_t* state,
                                  dfsch_object_t* object);
+  void dfsch_write_object_circular(dfsch_object_t* obj,
+                                   int readability,
+                                   dfsch_output_proc_t proc,
+                                   void* baton);
   void dfsch_write_string(dfsch_writer_state_t* state,
                                  char* str);
   void dfsch_write_strbuf(dfsch_writer_state_t* state,

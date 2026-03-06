@@ -25,7 +25,7 @@
 #include <dfsch/number.h>
 
 #include <time.h>
-#ifdef unix
+#if defined(__unix__) || defined(__APPLE__)
 #include <sys/times.h>
 #endif
 #include <unistd.h>
@@ -210,7 +210,7 @@ DFSCH_DEFINE_PRIMITIVE(iso_format_time, NULL){
                                          tm->tm_mday, t,
                                          tm->tm_hour, tm->tm_min, tm->tm_sec));
 }
-#ifdef unix
+#if defined(__unix__) || defined(__APPLE__)
 DFSCH_DEFINE_PRIMITIVE(get_internal_real_time, NULL){
   struct tms t;
   DFSCH_ARG_END(args);
@@ -256,7 +256,7 @@ void dfsch__system_register(dfsch_object_t *ctx){
                     DFSCH_PRIMITIVE_REF(get_universal_time));
   dfsch_defcanon_cstr(ctx, "iso-format-time", 
                     DFSCH_PRIMITIVE_REF(iso_format_time));
-#ifdef unix
+#if defined(__unix__) || defined(__APPLE__)
   dfsch_defcanon_cstr(ctx, "get-internal-real-time", 
                     DFSCH_PRIMITIVE_REF(get_internal_real_time));
   dfsch_defcanon_cstr(ctx, "get-internal-run-time", 

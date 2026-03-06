@@ -58,6 +58,7 @@ extern "C" {
   int dfsch_rational_p(dfsch_object_t* obj);
   int dfsch_integer_p(dfsch_object_t* obj);
   int dfsch_number_exact_p(dfsch_object_t* obj);
+  int dfsch_number_equal_p(dfsch_object_t* a, dfsch_object_t* b);
 
 
   /** Makes number object from given floating-point number. */

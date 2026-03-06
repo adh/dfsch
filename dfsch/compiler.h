@@ -16,6 +16,9 @@ dfsch_object_t* dfsch_compile_expression_list(dfsch_object_t* list,
                                               dfsch_object_t* env);
 dfsch_object_t* dfsch_compile_expression(dfsch_object_t* expression,
                                          dfsch_object_t* env);
+dfsch_object_t* dfsch_constant_expression_value(dfsch_object_t* expression,
+                                                dfsch_object_t* env);
+dfsch_object_t* dfsch_make_constant_ast_node(dfsch_object_t* value);
 
 void dfsch_compiler_declare_variable(dfsch_object_t* env,
                                      dfsch_object_t* name);
