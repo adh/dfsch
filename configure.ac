@@ -438,7 +438,7 @@ AM_CONDITIONAL(WIN32, test x$win32 == xtrue)
 dfschlibexecdir="${libdir}/dfsch"
 dfschlibscmdir="${datadir}/dfsch/scm"
 
-CFLAGS="$CFLAGS -std=gnu89 -Wno-error=implicit-function-declaration -Wno-error=int-conversion -Wno-error=incompatible-function-pointer-types -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
+CFLAGS="$CFLAGS -std=gnu89 -D_REENTRANT -DGC_THREADS"' -DDFSCH_LIB_SCM_DIR=\""$(dfschlibscmdir)"\" -DDFSCH_LIB_SO_DIR=\""$(dfschlibexecdir)"\"'
 
 AC_DEFINE_UNQUOTED(HOST_TRIPLET, "$host", [Host triplet])
 dnl AC_DEFINE_UNQUOTED(DFSCH_LIB_SCM_DIR, "$dfschlibscmdir", [Host triplet])
