@@ -269,7 +269,7 @@ libdfsch_os = shared_library('dfsch-os', 'lib/os.c',
   link_with: [libdfsch],
   install: true)
 
-shared_module('os', 'lib/os_mod.c',
+os_mod = shared_module('os', 'lib/os_mod.c',
   include_directories: inc_root,
   link_with: [libdfsch, libdfsch_os],
   name_prefix: '',
@@ -328,7 +328,7 @@ shared_module('inet', 'lib/inet_mod.c',
   install: true,
   install_dir: mod_install_dir)
 
-shared_module('gcollect', 'lib/gcollect.c',
+gcollect_mod = shared_module('gcollect', 'lib/gcollect.c',
   include_directories: inc_root,
   link_with: [libdfsch],
   name_prefix: '',
@@ -381,7 +381,7 @@ libdfsch_cmdopts = shared_library('dfsch-cmdopts', 'lib/cmdopts.c',
   link_with: [libdfsch],
   install: true)
 
-shared_module('cmdopts', 'lib/cmdopts_mod.c',
+cmdopts_mod = shared_module('cmdopts', 'lib/cmdopts_mod.c',
   include_directories: inc_root,
   link_with: [libdfsch, libdfsch_cmdopts],
   name_prefix: '',
@@ -873,10 +873,14 @@ install_data([
 
 install_man('doc/dfsch-repl.1')
 
+test_harness_module_deps = [cmdopts_mod, os_mod, gcollect_mod]
+
 test('scm-test', dfsch_repl,
+  depends: test_harness_module_deps,
   args: ['-L', meson.project_build_root(), '-L', join_paths(meson.project_source_root(), 'lib-scm'), '-L', join_paths(meson.project_source_root(), 'tests'), join_paths(meson.project_source_root(), 'tests', 'main.scm')])
 
 test('scm-test-interp', dfsch_repl,
+  depends: test_harness_module_deps,
   args: ['-X-compile_on_apply', '-L', meson.project_build_root(), '-L', join_paths(meson.project_source_root(), 'lib-scm'), '-L', join_paths(meson.project_source_root(), 'tests'), join_paths(meson.project_source_root(), 'tests', 'main.scm')])
 
 summary({
