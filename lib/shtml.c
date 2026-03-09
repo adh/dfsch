@@ -1,4 +1,5 @@
 #include <dfsch/lib/shtml.h>
+#include <dfsch/lib/inet.h>
 #include <dfsch/util.h>
 #include <dfsch/ports.h>
 #include <assert.h>

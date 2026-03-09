@@ -23,6 +23,9 @@
 
 #include <dfsch/strings.h>
 #include <dfsch/hash.h>
+#include <dfsch/ports.h>
+#include <dfsch/util.h>
+#include <ctype.h>
 #include <string.h>
 
 static dfsch_object_t* urldecode_to_string(char* buf, size_t len){

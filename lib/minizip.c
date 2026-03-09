@@ -1,4 +1,5 @@
 #include <dfsch/lib/minizip.h>
+#include <dfsch/util.h>
 #include "ext/minizip/unzip.h"
 
 typedef struct minizip_t {

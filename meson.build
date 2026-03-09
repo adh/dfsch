@@ -5,6 +5,7 @@ project('dfsch', 'c',
 
 cc = meson.get_compiler('c')
 cc_native = meson.get_compiler('c', native: true)
+fs = import('fs')
 
 is_windows = host_machine.system() == 'windows'
 
@@ -61,7 +62,9 @@ cdata.set('HAVE_GC_GC_H', 1)
 cdata.set('HAVE_LIBGC', 1)
 cdata.set('HAVE_ZLIB_H', 1)
 cdata.set('HAVE_EXPAT_H', 1)
-cdata.set10('USE_READLINE', use_readline)
+if use_readline
+  cdata.set('USE_READLINE', 1)
+endif
 cdata.set_quoted('HOST_TRIPLET', triplet)
 cdata.set_quoted('DFSCH_LIB_SCM_DIR', dfschlibscmdir)
 cdata.set_quoted('DFSCH_LIB_SO_DIR', dfschlibexecdir)
@@ -76,7 +79,7 @@ cdata.set_quoted('VERSION', meson.project_version())
 cdata.set('_FILE_OFFSET_BITS', 64)
 configure_file(output: 'config.h', configuration: cdata)
 
-vcs_tag(
+version_h = vcs_tag(
   input: 'version.h.in',
   output: 'version.h',
   fallback: 'snapshot',
@@ -87,6 +90,14 @@ add_project_arguments(
   '-D_REENTRANT',
   '-DGC_THREADS',
   language: 'c')
+
+if host_machine.system() == 'darwin'
+  add_project_arguments(
+    '-Wno-error=implicit-function-declaration',
+    '-Wno-incompatible-function-pointer-types',
+    '-Wno-int-conversion',
+    language: 'c')
+endif
 
 inc_root = include_directories('.', 'src', 'ext/minizip', 'ext/upskirt')
 
@@ -139,6 +150,7 @@ if dl_dep.found()
 endif
 
 vm_sources = [
+  version_h,
   'src/dfsch.c',
   'src/version.c',
   'src/types.c',
@@ -570,19 +582,25 @@ shared_module('markdown',
   install_dir: mod_install_dir)
 
 pcre_dep = cc.find_library('pcre', required: false)
-if get_option('pcre').enabled() and not pcre_dep.found()
-  error('pcre option enabled but libpcre not found')
+pcre_extra_inc = []
+if fs.exists('/opt/homebrew/include/pcre.h')
+  pcre_extra_inc += include_directories('/opt/homebrew/include')
 endif
-if (get_option('pcre').enabled() and pcre_dep.found()) or (get_option('pcre').auto() and pcre_dep.found())
+have_pcre = pcre_dep.found() and cc.has_header('pcre.h', include_directories: pcre_extra_inc)
+if get_option('pcre').enabled() and not have_pcre
+  error('pcre option enabled but working libpcre headers and library were not found')
+endif
+if (get_option('pcre').enabled() and have_pcre) or (get_option('pcre').auto() and have_pcre)
   libdfsch_pcre = shared_library('dfsch-pcre', 'lib/pcre.c',
-    include_directories: inc_root,
+    include_directories: [inc_root, pcre_extra_inc],
     link_with: [libdfsch],
     dependencies: [pcre_dep],
     install: true)
 
   shared_module('pcre', 'lib/pcre_mod.c',
-    include_directories: inc_root,
+    include_directories: [inc_root, pcre_extra_inc],
     link_with: [libdfsch, libdfsch_pcre],
+    dependencies: [pcre_dep],
     name_prefix: '',
     name_suffix: 'dsl',
     install: true,
@@ -595,18 +613,24 @@ tcl_inc_opt = get_option('tcl_include')
 tk_inc_opt = get_option('tk_include')
 tk_extra_inc = []
 if tcl_inc_opt != ''
-  tk_extra_inc += include_directories(tcl_inc_opt)
-else
-  tk_extra_inc += include_directories('/usr/include/tcl')
+  if fs.exists(tcl_inc_opt)
+    tk_extra_inc += include_directories(tcl_inc_opt)
+  endif
 endif
 if tk_inc_opt != ''
-  tk_extra_inc += include_directories(tk_inc_opt)
-else
-  tk_extra_inc += include_directories('/usr/include/tk')
+  if fs.exists(tk_inc_opt)
+    tk_extra_inc += include_directories(tk_inc_opt)
+  endif
 endif
-have_tk = tcl_dep.found() and tk_dep.found()
+if tcl_inc_opt == '' and fs.exists('/opt/homebrew/include/tcl-tk')
+  tk_extra_inc += include_directories('/opt/homebrew/include/tcl-tk')
+endif
+if tk_inc_opt == '' and fs.exists('/opt/homebrew/include/tcl-tk')
+  tk_extra_inc += include_directories('/opt/homebrew/include/tcl-tk')
+endif
+have_tk = tcl_dep.found() and tk_dep.found() and cc.has_header('tcl.h', include_directories: tk_extra_inc) and cc.has_header('tk.h', include_directories: tk_extra_inc)
 if get_option('tk_gui').enabled() and not have_tk
-  error('tk_gui enabled but tcl/tk libraries were not found')
+  error('tk_gui enabled but working tcl/tk headers and libraries were not found')
 endif
 if (get_option('tk_gui').enabled() and have_tk) or (get_option('tk_gui').auto() and have_tk)
   libdfsch_tk_gui = shared_library('dfsch-tk-gui', 'lib/tk-gui.c',
@@ -754,19 +778,25 @@ ffi_dep = dependency('libffi', required: false)
 if not ffi_dep.found()
   ffi_dep = cc.find_library('ffi', required: false)
 endif
-if get_option('ffi').enabled() and not ffi_dep.found()
-  error('ffi enabled but libffi not found')
+ffi_extra_inc = []
+if fs.exists('/opt/homebrew/opt/libffi/include/ffi.h')
+  ffi_extra_inc += include_directories('/opt/homebrew/opt/libffi/include')
 endif
-if (get_option('ffi').enabled() and ffi_dep.found()) or (get_option('ffi').auto() and ffi_dep.found())
+have_ffi = ffi_dep.found() and cc.has_header('ffi.h', include_directories: ffi_extra_inc)
+if get_option('ffi').enabled() and not have_ffi
+  error('ffi enabled but working libffi headers and library were not found')
+endif
+if (get_option('ffi').enabled() and have_ffi) or (get_option('ffi').auto() and have_ffi)
   libdfsch_ffi = shared_library('dfsch-ffi', 'lib/ffi.c',
-    include_directories: inc_root,
+    include_directories: [inc_root, ffi_extra_inc],
     link_with: [libdfsch],
     dependencies: [ffi_dep],
     install: true)
 
   shared_module('ffi', 'lib/ffi_mod.c',
-    include_directories: inc_root,
+    include_directories: [inc_root, ffi_extra_inc],
     link_with: [libdfsch, libdfsch_ffi],
+    dependencies: [ffi_dep],
     name_prefix: '',
     name_suffix: 'dsl',
     install: true,

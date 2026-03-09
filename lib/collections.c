@@ -2,6 +2,7 @@
 
 #include <limits.h>
 #include <assert.h>
+#include <string.h>
 
 /*
  * Priority queues
@@ -195,7 +196,7 @@ static dfsch_object_t* bv_ref(bitvector_t* b, size_t n){
     dfsch_error("Index out of range", dfsch_make_number_from_long(n));
   }
 
-  return dfsch_bool(b->words[n / WORD_BITS] & 1 << (n % WORD_BITS)) != 0;
+  return dfsch_bool((b->words[n / WORD_BITS] & (1 << (n % WORD_BITS))) != 0);
 }
 static void bv_set(bitvector_t* b, size_t n, dfsch_object_t* val){
   if (b->length <= n){

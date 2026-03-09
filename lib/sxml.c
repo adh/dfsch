@@ -1,5 +1,6 @@
 #include <dfsch/lib/sxml.h>
 #include <dfsch/lib/xml.h>
+#include <dfsch/lib/inet.h>
 #include <dfsch/util.h>
 #include <dfsch/ports.h>
 #include <expat.h>
