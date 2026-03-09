@@ -396,7 +396,7 @@ extern "C" {
 
 
   /** Return true or nil depending on value of BOOL. */
-  extern dfsch_object_t* dfsch_bool(int bool);
+  extern dfsch_object_t* dfsch_bool(int value);
 
   typedef void (*dfsch_package_iteration_cb_t)(void* baton,
                                                dfsch_object_t* symbol);

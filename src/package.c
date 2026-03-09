@@ -893,8 +893,8 @@ int dfsch_compare_keyword(dfsch_object_t* symbol,
   return dfsch_compare_symbol(symbol, DFSCH_KEYWORD_PACKAGE, name);
 }
 
-dfsch_object_t* dfsch_bool(int bool){
-  return bool ? DFSCH_SYM_TRUE : NULL;
+dfsch_object_t* dfsch_bool(int value){
+  return value ? DFSCH_SYM_TRUE : NULL;
 }
 
 
@@ -993,7 +993,7 @@ DFSCH_DEFINE_PRIMITIVE(export_symbol,
   return symbol;
 }
 
-DFSCH_DEFINE_PRIMITIVE(unintern, "Remove given symbol from it's package"){
+DFSCH_DEFINE_PRIMITIVE(unintern, "Remove given symbol from its package"){
   dfsch_object_t* symbol;
   DFSCH_OBJECT_ARG(args, symbol);
   DFSCH_ARG_END(args);

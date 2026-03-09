@@ -3,7 +3,7 @@ dnl AM_CONFIG_HEADER(src/config.h) - keep it simple
 
 dnl package name and version number
 
-AC_INIT(dfsch, 0.4.1-dev)
+AC_INIT([dfsch],[0.4.1-dev])
 AC_CONFIG_SRCDIR(src/repl.c)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([m4])
@@ -43,20 +43,6 @@ AC_PROG_MAKE_SET
 AC_HEADER_STDBOOL
 AC_C_CONST
 dnl AC_C_INLINE
-AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h stdlib.h string.h strings.h unistd.h],, [not_posix="1"])
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([memmove memset strcasecmp strchr strerror strpbrk],, [not_posix="1"])
-
-if test x$not_posix == x1; then
-        AC_MSG_RESULT()
-        AC_MSG_RESULT(****************************************************************)
-        AC_MSG_RESULT(Your system lacks some of standard C features)
-        AC_MSG_RESULT(****************************************************************)
-        AC_MSG_RESULT()
-        AC_MSG_ERROR(Seems like you are going to make a new port...)
-fi
-
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config)
 if test -n "$PKG_CONFIG"; then
@@ -92,14 +78,14 @@ AC_CHECK_LIB(readline, readline, [RL_LIBS="-lreadline"], [have_readline="no"], [
 
 
 AC_ARG_ENABLE([profile],
-  AC_HELP_STRING([--enable-profile], [Enable profiling]))
+  AS_HELP_STRING([--enable-profile],[Enable profiling]))
 
 if test x"$enable_profile" = x"yes"; then 
    CFLAGS="$CFLAGS -pg -fno-omit-frame-pointer -fno-inline-functions -fno-optimize-sibling-calls"
 fi 
 
 AC_ARG_WITH([readline],
-  AC_HELP_STRING([--with-readline], [Use readline library]))
+  AS_HELP_STRING([--with-readline],[Use readline library]))
 
 use_readline=no
 if test x"$with_readline" != x"no"; then 
@@ -111,7 +97,7 @@ if test x"$with_readline" != x"no"; then
 fi
 
 AC_ARG_WITH([expat],
-  AC_HELP_STRING([--with-expat=PATH], [Path to expat installation]),
+  AS_HELP_STRING([--with-expat=PATH],[Path to expat installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -129,7 +115,7 @@ if test x$have_expat != x1; then
 fi
 
 AC_ARG_WITH([zlib],
-  AC_HELP_STRING([--with-zlib=PATH], [Path to zlib installation]),
+  AS_HELP_STRING([--with-zlib=PATH],[Path to zlib installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -152,7 +138,7 @@ enable_pcre=yes
 AC_ARG_ENABLE([pcre],
     AS_HELP_STRING([--disable-pcre], [Disable pcre module]))
 AC_ARG_WITH([pcre],
-  AC_HELP_STRING([--with-pcre=PATH], [Path to PCRE installation]),
+  AS_HELP_STRING([--with-pcre=PATH],[Path to PCRE installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -175,10 +161,10 @@ AC_ARG_ENABLE([tk-gui],
     AS_HELP_STRING([--disable-tk-gui], [Disable tk-gui module]))
 
 AC_ARG_WITH([tk-includes],
-  AC_HELP_STRING([--with-tk=PATH], [Path to Tk includes]),
+  AS_HELP_STRING([--with-tk=PATH],[Path to Tk includes]),
   tk_includes="${withval}")
 AC_ARG_WITH([tcl-includes],
-  AC_HELP_STRING([--with-tcl=PATH], [Path to Tcl includes]),
+  AS_HELP_STRING([--with-tcl=PATH],[Path to Tcl includes]),
   tcl_includes="${withval}")
 
 if test x$"$enable_tk_gui" == x"yes"; then
@@ -211,9 +197,9 @@ AM_CONDITIONAL(TKGUI, test x"$enable_tk_gui" == x"yes")
 enable_sqlite=yes
 
 AC_ARG_ENABLE([sqlite],
-    AC_HELP_STRING([--disable-sqlite], [Disable sqlite module]))
+    AS_HELP_STRING([--disable-sqlite],[Disable sqlite module]))
 AC_ARG_WITH([sqlite],
-  AC_HELP_STRING([--with-sqlite=PATH], [Path to Sqlite installation]),
+  AS_HELP_STRING([--with-sqlite=PATH],[Path to Sqlite installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -232,9 +218,9 @@ AM_CONDITIONAL(SQLITE, test x"$enable_sqlite" == x"yes")
 enable_sqlite3=yes
 
 AC_ARG_ENABLE([sqlite3],
-    AC_HELP_STRING([--disable-sqlite3], [Disable sqlite3 module]))
+    AS_HELP_STRING([--disable-sqlite3],[Disable sqlite3 module]))
 AC_ARG_WITH([sqlite3],
-  AC_HELP_STRING([--with-sqlite3=PATH], [Path to Sqlite3 installation]),
+  AS_HELP_STRING([--with-sqlite3=PATH],[Path to Sqlite3 installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -253,9 +239,9 @@ AM_CONDITIONAL(SQLITE3, test x"$enable_sqlite3" == x"yes")
 enable_db_sqlite=yes
 
 AC_ARG_ENABLE([db-sqlite],
-    AC_HELP_STRING([--disable-db-sqlite], [Disable db-sqlite module]))
+    AS_HELP_STRING([--disable-db-sqlite],[Disable db-sqlite module]))
 AC_ARG_WITH([db-sql],
-  AC_HELP_STRING([--with-db-sql=PATH], [Path to Berkeley DB installation]),
+  AS_HELP_STRING([--with-db-sql=PATH],[Path to Berkeley DB installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -274,9 +260,9 @@ AM_CONDITIONAL(DB_SQLITE, test x"$enable_db_sqlite" == x"yes")
 enable_dbi=yes
 
 AC_ARG_ENABLE([dbi],
-    AC_HELP_STRING([--disable-dbi], [Disable dbi module]))
+    AS_HELP_STRING([--disable-dbi],[Disable dbi module]))
 AC_ARG_WITH([dbi],
-  AC_HELP_STRING([--with-dbi=PATH], [Path to libdbi installation]),
+  AS_HELP_STRING([--with-dbi=PATH],[Path to libdbi installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -296,9 +282,9 @@ AM_CONDITIONAL(DBI, test x"$enable_dbi" == x"yes")
 enable_tokyo_cabinet=yes
 
 AC_ARG_ENABLE([tokyo-cabinet],
-    AC_HELP_STRING([--disable-tokyo-cabinet], [Disable tokyocabinet module]))
+    AS_HELP_STRING([--disable-tokyo-cabinet],[Disable tokyocabinet module]))
 AC_ARG_WITH([tokyo-cabinet],
-  AC_HELP_STRING([--with-tokyo-cabinet=PATH], [Path to TOKYOCABINET installation]),
+  AS_HELP_STRING([--with-tokyo-cabinet=PATH],[Path to TOKYOCABINET installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -317,9 +303,9 @@ AM_CONDITIONAL(TOKYO_CABINET, test x"$enable_tokyo_cabinet" == x"yes")
 enable_tokyo_tyrant=yes
 
 AC_ARG_ENABLE([tokyo-tyrant],
-    AC_HELP_STRING([--disable-tokyo-tyrant], [Disable tokyotyrant module]))
+    AS_HELP_STRING([--disable-tokyo-tyrant],[Disable tokyotyrant module]))
 AC_ARG_WITH([tokyo-tyrant],
-  AC_HELP_STRING([--with-tokyo-tyrant=PATH], [Path to TOKYOTYRANT installation]),
+  AS_HELP_STRING([--with-tokyo-tyrant=PATH],[Path to TOKYOTYRANT installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -340,9 +326,9 @@ AM_CONDITIONAL(TOKYO_TYRANT, test x"$enable_tokyo_tyrant" == x"yes")
 enable_gd=yes
 
 AC_ARG_ENABLE([gd],
-    AC_HELP_STRING([--disable-gd], [Disable gd module]))
+    AS_HELP_STRING([--disable-gd],[Disable gd module]))
 AC_ARG_WITH([gd],
-  AC_HELP_STRING([--with-gd=PATH], [Path to Gd installation]),
+  AS_HELP_STRING([--with-gd=PATH],[Path to Gd installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -361,9 +347,9 @@ AM_CONDITIONAL(GD, test x"$enable_gd" == x"yes")
 enable_ffi=yes
 
 AC_ARG_ENABLE([ffi],
-    AC_HELP_STRING([--disable-ffi], [Disable foreign function interface]))
+    AS_HELP_STRING([--disable-ffi],[Disable foreign function interface]))
 AC_ARG_WITH([ffi],
-  AC_HELP_STRING([--with-libffi=PATH], [Path to libffi installation]),
+  AS_HELP_STRING([--with-libffi=PATH],[Path to libffi installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -383,9 +369,9 @@ AM_CONDITIONAL(FFI, test x"$enable_ffi" == x"yes")
 enable_curl=yes
 
 AC_ARG_ENABLE([curl],
-    AC_HELP_STRING([--disable-curl], [Disable curl module]))
+    AS_HELP_STRING([--disable-curl],[Disable curl module]))
 AC_ARG_WITH([curl],
-  AC_HELP_STRING([--with-libcurl=PATH], [Path to libcurl installation]),
+  AS_HELP_STRING([--with-libcurl=PATH],[Path to libcurl installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -405,9 +391,9 @@ AM_CONDITIONAL(CURL, test x"$enable_curl" == x"yes")
 enable_rrd=yes
 
 AC_ARG_ENABLE([rrd],
-    AC_HELP_STRING([--disable-rrd], [Disable rrd module]))
+    AS_HELP_STRING([--disable-rrd],[Disable rrd module]))
 AC_ARG_WITH([rrd],
-  AC_HELP_STRING([--with-librrd=PATH], [Path to librrd installation]),
+  AS_HELP_STRING([--with-librrd=PATH],[Path to librrd installation]),
   CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}"
   LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}")
 
@@ -454,7 +440,8 @@ dnl automake stuff
 AM_MAINTAINER_MODE
 
 dnl create makefiles
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
 cat <<EOF
 ================================================
